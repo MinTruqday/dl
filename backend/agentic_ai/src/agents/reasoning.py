@@ -2,7 +2,7 @@ import json
 from langchain_core.messages import HumanMessage
 from loguru import logger
 from src.core.prompts import PromptType, prompt_registry
-from src.workflow.brain import llm
+from src.workflow.graph import llm
 
 class ReasoningAgent:
     async def execute(self, task: str) -> str:

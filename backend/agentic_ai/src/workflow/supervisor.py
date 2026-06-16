@@ -12,7 +12,7 @@ from src.agents.reasoning import reasoning
 from src.agents.response_generator import response_generator
 from src.agents.search_engine import search_engine
 from src.core.prompts import PromptType, prompt_registry
-from src.workflow.brain import llm
+from src.workflow.graph import llm
 from src.workflow.state import ActingState
 from uuid6 import uuid7
 

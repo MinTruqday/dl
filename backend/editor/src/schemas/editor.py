@@ -34,3 +34,6 @@ class InlineCommentRequest(BaseModel):
 class VersionDiffRequest(BaseModel):
     version_id_a: str
     version_id_b: str
+
+class AISuggestionRequest(BaseModel):
+    context: str

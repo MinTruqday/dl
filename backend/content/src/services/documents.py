@@ -67,10 +67,10 @@ class DocumentService:
         if document.get("content"):
             await RepositoryFactory.get("document_revisions").insert_one({"document_id": document_id, "creator_id": str(current_user.get("id")), "content": document.get("content"), "content_format": document.get("content_format"), "created_at": datetime.now(timezone.utc), "note": "Auto-saved revision before update"})
         await docs_collection.update_one({"_id": document_id}, {"$set": {"content": content_in.content, "content_format": content_in.content_format, "updated_at": datetime.now(timezone.utc)}})
-        if settings.SIGNAL_URL:
+        if settings.NOTIFICATION_URL:
             try:
                 async with httpx.AsyncClient() as client:
-                    await client.post(f"{settings.SIGNAL_URL}/notifications/trigger", json={"target_user_id": str(current_user.get("id")), "title": "Document updated", "body": "Document content successfully updated", "type": "DOCUMENT_UPDATE"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                    await client.post(f"{settings.NOTIFICATION_URL}/notifications/dispatch", json={"target_user_id": str(current_user.get("id")), "title": "Document updated", "body": "Document content successfully updated", "type": "DOCUMENT_UPDATE"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
             except Exception: logger.error("Disruption navigating notification dispatch routing process transmitting core internal updates")
         logger.info("Binary payload matrix directly mapped overwriting existing target artifact completing seamlessly")
         if hasattr(db_client, "redis") and db_client.redis:
@@ -195,7 +195,7 @@ class DocumentService:
         author = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.PROVISION_URL}/users/{document['creator_id']}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.MANAGEMENT_URL}/users/{document['creator_id']}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200: author = resp.json().get("data")
         except Exception: logger.warning("Underlying structural networking loop failed pulling required remote creator hierarchical properties")
         if author: document["author"] = {"full_name": author.get("full_name") or author.get("username"), "avatar_url": author.get("avatar_url"), "slug": author.get("slug")}

@@ -20,7 +20,7 @@ client = AsyncInferenceClient(token=settings.HF_TOKEN)
 async def _check_quota(current_user: dict):
     try:
         async with httpx.AsyncClient() as c:
-            resp = await c.get(f"{settings.PROVISION_URL}/quota/verify", params={"user_id": str(current_user.get("id")), "role": current_user.get("role").value, "ai_tier": current_user.ai_tier.value, "feature": "chat"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+            resp = await c.get(f"{settings.MANAGEMENT_URL}/quota/verify", params={"user_id": str(current_user.get("id")), "role": current_user.get("role").value, "ai_tier": current_user.ai_tier.value, "feature": "chat"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
             if resp.status_code != 200:
                 raise HTTPException(status_code=429, detail="Your account has aggressively exceeded strictly allocated operational artificial intelligence network computation query quotas")
             return resp.json().get("data", {})
@@ -33,7 +33,7 @@ async def _check_quota(current_user: dict):
 async def _consume_quota(current_user: dict, tokens: int, req_reset_hours: int = 24):
     try:
         async with httpx.AsyncClient() as c:
-            await c.post(f"{settings.PROVISION_URL}/quota/consume", json={"user_id": str(current_user.get("id")), "feature": "chat", "req_reset_hours": req_reset_hours, "tokens": tokens}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+            await c.post(f"{settings.MANAGEMENT_URL}/quota/consume", json={"user_id": str(current_user.get("id")), "feature": "chat", "req_reset_hours": req_reset_hours, "tokens": tokens}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
     except Exception:
         logger.error("The backend infrastructure fundamentally failed correctly subtracting completely consumed computational tokens active user profile")
 

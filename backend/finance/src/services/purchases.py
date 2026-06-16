@@ -165,10 +165,10 @@ class PurchaseService:
                     await target_db["notifications"].insert_one(notification)
                     if hasattr(db_client, "redis") and db_client.redis:
                         try:
-                            if settings.SIGNAL_URL:
+                            if settings.NOTIFICATION_URL:
                                 async with httpx.AsyncClient() as client:
                                     await client.post(
-                                        f"{settings.SIGNAL_URL}/notifications/dispatch",
+                                        f"{settings.NOTIFICATION_URL}/notifications/dispatch",
                                         json={"target_user_id": creator_id, "title": notification["title"], "body": notification["body"], "type": "purchase"},
                                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                                     )

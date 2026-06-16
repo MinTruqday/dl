@@ -105,7 +105,7 @@ class PasskeyService:
         user_doc = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.PROVISION_URL}/users/by-email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.MANAGEMENT_URL}/users/email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")
         except Exception:

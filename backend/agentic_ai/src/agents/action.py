@@ -2,7 +2,7 @@ from core.prompt_registry import PromptType, prompt_registry
 from langchain_core.messages import HumanMessage
 from loguru import logger
 from src.tools.api import tools
-from src.workflow.brain import llm
+from src.workflow.graph import llm
 
 class ActionAgent:
     def __init__(self):

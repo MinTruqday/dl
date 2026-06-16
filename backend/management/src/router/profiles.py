@@ -5,6 +5,7 @@ from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from fastapi.responses import StreamingResponse
+from src.schemas.users import ProfileUpdate, SettingsUpdate, BrandPageUpdate
 from src.services.identity import IdentityService
 from src.services.privacy import PrivacyService
 from src.services.profiles import ProfileService

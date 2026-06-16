@@ -13,7 +13,7 @@ from uuid6 import uuid7
 class EditorService:
 
     @staticmethod
-    async def export_to_format(content: str, format_type: str, compiler_url: str = settings.COMPILER_URL):
+    async def export_to_format(content: str, format_type: str, compiler_url: str = settings.EDITOR_URL):
         if not content:
             raise HTTPException(
                 status_code=400, 
@@ -44,14 +44,14 @@ class EditorService:
             )
 
     @staticmethod
-    async def compile_editorjs_to_pdf(content: str, compiler_url: str = settings.COMPILER_URL):
+    async def compile_editorjs_to_pdf(content: str, editor_url: str = settings.EDITOR_URL):
         if not content:
             raise HTTPException(
                 status_code=400, 
                 detail="Requested operation cannot proceed because provided document content is completely empty"
             )
         try:
-            url = f"{compiler_url}/compile"
+            url = f"{editor_url}/compile"
             async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
                 response = await client.post(url, json={"content": content})
                 if response.status_code != 200:

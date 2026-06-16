@@ -2,7 +2,8 @@ from core.config import settings
 from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.dependency import get_current_user_from_header as get_current_user
 from fastapi import APIRouter
-from src.schemas.documents import (
+from src.schemas.editor import (
+    AISuggestionRequest,
     AutoSaveRequest,
     FindReplaceRequest,
     InlineCommentRequest,
@@ -12,7 +13,7 @@ from src.schemas.documents import (
     ResolveSuggestionRequest,
     VersionDiffRequest,
 )
-from src.services.documents import EditorService
+from src.services.editor import EditorService
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
     if current_user.ai_tier.value not in ["PREMIUM"] and current_user.get("role").value != "admin":

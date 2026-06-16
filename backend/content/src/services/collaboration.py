@@ -21,7 +21,7 @@ class CollaborationService:
         invitee = None
         try:
             async with httpx.AsyncClient() as client:
-                if (resp := await client.get(f"{settings.PROVISION_URL}/users/by-email/{invitee_email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)).status_code == 200: invitee = resp.json().get("data")
+                if (resp := await client.get(f"{settings.MANAGEMENT_URL}/users/email/{invitee_email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)).status_code == 200: invitee = resp.json().get("data")
         except Exception: pass
         if not invitee: raise HTTPException(status_code=404, detail="System failed executing explicit functional resolution mapping expected global identity endpoint")
         if str(invitee["_id"]) == str(current_user.get("id")): raise HTTPException(status_code=400, detail="Operational routing identifier currently obstructed resolving completely different functional digital object")
@@ -60,7 +60,7 @@ class CollaborationService:
             user_info = None
             try:
                 async with httpx.AsyncClient() as client:
-                    if (resp := await client.get(f"{settings.PROVISION_URL}/users/{inv['invitee_id']}", timeout=settings.DEFAULT_HTTP_TIMEOUT)).status_code == 200: user_info = resp.json().get("data")
+                    if (resp := await client.get(f"{settings.MANAGEMENT_URL}/users/{inv['invitee_id']}", timeout=settings.DEFAULT_HTTP_TIMEOUT)).status_code == 200: user_info = resp.json().get("data")
             except Exception: pass
             if user_info: collaborators.append({"collaboration_id": inv["_id"], "user_id": inv["invitee_id"], "email": user_info.get("email", ""), "full_name": user_info.get("full_name", "User"), "role": inv.get("role", "editor")})
         return collaborators
@@ -92,7 +92,7 @@ class CollaborationService:
         target_user = None
         try:
             async with httpx.AsyncClient() as client:
-                if (resp := await client.get(f"{settings.PROVISION_URL}/users/{target_user_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)).status_code == 200: target_user = resp.json().get("data")
+                if (resp := await client.get(f"{settings.MANAGEMENT_URL}/users/{target_user_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)).status_code == 200: target_user = resp.json().get("data")
         except Exception: pass
         if not target_user: raise HTTPException(status_code=404, detail="System failed executing explicit functional resolution mapping expected global identity endpoint")
         if target_user_id not in doc.get("coauthors", []): raise HTTPException(status_code=400, detail="Operational routing identifier currently obstructed resolving completely different functional digital object")

@@ -40,7 +40,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/users/by-email/{email}",
+                f"{settings.MANAGEMENT_URL}/users/email/{email}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:

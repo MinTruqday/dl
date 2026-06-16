@@ -8,7 +8,7 @@ async def check_quota(current_user: dict = Depends(get_current_user)):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/quota/verify",
+                f"{settings.MANAGEMENT_URL}/quota/verify",
                 params={"user_id": str(current_user.get("id")), "role": current_user.get("role").value},
             )
             if resp.status_code == 429:

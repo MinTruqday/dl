@@ -8,7 +8,7 @@ from uuid6 import uuid7
 class TelemetryService:
 
     @staticmethod
-    async def track_event(event_name: str, properties: Dict[str, Any], current_user: Optional[UserInDB] = None, db=None) -> dict:
+    async def track_event(event_name: str, properties: Dict[str, Any], current_user: Optional[Any] = None, db=None) -> dict:
         telemetry_event = {
             "_id": str(uuid7()),
             "event_name": event_name,
@@ -32,7 +32,7 @@ class TelemetryService:
         return await cursor.to_list(length=100)
 
     @staticmethod
-    async def log_performance_metric(metric_name: str, value: float, current_user: Optional[UserInDB] = None, db=None) -> dict:
+    async def log_performance_metric(metric_name: str, value: float, current_user: Optional[Any] = None, db=None) -> dict:
         return await TelemetryService.track_event("performance_metric", {"metric": metric_name, "value": value}, current_user)
 
     @staticmethod

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Response
 from core.dependency import get_current_user, get_db
 from src.services.exports import ExportService
 
-router = APIRouter(prefix="/export")
+router = APIRouter(prefix="/exports")
 
 @router.get("/{document_id}/pdf", response_model=APIResponse[Any])
 async def export_document_pdf(document_id: str, current_user: dict = Depends(get_current_user), db=Depends(get_db)):

@@ -138,7 +138,7 @@ async def transfer_document(document_id: str, new_owner_id: str = Query(...), cu
     target = None
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(f"{settings.PROVISION_URL}/users/{new_owner_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+            resp = await client.get(f"{settings.MANAGEMENT_URL}/users/{new_owner_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
             if resp.status_code == 200: target = resp.json().get("data")
     except Exception: pass
     if not target: raise HTTPException(status_code=404, detail="Target user account specified executing operational ownership transfer strictly unavailable")

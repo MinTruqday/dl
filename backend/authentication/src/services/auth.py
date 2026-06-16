@@ -36,12 +36,12 @@ class AuthService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.PROVISION_URL}/users",
+                    f"{settings.MANAGEMENT_URL}/users",
                     json={
                         "email": user_in.email,
                         "full_name": user_in.full_name,
                         "slug": user_in.slug,
-                        "role": "READER",
+                        "role": "reader",
                     },
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
@@ -77,8 +77,9 @@ class AuthService:
             "email": user_in.email,
             "full_name": user_in.full_name,
             "slug": user_in.slug,
-            "role": "READER",
-            "id": user_id,
+            "role": "reader",
+            "_id": user_id,
+            "created_at": datetime.now(timezone.utc),
         }
 
     @staticmethod
@@ -88,7 +89,7 @@ class AuthService:
 
         try:
             async with httpx.AsyncClient() as client:
-                url = f"{settings.PROVISION_URL}/users/by-email/{username}" if is_email else f"{settings.PROVISION_URL}/users/by-slug/{username}"
+                url = f"{settings.MANAGEMENT_URL}/users/email/{username}" if is_email else f"{settings.MANAGEMENT_URL}/users/slug/{username}"
                 resp = await client.get(url, timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")
@@ -144,7 +145,7 @@ class AuthService:
         user = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.PROVISION_URL}/users/by-email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.MANAGEMENT_URL}/users/email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user = resp.json().get("data")
         except Exception:
@@ -256,7 +257,7 @@ class AuthService:
         
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.PROVISION_URL}/users/by-email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.MANAGEMENT_URL}/users/email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")
         except Exception:
@@ -273,12 +274,12 @@ class AuthService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        f"{settings.PROVISION_URL}/users",
+                        f"{settings.MANAGEMENT_URL}/users",
                         json={
                             "email": email,
                             "full_name": google_user.get("name"),
                             "slug": f"{email.split('@')[0]}_{secrets.token_hex(2)}",
-                            "role": "READER",
+                            "role": "reader",
                         },
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )

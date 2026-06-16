@@ -62,10 +62,10 @@ class UserService:
         await RepositoryFactory.get("audit_logs").insert_one({"action": "WARN_USER", "actor_id": str(current_user.get("id")), "target_user_id": user_id, "reason": reason, "timestamp": datetime.now(timezone.utc)})
         
         try:
-            if settings.SIGNAL_URL:
+            if settings.NOTIFICATION_URL:
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/notifications/trigger",
+                        f"{settings.NOTIFICATION_URL}/notifications/dispatch",
                         json={"target_user_id": user_id, "title": "New system administrative warning", "body": f"Official violation warning recorded for your account due to {reason}", "type": "WARNING"},
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )

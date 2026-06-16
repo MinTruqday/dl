@@ -2,7 +2,7 @@ from typing import AsyncGenerator
 from langchain_core.messages import HumanMessage
 from loguru import logger
 from src.core.prompts import PromptType, prompt_registry
-from src.workflow.brain import llm
+from src.workflow.graph import llm
 
 class ResponseGeneratorAgent:
     async def aggregate_stream(self, query: str, gathered_data: list) -> AsyncGenerator[str, None]:

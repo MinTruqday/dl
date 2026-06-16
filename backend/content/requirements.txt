@@ -22,4 +22,5 @@ g4f[all]>=0.3.0
 argon2-cffi>=23.1.0
 passlib[argon2]>=1.7.4
 python-multipart>=0.0.6
-textstat>=4.0.0
+textstat==0.7.13
+aiofiles==23.2.1

@@ -57,7 +57,7 @@ class MessageService:
         audio_url: str = None,
         client_msg_id: str = None,
     ):
-        sender_id = str(current_user.get("id"))
+        sender_id = str(current_user.get('id'))
         if client_msg_id:
             existing = await RepositoryFactory.get("messages").find_one(
                 {"client_msg_id": client_msg_id, "sender_id": sender_id}
@@ -133,14 +133,14 @@ class MessageService:
         else:
             query = {
                 "$or": [
-                    {"sender_id": str(current_user.get("id")), "receiver_id": other_user_id},
-                    {"sender_id": other_user_id, "receiver_id": str(current_user.get("id"))},
+                    {"sender_id": str(current_user.get('id')), "receiver_id": other_user_id},
+                    {"sender_id": other_user_id, "receiver_id": str(current_user.get('id'))},
                 ]
             }
             
         if cursor:
             query["_id"] = {"$lt": cursor}
-        query["deleted_by"] = {"$ne": str(current_user.get("id"))}
+        query["deleted_by"] = {"$ne": str(current_user.get('id'))}
         
         messages = (
             await RepositoryFactory.get("messages")
@@ -153,13 +153,13 @@ class MessageService:
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
-            else f"{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+            else f"{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         )
         last_msg_id = messages[0]["_id"] if messages else None
-        update_data = {f"unread_count.{current_user.get("id")}": 0}
+        update_data = {f"unread_count.{current_user.get('id')}": 0}
         
         if last_msg_id:
-            update_data[f"last_read_message_id.{current_user.get("id")}"] = str(last_msg_id)
+            update_data[f"last_read_message_id.{current_user.get('id')}"] = str(last_msg_id)
         await RepositoryFactory.get("conversations").update_one(
             {"_id": participant_key}, {"$set": update_data}
         )
@@ -172,19 +172,19 @@ class MessageService:
             .find(
                 {
                     "$or": [
-                        {"participants": str(current_user.get("id"))},
+                        {"participants": str(current_user.get('id'))},
                         {
                             "_id": {
                                 "$in": [
                                     str(g["_id"])
                                     for g in await RepositoryFactory.get("message_groups")
-                                    .find({"members": str(current_user.get("id"))})
+                                    .find({"members": str(current_user.get('id'))})
                                     .to_list(100)
                                 ]
                             }
                         },
                     ],
-                    "cleared_by": {"$ne": str(current_user.get("id"))},
+                    "cleared_by": {"$ne": str(current_user.get('id'))},
                 }
             )
             .sort("updated_at", -1)
@@ -195,7 +195,7 @@ class MessageService:
         for conv in conversations:
             if not str(conv["_id"]).startswith("group_"):
                 for p in conv.get("participants", []):
-                    if p != str(current_user.get("id")):
+                    if p != str(current_user.get('id')):
                         other_user_ids.append(p)
                         
         users_list = []
@@ -203,7 +203,7 @@ class MessageService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        f"{settings.PROVISION_URL}/users/batch",
+                        f"{settings.MANAGEMENT_URL}/users/batch",
                         json=other_user_ids,
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
@@ -215,7 +215,7 @@ class MessageService:
         user_map = {str(u["_id"]): u for u in users_list}
         groups_list = (
             await RepositoryFactory.get("message_groups")
-            .find({"members": str(current_user.get("id"))})
+            .find({"members": str(current_user.get('id'))})
             .to_list(length=100)
         )
         group_map = {str(g["_id"]): g for g in groups_list}
@@ -227,13 +227,13 @@ class MessageService:
             
             if not is_group:
                 for p in conv.get("participants", []):
-                    if p != str(current_user.get("id")):
+                    if p != str(current_user.get('id')):
                         other_id = p
                         break
             if not other_id:
                 continue
                 
-            unread = conv.get("unread_count", {}).get(str(current_user.get("id")), 0)
+            unread = conv.get("unread_count", {}).get(str(current_user.get('id')), 0)
             pinned_messages = conv.get("pinned_messages", [])
             
             if is_group:
@@ -310,7 +310,7 @@ class MessageService:
     @staticmethod
     async def edit_message(message_id: str, new_content: str, current_user):
         msg = await RepositoryFactory.get("messages").find_one({"_id": message_id})
-        if not msg or msg["sender_id"] != str(current_user.get("id")):
+        if not msg or msg["sender_id"] != str(current_user.get('id')):
             return None
             
         await RepositoryFactory.get("messages").update_one(
@@ -347,7 +347,7 @@ class MessageService:
     @staticmethod
     async def recall_message(message_id: str, current_user):
         msg = await RepositoryFactory.get("messages").find_one({"_id": message_id})
-        if not msg or msg["sender_id"] != str(current_user.get("id")):
+        if not msg or msg["sender_id"] != str(current_user.get('id')):
             return None
             
         recalled_content = "Message recalled by sender"
@@ -415,8 +415,8 @@ class MessageService:
             query["receiver_id"] = other_user_id
         else:
             query["$or"] = [
-                {"sender_id": str(current_user.get("id")), "receiver_id": other_user_id},
-                {"sender_id": other_user_id, "receiver_id": str(current_user.get("id"))},
+                {"sender_id": str(current_user.get('id')), "receiver_id": other_user_id},
+                {"sender_id": other_user_id, "receiver_id": str(current_user.get('id'))},
             ]
             
         messages = (
@@ -432,34 +432,34 @@ class MessageService:
         if other_user_id.startswith("group_"):
             group = await RepositoryFactory.get("message_groups").find_one({"_id": other_user_id})
             if group:
-                if group.get("created_by") == str(current_user.get("id")):
+                if group.get("created_by") == str(current_user.get('id')):
                     await RepositoryFactory.get("message_groups").delete_one({"_id": other_user_id})
                     await RepositoryFactory.get("messages").delete_many({"receiver_id": other_user_id})
                     await RepositoryFactory.get("conversations").delete_one({"_id": other_user_id})
                 else:
                     await RepositoryFactory.get("message_groups").update_one(
                         {"_id": other_user_id},
-                        {"$pull": {"members": str(current_user.get("id"))}},
+                        {"$pull": {"members": str(current_user.get('id'))}},
                     )
                     await RepositoryFactory.get("conversations").update_one(
                         {"_id": other_user_id},
-                        {"$addToSet": {"cleared_by": str(current_user.get("id"))}},
+                        {"$addToSet": {"cleared_by": str(current_user.get('id'))}},
                     )
             return {"status": "success"}
             
         await RepositoryFactory.get("messages").update_many(
             {
                 "$or": [
-                    {"sender_id": str(current_user.get("id")), "receiver_id": other_user_id},
-                    {"sender_id": other_user_id, "receiver_id": str(current_user.get("id"))},
+                    {"sender_id": str(current_user.get('id')), "receiver_id": other_user_id},
+                    {"sender_id": other_user_id, "receiver_id": str(current_user.get('id'))},
                 ]
             },
-            {"$addToSet": {"deleted_by": str(current_user.get("id"))}},
+            {"$addToSet": {"deleted_by": str(current_user.get('id'))}},
         )
-        participant_key = f"{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+        participant_key = f"{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         await RepositoryFactory.get("conversations").update_one(
             {"_id": participant_key},
-            {"$addToSet": {"cleared_by": str(current_user.get("id"))}},
+            {"$addToSet": {"cleared_by": str(current_user.get('id'))}},
         )
         return {"status": "success"}
 
@@ -471,7 +471,7 @@ class MessageService:
             
         await RepositoryFactory.get("messages").update_one(
             {"_id": message_id},
-            {"$pull": {"reactions": {"user_id": str(current_user.get("id"))}}},
+            {"$pull": {"reactions": {"user_id": str(current_user.get('id'))}}},
         )
         if reaction:
             await RepositoryFactory.get("messages").update_one(
@@ -479,7 +479,7 @@ class MessageService:
                 {
                     "$push": {
                         "reactions": {
-                            "user_id": str(current_user.get("id")),
+                            "user_id": str(current_user.get('id')),
                             "user_name": current_user.get("full_name"),
                             "reaction": reaction,
                         }
@@ -490,7 +490,7 @@ class MessageService:
 
     @staticmethod
     async def mark_as_read(other_user_id: str, current_user):
-        user_id = str(current_user.get("id"))
+        user_id = str(current_user.get('id'))
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
@@ -548,7 +548,7 @@ class MessageService:
             
         content = f"Shared document preview and link to access {doc.get('title')} at internal reference {document_id}"
         message = MessageInDB(
-            sender_id=str(current_user.get("id")),
+            sender_id=str(current_user.get('id')),
             receiver_id=receiver_id,
             content=content,
             image_url=None,
@@ -558,11 +558,11 @@ class MessageService:
         await RepositoryFactory.get("messages").insert_one(msg_dict)
         
         await MessageService._upsert_conversation(
-            str(current_user.get("id")),
+            str(current_user.get('id')),
             receiver_id,
             {
                 "_id": msg_dict["_id"],
-                "sender_id": str(current_user.get("id")),
+                "sender_id": str(current_user.get('id')),
                 "receiver_id": receiver_id,
                 "content": content,
                 "is_recalled": False,
@@ -578,8 +578,8 @@ class MessageService:
         else:
             query = {
                 "$or": [
-                    {"sender_id": str(current_user.get("id")), "receiver_id": other_user_id},
-                    {"sender_id": other_user_id, "receiver_id": str(current_user.get("id"))},
+                    {"sender_id": str(current_user.get('id')), "receiver_id": other_user_id},
+                    {"sender_id": other_user_id, "receiver_id": str(current_user.get('id'))},
                 ]
             }
         query["is_recalled"] = False
@@ -620,7 +620,7 @@ class MessageService:
     @staticmethod
     async def block_user(other_user_id: str, current_user) -> dict:
         await RepositoryFactory.get("user_contact_profiles").update_one(
-            {"_id": str(current_user.get("id"))},
+            {"_id": str(current_user.get('id'))},
             {"$addToSet": {"blocked_users": other_user_id}},
             upsert=True,
         )
@@ -629,7 +629,7 @@ class MessageService:
     @staticmethod
     async def unblock_user(other_user_id: str, current_user) -> dict:
         await RepositoryFactory.get("user_contact_profiles").update_one(
-            {"_id": str(current_user.get("id"))}, {"$pull": {"blocked_users": other_user_id}}
+            {"_id": str(current_user.get('id'))}, {"$pull": {"blocked_users": other_user_id}}
         )
         return {"status": "unblocked", "other_user_id": other_user_id}
 
@@ -647,21 +647,21 @@ class MessageService:
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
-            else f"{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+            else f"{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         )
         conv = await RepositoryFactory.get("conversations").find_one({"_id": participant_key})
         pinned_by = conv.get("pinned_by", []) if conv else []
-        is_pinned = str(current_user.get("id")) in pinned_by
+        is_pinned = str(current_user.get('id')) in pinned_by
         
         if is_pinned:
             await RepositoryFactory.get("conversations").update_one(
-                {"_id": participant_key}, {"$pull": {"pinned_by": str(current_user.get("id"))}}
+                {"_id": participant_key}, {"$pull": {"pinned_by": str(current_user.get('id'))}}
             )
             return {"is_pinned": False}
         else:
             await RepositoryFactory.get("conversations").update_one(
                 {"_id": participant_key},
-                {"$addToSet": {"pinned_by": str(current_user.get("id"))}},
+                {"$addToSet": {"pinned_by": str(current_user.get('id'))}},
             )
             return {"is_pinned": True}
 
@@ -697,11 +697,11 @@ class MessageService:
     @staticmethod
     async def create_group(group_name: str, member_ids: list, current_user):
         group_id = f"group_{uuid7()}"
-        members = list(set(member_ids + [str(current_user.get("id"))]))
+        members = list(set(member_ids + [str(current_user.get('id'))]))
         group_doc = {
             "_id": group_id,
             "group_name": group_name,
-            "created_by": str(current_user.get("id")),
+            "created_by": str(current_user.get('id')),
             "members": members,
             "created_at": datetime.now(timezone.utc),
         }
@@ -713,11 +713,11 @@ class MessageService:
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
-            else f"{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+            else f"{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         )
         await RepositoryFactory.get("conversations").update_one(
             {"_id": participant_key},
-            {"$set": {f"drafts.{current_user.get("id")}": content}},
+            {"$set": {f"drafts.{current_user.get('id')}": content}},
             upsert=True,
         )
         return {"status": "success"}
@@ -727,10 +727,10 @@ class MessageService:
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
-            else f"{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+            else f"{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         )
         conv = await RepositoryFactory.get("conversations").find_one({"_id": participant_key})
-        draft = conv.get("drafts", {}).get(str(current_user.get("id")), "") if conv else ""
+        draft = conv.get("drafts", {}).get(str(current_user.get('id')), "") if conv else ""
         return {"draft": draft}
 
     @staticmethod
@@ -738,7 +738,7 @@ class MessageService:
         settings_id = (
             other_user_id
             if other_user_id.startswith("group_")
-            else f"settings_{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+            else f"settings_{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         )
         await RepositoryFactory.get("message_settings").update_one(
             {"_id": settings_id},
@@ -752,21 +752,21 @@ class MessageService:
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
-            else f"{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+            else f"{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         )
         conv = await RepositoryFactory.get("conversations").find_one({"_id": participant_key})
         muted_by = conv.get("muted_by", []) if conv else []
-        is_muted = str(current_user.get("id")) in muted_by
+        is_muted = str(current_user.get('id')) in muted_by
         
         if is_muted:
             await RepositoryFactory.get("conversations").update_one(
-                {"_id": participant_key}, {"$pull": {"muted_by": str(current_user.get("id"))}}
+                {"_id": participant_key}, {"$pull": {"muted_by": str(current_user.get('id'))}}
             )
             return {"is_muted": False}
         else:
             await RepositoryFactory.get("conversations").update_one(
                 {"_id": participant_key},
-                {"$addToSet": {"muted_by": str(current_user.get("id"))}},
+                {"$addToSet": {"muted_by": str(current_user.get('id'))}},
             )
             return {"is_muted": True}
 
@@ -775,19 +775,19 @@ class MessageService:
         settings_id = (
             other_user_id
             if other_user_id.startswith("group_")
-            else f"settings_{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+            else f"settings_{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         )
         msg_settings = await RepositoryFactory.get("message_settings").find_one({"_id": settings_id})
 
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
-            else f"{min(str(current_user.get("id")), other_user_id)}_{max(str(current_user.get("id")), other_user_id)}"
+            else f"{min(str(current_user.get('id')), other_user_id)}_{max(str(current_user.get('id')), other_user_id)}"
         )
         conv = await RepositoryFactory.get("conversations").find_one({"_id": participant_key})
         
-        is_muted = str(current_user.get("id")) in conv.get("muted_by", []) if conv else False
-        is_pinned = str(current_user.get("id")) in conv.get("pinned_by", []) if conv else False
+        is_muted = str(current_user.get('id')) in conv.get("muted_by", []) if conv else False
+        is_pinned = str(current_user.get('id')) in conv.get("pinned_by", []) if conv else False
 
         return {
             "self_destruct_seconds": msg_settings.get("self_destruct_seconds", 0) if msg_settings else 0,

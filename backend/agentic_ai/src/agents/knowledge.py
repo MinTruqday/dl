@@ -3,7 +3,7 @@ from core.config import settings
 from langchain_core.messages import HumanMessage
 from loguru import logger
 from src.core.prompts import PromptType, prompt_registry
-from src.workflow.brain import llm
+from src.workflow.graph import llm
 
 class KnowledgeAgent:
     async def execute(self, req_data: dict) -> str:

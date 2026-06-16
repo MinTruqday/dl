@@ -10,8 +10,8 @@ router = APIRouter(prefix="/auth")
 
 @router.get("/me", response_model=APIResponse[UserResponse])
 async def read_users_me(current_user: dict = Depends(get_current_user)):
-    user_data = current_user.model_dump()
-    user_data["has_passkey"] = len(current_user.passkeys) > 0 if current_user.passkeys else False
+    user_data = current_user
+    user_data["has_passkey"] = len(current_user.get("passkeys", [])) > 0 if current_user.get("passkeys") else False
     return APIResponse(
         data=user_data,
         message="Requested personal profile information successfully retrieved from the system records",

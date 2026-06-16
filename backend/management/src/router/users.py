@@ -4,6 +4,12 @@ from core.dependency import get_current_user, get_db, require_role
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from src.schemas.management import InternalCreateUserRequest
+from src.schemas.users import (
+    UpdateRoleRequest,
+    UpdateStatusRequest,
+    ModerationActionRequest,
+    NoteRequest,
+)
 from src.services.users import UserService
 
 router = APIRouter(prefix="/users")
@@ -92,7 +98,7 @@ async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_slug(slug, db)
     return APIResponse(data=user, message="Detailed profile information for specified user has been successfully retrieved")
 
-@router.post("/", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("", response_model=APIResponse[Any], status_code=201, include_in_schema=False)
 async def internal_create_user(req: InternalCreateUserRequest, db=Depends(get_db)):
     user_id = await UserService.internal_create_user(req.model_dump(), db)
     return APIResponse(
