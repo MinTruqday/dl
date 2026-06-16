@@ -4,8 +4,7 @@ import re
 from collections import Counter
 from core.config import settings
 from core.dependency import get_current_user
-from core.repositories.base_repository import RepositoryFactory
-from core.schemas.user import RoleEnum, UserInDB
+from core.repositories.base import RepositoryFactory
 from fastapi import APIRouter, Depends, HTTPException
 from huggingface_hub import AsyncInferenceClient
 from loguru import logger
@@ -13,15 +12,15 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from src.core.prompt import PromptType, prompt_registry
 from src.rag.embedder import embedding_service
 from src.schemas.requests import ActionRequest, CitationRequest, CodeRequest, GenerationRequest, GrammarRequest, ReviewRequest, SentimentRequest, SummarizeRequest, SynthesisRequest, ToneRequest
-from src.store.vector import vector_store
+from src.store.vector_store import vector_store
 
 router = APIRouter(prefix="/inference")
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
-async def _check_quota(current_user: UserInDB):
+async def _check_quota(current_user: dict):
     try:
         async with httpx.AsyncClient() as c:
-            resp = await c.get(f"{settings.PROVISION_URL}/quota/verify", params={"user_id": str(current_user.id), "role": current_user.role.value, "ai_tier": current_user.ai_tier.value, "feature": "chat"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+            resp = await c.get(f"{settings.PROVISION_URL}/quota/verify", params={"user_id": str(current_user.get("id")), "role": current_user.get("role").value, "ai_tier": current_user.ai_tier.value, "feature": "chat"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
             if resp.status_code != 200:
                 raise HTTPException(status_code=429, detail="Your account has aggressively exceeded strictly allocated operational artificial intelligence network computation query quotas")
             return resp.json().get("data", {})
@@ -31,10 +30,10 @@ async def _check_quota(current_user: UserInDB):
         logger.error("The system failed executing necessary authentication checks verifying current individual active user query limits")
         return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
 
-async def _consume_quota(current_user: UserInDB, tokens: int, req_reset_hours: int = 24):
+async def _consume_quota(current_user: dict, tokens: int, req_reset_hours: int = 24):
     try:
         async with httpx.AsyncClient() as c:
-            await c.post(f"{settings.PROVISION_URL}/quota/consume", json={"user_id": str(current_user.id), "feature": "chat", "req_reset_hours": req_reset_hours, "tokens": tokens}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+            await c.post(f"{settings.PROVISION_URL}/quota/consume", json={"user_id": str(current_user.get("id")), "feature": "chat", "req_reset_hours": req_reset_hours, "tokens": tokens}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
     except Exception:
         logger.error("The backend infrastructure fundamentally failed correctly subtracting completely consumed computational tokens active user profile")
 
@@ -46,7 +45,7 @@ async def _chat_direct(messages: list, max_tokens: int = 500, temperature: float
         logger.error("The artificial intelligence system encountered an unexpected structural exception during language textual generation processing")
         raise Exception("The system encountered an unexpected error and requires you to try again later")
 
-async def _run_ai_with_quota(current_user: UserInDB, messages: list, max_tokens: int = 500, temperature: float = 0.3) -> str:
+async def _run_ai_with_quota(current_user: dict, messages: list, max_tokens: int = 500, temperature: float = 0.3) -> str:
     limits = await _check_quota(current_user)
     model = limits.get("model", settings.QWEN_MODEL)
     result = await _chat_direct(messages, max_tokens, temperature, model)
@@ -56,7 +55,7 @@ async def _run_ai_with_quota(current_user: UserInDB, messages: list, max_tokens:
     return result
 
 @router.post("/generate-content")
-async def generate_text(req: GenerationRequest, current_user: UserInDB = Depends(get_current_user)):
+async def generate_text(req: GenerationRequest, current_user: dict = Depends(get_current_user)):
     try:
         result = await _run_ai_with_quota(current_user, messages=[{"role": "user", "content": req.prompt}], max_tokens=req.max_tokens, temperature=req.temperature)
         return {"result": result}
@@ -64,7 +63,7 @@ async def generate_text(req: GenerationRequest, current_user: UserInDB = Depends
         raise HTTPException(status_code=500, detail="The system encountered an unexpected error and requires you to try again later")
 
 @router.post("/translate")
-async def translate_text(req: TranslationRequest, current_user: UserInDB = Depends(get_current_user)):
+async def translate_text(req: TranslationRequest, current_user: dict = Depends(get_current_user)):
     try:
         prompt = prompt_registry.get(PromptType.TRANSLATE).format(target_lang=req.target_lang, text=req.text)
         result = await _run_ai_with_quota(current_user, messages=[{"role": "user", "content": prompt}], max_tokens=len(req.text) * 3, temperature=0.1)
@@ -73,7 +72,7 @@ async def translate_text(req: TranslationRequest, current_user: UserInDB = Depen
         raise HTTPException(status_code=500, detail="The system encountered an unexpected error and requires you to try again later")
 
 @router.post("/sentiment-analysis")
-async def analyze_sentiment(req: SentimentRequest, current_user: UserInDB = Depends(get_current_user)):
+async def analyze_sentiment(req: SentimentRequest, current_user: dict = Depends(get_current_user)):
     try:
         texts_to_analyze = req.texts or []
         if req.document_id:
@@ -106,7 +105,7 @@ async def analyze_sentiment(req: SentimentRequest, current_user: UserInDB = Depe
         raise HTTPException(status_code=500, detail="The system encountered an unexpected error and requires you to try again later")
 
 @router.post("/generate-code")
-async def generate_code(req: CodeRequest, current_user: UserInDB = Depends(get_current_user)):
+async def generate_code(req: CodeRequest, current_user: dict = Depends(get_current_user)):
     try:
         prompt = prompt_registry.get(PromptType.CODE_GENERATION).format(language=req.language, prompt=req.prompt)
         result = await _run_ai_with_quota(current_user, messages=[{"role": "user", "content": prompt}], max_tokens=1024, temperature=0.2)
@@ -115,10 +114,10 @@ async def generate_code(req: CodeRequest, current_user: UserInDB = Depends(get_c
         raise HTTPException(status_code=500, detail="The system encountered an unexpected error and requires you to try again later")
 
 @router.post("/check-grammar")
-async def grammar_check(req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)):
+async def grammar_check(req: GrammarRequest, current_user: dict = Depends(get_current_user)):
     import difflib
     try:
-        if current_user.role != RoleEnum.ADMIN and current_user.ai_tier.value != "PREMIUM":
+        if current_user.get("role") != "admin" and current_user.ai_tier.value != "PREMIUM":
             raise HTTPException(status_code=403, detail="This specific advanced functional processing feature is strictly restricted allowing premium operational subscription profile access only")
         prompt = prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
         result = await _run_ai_with_quota(current_user, messages=[{"role": "user", "content": prompt}], max_tokens=len(req.text) + 200, temperature=0.1)
@@ -128,9 +127,9 @@ async def grammar_check(req: GrammarRequest, current_user: UserInDB = Depends(ge
         raise HTTPException(status_code=500, detail="The system encountered an unexpected error and requires you to try again later")
 
 @router.post("/check-plagiarism")
-async def check_plagiarism(req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)):
+async def check_plagiarism(req: GrammarRequest, current_user: dict = Depends(get_current_user)):
     try:
-        if current_user.role != RoleEnum.ADMIN and current_user.ai_tier.value != "PREMIUM":
+        if current_user.get("role") != "admin" and current_user.ai_tier.value != "PREMIUM":
             raise HTTPException(status_code=403, detail="This specific advanced functional processing feature is strictly restricted allowing premium operational subscription profile access only")
         query_vector = await embedding_service.embed_query(req.text[:2000])
         matches = await vector_store.query(query_vector=query_vector, limit=5)

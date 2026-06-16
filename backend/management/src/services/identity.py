@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from core.database import db_client
-from core.schemas.user import CreatorStatusEnum, KYCStatusEnum, RoleEnum
 from core.storage import upload_file
 from fastapi import HTTPException
 from loguru import logger
@@ -11,15 +10,15 @@ class IdentityService:
     @staticmethod
     async def become_author(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
-        if current_user.role != RoleEnum.READER:
+        user_id = str(current_user.get("id"))
+        if current_user.get("role") != "reader":
             raise HTTPException(
                 status_code=400,
                 detail="Action restricted because only accounts with standard reader privileges can upgrade",
             )
         await target_db["users"].update_one(
             {"_id": user_id},
-            {"$set": {"role": RoleEnum.AUTHOR, "updated_at": datetime.now(timezone.utc)}},
+            {"$set": {"role": "author", "updated_at": datetime.now(timezone.utc)}},
         )
         logger.info("Access privileges for specified user account elevated to author role")
         return {"status": "success", "message": "Account successfully upgraded and granted full author publishing privileges"}
@@ -27,10 +26,10 @@ class IdentityService:
     @staticmethod
     async def apply_author(application, current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
-        if current_user.role == RoleEnum.AUTHOR:
+        user_id = str(current_user.get("id"))
+        if current_user.get("role") == "author":
             raise HTTPException(status_code=400, detail="Specified account already configured with full author privileges and capabilities")
-        if current_user.role != RoleEnum.READER:
+        if current_user.get("role") != "reader":
             raise HTTPException(status_code=403, detail="Action restricted because only accounts with standard reader privileges can apply")
         if current_user.creator_status == CreatorStatusEnum.PENDING:
             raise HTTPException(status_code=400, detail="Previous application for author status is currently under active administrative review")
@@ -56,7 +55,7 @@ class IdentityService:
     @staticmethod
     async def upload_kyc(file, current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         if current_user.kyc_status == KYCStatusEnum.PENDING:
             raise HTTPException(status_code=400, detail="Submitted identity verification documents are currently under active administrative review")
         if current_user.kyc_status == KYCStatusEnum.VERIFIED:

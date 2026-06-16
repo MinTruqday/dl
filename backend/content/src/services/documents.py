@@ -4,7 +4,7 @@ from typing import List
 from bson import ObjectId
 from core.config import settings
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import HTTPException, Query
 from loguru import logger
 from passlib.context import CryptContext
@@ -43,15 +43,15 @@ class DocumentService:
         docs_collection = RepositoryFactory.get("documents")
         if await docs_collection.find_one({"slug": doc_in.slug}): raise HTTPException(status_code=400, detail="Operational routing identifier currently obstructed resolving completely different functional digital object")
         doc_dict = doc_in.model_dump()
-        if not doc_dict.get("publisher_name"): doc_dict["publisher_name"] = current_user.full_name
-        doc_doc = DocumentInDB(**doc_dict, creator_id=str(current_user.id))
+        if not doc_dict.get("publisher_name"): doc_dict["publisher_name"] = current_user.get("full_name")
+        doc_doc = DocumentInDB(**doc_dict, creator_id=str(current_user.get("id")))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
         logger.info("Fresh sophisticated binary artifact actively compiled securely registered remote structural cloud")
         return doc_doc
 
     @staticmethod
     async def get_my_documents(current_user, q: str = None, cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> list:
-        query = {"creator_id": str(current_user.id), "is_deleted": {"$ne": True}}
+        query = {"creator_id": str(current_user.get("id")), "is_deleted": {"$ne": True}}
         if q: query["$or"] = [{"title": {"$regex": q, "$options": "i"}}, {"description": {"$regex": q, "$options": "i"}}]
         if cursor: query["_id"] = {"$lt": cursor}
         docs = await RepositoryFactory.get("documents").find(query).sort("_id", -1).limit(limit).to_list(length=limit)
@@ -60,17 +60,17 @@ class DocumentService:
     @staticmethod
     async def update_document_content(document_id: str, content_in: DocumentContentUpdate, current_user):
         docs_collection = RepositoryFactory.get("documents")
-        document = await docs_collection.find_one({"_id": document_id, "creator_id": str(current_user.id)})
+        document = await docs_collection.find_one({"_id": document_id, "creator_id": str(current_user.get("id"))})
         if not document: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
         if content_in.expected_version and document.get("updated_at") and str(document.get("updated_at")).split("+")[0] != str(content_in.expected_version).split("+")[0]:
             raise HTTPException(status_code=409, detail="Database strict hierarchical lock prevents overlapping editing protecting prior synchronized mutations")
         if document.get("content"):
-            await RepositoryFactory.get("document_revisions").insert_one({"document_id": document_id, "creator_id": str(current_user.id), "content": document.get("content"), "content_format": document.get("content_format"), "created_at": datetime.now(timezone.utc), "note": "Auto-saved revision before update"})
+            await RepositoryFactory.get("document_revisions").insert_one({"document_id": document_id, "creator_id": str(current_user.get("id")), "content": document.get("content"), "content_format": document.get("content_format"), "created_at": datetime.now(timezone.utc), "note": "Auto-saved revision before update"})
         await docs_collection.update_one({"_id": document_id}, {"$set": {"content": content_in.content, "content_format": content_in.content_format, "updated_at": datetime.now(timezone.utc)}})
         if settings.SIGNAL_URL:
             try:
                 async with httpx.AsyncClient() as client:
-                    await client.post(f"{settings.SIGNAL_URL}/notifications/trigger", json={"target_user_id": str(current_user.id), "title": "Document updated", "body": "Document content successfully updated", "type": "DOCUMENT_UPDATE"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                    await client.post(f"{settings.SIGNAL_URL}/notifications/trigger", json={"target_user_id": str(current_user.get("id")), "title": "Document updated", "body": "Document content successfully updated", "type": "DOCUMENT_UPDATE"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
             except Exception: logger.error("Disruption navigating notification dispatch routing process transmitting core internal updates")
         logger.info("Binary payload matrix directly mapped overwriting existing target artifact completing seamlessly")
         if hasattr(db_client, "redis") and db_client.redis:
@@ -83,7 +83,7 @@ class DocumentService:
         docs_col = RepositoryFactory.get("documents")
         doc = await docs_col.find_one({"_id": document_id})
         if not doc: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
-        if doc.get("creator_id") != str(current_user.id) and current_user.role != "ADMIN": raise HTTPException(status_code=403, detail="Platform essentially blocked specific account avoiding altering unowned primary systematic logic")
+        if doc.get("creator_id") != str(current_user.get("id")) and current_user.get("role") != "ADMIN": raise HTTPException(status_code=403, detail="Platform essentially blocked specific account avoiding altering unowned primary systematic logic")
         if hasattr(doc_update, "expected_version") and doc_update.expected_version and doc.get("updated_at") and str(doc.get("updated_at")).split("+")[0] != str(doc_update.expected_version).split("+")[0]:
             raise HTTPException(status_code=409, detail="Database strict hierarchical lock prevents overlapping editing protecting prior synchronized mutations")
         update_data = {k: v for k, v in doc_update.model_dump().items() if v is not None}
@@ -91,7 +91,7 @@ class DocumentService:
             raise HTTPException(status_code=400, detail="Operational routing identifier currently obstructed resolving completely different functional digital object")
         if update_data:
             if doc.get("content") and "content" in update_data:
-                await RepositoryFactory.get("document_revisions").insert_one({"document_id": document_id, "creator_id": str(current_user.id), "content": doc.get("content"), "content_format": doc.get("content_format"), "created_at": datetime.now(timezone.utc), "note": "Auto-saved revision before update"})
+                await RepositoryFactory.get("document_revisions").insert_one({"document_id": document_id, "creator_id": str(current_user.get("id")), "content": doc.get("content"), "content_format": doc.get("content_format"), "created_at": datetime.now(timezone.utc), "note": "Auto-saved revision before update"})
             update_data["updated_at"] = datetime.now(timezone.utc)
             await docs_col.update_one({"_id": document_id}, {"$set": update_data})
         if hasattr(db_client, "redis") and db_client.redis:
@@ -112,10 +112,10 @@ class DocumentService:
 
     @staticmethod
     async def get_document_by_id(document_id: str, current_user, password: str = None):
-        user_id = str(current_user.id) if current_user else None
+        user_id = str(current_user.get("id")) if current_user else None
         document = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not document: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
-        if document.get("creator_id") != user_id and document.get("status") != DocumentStatus.PUBLISHED and (not current_user or current_user.role != "ADMIN"):
+        if document.get("creator_id") != user_id and document.get("status") != DocumentStatus.PUBLISHED and (not current_user or current_user.get("role") != "ADMIN"):
             raise HTTPException(status_code=403, detail="Active object fundamentally blocked remaining entirely shielded testing production pipeline stages")
         if document.get("is_password_protected") and document.get("creator_id") != user_id:
             if not password: return {"_id": str(document["_id"]), "title": document.get("title"), "is_password_protected": True}
@@ -135,26 +135,26 @@ class DocumentService:
 
     @staticmethod
     async def soft_delete_document(document_id: str, current_user) -> dict:
-        res = await RepositoryFactory.get("documents").update_one({"_id": document_id, "creator_id": str(current_user.id), "is_deleted": {"$ne": True}}, {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}})
+        res = await RepositoryFactory.get("documents").update_one({"_id": document_id, "creator_id": str(current_user.get("id")), "is_deleted": {"$ne": True}}, {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}})
         if res.modified_count == 0: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
         logger.info("Internal structural deletion procedure successfully shifted target isolating primary mapping array")
         return {"message": "Selected active functional item structurally transitioned entering volatile deletion pending array"}
 
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
-        res = await RepositoryFactory.get("documents").update_one({"_id": document_id, "creator_id": str(current_user.id), "is_deleted": True}, {"$set": {"is_deleted": False, "deleted_at": None}})
+        res = await RepositoryFactory.get("documents").update_one({"_id": document_id, "creator_id": str(current_user.get("id")), "is_deleted": True}, {"$set": {"is_deleted": False, "deleted_at": None}})
         if res.modified_count == 0: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
         logger.info("Volatile pending functional object dynamically reversed linking primary network tree reliably")
         return {"message": "Designated explicitly volatile unit dynamically relocated restoring overarching operational data map"}
 
     @staticmethod
     async def get_trash(current_user) -> list:
-        docs = await RepositoryFactory.get("documents").find({"creator_id": str(current_user.id), "is_deleted": True}).sort("deleted_at", -1).to_list(length=100)
+        docs = await RepositoryFactory.get("documents").find({"creator_id": str(current_user.get("id")), "is_deleted": True}).sort("deleted_at", -1).to_list(length=100)
         return [{"_id": str(b["_id"]), "title": b.get("title", ""), "deleted_at": (b["deleted_at"].isoformat() if isinstance(b.get("deleted_at"), datetime) else b.get("deleted_at"))} for b in docs]
 
     @staticmethod
     async def set_document_password(document_id: str, password: str, current_user) -> dict:
-        doc = await RepositoryFactory.get("documents").find_one({"_id": document_id, "creator_id": str(current_user.id)})
+        doc = await RepositoryFactory.get("documents").find_one({"_id": document_id, "creator_id": str(current_user.get("id"))})
         if not doc: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
         hashed = CryptContext(schemes=["bcrypt"], deprecated="auto").hash(password)
         await RepositoryFactory.get("documents").update_one({"_id": document_id}, {"$set": {"access_password_hash": hashed, "is_password_protected": True, "updated_at": datetime.now(timezone.utc)}})
@@ -165,13 +165,13 @@ class DocumentService:
     async def get_document_by_slug(slug: str, current_user=None):
         document = await RepositoryFactory.get("documents").find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}})
         if not document: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
-        user_id = str(current_user.id) if current_user else None
+        user_id = str(current_user.get("id")) if current_user else None
         has_purchased = False
         if user_id:
             if document.get("creator_id") == user_id: has_purchased = True
             else:
                 if await RepositoryFactory.get("purchases").find_one({"user_id": user_id, "item_id": str(document["_id"])}): has_purchased = True
-        is_privileged = current_user and current_user.role == "ADMIN"
+        is_privileged = current_user and current_user.get("role") == "ADMIN"
         if document.get("is_premium") and not has_purchased and not is_privileged:
             raw_content = document.get("content") or ""
             limit = document.get("preview_pages", 5)
@@ -220,7 +220,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_audit_logs(document_id: str, current_user) -> list:
-        if not await RepositoryFactory.get("documents").find_one({"_id": document_id, "creator_id": str(current_user.id)}, {"_id": 1}):
+        if not await RepositoryFactory.get("documents").find_one({"_id": document_id, "creator_id": str(current_user.get("id"))}, {"_id": 1}):
             raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
         logs = await RepositoryFactory.get("audit_logs").find({"document_id": document_id}).sort("timestamp", -1).limit(100).to_list(length=100)
         return [{"_id": str(log["_id"]), "action": log.get("action"), "actor_id": log.get("actor_id"), "reason": log.get("reason"), "timestamp": (log["timestamp"].isoformat() if isinstance(log.get("timestamp"), datetime) else log.get("timestamp"))} for log in logs]
@@ -242,13 +242,13 @@ class DocumentService:
     @staticmethod
     async def moderate_document(document_id: str, action: str, reason: str, current_user) -> dict:
         status_val = "PUBLISHED" if action == "approve" else "REJECTED"
-        await RepositoryFactory.get("documents").update_one({"_id": document_id}, {"$set": {"status": status_val, "moderation_reason": reason, "moderated_by": str(current_user.id), "moderated_at": datetime.now(timezone.utc)}})
+        await RepositoryFactory.get("documents").update_one({"_id": document_id}, {"$set": {"status": status_val, "moderation_reason": reason, "moderated_by": str(current_user.get("id")), "moderated_at": datetime.now(timezone.utc)}})
         if action == "approve":
             doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
             if doc:
                 await trigger_document_publish_job(document_id, doc.get("creator_id"))
                 logger.info("Background compilation structural thread initiated reliably preparing targeted operational artifact")
-        await RepositoryFactory.get("audit_logs").insert_one({"action": f"DOCUMENT_{status_val}", "actor_id": str(current_user.id), "document_id": document_id, "reason": reason, "timestamp": datetime.now(timezone.utc)})
+        await RepositoryFactory.get("audit_logs").insert_one({"action": f"DOCUMENT_{status_val}", "actor_id": str(current_user.get("id")), "document_id": document_id, "reason": reason, "timestamp": datetime.now(timezone.utc)})
         logger.info("Internal security overriding protocol cleanly approved validating target hierarchical status")
         return {"message": "Authoritative moderation filtering action definitely recorded securely modifying fundamental object"}
 

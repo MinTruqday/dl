@@ -1,10 +1,9 @@
 from typing import Any
 from core.dependency import get_current_user, get_db, require_role
 from core.response import APIResponse
-from core.schemas.quota import QuotaLimit
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends
 from src.schemas.management import ConsumeQuotaRequest
+from src.schemas.quotas import QuotaLimit
 from src.services.quotas import QuotaService
 
 router = APIRouter(prefix="/quotas")
@@ -19,15 +18,15 @@ async def check_quota_internal(user_id: str, role: str, ai_tier: str = "BASIC", 
     )
 
 @router.get("/me", response_model=APIResponse[Any])
-async def get_my_quota(current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
-    usage = await QuotaService.get_current_usage(str(current_user.id), current_user.role.value, current_user.ai_tier.value, db=db)
+async def get_my_quota(current_user: dict = Depends(get_current_user), db=Depends(get_db)):
+    usage = await QuotaService.get_current_usage(str(current_user.get("id")), current_user.get("role").value, current_user.ai_tier.value, db=db)
     return APIResponse(
         data=usage,
         message="Current resource usage quota information has been successfully retrieved from database"
     )
 
 @router.put("/{role}/config", response_model=APIResponse[Any])
-async def update_role_quota(role: str, limits: QuotaLimit, current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])), db=Depends(get_db)):
+async def update_role_quota(role: str, limits: QuotaLimit, current_user: dict = Depends(require_role(["admin"])), db=Depends(get_db)):
     await QuotaService.update_role_quota(role, limits.model_dump(), db=db)
     return APIResponse(
         data={},
@@ -35,7 +34,7 @@ async def update_role_quota(role: str, limits: QuotaLimit, current_user: UserInD
     )
 
 @router.get("/config", response_model=APIResponse[Any])
-async def get_global_config(current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])), db=Depends(get_db)):
+async def get_global_config(current_user: dict = Depends(require_role(["admin"])), db=Depends(get_db)):
     global_cfg = await QuotaService.get_global_config_from_db(db=db)
     return APIResponse(
         data=global_cfg,

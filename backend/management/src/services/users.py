@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from core.config import settings
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
@@ -57,9 +57,9 @@ class UserService:
         if not user:
             raise HTTPException(status_code=404, detail="System unable to locate user profile matching provided account identifier")
             
-        warning = {"_id": str(uuid7()), "user_id": user_id, "actor_id": str(current_user.id), "reason": reason, "created_at": datetime.now(timezone.utc)}
+        warning = {"_id": str(uuid7()), "user_id": user_id, "actor_id": str(current_user.get("id")), "reason": reason, "created_at": datetime.now(timezone.utc)}
         await RepositoryFactory.get("warnings").insert_one(warning)
-        await RepositoryFactory.get("audit_logs").insert_one({"action": "WARN_USER", "actor_id": str(current_user.id), "target_user_id": user_id, "reason": reason, "timestamp": datetime.now(timezone.utc)})
+        await RepositoryFactory.get("audit_logs").insert_one({"action": "WARN_USER", "actor_id": str(current_user.get("id")), "target_user_id": user_id, "reason": reason, "timestamp": datetime.now(timezone.utc)})
         
         try:
             if settings.SIGNAL_URL:
@@ -82,7 +82,7 @@ class UserService:
             {"_id": user_id},
             {"$set": {"is_active": False, "locked_until": lock_until, "lock_reason": reason, "updated_at": datetime.now(timezone.utc)}},
         )
-        await RepositoryFactory.get("audit_logs").insert_one({"action": "LOCK_USER", "actor_id": str(current_user.id), "target_user_id": user_id, "reason": reason, "duration": duration_hours, "timestamp": datetime.now(timezone.utc)})
+        await RepositoryFactory.get("audit_logs").insert_one({"action": "LOCK_USER", "actor_id": str(current_user.get("id")), "target_user_id": user_id, "reason": reason, "duration": duration_hours, "timestamp": datetime.now(timezone.utc)})
         logger.info("Specified user account temporarily suspended and restricted from accessing platform resources")
         return {"message": "Specified user account successfully locked and temporarily restricted from accessing system"}
 
@@ -93,7 +93,7 @@ class UserService:
             {"$set": {"is_shadowbanned": is_banned, "updated_at": datetime.now(timezone.utc)}},
         )
         action = "SHADOWBAN" if is_banned else "UNSHADOWBAN"
-        await RepositoryFactory.get("audit_logs").insert_one({"action": action, "actor_id": str(current_user.id), "target_user_id": user_id, "timestamp": datetime.now(timezone.utc)})
+        await RepositoryFactory.get("audit_logs").insert_one({"action": action, "actor_id": str(current_user.get("id")), "target_user_id": user_id, "timestamp": datetime.now(timezone.utc)})
         logger.info("Visibility restriction protocol for specified user account successfully applied or lifted")
         return {"message": "System visibility restriction status for specified account updated successfully"}
 
@@ -113,7 +113,7 @@ class UserService:
     @staticmethod
     async def add_note(user_id: str, note: str, current_user, db=None) -> dict:
         await RepositoryFactory.get("moderator_notes").insert_one(
-            {"_id": str(uuid7()), "user_id": user_id, "actor_id": str(current_user.id), "note": note, "created_at": datetime.now(timezone.utc)}
+            {"_id": str(uuid7()), "user_id": user_id, "actor_id": str(current_user.get("id")), "note": note, "created_at": datetime.now(timezone.utc)}
         )
         logger.info("Internal administrative note successfully attached to specified user profile by moderation staff")
         return {"message": "Internal administrative moderation note successfully saved and attached to user profile"}

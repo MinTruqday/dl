@@ -2,7 +2,7 @@ import httpx
 from core.config import settings
 from langchain_core.messages import HumanMessage
 from loguru import logger
-from src.core.prompt_registry import PromptType, prompt_registry
+from src.core.prompts import PromptType, prompt_registry
 from src.workflow.brain import llm
 
 class KnowledgeAgent:

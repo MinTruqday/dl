@@ -1,9 +1,9 @@
 import json
 from typing import Any
 from core.database import db_client
-from core.dependency import Depends, Query
+from fastapi import APIRouter, Depends, Query
 from core.dependency import get_current_user_from_header as get_current_user
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from core.response import APIResponse
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
@@ -78,7 +78,7 @@ async def toggle_pin(message_id: str, current_user=Depends(get_current_user)):
             status=400
         )
         
-    other_id = result["receiver_id"] if result["sender_id"] == str(current_user.id) else result["sender_id"]
+    other_id = result["receiver_id"] if result["sender_id"] == str(current_user.get("id")) else result["sender_id"]
     await publish_personal_message({"type": "message_pinned", "data": result}, other_id)
     return APIResponse(
         data=result["is_pinned"], 
@@ -102,7 +102,7 @@ async def edit_message(message_id: str, req: dict, current_user=Depends(get_curr
             status=403
         )
         
-    other_id = result["receiver_id"] if result["sender_id"] == str(current_user.id) else result["sender_id"]
+    other_id = result["receiver_id"] if result["sender_id"] == str(current_user.get("id")) else result["sender_id"]
     await publish_personal_message({"type": "message_edited", "data": result}, other_id)
     return APIResponse(
         data=result, 
@@ -119,7 +119,7 @@ async def recall_message(message_id: str, current_user=Depends(get_current_user)
             status=403
         )
         
-    other_id = result["receiver_id"] if result["sender_id"] == str(current_user.id) else result["sender_id"]
+    other_id = result["receiver_id"] if result["sender_id"] == str(current_user.get("id")) else result["sender_id"]
     await publish_personal_message({"type": "message_recalled", "data": result}, other_id)
     return APIResponse(
         data=result, 
@@ -144,7 +144,7 @@ async def add_reaction(message_id: str, req: dict, current_user=Depends(get_curr
             status=400
         )
         
-    other_id = result["receiver_id"] if result["sender_id"] == str(current_user.id) else result["sender_id"]
+    other_id = result["receiver_id"] if result["sender_id"] == str(current_user.get("id")) else result["sender_id"]
     await publish_personal_message({"type": "message_reaction", "data": result}, other_id)
     return APIResponse(
         data=result, 
@@ -155,7 +155,7 @@ async def add_reaction(message_id: str, req: dict, current_user=Depends(get_curr
 async def mark_as_read(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.mark_as_read(other_user_id, current_user)
     await publish_personal_message(
-        {"type": "messages_read", "data": {"viewer_id": str(current_user.id)}}, 
+        {"type": "messages_read", "data": {"viewer_id": str(current_user.get("id"))}}, 
         other_user_id
     )
     return APIResponse(
@@ -209,7 +209,7 @@ async def unblock_user(other_user_id: str, current_user=Depends(get_current_user
 
 @router.get("/{other_user_id}/block-status", response_model=APIResponse[Any])
 async def get_blocked_status(other_user_id: str, current_user=Depends(get_current_user)):
-    blocked = await MessageService.check_blocked_status(str(current_user.id), other_user_id)
+    blocked = await MessageService.check_blocked_status(str(current_user.get("id")), other_user_id)
     return APIResponse(
         data={"is_blocked": blocked}, 
         message="Interaction restriction status between specified accounts successfully verified"

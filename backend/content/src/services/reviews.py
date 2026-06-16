@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -10,7 +10,7 @@ class ReviewService:
     async def rate_document(document_id: str, rating_data, current_user, db=None):
         db = db or db_client.mongodb.get_default_database()
         await RepositoryFactory.get("reviews").update_one(
-            {"user_id": str(current_user.id), "document_id": document_id},
+            {"user_id": str(current_user.get("id")), "document_id": document_id},
             {"$set": {"rating": rating_data.rating, "review_text": rating_data.review_text, "created_at": datetime.now(timezone.utc)}},
             upsert=True,
         )
@@ -24,7 +24,7 @@ class ReviewService:
         description = getattr(data, "description", None) or getattr(data, "context_text", "") or ""
         report = {
             "_id": str(uuid7()),
-            "user_id": str(current_user.id),
+            "user_id": str(current_user.get("id")),
             "document_id": document_id,
             "text_excerpt": text_excerpt[:500] if text_excerpt else "",
             "description": description[:300] if description else "",
@@ -38,7 +38,7 @@ class ReviewService:
     @staticmethod
     async def get_typo_reports(document_id: str, current_user, db=None) -> list:
         db = db or db_client.mongodb.get_default_database()
-        reports = await RepositoryFactory.get("typo_reports").find({"document_id": document_id, "user_id": str(current_user.id)}).sort("created_at", -1).to_list(length=50)
+        reports = await RepositoryFactory.get("typo_reports").find({"document_id": document_id, "user_id": str(current_user.get("id"))}).sort("created_at", -1).to_list(length=50)
         return [{"_id": str(r["_id"]), "text_excerpt": r.get("text_excerpt", ""), "description": r.get("description", ""), "status": r.get("status", "pending"), "created_at": (r["created_at"].isoformat() if isinstance(r.get("created_at"), datetime) else "")} for r in reports]
 
     @staticmethod
@@ -48,8 +48,8 @@ class ReviewService:
         review_item = {
             "_id": str(uuid7()),
             "document_id": document_id,
-            "user_id": str(current_user.id),
-            "full_name": current_user.full_name or "Anonymous collaborator",
+            "user_id": str(current_user.get("id")),
+            "full_name": current_user.get("full_name") or "Anonymous collaborator",
             "avatar_url": getattr(current_user, "avatar_url", None),
             "rating": review_in.rating,
             "content": content_text,
@@ -57,7 +57,7 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("reviews").update_one(
-            {"user_id": str(current_user.id), "document_id": document_id},
+            {"user_id": str(current_user.get("id")), "document_id": document_id},
             {"$set": review_item},
             upsert=True,
         )
@@ -85,7 +85,7 @@ class ReviewService:
         description = getattr(data, "description", None) or getattr(data, "details", "") or ""
         report = {
             "_id": str(uuid7()),
-            "reporter_id": str(current_user.id),
+            "reporter_id": str(current_user.get("id")),
             "item_type": item_type,
             "item_id": item_id,
             "reason": data.reason,

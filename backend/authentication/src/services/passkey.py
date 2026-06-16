@@ -5,7 +5,7 @@ import httpx
 from core.config import settings
 from fastapi import HTTPException
 from loguru import logger
-from src.repositories.auth import AuthRepository
+from src.repositories.auth_repository import AuthRepository
 from src.services.auth import AuthService
 from webauthn import (
     generate_authentication_options,

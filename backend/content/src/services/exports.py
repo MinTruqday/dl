@@ -1,7 +1,7 @@
 import asyncio
 import io
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 
@@ -23,8 +23,8 @@ class ExportService:
         db = db or db_client.mongodb.get_default_database()
         document = await RepositoryFactory.get("documents").find_one({"_id": str(document_id)})
         if not document: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
-        user_id = str(current_user.id)
-        if document.get("is_premium") and document.get("creator_id") != user_id and (not hasattr(current_user, "role") or current_user.role != "ADMIN"):
+        user_id = str(current_user.get("id"))
+        if document.get("is_premium") and document.get("creator_id") != user_id and (not hasattr(current_user, "role") or current_user.get("role") != "ADMIN"):
             if not await RepositoryFactory.get("purchases").find_one({"user_id": user_id, "item_id": str(document["_id"])}):
                 raise HTTPException(status_code=403, detail="Platform essentially blocked specific account avoiding altering unowned primary systematic logic")
         

@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from loguru import logger
 from src.rag.ingestion_pipeline import ingestion_pipeline
 from src.schemas.requests import IngestRequest
-from src.store.vector import vector_store
+from src.store.vector_store import vector_store
 
 router = APIRouter(prefix="/ingestion")
 

@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
+from src.schemas.users import RoleEnum
 
 class CampaignRequest(BaseModel):
     title: str
@@ -22,5 +23,9 @@ class InternalCreateUserRequest(BaseModel):
     email: str
     password_hash: Optional[str] = None
     full_name: str
-    role: str = "READER"
+    role: RoleEnum = RoleEnum.READER
     slug: str
+
+class CollectionRequest(BaseModel):
+    source: str
+    pages: int

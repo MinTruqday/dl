@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Literal, Optional
 from core.config import settings
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 

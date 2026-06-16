@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timezone
 from core.config import settings
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from huggingface_hub import HfApi
 from loguru import logger

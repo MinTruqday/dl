@@ -1,16 +1,15 @@
 import httpx
 from core.config import settings
 from core.dependency import get_current_user
-from core.schemas.user import UserInDB
 from fastapi import Depends, HTTPException
 from loguru import logger
 
-async def check_quota(current_user: UserInDB = Depends(get_current_user)):
+async def check_quota(current_user: dict = Depends(get_current_user)):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
             resp = await client.get(
                 f"{settings.PROVISION_URL}/quota/verify",
-                params={"user_id": str(current_user.id), "role": current_user.role.value},
+                params={"user_id": str(current_user.get("id")), "role": current_user.get("role").value},
             )
             if resp.status_code == 429:
                 raise HTTPException(status_code=429, detail="Storage quota exceeded allocated operational limits")

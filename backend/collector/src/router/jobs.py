@@ -1,8 +1,7 @@
 import os
 from datetime import datetime, timezone
 from core.config import settings
-from core.repositories.base_repository import RepositoryFactory
-from core.schemas.collector import CollectionRequest
+from core.repositories.base import RepositoryFactory
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient

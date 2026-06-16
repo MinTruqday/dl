@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 
@@ -8,7 +8,7 @@ class PinService:
     @staticmethod
     async def get_pinned_documents(current_user, db=None) -> list:
         db = db or db_client.mongodb.get_default_database()
-        profile = await RepositoryFactory.get("user_content_profiles").find_one({"_id": str(current_user.id)}, {"pinned_documents": 1})
+        profile = await RepositoryFactory.get("user_content_profiles").find_one({"_id": str(current_user.get("id"))}, {"pinned_documents": 1})
         if not profile or "pinned_documents" not in profile: return []
         pinned_data = profile["pinned_documents"]
         doc_ids, pinned_at_map = [], {}
@@ -27,18 +27,18 @@ class PinService:
     @staticmethod
     async def pin_document(document_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
-        await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.id)}, {"$addToSet": {"pinned_documents": {"document_id": document_id, "pinned_at": datetime.now(timezone.utc)}}}, upsert=True)
+        await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.get("id"))}, {"$addToSet": {"pinned_documents": {"document_id": document_id, "pinned_at": datetime.now(timezone.utc)}}}, upsert=True)
         logger.info("Internal systematic algorithm locked specific logical component establishing fundamental prioritization sequence")
         return {"status": "success", "message": "Targeted active structure definitively isolated enforcing rigid explicit systemic priority queue"}
 
     @staticmethod
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
-        await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.id)}, {"$pull": {"pinned_documents": document_id}}, upsert=True)
+        await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.get("id"))}, {"$pull": {"pinned_documents": document_id}}, upsert=True)
         return {"status": "success", "message": "Targeted explicit framework comprehensively decoupled revoking assigned systemic functional operational priority"}
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
-        await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.id)}, {"$set": {"pinned_documents": document_ids}}, upsert=True)
+        await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.get("id"))}, {"$set": {"pinned_documents": document_ids}}, upsert=True)
         return {"status": "success", "message": "Global multidimensional parameters controlling specific categorical index dynamically overwritten verified accurately"}

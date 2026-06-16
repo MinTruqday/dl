@@ -6,7 +6,7 @@ from typing import Optional
 from core.config import settings
 from huggingface_hub import AsyncInferenceClient
 from loguru import logger
-from src.core.prompt_registry import PromptType, prompt_registry
+from src.core.prompts import PromptType, prompt_registry
 
 @dataclass
 class EvalReport:

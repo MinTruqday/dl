@@ -1,8 +1,8 @@
 from typing import Any
 from core.dependency import get_db
 from core.response import APIResponse
-from core.schemas.user import PasskeyFinishRequest, PasskeyRequest
 from fastapi import APIRouter, Depends
+from src.schemas.auth import PasskeyRequest, PasskeyFinishRequest
 from src.services.passkey import PasskeyService
 
 router = APIRouter(prefix="/auth/passkey")

@@ -7,7 +7,6 @@ from typing import Optional
 import httpx
 import jwt
 from core.config import settings
-from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
@@ -166,7 +165,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
         response = await _make_api_request("DELETE", f"{INTERNAL_API_URL}/documents/{document_id}", headers={"Authorization": token}, timeout=settings.LONG_PROCESS_TIMEOUT)
         if response.status_code == 200:
             try:
-                from src.store.vector import vector_store
+                from src.store.vector_store import vector_store
                 await vector_store.delete_by_document(document_id)
                 logger.info("The system successfully completed the index cleanup for the specified document")
             except Exception:

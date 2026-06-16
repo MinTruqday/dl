@@ -1,9 +1,8 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 import httpx
 import jwt
 from core.config import settings
 from core.database import db_client
-from core.schemas.user import RoleEnum, UserInDB
 from core.security import ALGORITHM, SECRET_KEY
 from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
@@ -19,7 +18,7 @@ class AuthenticatedUser:
 async def get_db():
     return db_client.mongodb[settings.MONGODB_DB_NAME]
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Current authentication session is either invalid or has expired so please log in again",
@@ -62,11 +61,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
             raise credentials_exception
 
     user_doc["_id"] = user_id_str
-    return UserInDB(**user_doc)
+    user_doc["id"] = user_id_str
+    return user_doc
 
 async def get_current_user_optional(
     token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False))
-) -> Optional[UserInDB]:
+) -> Optional[Dict[str, Any]]:
     if not token:
         return None
     try:
@@ -74,14 +74,14 @@ async def get_current_user_optional(
     except HTTPException:
         return None
 
-async def get_current_user_token_param(token: str) -> UserInDB:
+async def get_current_user_token_param(token: str) -> Dict[str, Any]:
     return await get_current_user(token)
 
-def require_role(required_roles: List[RoleEnum]):
-    async def role_checker(current_user: UserInDB = Depends(get_current_user)) -> UserInDB:
-        if current_user.role == RoleEnum.ADMIN:
+def require_role(required_roles: List[str]):
+    async def role_checker(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+        if current_user.get("role") == "admin":
             return current_user
-        if current_user.role not in required_roles:
+        if current_user.get("role") not in required_roles:
             logger.warning("Access attempt was automatically rejected by system because account lacks required authorization tier permissions")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -123,9 +123,9 @@ class RateLimiter:
         return True
 
 def require_permissions(required_permissions: List[str]):
-    async def permission_checker(current_user: UserInDB = Depends(get_current_user)) -> UserInDB:
-        user_perms = current_user.permissions or []
-        if current_user.role == RoleEnum.ADMIN:
+    async def permission_checker(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+        user_perms = current_user.get("permissions", [])
+        if current_user.get("role") == "admin":
             return current_user
             
         missing = [p for p in required_permissions if p not in user_perms]

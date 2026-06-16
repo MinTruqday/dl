@@ -2,7 +2,7 @@ import sys
 from contextlib import asynccontextmanager
 from core.config import settings
 from core.middleware import add_trace_id_header, trace_id_filter
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
@@ -17,7 +17,7 @@ from src.router.finetuning import router as finetune_router
 from src.router.history import router as history_router
 from src.router.inference import router as inference_router
 from src.router.ingestion import router as ingest_router
-from src.store.vector import vector_store
+from src.store.vector_store import vector_store
 
 logger.remove()
 logger.add(

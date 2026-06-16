@@ -5,7 +5,7 @@ from typing import List
 import httpx
 from bson import ObjectId
 from core.config import settings
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -78,7 +78,7 @@ class EditorService:
     async def sync_keystroke_buffer(document_id: str, payload: dict, current_user, redis_client=None, db=None):
         try:
             if redis_client:
-                user_id = str(current_user.id)
+                user_id = str(current_user.get("id"))
                 await redis_client.publish(f"editor:{document_id}:keystroke", str(payload))
                 await redis_client.hset(f"editor_snapshot:{document_id}", user_id, str(payload))
             return {"status": "synced_cache", "timestamp": payload.get("timestamp")}
@@ -88,7 +88,7 @@ class EditorService:
 
     @staticmethod
     async def add_inline_suggestion(document_id: str, payload: dict, current_user, db=None):
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         await RepositoryFactory.get("editor_suggestions").insert_one(
             {
                 "document_id": str(document_id),
@@ -105,7 +105,7 @@ class EditorService:
 
     @staticmethod
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user, db=None):
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         sug = await RepositoryFactory.get("editor_suggestions").find_one({"_id": ObjectId(suggestion_id)})
         if not sug:
             raise HTTPException(
@@ -129,7 +129,7 @@ class EditorService:
 
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         await RepositoryFactory.get("pomodoro_sessions").insert_one(
             {
                 "user_id": user_id,
@@ -163,7 +163,7 @@ class EditorService:
             content_str = re.sub(r" on\w+\s*=", " ", content_str, flags=re.IGNORECASE)
             content = json.loads(content_str)
 
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         toc = []
         words = 0
         try:
@@ -205,7 +205,7 @@ class EditorService:
 
     @staticmethod
     async def submit_for_review(document_id: str, current_user, db=None):
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id, "creator_id": user_id},
             {"$set": {"editor_review_status": "pending_review"}},
@@ -222,7 +222,7 @@ class EditorService:
         current_user,
         db=None,
     ):
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         document = await RepositoryFactory.get("documents").find_one(
             {"_id": str(document_id), "creator_id": user_id}
         )
@@ -413,8 +413,8 @@ class EditorService:
         comment = {
             "_id": comment_id,
             "document_id": document_id,
-            "user_id": str(current_user.id),
-            "user_name": current_user.full_name,
+            "user_id": str(current_user.get("id")),
+            "user_name": current_user.get("full_name"),
             "block_id": data["block_id"],
             "text": data["text"],
             "selected_text": data.get("selected_text", ""),
@@ -450,7 +450,7 @@ class EditorService:
             )
 
         doc = await RepositoryFactory.get("documents").find_one({"_id": comment["document_id"]})
-        if doc and str(doc.get("creator_id")) != str(current_user.id) and comment.get("user_id") != str(current_user.id):
+        if doc and str(doc.get("creator_id")) != str(current_user.get("id")) and comment.get("user_id") != str(current_user.get("id")):
             raise HTTPException(
                 status_code=403, 
                 detail="Current account lacks necessary authorization to mark specific comment as resolved"
@@ -461,7 +461,7 @@ class EditorService:
             {
                 "$set": {
                     "status": "resolved",
-                    "resolved_by": str(current_user.id),
+                    "resolved_by": str(current_user.get("id")),
                     "resolved_at": datetime.now(timezone.utc),
                 }
             },
@@ -487,7 +487,7 @@ class EditorService:
     @staticmethod
     async def check_deep_plagiarism(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "creator_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.get("id"))}
         )
         if not doc:
             raise HTTPException(
@@ -532,7 +532,7 @@ class EditorService:
     @staticmethod
     async def check_grammar(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "creator_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.get("id"))}
         )
         if not doc:
             raise HTTPException(

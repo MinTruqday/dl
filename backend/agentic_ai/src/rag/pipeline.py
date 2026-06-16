@@ -3,7 +3,7 @@ from core.config import settings
 from loguru import logger
 from src.rag.chunker import document_chunker
 from src.rag.embedder import embedding_service
-from src.store.vector import vector_store
+from src.store.vector_store import vector_store
 
 class IngestionPipeline:
     async def ingest_document(self, document_id: str) -> dict:

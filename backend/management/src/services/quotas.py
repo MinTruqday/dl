@@ -1,7 +1,7 @@
 import math
 from core.config import settings
 from core.database import db_client
-from core.schemas.quota import QuotaLimit
+from src.schemas.quotas import QuotaLimit
 from fastapi import HTTPException
 
 class QuotaService:
@@ -16,7 +16,7 @@ class QuotaService:
             "BASIC": {"daily_requests": 10, "daily_tokens": 3000, "req_reset_hours": 24, "max_docs": 1, "model": settings.QWEN_MODEL, "thinking": False},
             "PRO": {"daily_requests": 25, "daily_tokens": 7500, "req_reset_hours": 5, "max_docs": 5, "model": settings.LLAMA_MODEL, "thinking": False},
             "PREMIUM": {"daily_requests": 100, "daily_tokens": 30000, "req_reset_hours": 5, "max_docs": -1, "model": settings.LLAMA_MODEL, "thinking": True},
-            "admin": {"daily_requests": -1, "daily_tokens": -1, "req_reset_hours": 24, "max_docs": -1, "model": settings.LLAMA_MODEL, "thinking": True},
+            "admin": {"daily_requests": math.inf, "daily_tokens": math.inf, "req_reset_hours": 0, "max_docs": math.inf, "model": settings.LLAMA_MODEL, "thinking": True},
         }
         await db_client.db.quota_configs.update_one({"_id": "global"}, {"$set": {"role_limits": default_limits}}, upsert=True)
         return default_limits

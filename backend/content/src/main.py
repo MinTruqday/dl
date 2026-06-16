@@ -5,21 +5,21 @@ from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.routers.bookmarks import router as bookmark_router
-from src.routers.collaboration import router as collaboration_router
-from src.routers.discovery import router as discovery_router
-from src.routers.documents import router as document_router
-from src.routers.drafts import router as draft_router
-from src.routers.exports import router as export_router
-from src.routers.highlights import router as highlight_router
-from src.routers.library import router as library_router
-from src.routers.pins import router as pin_router
-from src.routers.publication import router as publication_router
-from src.routers.reading import router as reading_router
-from src.routers.reviews import router as review_router
-from src.routers.storage import router as storage_router
-from src.routers.uploads import router as upload_router
-from src.routers.versions import router as version_router
+from src.router.bookmarks import router as bookmark_router
+from src.router.collaboration import router as collaboration_router
+from src.router.discovery import router as discovery_router
+from src.router.documents import router as document_router
+from src.router.drafts import router as draft_router
+from src.router.exports import router as export_router
+from src.router.highlights import router as highlight_router
+from src.router.library import router as library_router
+from src.router.pins import router as pin_router
+from src.router.publication import router as publication_router
+from src.router.reading import router as reading_router
+from src.router.reviews import router as review_router
+from src.router.storage import router as storage_router
+from src.router.uploads import router as upload_router
+from src.router.versions import router as version_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

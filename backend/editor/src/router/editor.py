@@ -1,7 +1,6 @@
 from core.config import settings
 from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.dependency import get_current_user_from_header as get_current_user
-from core.schemas.inference import AISuggestionRequest
 from fastapi import APIRouter
 from src.schemas.documents import (
     AutoSaveRequest,
@@ -16,7 +15,7 @@ from src.schemas.documents import (
 from src.services.documents import EditorService
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
-    if current_user.ai_tier.value not in ["PREMIUM"] and current_user.role.value != "admin":
+    if current_user.ai_tier.value not in ["PREMIUM"] and current_user.get("role").value != "admin":
         raise HTTPException(
             status_code=403, 
             detail="Access to advanced artificial intelligence capabilities requires active premium subscription plan"

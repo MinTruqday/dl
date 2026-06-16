@@ -8,7 +8,7 @@ class PricingService:
     @staticmethod
     async def set_document_pricing(document_id: str, data: dict, current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        doc = await target_db["documents"].find_one({"_id": document_id, "creator_id": str(current_user.id)})
+        doc = await target_db["documents"].find_one({"_id": document_id, "creator_id": str(current_user.get("id"))})
         
         if not doc:
             raise HTTPException(status_code=404, detail="Requested digital document could not be located in primary storage repository")

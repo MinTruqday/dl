@@ -4,9 +4,8 @@ import aiofiles
 import shutil
 from typing import Any
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
-from src.dependencies import get_db, require_role
+from core.dependency import get_db, require_role
 from src.services.uploads import UploadService
 
 router = APIRouter(prefix="/upload")
@@ -20,7 +19,7 @@ async def validate_svg(file: UploadFile):
         await file.seek(0)
 
 @router.post("/images", response_model=APIResponse[Any])
-async def upload_image(file: UploadFile = File(...), current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
+async def upload_image(file: UploadFile = File(...), current_user: dict = Depends(require_role(["author", "admin"])), db=Depends(get_db)) -> Any:
     await validate_svg(file)
     return APIResponse(
         data=await UploadService.upload_image(file, db=db),
@@ -29,7 +28,7 @@ async def upload_image(file: UploadFile = File(...), current_user: UserInDB = De
     )
 
 @router.post("/documents", response_model=APIResponse[Any])
-async def upload_document(file: UploadFile = File(...), current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
+async def upload_document(file: UploadFile = File(...), current_user: dict = Depends(require_role(["author", "admin"])), db=Depends(get_db)) -> Any:
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
         message="Digital document successfully uploaded and securely registered within primary system repository",
@@ -37,9 +36,9 @@ async def upload_document(file: UploadFile = File(...), current_user: UserInDB =
     )
 
 @router.post("/files", response_model=APIResponse[Any])
-async def upload_asset(file: UploadFile = File(...), current_user: UserInDB = Depends(require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
+async def upload_asset(file: UploadFile = File(...), current_user: dict = Depends(require_role(["reader", "author", "admin"])), db=Depends(get_db)) -> Any:
     from src.services.storage import StorageService
-    quota = await StorageService.get_storage_quota(current_user.id, db=db)
+    quota = await StorageService.get_storage_quota(current_user.get("id"), db=db)
     if quota["used"] >= quota["limit"]:
         raise HTTPException(status_code=400, detail="File upload sequence rejected because account exceeded maximum allocated structural capacity")
     return APIResponse(
@@ -49,7 +48,7 @@ async def upload_asset(file: UploadFile = File(...), current_user: UserInDB = De
     )
 
 @router.get("/storage/{file_path:path}", response_model=APIResponse[Any])
-async def get_presigned_download_url(file_path: str, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
+async def get_presigned_download_url(file_path: str, current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     return APIResponse(
         data=await UploadService.get_presigned_url(file_path, db=db),
         message="Cryptographically secure access download link for requested asset successfully generated functionally",
@@ -62,7 +61,7 @@ class MockFile:
         self.filename = n
 
 @router.post("/segments", response_model=APIResponse[Any])
-async def upload_chunk(file: UploadFile = File(...), upload_id: str = Form(...), chunk_index: int = Form(...), total_chunks: int = Form(...), filename: str = Form(...), current_user: UserInDB = Depends(require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
+async def upload_chunk(file: UploadFile = File(...), upload_id: str = Form(...), chunk_index: int = Form(...), total_chunks: int = Form(...), filename: str = Form(...), current_user: dict = Depends(require_role(["reader", "author", "admin"])), db=Depends(get_db)) -> Any:
     chunk_dir = f"storage/chunks/{upload_id}"
     os.makedirs(chunk_dir, exist_ok=True)
     chunk_path = os.path.join(chunk_dir, f"chunk_{chunk_index}")

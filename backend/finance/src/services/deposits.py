@@ -64,7 +64,7 @@ class DepositService:
         await target_db["orders"].insert_one(
             {
                 "order_code": order_code,
-                "user_id": str(current_user.id),
+                "user_id": str(current_user.get("id")),
                 "amount": req.amount,
                 "dl": req.amount // 1000,
                 "gateway": "PAYOS",
@@ -147,11 +147,11 @@ class DepositService:
         
         if not order:
             raise HTTPException(status_code=404, detail="System unable to locate deposit transaction matching provided gateway reference identifier")
-        if order.get("user_id") != str(current_user.id):
+        if order.get("user_id") != str(current_user.get("id")):
             raise HTTPException(status_code=403, detail="Current account lacks required authorization to view details of specific transaction")
 
         if getattr(db_client, "redis", None):
-            rl_key = f"rl:verify_deposit:{current_user.id}"
+            rl_key = f"rl:verify_deposit:{current_user.get('id')}"
             try:
                 attempts = await db_client.redis.incr(rl_key)
                 if attempts == 1:

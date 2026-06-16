@@ -21,7 +21,7 @@ class PurchaseService:
         if current_user.ai_tier and current_user.ai_tier.value == tier:
             raise HTTPException(status_code=400, detail="Account already has active plan matching selected membership subscription tier")
 
-        wallet = await target_db["wallets"].find_one({"_id": str(current_user.id)})
+        wallet = await target_db["wallets"].find_one({"_id": str(current_user.get("id"))})
         if not wallet or wallet.get("balance", 0) < price:
             raise HTTPException(status_code=400, detail="Insufficient digital balance to acquire requested membership subscription plan tier")
 
@@ -29,7 +29,7 @@ class PurchaseService:
         session.start_transaction()
         try:
             deduct_result = await target_db["wallets"].update_one(
-                {"_id": str(current_user.id), "balance": {"$gte": price}},
+                {"_id": str(current_user.get("id")), "balance": {"$gte": price}},
                 {"$inc": {"balance": -price}},
                 session=session,
             )
@@ -38,13 +38,13 @@ class PurchaseService:
                 raise HTTPException(status_code=400, detail="Insufficient digital balance to acquire requested membership subscription plan tier")
 
             await target_db["users"].update_one(
-                {"_id": str(current_user.id)},
+                {"_id": str(current_user.get("id"))},
                 {"$set": {"ai_tier": tier}},
                 session=session,
             )
 
             tx = Transaction(
-                user_id=str(current_user.id),
+                user_id=str(current_user.get("id")),
                 type=TransactionType.PURCHASE,
                 amount=-price,
                 note=f"Membership upgrade to requested premium tier plan",
@@ -87,7 +87,7 @@ class PurchaseService:
                 await session.end_session()
             return {"message": "Specified digital document is currently freely accessible without financial purchase", "status": "free"}
             
-        wallet = await target_db["wallets"].find_one({"_id": str(current_user.id)})
+        wallet = await target_db["wallets"].find_one({"_id": str(current_user.get("id"))})
         if not wallet or wallet.get("balance", 0) < price:
             if should_close_session:
                 await session.abort_transaction()
@@ -96,11 +96,11 @@ class PurchaseService:
             
         lock = None
         if hasattr(db_client, "redis") and db_client.redis:
-            lock = db_client.redis.lock(f"purchase:{current_user.id}:{document_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+            lock = db_client.redis.lock(f"purchase:{current_user.get('id')}:{document_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
             await lock.acquire()
             
         try:
-            existing = await target_db["purchases"].find_one({"user_id": str(current_user.id), "document_id": document_id, "item_type": "document"})
+            existing = await target_db["purchases"].find_one({"user_id": str(current_user.get("id")), "document_id": document_id, "item_type": "document"})
             if existing:
                 if should_close_session:
                     await session.abort_transaction()
@@ -109,7 +109,7 @@ class PurchaseService:
             creator_id = doc.get("creator_id")
             try:
                 deduct_result = await target_db["wallets"].update_one(
-                    {"_id": str(current_user.id), "balance": {"$gte": price}},
+                    {"_id": str(current_user.get("id")), "balance": {"$gte": price}},
                     {"$inc": {"balance": -price}},
                     session=session,
                 )
@@ -124,7 +124,7 @@ class PurchaseService:
                 await target_db["purchases"].insert_one(
                     {
                         "_id": str(uuid7()),
-                        "user_id": str(current_user.id),
+                        "user_id": str(current_user.get("id")),
                         "document_id": document_id,
                         "item_type": "document",
                         "price": price,
@@ -134,7 +134,7 @@ class PurchaseService:
                 )
                 
                 tx_buyer = Transaction(
-                    user_id=str(current_user.id),
+                    user_id=str(current_user.get("id")),
                     type=TransactionType.WITHDRAW,
                     amount=-price,
                     note="Payment processed for digital document acquisition",
@@ -203,7 +203,7 @@ class PurchaseService:
             session.start_transaction()
             should_close_session = True
 
-        purchase = await target_db["purchases"].find_one({"_id": purchase_id, "user_id": str(current_user.id)})
+        purchase = await target_db["purchases"].find_one({"_id": purchase_id, "user_id": str(current_user.get("id"))})
         if not purchase:
             if should_close_session:
                 await session.abort_transaction()
@@ -226,7 +226,7 @@ class PurchaseService:
         creator_id = doc.get("creator_id") if doc else None
 
         try:
-            await target_db["wallets"].update_one({"_id": str(current_user.id)}, {"$inc": {"balance": price}}, upsert=True, session=session)
+            await target_db["wallets"].update_one({"_id": str(current_user.get("id"))}, {"$inc": {"balance": price}}, upsert=True, session=session)
             if creator_id:
                 deduct_result = await target_db["wallets"].update_one(
                     {"_id": creator_id, "balance": {"$gte": price}},
@@ -245,7 +245,7 @@ class PurchaseService:
             )
             
             tx_refund_buyer = Transaction(
-                user_id=str(current_user.id),
+                user_id=str(current_user.get("id")),
                 type=TransactionType.REFUND,
                 amount=price,
                 note="Refund issued for previously cancelled purchase transaction",

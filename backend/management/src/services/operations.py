@@ -4,7 +4,7 @@ import httpx
 from datetime import datetime, timezone
 from core.config import settings
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from core.storage import get_storage_client
 from fastapi import HTTPException, Query
 from loguru import logger

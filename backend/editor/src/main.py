@@ -5,7 +5,9 @@ from core.middleware import add_trace_id_header, trace_id_filter
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router import documents, editorjs, latex
+from src.router.editor import router as editor_router
+from src.router.editorjs import router as editorjs_router
+from src.router.latex import router as latex_router
 
 logger.remove()
 logger.add(
@@ -31,9 +33,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(latex.router)
-app.include_router(editorjs.router)
-app.include_router(documents.router)
+app.include_router(latex_router)
+app.include_router(editorjs_router)
+app.include_router(editor_router)
 
 @app.get("/health")
 async def health_check():

@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from typing import Any, Optional
 from core.database import db_client
-from core.schemas.user import RoleEnum
 from fastapi import HTTPException
 from loguru import logger
 from src.schemas.finance import CouponStatus, CouponTargetType
@@ -12,11 +11,11 @@ class CouponService:
     @staticmethod
     async def create_coupon(data: dict, current_user: Any, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        status = CouponStatus.APPROVED if (current_user and current_user.role == RoleEnum.ADMIN) else CouponStatus.PENDING
+        status = CouponStatus.APPROVED if (current_user and current_user.get("role") == "admin") else CouponStatus.PENDING
         
         coupon = {
             "_id": str(uuid7()),
-            "creator_id": str(current_user.id) if current_user else "admin",
+            "creator_id": str(current_user.get("id")) if current_user else "admin",
             "code": data["code"].upper(),
             "discount_percent": min(100, max(1, data.get("discount_percent", 10))),
             "max_uses": data.get("max_uses", 100),
@@ -41,8 +40,8 @@ class CouponService:
     async def get_coupons(current_user: Any, db=None) -> list:
         target_db = db or db_client.mongodb.get_default_database()
         query = {}
-        if current_user and current_user.role != RoleEnum.ADMIN:
-            query["creator_id"] = str(current_user.id)
+        if current_user and current_user.get("role") != "admin":
+            query["creator_id"] = str(current_user.get("id"))
             
         coupons = await target_db["coupons"].find(query).sort("created_at", -1).to_list(length=100)
         return [
@@ -64,7 +63,7 @@ class CouponService:
     @staticmethod
     async def approve_coupon(coupon_id: str, action: str, current_user: Any, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        if not current_user or current_user.role != RoleEnum.ADMIN:
+        if not current_user or current_user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Current account lacks necessary administrative privileges to perform restricted action")
             
         status = CouponStatus.APPROVED if action == "approve" else CouponStatus.REJECTED
@@ -105,8 +104,8 @@ class CouponService:
     async def toggle_coupon_status(coupon_id: str, current_user: Any, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
         query = {"_id": coupon_id}
-        if not current_user or current_user.role != RoleEnum.ADMIN:
-            query["creator_id"] = str(current_user.id)
+        if not current_user or current_user.get("role") != "admin":
+            query["creator_id"] = str(current_user.get("id"))
             
         coupon = await target_db["coupons"].find_one(query)
         if not coupon:
@@ -121,8 +120,8 @@ class CouponService:
     async def delete_coupon(coupon_id: str, current_user: Any, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
         query = {"_id": coupon_id}
-        if not current_user or current_user.role != RoleEnum.ADMIN:
-            query["creator_id"] = str(current_user.id)
+        if not current_user or current_user.get("role") != "admin":
+            query["creator_id"] = str(current_user.get("id"))
             
         res = await target_db["coupons"].delete_one(query)
         if res.deleted_count == 0:

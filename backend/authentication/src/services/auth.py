@@ -2,11 +2,11 @@ import secrets
 from datetime import datetime, timedelta, timezone
 import httpx
 from core.config import settings
-from core.schemas.user import UserCreate, UserInDB
 from core.security import create_access_token, get_password_hash, verify_password
 from fastapi import HTTPException, status
 from loguru import logger
-from src.repositories.auth import AuthRepository
+from src.repositories.auth_repository import AuthRepository
+from src.schemas.auth import UserCreate
 from src.services.email import EmailService
 from uuid6 import uuid7
 
@@ -133,8 +133,8 @@ class AuthService:
         }
 
     @staticmethod
-    async def revoke_all_sessions(current_user: UserInDB):
-        user_id_str = str(current_user.id)
+    async def revoke_all_sessions(current_user: dict):
+        user_id_str = str(current_user.get("id"))
         await AuthRepository.revoke_all_sessions(user_id_str)
         logger.info(f"All active authentication sessions for user {user_id_str} have been successfully revoked")
         return {"message": "You have been successfully signed out from all active devices and sessions"}

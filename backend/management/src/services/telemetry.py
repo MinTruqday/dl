@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
-from core.schemas.user import UserInDB
+from core.repositories.base import RepositoryFactory
 from loguru import logger
 from uuid6 import uuid7
 
@@ -14,7 +13,7 @@ class TelemetryService:
             "_id": str(uuid7()),
             "event_name": event_name,
             "properties": properties,
-            "user_id": str(current_user.id) if current_user else "anonymous",
+            "user_id": str(current_user.get("id")) if current_user else "anonymous",
             "timestamp": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("telemetry").insert_one(telemetry_event)

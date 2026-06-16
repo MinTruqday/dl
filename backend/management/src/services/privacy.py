@@ -6,7 +6,7 @@ class PrivacyService:
     @staticmethod
     async def request_data_takeout(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         comments = await target_db["comments"].find({"user_id": user_id}).to_list(length=1000)
         documents = await target_db["documents"].find({"creator_id": user_id}).to_list(length=1000)
         reactions = await target_db["reactions"].find({"user_id": user_id}).to_list(length=1000)
@@ -24,7 +24,7 @@ class PrivacyService:
     @staticmethod
     async def right_to_be_forgotten(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         await target_db["comments"].update_many(
             {"user_id": user_id},
             {"$set": {"content": "[Content removed in compliance with GDPR Right to be Forgotten]", "is_shadowbanned_content": True}},
@@ -35,7 +35,7 @@ class PrivacyService:
         if db_client.redis:
             await db_client.redis.delete(f"active_session:{user_id}")
             
-        await target_db["users"].delete_one({"_id": str(current_user.id)})
+        await target_db["users"].delete_one({"_id": str(current_user.get("id"))})
         logger.info("Authenticated user invoked right to be forgotten resulting in permanent data removal")
         return {
             "status": "success",
@@ -50,9 +50,9 @@ class PrivacyService:
     @staticmethod
     async def generate_gdpr_takeout(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
+        user_id = str(current_user.get("id"))
         full_data = {
-            "profile": await target_db["users"].find_one({"_id": str(current_user.id)}, {"password_hash": 0}),
+            "profile": await target_db["users"].find_one({"_id": str(current_user.get("id"))}, {"password_hash": 0}),
             "documents": await target_db["documents"].find({"creator_id": user_id}).to_list(100),
             "comments": await target_db["comments"].find({"user_id": user_id}).to_list(500),
         }

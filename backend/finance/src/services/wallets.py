@@ -13,7 +13,7 @@ class WalletService:
     @staticmethod
     async def get_balance(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        wallet = await target_db["wallets"].find_one({"_id": str(current_user.id)})
+        wallet = await target_db["wallets"].find_one({"_id": str(current_user.get("id"))})
         return {"balance": wallet.get("balance", 0) if wallet else 0}
 
     @staticmethod
@@ -23,7 +23,7 @@ class WalletService:
         is_locked = False
 
         if db_client.redis:
-            user_rl_key = f"rl:coupon:{current_user.id}"
+            user_rl_key = f"rl:coupon:{current_user.get('id')}"
             try:
                 attempts = await db_client.redis.incr(user_rl_key)
                 if attempts == 1:
@@ -68,7 +68,7 @@ class WalletService:
             bonus_dl = coupon.get("amount_dl", coupon.get("amount_dls", 0))
             result = await target_db["coupons"].update_one(
                 {"_id": coupon["_id"]},
-                {"$set": {"is_used": True, "used_by": str(current_user.id), "used_at": datetime.now(timezone.utc)}},
+                {"$set": {"is_used": True, "used_by": str(current_user.get("id")), "used_at": datetime.now(timezone.utc)}},
                 session=session
             )
             
@@ -78,11 +78,11 @@ class WalletService:
                 raise HTTPException(status_code=400, detail="Submitted promotional code reached maximum redemption capacity or was claimed by another account")
 
             await target_db["wallets"].update_one(
-                {"_id": str(current_user.id)}, {"$inc": {"balance": bonus_dl}}, upsert=True, session=session
+                {"_id": str(current_user.get("id"))}, {"$inc": {"balance": bonus_dl}}, upsert=True, session=session
             )
             
             tx = Transaction(
-                user_id=str(current_user.id),
+                user_id=str(current_user.get("id")),
                 type=TransactionType.TOPUP,
                 amount=bonus_dl,
                 note="Promotional coupon successfully redeemed and credited to digital wallet",
@@ -98,7 +98,7 @@ class WalletService:
                         await client.post(
                             f"{settings.SIGNAL_URL}/notifications/dispatch",
                             json={
-                                "target_user_id": str(current_user.id),
+                                "target_user_id": str(current_user.get("id")),
                                 "title": "Deposit transaction completed",
                                 "body": "Digital wallet successfully credited with requested promotional bonus balance",
                                 "type": "topup",
@@ -133,7 +133,7 @@ class WalletService:
     @staticmethod
     async def get_history(current_user, cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), tx_type: str = None, skip: int = 0, db=None) -> list:
         target_db = db or db_client.mongodb.get_default_database()
-        query = {"user_id": str(current_user.id)}
+        query = {"user_id": str(current_user.get("id"))}
         if tx_type:
             query["type"] = tx_type.lower()
             

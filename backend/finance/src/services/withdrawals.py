@@ -16,7 +16,7 @@ class WithdrawalService:
     async def get_revenue(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
         pipeline = [
-            {"$match": {"user_id": str(current_user.id), "type": {"$in": ["receive", "tip"]}}},
+            {"$match": {"user_id": str(current_user.get("id")), "type": {"$in": ["receive", "tip"]}}},
             {"$group": {"_id": None, "total_revenue": {"$sum": "$amount"}}},
         ]
         cursor = target_db["transactions"].aggregate(pipeline)
@@ -24,7 +24,7 @@ class WithdrawalService:
         total_revenue = res[0]["total_revenue"] if res else 0
         
         withdrawal_res = await target_db["withdrawal_requests"].aggregate([
-            {"$match": {"user_id": str(current_user.id), "status": "PENDING"}},
+            {"$match": {"user_id": str(current_user.get("id")), "status": "PENDING"}},
             {"$group": {"_id": None, "pending": {"$sum": "$amount"}}},
         ]).to_list(length=1)
         pending_withdrawal = withdrawal_res[0]["pending"] if withdrawal_res else 0
@@ -50,7 +50,7 @@ class WithdrawalService:
                 await session.end_session()
             raise HTTPException(status_code=400, detail="Requested withdrawal amount falls below minimum required processing threshold limits")
 
-        wallet = await target_db["wallets"].find_one({"_id": str(current_user.id)})
+        wallet = await target_db["wallets"].find_one({"_id": str(current_user.get("id"))})
         if not wallet or wallet.get("balance", 0) < amount:
             if should_close_session:
                 await session.abort_transaction()
@@ -61,7 +61,7 @@ class WithdrawalService:
         user_info = {}
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.PROVISION_URL}/users/{current_user.id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.PROVISION_URL}/users/{current_user.get("id")}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user_info = resp.json().get("data") or {}
         except Exception:
@@ -88,7 +88,7 @@ class WithdrawalService:
 
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         daily_withdrawals = await target_db["withdrawal_requests"].aggregate([
-            {"$match": {"user_id": str(current_user.id), "created_at": {"$gte": today_start}, "status": {"$in": ["PENDING", "APPROVED"]}}},
+            {"$match": {"user_id": str(current_user.get("id")), "created_at": {"$gte": today_start}, "status": {"$in": ["PENDING", "APPROVED"]}}},
             {"$group": {"_id": None, "count": {"$sum": 1}, "total_amount": {"$sum": "$amount"}}},
         ]).to_list(length=1)
 
@@ -108,7 +108,7 @@ class WithdrawalService:
         withdrawal_id = str(uuid7())
         try:
             deduct_result = await target_db["wallets"].update_one(
-                {"_id": str(current_user.id), "balance": {"$gte": amount}},
+                {"_id": str(current_user.get("id")), "balance": {"$gte": amount}},
                 {"$inc": {"balance": -amount}},
                 session=session,
             )
@@ -119,7 +119,7 @@ class WithdrawalService:
 
             withdrawal_request = {
                 "_id": withdrawal_id,
-                "user_id": str(current_user.id),
+                "user_id": str(current_user.get("id")),
                 "amount": amount,
                 "bank_info": bank_info,
                 "status": "PENDING",
@@ -128,7 +128,7 @@ class WithdrawalService:
             await target_db["withdrawal_requests"].insert_one(withdrawal_request, session=session)
             
             transaction = Transaction(
-                user_id=str(current_user.id),
+                user_id=str(current_user.get("id")),
                 amount=-amount,
                 type=TransactionType.WITHDRAW,
                 note="Funds temporarily reserved for pending withdrawal processing requests",
@@ -207,7 +207,7 @@ class WithdrawalService:
                 await session.end_session()
             raise HTTPException(status_code=404, detail="System unable to locate withdrawal request matching provided transaction identifier")
 
-        if str(current_user.id) == withdrawal.get("user_id"):
+        if str(current_user.get("id")) == withdrawal.get("user_id"):
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -225,7 +225,7 @@ class WithdrawalService:
         try:
             update_result = await target_db["withdrawal_requests"].update_one(
                 {"_id": withdrawal_id, "status": "PENDING"},
-                {"$set": {"status": status, "processed_by": str(current_user.id), "processed_at": datetime.now(timezone.utc)}},
+                {"$set": {"status": status, "processed_by": str(current_user.get("id")), "processed_at": datetime.now(timezone.utc)}},
                 session=session,
             )
             if update_result.modified_count == 0:
@@ -255,7 +255,7 @@ class WithdrawalService:
             await target_db["audit_logs"].insert_one(
                 {
                     "action": f"WITHDRAWAL_{status}",
-                    "actor_id": str(current_user.id),
+                    "actor_id": str(current_user.get("id")),
                     "withdrawal_id": withdrawal_id,
                     "bank_info_masked": masked_bank,
                     "timestamp": datetime.now(timezone.utc),
@@ -289,7 +289,7 @@ class WithdrawalService:
             session.start_transaction()
             should_close_session = True
 
-        withdrawal = await target_db["withdrawal_requests"].find_one({"_id": withdrawal_id, "user_id": str(current_user.id)})
+        withdrawal = await target_db["withdrawal_requests"].find_one({"_id": withdrawal_id, "user_id": str(current_user.get("id"))})
         if not withdrawal:
             if should_close_session:
                 await session.abort_transaction()
@@ -304,7 +304,7 @@ class WithdrawalService:
 
         try:
             update_result = await target_db["withdrawal_requests"].update_one(
-                {"_id": withdrawal_id, "user_id": str(current_user.id), "status": "PENDING"},
+                {"_id": withdrawal_id, "user_id": str(current_user.get("id")), "status": "PENDING"},
                 {"$set": {"status": "CANCELLED", "cancelled_at": datetime.now(timezone.utc)}},
                 session=session,
             )
@@ -314,13 +314,13 @@ class WithdrawalService:
                 raise HTTPException(status_code=400, detail="Database engine encountered issue attempting to update status of withdrawal request")
 
             await target_db["wallets"].update_one(
-                {"_id": str(current_user.id)},
+                {"_id": str(current_user.get("id"))},
                 {"$inc": {"balance": withdrawal.get("amount", 0)}},
                 upsert=True,
                 session=session,
             )
             refund_transaction = Transaction(
-                user_id=str(current_user.id),
+                user_id=str(current_user.get("id")),
                 amount=withdrawal.get("amount", 0),
                 type=TransactionType.TOPUP,
                 note="Reserved funds successfully restored following cancellation of withdrawal request",

@@ -4,7 +4,7 @@ from typing import Any, List
 import httpx
 from core.config import settings
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import WebSocket, WebSocketDisconnect
 from loguru import logger
 

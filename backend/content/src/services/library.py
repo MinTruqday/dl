@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -9,7 +9,7 @@ class LibraryService:
     @staticmethod
     async def create_reading_list(data, current_user, db=None):
         db = db or db_client.mongodb.get_default_database()
-        new_list = {"_id": str(uuid7()), "user_id": str(current_user.id), "name": data.name, "description": data.description, "is_public": data.is_public, "documents": [], "created_at": datetime.now(timezone.utc)}
+        new_list = {"_id": str(uuid7()), "user_id": str(current_user.get("id")), "name": data.name, "description": data.description, "is_public": data.is_public, "documents": [], "created_at": datetime.now(timezone.utc)}
         await RepositoryFactory.get("reading_lists").insert_one(new_list)
         logger.info("Configured personalized sequential architectural collection algorithm dynamically executed establishing functional array")
         return new_list
@@ -17,12 +17,12 @@ class LibraryService:
     @staticmethod
     async def get_my_reading_lists(current_user, db=None):
         db = db or db_client.mongodb.get_default_database()
-        return await RepositoryFactory.get("reading_lists").find({"user_id": str(current_user.id)}).to_list(100)
+        return await RepositoryFactory.get("reading_lists").find({"user_id": str(current_user.get("id"))}).to_list(100)
 
     @staticmethod
     async def get_reading_list_by_id(list_id: str, current_user, db=None):
         db = db or db_client.mongodb.get_default_database()
-        reading_list = await RepositoryFactory.get("reading_lists").find_one({"_id": list_id, "user_id": str(current_user.id)})
+        reading_list = await RepositoryFactory.get("reading_lists").find_one({"_id": list_id, "user_id": str(current_user.get("id"))})
         if not reading_list: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
         if doc_ids := reading_list.get("documents", []): reading_list["documents_detailed"] = await RepositoryFactory.get("documents").find({"_id": {"$in": doc_ids}}).to_list(length=100)
         else: reading_list["documents_detailed"] = []
@@ -31,13 +31,13 @@ class LibraryService:
     @staticmethod
     async def add_document_to_list(list_id: str, document_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
-        if (await RepositoryFactory.get("reading_lists").update_one({"_id": list_id, "user_id": str(current_user.id)}, {"$addToSet": {"documents": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}})).matched_count == 0:
+        if (await RepositoryFactory.get("reading_lists").update_one({"_id": list_id, "user_id": str(current_user.get("id"))}, {"$addToSet": {"documents": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}})).matched_count == 0:
             raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
         return {"status": "success", "message": "Specific target object dynamically attached updating relational mapping sequential structural logic"}
 
     @staticmethod
     async def remove_document_from_list(list_id: str, document_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
-        if (await RepositoryFactory.get("reading_lists").update_one({"_id": list_id, "user_id": str(current_user.id)}, {"$pull": {"documents": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}})).matched_count == 0:
+        if (await RepositoryFactory.get("reading_lists").update_one({"_id": list_id, "user_id": str(current_user.get("id"))}, {"$pull": {"documents": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}})).matched_count == 0:
             raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
         return {"status": "success", "message": "Specific target object decisively abandoned detaching explicit active array filtering sequence"}

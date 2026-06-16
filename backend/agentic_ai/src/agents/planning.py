@@ -1,7 +1,7 @@
 import json
 from langchain_core.messages import HumanMessage
 from loguru import logger
-from src.core.prompt_registry import PromptType, prompt_registry
+from src.core.prompts import PromptType, prompt_registry
 from src.workflow.brain import llm
 
 class PlanningAgent:

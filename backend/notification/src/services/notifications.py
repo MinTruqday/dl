@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
+from core.repositories.base import RepositoryFactory
 from fastapi import HTTPException, status
 from loguru import logger
 from src.schemas.notifications import NotificationCreate

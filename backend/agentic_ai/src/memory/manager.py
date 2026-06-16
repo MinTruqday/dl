@@ -1,5 +1,5 @@
 from loguru import logger
-from src.memory.mem0 import mem0_manager
+from src.memory.mem0_manager import mem0_manager
 
 class MemoryManager:
     async def get_user_preferences(self, user_id: str) -> str:

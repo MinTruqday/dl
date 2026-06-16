@@ -6,44 +6,43 @@ import aiohttp
 from urllib.parse import urlparse
 from typing import Any
 from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query, HTTPException
-from src.dependencies import get_current_user, get_db
+from core.dependency import get_current_user, get_db
 from src.schemas.library import ProgressUpdate
 from src.services.reading import ReadingService
 
 router = APIRouter(prefix="/reading")
 
 @router.get("/history", response_model=APIResponse[Any])
-async def get_history(cursor: str = None, limit: int = Query(20), current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
+async def get_history(cursor: str = None, limit: int = Query(20), current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await ReadingService.get_reading_history(current_user, cursor, limit, db=db),
         message="Personal reading history trajectory has been successfully retrieved from system records",
     )
 
 @router.post("/progress", response_model=APIResponse[Any])
-async def update_progress(data: ProgressUpdate, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
+async def update_progress(data: ProgressUpdate, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await ReadingService.update_progress(data, current_user, db=db),
         message="Current reading progress metrics have been successfully synchronized and updated internally",
     )
 
 @router.get("/documents/{document_id}/search", response_model=APIResponse[Any])
-async def search_in_document(document_id: str, q: str = Query(...), current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
+async def search_in_document(document_id: str, q: str = Query(...), current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await ReadingService.search_in_document(document_id, q, current_user, db=db),
         message="Contextual search operation within document content has been successfully executed returning matches",
     )
 
 @router.delete("/history", response_model=APIResponse[Any])
-async def clear_reading_history(current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
+async def clear_reading_history(current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await ReadingService.clear_reading_history(current_user, db=db),
         message="Entire reading history profile has been successfully and permanently expunged",
     )
 
 @router.delete("/history/{document_id}", response_model=APIResponse[Any])
-async def delete_history_item(document_id: str, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
+async def delete_history_item(document_id: str, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await ReadingService.delete_history_item(document_id, current_user, db=db),
         message="Specified reading history chronological entry has been successfully removed from account",

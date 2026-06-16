@@ -22,14 +22,14 @@ class ProfileService:
             raise HTTPException(status_code=400, detail="Update request could not be processed because no valid information was provided")
             
         update_fields["updated_at"] = datetime.now(timezone.utc)
-        await target_db["users"].update_one({"_id": str(current_user.id)}, {"$set": update_fields})
+        await target_db["users"].update_one({"_id": str(current_user.get("id"))}, {"$set": update_fields})
         logger.info("Personal profile information has been successfully updated by authenticated user")
         return {"message": "Your personal profile information has been successfully updated and saved"}
 
     @staticmethod
     async def get_user_profile(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user = await target_db["users"].find_one({"_id": str(current_user.id)}, {"password_hash": 0})
+        user = await target_db["users"].find_one({"_id": str(current_user.get("id"))}, {"password_hash": 0})
         if not user:
             raise HTTPException(status_code=404, detail="Requested profile information could not be located in the system database")
         user["_id"] = str(user["_id"])
@@ -38,14 +38,14 @@ class ProfileService:
     @staticmethod
     async def get_badges(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user_record = await target_db["users"].find_one({"_id": str(current_user.id)})
+        user_record = await target_db["users"].find_one({"_id": str(current_user.get("id"))})
         badges = user_record.get("badges", []) if user_record else []
         return {"badges": badges}
 
     @staticmethod
     async def get_reading_streaks(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        user_record = await target_db["users"].find_one({"_id": str(current_user.id)})
+        user_record = await target_db["users"].find_one({"_id": str(current_user.get("id"))})
         if not user_record:
             return {
                 "current_streak": 0,
@@ -76,20 +76,20 @@ class ProfileService:
             raise HTTPException(status_code=400, detail="Update request could not be processed because no valid information provided")
             
         update_fields["updated_at"] = datetime.now(timezone.utc)
-        await target_db["users"].update_one({"_id": str(current_user.id)}, {"$set": update_fields})
+        await target_db["users"].update_one({"_id": str(current_user.get("id"))}, {"$set": update_fields})
         logger.info("Public author brand page has been successfully modified by account owner")
         return {"message": "Your public author brand page has been successfully updated and published"}
 
     @staticmethod
     async def block_user(target_id: str, current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
-        if str(current_user.id) == target_id:
+        if str(current_user.get("id")) == target_id:
             raise HTTPException(status_code=400, detail="System prevents users from applying interaction blocks to their own accounts")
             
         target_user = await target_db["users"].find_one({"_id": target_id})
         if not target_user:
             raise HTTPException(status_code=404, detail="Specified target account could not be located in the system records")
             
-        await target_db["users"].update_one({"_id": str(current_user.id)}, {"$addToSet": {"blocked_users": target_id}})
+        await target_db["users"].update_one({"_id": str(current_user.get("id"))}, {"$addToSet": {"blocked_users": target_id}})
         logger.info("Target account successfully restricted from interacting with authenticated user profile")
         return {"status": "ok", "message": "Specified account successfully restricted from interacting with your profile"}

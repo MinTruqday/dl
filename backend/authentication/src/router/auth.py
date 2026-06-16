@@ -1,22 +1,15 @@
 from typing import Any
 from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import (
-    ForgotPasswordRequest,
-    ResetPasswordRequest,
-    UserCreate,
-    UserInDB,
-    UserResponse,
-    VerifyCodeRequest,
-)
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from src.services.auth import AuthService
+from src.schemas.auth import UserResponse, UserCreate, ForgotPasswordRequest, ResetPasswordRequest, VerifyCodeRequest
 
 router = APIRouter(prefix="/auth")
 
 @router.get("/me", response_model=APIResponse[UserResponse])
-async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
+async def read_users_me(current_user: dict = Depends(get_current_user)):
     user_data = current_user.model_dump()
     user_data["has_passkey"] = len(current_user.passkeys) > 0 if current_user.passkeys else False
     return APIResponse(
