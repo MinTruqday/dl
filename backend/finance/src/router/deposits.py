@@ -5,12 +5,12 @@ from fastapi import APIRouter, Depends
 from src.schemas.finance import DepositRequest
 from src.services.deposits import DepositService
 
-router = APIRouter(prefix="/deposits")
+router = APIRouter(prefix="/nap-tien")
 
 @router.post("", response_model=APIResponse[Any])
 async def create_deposit(req: DepositRequest, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await DepositService.create_deposit_link(req, current_user, db=db),
-        message="Deposit transaction has been successfully initiated and is awaiting payment confirmation from gateway",
+        message="Khởi tạo AI thành công",
         status=201,
     )

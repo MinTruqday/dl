@@ -19,8 +19,8 @@ def extract_text_from_base64(b64_string: str) -> str:
         else:
             return document_parser.parse_txt(file_bytes) or ""
     except binascii.Error:
-        logger.error("The fundamental binary decoding algorithm failed parsing improperly structured encoded structural datastream")
+        logger.error("Lỗi khi truy xuất tài liệu")
         return ""
     except Exception:
-        logger.error("The generalized file interpretation processor explicitly crashed evaluating uploaded arbitrary binary metadata")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return ""

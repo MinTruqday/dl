@@ -27,10 +27,10 @@ async def supervisor_node(state: ActingState):
         start_time = time.time()
 
     if time.time() - start_time > 45:
-        logger.exception("The artificial intelligence workflow execution exceeded the predefined maximum time limit")
+        logger.exception("Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI")
         return {
             "next_node": "trimmer",
-            "error": "The submitted request is highly complex and has exceeded the maximum processing time allowed by the system",
+            "error": "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý",
         }
 
     steps = state.get("steps", [])
@@ -42,7 +42,7 @@ async def supervisor_node(state: ActingState):
             "steps": steps,
             "current_step_index": len(steps),
             "next_node": "trimmer",
-            "error": "The artificial intelligence agent has exceeded the maximum allowed number of tool execution steps",
+            "error": "Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI",
         }
 
     if not steps:
@@ -50,7 +50,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
 
     if state.get("error"):
-        logger.warning("The system is skipping subsequent execution steps due to a previously encountered issue")
+        logger.warning("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return {
             "steps": steps,
             "current_step_index": len(steps),
@@ -108,14 +108,14 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 eval_res = await evaluator_llm.ainvoke(prompt)
                 if eval_res.status == "FAIL":
                     replan_count += 1
-                    logger.warning("Self evaluation framework failed initiating automatic structural replanning module")
+                    logger.warning("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
                     current_task = eval_res.revised_task or current_task
                     final_res = res
                 else:
                     final_res = res
                     break
             except Exception:
-                logger.debug("Evaluation structural parsing failed accepting current returned execution result securely")
+                logger.debug("Lỗi khi truy xuất tài liệu")
                 final_res = res
                 break
 
@@ -128,10 +128,10 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "last_agent_result": final_res,
         }
     except Exception:
-        logger.exception("The internal execution node routing component encountered an unexpected catastrophic failure")
+        logger.exception("Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI")
         return {
             "consolidated_results": ["The execution step failed completely"],
-            "error": "The system encountered an unexpected error and requires you to try again later",
+            "error": "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý",
         }
 
 async def code_interpreter_node(state: ActingState):
@@ -156,14 +156,14 @@ async def trimmer_node(state: ActingState):
 
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
-        logger.info("Summarizing lengthy execution results optimizing overall structural memory context window")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         try:
             combined = "\n\n".join(str(r) for r in results)
             summary_prompt = f"Summarize concisely preserving facts IDs data:\n\n{combined[:20000]}"
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception:
-            logger.exception("Contextual summary generation failed executing default hard string truncation algorithm")
+            logger.exception("Lỗi khi truy xuất tài liệu")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
 
@@ -223,7 +223,7 @@ class Supervisor:
         self.app = supervisor_app
 
     async def execute_plan(self, req_data):
-        logger.info("Initialized operational execution flow establishing secure logical routing processing sequence")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         yield {"type": "status", "node": "The system is analyzing your request processing internal algorithmic pathways"}
 
         initial_state = {
@@ -255,7 +255,7 @@ class Supervisor:
                         yield {"type": "plan", "steps": steps}
                 elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
                     if state_update.get("error"):
-                        yield {"type": "error", "message": "The system encountered an internal execution issue processing specific node"}
+                        yield {"type": "error", "message": "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"}
                     else:
                         yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Completed")}
 

@@ -17,10 +17,10 @@ class SemanticRouter:
                 raw = raw.split("```")[1].split("```")[0]
                 
             parsed = json.loads(raw)
-            logger.info("The primary intent classification neural routing module decisively allocated explicit appropriate processing")
+            logger.info("Lỗi xử lý model AI")
             return {"route": parsed.get("route", "rag"), "answer": parsed.get("answer", "")}
         except Exception:
-            logger.error("The semantic primary routing evaluation matrix catastrophically failed evaluating exact intent vectors")
+            logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
             return {"route": "rag", "answer": ""}
 
 semantic_router = SemanticRouter()

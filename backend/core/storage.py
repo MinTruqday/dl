@@ -30,9 +30,9 @@ async def initialize_bucket():
     try:
         await storage_client.head_bucket(Bucket=MINIO_BUCKET_NAME)
     except ClientError:
-        logger.info("Automated provisioning sequence for primary object storage bucket has been successfully initiated by system")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
-        logger.info("Primary object storage bucket has been successfully provisioned and is ready storing multimedia assets")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
 async def upload_file(
     file_content: bytes,

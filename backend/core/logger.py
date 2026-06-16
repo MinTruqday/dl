@@ -12,4 +12,4 @@ def setup_production_logger():
         serialize=True,
         enqueue=True,
     )
-    logger.info("Structured internal operational logging engine successfully initialized processing automated formatting streams")
+    logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")

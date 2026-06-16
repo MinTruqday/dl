@@ -19,7 +19,7 @@ logger.add(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Document compilation and editor service successfully initialized and ready to accept incoming requests")
+    logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
     yield
 
 app = FastAPI(title="DocLib Editor", version=settings.VERSION, lifespan=lifespan)
@@ -37,9 +37,9 @@ app.include_router(latex_router)
 app.include_router(editorjs_router)
 app.include_router(editor_router)
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
     return {
-        "status": "Document editor service is currently operating normally and functioning as expected without internal issues",
+        "status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định",
         "service": "document_editor"
     }

@@ -8,10 +8,10 @@ class CodeInterpreterAgent:
         try:
             prompt = prompt_registry.get(PromptType.CODE_INTERPRETER) + f"\nTASK: {task}"
             result = await llm.ainvoke([HumanMessage(content=prompt)])
-            logger.info("The programmatic structural code compilation module seamlessly processed explicit textual algorithmic generation")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             return result.content
         except Exception:
-            logger.error("The structural code interpreter algorithmic logic decisively crashed executing designated computational generation")
-            return "The system encountered an unexpected error and requires you to try again later"
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+            return "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
 
 code_interpreter = CodeInterpreterAgent()

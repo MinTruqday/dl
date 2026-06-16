@@ -30,20 +30,20 @@ celery_app.conf.task_queues = (
 
 @celery_app.task(name="src.tasks.hard_delete_document", acks_late=True, reject_on_worker_lost=True, max_retries=3, default_retry_delay=10)
 def hard_delete_document(document_id: str, user_id: str):
-    logger.info(f"Initiating permanent removal process for vector data associated with document ID {document_id}")
+    logger.info(f"Bắt đầu xóa vĩnh viễn dữ liệu vector tài liệu {document_id}")
     try:
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:
-            response = httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+            response = httpx.delete(f"{rag_url}/suy-luan/vector/{document_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
             response.raise_for_status()
-        logger.info(f"Vector data for document ID {document_id} successfully removed from the storage system")
+        logger.info(f"Đã xóa thành công dữ liệu vector tài liệu {document_id}")
     except Exception as e:
-        logger.error(f"Failed to remove vector data for document ID {document_id} due to network or system failure")
+        logger.error(f"Lỗi mạng: Không thể xóa dữ liệu vector của tài liệu {document_id}")
         raise hard_delete_document.retry(exc=e)
 
 @celery_app.task(name="src.tasks.compile_document_tectonic", acks_late=True, reject_on_worker_lost=True, max_retries=2, default_retry_delay=10)
 def compile_document_tectonic(document_id: str, tex_content: str):
-    logger.info(f"Initiating tectonic compilation process for LaTeX document with ID {document_id}")
+    logger.info(f"Bắt đầu biên dịch LaTeX cho tài liệu {document_id}")
     with tempfile.TemporaryDirectory() as temp_dir:
         tex_path = os.path.join(temp_dir, f"{document_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{document_id}.pdf")
@@ -53,7 +53,7 @@ def compile_document_tectonic(document_id: str, tex_content: str):
             f.write(tex_content)
 
         try:
-            logger.debug(f"Executing underlying subprocess compilation steps for document with ID {document_id}")
+            logger.debug(f"Bắt đầu biên dịch tài liệu")
             process = subprocess.run(
                 ["tectonic", "--synctex", "--keep-logs", "-Z", "continue-on-errors", "--outdir", temp_dir, tex_path],
                 capture_output=True,
@@ -62,32 +62,32 @@ def compile_document_tectonic(document_id: str, tex_content: str):
             )
 
             if not os.path.exists(pdf_path):
-                logger.error(f"Compilation process failed to generate final PDF output for document with ID {document_id}")
+                logger.error(f"Không thể tạo file PDF cho tài liệu")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
                         log_content += "\n" + lf.read()
                 return {
                     "status": "error",
-                    "error": "Document could not be processed completely due to invalid structural formatting or syntax issues",
+                    "error": "Lỗi biên dịch không thể tạo file PDF",
                     "logs": log_content,
                     "document_id": document_id,
                 }
 
-            logger.info(f"Document with ID {document_id} has been successfully compiled and processed into PDF format")
+            logger.info(f"Tài liệu {document_id} đã biên dịch xong và tạo PDF")
             return {"status": "success", "pdf_path": pdf_path, "document_id": document_id, "logs": process.stdout}
 
         except subprocess.TimeoutExpired:
-            logger.error(f"Background compilation process exceeded maximum allowed execution time for document with ID {document_id}")
+            logger.error(f"Quá trình biên dịch vượt quá thời gian cho phép với tài liệu {document_id}")
             return {
                 "status": "error",
-                "error": "Compilation process exceeded maximum time limit please verify document structure and try again",
+                "error": "Lỗi quá thời gian biên dịch tài liệu",
                 "document_id": document_id,
             }
         except Exception as e:
-            logger.exception(f"Unexpected system failure occurred while attempting to compile document with ID {document_id}")
+            logger.exception(f"Lỗi hệ thống không mong muốn khi biên dịch tài liệu {document_id}")
             return {
                 "status": "error",
-                "error": "Unexpected system failure occurred during document processing please attempt your request again later",
+                "error": "Lỗi hệ thống không xác định khi biên dịch",
                 "document_id": document_id,
             }

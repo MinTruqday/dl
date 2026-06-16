@@ -17,18 +17,18 @@ class KnowledgeAgent:
                 for doc_id in doc_ids:
                     try:
                         async with httpx.AsyncClient() as client:
-                            res = await client.get(f"{settings.INTERNAL_API_URL}/documents/{doc_id}", headers={"Authorization": f"Bearer {token}"}, timeout=settings.LONG_PROCESS_TIMEOUT)
+                            res = await client.get(f"{settings.CONTENT_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {token}"}, timeout=settings.LONG_PROCESS_TIMEOUT)
                             if res.status_code == 200:
                                 context_data += f"\nDocument {doc_id}:\n{res.json().get('data', {}).get('content', '')[:5000]}"
                     except Exception:
-                        logger.warning("The operational structural network lost connectivity avoiding rendering strictly mapped internal targeted document")
+                        logger.warning("Mất kết nối mạng tạm thời")
                         
             prompt = prompt_registry.get(PromptType.MULTI_DOC_SYNTHESIS).format(query=query, context=context_data or "No specific documentation context available")
             result = await llm.ainvoke([HumanMessage(content=prompt)])
-            logger.info("The knowledge synthesis analytical processor precisely formulated explicit structural informational textual payload")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             return result.content
         except Exception:
-            logger.error("The internal analytical knowledge extraction processor crashed mapping multi dimensional document variables")
-            return "The system encountered an unexpected error and requires you to try again later"
+            logger.error("Lỗi khi truy xuất tài liệu")
+            return "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
 
 knowledge = KnowledgeAgent()

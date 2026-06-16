@@ -15,10 +15,10 @@ class TranslationService:
                 if response.status_code == 200:
                     result = response.json()
                     return result[0].get("translation_text", text)
-                logger.error("The external neural language translation engine strictly rejected parsing submitted linguistic payload")
+                logger.error("Lỗi khi truy xuất tài liệu")
                 return text
         except Exception:
-            logger.error("The remote translation infrastructure definitively lost connection halting active language structural conversion")
+            logger.error("Mất kết nối mạng tạm thời")
             return text
 
 translation_service = TranslationService()

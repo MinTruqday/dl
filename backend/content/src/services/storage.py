@@ -78,7 +78,7 @@ class StorageService:
                 for old_url in old_version_urls:
                     try: await storage_client.delete_object(Bucket=settings.MINIO_BUCKET_NAME, Key=old_url)
                     except Exception: pass
-            except Exception: logger.error("Internal physical garbage removal algorithm unexpectedly aborted leaving fragmented structural objects explicitly")
+            except Exception: logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return True
 
     @staticmethod
@@ -125,12 +125,12 @@ class StorageService:
     @staticmethod
     async def share_item(item_id: str, email: str, role: str, owner_id: str, db=None) -> dict:
         target_user = await db_client.mongodb.get_default_database().users.find_one({"email": email})
-        if not target_user: raise HTTPException(status_code=404, detail="Requested operational execution denied explicitly blocking specific binary asset configuration format")
+        if not target_user: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         target_user_id = str(target_user["_id"])
-        if target_user_id == owner_id: raise HTTPException(status_code=400, detail="Requested operational execution denied explicitly blocking specific binary asset configuration format")
-        if not await db_client.mongodb.get_default_database().storage_items.find_one({"_id": item_id, "owner_id": owner_id}): raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
-        if (await db_client.mongodb.get_default_database().storage_items.update_one({"_id": item_id, "shared_with.user_id": {"$ne": target_user_id}}, {"$addToSet": {"shared_with": {"user_id": target_user_id, "role": role}}})).modified_count == 0: return {"message": "Structural dynamic grouping parameters firmly assigned designated functional internal matrix"}
-        return {"message": "Target fundamental media block successfully routed injecting remote active distribution network"}
+        if target_user_id == owner_id: raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        if not await db_client.mongodb.get_default_database().storage_items.find_one({"_id": item_id, "owner_id": owner_id}): raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        if (await db_client.mongodb.get_default_database().storage_items.update_one({"_id": item_id, "shared_with.user_id": {"$ne": target_user_id}}, {"$addToSet": {"shared_with": {"user_id": target_user_id, "role": role}}})).modified_count == 0: return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def get_recent_items(owner_id: str, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None) -> List[StorageItemInDB]:

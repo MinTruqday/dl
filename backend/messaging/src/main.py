@@ -9,11 +9,11 @@ from src.router.messages import router as message_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Internal messaging service has been successfully initialized and is ready to process incoming requests")
+    logger.info("Quá trình khởi tạo dịch vụ và kết nối cơ sở dữ liệu thành công")
     await init_db()
     yield
     await close_db()
-    logger.info("Internal messaging service has safely shut down and closed all active database connections")
+    logger.info("Dịch vụ đã ngắt kết nối cơ sở dữ liệu và dừng an toàn")
 
 app = FastAPI(title="DocLib Messaging", version=settings.VERSION, lifespan=lifespan)
 
@@ -31,6 +31,6 @@ app.add_middleware(
 
 app.include_router(message_router)
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
-    return {"status": "Messaging communication service is operating normally and functioning as expected without internal issues"}
+    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}

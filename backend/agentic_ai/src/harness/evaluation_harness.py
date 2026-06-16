@@ -77,7 +77,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception:
-        logger.warning("The systemic algorithmic evaluation analytical testing component structurally failed evaluating designated mapping properly executing parameters")
+        logger.warning("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return {
             "accuracy": 0,
             "completeness": 0,
@@ -94,9 +94,9 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info("The complex structural algorithm correctly retrieved required systemic validation mapped dataset precisely formatting internal storage")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         except Exception:
-            logger.error("The underlying sequential database operational structure absolutely rejected fetching designated evaluation dataset isolating parsing protocol")
+            logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
             self._dataset = []
 
     async def evaluate_rag_response(self, query: str, expected_answer: str, actual_answer: str, contexts: list[str], use_judge: bool = False) -> EvalReport:
@@ -120,16 +120,16 @@ class EvaluationHarness:
             overall = (retrieval_precision + gen_faithfulness + answer_relevance) / 3
         report = EvalReport(query=query, expected=expected_answer, actual=actual_answer, retrieval_precision=round(retrieval_precision, 4), generation_faithfulness=round(gen_faithfulness, 4), answer_relevance=round(answer_relevance, 4), bleu=bleu, rouge_l=rouge, judge_scores=judge_scores, overall_score=round(overall, 4))
         self._reports.append(report)
-        logger.info("The internal systematic algorithmic textual extraction testing completely succeeded reliably measuring designated explicit informational accuracy")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
         if not self._dataset:
-            return {"error": "The evaluation testing mechanism essentially requires comprehensive structural dataset explicitly uploaded generating valid diagnostic algorithmic routing"}
+            return {"error": "Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI"}
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
         except Exception:
-            return {"error": "The structural routing mechanism failed instantiating active functional language interpreting algorithmic nodes evaluating diagnostic testing parameters"}
+            return {"error": "Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI"}
         results = []
         for sample in self._dataset:
             instruction = sample.get("instruction", "")
@@ -156,13 +156,13 @@ class EvaluationHarness:
         if judge_results:
             avg_judge = {"accuracy": round(sum(j["accuracy"] for j in judge_results) / len(judge_results), 2), "completeness": round(sum(j["completeness"] for j in judge_results) / len(judge_results), 2), "relevance": round(sum(j["relevance"] for j in judge_results) / len(judge_results), 2)}
         summary = {"model": model_name, "total_samples": len(results), "average_bleu": avg_bleu, "average_rouge_l": avg_rouge, "average_judge_scores": avg_judge, "results": results}
-        logger.info("The systemic functional artificial intelligence diagnostic mapping algorithms successfully evaluated designated overarching analytical parameters explicitly")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return summary
 
     def get_dashboard_metrics(self) -> dict:
         if not self._reports:
-            return {"status": "The system structurally detected fundamentally zero analytical executing evaluative benchmarks currently populating dashboard metric viewing", "total_evaluations": 0}
+            return {"status": "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý", "total_evaluations": 0}
         count = len(self._reports)
-        return {"total_evaluations": count, "average_metrics": {"retrieval_precision": round(sum(r.retrieval_precision for r in self._reports) / count, 4), "generation_faithfulness": round(sum(r.generation_faithfulness for r in self._reports) / count, 4), "answer_relevance": round(sum(r.answer_relevance for r in self._reports) / count, 4), "bleu": round(sum(r.bleu for r in self._reports) / count, 4), "rouge_l": round(sum(r.rouge_l for r in self._reports) / count, 4), "overall_score": round(sum(r.overall_score for r in self._reports) / count, 4)}, "status": "The explicit multidimensional tracking evaluation operational metrics dashboard successfully configured completely parsing numerical data successfully"}
+        return {"total_evaluations": count, "average_metrics": {"retrieval_precision": round(sum(r.retrieval_precision for r in self._reports) / count, 4), "generation_faithfulness": round(sum(r.generation_faithfulness for r in self._reports) / count, 4), "answer_relevance": round(sum(r.answer_relevance for r in self._reports) / count, 4), "bleu": round(sum(r.bleu for r in self._reports) / count, 4), "rouge_l": round(sum(r.rouge_l for r in self._reports) / count, 4), "overall_score": round(sum(r.overall_score for r in self._reports) / count, 4)}, "status": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
 evaluation_harness = EvaluationHarness()

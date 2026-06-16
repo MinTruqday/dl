@@ -14,27 +14,27 @@ class IdentityService:
         if current_user.get("role") != "reader":
             raise HTTPException(
                 status_code=400,
-                detail="Action restricted because only accounts with standard reader privileges can upgrade",
+                detail="Lỗi xử lý tài khoản",
             )
         await target_db["users"].update_one(
             {"_id": user_id},
             {"$set": {"role": "author", "updated_at": datetime.now(timezone.utc)}},
         )
-        logger.info("Access privileges for specified user account elevated to author role")
-        return {"status": "success", "message": "Account successfully upgraded and granted full author publishing privileges"}
+        logger.info("Lỗi xử lý tài khoản")
+        return {"status": "success", "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def apply_author(application, current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
         user_id = str(current_user.get("id"))
         if current_user.get("role") == "author":
-            raise HTTPException(status_code=400, detail="Specified account already configured with full author privileges and capabilities")
+            raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
         if current_user.get("role") != "reader":
-            raise HTTPException(status_code=403, detail="Action restricted because only accounts with standard reader privileges can apply")
+            raise HTTPException(status_code=403, detail="Lỗi xử lý tài khoản")
         if current_user.creator_status == CreatorStatusEnum.PENDING:
-            raise HTTPException(status_code=400, detail="Previous application for author status is currently under active administrative review")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         if current_user.creator_status == CreatorStatusEnum.SUSPENDED:
-            raise HTTPException(status_code=403, detail="Account is restricted by administration and cannot apply for elevated privileges")
+            raise HTTPException(status_code=403, detail="Lỗi xử lý tài khoản")
             
         application_data = {
             "_id": str(uuid7()),
@@ -49,17 +49,17 @@ class IdentityService:
             {"_id": user_id},
             {"$set": {"creator_status": CreatorStatusEnum.PENDING, "tos_accepted_at": datetime.now(timezone.utc)}},
         )
-        logger.info("Application for author privileges successfully submitted and recorded in queue")
-        return {"status": "success", "message": "Author application submitted successfully and is awaiting administrative review"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"status": "success", "message": "Khởi tạo AI thành công"}
 
     @staticmethod
     async def upload_kyc(file, current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
         user_id = str(current_user.get("id"))
         if current_user.kyc_status == KYCStatusEnum.PENDING:
-            raise HTTPException(status_code=400, detail="Submitted identity verification documents are currently under active administrative review")
+            raise HTTPException(status_code=400, detail="Lỗi khi truy xuất tài liệu")
         if current_user.kyc_status == KYCStatusEnum.VERIFIED:
-            raise HTTPException(status_code=400, detail="Account identity has already been successfully verified by system administration")
+            raise HTTPException(status_code=400, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             
         file_bytes = await file.read()
         file_ext = file.filename.split(".")[-1]
@@ -75,8 +75,8 @@ class IdentityService:
         }
         await target_db["kyc_applications"].insert_one(kyc_data)
         await target_db["users"].update_one({"_id": user_id}, {"$set": {"kyc_status": KYCStatusEnum.PENDING}})
-        logger.info("User successfully uploaded identity verification documents to secure storage system")
-        return {"status": "success", "message": "Identity verification documents securely uploaded and are pending review"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"status": "success", "message": "Lỗi khi truy xuất tài liệu"}
 
     @staticmethod
     async def get_public_profile(slug: str, db=None) -> dict:
@@ -85,7 +85,7 @@ class IdentityService:
             {"$or": [{"slug": slug}, {"username": slug}, {"_id": slug}], "is_active": {"$ne": False}}
         )
         if not author:
-            raise HTTPException(status_code=404, detail="Requested public member profile could not be located within system records")
+            raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         creator_id = str(author["_id"])
         docs = await target_db["documents"].find({"creator_id": creator_id, "status": "PUBLISHED"}).sort("created_at", -1).limit(10).to_list(length=10)

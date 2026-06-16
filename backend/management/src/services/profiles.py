@@ -19,19 +19,19 @@ class ProfileService:
             update_fields["donation_link"] = data["donation_link"]
             
         if not update_fields:
-            raise HTTPException(status_code=400, detail="Update request could not be processed because no valid information was provided")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await target_db["users"].update_one({"_id": str(current_user.get("id"))}, {"$set": update_fields})
-        logger.info("Personal profile information has been successfully updated by authenticated user")
-        return {"message": "Your personal profile information has been successfully updated and saved"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def get_user_profile(current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
         user = await target_db["users"].find_one({"_id": str(current_user.get("id"))}, {"password_hash": 0})
         if not user:
-            raise HTTPException(status_code=404, detail="Requested profile information could not be located in the system database")
+            raise HTTPException(status_code=404, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
         user["_id"] = str(user["_id"])
         return user
 
@@ -41,25 +41,6 @@ class ProfileService:
         user_record = await target_db["users"].find_one({"_id": str(current_user.get("id"))})
         badges = user_record.get("badges", []) if user_record else []
         return {"badges": badges}
-
-    @staticmethod
-    async def get_reading_streaks(current_user, db=None) -> dict:
-        target_db = db or db_client.mongodb.get_default_database()
-        user_record = await target_db["users"].find_one({"_id": str(current_user.get("id"))})
-        if not user_record:
-            return {
-                "current_streak": 0,
-                "longest_streak": 0,
-                "message": "There is currently no reading activity streak information available for account",
-            }
-        reading_stats = user_record.get("reading_stats", {})
-        current_s = reading_stats.get("current_streak", 0)
-        longest_s = reading_stats.get("longest_streak", 0)
-        return {
-            "current_streak": current_s,
-            "longest_streak": longest_s,
-            "message": "You have successfully maintained an active reading streak for reported duration" if current_s > 0 else "Begin reading documents to initiate and build your daily activity streak",
-        }
 
     @staticmethod
     async def update_brand_page(data: dict, current_user, db=None) -> dict:
@@ -73,23 +54,23 @@ class ProfileService:
             update_fields["author_profile.custom_theme"] = data["custom_theme"]
             
         if not update_fields:
-            raise HTTPException(status_code=400, detail="Update request could not be processed because no valid information provided")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await target_db["users"].update_one({"_id": str(current_user.get("id"))}, {"$set": update_fields})
-        logger.info("Public author brand page has been successfully modified by account owner")
-        return {"message": "Your public author brand page has been successfully updated and published"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def block_user(target_id: str, current_user, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
         if str(current_user.get("id")) == target_id:
-            raise HTTPException(status_code=400, detail="System prevents users from applying interaction blocks to their own accounts")
+            raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
             
         target_user = await target_db["users"].find_one({"_id": target_id})
         if not target_user:
-            raise HTTPException(status_code=404, detail="Specified target account could not be located in the system records")
+            raise HTTPException(status_code=404, detail="Lỗi xử lý tài khoản")
             
         await target_db["users"].update_one({"_id": str(current_user.get("id"))}, {"$addToSet": {"blocked_users": target_id}})
-        logger.info("Target account successfully restricted from interacting with authenticated user profile")
-        return {"status": "ok", "message": "Specified account successfully restricted from interacting with your profile"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"status": "ok", "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}

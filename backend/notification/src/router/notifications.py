@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from src.schemas.notifications import NotificationCreate
 from src.services.notifications import NotificationService
 
-router = APIRouter(prefix="/notifications")
+router = APIRouter(prefix="/thong-bao")
 
 @router.get("", response_model=APIResponse[Any])
 async def get_notifications(
@@ -15,24 +15,24 @@ async def get_notifications(
 ):
     return APIResponse(
         data=await NotificationService.get_notifications(str(current_user.get("id")), skip, limit),
-        message="Requested notifications have been successfully retrieved from the system database records"
+        message="Yêu cầu đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.patch("/{notification_id}/read", response_model=APIResponse[Any])
+@router.patch("/{notification_id}/doc-hieu", response_model=APIResponse[Any])
 async def mark_as_read(
     notification_id: str,
     current_user: dict = Depends(get_current_user)
 ):
     return APIResponse(
         data=await NotificationService.mark_as_read(notification_id, str(current_user.get("id"))),
-        message="Specified notification has been successfully updated and marked as read by the system"
+        message="Yêu cầu đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.patch("/read-all", response_model=APIResponse[Any])
+@router.patch("/doc-hieu-tat-ca", response_model=APIResponse[Any])
 async def mark_all_as_read(current_user: dict = Depends(get_current_user)):
     return APIResponse(
         data=await NotificationService.mark_all_as_read(str(current_user.get("id"))),
-        message="All pending notifications for the current user have been successfully marked as read"
+        message="Yêu cầu đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
 @router.delete("/{notification_id}", response_model=APIResponse[Any])
@@ -42,13 +42,13 @@ async def delete_notification(
 ):
     return APIResponse(
         data=await NotificationService.delete_notification(notification_id, str(current_user.get("id"))),
-        message="Specified notification has been permanently removed from the system storage"
+        message="Lỗi truy xuất cơ sở dữ liệu hệ thống"
     )
 
-@router.post("/dispatch", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False)
 async def create_notification(data: NotificationCreate):
     return APIResponse(
         data=await NotificationService.create_notification(data),
-        message="New notification has been successfully generated and dispatched to the intended recipient",
+        message="Yêu cầu đã được hệ thống tiếp nhận và xử lý thành công",
         status=201
     )

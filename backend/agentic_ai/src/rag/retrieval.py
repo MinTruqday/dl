@@ -32,7 +32,7 @@ class RetrievalService:
                     unique_results.append(doc)
             return self._lost_in_the_middle_reorder(unique_results[:k])
         except Exception:
-            logger.error("The multidimensional contextual tracking sequence failed searching cross referenced structural data components")
+            logger.error("Lỗi khi truy xuất tài liệu")
             return []
 
 retrieval_service = RetrievalService()

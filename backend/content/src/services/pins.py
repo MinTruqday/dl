@@ -28,17 +28,17 @@ class PinService:
     async def pin_document(document_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.get("id"))}, {"$addToSet": {"pinned_documents": {"document_id": document_id, "pinned_at": datetime.now(timezone.utc)}}}, upsert=True)
-        logger.info("Internal systematic algorithm locked specific logical component establishing fundamental prioritization sequence")
-        return {"status": "success", "message": "Targeted active structure definitively isolated enforcing rigid explicit systemic priority queue"}
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"status": "success", "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.get("id"))}, {"$pull": {"pinned_documents": document_id}}, upsert=True)
-        return {"status": "success", "message": "Targeted explicit framework comprehensively decoupled revoking assigned systemic functional operational priority"}
+        return {"status": "success", "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         await RepositoryFactory.get("user_content_profiles").update_one({"_id": str(current_user.get("id"))}, {"$set": {"pinned_documents": document_ids}}, upsert=True)
-        return {"status": "success", "message": "Global multidimensional parameters controlling specific categorical index dynamically overwritten verified accurately"}
+        return {"status": "success", "message": "Lỗi truy xuất cơ sở dữ liệu hệ thống"}

@@ -6,8 +6,8 @@ class SearchEngineAgent:
     async def execute(self, query: str) -> str:
         try:
             if not settings.TAVILY_API_KEY:
-                logger.error("The external search indexing engine lacks vital required cryptographic system access configurations")
-                return "The external informational search configuration is missing requiring administrative operational system intervention"
+                logger.error("Lỗi hệ thống khi tìm kiếm dữ liệu cấu trúc")
+                return "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
                 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 res = await client.post(
@@ -16,11 +16,11 @@ class SearchEngineAgent:
                 )
                 if res.status_code == 200:
                     data = res.json()
-                    logger.info("The independent external search routing matrix fully finalized isolating optimal dynamic variables")
+                    logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                     return data.get("answer", "\n".join([r.get("content", "") for r in data.get("results", [])]))
-                return "The external search structural networking service forcibly rejected incoming analytical query parsing"
+                return "Từ chối truy cập API nội bộ"
         except Exception:
-            logger.error("The external distributed structural analytical mapping architecture brutally crashed disrupting informational search")
-            return "The system encountered an unexpected error and requires you to try again later"
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+            return "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
 
 search_engine = SearchEngineAgent()

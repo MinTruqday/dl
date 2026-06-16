@@ -17,7 +17,7 @@ class TelemetryService:
             "timestamp": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("telemetry").insert_one(telemetry_event)
-        logger.debug("New system telemetry event has been successfully captured and recorded")
+        logger.debug("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return {"status": "success"}
 
     @staticmethod

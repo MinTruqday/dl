@@ -6,28 +6,28 @@ from src.schemas.finance import MembershipRequest, PurchaseRequest
 from src.services.pricing import PricingService
 from src.services.purchases import PurchaseService
 
-router = APIRouter(prefix="/monetization")
+router = APIRouter(prefix="/doanh-thu")
 
-@router.post("/purchase/document", response_model=APIResponse[Any])
+@router.post("/mua-hang/tai-lieu", response_model=APIResponse[Any])
 async def purchase_document(req: PurchaseRequest, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await PurchaseService.purchase_document(req.document_id, current_user, db=db),
-        message="Digital document purchase transaction has been completed successfully and library access granted",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )
 
-@router.post("/membership", response_model=APIResponse[Any])
+@router.post("/thanh-vien", response_model=APIResponse[Any])
 async def buy_membership(req: MembershipRequest, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await PurchaseService.buy_ai_tier(req.tier, current_user, db=db),
-        message="Your artificial intelligence membership plan has been successfully upgraded and activated",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )
 
-@router.get("/pricing", response_model=APIResponse[Any])
+@router.get("/bang-gia", response_model=APIResponse[Any])
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
         data=await PricingService.get_pricing_config(db=db),
-        message="Current membership pricing configuration matrix has been successfully retrieved from database",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )

@@ -12,10 +12,10 @@ class DocLibDatabase:
     async def insert_document(self, document_data: dict):
         try:
             res = await self.db.documents.insert_one(document_data)
-            logger.info("New document record successfully generated and securely inserted primary system database collection")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             return str(res.inserted_id)
         except Exception:
-            logger.error("System failed safely insert new document record database due unexpected structural constraint connectivity")
+            logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
             return None
 
     async def update_document(self, document_id: str, update_data: dict):
@@ -23,8 +23,8 @@ class DocLibDatabase:
             await self.db.documents.update_one(
                 {"_id": ObjectId(document_id)}, {"$set": update_data}
             )
-            logger.info("Requested document active record successfully updated securely saved within primary system database collection")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         except Exception:
-            logger.error("Database operational engine encountered unexpected structural error attempting update specified functional document record")
+            logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
 
 db_client = DocLibDatabase()

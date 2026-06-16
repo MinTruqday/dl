@@ -10,19 +10,19 @@ from src.services.storage import StorageService
 from loguru import logger
 from fastapi.responses import StreamingResponse
 
-router = APIRouter(prefix="/storage")
+router = APIRouter(prefix="/luu-tru")
 
-@router.post("/folders", response_model=APIResponse[StorageItemResponse])
+@router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
 async def create_folder(data: StorageItemCreate = Body(...), current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     data.is_folder = True
     item = await StorageService.create_item(data, current_user.get("id"), db=db)
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="New structural operational folder successfully instantiated within personalized active user workspace",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=201,
     )
 
-@router.post("/files", response_model=APIResponse[StorageItemResponse])
+@router.post("/tap-tin", response_model=APIResponse[StorageItemResponse])
 async def create_file(background_tasks: BackgroundTasks, data: StorageItemCreate = Body(...), current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     from src.services.ai import AIService
     data.is_folder = False
@@ -30,59 +30,59 @@ async def create_file(background_tasks: BackgroundTasks, data: StorageItemCreate
     background_tasks.add_task(AIService.process_storage_file, str(item.id), current_user.get("id"))
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="New file securely uploaded and officially registered within centralized storage workspace",
+        message="Lỗi truy xuất cơ sở dữ liệu hệ thống",
         status=201,
     )
 
-@router.get("/lists", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/danh-sach", response_model=APIResponse[List[StorageItemResponse]])
 async def list_items(parent_id: Optional[str] = None, is_trashed: bool = False, is_starred: Optional[bool] = None, current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     items = await StorageService.get_items_by_parent(parent_id, current_user.get("id"), is_trashed, is_starred, db=db)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items], 
-        message="Requested directory hierarchical contents successfully extracted and retrieved from user workspace", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=200
     )
 
-@router.get("/search", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/tim-kiem", response_model=APIResponse[List[StorageItemResponse]])
 async def search_items(q: str, type: Optional[str] = None, current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     items = await StorageService.search_items(q, current_user.get("id"), type, db=db)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
-        message="Contextual search operation completed flawlessly and matching files securely compiled internally",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )
 
-@router.get("/recent", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     items = await StorageService.get_recent_items(current_user.get("id"), limit, db=db)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
-        message="Recent historical tracking list referencing accessed storage items efficiently compiled algorithmically",
+        message="Lỗi truy xuất cơ sở dữ liệu hệ thống",
         status=200,
     )
 
-@router.get("/quota", response_model=APIResponse[Any])
+@router.get("/han-muc", response_model=APIResponse[Any])
 async def get_storage_quota(current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     data = await StorageService.get_storage_quota(current_user.get("id"), db=db)
-    return APIResponse(data=data, message="Personal workspace storage quota and structural utilization metrics effectively calculated successfully", status=200)
+    return APIResponse(data=data, message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", status=200)
 
-@router.post("/files/{item_id}/shortcut", response_model=APIResponse[StorageItemResponse])
+@router.post("/tap-tin/{item_id}/loi-tat", response_model=APIResponse[StorageItemResponse])
 async def create_shortcut(item_id: str, target_parent_id: Optional[str] = Body(None, embed=True), current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     item = await StorageService.create_shortcut(item_id, target_parent_id, current_user.get("id"), db=db)
     if not item:
-        raise HTTPException(status_code=404, detail="System fundamentally failed locating required original reference file constructing operational shortcut")
+        raise HTTPException(status_code=404, detail="Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
     return APIResponse(
         data=StorageItemResponse(**item.dict()), 
-        message="Dynamic navigational structural shortcut traversing specified active file successfully created internally", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=201
     )
 
-@router.get("/download-archive")
+@router.get("/tai-xuong-luu-tru-cu")
 async def download_zip(ids: str, current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     from core.storage import get_storage_client
     item_ids = [i.strip() for i in ids.split(",") if i.strip()]
     if not item_ids:
-        raise HTTPException(status_code=400, detail="Archive payload generation request explicitly rejected preventing zero file initialization sequence")
+        raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
     
     zip_buffer = io.BytesIO()
     async with await get_storage_client() as storage_client:
@@ -95,11 +95,11 @@ async def download_zip(ids: str, current_user: dict = Depends(require_role(["aut
                         file_data = await resp["Body"].read()
                         zip_file.writestr(item.name, file_data)
                     except Exception:
-                        logger.warning("System encountered temporal network disruption attempting retrieval specific archive package module")
+                        logger.warning("Mất kết nối mạng tạm thời")
     zip_buffer.seek(0)
     return StreamingResponse(zip_buffer, media_type="application/x-zip-compressed", headers={"Content-Disposition": "attachment; filename=storage_download.zip"})
 
-@router.put("/files/{item_id}", response_model=APIResponse[StorageItemResponse])
+@router.put("/tap-tin/{item_id}", response_model=APIResponse[StorageItemResponse])
 async def update_item(item_id: str, data: StorageItemUpdate = Body(...), current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     from uuid6 import uuid7
     if data.is_public and data.is_public is True:
@@ -114,60 +114,60 @@ async def update_item(item_id: str, data: StorageItemUpdate = Body(...), current
         item = await StorageService.update_item(item_id, current_user.get("id"), data, db=db)
         
     if not item:
-        raise HTTPException(status_code=404, detail="System unfortunately failed pinpointing targeted organizational structure modifying internal personalized workspace")
+        raise HTTPException(status_code=404, detail="Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Primary architectural metadata attached explicitly specified storage element safely overwritten successfully",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )
 
-@router.delete("/files/{item_id}", response_model=APIResponse[Any])
+@router.delete("/tap-tin/{item_id}", response_model=APIResponse[Any])
 async def delete_item(item_id: str, hard_delete: bool = False, current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     if hard_delete:
         success = await StorageService.delete_item(item_id, current_user.get("id"), db=db)
         if not success:
-            raise HTTPException(status_code=404, detail="System hopelessly failed uncovering designated active file deleting secure internal repository")
-        return APIResponse(data=None, message="Specifically designated organizational storage object safely deleted effectively clearing digital footprints", status=200)
+            raise HTTPException(status_code=404, detail="Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+        return APIResponse(data=None, message="Lỗi truy xuất cơ sở dữ liệu hệ thống", status=200)
     
     item = await StorageService.update_item(item_id, current_user.get("id"), StorageItemUpdate(is_trashed=True), db=db)
     if not item:
-        raise HTTPException(status_code=404, detail="System hopelessly failed uncovering designated active file updating secure internal repository")
-    return APIResponse(data=None, message="Distinct operational storage asset reliably transferred designated temporary digital recycling bin", status=200)
+        raise HTTPException(status_code=404, detail="Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+    return APIResponse(data=None, message="Lỗi truy xuất cơ sở dữ liệu hệ thống", status=200)
 
-@router.post("/files/{item_id}/copy", response_model=APIResponse[StorageItemResponse])
+@router.post("/tap-tin/{item_id}/sao-chep", response_model=APIResponse[StorageItemResponse])
 async def copy_item(item_id: str, target_parent_id: Optional[str] = Body(None, embed=True), current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     item = await StorageService.copy_item(item_id, current_user.get("id"), target_parent_id, db=db)
     if not item:
-        raise HTTPException(status_code=404, detail="Platform essentially aborted targeting correct structural directory replicating specific active documents")
+        raise HTTPException(status_code=404, detail="Lỗi khi truy xuất tài liệu")
     return APIResponse(
         data=StorageItemResponse(**item.dict()), 
-        message="Identified primary structural component functionally duplicated safely migrating toward defined target", 
+        message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
         status=201
     )
 
-@router.post("/files/{item_id}/versions", response_model=APIResponse[StorageItemResponse])
+@router.post("/tap-tin/{item_id}/phien-lam-cam-quyen", response_model=APIResponse[StorageItemResponse])
 async def add_version(item_id: str, url: str = Body(..., embed=True), size: int = Body(..., embed=True), current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     item = await StorageService.add_version(item_id, current_user.get("id"), url, size, db=db)
     if not item:
-        raise HTTPException(status_code=404, detail="Platform essentially aborted targeting correct structural directory appending specific historical modifications")
+        raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Constructed alternative historical progression explicitly specified structural file recorded chronologically flawlessly",
+        message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn",
         status=200,
     )
 
-@router.post("/files/{item_id}/share", response_model=APIResponse[Any])
+@router.post("/tap-tin/{item_id}/chia-se", response_model=APIResponse[Any])
 async def share_archive(item_id: str, email: str = Body(..., embed=True), role: str = Body("viewer", embed=True), current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     res = await StorageService.share_item(item_id, email, role, current_user.get("id"), db=db)
     return APIResponse(data=None, message=res["message"], status=200)
 
-@router.get("/shares/{share_token}", response_model=APIResponse[StorageItemResponse])
+@router.get("/chia-se/{share_token}", response_model=APIResponse[StorageItemResponse])
 async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageService.get_public_item(share_token, db=db)
     if not item:
-        raise HTTPException(status_code=404, detail="Publicized global cryptographic networking token formally rejected rendering structural access impossible")
+        raise HTTPException(status_code=404, detail="Từ chối truy cập API nội bộ")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Complete comprehensive diagnostic data mapping universally shared organizational unit collected algorithmically",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )

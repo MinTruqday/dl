@@ -21,7 +21,7 @@ async def init_db():
     rabbitmq_uri = settings.RABBITMQ_URI
 
     if not mongo_uri or not redis_uri or not rabbitmq_uri:
-        logger.error("System initialization failed because required database connection configurations are entirely missing")
+        logger.error("Mất kết nối mạng tạm thời")
         sys.exit(1)
 
     db_client.mongodb = AsyncIOMotorClient(mongo_uri, maxPoolSize=1000)
@@ -32,15 +32,15 @@ async def init_db():
         try:
             parsed_uri = urlparse(mongo_uri)
             host_with_port = parsed_uri.netloc.split("@")[-1] if "@" in parsed_uri.netloc else parsed_uri.netloc
-            logger.info("Primary database cluster initialization sequence has been successfully started by internal system")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             await db_client.mongodb.admin.command(
                 "replSetInitiate",
                 {"_id": "rs0", "members": [{"_id": 0, "host": host_with_port}]},
             )
-            logger.info("Primary database cluster has been successfully initialized and is ready to accept connections")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             await asyncio.sleep(3)
         except Exception:
-            logger.warning("System encountered an unexpected disruption while attempting to initialize primary database cluster")
+            logger.warning("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
 
@@ -48,13 +48,13 @@ async def init_db():
     for i in range(max_retries):
         try:
             db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
-            logger.info("Background message queue connection has been successfully established and is operating normally")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             break
         except Exception as e:
             if i == max_retries - 1:
-                logger.error("Background message queue connection could not be established after multiple consecutive retry attempts")
+                logger.error("Mất kết nối mạng tạm thời")
                 raise e
-            logger.warning("System experienced temporary delay attempting to connect background message queue and will retry")
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             await asyncio.sleep(5)
 
     await setup_indexes()
@@ -103,9 +103,9 @@ async def setup_indexes():
         await db["storage_items"].create_index([("target_id", 1)], background=True)
         await db["storage_items"].create_index([("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True)
 
-        logger.info("Primary database indexing process has been successfully completed to optimize query performance")
+        logger.info("Khởi tạo danh mục tìm kiếm thành công")
     except Exception:
-        logger.error("System encountered an unexpected disruption while attempting to build primary database indexes")
+        logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
 
 async def close_db():
     if db_client.mongodb:

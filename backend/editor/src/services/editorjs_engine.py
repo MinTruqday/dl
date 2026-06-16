@@ -288,7 +288,7 @@ class EditorJSEngine:
         ):
             return ""
 
-        logger.warning("System safely ignored invalid or unsupported content block during document rendering process")
+        logger.warning("Lỗi khi truy xuất tài liệu")
         return ""
 
     @staticmethod
@@ -353,7 +353,7 @@ class EditorJSEngine:
             await asyncio.wait_for(process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT)
 
             if not os.path.exists(pdf_path):
-                logger.error("System encountered critical failure while attempting to generate final portable document format")
+                logger.error("Lỗi khi truy xuất tài liệu")
                 raise Exception("System failed to generate final document output due to internal rendering error")
 
             with open(pdf_path, "rb") as f:
@@ -364,11 +364,11 @@ class EditorJSEngine:
                 try:
                     process.kill()
                 except Exception:
-                    logger.warning("System was unable to cleanly terminate background compilation process")
+                    logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             raise Exception("Document compilation process exceeded maximum allowed execution time and was terminated")
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception:
-                    logger.warning("System was unable to automatically clean up temporary processing files")
+                    logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")

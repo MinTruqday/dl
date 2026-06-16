@@ -18,7 +18,7 @@ class PrivacyService:
             "reactions_given": len(reactions),
             "raw_comments": [{"document_id": c.get("document_id"), "content": c.get("content")} for c in comments],
         }
-        logger.info("Comprehensive data takeout request has been initiated by authenticated user")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         return takeout_payload
 
     @staticmethod
@@ -36,16 +36,16 @@ class PrivacyService:
             await db_client.redis.delete(f"active_session:{user_id}")
             
         await target_db["users"].delete_one({"_id": str(current_user.get("id"))})
-        logger.info("Authenticated user invoked right to be forgotten resulting in permanent data removal")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         return {
             "status": "success",
-            "message": "Account and associated personal data permanently removed from systems as requested",
+            "message": "Lỗi xử lý tài khoản",
         }
 
     @staticmethod
     async def request_data_export(current_user, db=None) -> dict:
-        logger.info("Data export request has been successfully registered for authenticated user")
-        return {"message": "Data export request received and secure download link will be dispatched shortly"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def generate_gdpr_takeout(current_user, db=None) -> dict:
@@ -56,5 +56,5 @@ class PrivacyService:
             "documents": await target_db["documents"].find({"creator_id": user_id}).to_list(100),
             "comments": await target_db["comments"].find({"user_id": user_id}).to_list(500),
         }
-        logger.info("Compliance data takeout package successfully compiled and prepared for user")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return {"status": "success", "data": full_data}

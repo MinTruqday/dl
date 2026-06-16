@@ -30,11 +30,11 @@ class CouponService:
         
         existing = await target_db["coupons"].find_one({"code": coupon["code"]})
         if existing:
-            raise HTTPException(status_code=400, detail="Provided promotional code is already registered within active database campaigns")
+            raise HTTPException(status_code=400, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
             
         await target_db["coupons"].insert_one(coupon)
-        logger.info("New promotional coupon successfully configured and activated within marketing system")
-        return {"message": "Promotional coupon has been successfully generated and recorded", "coupon_id": coupon["_id"]}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", "coupon_id": coupon["_id"]}
 
     @staticmethod
     async def get_coupons(current_user: Any, db=None) -> list:
@@ -64,16 +64,16 @@ class CouponService:
     async def approve_coupon(coupon_id: str, action: str, current_user: Any, db=None) -> dict:
         target_db = db or db_client.mongodb.get_default_database()
         if not current_user or current_user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Current account lacks necessary administrative privileges to perform restricted action")
+            raise HTTPException(status_code=403, detail="Lỗi xử lý tài khoản")
             
         status = CouponStatus.APPROVED if action == "approve" else CouponStatus.REJECTED
         res = await target_db["coupons"].update_one({"_id": coupon_id}, {"$set": {"status": status}})
         
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Specified promotional coupon could not be located in active database records")
+            raise HTTPException(status_code=404, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
             
-        logger.info("Designated promotional coupon successfully updated following strict administrative review")
-        return {"message": "Administrative action successfully applied to specified promotional coupon records"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def validate_coupon(code: str, user: Any, document_id: Optional[str] = None, db=None) -> dict:
@@ -81,22 +81,22 @@ class CouponService:
         coupon = await target_db["coupons"].find_one({"code": code.upper(), "is_active": True, "status": CouponStatus.APPROVED})
         
         if not coupon:
-            raise HTTPException(status_code=404, detail="Submitted promotional code is invalid or currently awaiting administrative approval")
+            raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         if coupon.get("expires_at") and coupon["expires_at"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail="Submitted promotional code exceeded designated expiration period and is invalid")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         if coupon.get("used_count", 0) >= coupon.get("max_uses", 0):
-            raise HTTPException(status_code=400, detail="Submitted promotional code reached maximum allowed system redemption limit")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         if coupon.get("document_id") and coupon["document_id"] != document_id:
-            raise HTTPException(status_code=400, detail="Submitted promotional code is not applicable to currently selected digital document")
+            raise HTTPException(status_code=400, detail="Lỗi khi truy xuất tài liệu")
             
         target = coupon.get("target_type", CouponTargetType.ALL)
         if target == CouponTargetType.NEW_USER:
             purchase_count = await target_db["purchases"].count_documents({"user_id": str(user.id)})
             if purchase_count > 0:
-                raise HTTPException(status_code=400, detail="Specified promotional code is exclusively reserved for first time purchasers")
+                raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
                 
         return {"code": coupon["code"], "discount_percent": coupon["discount_percent"], "target_type": target}
 
@@ -109,12 +109,12 @@ class CouponService:
             
         coupon = await target_db["coupons"].find_one(query)
         if not coupon:
-            raise HTTPException(status_code=404, detail="Specified promotional coupon could not be located in active database records")
+            raise HTTPException(status_code=404, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
             
         new_status = not coupon.get("is_active", True)
         await target_db["coupons"].update_one({"_id": coupon_id}, {"$set": {"is_active": new_status}})
-        logger.info("Operational status of designated promotional coupon successfully toggled by administrator")
-        return {"message": "Operational status of specified promotional coupon successfully updated in system", "is_active": new_status}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", "is_active": new_status}
 
     @staticmethod
     async def delete_coupon(coupon_id: str, current_user: Any, db=None) -> dict:
@@ -125,7 +125,7 @@ class CouponService:
             
         res = await target_db["coupons"].delete_one(query)
         if res.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Specified promotional coupon could not be located in active database records")
+            raise HTTPException(status_code=404, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
             
-        logger.info("Designated promotional coupon successfully and permanently removed from active system")
-        return {"message": "Specified promotional coupon permanently removed from active system records"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}

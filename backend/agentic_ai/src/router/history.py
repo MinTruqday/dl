@@ -7,7 +7,7 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7
 
-router = APIRouter(prefix="/history")
+router = APIRouter(prefix="/lich-su")
 
 def get_db():
     client = AsyncIOMotorClient(settings.MONGODB_URI)
@@ -23,7 +23,7 @@ async def create_session(data: dict, db=Depends(get_db)):
     document_id = data.get("document_id")
     first_query = data.get("first_query", "")
     if not user_id:
-        raise HTTPException(status_code=400, detail="The strictly required account identification token signature payload information completely omitted explicitly failing input validation process")
+        raise HTTPException(status_code=400, detail="Khởi tạo AI thành công")
 
     title = first_query[:40] if first_query else "New ongoing conversation"
     session = {
@@ -50,35 +50,35 @@ async def get_user_sessions(user_id: str, document_id: Optional[str] = None, db=
 async def get_session_detail(session_id: str, user_id: str, db=Depends(get_db)):
     session = await RepositoryFactory.get("ai_sessions").find_one({"_id": session_id, "user_id": user_id})
     if not session:
-        raise HTTPException(status_code=404, detail="The designated historical interactive dialog chronological recording logically vanished evading explicit functional structural detection protocols")
+        raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
     messages = await RepositoryFactory.get("ai_messages").find({"session_id": session_id}).sort("created_at", 1).to_list(length=100)
     session["messages"] = messages
     return session
 
-@router.put("/{session_id}/title", response_model=Dict[str, Any])
+@router.put("/{session_id}/tieu-de", response_model=Dict[str, Any])
 async def update_title(session_id: str, data: dict, user_id: str, db=Depends(get_db)):
     result = await RepositoryFactory.get("ai_sessions").update_one(
         {"_id": session_id, "user_id": user_id},
         {"$set": {"title": data.get("title", ""), "updated_at": datetime.now(timezone.utc)}},
     )
     if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="The designated historical interactive dialog chronological recording logically vanished evading explicit functional structural detection protocols")
+        raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
     return {"status": "success"}
 
 @router.delete("/{session_id}", response_model=Dict[str, Any])
 async def delete_session(session_id: str, user_id: str, db=Depends(get_db)):
     result = await RepositoryFactory.get("ai_sessions").delete_one({"_id": session_id, "user_id": user_id})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="The designated historical interactive dialog chronological recording logically vanished evading explicit functional structural detection protocols")
+        raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
     return {"status": "success"}
 
-@router.post("/{session_id}/messages", response_model=Dict[str, Any])
+@router.post("/{session_id}/tin-nhan", response_model=Dict[str, Any])
 async def add_message(session_id: str, data: dict, db=Depends(get_db)):
     user_id = data.get("user_id")
     role = data.get("role")
     content = data.get("content")
     if not user_id or not role or not content:
-        raise HTTPException(status_code=400, detail="The strictly required structured payload mapping parameters were categorically omitted terminating explicit functional internal recording sequence")
+        raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
     message = {
         "_id": str(uuid7()),
         "session_id": session_id,

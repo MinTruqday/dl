@@ -47,13 +47,13 @@ class AgentOpsHarness:
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
             except Exception:
-                logger.error("The system encountered a significant network failure attempting to establish active connection mapping primary database securely")
+                logger.error("Mất kết nối mạng tạm thời")
         return self._db_client
 
     def record_session_start(self, session_id: str, user_id: str, query_preview: str = ""):
         metrics = SessionMetrics(session_id=session_id, user_id=user_id, started_at=datetime.now(timezone.utc))
         self._sessions[session_id] = metrics
-        logger.info("The systemic operational telemetry diagnostic recording process explicitly tracking current session initialized correctly successfully")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
     def record_session_end(self, session_id: str, status: Literal["done", "failed", "cancelled"] = "done"):
         metrics = self._sessions.get(session_id)
@@ -62,7 +62,7 @@ class AgentOpsHarness:
         metrics.ended_at = datetime.now(timezone.utc)
         metrics.status = status
         metrics.total_duration_ms = int((metrics.ended_at - metrics.started_at).total_seconds() * 1000)
-        logger.info("The operational diagnostic telemetry recording process explicitly tracking current functional session flawlessly concluded completed")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         asyncio.create_task(self._flush_session(session_id))
 
     def record_tool_call(self, session_id: str, tool_name: str, duration_ms: int, success: bool, error: str = ""):
@@ -84,13 +84,13 @@ class AgentOpsHarness:
             metrics.total_tokens_in += prompt_tokens
             metrics.total_tokens_out += completion_tokens
             metrics.llm_latencies_ms.append(duration_ms)
-        logger.info("The systemic operational metrics array reliably captured tracking event mapping primary language model evaluation invocation")
+        logger.info("Lỗi xử lý model AI")
 
     def record_security_event(self, session_id: str, event_type: str, risk_score: float, violations: list = None):
         metrics = self._sessions.get(session_id)
         if metrics:
             metrics.security_violations += 1
-        logger.warning("The operational security module intercepted tracked potential systematic structural policy violation anomaly perfectly identified")
+        logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
     async def _flush_session(self, session_id: str):
         metrics = self._sessions.pop(session_id, None)
@@ -116,9 +116,9 @@ class AgentOpsHarness:
                 "avg_llm_latency_ms": (int(sum(metrics.llm_latencies_ms) / len(metrics.llm_latencies_ms)) if metrics.llm_latencies_ms else 0),
             }
             await RepositoryFactory.get("agent_traces").insert_one(doc)
-            logger.info("The operational session tracking statistical diagnostic history seamlessly committed persisting entirely isolated permanent database")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         except Exception:
-            logger.error("The system failed executing transaction reliably storing active diagnostic session tracking operational history saving data")
+            logger.error("Lỗi xử lý tài khoản")
 
     def get_prometheus_metrics(self) -> str:
         active_count = len(self._sessions)

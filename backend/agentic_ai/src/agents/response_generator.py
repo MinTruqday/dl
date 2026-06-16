@@ -10,12 +10,12 @@ class ResponseGeneratorAgent:
             combined = "\n\n".join([str(d) for d in gathered_data])
             prompt = prompt_registry.get(PromptType.AGGREGATOR).format(query=query, gathered_data=combined)
             
-            logger.info("The final linguistic synthesizing aggregator framework effectively engaged processing combined analytical stream")
+            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             async for chunk in llm.astream([HumanMessage(content=prompt)]):
                 if chunk.content:
                     yield chunk.content
         except Exception:
-            logger.error("The automated linguistic synthesis sequence abruptly failed dispatching contiguous output streaming components")
-            yield "The system encountered an unexpected error and requires you to try again later"
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+            yield "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
 
 response_generator = ResponseGeneratorAgent()

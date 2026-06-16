@@ -12,14 +12,14 @@ from src.harness.context_harness import context_harness
 from src.harness.orchestration_harness import orchestration_harness
 from src.harness.security_harness import security_harness
 from src.schemas.requests import ChatRequest
-from src.tools.api import INTERNAL_API_URL, _make_api_request
+from src.tools.api import _make_api_request
 from src.utils.hf import HFInferenceChat
 from src.workflow.supervisor import supervisor
 import asyncio
 
-router = APIRouter(prefix="/chat")
+router = APIRouter(prefix="/tro-chuyen")
 
-@router.post("/chat")
+@router.post("/tro-chuyen")
 async def chat_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     if token:
@@ -35,11 +35,11 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         if req.document_ids:
             for doc_id in req.document_ids:
                 try:
-                    doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/documents/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                    doc_res = await _make_api_request("GET", f"{settings.CONTENT_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
                     if doc_res.status_code not in [200, 201]:
                         return {"answer": "The requested document either explicitly does not exist or requires additional elevated operational access permissions", "route": "error"}
                 except Exception:
-                    logger.error("The system encountered a fundamental architectural error while verifying structural document operational access permissions")
+                    logger.error("Lỗi khi truy xuất tài liệu")
                     return {"answer": "The system is currently completely unable to verify the active document access permissions securely", "route": "error"}
 
         route_data = await semantic_router.execute(req.query)
@@ -63,10 +63,10 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         final_answer = security_harness.scan_output(final_answer)
         return {"answer": final_answer or "The system encountered an unexpected structural exception rendering execution impossible forcing processing cancellation", "route": "agentic_ai"}
     except Exception:
-        logger.error("The artificial intelligence dynamic routing workflow execution encountered an unexpected critical structural issue")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return {"answer": "The system encountered an unexpected error and requires you to try again later", "route": "error"}
 
-@router.post("/stream")
+@router.post("/truc-tiep")
 async def stream_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
@@ -95,13 +95,13 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             if req.document_ids:
                 for doc_id in req.document_ids:
                     try:
-                        doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/documents/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                        doc_res = await _make_api_request("GET", f"{settings.CONTENT_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
                         if doc_res.status_code not in [200, 201]:
                             yield f"event: message\ndata: {json.dumps({'chunk': 'The targeted document explicitly does not exist or inherently requires additional elevated systematic network permissions'})}\n\n"
                             agentops_harness.record_session_end(session_id, "failed")
                             return
                     except Exception:
-                        logger.error("The system encountered a profound architectural error while establishing remote document access permissions")
+                        logger.error("Mất kết nối mạng tạm thời")
                         yield f"event: message\ndata: {json.dumps({'chunk': 'The system is fundamentally unable to correctly verify target document physical access hierarchical permissions'})}\n\n"
                         agentops_harness.record_session_end(session_id, "failed")
                         return
@@ -180,7 +180,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             agentops_harness.record_session_end(session_id, "done")
 
         except Exception:
-            logger.error("The artificial intelligence continuous streaming workflow execution encountered an unexpected critical functional exception")
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
             agentops_harness.record_session_end(session_id, "failed")
             yield f"event: message\ndata: {json.dumps({'chunk': 'The system encountered an unexpected error and requires you to try again later'})}\n\n"
 

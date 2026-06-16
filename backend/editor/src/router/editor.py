@@ -19,13 +19,13 @@ def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_use
     if current_user.ai_tier.value not in ["PREMIUM"] and current_user.get("role").value != "admin":
         raise HTTPException(
             status_code=403, 
-            detail="Access to advanced artificial intelligence capabilities requires active premium subscription plan"
+            detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
         )
     return current_user
 
-router = APIRouter(prefix="/editor")
+router = APIRouter(prefix="/soan-thao")
 
-@router.post("/{document_id}/plagiarism-check")
+@router.post("/{document_id}/dao-van-kiem-tra")
 async def check_plagiarism(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -33,11 +33,11 @@ async def check_plagiarism(
 ):
     return {
         "data": await EditorService.check_deep_plagiarism(document_id, current_user, agentic_ai_url),
-        "message": "Comprehensive originality analysis has been successfully completed for the requested document",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/sync")
+@router.post("/{document_id}/dong-bo")
 async def sync_keystroke_buffer(
     document_id: str,
     payload: KeystrokeSyncRequest,
@@ -45,11 +45,11 @@ async def sync_keystroke_buffer(
 ):
     return {
         "data": await EditorService.sync_keystroke_buffer(document_id, payload.model_dump(), current_user),
-        "message": "Editor keystroke buffer has been successfully synchronized with the remote server",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/suggestions")
+@router.post("/{document_id}/goi-y")
 async def add_inline_suggestion(
     document_id: str,
     payload: InlineSuggestionRequest,
@@ -57,11 +57,11 @@ async def add_inline_suggestion(
 ):
     return {
         "data": await EditorService.add_inline_suggestion(document_id, payload.model_dump(), current_user),
-        "message": "Inline editorial suggestion has been successfully recorded and attached to document",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 201,
     }
 
-@router.put("/suggestions/{suggestion_id}/resolve")
+@router.put("/goi-y/{suggestion_id}/giai-quyet")
 async def resolve_suggestion(
     suggestion_id: str,
     payload: ResolveSuggestionRequest,
@@ -69,39 +69,39 @@ async def resolve_suggestion(
 ):
     return {
         "data": await EditorService.resolve_suggestion(suggestion_id, payload.model_dump(), current_user),
-        "message": "Specified editorial suggestion has been successfully processed and marked as resolved",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/pomodoro")
+@router.post("/thoi-gian")
 async def sync_pomodoro_session(
     payload: PomodoroSyncRequest, current_user=Depends(get_current_user)
 ):
     return {
         "data": await EditorService.sync_pomodoro_session(payload.model_dump(), current_user),
-        "message": "Focus session metrics have been successfully synchronized with the central server",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/auto-save")
+@router.post("/{document_id}/tu-dong-luu-lai")
 async def auto_save_draft(
     document_id: str, payload: AutoSaveRequest, current_user=Depends(get_current_user)
 ):
     return {
         "data": await EditorService.auto_save_draft(document_id, payload.content, current_user),
-        "message": "Current document draft has been successfully preserved in the background storage system",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/submit-review")
+@router.post("/{document_id}/gui-di-danh-gia")
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.submit_for_review(document_id, current_user),
-        "message": "Specified document has been successfully queued for official editorial review process",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 201,
     }
 
-@router.post("/{document_id}/find-replace")
+@router.post("/{document_id}/tim-kiem-thay-nhan-dan")
 async def global_find_replace(
     document_id: str,
     payload: FindReplaceRequest,
@@ -111,11 +111,11 @@ async def global_find_replace(
         "data": await EditorService.global_find_replace(
             document_id, payload.search, payload.replace, payload.match_case, current_user
         ),
-        "message": "Global search and replacement operation has been successfully executed across document content",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/ai-suggestions")
+@router.post("/{document_id}/ai-goi-y")
 async def get_ai_suggestions(
     document_id: str,
     payload: AISuggestionRequest,
@@ -124,11 +124,11 @@ async def get_ai_suggestions(
 ):
     return {
         "data": await EditorService.get_ai_suggestions(document_id, payload.context, current_user, agentic_ai_url),
-        "message": "Artificial intelligence generated suggestions have been successfully retrieved for specified context",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/summarize")
+@router.post("/{document_id}/tom-tat")
 async def summarize_document(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -136,11 +136,11 @@ async def summarize_document(
 ):
     return {
         "data": await EditorService.summarize_document(document_id, current_user, agentic_ai_url),
-        "message": "Automated content summarization process has been successfully completed for the document",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/extract-tags")
+@router.post("/{document_id}/trich-xuat-nhan-dan")
 async def extract_smart_tags(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -148,11 +148,11 @@ async def extract_smart_tags(
 ):
     return {
         "data": await EditorService.extract_smart_tags(document_id, current_user, agentic_ai_url),
-        "message": "Intelligent contextual tags have been successfully extracted from the document content",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/check-logic")
+@router.post("/{document_id}/kiem-tra-xu-ly")
 async def check_logic(
     document_id: str,
     payload: dict,
@@ -161,11 +161,11 @@ async def check_logic(
 ):
     return {
         "data": await EditorService.check_logic(document_id, payload.get("content", ""), current_user, agentic_ai_url),
-        "message": "Logical consistency analysis has been successfully completed for the provided text",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/check-grammar")
+@router.post("/{document_id}/kiem-tra-ngu-phap")
 async def check_grammar(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -173,11 +173,11 @@ async def check_grammar(
 ):
     return {
         "data": await EditorService.check_grammar(document_id, current_user, agentic_ai_url),
-        "message": "Grammatical and structural analysis has been successfully completed for the document",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/comments")
+@router.post("/{document_id}/binh-luan")
 async def add_inline_comment(
     document_id: str,
     payload: InlineCommentRequest,
@@ -185,27 +185,27 @@ async def add_inline_comment(
 ):
     return {
         "data": await EditorService.add_inline_comment(document_id, payload.model_dump(), current_user),
-        "message": "Inline contextual comment has been successfully attached to specified document section",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.get("/{document_id}/comments")
+@router.get("/{document_id}/binh-luan")
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.get_inline_comments(document_id, current_user),
-        "message": "Associated inline comments have been successfully retrieved from the system database",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.put("/comments/{comment_id}/resolve")
+@router.put("/binh-luan/{comment_id}/giai-quyet")
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.resolve_comment(comment_id, current_user),
-        "message": "Selected inline comment has been successfully marked as resolved by the user",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }
 
-@router.post("/{document_id}/compare-versions")
+@router.post("/{document_id}/so-sanh-phien-lam-cam-quyen")
 async def get_version_diff(
     document_id: str,
     payload: VersionDiffRequest,
@@ -213,6 +213,6 @@ async def get_version_diff(
 ):
     return {
         "data": await EditorService.get_version_diff(document_id, payload.version_id_a, payload.version_id_b, current_user),
-        "message": "Comparative analysis between specified document versions has been successfully generated",
+        "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         "status": 200,
     }

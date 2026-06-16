@@ -6,24 +6,24 @@ from src.services.latex_engine import LatexEngine
 
 router = APIRouter()
 
-@router.post("/compile")
+@router.post("/bien-dich")
 async def compile_latex(req: CompileRequest):
     try:
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception:
-        logger.error("System encountered unexpected error attempting to compile formatted typesetting document")
+        logger.error("Lỗi khi truy xuất tài liệu")
         raise HTTPException(
             status_code=500, 
-            detail="Typesetting compilation process encountered structural errors and could not generate output"
+            detail="Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
         )
 
-@router.post("/export/{format}")
+@router.post("/ket-xuat/{format}")
 async def export_document(format: str, req: CompileRequest):
     if format not in ["docx", "html"]:
         raise HTTPException(
             status_code=400, 
-            detail="Requested export format is not currently supported by the conversion system"
+            detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
         )
 
     try:
@@ -34,17 +34,17 @@ async def export_document(format: str, req: CompileRequest):
 
         return Response(content=file_bytes, media_type=media_type)
     except Exception:
-        logger.error("System encountered unexpected error attempting to export document to requested format")
+        logger.error("Lỗi khi truy xuất tài liệu")
         raise HTTPException(
             status_code=500, 
-            detail="Document export process could not be completed due to internal processing interruption"
+            detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
         )
 
-@router.post("/format")
+@router.post("/dinh-dang")
 async def format_latex(req: CompileRequest):
     return LatexEngine.format_latex(req.content)
 
-@router.post("/export-zip")
+@router.post("/ket-xuat-nen-tap-tin")
 async def export_project_zip(req: CompileRequest):
     zip_bytes = LatexEngine.export_project_zip(req.content)
     return Response(content=zip_bytes, media_type="application/x-zip-compressed")

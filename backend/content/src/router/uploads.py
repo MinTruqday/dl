@@ -8,50 +8,50 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
 from core.dependency import get_db, require_role
 from src.services.uploads import UploadService
 
-router = APIRouter(prefix="/upload")
+router = APIRouter(prefix="/tai-len")
 
 async def validate_svg(file: UploadFile):
     if file.filename and file.filename.lower().endswith(".svg"):
         content = await file.read()
         text = content.decode("utf-8", errors="ignore")
         if re.search("<!ENTITY", text, re.IGNORECASE) or re.search("<!DOCTYPE", text, re.IGNORECASE):
-            raise HTTPException(status_code=400, detail="Uploaded vector graphic contains potentially unsafe structural formatting rejected by filters")
+            raise HTTPException(status_code=400, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
         await file.seek(0)
 
-@router.post("/images", response_model=APIResponse[Any])
+@router.post("/hinh-anh", response_model=APIResponse[Any])
 async def upload_image(file: UploadFile = File(...), current_user: dict = Depends(require_role(["author", "admin"])), db=Depends(get_db)) -> Any:
     await validate_svg(file)
     return APIResponse(
         data=await UploadService.upload_image(file, db=db),
-        message="Image asset has been successfully uploaded and securely transferred to remote storage",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=201,
     )
 
-@router.post("/documents", response_model=APIResponse[Any])
+@router.post("/tai-lieu", response_model=APIResponse[Any])
 async def upload_document(file: UploadFile = File(...), current_user: dict = Depends(require_role(["author", "admin"])), db=Depends(get_db)) -> Any:
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
-        message="Digital document successfully uploaded and securely registered within primary system repository",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=201,
     )
 
-@router.post("/files", response_model=APIResponse[Any])
+@router.post("/tap-tin", response_model=APIResponse[Any])
 async def upload_asset(file: UploadFile = File(...), current_user: dict = Depends(require_role(["reader", "author", "admin"])), db=Depends(get_db)) -> Any:
     from src.services.storage import StorageService
     quota = await StorageService.get_storage_quota(current_user.get("id"), db=db)
     if quota["used"] >= quota["limit"]:
-        raise HTTPException(status_code=400, detail="File upload sequence rejected because account exceeded maximum allocated structural capacity")
+        raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
-        message="Requested file asset successfully uploaded and actively stored within personalized workspace",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=201,
     )
 
-@router.get("/storage/{file_path:path}", response_model=APIResponse[Any])
+@router.get("/luu-tru/{file_path:path}", response_model=APIResponse[Any])
 async def get_presigned_download_url(file_path: str, current_user: dict = Depends(require_role(["author", "admin", "reader"])), db=Depends(get_db)):
     return APIResponse(
         data=await UploadService.get_presigned_url(file_path, db=db),
-        message="Cryptographically secure access download link for requested asset successfully generated functionally",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )
 
@@ -60,7 +60,7 @@ class MockFile:
         self.file = open(p, "rb")
         self.filename = n
 
-@router.post("/segments", response_model=APIResponse[Any])
+@router.post("/phan-doan", response_model=APIResponse[Any])
 async def upload_chunk(file: UploadFile = File(...), upload_id: str = Form(...), chunk_index: int = Form(...), total_chunks: int = Form(...), filename: str = Form(...), current_user: dict = Depends(require_role(["reader", "author", "admin"])), db=Depends(get_db)) -> Any:
     chunk_dir = f"storage/chunks/{upload_id}"
     os.makedirs(chunk_dir, exist_ok=True)
@@ -83,12 +83,12 @@ async def upload_chunk(file: UploadFile = File(...), upload_id: str = Form(...),
         os.remove(final_path)
         return APIResponse(
             data=result, 
-            message="Segmented file parts successfully merged and uploaded into remote centralized repository", 
+            message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
             status=201
         )
         
     return APIResponse(
         data={"uploaded": chunk_index}, 
-        message="Designated fragmented file segment successfully received and temporarily secured by server", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=200
     )

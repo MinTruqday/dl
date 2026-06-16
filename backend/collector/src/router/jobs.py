@@ -10,7 +10,7 @@ from uuid6 import uuid7
 
 router = APIRouter()
 
-@router.post("/triggers")
+@router.post("/kich-hoat")
 async def trigger_collection(req: CollectionRequest):
     source = req.source
     pages = req.pages
@@ -36,42 +36,42 @@ async def trigger_collection(req: CollectionRequest):
     else:
         raise HTTPException(
             status_code=400, 
-            detail="Specified data collection source is not recognized or supported by current system configuration"
+            detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
         )
 
     try:
         await mq_client.publish(queue_name, payload)
-        logger.info("Background data collection process successfully queued and initiated for requested data source")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return {
             "status": "success",
             "job_id": payload["job_id"],
-            "message": "Automated data collection process successfully initiated and running in background infrastructure",
+            "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         }
     except Exception:
-        logger.error("System encountered unexpected error attempting to initiate background data collection process")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         raise HTTPException(
             status_code=500, 
-            detail="System unable to queue requested data collection process due to internal service interruption"
+            detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
         )
 
-@router.post("/pause")
+@router.post("/tam-dung")
 async def stop_collection():
     try:
         if mq_client.channel:
             await mq_client.channel.close()
-        logger.info("Active data collection process successfully paused following administrative intervention command")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return {
             "status": "success",
-            "message": "Administrative stop signal acknowledged and active collection process safely paused",
+            "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn",
         }
     except Exception:
-        logger.error("System encountered unexpected error attempting to transmit pause signal to collection process")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         raise HTTPException(
             status_code=500, 
-            detail="System unable to transmit pause signal to background workers due to communication interruption"
+            detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
         )
 
-@router.get("/active-jobs")
+@router.get("/hoat-dong-cong-viec")
 async def get_active_jobs():
     active_collectors = (
         await RepositoryFactory.get("collection_jobs")
@@ -84,7 +84,7 @@ async def get_active_jobs():
     ]
     return jobs
 
-@router.get("/stats")
+@router.get("/thong-ke")
 async def get_collector_stats():
     total_docs = await RepositoryFactory.get("documents").count_documents({})
     total_assets = await RepositoryFactory.get("archives").count_documents({})
@@ -114,7 +114,7 @@ async def get_collector_stats():
         "status": "operational",
     }
 
-@router.get("/logs")
+@router.get("/nhat-ky")
 async def get_collector_logs():
     log_file = "logs/backend.log"
     logs = []

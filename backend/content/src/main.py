@@ -12,7 +12,6 @@ from src.router.documents import router as document_router
 from src.router.drafts import router as draft_router
 from src.router.exports import router as export_router
 from src.router.highlights import router as highlight_router
-from src.router.library import router as library_router
 from src.router.pins import router as pin_router
 from src.router.publication import router as publication_router
 from src.router.reading import router as reading_router
@@ -23,7 +22,7 @@ from src.router.versions import router as version_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Primary content management service initialized successfully and ready to process incoming requests")
+    logger.info("Quá trình khởi tạo dịch vụ và kết nối cơ sở dữ liệu thành công")
     await init_db()
     yield
     await close_db()
@@ -47,7 +46,6 @@ app.include_router(review_router)
 app.include_router(version_router)
 app.include_router(reading_router)
 app.include_router(bookmark_router)
-app.include_router(library_router)
 app.include_router(upload_router)
 app.include_router(discovery_router)
 app.include_router(export_router)
@@ -58,6 +56,6 @@ app.include_router(highlight_router)
 app.include_router(draft_router)
 app.include_router(pin_router)
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
-    return {"status": "Content management service is currently operating normally and functioning as expected without internal issues"}
+    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}

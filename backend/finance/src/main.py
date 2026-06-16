@@ -9,11 +9,11 @@ from src.router import coupons, deposits, monetization, wallets, withdrawals
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Financial processing service has been successfully initialized and is ready to handle transactions")
+    logger.info("Quá trình khởi tạo dịch vụ và kết nối cơ sở dữ liệu thành công")
     await init_db()
     yield
     await close_db()
-    logger.info("Financial processing service has cleanly shut down and closed all database connections")
+    logger.info("Dịch vụ đã ngắt kết nối cơ sở dữ liệu và dừng an toàn")
 
 app = FastAPI(title="DocLib Finance", version=settings.VERSION, lifespan=lifespan)
 
@@ -31,6 +31,6 @@ app.include_router(withdrawals.router)
 app.include_router(monetization.router)
 app.include_router(coupons.router)
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
-    return {"status": "Financial management service is currently operating normally and functioning as expected without internal issues"}
+    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}

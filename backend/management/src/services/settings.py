@@ -35,5 +35,5 @@ class SettingService:
             {"_id": user_id},
             {"$set": {"settings": merged_settings, "updated_at": datetime.now(timezone.utc)}},
         )
-        logger.info("System configuration settings have been successfully updated by authenticated user")
-        return {"message": "Personal system configuration settings have been successfully updated and saved"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}

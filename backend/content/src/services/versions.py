@@ -10,10 +10,10 @@ class VersionService:
     async def save_version(document_id, version_note, current_user, db=None):
         db = db or db_client.mongodb.get_default_database()
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id, "creator_id": str(current_user.get("id"))})
-        if not doc: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
+        if not doc: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         await RepositoryFactory.get("document_versions").insert_one({"document_id": document_id, "creator_id": str(current_user.get("id")), "note": version_note, "snapshot": {"title": doc.get("title"), "description": doc.get("description"), "content": doc.get("content", ""), "cover_url": doc.get("cover_url"), "tags": doc.get("tags", []), "categories": doc.get("categories", [])}, "created_at": datetime.now(timezone.utc)})
-        logger.info("Internal discrete historical snapshot mechanism reliably processed backing operational artifact successfully")
-        return {"message": "Structural contextual version successfully mapped freezing dynamic active framework logically"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def get_versions(document_id, current_user, db=None):
@@ -28,9 +28,9 @@ class VersionService:
     async def restore_version(version_id: str, current_user, db=None):
         db = db or db_client.mongodb.get_default_database()
         version = await RepositoryFactory.get("document_versions").find_one({"_id": ObjectId(version_id), "creator_id": str(current_user.get("id"))})
-        if not version: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
+        if not version: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         snapshot = version.get("snapshot")
         update_data = {"content": version.get("content", ""), "updated_at": datetime.now(timezone.utc)} if not snapshot else {**snapshot, "updated_at": datetime.now(timezone.utc)}
         await RepositoryFactory.get("documents").update_one({"_id": version["document_id"]}, {"$set": update_data})
-        logger.info("Explicit targeted object effectively rolled back overriding current systematic state gracefully")
-        return {"message": "Targeted active structure definitively rolled back establishing prior confirmed parameters explicitly"}
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}

@@ -10,7 +10,7 @@ from fastapi.encoders import jsonable_encoder
 from src.schemas.messages import MessageCreate
 from src.services.messages import MessageService
 
-router = APIRouter(prefix="/messages")
+router = APIRouter(prefix="/tin-nhan")
 
 async def publish_personal_message(message: dict, receiver_id: str):
     payload = json.dumps(jsonable_encoder(message))
@@ -39,7 +39,7 @@ async def send_message(req: MessageCreate, current_user=Depends(get_current_user
     await publish_personal_message({"type": "new_message", "data": msg}, req.receiver_id)
     return APIResponse(
         data=msg, 
-        message="Direct message has been successfully dispatched to intended recipient", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=201
     )
 
@@ -52,29 +52,29 @@ async def get_messages(
 ):
     return APIResponse(
         data=await MessageService.get_messages(other_user_id, current_user, limit, cursor),
-        message="Requested conversation history has been successfully retrieved from system database",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )
 
-@router.get("/conversations", response_model=APIResponse[Any])
+@router.get("/hoi-thoai", response_model=APIResponse[Any])
 async def get_conversations(current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageService.get_conversations(current_user),
-        message="Active conversation list for current user has been successfully compiled",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )
 
-@router.post("/{message_id}/pin", response_model=APIResponse[Any])
+@router.post("/{message_id}/ghim-trang", response_model=APIResponse[Any])
 async def toggle_pin(message_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.toggle_pin(message_id, current_user)
     if result is None:
         return APIResponse(
-            message="System unable to locate specified message or permissions are insufficient", 
+            message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
             status=404
         )
     if result == "limit_reached":
         return APIResponse(
-            message="Operation rejected because maximum allowed limit of pinned messages exceeded", 
+            message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
             status=400
         )
         
@@ -82,7 +82,7 @@ async def toggle_pin(message_id: str, current_user=Depends(get_current_user)):
     await publish_personal_message({"type": "message_pinned", "data": result}, other_id)
     return APIResponse(
         data=result["is_pinned"], 
-        message="Pinned status of specified message has been successfully updated", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=200
     )
 
@@ -91,14 +91,14 @@ async def edit_message(message_id: str, req: dict, current_user=Depends(get_curr
     content = req.get("content")
     if not content:
         return APIResponse(
-            message="Modification request rejected because submitted message content cannot be empty", 
+            message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
             status=400
         )
         
     result = await MessageService.edit_message(message_id, content, current_user)
     if not result:
         return APIResponse(
-            message="Specified message cannot be modified due to strict security constraints", 
+            message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
             status=403
         )
         
@@ -106,7 +106,7 @@ async def edit_message(message_id: str, req: dict, current_user=Depends(get_curr
     await publish_personal_message({"type": "message_edited", "data": result}, other_id)
     return APIResponse(
         data=result, 
-        message="Content of specified message has been successfully modified and updated", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=200
     )
 
@@ -115,7 +115,7 @@ async def recall_message(message_id: str, current_user=Depends(get_current_user)
     result = await MessageService.recall_message(message_id, current_user)
     if not result:
         return APIResponse(
-            message="Operation restricted because you lack permissions to recall this message", 
+            message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
             status=403
         )
         
@@ -123,24 +123,24 @@ async def recall_message(message_id: str, current_user=Depends(get_current_user)
     await publish_personal_message({"type": "message_recalled", "data": result}, other_id)
     return APIResponse(
         data=result, 
-        message="Specified message successfully recalled and removed from active thread", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=200
     )
 
-@router.get("/{other_user_id}/search", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_messages(other_user_id: str, q: str = Query(...), current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageService.search_messages(other_user_id, q, current_user),
-        message="Message search operation successfully executed across specified conversation history",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
     )
 
-@router.post("/{message_id}/reactions", response_model=APIResponse[Any])
+@router.post("/{message_id}/phan-ung", response_model=APIResponse[Any])
 async def add_reaction(message_id: str, req: dict, current_user=Depends(get_current_user)):
     reaction = req.get("reaction")
     result = await MessageService.add_reaction(message_id, reaction, current_user)
     if not result:
         return APIResponse(
-            message="Requested reaction operation currently unavailable for this specific message", 
+            message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
             status=400
         )
         
@@ -148,10 +148,10 @@ async def add_reaction(message_id: str, req: dict, current_user=Depends(get_curr
     await publish_personal_message({"type": "message_reaction", "data": result}, other_id)
     return APIResponse(
         data=result, 
-        message="Interaction metric for specified message has been successfully recorded"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.post("/{other_user_id}/read", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/doc-hieu", response_model=APIResponse[Any])
 async def mark_as_read(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.mark_as_read(other_user_id, current_user)
     await publish_personal_message(
@@ -160,75 +160,75 @@ async def mark_as_read(other_user_id: str, current_user=Depends(get_current_user
     )
     return APIResponse(
         data=result, 
-        message="Conversation thread successfully marked as read for current active user"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.post("/{receiver_id}/documents/share", response_model=APIResponse[Any])
+@router.post("/{receiver_id}/tai-lieu/chia-se", response_model=APIResponse[Any])
 async def share_document(receiver_id: str, req: dict, current_user=Depends(get_current_user)):
     document_id = req.get("document_id")
     if not document_id:
         return APIResponse(
-            message="Sharing operation aborted due to missing document identification parameters", 
+            message="Lỗi khi truy xuất tài liệu", 
             status=400
         )
         
     result = await MessageService.share_document(receiver_id, document_id, current_user)
     if not result:
         return APIResponse(
-            message="System unable to locate specified document within core storage repository", 
+            message="Lỗi truy xuất cơ sở dữ liệu hệ thống", 
             status=404
         )
         
     await publish_personal_message({"type": "new_message", "data": result}, receiver_id)
     return APIResponse(
         data=result, 
-        message="Specified document successfully shared with designated external recipient profile", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=201
     )
 
-@router.get("/{other_user_id}/documents/shared", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/tai-lieu/da-chia-se", response_model=APIResponse[Any])
 async def get_shared_attachments(other_user_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageService.get_shared_attachments(other_user_id, current_user),
-        message="Shared multimedia and document attachments successfully retrieved from history",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
     )
 
 @router.post("/{other_user_id}/block", response_model=APIResponse[Any])
 async def block_user(other_user_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageService.block_user(other_user_id, current_user),
-        message="Specified user account successfully restricted from initiating further communications",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
     )
 
-@router.post("/{other_user_id}/unblock", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/bo-chan", response_model=APIResponse[Any])
 async def unblock_user(other_user_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageService.unblock_user(other_user_id, current_user),
-        message="Communication restrictions for specified user account have been successfully lifted",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
     )
 
-@router.get("/{other_user_id}/block-status", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/block-trang-thai", response_model=APIResponse[Any])
 async def get_blocked_status(other_user_id: str, current_user=Depends(get_current_user)):
     blocked = await MessageService.check_blocked_status(str(current_user.get("id")), other_user_id)
     return APIResponse(
         data={"is_blocked": blocked}, 
-        message="Interaction restriction status between specified accounts successfully verified"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.post("/conversations/{other_user_id}/pin", response_model=APIResponse[Any])
+@router.post("/hoi-thoai/{other_user_id}/ghim-trang", response_model=APIResponse[Any])
 async def toggle_pin_conversation(other_user_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageService.toggle_pin_conversation(other_user_id, current_user),
-        message="Prioritization status of selected conversation successfully updated in system",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
     )
 
-@router.post("/{message_id}/translate", response_model=APIResponse[Any])
+@router.post("/{message_id}/phien-dich", response_model=APIResponse[Any])
 async def translate_message(message_id: str, req: dict, current_user=Depends(get_current_user)):
     target_lang = req.get("target_lang", "vi")
     result = await MessageService.translate_message(message_id, target_lang, current_user)
     if not result:
         return APIResponse(
-            message="System unable to locate specified message for requested translation process", 
+            message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
             status=404
         )
         
@@ -240,44 +240,44 @@ async def translate_message(message_id: str, req: dict, current_user=Depends(get
         )
     return APIResponse(
         data=result, 
-        message="Specified message content successfully translated into requested target language"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.post("/groups", response_model=APIResponse[Any])
+@router.post("/hoi-nhom", response_model=APIResponse[Any])
 async def create_group(req: dict, current_user=Depends(get_current_user)):
     group_name = req.get("group_name")
     member_ids = req.get("member_ids", [])
     if not group_name:
         return APIResponse(
-            message="Group creation request rejected because valid group name is required", 
+            message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn", 
             status=400
         )
         
     result = await MessageService.create_group(group_name, member_ids, current_user)
     return APIResponse(
         data=result, 
-        message="New communication group successfully provisioned and initialized within system", 
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", 
         status=201
     )
 
-@router.post("/{other_user_id}/drafts", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/cam-quyen-nhap-lieu", response_model=APIResponse[Any])
 async def save_draft(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
     content = req.get("content", "")
     result = await MessageService.save_draft(other_user_id, content, current_user)
     return APIResponse(
         data=result, 
-        message="Message draft successfully preserved in system cache for future editing"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.get("/{other_user_id}/drafts", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/cam-quyen-nhap-lieu", response_model=APIResponse[Any])
 async def get_draft(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.get_draft(other_user_id, current_user)
     return APIResponse(
         data=result, 
-        message="Previously saved message draft successfully retrieved from local system cache"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.post("/{other_user_id}/self-destruct", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/ca-nhan-huy-bo-diet", response_model=APIResponse[Any])
 async def toggle_self_destruct(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
     seconds = req.get("seconds", 0)
     result = await MessageService.toggle_self_destruct(other_user_id, seconds, current_user)
@@ -287,30 +287,30 @@ async def toggle_self_destruct(other_user_id: str, req: dict, current_user=Depen
     )
     return APIResponse(
         data=result, 
-        message="Automated self destruction timer for conversation successfully configured and applied"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.post("/{other_user_id}/mute", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/tat-am", response_model=APIResponse[Any])
 async def toggle_mute(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.toggle_mute(other_user_id, current_user)
     return APIResponse(
         data=result, 
-        message="Notification suppression settings for specified conversation successfully updated internally"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.get("/{other_user_id}/settings", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/cai-dat", response_model=APIResponse[Any])
 async def get_conversation_settings(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.get_conversation_settings(other_user_id, current_user)
     result["is_online"] = False
     return APIResponse(
         data=result, 
-        message="Personalized configuration settings for specified conversation successfully retrieved from database"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )
 
-@router.delete("/conversations/{other_user_id}", response_model=APIResponse[Any])
+@router.delete("/hoi-thoai/{other_user_id}", response_model=APIResponse[Any])
 async def delete_conversation(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.delete_conversation(other_user_id, current_user)
     return APIResponse(
         data=result, 
-        message="Specified conversation history successfully cleared and removed from active inbox"
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
     )

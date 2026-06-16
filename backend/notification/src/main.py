@@ -17,7 +17,7 @@ logger.add(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Notification service has been successfully initialized and is ready to process incoming requests")
+    logger.info("Yêu cầu đã được hệ thống tiếp nhận và xử lý thành công")
     yield
 
 app = FastAPI(title="DocLib Notification", version=settings.VERSION, lifespan=lifespan)
@@ -33,6 +33,6 @@ app.add_middleware(
 
 app.include_router(notification_router)
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
-    return {"status": "Notification service is operating normally and functioning as expected without internal issues"}
+    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}

@@ -35,10 +35,10 @@ class MessageQueueConnection:
                 await self.channel.declare_queue("anna_archive_queue", durable=True, arguments=queue_args)
                 await self.channel.declare_queue("ctan_queue", durable=True, arguments=queue_args)
 
-                logger.info("System successfully established secure operational connection asynchronous structural background active processing distributed queue")
+                logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                 return
             except Exception as e:
-                logger.error("Temporary network disruption prevented operational connection processing queue automated retry scheduled background sequence")
+                logger.error("Mất kết nối mạng tạm thời")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)
@@ -52,8 +52,8 @@ class MessageQueueConnection:
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
-            logger.debug("Asynchronous functional message payload successfully dispatched designated structural background active processing operational queue")
+            logger.debug("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         except Exception:
-            logger.error("Internal distribution mechanism failed securely publish asynchronous message operational payload required functional queue")
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
 
 mq_client = MessageQueueConnection()

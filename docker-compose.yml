@@ -105,7 +105,16 @@ services:
       - PAYOS_CHECKSUM_KEY=${PAYOS_CHECKSUM_KEY}
       - PAYOS_RETURN_URL=${PAYOS_RETURN_URL}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - INTERNAL_API_URL=${INTERNAL_API_URL}
+      - CONTENT_URL=${CONTENT_URL}
+      - FINANCE_URL=${FINANCE_URL}
+      - MANAGEMENT_URL=${MANAGEMENT_URL}
+      - AGENTIC_AI_URL=${AGENTIC_AI_URL}
+      - NOTIFICATION_URL=${NOTIFICATION_URL}
+      - AUTHENTICATION_URL=${AUTHENTICATION_URL}
+      - MESSAGING_URL=${MESSAGING_URL}
+      - COLLECTOR_URL=${COLLECTOR_URL}
+      - EDITOR_URL=${EDITOR_URL}
+      - REALTIME_URL=${REALTIME_URL}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
@@ -182,7 +191,7 @@ services:
       - "8400:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/finetune`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/ingest`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/inference`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/tro-chuyen`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nhap-lieu`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -255,7 +264,7 @@ services:
       - "8250:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.collector.rule=PathPrefix(`/collector`)"
+      - "traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)"
       - "traefik.http.services.collector.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -306,7 +315,7 @@ services:
       - "8500:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.authentication.rule=PathPrefix(`/auth`)"
+      - "traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`)"
       - "traefik.http.services.authentication.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -331,7 +340,7 @@ services:
       - "8050:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.management.rule=PathPrefix(`/ho-so`) || PathPrefix(`/audit`) || PathPrefix(`/quang-cao`) || PathPrefix(`/hoat-dong`) || PathPrefix(`/telemetry`) || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)"
+      - "traefik.http.routers.management.rule=PathPrefix(`/ho-so`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`) || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)"
       - "traefik.http.services.management.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -356,7 +365,7 @@ services:
       - "8200:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.realtime.rule=PathPrefix(`/tin-nhan`) || PathPrefix(`/soan-thao`)"
+      - "traefik.http.routers.realtime.rule=PathPrefix(`/ws`)"
       - "traefik.http.services.realtime.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -379,7 +388,7 @@ services:
       - "8100:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.messaging.rule=PathPrefix(`/lien-he`)"
+      - "traefik.http.routers.messaging.rule=PathPrefix(`/tin-nhan`)"
       - "traefik.http.services.messaging.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -404,7 +413,7 @@ services:
       - "8450:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.content.rule=PathPrefix(`/to-dam`) || PathPrefix(`/doc-sach`) || PathPrefix(`/dau-trang`) || PathPrefix(`/danh-gia`) || PathPrefix(`/tai-len`) || PathPrefix(`/xuat`) || PathPrefix(`/ban-nhap`) || PathPrefix(`/storage`) || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-ban`) || PathPrefix(`/phien-ban`)"
+      - "traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`) || PathPrefix(`/danh-gia`) || PathPrefix(`/tai-len`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/cam-quyen-nhap-lieu`) || PathPrefix(`/luu-tru`) || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`) || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`) || PathPrefix(`/tai-lieu-hieu`)"
       - "traefik.http.services.content.loadbalancer.server.port=8000"
     env_file:
       - .env

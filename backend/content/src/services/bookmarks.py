@@ -15,12 +15,12 @@ class BookmarkService:
         bookmarks = profile.get("bookmarks", []) if profile else []
         if document_id in bookmarks:
             bookmarks.remove(document_id)
-            message = "Target internal document permanently eliminated disconnecting fundamental indexing logic perfectly executed"
+            message = "Lỗi truy xuất cơ sở dữ liệu hệ thống"
             is_bookmarked = False
             await RepositoryFactory.get("user_content_profiles").update_one({"_id": user_id}, {"$pull": {"bookmarks": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}}, upsert=True)
         else:
             bookmarks.append(document_id)
-            message = "Target internal document formally established connecting fundamental indexing logic perfectly executed"
+            message = "Lỗi truy xuất cơ sở dữ liệu hệ thống"
             is_bookmarked = True
             await RepositoryFactory.get("user_content_profiles").update_one({"_id": user_id}, {"$addToSet": {"bookmarks": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}}, upsert=True)
         return {"status": "success", "message": message, "is_bookmarked": is_bookmarked}
@@ -39,7 +39,7 @@ class BookmarkService:
         db = db or db_client.mongodb.get_default_database()
         folder = {"_id": str(uuid7()), "user_id": str(current_user.get("id")), "name": name.strip()[:100], "bookmark_ids": [], "created_at": datetime.now(timezone.utc)}
         await RepositoryFactory.get("bookmark_folders").insert_one(folder)
-        logger.info("Internal systematic folder indexing logic correctly deployed partitioning structured analytical arrays")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return folder
 
     @staticmethod
@@ -52,12 +52,12 @@ class BookmarkService:
     async def assign_bookmarks_to_folder(folder_id: str, bookmark_ids: list, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         result = await RepositoryFactory.get("bookmark_folders").update_one({"_id": folder_id, "user_id": str(current_user.get("id"))}, {"$set": {"bookmark_ids": bookmark_ids, "updated_at": datetime.now(timezone.utc)}})
-        if result.matched_count == 0: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
-        return {"message": "Structural dynamic grouping parameters firmly assigned designated functional internal matrix"}
+        if result.matched_count == 0: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         result = await RepositoryFactory.get("bookmark_folders").delete_one({"_id": folder_id, "user_id": str(current_user.get("id"))})
-        if result.deleted_count == 0: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
-        return {"message": "Structural dynamic grouping parameters definitively removed detaching designated functional analytical node"}
+        if result.deleted_count == 0: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}

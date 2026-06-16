@@ -18,12 +18,12 @@ logger.add(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Automated data collection service successfully initialized and ready to process background tasks")
+    logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
     from src.worker import run_worker
     task = asyncio.create_task(run_worker())
     yield
     task.cancel()
-    logger.info("Automated data collection service and associated background workers shut down safely")
+    logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
 app = FastAPI(title="DocLib Collector", version=settings.VERSION, lifespan=lifespan)
 app.middleware("http")(add_trace_id_header)
@@ -36,11 +36,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/collectors")
+app.include_router(router, prefix="/thu-thap")
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
     return {
-        "status": "Automated data collection service is currently operating normally and functioning as expected",
+        "status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định",
         "service": "crawler_service"
     }

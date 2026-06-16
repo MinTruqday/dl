@@ -37,7 +37,7 @@ class CollectorStorage:
             client = await self.get_client()
             await client.head_bucket(Bucket=self.bucket)
         except ClientError:
-            logger.info("Automated structural provisioning sequence preparing primary object storage dynamic bucket incoming multimedia assets")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             client = await self.get_client()
             await client.create_bucket(Bucket=self.bucket)
 
@@ -53,7 +53,7 @@ class CollectorStorage:
             )
             return f"{self.public_url}/{self.bucket}/{object_name}"
         except Exception as e:
-            logger.error("System encountered critical structural network failure securely transferring operational file permanent object storage backend")
+            logger.error("Mất kết nối mạng tạm thời")
             raise e
 
 storage = CollectorStorage()

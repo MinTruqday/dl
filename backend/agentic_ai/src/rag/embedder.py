@@ -18,10 +18,10 @@ class EmbeddingService:
             response = await self._client.post(self._url, headers=self._headers, json={"inputs": [text]})
             if response.status_code == 200:
                 return response.json()[0]
-            logger.error("The semantic embedding generative model forcefully rejected incoming specific text encoding request")
+            logger.error("Lỗi xử lý model AI")
             return [0.0] * self._dimensions
         except Exception:
-            logger.error("The systematic artificial intelligence framework failed retrieving dimensional vector representations correctly")
+            logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
             return [0.0] * self._dimensions
 
     async def embed_documents(self, texts: List[str]) -> List[List[float]]:
@@ -35,7 +35,7 @@ class EmbeddingService:
                 else:
                     embeddings.extend([[0.0] * self._dimensions for _ in batch])
             except Exception:
-                logger.error("The semantic contextual indexing mechanism collapsed translating text blocks into vector matrices")
+                logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
                 embeddings.extend([[0.0] * self._dimensions for _ in batch])
             await asyncio.sleep(0.1)
         return embeddings

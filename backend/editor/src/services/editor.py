@@ -17,30 +17,30 @@ class EditorService:
         if not content:
             raise HTTPException(
                 status_code=400, 
-                detail="Requested operation cannot proceed because provided document content is completely empty"
+                detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
             )
         try:
-            url = f"{compiler_url}/export/{format_type}"
+            url = f"{compiler_url}/xuat/{format_type}"
             async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
                 response = await client.post(url, json={"content": content, "format": format_type})
                 if response.status_code != 200:
                     raise HTTPException(
                         status_code=422, 
-                        detail="System was unable to successfully export document to requested file format"
+                        detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
                     )
                 return response.content
         except httpx.TimeoutException:
             raise HTTPException(
                 status_code=408, 
-                detail="Document export process exceeded maximum allowed execution time and was terminated"
+                detail="Lỗi khi truy xuất tài liệu"
             )
         except HTTPException:
             raise
         except Exception:
-            logger.error("Document export operation failed unexpectedly while processing the conversion request")
+            logger.error("Lỗi khi truy xuất tài liệu")
             raise HTTPException(
                 status_code=500, 
-                detail="Document export process encountered critical failure and could not be completed"
+                detail="Khởi tạo AI thành công"
             )
 
     @staticmethod
@@ -48,30 +48,30 @@ class EditorService:
         if not content:
             raise HTTPException(
                 status_code=400, 
-                detail="Requested operation cannot proceed because provided document content is completely empty"
+                detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
             )
         try:
-            url = f"{editor_url}/compile"
+            url = f"{editor_url}/bien-dich"
             async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
                 response = await client.post(url, json={"content": content})
                 if response.status_code != 200:
                     raise HTTPException(
                         status_code=422, 
-                        detail="Document compilation process encountered critical failure and could not be completed"
+                        detail="Khởi tạo AI thành công"
                     )
                 return response.content
         except httpx.TimeoutException:
             raise HTTPException(
                 status_code=408, 
-                detail="Document compilation process exceeded maximum allowed execution time and was terminated"
+                detail="Lỗi khi truy xuất tài liệu"
             )
         except HTTPException:
             raise
         except Exception:
-            logger.error("Background document compilation task failed to complete successfully")
+            logger.error("Khởi tạo AI thành công")
             raise HTTPException(
                 status_code=500, 
-                detail="Document compilation process encountered critical failure and could not be completed"
+                detail="Khởi tạo AI thành công"
             )
 
     @staticmethod
@@ -83,8 +83,8 @@ class EditorService:
                 await redis_client.hset(f"editor_snapshot:{document_id}", user_id, str(payload))
             return {"status": "synced_cache", "timestamp": payload.get("timestamp")}
         except Exception:
-            logger.error("Background task failed to synchronize editor keystroke buffer with remote cache")
-            return {"status": "sync_failed", "error": "Synchronization process encountered unexpected system failure"}
+            logger.error("Mất kết nối mạng tạm thời")
+            return {"status": "sync_failed", "error": "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"}
 
     @staticmethod
     async def add_inline_suggestion(document_id: str, payload: dict, current_user, db=None):
@@ -100,8 +100,8 @@ class EditorService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("New inline editorial suggestion has been successfully recorded for specified document")
-        return {"message": "Inline editorial suggestion has been successfully submitted and saved"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user, db=None):
@@ -110,13 +110,13 @@ class EditorService:
         if not sug:
             raise HTTPException(
                 status_code=404, 
-                detail="Requested editorial suggestion could not be located within the system records"
+                detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
             )
         doc = await RepositoryFactory.get("documents").find_one({"_id": sug["document_id"]})
         if doc and str(doc.get("creator_id")) != user_id and sug.get("reviewer_id") != user_id:
             raise HTTPException(
                 status_code=403, 
-                detail="Current account lacks necessary permissions to resolve specific editorial suggestion"
+                detail="Lỗi xử lý tài khoản"
             )
 
         action = payload.get("action", "rejected")
@@ -124,8 +124,8 @@ class EditorService:
             {"_id": ObjectId(suggestion_id)},
             {"$set": {"status": action, "resolved_at": datetime.now(timezone.utc)}},
         )
-        logger.info("Inline editorial suggestion has been marked as resolved by authorized account")
-        return {"message": "Specified editorial suggestion has been successfully processed and updated"}
+        logger.info("Lỗi xử lý tài khoản")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
@@ -139,8 +139,8 @@ class EditorService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("New focus session has been successfully recorded for the authenticated account")
-        return {"status": "Session metrics have been successfully recorded"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"status": "Xác thực tài khoản và phân quyền người dùng thành công"}
 
     @staticmethod
     async def auto_save_draft(document_id: str, content: dict, current_user, db=None):
@@ -181,7 +181,7 @@ class EditorService:
                 if "data" in block and "text" in block["data"]:
                     words += len(str(block["data"]["text"]).split())
         except Exception:
-            logger.error("System encountered structural error attempting to parse document draft content")
+            logger.error("Lỗi khi truy xuất tài liệu")
 
         reading_time_minutes = max(1, words // 200)
         await RepositoryFactory.get("documents").update_one(
@@ -199,7 +199,7 @@ class EditorService:
             },
         )
         return {
-            "message": "Current document draft has been successfully preserved in background storage",
+            "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
             "timestamp": str(datetime.now(timezone.utc)),
         }
 
@@ -210,8 +210,8 @@ class EditorService:
             {"_id": document_id, "creator_id": user_id},
             {"$set": {"editor_review_status": "pending_review"}},
         )
-        logger.info("Document has been successfully placed into editorial review queue by author")
-        return {"message": "Specified document has been successfully queued for official editorial review"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def global_find_replace(
@@ -229,7 +229,7 @@ class EditorService:
         if not document:
             raise HTTPException(
                 status_code=403,
-                detail="System could not locate specified document or account lacks access permissions",
+                detail="Lỗi xử lý tài khoản",
             )
 
         flags = 0 if match_case else re.IGNORECASE
@@ -273,9 +273,9 @@ class EditorService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Global search and replacement operation has been successfully executed on document")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return {
-            "message": "Global search and replacement operation has been successfully executed across document",
+            "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
             "affected_fields": ["title", "description", "content"],
         }
 
@@ -286,7 +286,7 @@ class EditorService:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
-                f"{agentic_ai_url}/inference/actions",
+                f"{agentic_ai_url}/suy-luan/hanh-dong",
                 json={
                     "action": "ai_suggestions",
                     "text": context,
@@ -295,7 +295,7 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return {"suggestions": resp.json().get("result", "")}
-        return {"suggestions": "Artificial intelligence service is currently unable to generate suggestions for content"}
+        return {"suggestions": "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"}
 
     @staticmethod
     async def summarize_document(
@@ -305,7 +305,7 @@ class EditorService:
         if not doc:
             raise HTTPException(
                 status_code=404, 
-                detail="Requested document could not be located within the active system records"
+                detail="Hệ thống không tìm thấy tài liệu được yêu cầu"
             )
             
         content = doc.get("draft_content") or doc.get("content", "")
@@ -322,13 +322,13 @@ class EditorService:
         if len(text.split()) < 20:
             raise HTTPException(
                 status_code=400, 
-                detail="Provided document does not contain enough text to generate meaningful summary"
+                detail="Lỗi khi truy xuất tài liệu"
             )
             
         try:
             async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
                 resp = await client.post(
-                    f"{agentic_ai_url}/inference/actions",
+                    f"{agentic_ai_url}/suy-luan/hanh-dong",
                     json={
                         "action": "summarize",
                         "text": text[:5000],
@@ -342,14 +342,14 @@ class EditorService:
                     )
                     return {"summary": summary}
         except Exception:
-            logger.error("Automated document summarization task encountered unexpected internal system failure")
+            logger.error("Lỗi khi truy xuất tài liệu")
             raise HTTPException(
                 status_code=500, 
-                detail="System unable to establish secure connection with artificial intelligence processing service"
+                detail="Mất kết nối mạng tạm thời"
             )
         raise HTTPException(
             status_code=500, 
-            detail="Automated document summarization process could not be completed successfully"
+            detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
         )
 
     @staticmethod
@@ -360,7 +360,7 @@ class EditorService:
         if not doc:
             raise HTTPException(
                 status_code=404, 
-                detail="Requested document could not be located within the active system records"
+                detail="Hệ thống không tìm thấy tài liệu được yêu cầu"
             )
             
         content = doc.get("draft_content") or doc.get("content", "")
@@ -376,7 +376,7 @@ class EditorService:
         try:
             async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
                 resp = await client.post(
-                    f"{agentic_ai_url}/inference/actions",
+                    f"{agentic_ai_url}/suy-luan/hanh-dong",
                     json={
                         "action": "extract_tags",
                         "text": text[:3000],
@@ -397,14 +397,14 @@ class EditorService:
                     )
                     return {"tags": tags}
         except Exception:
-            logger.error("Intelligent tag extraction process encountered unexpected internal system failure")
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
             raise HTTPException(
                 status_code=500, 
-                detail="System unable to establish secure connection with artificial intelligence processing service"
+                detail="Mất kết nối mạng tạm thời"
             )
         raise HTTPException(
             status_code=500, 
-            detail="Intelligent contextual tags could not be successfully extracted from provided document"
+            detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"
         )
 
     @staticmethod
@@ -422,7 +422,7 @@ class EditorService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("editor_comments").insert_one(comment)
-        return {"_id": comment_id, "message": "Inline contextual comment has been successfully recorded and attached"}
+        return {"_id": comment_id, "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def get_inline_comments(document_id: str, current_user, db=None) -> List[dict]:
@@ -446,14 +446,14 @@ class EditorService:
         if not comment:
             raise HTTPException(
                 status_code=404, 
-                detail="Requested inline comment could not be located within the system records"
+                detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
             )
 
         doc = await RepositoryFactory.get("documents").find_one({"_id": comment["document_id"]})
         if doc and str(doc.get("creator_id")) != str(current_user.get("id")) and comment.get("user_id") != str(current_user.get("id")):
             raise HTTPException(
                 status_code=403, 
-                detail="Current account lacks necessary authorization to mark specific comment as resolved"
+                detail="Lỗi xử lý tài khoản"
             )
 
         await RepositoryFactory.get("editor_comments").update_one(
@@ -466,7 +466,7 @@ class EditorService:
                 }
             },
         )
-        return {"message": "Selected inline comment has been successfully marked as resolved"}
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def get_version_diff(document_id: str, version_id_a: str, version_id_b: str, current_user, db=None) -> dict:
@@ -475,7 +475,7 @@ class EditorService:
         if not v_a or not v_b:
             raise HTTPException(
                 status_code=404, 
-                detail="System unable to locate specified document versions required for comparative analysis"
+                detail="Lỗi khi truy xuất tài liệu"
             )
         return {
             "version_a": v_a.get("content"),
@@ -492,23 +492,23 @@ class EditorService:
         if not doc:
             raise HTTPException(
                 status_code=404, 
-                detail="Requested document could not be located within the active system records"
+                detail="Hệ thống không tìm thấy tài liệu được yêu cầu"
             )
         content = str(doc.get("content", ""))
         try:
             async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
                 resp = await client.post(
-                    f"{agentic_ai_url}/inference/plagiarism-check",
+                    f"{agentic_ai_url}/suy-luan/dao-van-kiem-tra",
                     json={"text": content[:5000]},
                 )
                 if resp.status_code == 200:
                     return resp.json()
         except Exception:
-            logger.error("Comprehensive originality analysis process encountered unexpected internal system failure")
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return {
             "plagiarism_score": None,
             "status": "error",
-            "message": "Originality verification service is currently experiencing technical difficulties processing the request",
+            "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn",
         }
 
     @staticmethod
@@ -517,7 +517,7 @@ class EditorService:
         previous_content = doc.get("content", "")
         async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
-                f"{agentic_ai_url}/inference/actions",
+                f"{agentic_ai_url}/suy-luan/hanh-dong",
                 json={
                     "action": "check_logic",
                     "text": content,
@@ -537,12 +537,12 @@ class EditorService:
         if not doc:
             raise HTTPException(
                 status_code=404, 
-                detail="Requested document could not be located within the active system records"
+                detail="Hệ thống không tìm thấy tài liệu được yêu cầu"
             )
         content = doc.get("content", "")
         async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
-                f"{agentic_ai_url}/inference/grammar-check",
+                f"{agentic_ai_url}/suy-luan/ngu-phap-kiem-tra",
                 json={"text": content[:5000]},
             )
             if resp.status_code == 200:
@@ -550,5 +550,5 @@ class EditorService:
         return {
             "corrected_text": "",
             "score": 0,
-            "message": "Grammatical analysis service is currently experiencing technical difficulties processing the request"
+            "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
         }

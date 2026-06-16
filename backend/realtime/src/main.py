@@ -9,11 +9,11 @@ from src.router import editor, messages
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Real-time communication service initialized successfully and ready to accept incoming connections")
+    logger.info("Quá trình khởi tạo dịch vụ và kết nối cơ sở dữ liệu thành công")
     await init_db()
     yield
     await close_db()
-    logger.info("Real-time communication service has been shut down cleanly and all connections closed")
+    logger.info("Dịch vụ đã ngắt kết nối cơ sở dữ liệu và dừng an toàn")
 
 app = FastAPI(title="Real-time Service", version=settings.VERSION, lifespan=lifespan)
 
@@ -29,9 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(editor.router, prefix="/editor")
-app.include_router(messages.router, prefix="/messages")
+app.include_router(editor.router, prefix="/soan-thao")
+app.include_router(messages.router, prefix="/tin-nhan")
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def check_health():
-    return {"status": "Real-time communication service is operating normally and functioning as expected"}
+    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}

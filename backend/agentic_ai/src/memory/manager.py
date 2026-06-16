@@ -4,10 +4,10 @@ from src.memory.mem0_manager import mem0_manager
 class MemoryManager:
     async def get_user_preferences(self, user_id: str) -> str:
         try:
-            logger.info("The unified cross linked global memory system precisely abstracted remote configuration mapping")
+            logger.info("Mất kết nối mạng tạm thời")
             return await mem0_manager.get_user_preferences(user_id)
         except Exception:
-            logger.error("The overarching associative hierarchical memory system collapsed retrieving designated stored profile identities")
+            logger.error("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             return ""
 
 memory_manager = MemoryManager()

@@ -20,10 +20,10 @@ class PlanningAgent:
                 raw_content = raw_content.split("```")[1].split("```")[0]
                 
             parsed = json.loads(raw_content)
-            logger.info("The centralized operational architectural planner flawlessly decomposed linguistic query extracting logical sequences")
+            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             return parsed.get("steps", [{"agent": "Knowledge", "task": query}])
         except Exception:
-            logger.error("The artificial intelligence dynamic task orchestration planner completely failed formatting execution JSON")
+            logger.error("Khởi tạo AI thành công")
             return [{"agent": "Knowledge", "task": req_data.get("query", "")}]
 
 planning = PlanningAgent()

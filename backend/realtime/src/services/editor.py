@@ -11,14 +11,14 @@ class EditorManager:
         if room_id not in self.active_connections:
             self.active_connections[room_id] = []
         self.active_connections[room_id].append(websocket)
-        logger.info(f"New device successfully established connection to collaboration space {room_id} bringing total sessions to {len(self.active_connections[room_id])}")
+        logger.info(f"Thiết bị mới đã kết nối vào không gian cộng tác {room_id}, tổng số phiên: {len(self.active_connections[room_id])}")
 
     def disconnect(self, websocket: WebSocket, room_id: str):
         if room_id in self.active_connections and websocket in self.active_connections[room_id]:
             self.active_connections[room_id].remove(websocket)
             if not self.active_connections[room_id]:
                 del self.active_connections[room_id]
-            logger.info(f"Device has cleanly disconnected from the collaboration space with identifier {room_id}")
+            logger.info(f"Thiết bị đã ngắt kết nối khỏi không gian cộng tác")
 
     async def broadcast(self, message: bytes, room_id: str, sender: WebSocket):
         if room_id in self.active_connections:
@@ -28,7 +28,7 @@ class EditorManager:
                     try:
                         await connection.send_bytes(message)
                     except Exception:
-                        logger.error(f"System encountered unexpected network failure broadcasting synchronization signals to collaboration space {room_id}")
+                        logger.error(f"Lỗi mạng khi đồng bộ không gian cộng tác")
                         dead_connections.append(connection)
             for dead in dead_connections:
                 self.disconnect(dead, room_id)

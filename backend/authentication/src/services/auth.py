@@ -17,12 +17,12 @@ class AuthService:
         google_client_id = settings.GOOGLE_CLIENT_ID
         redirect_uri = settings.GOOGLE_REDIRECT_URI
         if not google_client_id or not redirect_uri:
-            logger.error("External authentication provider configuration is missing essential environment variables causing process to halt")
+            logger.error("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="External authentication service is currently unavailable due to incomplete system configuration",
+                detail="Khởi tạo AI thành công",
             )
-        return f"{settings.GOOGLE_AUTH_URL}/?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile"
+        return f"{settings.GOOGLE_AUTH_URL}/?response_type=ma-so&client_id={cai-dat.GOOGLE_CLIENT_ID}&redirect_uri={cai-dat.GOOGLE_REDIRECT_URI}&scope=openid thu-dien ho-so"
 
     @staticmethod
     async def register_user(user_in: UserCreate, client_ip: str, db=None):
@@ -30,13 +30,13 @@ class AuthService:
         if config and not config.get("registration_enabled", True):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account creation functionality is temporarily disabled by system administrators at this time",
+                detail="Lỗi xử lý tài khoản",
             )
 
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.MANAGEMENT_URL}/users",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung",
                     json={
                         "email": user_in.email,
                         "full_name": user_in.full_name,
@@ -49,10 +49,10 @@ class AuthService:
                     detail = resp.json().get("detail") if resp.json() else "Unexpected system error occurred while attempting to process the registration request"
                     raise HTTPException(status_code=400, detail=detail)
                 elif resp.status_code != 201:
-                    raise HTTPException(status_code=500, detail="Unexpected system error occurred while communicating with the user provisioning service")
+                    raise HTTPException(status_code=500, detail="Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
                 user_id = resp.json().get("data", {}).get("user_id")
         except httpx.RequestError:
-            raise HTTPException(status_code=500, detail="System was unable to establish connection with internal user management service")
+            raise HTTPException(status_code=500, detail="Mất kết nối mạng tạm thời")
 
         auth_cred = {
             "_id": user_id,
@@ -89,7 +89,7 @@ class AuthService:
 
         try:
             async with httpx.AsyncClient() as client:
-                url = f"{settings.MANAGEMENT_URL}/users/email/{username}" if is_email else f"{settings.MANAGEMENT_URL}/users/slug/{username}"
+                url = f"{settings.MANAGEMENT_URL}/nguoi-dung/thu-dien/{username}" if is_email else f"{settings.MANAGEMENT_URL}/nguoi-dung/dinh-danh/{username}"
                 resp = await client.get(url, timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")
@@ -97,7 +97,7 @@ class AuthService:
             pass
 
         if not user_doc:
-            raise HTTPException(status_code=401, detail="System could not locate an account associated with the provided credentials")
+            raise HTTPException(status_code=401, detail="Lỗi xử lý tài khoản")
 
         auth_cred = await AuthRepository.get_auth_credential_by_id(str(user_doc["_id"]), db=db)
         password_hash = auth_cred.get("password_hash") if auth_cred else "invalid"
@@ -113,17 +113,17 @@ class AuthService:
                 db=db,
             )
             logger.warning(f"Authentication attempt for {username} failed due to incorrect credentials from {client_ip}")
-            raise HTTPException(status_code=401, detail="Provided authentication credentials do not match our secure system records")
+            raise HTTPException(status_code=401, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
         if not user_doc.get("is_active", True):
-            raise HTTPException(status_code=403, detail="Access to account is currently restricted due to inactive or locked status")
+            raise HTTPException(status_code=403, detail="Lỗi xử lý tài khoản")
 
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
         await AuthRepository.register_session(user_id_str, session_id, client_ip)
         access_token = create_access_token(data={"sub": user_doc["email"], "sid": session_id})
         
-        logger.info(f"Account associated with {username} successfully authenticated from network address {client_ip}")
+        logger.info(f"Tài khoản {username} đã đăng nhập thành công từ IP {client_ip}")
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -137,15 +137,15 @@ class AuthService:
     async def revoke_all_sessions(current_user: dict):
         user_id_str = str(current_user.get("id"))
         await AuthRepository.revoke_all_sessions(user_id_str)
-        logger.info(f"All active authentication sessions for user {user_id_str} have been successfully revoked")
-        return {"message": "You have been successfully signed out from all active devices and sessions"}
+        logger.info(f"Tất cả phiên đăng nhập của user {user_id_str} đã bị thu hồi")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def forgot_password(email: str, client_ip: str, db=None):
         user = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.MANAGEMENT_URL}/users/email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.MANAGEMENT_URL}/nguoi-dung/thu-dien/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user = resp.json().get("data")
         except Exception:
@@ -176,15 +176,15 @@ class AuthService:
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
             except Exception:
-                logger.error("System encountered unexpected error attempting to dispatch the password recovery email")
+                logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
                 
-        return {"status": "ok", "message": "Password recovery request received and is currently being processed by the system"}
+        return {"status": "ok", "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def reset_password(token: str, new_password: str, client_ip: str, db=None):
         token_doc = await AuthRepository.get_valid_password_reset_token(token, db=db)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail="Provided verification token is either invalid or has exceeded allowed expiration time")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         auth_cred = await AuthRepository.get_auth_credential_by_email(token_doc["email"], db=db)
         if auth_cred:
@@ -201,19 +201,19 @@ class AuthService:
             db=db,
         )
         logger.info(f"Password for account {token_doc['email']} was successfully modified from network address {client_ip}")
-        return {"status": "ok", "message": "Your account password has been successfully updated and saved to the system"}
+        return {"status": "ok", "message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def verify_reset_code(token: str, client_ip: str, db=None):
         token_doc = await AuthRepository.get_valid_password_reset_token(token, db=db)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail="Provided verification token is either invalid or has exceeded allowed expiration time")
-        return {"status": "ok", "message": "Submitted verification token has been verified and confirmed as valid by system"}
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"status": "ok", "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def issue_token_for_user(user_doc: dict, client_ip: str, db=None):
         if not user_doc.get("is_active", True):
-            raise HTTPException(status_code=403, detail="Access to account is currently restricted due to inactive or locked status")
+            raise HTTPException(status_code=403, detail="Lỗi xử lý tài khoản")
             
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
@@ -243,8 +243,8 @@ class AuthService:
             )
             token_data = token_resp.json()
             if "access_token" not in token_data:
-                logger.error("External authentication provider rejected authorization request due to invalid token exchange")
-                raise HTTPException(status_code=400, detail="System unable to complete authentication process with the external identity provider")
+                logger.error("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+                raise HTTPException(status_code=400, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                 
             user_resp = await client.get(
                 settings.GOOGLE_USERINFO_URL,
@@ -257,7 +257,7 @@ class AuthService:
         
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.MANAGEMENT_URL}/users/email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.MANAGEMENT_URL}/nguoi-dung/thu-dien/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")
         except Exception:
@@ -268,13 +268,13 @@ class AuthService:
             if config and not config.get("registration_enabled", True):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Account creation functionality is temporarily disabled by system administrators at this time",
+                    detail="Lỗi xử lý tài khoản",
                 )
 
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        f"{settings.MANAGEMENT_URL}/users",
+                        f"{settings.MANAGEMENT_URL}/nguoi-dung",
                         json={
                             "email": email,
                             "full_name": google_user.get("name"),
@@ -284,7 +284,7 @@ class AuthService:
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if resp.status_code != 201:
-                        raise HTTPException(status_code=500, detail="Unexpected system error occurred while communicating with the user provisioning service")
+                        raise HTTPException(status_code=500, detail="Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
                         
                     user_id = resp.json().get("data", {}).get("user_id")
                     auth_cred = {
@@ -296,8 +296,8 @@ class AuthService:
                     await AuthRepository.create_auth_credential(auth_cred, db=db)
                     user_doc = {"_id": user_id, "email": email, "is_active": True}
             except httpx.RequestError:
-                raise HTTPException(status_code=500, detail="System was unable to establish connection with internal user management service")
+                raise HTTPException(status_code=500, detail="Mất kết nối mạng tạm thời")
                 
-            logger.info(f"New integrated account automatically provisioned for {email} following successful external authentication")
+            logger.info(f"Tài khoản liên kết mới đã được tạo tự động cho {email}")
             
         return await AuthService.issue_token_for_user(user_doc, client_ip, db=db)

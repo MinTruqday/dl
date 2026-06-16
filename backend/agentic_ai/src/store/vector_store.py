@@ -32,7 +32,7 @@ class VectorStore:
             except asyncio.CancelledError:
                 break
             except Exception:
-                logger.error("The system encountered an unexpected issue while attempting to queue data for index")
+                logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
 
     async def ensure_collection(self):
         try:
@@ -45,7 +45,7 @@ class VectorStore:
                     vectors_config=VectorParams(size=embedding_service._dimensions, distance=Distance.COSINE),
                 )
         except Exception:
-            logger.error("The system encountered an unexpected issue initializing the search index collection")
+            logger.error("Lỗi hệ thống khi tìm kiếm dữ liệu cấu trúc")
             raise
 
     async def upsert(self, ids: List[str], embeddings: List[List[float]], documents: List[str], metadatas: List[Dict]):
@@ -77,7 +77,7 @@ class VectorStore:
                 for hit in results
             ]
         except Exception:
-            logger.error("The search query execution process failed due to an unexpected system exception")
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
             return []
 
     async def delete_by_document(self, document_id: str):
@@ -87,7 +87,7 @@ class VectorStore:
                 points_selector=Filter(must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))]),
             )
         except Exception:
-            logger.error("The system failed to permanently remove specified data from the search index database")
+            logger.error("Lỗi hệ thống khi tìm kiếm dữ liệu cấu trúc")
             raise
 
 vector_store = VectorStore()

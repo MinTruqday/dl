@@ -36,9 +36,9 @@ class UserService:
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
         )
         if res.matched_count == 0:
-            raise HTTPException(status_code=404, detail="System unable to locate user profile matching provided account identifier")
-        logger.info("Access privileges for specified user account successfully modified to requested permission level")
-        return {"message": "Access privileges for specified account successfully updated and applied"}
+            raise HTTPException(status_code=404, detail="Lỗi xử lý tài khoản")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def update_user_status(user_id: str, is_active: bool, db=None) -> Dict[str, str]:
@@ -47,15 +47,15 @@ class UserService:
             {"$set": {"is_active": is_active, "updated_at": datetime.now(timezone.utc)}},
         )
         if res.matched_count == 0:
-            raise HTTPException(status_code=404, detail="System unable to locate user profile matching provided account identifier")
-        logger.info("Operational activity status for specified user account successfully updated to reflect new state")
-        return {"message": "Operational activity status for specified account successfully updated"}
+            raise HTTPException(status_code=404, detail="Lỗi xử lý tài khoản")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def warn_user(user_id: str, reason: str, current_user, db=None) -> dict:
         user = await RepositoryFactory.get("users").find_one({"_id": user_id})
         if not user:
-            raise HTTPException(status_code=404, detail="System unable to locate user profile matching provided account identifier")
+            raise HTTPException(status_code=404, detail="Lỗi xử lý tài khoản")
             
         warning = {"_id": str(uuid7()), "user_id": user_id, "actor_id": str(current_user.get("id")), "reason": reason, "created_at": datetime.now(timezone.utc)}
         await RepositoryFactory.get("warnings").insert_one(warning)
@@ -65,15 +65,15 @@ class UserService:
             if settings.NOTIFICATION_URL:
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.NOTIFICATION_URL}/notifications/dispatch",
+                        f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",
                         json={"target_user_id": user_id, "title": "New system administrative warning", "body": f"Official violation warning recorded for your account due to {reason}", "type": "WARNING"},
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
         except Exception:
-            logger.warning("System encountered unexpected disruption attempting to dispatch notification payload to external signaling service")
+            logger.warning("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
             
-        logger.info("Official administrative warning successfully issued to specified user account by moderation staff")
-        return {"message": "Administrative warning successfully generated and dispatched to targeted user account"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def lock_user(user_id: str, reason: str, duration_hours: int, current_user, db=None) -> dict:
@@ -83,8 +83,8 @@ class UserService:
             {"$set": {"is_active": False, "locked_until": lock_until, "lock_reason": reason, "updated_at": datetime.now(timezone.utc)}},
         )
         await RepositoryFactory.get("audit_logs").insert_one({"action": "LOCK_USER", "actor_id": str(current_user.get("id")), "target_user_id": user_id, "reason": reason, "duration": duration_hours, "timestamp": datetime.now(timezone.utc)})
-        logger.info("Specified user account temporarily suspended and restricted from accessing platform resources")
-        return {"message": "Specified user account successfully locked and temporarily restricted from accessing system"}
+        logger.info("Lỗi xử lý tài khoản")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def shadowban_user(user_id: str, is_banned: bool, current_user, db=None) -> dict:
@@ -94,8 +94,8 @@ class UserService:
         )
         action = "SHADOWBAN" if is_banned else "UNSHADOWBAN"
         await RepositoryFactory.get("audit_logs").insert_one({"action": action, "actor_id": str(current_user.get("id")), "target_user_id": user_id, "timestamp": datetime.now(timezone.utc)})
-        logger.info("Visibility restriction protocol for specified user account successfully applied or lifted")
-        return {"message": "System visibility restriction status for specified account updated successfully"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def get_notes(user_id: str, db=None) -> list:
@@ -115,8 +115,8 @@ class UserService:
         await RepositoryFactory.get("moderator_notes").insert_one(
             {"_id": str(uuid7()), "user_id": user_id, "actor_id": str(current_user.get("id")), "note": note, "created_at": datetime.now(timezone.utc)}
         )
-        logger.info("Internal administrative note successfully attached to specified user profile by moderation staff")
-        return {"message": "Internal administrative moderation note successfully saved and attached to user profile"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công"}
 
     @staticmethod
     async def get_report_queue(status_filter: str = "pending", cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), skip: int = 0, db=None) -> list:
@@ -125,7 +125,7 @@ class UserService:
             try:
                 match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))}
             except ValueError:
-                logger.warning("Requested pagination process interrupted because provided cursor value was incorrectly formatted")
+                logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
                 
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:

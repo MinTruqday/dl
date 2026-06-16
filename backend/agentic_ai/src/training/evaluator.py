@@ -4,10 +4,10 @@ class ModelEvaluator:
     @staticmethod
     def evaluate_adapter(adapter_path: str, validation_data: list) -> dict:
         try:
-            logger.info("The automated post training evaluation operational framework efficiently analyzed output generated adapters")
+            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             return {"perplexity": 0.0, "accuracy": 0.0}
         except Exception:
-            logger.error("The underlying sequential evaluation diagnostic mathematical framework failed reading adapter matrix accurately")
-            return {"error": "The algorithmic model validation system crashed circumventing proper statistical assessment diagnostics"}
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+            return {"error": "Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI"}
 
 model_evaluator = ModelEvaluator()

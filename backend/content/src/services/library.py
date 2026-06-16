@@ -11,7 +11,7 @@ class LibraryService:
         db = db or db_client.mongodb.get_default_database()
         new_list = {"_id": str(uuid7()), "user_id": str(current_user.get("id")), "name": data.name, "description": data.description, "is_public": data.is_public, "documents": [], "created_at": datetime.now(timezone.utc)}
         await RepositoryFactory.get("reading_lists").insert_one(new_list)
-        logger.info("Configured personalized sequential architectural collection algorithm dynamically executed establishing functional array")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         return new_list
 
     @staticmethod
@@ -23,7 +23,7 @@ class LibraryService:
     async def get_reading_list_by_id(list_id: str, current_user, db=None):
         db = db or db_client.mongodb.get_default_database()
         reading_list = await RepositoryFactory.get("reading_lists").find_one({"_id": list_id, "user_id": str(current_user.get("id"))})
-        if not reading_list: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
+        if not reading_list: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         if doc_ids := reading_list.get("documents", []): reading_list["documents_detailed"] = await RepositoryFactory.get("documents").find({"_id": {"$in": doc_ids}}).to_list(length=100)
         else: reading_list["documents_detailed"] = []
         return reading_list
@@ -32,12 +32,12 @@ class LibraryService:
     async def add_document_to_list(list_id: str, document_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         if (await RepositoryFactory.get("reading_lists").update_one({"_id": list_id, "user_id": str(current_user.get("id"))}, {"$addToSet": {"documents": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}})).matched_count == 0:
-            raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
-        return {"status": "success", "message": "Specific target object dynamically attached updating relational mapping sequential structural logic"}
+            raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"status": "success", "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def remove_document_from_list(list_id: str, document_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         if (await RepositoryFactory.get("reading_lists").update_one({"_id": list_id, "user_id": str(current_user.get("id"))}, {"$pull": {"documents": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}})).matched_count == 0:
-            raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
-        return {"status": "success", "message": "Specific target object decisively abandoned detaching explicit active array filtering sequence"}
+            raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"status": "success", "message": "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"}

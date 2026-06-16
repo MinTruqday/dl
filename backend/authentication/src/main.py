@@ -10,7 +10,7 @@ from src.router.passkey import router as passkey_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Security and authentication service initialized successfully and ready to accept incoming connections")
+    logger.info("Quá trình khởi tạo dịch vụ và kết nối cơ sở dữ liệu thành công")
     await init_db()
     yield
     await close_db()
@@ -32,6 +32,6 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(passkey_router)
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
-    return {"status": "Authentication service is operating normally and functioning as expected without internal issues"}
+    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}

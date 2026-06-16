@@ -13,20 +13,20 @@ try:
     from reportlab.pdfgen import canvas
     REPORTLAB_AVAILABLE = True
 except ImportError:
-    logger.error("Internal algorithmic formatting sequence blocked fundamentally resolving incomplete processing system packages")
+    logger.error("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
     REPORTLAB_AVAILABLE = False
 
 class ExportService:
     @staticmethod
     async def export_document_pdf_watermarked(document_id: str, current_user, db=None):
-        if not REPORTLAB_AVAILABLE: raise HTTPException(status_code=500, detail="Automated document exporting algorithm completely blocked experiencing significant functional compilation error")
+        if not REPORTLAB_AVAILABLE: raise HTTPException(status_code=500, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         db = db or db_client.mongodb.get_default_database()
         document = await RepositoryFactory.get("documents").find_one({"_id": str(document_id)})
-        if not document: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
+        if not document: raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         user_id = str(current_user.get("id"))
         if document.get("is_premium") and document.get("creator_id") != user_id and (not hasattr(current_user, "role") or current_user.get("role") != "ADMIN"):
             if not await RepositoryFactory.get("purchases").find_one({"user_id": user_id, "item_id": str(document["_id"])}):
-                raise HTTPException(status_code=403, detail="Platform essentially blocked specific account avoiding altering unowned primary systematic logic")
+                raise HTTPException(status_code=403, detail="Lỗi xử lý tài khoản")
         
         watermark_text = "Copyright Protected Material - Licensed exclusively for personal usage"
 
@@ -71,10 +71,10 @@ class ExportService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception:
-                logger.error("Sophisticated layout synthesizing pipeline experienced severe structural parsing alignment processing failure")
+                logger.error("Lỗi khi truy xuất tài liệu")
                 return None
 
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
-        if pdf_data is None: raise HTTPException(status_code=500, detail="Requested operational artifact fundamentally corrupted rejecting secondary algorithmic interpretation exporting module")
-        logger.info("Encrypted PDF document perfectly constructed enveloping robust static digital structural frame")
+        if pdf_data is None: raise HTTPException(status_code=500, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return pdf_data

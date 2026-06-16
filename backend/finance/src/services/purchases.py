@@ -14,16 +14,16 @@ class PurchaseService:
         target_db = db or db_client.mongodb.get_default_database()
         tier = tier.upper()
         if tier not in ["PRO", "PREMIUM"]:
-            raise HTTPException(status_code=400, detail="Selected membership plan is not recognized so please choose valid tier")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
         price = 750 if tier == "PRO" else 2500
 
         if current_user.ai_tier and current_user.ai_tier.value == tier:
-            raise HTTPException(status_code=400, detail="Account already has active plan matching selected membership subscription tier")
+            raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
 
         wallet = await target_db["wallets"].find_one({"_id": str(current_user.get("id"))})
         if not wallet or wallet.get("balance", 0) < price:
-            raise HTTPException(status_code=400, detail="Insufficient digital balance to acquire requested membership subscription plan tier")
+            raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
 
         session = await db_client.mongodb.start_session()
         session.start_transaction()
@@ -35,7 +35,7 @@ class PurchaseService:
             )
             if deduct_result.modified_count == 0:
                 await session.abort_transaction()
-                raise HTTPException(status_code=400, detail="Insufficient digital balance to acquire requested membership subscription plan tier")
+                raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
 
             await target_db["users"].update_one(
                 {"_id": str(current_user.get("id"))},
@@ -52,14 +52,14 @@ class PurchaseService:
             await target_db["transactions"].insert_one(tx.model_dump(by_alias=True), session=session)
 
             await session.commit_transaction()
-            logger.info("Account owner successfully upgraded artificial intelligence membership subscription plan tier")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             return {"tier": tier, "status": "active"}
         except HTTPException:
             raise
         except Exception:
             await session.abort_transaction()
-            logger.error("Membership upgrade sequence encountered unexpected failure preventing transaction completion")
-            raise HTTPException(status_code=500, detail="Membership upgrade could not be completed at this time please try again")
+            logger.error("Lỗi xử lý tài khoản")
+            raise HTTPException(status_code=500, detail="Khởi tạo AI thành công")
         finally:
             await session.end_session()
 
@@ -78,21 +78,21 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="Requested digital document could not be located in primary storage repository")
+            raise HTTPException(status_code=404, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
             
         price = doc.get("price_dl", doc.get("price_dls", 0))
         if price <= 0:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            return {"message": "Specified digital document is currently freely accessible without financial purchase", "status": "free"}
+            return {"message": "Lỗi khi truy xuất tài liệu", "status": "free"}
             
         wallet = await target_db["wallets"].find_one({"_id": str(current_user.get("id"))})
         if not wallet or wallet.get("balance", 0) < price:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=400, detail="Transaction cannot proceed due to insufficient funds available in digital wallet")
+            raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
             
         lock = None
         if hasattr(db_client, "redis") and db_client.redis:
@@ -104,7 +104,7 @@ class PurchaseService:
             if existing:
                 if should_close_session:
                     await session.abort_transaction()
-                return {"message": "Specified digital document has already been purchased and is accessible", "status": "owned"}
+                return {"message": "Lỗi khi truy xuất tài liệu", "status": "owned"}
                 
             creator_id = doc.get("creator_id")
             try:
@@ -116,7 +116,7 @@ class PurchaseService:
                 if deduct_result.modified_count == 0:
                     if should_close_session:
                         await session.abort_transaction()
-                    raise HTTPException(status_code=400, detail="Transaction cannot proceed due to insufficient funds available in digital wallet")
+                    raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
                     
                 if creator_id:
                     await target_db["wallets"].update_one({"_id": creator_id}, {"$inc": {"balance": price}}, upsert=True, session=session)
@@ -168,22 +168,22 @@ class PurchaseService:
                             if settings.NOTIFICATION_URL:
                                 async with httpx.AsyncClient() as client:
                                     await client.post(
-                                        f"{settings.NOTIFICATION_URL}/notifications/dispatch",
+                                        f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",
                                         json={"target_user_id": creator_id, "title": notification["title"], "body": notification["body"], "type": "purchase"},
                                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                                     )
                         except Exception:
-                            logger.error("System encountered minor disruption attempting to dispatch transaction success notification payload")
+                            logger.error("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                             
-                logger.info("Digital document purchase transaction has been successfully processed and recorded")
-                return {"message": "Digital document purchase transaction completed successfully and access has been granted", "status": "purchased"}
+                logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+                return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", "status": "purchased"}
             except HTTPException:
                 raise
             except Exception:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.error("Unexpected disruption occurred attempting to process financial transactions for document purchase")
-                raise HTTPException(status_code=500, detail="Requested financial transaction encountered internal failure and could not be processed")
+                logger.error("Lỗi xử lý tài khoản")
+                raise HTTPException(status_code=500, detail="Lỗi xử lý tài khoản")
         finally:
             if should_close_session:
                 await session.end_session()
@@ -208,7 +208,7 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="Specified purchase transaction record could not be located within system database")
+            raise HTTPException(status_code=404, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
             
         purchased_at = purchase.get("purchased_at", datetime.now(timezone.utc))
         if isinstance(purchased_at, str):
@@ -218,7 +218,7 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=400, detail="Refund request rejected because it falls outside permissible forty eight hour window")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         price = purchase.get("price", 0)
         doc_id = purchase.get("document_id")
@@ -236,7 +236,7 @@ class PurchaseService:
                 if deduct_result.modified_count == 0:
                     if should_close_session:
                         await session.abort_transaction()
-                    raise HTTPException(status_code=400, detail="Refund cannot be processed because author account currently has insufficient funds")
+                    raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
 
             await target_db["purchases"].update_one(
                 {"_id": purchase_id},
@@ -261,14 +261,14 @@ class PurchaseService:
 
             if should_close_session:
                 await session.commit_transaction()
-            return {"message": "Refund request successfully processed and digital funds have been fully restored", "refunded_amount": price}
+            return {"message": "Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công", "refunded_amount": price}
         except HTTPException:
             raise
         except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Unexpected error occurred attempting to process refund request and adjust associated balances")
-            raise HTTPException(status_code=500, detail="System encountered internal failure attempting to process requested refund financial transaction")
+            logger.error("Lỗi xử lý tài khoản")
+            raise HTTPException(status_code=500, detail="Lỗi xử lý tài khoản")
         finally:
             if should_close_session:
                 await session.end_session()

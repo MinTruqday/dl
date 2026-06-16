@@ -54,14 +54,14 @@ class QuotaService:
         current_reqs = int(current_reqs) if current_reqs else 0
 
         if current_reqs >= limits.daily_requests:
-            raise HTTPException(status_code=429, detail="Requested operation cannot proceed because account has exceeded allocated daily request allowance")
+            raise HTTPException(status_code=429, detail="Lỗi xử lý tài khoản")
 
         token_key = f"quota:{user_id}:{feature}:token"
         current_tokens = await db_client.redis.get(token_key)
         current_tokens = int(current_tokens) if current_tokens else 0
 
         if current_tokens >= limits.daily_tokens:
-            raise HTTPException(status_code=429, detail="Requested operation cannot proceed because account consumed entire allocated daily computation allowance")
+            raise HTTPException(status_code=429, detail="Lỗi xử lý tài khoản")
             
         return limits
 

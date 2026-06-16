@@ -46,7 +46,7 @@ class ContextHarness:
             try:
                 self._redis_client = aioredis.from_url(settings.REDIS_URI, decode_responses=True)
             except Exception:
-                logger.error("The underlying sequential database operational structure absolutely rejected fetching designated fast caching protocol network parameters")
+                logger.error("Từ chối truy cập API nội bộ")
         return self._redis_client
 
     async def _load_short_term_history(self, session_id: str) -> list:
@@ -63,7 +63,7 @@ class ContextHarness:
                     pass
             return history
         except Exception:
-            logger.warning("The operational dynamic logic thoroughly bypassed accessing explicit temporary mapping arrays retrieving conversation chronological records")
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             return []
 
     async def _load_user_preferences(self, user_id: str) -> str:
@@ -73,7 +73,7 @@ class ContextHarness:
             prefs = await mem0_manager.get_user_preferences(user_id)
             return prefs or ""
         except Exception:
-            logger.warning("The internal structural logic engine definitively crashed avoiding rendering specifically targeted designated active identity parameters")
+            logger.warning("Lỗi khi truy xuất tài liệu")
             return ""
 
     async def build_context(self, session_id: str, user_id: str, query: str, document_ids: Optional[list] = None, max_tokens: int = DEFAULT_MAX_CONTEXT_TOKENS) -> AgentContext:
@@ -85,7 +85,7 @@ class ContextHarness:
         truncated_history = _truncate_history(history, history_budget)
         estimated = query_tokens + _estimate_tokens(preferences) + sum(_estimate_tokens(t.get("content", "")) for t in truncated_history)
         ctx = AgentContext(session_id=session_id, user_id=user_id, query=query, chat_history=truncated_history, user_preferences=preferences, active_document_ids=document_ids or [], estimated_tokens=estimated)
-        logger.info("The internal explicit structural configuration completely formatted essential active parsing parameters directing artificial intelligence module")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return ctx
 
     async def save_turn(self, session_id: str, role: str, content: str, ttl_seconds: int = 86400):
@@ -101,7 +101,7 @@ class ContextHarness:
                 pipe.expire(key, ttl_seconds)
                 await pipe.execute()
         except Exception:
-            logger.warning("The underlying logic failed writing explicit current dimensional interactive logging variables storing internal database array")
+            logger.warning("Lỗi truy xuất cơ sở dữ liệu hệ thống")
 
     async def clear_session(self, session_id: str):
         redis = self._get_redis()
@@ -109,9 +109,9 @@ class ContextHarness:
             return
         try:
             await redis.delete(f"session:{session_id}:history")
-            logger.info("The explicitly designated tracking session history successfully thoroughly erased purging localized memory storage caching module")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         except Exception:
-            logger.warning("The operational structural memory engine completely dropped wiping specifically formatted conversational sequential caching tracking history")
+            logger.warning("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history

@@ -46,10 +46,10 @@ class EmailService:
         </html>
         """
 
-        logger.info(f"System initiating dispatch process for password recovery email to {email}")
+        logger.info(f"Bắt đầu gửi email khôi phục mật khẩu cho {email}")
         
         if not all([smtp_host, smtp_port, smtp_user, smtp_pass, sender_email, sender_name]):
-            logger.error(f"Email dispatch process for {email} could not proceed due to incomplete configurations")
+            logger.error(f"Không thể gửi email cho {email} do cấu hình chưa hoàn tất")
             raise Exception("Outbound mailing service is not properly configured to process this request")
 
         def send_sync():
@@ -67,8 +67,8 @@ class EmailService:
                 server.quit()
                 return True
             except Exception:
-                logger.error("Unexpected network or authentication error occurred communicating with outbound mail server")
+                logger.error("Mất kết nối mạng tạm thời")
                 raise Exception("Unexpected network or authentication error occurred communicating with outbound mail server")
 
         await asyncio.to_thread(send_sync)
-        logger.info(f"Password recovery instructions successfully transmitted to the provided email address {email}")
+        logger.info(f"Hướng dẫn khôi phục mật khẩu đã được gửi đến {email}")

@@ -11,11 +11,10 @@ from src.router.quotas import router as quota_router
 from src.router.telemetry import router as telemetry_router
 from src.router.users import router as user_router
 from src.router.profiles import router as profile_router
-from src.router.banners import router as banner_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Management service has been successfully initialized and is ready to process incoming requests")
+    logger.info("Quá trình khởi tạo dịch vụ và kết nối cơ sở dữ liệu thành công")
     await init_db()
     yield
     await close_db()
@@ -40,8 +39,7 @@ app.include_router(telemetry_router)
 app.include_router(operation_router)
 app.include_router(quota_router)
 app.include_router(profile_router)
-app.include_router(banner_router)
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
-    return {"status": "Management service is currently operating normally and functioning as expected without internal issues"}
+    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}

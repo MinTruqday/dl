@@ -8,15 +8,15 @@ async def check_quota(current_user: dict = Depends(get_current_user)):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
             resp = await client.get(
-                f"{settings.MANAGEMENT_URL}/quota/verify",
+                f"{settings.MANAGEMENT_URL}/han-muc/xac-minh",
                 params={"user_id": str(current_user.get("id")), "role": current_user.get("role").value},
             )
             if resp.status_code == 429:
-                raise HTTPException(status_code=429, detail="Storage quota exceeded allocated operational limits")
+                raise HTTPException(status_code=429, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
             elif resp.status_code != 200:
-                logger.warning("System failed to securely verify storage quota attributes from provisioning subsystem")
+                logger.warning("Lỗi truy xuất cơ sở dữ liệu hệ thống")
     except HTTPException:
         raise
     except Exception:
-        logger.error("Internal service network failure occurred attempting connection with remote provisioning subsystem")
+        logger.error("Mất kết nối mạng tạm thời")
     return current_user

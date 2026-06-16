@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from core.dependency import get_current_user, get_db
 from src.services.bookmarks import BookmarkService
 
-router = APIRouter(prefix="/bookmarks")
+router = APIRouter(prefix="/danh-dau")
 
 class BookmarkFolderCreate(BaseModel):
     name: str
@@ -17,7 +17,7 @@ class BookmarkFolderAssign(BaseModel):
 async def toggle_bookmark(document_id: str, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await BookmarkService.toggle_bookmark(document_id, current_user, db=db),
-        message="Requested bookmarking status operation successfully processed and applied to user account",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=200,
     )
 
@@ -25,34 +25,34 @@ async def toggle_bookmark(document_id: str, current_user: dict = Depends(get_cur
 async def get_bookmarks(limit: int = Query(100), current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await BookmarkService.get_bookmarks(current_user, limit, db=db),
-        message="Personal collection of saved bookmarks has been successfully retrieved operationally",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
     )
 
-@router.post("/folders", response_model=APIResponse[Any])
+@router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(data: BookmarkFolderCreate, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await BookmarkService.create_bookmark_folder(data.name, current_user, db=db),
-        message="New structural bookmark grouping folder successfully created and attached to collection",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
         status=201,
     )
 
-@router.get("/folders", response_model=APIResponse[Any])
+@router.get("/thu-muc", response_model=APIResponse[Any])
 async def get_bookmark_folders(current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await BookmarkService.get_bookmark_folders(current_user, db=db),
-        message="Hierarchical list of personalized bookmark folders has been successfully retrieved",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
     )
 
-@router.put("/folders/{folder_id}", response_model=APIResponse[Any])
+@router.put("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def assign_bookmarks(folder_id: str, data: BookmarkFolderAssign, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await BookmarkService.assign_bookmarks_to_folder(folder_id, data.bookmark_ids, current_user, db=db),
-        message="Contents mapping of specified bookmark folder successfully modified and permanently updated",
+        message="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công",
     )
 
-@router.delete("/folders/{folder_id}", response_model=APIResponse[Any])
+@router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def delete_bookmark_folder(folder_id: str, current_user: dict = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
         data=await BookmarkService.delete_bookmark_folder(folder_id, current_user, db=db),
-        message="Designated hierarchical bookmark folder permanently removed from personal active collection",
+        message="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn",
     )

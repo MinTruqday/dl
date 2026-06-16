@@ -26,7 +26,7 @@ class HighlightService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("highlights").insert_one(highlight)
-        logger.info("Visual positional annotation safely merged tracking explicitly mapped textual element array")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         return highlight
 
     @staticmethod
@@ -39,16 +39,16 @@ class HighlightService:
     async def update_highlight_note(highlight_id: str, note: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         result = await RepositoryFactory.get("highlights").update_one({"_id": highlight_id, "user_id": str(current_user.get("id"))}, {"$set": {"note": note, "updated_at": datetime.now(timezone.utc)}})
-        if result.matched_count == 0: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
-        return {"message": "Structural contextual logic describing selected visual indicator reliably overwritten preserving history"}
+        if result.matched_count == 0: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"message": "Lỗi khi truy xuất tài liệu"}
 
     @staticmethod
     async def delete_highlight(highlight_id: str, current_user, db=None) -> dict:
         db = db or db_client.mongodb.get_default_database()
         result = await RepositoryFactory.get("highlights").delete_one({"_id": highlight_id, "user_id": str(current_user.get("id"))})
-        if result.deleted_count == 0: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
-        logger.info("Explicit physical visual tracking notation reliably erased detaching linked functional component")
-        return {"message": "Specific visual filtering structural segment totally stripped releasing anchored analytical boundary"}
+        if result.deleted_count == 0: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def get_all_notes(current_user, cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), skip: int = 0, db=None) -> list:
@@ -56,7 +56,7 @@ class HighlightService:
         match_query = {"user_id": str(current_user.get("id")), "note": {"$ne": ""}}
         if cursor:
             try: match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))}
-            except ValueError: logger.warning("Algorithmic pagination logic compromised explicitly filtering inaccurate temporal sequential parsing payload")
+            except ValueError: logger.warning("Lỗi khi truy xuất tài liệu")
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0: pipeline.append({"$skip": skip})
         pipeline.append({"$limit": limit})

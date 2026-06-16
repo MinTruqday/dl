@@ -5,9 +5,9 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.schemas.requests import FeedbackRequest
 
-router = APIRouter(prefix="/feedback")
+router = APIRouter(prefix="/phan-hoi")
 
-@router.post("/feedback")
+@router.post("/phan-hoi")
 async def submit_feedback(req: FeedbackRequest):
     try:
         client = AsyncIOMotorClient(settings.MONGODB_URI)
@@ -22,8 +22,8 @@ async def submit_feedback(req: FeedbackRequest):
         }
         await db.rag_feedback.insert_one(feedback_doc)
         client.close()
-        logger.info("The submitted analytical user qualitative interaction evaluation feedback was firmly saved safely operational internal memory")
-        return {"status": "success", "message": "We highly appreciate insightful comprehensive functional evaluation assisting artificial intelligence systemic framework improvement capabilities directly"}
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"status": "success", "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
     except Exception:
-        logger.error("The network logging operational pipeline utterly failed accurately recording user submitted interactive structural textual feedback")
-        return {"status": "error", "message": "The system encountered an unexpected error and requires you to try again later"}
+        logger.error("Mất kết nối mạng tạm thời")
+        return {"status": "error", "message": "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"}

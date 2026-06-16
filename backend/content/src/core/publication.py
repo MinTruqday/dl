@@ -5,7 +5,7 @@ from loguru import logger
 
 async def publish_compile_task(document_id: str, creator_id: str, content_raw: str):
     if not db_client.rabbitmq:
-        logger.error("System failed to establish secure connection with background message queue rejecting compilation task")
+        logger.error("Từ chối truy cập API nội bộ")
         return False
     try:
         async with db_client.rabbitmq.channel() as channel:
@@ -15,12 +15,12 @@ async def publish_compile_task(document_id: str, creator_id: str, content_raw: s
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception:
-        logger.error("System encountered critical failure attempting to initialize requested document compilation processing sequence")
+        logger.error("Khởi tạo AI thành công")
         return False
 
 async def trigger_document_publish_job(document_id: str, creator_id: str):
     if not db_client.rabbitmq:
-        logger.error("System failed to establish secure connection with background message queue rejecting publication task")
+        logger.error("Từ chối truy cập API nội bộ")
         return False
     try:
         async with db_client.rabbitmq.channel() as channel:
@@ -30,12 +30,12 @@ async def trigger_document_publish_job(document_id: str, creator_id: str):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception:
-        logger.error("System encountered critical failure attempting to initialize requested document publication dissemination sequence")
+        logger.error("Khởi tạo AI thành công")
         return False
 
 async def publish_event(queue_name: str, payload: dict):
     if not db_client.rabbitmq:
-        logger.error("System failed to establish secure connection with background message queue rejecting event creation")
+        logger.error("Từ chối truy cập API nội bộ")
         return False
     try:
         async with db_client.rabbitmq.channel() as channel:
@@ -44,5 +44,5 @@ async def publish_event(queue_name: str, payload: dict):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception:
-        logger.error("System encountered critical failure attempting to dispatch payload to designated background messaging queue")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return False

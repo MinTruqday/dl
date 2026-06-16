@@ -19,11 +19,11 @@ async def handle_message_connection(websocket: WebSocket, user_id: str, token: s
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("sub") != user_id:
-            logger.warning("Connection request rejected because provided authentication credentials did not match the expected records")
+            logger.warning("Từ chối truy cập API nội bộ")
             await websocket.close(code=1008)
             return
     except Exception:
-        logger.error(f"System failed to authenticate connection token for user identifier {user_id} due to invalid payload")
+        logger.error(f"Xác thực token thất bại cho user {user_id}")
         await websocket.close(code=1008)
         return
 
@@ -66,5 +66,5 @@ async def handle_message_connection(websocket: WebSocket, user_id: str, token: s
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
     except Exception:
-        logger.error(f"System encountered an unexpected error while processing direct messages for user identifier {user_id}")
+        logger.error(f"Lỗi hệ thống khi xử lý tin nhắn của user {user_id}")
         message_manager.disconnect(user_id, websocket)

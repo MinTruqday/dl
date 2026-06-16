@@ -14,7 +14,7 @@ class ActionAgent:
             result = await self.llm_with_tools.ainvoke([HumanMessage(content=prompt)])
             
             if not result.tool_calls:
-                return "The intelligent routing mechanism could not discover suitable functional API execution tool mapping"
+                return "Mất kết nối mạng tạm thời"
 
             tool_call = result.tool_calls[0]
             tool_name = tool_call["name"]
@@ -22,14 +22,14 @@ class ActionAgent:
 
             tool_instance = next((t for t in tools if t.name == tool_name), None)
             if not tool_instance:
-                return "The system routing architecture failed executing designated explicitly authorized networking software utility"
+                return "Mất kết nối mạng tạm thời"
 
             config = {"configurable": {"token": token}}
             tool_res = await tool_instance.ainvoke(tool_args, config=config)
-            logger.info("The operational diagnostic utility precisely executed mapped administrative transactional modification database queries")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             return str(tool_res)
         except Exception:
-            logger.error("The programmatic procedural evaluation system crashed dispatching complex active structural tool invocations")
-            return "The system encountered an unexpected error and requires you to try again later"
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+            return "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
 
 action = ActionAgent()

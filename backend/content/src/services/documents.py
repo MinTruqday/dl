@@ -41,12 +41,12 @@ class DocumentService:
     @staticmethod
     async def create_document(doc_in: DocumentCreate, current_user):
         docs_collection = RepositoryFactory.get("documents")
-        if await docs_collection.find_one({"slug": doc_in.slug}): raise HTTPException(status_code=400, detail="Operational routing identifier currently obstructed resolving completely different functional digital object")
+        if await docs_collection.find_one({"slug": doc_in.slug}): raise HTTPException(status_code=400, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         doc_dict = doc_in.model_dump()
         if not doc_dict.get("publisher_name"): doc_dict["publisher_name"] = current_user.get("full_name")
         doc_doc = DocumentInDB(**doc_dict, creator_id=str(current_user.get("id")))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
-        logger.info("Fresh sophisticated binary artifact actively compiled securely registered remote structural cloud")
+        logger.info("Mất kết nối mạng tạm thời")
         return doc_doc
 
     @staticmethod
@@ -61,18 +61,18 @@ class DocumentService:
     async def update_document_content(document_id: str, content_in: DocumentContentUpdate, current_user):
         docs_collection = RepositoryFactory.get("documents")
         document = await docs_collection.find_one({"_id": document_id, "creator_id": str(current_user.get("id"))})
-        if not document: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
+        if not document: raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         if content_in.expected_version and document.get("updated_at") and str(document.get("updated_at")).split("+")[0] != str(content_in.expected_version).split("+")[0]:
-            raise HTTPException(status_code=409, detail="Database strict hierarchical lock prevents overlapping editing protecting prior synchronized mutations")
+            raise HTTPException(status_code=409, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
         if document.get("content"):
             await RepositoryFactory.get("document_revisions").insert_one({"document_id": document_id, "creator_id": str(current_user.get("id")), "content": document.get("content"), "content_format": document.get("content_format"), "created_at": datetime.now(timezone.utc), "note": "Auto-saved revision before update"})
         await docs_collection.update_one({"_id": document_id}, {"$set": {"content": content_in.content, "content_format": content_in.content_format, "updated_at": datetime.now(timezone.utc)}})
         if settings.NOTIFICATION_URL:
             try:
                 async with httpx.AsyncClient() as client:
-                    await client.post(f"{settings.NOTIFICATION_URL}/notifications/dispatch", json={"target_user_id": str(current_user.get("id")), "title": "Document updated", "body": "Document content successfully updated", "type": "DOCUMENT_UPDATE"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
-            except Exception: logger.error("Disruption navigating notification dispatch routing process transmitting core internal updates")
-        logger.info("Binary payload matrix directly mapped overwriting existing target artifact completing seamlessly")
+                    await client.post(f"{settings.NOTIFICATION_URL}/thong-bao/gui-di", json={"target_user_id": str(current_user.get("id")), "title": "Document updated", "body": "Document content successfully updated", "type": "DOCUMENT_UPDATE"}, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+            except Exception: logger.error("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         if hasattr(db_client, "redis") and db_client.redis:
             await db_client.redis.delete(f"document:{document_id}")
             if document.get("slug"): await db_client.redis.delete(f"document:slug:{document.get('slug')}")
@@ -82,13 +82,13 @@ class DocumentService:
     async def update_document(document_id: str, doc_update, current_user) -> dict:
         docs_col = RepositoryFactory.get("documents")
         doc = await docs_col.find_one({"_id": document_id})
-        if not doc: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
-        if doc.get("creator_id") != str(current_user.get("id")) and current_user.get("role") != "ADMIN": raise HTTPException(status_code=403, detail="Platform essentially blocked specific account avoiding altering unowned primary systematic logic")
+        if not doc: raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        if doc.get("creator_id") != str(current_user.get("id")) and current_user.get("role") != "ADMIN": raise HTTPException(status_code=403, detail="Lỗi xử lý tài khoản")
         if hasattr(doc_update, "expected_version") and doc_update.expected_version and doc.get("updated_at") and str(doc.get("updated_at")).split("+")[0] != str(doc_update.expected_version).split("+")[0]:
-            raise HTTPException(status_code=409, detail="Database strict hierarchical lock prevents overlapping editing protecting prior synchronized mutations")
+            raise HTTPException(status_code=409, detail="Lỗi truy xuất cơ sở dữ liệu hệ thống")
         update_data = {k: v for k, v in doc_update.model_dump().items() if v is not None}
         if "slug" in update_data and update_data["slug"] != doc.get("slug") and await docs_col.find_one({"slug": update_data["slug"]}):
-            raise HTTPException(status_code=400, detail="Operational routing identifier currently obstructed resolving completely different functional digital object")
+            raise HTTPException(status_code=400, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         if update_data:
             if doc.get("content") and "content" in update_data:
                 await RepositoryFactory.get("document_revisions").insert_one({"document_id": document_id, "creator_id": str(current_user.get("id")), "content": doc.get("content"), "content_format": doc.get("content_format"), "created_at": datetime.now(timezone.utc), "note": "Auto-saved revision before update"})
@@ -114,38 +114,38 @@ class DocumentService:
     async def get_document_by_id(document_id: str, current_user, password: str = None):
         user_id = str(current_user.get("id")) if current_user else None
         document = await RepositoryFactory.get("documents").find_one({"_id": document_id})
-        if not document: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
+        if not document: raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         if document.get("creator_id") != user_id and document.get("status") != DocumentStatus.PUBLISHED and (not current_user or current_user.get("role") != "ADMIN"):
-            raise HTTPException(status_code=403, detail="Active object fundamentally blocked remaining entirely shielded testing production pipeline stages")
+            raise HTTPException(status_code=403, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         if document.get("is_password_protected") and document.get("creator_id") != user_id:
             if not password: return {"_id": str(document["_id"]), "title": document.get("title"), "is_password_protected": True}
             rl_key = None
             if hasattr(db_client, "redis") and db_client.redis:
                 rl_key = f"rl:unlock:{document_id}:{user_id or 'guest'}"
                 if (attempts := await db_client.redis.get(rl_key)) and int(attempts) >= 5:
-                    raise HTTPException(status_code=429, detail="Network access actively revoked bypassing multiple sequential algorithmic cryptographic processing failures")
+                    raise HTTPException(status_code=429, detail="Mất kết nối mạng tạm thời")
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             if not pwd_context.verify(password, document.get("access_password_hash")):
                 if rl_key and hasattr(db_client, "redis") and db_client.redis:
                     await db_client.redis.incr(rl_key)
                     await db_client.redis.expire(rl_key, 900)
-                raise HTTPException(status_code=403, detail="Entered cryptographic hashing sequence actively derailed rendering decryption operations fundamentally impossible")
+                raise HTTPException(status_code=403, detail="Lỗi khi truy xuất tài liệu")
             if rl_key and hasattr(db_client, "redis") and db_client.redis: await db_client.redis.delete(rl_key)
         return serialize_document(document)
 
     @staticmethod
     async def soft_delete_document(document_id: str, current_user) -> dict:
         res = await RepositoryFactory.get("documents").update_one({"_id": document_id, "creator_id": str(current_user.get("id")), "is_deleted": {"$ne": True}}, {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}})
-        if res.modified_count == 0: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
-        logger.info("Internal structural deletion procedure successfully shifted target isolating primary mapping array")
-        return {"message": "Selected active functional item structurally transitioned entering volatile deletion pending array"}
+        if res.modified_count == 0: raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
         res = await RepositoryFactory.get("documents").update_one({"_id": document_id, "creator_id": str(current_user.get("id")), "is_deleted": True}, {"$set": {"is_deleted": False, "deleted_at": None}})
-        if res.modified_count == 0: raise HTTPException(status_code=404, detail="System isolated recycling bin lacks designated specific file restoring procedural access")
-        logger.info("Volatile pending functional object dynamically reversed linking primary network tree reliably")
-        return {"message": "Designated explicitly volatile unit dynamically relocated restoring overarching operational data map"}
+        if res.modified_count == 0: raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        logger.info("Mất kết nối mạng tạm thời")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def get_trash(current_user) -> list:
@@ -155,16 +155,16 @@ class DocumentService:
     @staticmethod
     async def set_document_password(document_id: str, password: str, current_user) -> dict:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id, "creator_id": str(current_user.get("id"))})
-        if not doc: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
+        if not doc: raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         hashed = CryptContext(schemes=["bcrypt"], deprecated="auto").hash(password)
         await RepositoryFactory.get("documents").update_one({"_id": document_id}, {"$set": {"access_password_hash": hashed, "is_password_protected": True, "updated_at": datetime.now(timezone.utc)}})
-        logger.info("Robust cryptographic lock algorithmically deployed sealing specific vulnerable internal digital boundary")
-        return {"message": "Secure alphanumeric protective gating string perfectly configured shielding targeted active component"}
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
         document = await RepositoryFactory.get("documents").find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}})
-        if not document: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
+        if not document: raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         user_id = str(current_user.get("id")) if current_user else None
         has_purchased = False
         if user_id:
@@ -195,9 +195,9 @@ class DocumentService:
         author = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.MANAGEMENT_URL}/users/{document['creator_id']}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.MANAGEMENT_URL}/nguoi-dung/{tai-lieu['creator_id']}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200: author = resp.json().get("data")
-        except Exception: logger.warning("Underlying structural networking loop failed pulling required remote creator hierarchical properties")
+        except Exception: logger.warning("Mất kết nối mạng tạm thời")
         if author: document["author"] = {"full_name": author.get("full_name") or author.get("username"), "avatar_url": author.get("avatar_url"), "slug": author.get("slug")}
         document["has_purchased"] = has_purchased
         return document
@@ -205,7 +205,7 @@ class DocumentService:
     @staticmethod
     async def get_document_preview(slug: str) -> dict:
         doc = await RepositoryFactory.get("documents").find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}})
-        if not doc: raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
+        if not doc: raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         limit = doc.get("preview_pages", 5)
         raw_content = doc.get("content", "")
         preview_content = ""
@@ -221,7 +221,7 @@ class DocumentService:
     @staticmethod
     async def get_document_audit_logs(document_id: str, current_user) -> list:
         if not await RepositoryFactory.get("documents").find_one({"_id": document_id, "creator_id": str(current_user.get("id"))}, {"_id": 1}):
-            raise HTTPException(status_code=404, detail="Underlying designated core element completely vanished blocking sequential operational reading protocol")
+            raise HTTPException(status_code=404, detail="Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         logs = await RepositoryFactory.get("audit_logs").find({"document_id": document_id}).sort("timestamp", -1).limit(100).to_list(length=100)
         return [{"_id": str(log["_id"]), "action": log.get("action"), "actor_id": log.get("actor_id"), "reason": log.get("reason"), "timestamp": (log["timestamp"].isoformat() if isinstance(log.get("timestamp"), datetime) else log.get("timestamp"))} for log in logs]
 
@@ -247,10 +247,10 @@ class DocumentService:
             doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
             if doc:
                 await trigger_document_publish_job(document_id, doc.get("creator_id"))
-                logger.info("Background compilation structural thread initiated reliably preparing targeted operational artifact")
+                logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         await RepositoryFactory.get("audit_logs").insert_one({"action": f"DOCUMENT_{status_val}", "actor_id": str(current_user.get("id")), "document_id": document_id, "reason": reason, "timestamp": datetime.now(timezone.utc)})
-        logger.info("Internal security overriding protocol cleanly approved validating target hierarchical status")
-        return {"message": "Authoritative moderation filtering action definitely recorded securely modifying fundamental object"}
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
 
     @staticmethod
     async def get_trending_tags(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[str]:

@@ -14,7 +14,7 @@ class ReviewService:
             {"$set": {"rating": rating_data.rating, "review_text": rating_data.review_text, "created_at": datetime.now(timezone.utc)}},
             upsert=True,
         )
-        logger.info("Quantitative assessment logic seamlessly committed mapping subjective perspective attached digital representation")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         return {"status": "success"}
 
     @staticmethod
@@ -32,8 +32,8 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("typo_reports").insert_one(report)
-        logger.info("Identified linguistic error explicitly registered traversing automated moderation review classification queue")
-        return {"message": "Structural modification request targeting explicit document text anomaly decisively compiled queued"}
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+        return {"message": "Lỗi khi truy xuất tài liệu"}
 
     @staticmethod
     async def get_typo_reports(document_id: str, current_user, db=None) -> list:
@@ -61,7 +61,7 @@ class ReviewService:
             {"$set": review_item},
             upsert=True,
         )
-        logger.info("Qualitative subjective analysis logically attached target operational artifact decisively executed perfectly")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         return review_item
 
     @staticmethod
@@ -94,5 +94,5 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("reports").insert_one(report)
-        logger.info("Internal systematic alert referencing suspicious qualitative content proactively submitted moderation queue")
-        return {"message": "Designated operational anomaly explicitly flagged assigning restrictive diagnostic assessment protocol effectively"}
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        return {"message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}

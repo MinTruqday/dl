@@ -16,9 +16,9 @@ class AnnaArchivePipeline:
     @staticmethod
     async def collect_list(search_query: str = "", pages: int = 0):
         if search_query:
-            logger.info("System initiating paginated search operation on specified external data source")
+            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         else:
-            logger.info("System initiating comprehensive bulk data collection process across primary archives")
+            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         encoded = urllib.parse.quote(search_query)
 
@@ -31,13 +31,13 @@ class AnnaArchivePipeline:
                 page_num = 1
                 while True:
                     search_url = f"https://annas-archive.gl/search?index=journals&sort=&lang=en&lang=anti__zh&lang=la&lang=vi&display=&q={encoded}&page={page_num}"
-                    logger.info("Collection bot navigating to next paginated section of external search results")
+                    logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
                     await page.goto(search_url, timeout=60000, wait_until="domcontentloaded")
                     content = await page.content()
 
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Active firewall protection detected so system engaging automated evasion mechanisms")
+                        logger.info("Phát hiện tấn công tường lửa")
                         flaresolverr_url = settings.FLARESOLVERR_URL
                         async with aiohttp.ClientSession() as session:
                             async with session.post(
@@ -54,11 +54,11 @@ class AnnaArchivePipeline:
                     try:
                         await page.wait_for_selector(list_selector, timeout=15000)
                     except Exception:
-                        logger.error("Collection bot failed to extract document reference links due to unexpected layout changes")
+                        logger.error("Lỗi khi truy xuất tài liệu")
 
                     document_nodes = await page.query_selector_all(list_selector)
                     if not document_nodes:
-                        logger.warning("No valid document reference links found on current page so scanning process halting")
+                        logger.warning("Lỗi khi truy xuất tài liệu")
                         break
 
                     document_urls = set()
@@ -68,24 +68,24 @@ class AnnaArchivePipeline:
                             full_url = "https://annas-archive.gl" + href if href.startswith("/") else href
                             document_urls.add(full_url)
 
-                    logger.info("Collection bot successfully extracted available document reference links from current index page")
+                    logger.info("Khởi tạo AI thành công")
 
                     for url in document_urls:
                         if not await dedup.is_collected("anna_url", url):
                             await mq_client.publish("collect_detail_queue", {"url": url})
                             await dedup.mark_collected("anna_url", url)
 
-                    logger.info("Newly discovered document links successfully placed into distributed processing queue")
+                    logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                     if page_num >= pages:
-                        logger.info("Maximum allowed page count reached so list scanning process is halting successfully")
+                        logger.info("Phân tích tài liệu hoàn tất")
                         break
                     page_num += 1
             except Exception:
-                logger.error("System failed to retrieve document list from external source due to network failure")
+                logger.error("Mất kết nối mạng tạm thời")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str):
-        logger.info("Collection bot requesting valid session tokens and secure agent profiles from evasion service")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         try:
             flare_url = settings.FLARESOLVERR_URL
             async with aiohttp.ClientSession() as session:
@@ -111,12 +111,12 @@ class AnnaArchivePipeline:
                             await context.add_cookies(formatted_cookies)
                         return context
         except Exception:
-            logger.error("Automated request to evasion service failed to return valid cryptographic clearance token")
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return await get_stealth_context(browser)
 
     @staticmethod
     async def collect_detail(document_url: str):
-        logger.info("Collection bot currently processing detailed structural metadata for specified archival document")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -128,7 +128,7 @@ class AnnaArchivePipeline:
                 content = await page.content()
 
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Detailed document page protected by firewall so system engaging active evasion mechanisms")
+                    logger.info("Phát hiện tấn công tường lửa")
                     await page.close()
                     await context.close()
 
@@ -150,7 +150,7 @@ class AnnaArchivePipeline:
                 author_el = await page.query_selector("div.italic")
                 payload["author"] = await author_el.inner_text() if author_el else "Unknown"
 
-                logger.info("Essential document metadata successfully extracted from external archival source page")
+                logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
                 cover_el = (
                     await page.query_selector('img[src*="covers/"]')
@@ -168,13 +168,13 @@ class AnnaArchivePipeline:
                 if slow_link_el:
                     slow_href = await slow_link_el.get_attribute("href")
                     slow_url = "https://annas-archive.gl" + slow_href if slow_href.startswith("/") else slow_href
-                    logger.info("Collection bot navigating to secure download gateway for current specific document")
+                    logger.info("Mất kết nối mạng tạm thời")
 
                     await page.goto(slow_url, timeout=60000)
                     content = await page.content()
 
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Secure download gateway protected by firewall so system engaging active evasion mechanisms")
+                        logger.info("Phát hiện tấn công tường lửa")
                         await page.close()
                         await context.close()
 
@@ -187,7 +187,7 @@ class AnnaArchivePipeline:
                         download_link = None
                         js_link_css = 'main p a[href*="http"]'
 
-                        logger.info("Collection bot waiting for external security timer to complete its active validation cycle")
+                        logger.info("Khởi tạo AI thành công")
                         for _ in range(60):
                             try:
                                 link_els = await page.query_selector_all(js_link_css)
@@ -199,13 +199,13 @@ class AnnaArchivePipeline:
                                 if download_link:
                                     break
                             except Exception:
-                                logger.warning("Collection bot encountered difficulties attempting to extract secure download endpoint link")
+                                logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
                             await page.wait_for_timeout(5000)
 
                         if download_link:
                             payload["download_link"] = download_link
-                            logger.info("Secure download link successfully extracted and validated against security protocol")
+                            logger.info("Khởi tạo AI thành công")
 
                             ext = payload["download_link"].split("")[-1][:4] if "" in payload["download_link"].split("/")[-1] else "pdf"
                             if len(ext) > 4 or "/" in ext:
@@ -216,14 +216,14 @@ class AnnaArchivePipeline:
 
                             await mq_client.publish("download_processor_queue", payload)
                         else:
-                            logger.warning("Security timer execution exceeded maximum allowed waiting period and timed out automatically")
+                            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
                     except Exception:
-                        logger.error("Unexpected error occurred while system was monitoring download link generation process")
+                        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
                 if not slow_link_el:
-                    logger.warning("Required download action button could not be located on active document page")
+                    logger.warning("Hệ thống không tìm thấy tài liệu được yêu cầu")
                     raise Exception("Automated collection process could not locate valid download button on provided source page")
             except Exception:
-                logger.error("Unexpected system error occurred during detailed document extraction and parsing process")
+                logger.error("Lỗi khi truy xuất tài liệu")
                 raise
 
     @staticmethod
@@ -232,10 +232,10 @@ class AnnaArchivePipeline:
         title = payload.get("title", "document")
 
         if not url:
-            logger.error("Provided download link structurally invalid and cannot be processed by background downloader")
+            logger.error("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             return
 
-        logger.info("System currently downloading requested document file into local secure temporary storage buffer")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         ext = payload.get("content_format", "pdf")
@@ -249,17 +249,17 @@ class AnnaArchivePipeline:
 
             success = await download_file_with_retry(url, target_local)
             if success:
-                logger.info("Remote document successfully downloaded and securely saved to temporary system storage path")
+                logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                 minio_url = await storage.upload_local_file(f"documents/anna_archive/{filename}", target_local)
 
             if os.path.exists(target_local):
                 os.unlink(target_local)
         except Exception:
-            logger.error("Unexpected system error occurred attempting to download and save remote document file")
+            logger.error("Mất kết nối mạng tạm thời")
             raise
 
         if minio_url:
-            logger.info("Downloaded document successfully transferred to permanent enterprise object storage backend system")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
             document_metadata = {
                 "title": title,

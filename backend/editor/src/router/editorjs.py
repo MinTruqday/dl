@@ -6,14 +6,14 @@ from src.services.editorjs_engine import EditorJSEngine
 
 router = APIRouter()
 
-@router.post("/compile")
+@router.post("/bien-dich")
 async def compile_editorjs(req: CompileRequest):
     try:
         pdf_bytes = await EditorJSEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception:
-        logger.error("System encountered unexpected error attempting to compile visual document content")
+        logger.error("Lỗi khi truy xuất tài liệu")
         raise HTTPException(
             status_code=500, 
-            detail="Document compilation process failed due to an internal system processing interruption"
+            detail="Lỗi khi truy xuất tài liệu"
         )

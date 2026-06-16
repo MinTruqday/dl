@@ -14,7 +14,7 @@ class DocumentParser:
                     text += page.get_text("text") + "\n"
             return text.strip()
         except Exception:
-            logger.error("The embedded portable document format parsing library encountered insurmountable binary extraction anomalies")
+            logger.error("Lỗi khi truy xuất tài liệu")
             return None
 
     @staticmethod
@@ -23,7 +23,7 @@ class DocumentParser:
             doc = docx.Document(io.BytesIO(file_bytes))
             return "\n".join([paragraph.text for paragraph in doc.paragraphs]).strip()
         except Exception:
-            logger.error("The embedded structural document parsing engine crashed processing specified proprietary formatted payload")
+            logger.error("Lỗi khi truy xuất tài liệu")
             return None
 
     @staticmethod
@@ -34,7 +34,7 @@ class DocumentParser:
             try:
                 return file_bytes.decode("latin-1").strip()
             except Exception:
-                logger.error("The universal textual decoding framework absolutely failed translating raw byte stream encoding")
+                logger.error("Lỗi khi truy xuất tài liệu")
                 return None
 
 document_parser = DocumentParser()

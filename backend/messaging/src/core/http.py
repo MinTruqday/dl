@@ -18,7 +18,7 @@ class CircuitBreaker:
             else:
                 raise HTTPException(
                     status_code=503, 
-                    detail="Requested external service is currently undergoing maintenance and is temporarily unavailable"
+                    detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
                 )
 
     def on_success(self):
@@ -30,7 +30,7 @@ class CircuitBreaker:
         self.last_failure_time = time.time()
         if self.failure_count >= self.max_failures:
             self.state = "OPEN"
-            logger.warning("External service connection suspended due to excessive consecutive transmission failures")
+            logger.warning("Mất kết nối mạng tạm thời")
 
 ai_circuit_breaker = CircuitBreaker()
 

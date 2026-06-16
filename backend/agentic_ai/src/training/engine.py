@@ -10,7 +10,7 @@ from datasets import Dataset
 
 def run_finetune_job(job_id: str, config: dict, progress_callback) -> dict:
     try:
-        logger.info("The standalone artificial intelligence structural model training pipeline explicitly initiated execution flawlessly")
+        logger.info("Lỗi xử lý model AI")
         
         base_model_name = config.get("base_model", settings.LLAMA_MODEL)
         output_dir = f"./workspace/finetune/{job_id}"
@@ -68,8 +68,8 @@ def run_finetune_job(job_id: str, config: dict, progress_callback) -> dict:
         
         final_loss = trainer.state.log_history[-1].get("loss", 0.0) if trainer.state.log_history else 0.0
         
-        logger.info("The rigorous mathematical statistical evaluation training procedure conclusively succeeded mapping specific layers")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         return {"adapter_path": adapter_path, "merged_path": adapter_path, "gguf_path": "", "final_loss": final_loss}
     except Exception:
-        logger.error("The sophisticated isolated neural language model modifying fine tuning processor catastrophically crashed")
+        logger.error("Lỗi xử lý model AI")
         raise

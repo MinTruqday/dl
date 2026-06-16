@@ -27,13 +27,13 @@ try:
     nli_model = CrossEncoder(settings.NLI_MODEL_NAME)
 except Exception:
     nli_model = None
-    logger.error("The system was unable to load the natural language processing model securely during initialization")
+    logger.error("Lỗi xử lý model AI")
 
 try:
     langchain.llm_cache = RedisSemanticCache(redis_url=settings.REDIS_URI, embedding=embedding_service)
-    logger.info("The high speed semantic caching datastore was successfully initialized configuring system access completely")
+    logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 except Exception:
-    logger.error("The system encountered an unexpected error while attempting configuring high speed cache storage reliably")
+    logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
 
 llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
 llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
@@ -42,9 +42,9 @@ try:
     _fallback_client = AsyncInferenceClient(model=settings.FALLBACK_MODEL, token=settings.HF_TOKEN)
     _fallback_llm = HFInferenceChat(client=_fallback_client, model=settings.FALLBACK_MODEL)
     llm = llm.with_fallbacks([_fallback_llm])
-    logger.info("The language model fallback sequence was successfully established dynamically ensuring high system availability")
+    logger.info("Khởi tạo AI thành công")
 except Exception:
-    logger.warning("The system was utterly unable to successfully configure language model failover fallback protective mechanism")
+    logger.warning("Khởi tạo AI thành công")
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
@@ -76,7 +76,7 @@ async def contextualize_question(state: AgentState):
         response = await structured_llm.ainvoke(prompt.format(history=history_str, question=question))
         return {"question": response.question}
     except Exception:
-        logger.error("The system encountered an unexpected error during contextual processing evaluating semantic conversation history")
+        logger.error("Lỗi khi truy xuất tài liệu")
         return {"question": question}
 
 async def route_question(state: AgentState):
@@ -87,7 +87,7 @@ async def route_question(state: AgentState):
         response = await structured_llm.ainvoke(prompt.format(question=question))
         return {"current_source": "db", "route": response.route}
     except Exception:
-        logger.error("The system encountered a routing algorithmic failure logically determining appropriate node execution path")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return {"current_source": "db", "route": "rag"}
 
 def decide_initial_route(state: AgentState):
@@ -111,7 +111,7 @@ async def retrieve_db(state: AgentState):
     question = state["question"]
     document_ids = state.get("document_ids", [])
     if document_ids and len(document_ids) >= 2:
-        logger.info("The system is currently effectively utilizing linked retrieval processing requested multidimensional target documents")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         try:
             raw_documents = await retrieval_service.cross_document_retrieve(question, document_ids, k=6)
             extracted_documents = []
@@ -120,7 +120,7 @@ async def retrieve_db(state: AgentState):
                 extracted_documents.append(f"Source document {title}\n{_mask_pii(doc.get('text', ''))}")
             return {"documents": list(set(extracted_documents)), "current_source": "db"}
         except Exception:
-            logger.error("The system failed retrieving structural information across multiple connected relational document components")
+            logger.error("Lỗi khi truy xuất tài liệu")
 
     prompt = PromptTemplate(template=prompt_registry.get(PromptType.RETRIEVAL_STRATEGY), input_variables=["question"])
     queries = [question]
@@ -130,7 +130,7 @@ async def retrieve_db(state: AgentState):
         if not response.is_simple and response.queries:
             queries.extend(response.queries)
     except Exception:
-        logger.error("The system encountered a structural failure generating optimal retrieval multidimensional searching algorithmic strategy")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
 
     extracted_documents = []
     try:
@@ -147,7 +147,7 @@ async def retrieve_db(state: AgentState):
                 doc["_query"] = q
                 all_raw_documents.append(doc)
         except Exception:
-            logger.error("The search engine encountered an unexpected failure during processing vector similarity mapping search")
+            logger.error("Lỗi hệ thống khi tìm kiếm dữ liệu cấu trúc")
 
     if all_raw_documents:
         if reranker:
@@ -158,7 +158,7 @@ async def retrieve_db(state: AgentState):
                 scored_documents.sort(key=lambda x: x[1], reverse=True)
                 top_documents = retrieval_service._lost_in_the_middle_reorder([doc for doc, score in scored_documents[:6]])[:3]
             except Exception:
-                logger.error("The system encountered an issue attempting sorting search results utilizing ranking mathematical model")
+                logger.error("Lỗi xử lý model AI")
                 top_documents = all_raw_documents[:3]
         else:
             top_documents = all_raw_documents[:3]
@@ -175,7 +175,7 @@ async def retrieve_internet(state: AgentState):
         results = await search_engine.execute(question)
         return {"documents": [f"[Internet Source]\n{results}"], "current_source": "internet"}
     except Exception:
-        logger.error("The web search external execution module encountered an unexpected failure during informational retrieval")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return {"documents": [], "current_source": "internet"}
 
 async def grade_documents(state: AgentState):
@@ -190,7 +190,7 @@ async def grade_documents(state: AgentState):
             if response.is_relevant:
                 filtered_documents.append(d)
         except Exception:
-            logger.error("The document computational evaluation module encountered an error accessing structural semantic relevance accurately")
+            logger.error("Lỗi khi truy xuất tài liệu")
             filtered_documents.append(d)
     return {"documents": filtered_documents}
 
@@ -207,7 +207,7 @@ async def transform_query(state: AgentState):
         res = await structured_llm.ainvoke(prompt.format(question=question))
         return {"question": res.question, "retry_count": state.get("retry_count", 0) + 1, "current_source": "db"}
     except Exception:
-        logger.error("The system encountered an explicit issue attempting optimization structuring search query strings operationally")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
 async def generate_direct(state: AgentState):
@@ -216,7 +216,7 @@ async def generate_direct(state: AgentState):
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
     except Exception:
-        logger.error("The system failed generating direct output sequence due unexpected internal operational processing error")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
 
 async def generate(state: AgentState):
@@ -239,7 +239,7 @@ async def generate(state: AgentState):
         await mem0_manager.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
         return {"generation": generation}
     except Exception:
-        logger.error("The system encountered an unexpected analytical failure generating optimal contextual content structural payload")
+        logger.error("Lỗi khi truy xuất tài liệu")
         return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
 
 async def grade_generation(state: AgentState):
@@ -257,7 +257,7 @@ async def grade_generation(state: AgentState):
             if scores[0][0] > scores[0][1]: is_hallucination = True
         return {"hallucination_pass": "no" if is_hallucination else "yes"}
     except Exception:
-        logger.exception("The internal algorithmic evaluation module encountered errors rigorously evaluating generated content logic boundaries")
+        logger.exception("Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI")
         return {"hallucination_pass": "yes"}
 
 def check_hallucination(state: AgentState):

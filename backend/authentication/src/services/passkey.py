@@ -27,11 +27,11 @@ class PasskeyService:
     async def login_begin(email: str, db=None):
         user = await AuthRepository.get_auth_credential_by_email(email, db=db)
         if not user:
-            raise HTTPException(status_code=404, detail="System unable to locate a user profile matching the provided information")
+            raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         passkeys = user.get("passkeys", [])
         if not passkeys:
-            raise HTTPException(status_code=400, detail="Specified account has not been configured to support secure passkey authentication")
+            raise HTTPException(status_code=400, detail="Lỗi xử lý tài khoản")
             
         options = generate_authentication_options(
             rp_id=RP_ID,
@@ -49,7 +49,7 @@ class PasskeyService:
         try:
             await AuthRepository.set_redis_passkey_challenge(email, options.challenge)
         except Exception:
-            logger.warning("System encountered issue attempting to persist authentication challenge to cache storage")
+            logger.warning("Lỗi truy xuất cơ sở dữ liệu hệ thống")
             
         await AuthRepository.upsert_passkey_challenge(email, options.challenge, db=db)
         return json.loads(options_to_json(options))
@@ -58,13 +58,13 @@ class PasskeyService:
     async def login_finish(email: str, credential_data: dict, db=None):
         user = await AuthRepository.get_auth_credential_by_email(email, db=db)
         if not user:
-            raise HTTPException(status_code=404, detail="System unable to locate a user profile matching the provided information")
+            raise HTTPException(status_code=404, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         challenge = None
         try:
             challenge = await AuthRepository.get_redis_passkey_challenge(email)
         except Exception:
-            logger.warning("System could not retrieve active authentication challenge from temporary cache storage")
+            logger.warning("Lỗi truy xuất cơ sở dữ liệu hệ thống")
             
         if not challenge:
             chal_doc = await AuthRepository.get_passkey_challenge(email, db=db)
@@ -74,13 +74,13 @@ class PasskeyService:
                     challenge = chal_doc["challenge"]
                     
         if not challenge:
-            raise HTTPException(status_code=400, detail="Cryptographic challenge required for authentication is invalid or exceeded time window")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         credential_id_b64 = credential_data.get("id")
         passkey = next((p for p in user.get("passkeys", []) if p["credential_id"] == credential_id_b64), None)
         
         if not passkey:
-            raise HTTPException(status_code=400, detail="Submitted security credential does not match registered hardware or software token")
+            raise HTTPException(status_code=400, detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             
         try:
             verification = verify_authentication_response(
@@ -92,7 +92,7 @@ class PasskeyService:
                 credential_current_sign_count=passkey["sign_count"],
             )
         except Exception:
-            raise HTTPException(status_code=400, detail="Cryptographic signature verification process failed to validate the provided security token")
+            raise HTTPException(status_code=400, detail="Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
             
         await AuthRepository.update_passkey_sign_count(user["_id"], credential_id_b64, verification.new_sign_count, db=db)
         await AuthRepository.delete_passkey_challenge(email, db=db)
@@ -100,18 +100,18 @@ class PasskeyService:
         try:
             await AuthRepository.delete_redis_passkey_challenge(email)
         except Exception:
-            logger.error(f"System unable to clear consumed authentication challenge for account {email}")
+            logger.error(f"Không thể xóa mã xác thực của {email}")
 
         user_doc = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.MANAGEMENT_URL}/users/email/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(f"{settings.MANAGEMENT_URL}/nguoi-dung/thu-dien/{email}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")
         except Exception:
             pass
 
         if not user_doc:
-            raise HTTPException(status_code=401, detail="System could not verify existence of account associated with authentication request")
+            raise HTTPException(status_code=401, detail="Lỗi xử lý tài khoản")
 
         return await AuthService.issue_token_for_user(user_doc, "passkey_login", db=db)

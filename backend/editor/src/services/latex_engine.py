@@ -58,14 +58,14 @@ class LatexEngine:
                 try:
                     process.kill()
                 except Exception:
-                    logger.warning("System was unable to cleanly terminate background compilation process")
+                    logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             raise Exception("Typesetting compilation process exceeded maximum allowed execution time and was terminated")
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception:
-                    logger.warning("System was unable to automatically clean up temporary processing files")
+                    logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -95,7 +95,7 @@ class LatexEngine:
                 try:
                     os.remove(filepath)
                 except Exception:
-                    logger.warning("System was unable to automatically clean up temporary processing files")
+                    logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
     @staticmethod
     def format_latex(content: str) -> dict:

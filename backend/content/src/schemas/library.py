@@ -20,9 +20,6 @@ class BookmarkFolderAssign(BaseModel):
     folder_id: str
     document_ids: List[str]
 
-class ProgressUpdate(BaseModel):
-    document_id: str
-    progress_percentage: float
 
 class PinnedDocumentRequest(BaseModel):
     document_ids: List[str]

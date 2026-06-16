@@ -16,7 +16,7 @@ async def run_worker():
                 payload = json.loads(message.body.decode())
                 await handler_func(payload)
         except Exception:
-            logger.error("Background worker failed to process incoming message payload due to unexpected structural issue")
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
             raise
 
     await mq_client.channel.set_qos(prefetch_count=2)
@@ -86,9 +86,9 @@ async def run_worker():
     stop_event = asyncio.Event()
 
     def signal_handler():
-        logger.info("Stop signal received and background processing worker is shutting down gracefully")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         stop_event.set()
 
     await stop_event.wait()
-    logger.info("Connection to message queue broker is being closed safely")
+    logger.info("Mất kết nối mạng tạm thời")
     await mq_client.connection.close()

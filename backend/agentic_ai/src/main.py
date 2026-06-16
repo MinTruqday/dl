@@ -29,12 +29,12 @@ logger.add(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("The artificial intelligence system components were initialized and configured successfully")
+    logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
     try:
         await vector_store.ensure_collection()
-        logger.info("The vector database indexing component was successfully initialized and prepared")
+        logger.info("Khởi tạo danh mục tìm kiếm thành công")
     except Exception:
-        logger.error("The system failed to initialize the required vector database searching component")
+        logger.error("Khởi tạo AI thành công")
         
     try:
         if settings.MONGODB_URI:
@@ -42,9 +42,9 @@ async def lifespan(app: FastAPI):
             await RepositoryFactory.get("finetune_samples").create_index([("dataset_id", 1), ("created_at", 1)], background=True)
             await RepositoryFactory.get("finetune_jobs").create_index([("user_id", 1), ("created_at", -1)], background=True)
             await RepositoryFactory.get("finetune_jobs").create_index([("dataset_id", 1), ("status", 1)], background=True)
-            logger.info("The primary database collection indexes were created and initialized successfully")
+            logger.info("Khởi tạo danh mục tìm kiếm thành công")
     except Exception:
-        logger.error("The system encountered a failure while initializing the essential database indexes")
+        logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
     yield
 
 app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION, lifespan=lifespan)
@@ -69,15 +69,15 @@ app.include_router(feedback_router)
 app.include_router(finetune_router)
 app.include_router(history_router)
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
-    return {"status": "System health check passed and service is operating normally"}
+    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}
 
-@app.get("/evaluate/metrics")
+@app.get("/danh-gia/chi-so")
 async def harness_metrics():
     return PlainTextResponse(content=agentops_harness.get_prometheus_metrics(), media_type="text/plain; version=0.0.4")
 
-@app.get("/evaluate/status")
+@app.get("/danh-gia/trang-thai")
 async def harness_status():
     return {
         "orchestration": {

@@ -21,7 +21,7 @@ async def get_db():
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Current authentication session is either invalid or has expired so please log in again",
+        detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn",
         headers={"WWW-Authenticate": "Bearer"},
     )
     
@@ -30,17 +30,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
         email: str = payload.get("sub")
         session_id: str = payload.get("sid")
         if email is None or session_id is None:
-            logger.warning("Authentication token verification failed because it is missing essential cryptographic structural components")
+            logger.warning("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
             raise credentials_exception
     except jwt.PyJWTError:
-        logger.warning("System was unable to decode provided authentication token due to invalid signature or structural corruption")
+        logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
         raise credentials_exception
 
     user_doc = None
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.MANAGEMENT_URL}/users/email/{email}",
+                f"{settings.MANAGEMENT_URL}/nguoi-dung/thu-dien/{email}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:
@@ -49,7 +49,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
         pass
 
     if user_doc is None:
-        logger.warning("System could not locate an account associated with provided authentication credentials within operational database")
+        logger.warning("Lỗi truy xuất cơ sở dữ liệu hệ thống")
         raise credentials_exception
 
     user_id_str = str(user_doc["_id"])
@@ -57,7 +57,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
     if db_client.redis:
         is_valid_session = await db_client.redis.sismember(f"user_sessions:{user_id_str}", session_id)
         if not is_valid_session:
-            logger.warning("System detected and prevented an unauthorized attempt to access a revoked active authentication session")
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             raise credentials_exception
 
     user_doc["_id"] = user_id_str
@@ -82,10 +82,10 @@ def require_role(required_roles: List[str]):
         if current_user.get("role") == "admin":
             return current_user
         if current_user.get("role") not in required_roles:
-            logger.warning("Access attempt was automatically rejected by system because account lacks required authorization tier permissions")
+            logger.warning("Lỗi xử lý tài khoản")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Current account does not possess necessary administrative privileges to perform this restricted operational action",
+                detail="Lỗi xử lý tài khoản",
             )
         return current_user
     return role_checker
@@ -102,7 +102,7 @@ class RateLimiter:
         if not db_client.redis:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="This specific feature is currently undergoing scheduled maintenance so please attempt your request again later",
+                detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn",
             )
             
         client_ip = request.client.host if request.client else "unknown"
@@ -113,7 +113,7 @@ class RateLimiter:
         if current is not None and int(current) >= self.calls:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="System has temporarily restricted your access because you exceeded maximum allowed number of operational requests",
+                detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn",
             )
             
         pipe = db_client.redis.pipeline()
@@ -132,7 +132,7 @@ def require_permissions(required_permissions: List[str]):
         if missing:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Requested action denied because current account lacks specific structural permissions required to proceed functionally",
+                detail="Lỗi xử lý tài khoản",
             )
         return current_user
     return permission_checker
@@ -141,6 +141,6 @@ def get_current_user_from_header(x_user_id: str = Header(None), x_user_name: str
     if not x_user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Incoming request rejected because it is missing mandatory user identification header required for routing"
+            detail="Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"
         )
     return AuthenticatedUser(x_user_id, x_user_name)

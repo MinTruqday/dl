@@ -14,6 +14,6 @@ class RedisDeduplicator:
     async def mark_collected(self, key_type: str, value: str):
         redis_key = f"Collector:dedup:{key_type}"
         await self.r.sadd(redis_key, value)
-        logger.debug("Specified unique structural resource identifier successfully marked collected active remote caching operational system")
+        logger.debug("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
 dedup = RedisDeduplicator()

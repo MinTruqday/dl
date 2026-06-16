@@ -26,7 +26,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("The sophisticated hardware networking diagnostic circuit completely disconnected avoiding persistent catastrophic cascading operational internal failure")
+            logger.error("Khởi tạo AI thành công")
 
     def record_success(self):
         self._failures = 0
@@ -37,7 +37,7 @@ class CircuitBreaker:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info("The internal explicit diagnostic networking circuit smoothly reconnected actively resetting previous massive connection distribution blocks")
+            logger.info("Từ chối truy cập API nội bộ")
             self._tripped_at = None
             self._failures = 0
             return False
@@ -63,43 +63,43 @@ class OrchestrationHarness:
 
     async def run(self, supervisor_execute_plan, req, session_id: str) -> AsyncGenerator[dict, None]:
         if self._circuit_breaker.is_open():
-            logger.error("The centralized systematic execution architecture actively blocked requested processing preventing systemic hardware network overloads dynamically")
-            yield {"type": "error", "message": "The network routing infrastructure essentially requires temporary suspension pausing incoming traffic preserving overall stability safely"}
+            logger.error("Từ chối truy cập API nội bộ")
+            yield {"type": "error", "message": "Mất kết nối mạng tạm thời"}
             return
         self._open_session(session_id)
-        logger.info("The complex structural network module seamlessly provisioned new dynamic isolated logical executing operating session arrays")
+        logger.info("Mất kết nối mạng tạm thời")
         try:
             async with asyncio.timeout(SESSION_HARD_TIMEOUT_SECONDS):
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
-                        logger.info("The currently designated dynamic algorithmic tracking session cleanly terminated matching internal administrative override command")
-                        yield {"type": "error", "message": "The dynamic processing algorithm effectively halted operations fulfilling designated systemic overriding operational shutdown request entirely"}
+                        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+                        yield {"type": "error", "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
                         return
                     yield event
             self._close_session(session_id, "done")
             self._circuit_breaker.record_success()
-            logger.info("The explicit complex logic session thoroughly finalized traversing all required underlying routing pathways exactly properly")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
         except asyncio.TimeoutError:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.error("The underlying sequential algorithm significantly violated absolute maximum timing variables definitively terminating corresponding operational processing")
-            yield {"type": "error", "message": "The execution structural logic substantially delayed explicitly demanding definitive algorithmic termination freeing operational resources dynamically"}
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+            yield {"type": "error", "message": "Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn"}
         except asyncio.CancelledError:
             self._close_session(session_id, "cancelled")
-            logger.warning("The complex operational routing framework explicitly received overriding cancellation matrix signals safely terminating executing processes")
-            yield {"type": "error", "message": "The system abruptly abandoned processing algorithmic instructions reflecting sudden missing internal diagnostic client networking connectivity"}
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+            yield {"type": "error", "message": "Mất kết nối mạng tạm thời"}
         except Exception:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.error("The underlying sequential algorithm significantly violated absolute maximum timing variables definitively terminating corresponding operational processing")
-            yield {"type": "error", "message": "The network routing infrastructure essentially requires temporary suspension pausing incoming traffic preserving overall stability safely"}
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+            yield {"type": "error", "message": "Mất kết nối mạng tạm thời"}
 
     def cancel_session(self, session_id: str):
         state = self._sessions.get(session_id)
         if state:
             state.status = "cancelled"
-            logger.info("The structural orchestration mapping architecture seamlessly digested required overriding internal routing cancellation diagnostic execution signals")
+            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
     def get_active_sessions(self) -> list[str]:
         return list(self._sessions.keys())

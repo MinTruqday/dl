@@ -91,11 +91,11 @@ class SecurityHarness:
         risk_score = min(injection_score + anomaly * 0.2, 1.0)
 
         if injection_violations:
-            logger.warning("The advanced operational structural security network specifically intercepted fundamentally hazardous algorithmic instructions reliably filtering execution")
+            logger.warning("Mất kết nối mạng tạm thời")
             return ScanResult(passed=False, blocked=True, risk_score=risk_score, sanitized_text=sanitized, violations=all_violations)
 
         if pii_violations:
-            logger.info("The internal explicit structural evaluation security component definitively verified masking exposing operational identity textual tracking elements")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
         return ScanResult(passed=True, blocked=False, risk_score=risk_score, sanitized_text=sanitized, violations=all_violations)
 
@@ -104,8 +104,8 @@ class SecurityHarness:
             return text
         credential_violations = self._detect_credential_leak(text)
         if credential_violations:
-            logger.error("The internal secure operational framework categorically terminated leaking exposed specific authentication metadata reliably avoiding damages")
-            return "The explicit functional operational response formally prohibited containing identified restrictive sensitive authorization cryptographic sequences systematically"
+            logger.error("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+            return "Hệ thống từ chối yêu cầu do không đủ quyền truy cập"
         sanitized, _ = self._redact_pii(text)
         return sanitized
 

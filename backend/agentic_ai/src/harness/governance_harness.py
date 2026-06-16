@@ -37,7 +37,7 @@ class GovernanceHarness:
 
     def open_session(self, session_id: str, user_id: str, role: UserRole):
         self._sessions[session_id] = SessionGovernanceState(session_id=session_id, user_id=user_id, role=role)
-        logger.info("The organizational governance access control framework systematically authorized managing new actively operational authenticated dynamic tracking session")
+        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
     def close_session(self, session_id: str):
         self._sessions.pop(session_id, None)
@@ -45,18 +45,18 @@ class GovernanceHarness:
     def check_tool_allowed(self, session_id: str, tool_name: str) -> PolicyDecision:
         state = self._sessions.get(session_id)
         if not state:
-            return PolicyDecision(allowed=False, reason="The designated operational execution session technically circumvented active administrative governance systematic explicit validation security arrays")
+            return PolicyDecision(allowed=False, reason="Hệ thống từ chối yêu cầu do không đủ quyền truy cập")
         policy = self._get_policy(state.role)
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
-            logger.warning("The operational dynamic governance logic decisively suspended requested system invocation matching missing authorization parameters")
-            return PolicyDecision(allowed=False, reason="The requested active operation currently requires elevated authenticated security clearances absolutely unavailable bypassing operational authorization", blocked_tool=tool_name)
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+            return PolicyDecision(allowed=False, reason="Hệ thống từ chối yêu cầu do không đủ quyền truy cập", blocked_tool=tool_name)
         if policy["allowed_tools"] is not None and tool_name not in policy["allowed_tools"]:
-            logger.warning("The operational dynamic governance logic decisively suspended requested system invocation matching missing authorization parameters")
-            return PolicyDecision(allowed=False, reason="The precisely targeted execution module completely lacks essential whitelisting permissions tracking current authenticated processing constraints", blocked_tool=tool_name)
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+            return PolicyDecision(allowed=False, reason="Khởi tạo AI thành công", blocked_tool=tool_name)
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
-            logger.warning("The governance diagnostic module blocked active routing exceeding maximum explicit processing limitations defined logically")
-            return PolicyDecision(allowed=False, reason="The processing execution array strictly exceeded globally mapped active functional algorithmic invocations operational structural limits")
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+            return PolicyDecision(allowed=False, reason="Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI")
         return PolicyDecision(allowed=True)
 
     def record_tool_call(self, session_id: str, query_text: str = ""):
@@ -72,8 +72,8 @@ class GovernanceHarness:
         policy = self._get_policy(state.role)
         max_steps = policy["max_plan_steps"]
         if max_steps != -1 and num_steps > max_steps:
-            logger.warning("The governance diagnostic module blocked active routing exceeding maximum explicit processing limitations defined logically")
-            return PolicyDecision(allowed=False, reason="The evaluated dynamic execution logic fundamentally exceeds explicitly mapped complex authorization systematic parameters permitted currently")
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+            return PolicyDecision(allowed=False, reason="Hệ thống từ chối yêu cầu do không đủ quyền truy cập")
         return PolicyDecision(allowed=True)
 
     def check_token_budget(self, session_id: str, additional_tokens: int) -> PolicyDecision:
@@ -83,8 +83,8 @@ class GovernanceHarness:
         policy = self._get_policy(state.role)
         max_tokens = policy["max_tokens_per_session"]
         if max_tokens != -1 and (state.estimated_tokens_used + additional_tokens) > max_tokens:
-            logger.warning("The governance diagnostic module blocked active routing exceeding maximum explicit processing limitations defined logically")
-            return PolicyDecision(allowed=False, reason="The explicitly evaluated active processing algorithmic network session aggressively surpassed mapped permitted total memory boundaries")
+            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+            return PolicyDecision(allowed=False, reason="Kiểm tra sức khỏe hệ thống hoàn tất và ổn định")
         return PolicyDecision(allowed=True)
 
     def get_session_summary(self, session_id: str) -> dict:

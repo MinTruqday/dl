@@ -34,4 +34,4 @@ class AuditService:
                 "timestamp": datetime.now(timezone.utc),
             }
         )
-        logger.info("Administrative system action has been successfully captured and recorded in audit logs")
+        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")

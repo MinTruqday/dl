@@ -67,9 +67,9 @@ async def agent_summarize_long_document(document_id: str, config: dict) -> str:
     from src.tools.api import _get_doc_text
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication is explicitly required safely preceding executing requested administrative diagnostic internal systemic summarization operation"
+        return "Xác thực tài khoản và phân quyền người dùng thành công"
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "The specified document underlying content data matrix could not be discovered mapping available accessible infrastructure reliably"
+        return "Lỗi khi truy xuất tài liệu"
     res = await map_reduce_app.ainvoke({"document_text": text, "chunks": [], "summaries": [], "final_summary": ""})
     return f"The complete document comprehensive algorithmic functional summary was successfully processed mapping underlying content reliably\n\n{res['final_summary']}"

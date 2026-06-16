@@ -28,10 +28,10 @@ class HFInferenceChat(BaseChatModel):
         try:
             response = await self.client.chat_completion(model=self.model, messages=formatted_msgs, max_tokens=self.max_tokens, temperature=self.temperature)
             content = response.choices[0].message.content
-            logger.info("The external remote language processing mathematical framework precisely generated optimal contextual sequence")
+            logger.info("Mất kết nối mạng tạm thời")
             return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
         except Exception:
-            logger.error("The external remote language processing infrastructure severely crashed blocking intended analytical generation")
+            logger.error("Từ chối truy cập API nội bộ")
             raise
 
     async def _astream(self, messages: List[BaseMessage], stop: Optional[List[str]] = None, run_manager: Optional[AsyncCallbackManagerForLLMRun] = None, **kwargs: Any) -> AsyncIterator[ChatGeneration]:
@@ -50,7 +50,7 @@ class HFInferenceChat(BaseChatModel):
                 if token:
                     yield ChatGeneration(message=AIMessage(content=token))
         except Exception:
-            logger.error("The underlying sequential continuous streaming generative process decisively collapsed losing networking integrity")
+            logger.error("Mất kết nối mạng tạm thời")
             raise
 
     @property

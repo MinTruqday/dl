@@ -30,19 +30,19 @@ async def managed_browser(headless=True):
         )
         yield browser
     except Exception:
-        logger.error("Automated structural browser environment failed initializing safely executing underlying process system configuration issue")
+        logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         raise
     finally:
         if browser:
             try:
                 await browser.close()
             except Exception:
-                logger.warning("Background cleanup operational routine encountered unexpected delay safely closing functional automated browser instance")
+                logger.warning("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
         if playwright:
             try:
                 await playwright.stop()
             except Exception:
-                logger.warning("Background cleanup structural routine encountered resource lock actively attempting terminate primary rendering engine")
+                logger.warning("Lỗi khi truy xuất tài liệu")
 
 async def get_stealth_context(browser):
     context = await browser.new_context(
@@ -66,11 +66,11 @@ async def download_file_with_retry(url: str, dest_path: str, timeout: int = 300,
                                 f.write(chunk)
                         return True
                     else:
-                        logger.error("Network transfer request specified remote structural resource failed unexpected operational protocol numeric status code")
+                        logger.error("Mất kết nối mạng tạm thời")
         except Exception:
-            logger.warning("Temporary dynamic network disruption occurred processing active download system preparing automated retry functional sequence")
+            logger.warning("Mất kết nối mạng tạm thời")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2**attempt)
             else:
-                logger.error("Remote file download operational process failed permanently exhausted all configured automated structural retry attempts")
+                logger.error("Mất kết nối mạng tạm thời")
     return False

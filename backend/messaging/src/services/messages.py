@@ -70,7 +70,7 @@ class MessageService:
         if user_doc and sender_id in user_doc.get("blocked_users", []):
             raise HTTPException(
                 status_code=403, 
-                detail="Communication attempt restricted because target account has disabled interactions from your profile"
+                detail="Lỗi xử lý tài khoản"
             )
             
         settings_id = f"settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
@@ -203,14 +203,14 @@ class MessageService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        f"{settings.MANAGEMENT_URL}/users/batch",
+                        f"{settings.MANAGEMENT_URL}/nguoi-dung/hang-loat",
                         json=other_user_ids,
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if resp.status_code == 200:
                         users_list = resp.json().get("data", [])
             except Exception:
-                logger.warning("System failed to retrieve detailed profile information for remote accounts")
+                logger.warning("Mất kết nối mạng tạm thời")
                 
         user_map = {str(u["_id"]): u for u in users_list}
         groups_list = (
@@ -674,7 +674,7 @@ class MessageService:
         translated_content = ""
         try:
             response = await make_ai_request(
-                f"{settings.AGENTIC_AI_URL}/translate",
+                f"{settings.AGENTIC_AI_URL}/phien-dich",
                 {"text": msg["content"], "target_lang": target_lang}
             )
             if response.status_code == 200:

@@ -49,7 +49,7 @@ class MessageManager:
         except asyncio.CancelledError:
             pass
         except Exception:
-            logger.error("Background task failed to listen to incoming broadcast signals due to connection interruption with message broker")
+            logger.error("Mất kết nối mạng tạm thời")
             self._listener_task = None
 
     async def connect(self, user_id: str, websocket: WebSocket):
@@ -129,7 +129,7 @@ class MessageManager:
         active_finetunes = await RepositoryFactory.get("finetune_jobs").find({"status": {"$in": ["running", "pending"]}}).to_list(50)
         try:
             async with httpx.AsyncClient() as client:
-                res = await client.get(f"{settings.COLLECTOR_URL}/active-processes", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                res = await client.get(f"{settings.COLLECTOR_URL}/hoat-dong-tien-trinh", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 active_collectors = res.json() if res.status_code == 200 else []
         except Exception:
             active_collectors = []

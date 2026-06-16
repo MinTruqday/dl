@@ -55,13 +55,13 @@ class NXBGDPipeline:
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info("Visual capture module successfully intercepted and saved high resolution structural document page")
+                        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception:
-                    logger.warning("Visual capture module encountered minor interruption attempting to retrieve page image sequence data")
+                    logger.warning("Lỗi khi truy xuất tài liệu")
         except Exception:
-            logger.warning("Unexpected error occurred parsing intercepted network response from primary document viewer component")
+            logger.warning("Mất kết nối mạng tạm thời")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -91,16 +91,16 @@ class NXBGDPipeline:
         )
 
         if not image_files:
-            logger.warning("Document compilation process skipped because no valid image pages successfully captured locally")
+            logger.warning("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             return
 
         try:
-            logger.info("Rendering engine actively compiling captured image sequence into unified portable document format")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             with open(pdf_path, "wb") as f:
                 f.write(img2pdf.convert(image_files))
-            logger.info("Unified structural document successfully compiled and saved to local secure temporary workspace")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
 
-            logger.info("Compiled structural document securely transferring to permanent distributed object storage backend")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             minio_url = await storage.upload_local_file(f"documents/nxbgd/{final_pdf_name}", pdf_path)
 
             if minio_url:
@@ -121,21 +121,21 @@ class NXBGDPipeline:
                 }
                 await db_client.insert_document(document_metadata)
         except Exception:
-            logger.error("Unexpected system error occurred during final document rendering compilation and upload sequence")
+            logger.error("Lỗi khi truy xuất tài liệu")
             raise
         finally:
-            logger.info("Automated structural cleanup routine securely removing temporary processing directories and asset files")
+            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception:
-                logger.warning("Automated cleanup routine encountered permission access issue removing targeted temporary working files")
+                logger.warning("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
 
     async def execute(self):
         await self.init_browser()
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         
         try:
-            logger.info("Collection bot navigating to primary origin domain to begin categorical scanning process")
+            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
             await self.page.goto(url, timeout=60000)
             await asyncio.sleep(5)
 
@@ -148,11 +148,11 @@ class NXBGDPipeline:
                     if href and href not in document_urls:
                         document_urls.append(href)
 
-                logger.info("Scanning module successfully discovered batch of available technical documents on active categorical page")
+                logger.info("Khởi tạo AI thành công")
 
                 for doc_url in document_urls:
                     full_doc_url = f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
-                    logger.info("System transitioning to structural details view to extract specific functional metadata profile")
+                    logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
                     try:
                         await self.page.goto(full_doc_url, timeout=60000)
@@ -167,7 +167,7 @@ class NXBGDPipeline:
                             full_title = res_name.strip()
 
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info("Collection bot skipping current document because it has already been successfully processed")
+                                logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                                 continue
 
                             await dedup.mark_collected("taphuan_book", full_title)
@@ -176,7 +176,7 @@ class NXBGDPipeline:
                             if viewer_url.startswith("/"):
                                 viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
 
-                            logger.info("Active collection module preparing to process detailed graphical contents of target resource")
+                            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
 
                             safe_title = re.sub(r'[\\/*?:"<>|]', "", full_title).strip()
                             self.temp_dir = tempfile.mkdtemp(prefix=f"nxbgd_{safe_title[:20]}_")
@@ -202,14 +202,14 @@ class NXBGDPipeline:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
                                 except Exception:
-                                    logger.warning("Automated navigation script encountered unexpected functional issue interacting with document viewer")
+                                    logger.warning("Lỗi khi truy xuất tài liệu")
                                 await asyncio.sleep(2)
 
                                 current_pages = len(self.captured_hashes)
                                 if current_pages > 0 and current_pages == last_page_count:
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info("Visual capture module successfully collected stable functional sequence of document pages")
+                                        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                                         break
                                 else:
                                     stable_count = 0
@@ -219,25 +219,25 @@ class NXBGDPipeline:
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
                     except Exception:
-                        logger.error("System failed to properly inspect document details due to unexpected layout structure timeout")
+                        logger.error("Lỗi khi truy xuất tài liệu")
 
                 try:
                     await self.page.goto(url, timeout=60000)
                     await asyncio.sleep(5)
                     next_btn = await self.page.query_selector("button.p-paginator-next")
                     if next_btn and not await next_btn.is_disabled() and "p-disabled" not in (await next_btn.get_attribute("class") or ""):
-                        logger.info("Collection bot executing precise pagination command to access next batch of document listings")
+                        logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
                         await next_btn.click()
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info("Scanning sequence reached final structural page or functional pagination controls no longer available")
+                        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
                 except Exception:
-                    logger.error("Automated functional pagination script failed navigating to next sequence due to unexpected layout")
+                    logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
                     has_next = False
                 break
         except Exception:
-            logger.error("Primary structural collection sequence encountered critical functional failure navigating targeted source domain")
+            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
             raise
         finally:
             await self.close()

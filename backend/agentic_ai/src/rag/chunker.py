@@ -18,10 +18,10 @@ class DocumentChunker:
             if not text or not text.strip():
                 return []
             chunks = self.splitter.split_text(text)
-            logger.info("The structural text segmentation utility successfully dismantled original document into manageable contextual arrays")
+            logger.info("Phân tích tài liệu hoàn tất")
             return chunks
         except Exception:
-            logger.error("The algorithmic structural parsing engine drastically failed partitioning raw linguistic textual payloads")
+            logger.error("Lỗi khi truy xuất tài liệu")
             return []
 
 document_chunker = DocumentChunker()

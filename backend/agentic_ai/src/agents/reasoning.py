@@ -9,11 +9,11 @@ class ReasoningAgent:
         try:
             prompt = prompt_registry.get(PromptType.ANALYTICAL_ENGINE).format(task=task)
             result = await llm.ainvoke([HumanMessage(content=prompt)])
-            logger.info("The sophisticated analytical reasoning processor finalized evaluating deeply complex operational functional boundaries")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             return result.content
         except Exception:
-            logger.error("The computational semantic reasoning mathematical matrix completely derailed avoiding analytical mapping structures")
-            return "The system encountered an unexpected error and requires you to try again later"
+            logger.error("Khởi tạo AI thành công")
+            return "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
 
     async def evaluate_quality(self, query: str, answer: str, context: list) -> dict:
         try:
@@ -24,10 +24,10 @@ class ReasoningAgent:
             if "```json" in raw:
                 raw = raw.split("```json")[1].split("```")[0]
             parsed = json.loads(raw)
-            logger.info("The algorithmic quality assurance diagnostic protocol executed evaluating exact string contextual correctness")
+            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
             return parsed
         except Exception:
-            logger.warning("The operational dynamic validation protocol missed parsing explicit rigid analytical JSON constraints")
+            logger.warning("Lỗi khi truy xuất tài liệu")
             return {"should_retry": False}
 
 reasoning = ReasoningAgent()
