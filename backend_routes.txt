@@ -214,3 +214,10 @@ signal | DELETE | /notification/{notif_id}
 signal | PATCH | /notification/read-all
 signal | PATCH | /notification/{notif_id}/read
 signal | POST | /notification/trigger
+
+
+      18 + from src.router.reading import router as reading_router
+      19 + from src.router.reviews import router as review_router
+      20 + from src.router.storage import router as storage_router
+      21 + from src.router.uploads import router as upload_router
+      22 + from src.router.versions import router as version_router

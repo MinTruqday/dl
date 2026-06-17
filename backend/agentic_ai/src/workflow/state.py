@@ -1,17 +1,22 @@
-import operator
 from typing import Annotated, Any, Dict, List, TypedDict
-from langchain_core.messages import BaseMessage, RemoveMessage, SystemMessage
+from langchain_core.messages import RemoveMessage, SystemMessage
+
 
 def reduce_chat_history(left: list, right: list) -> list:
-    if left is None: left = []
-    if right is None: right = []
-    if not isinstance(left, list): left = []
-    if not isinstance(right, list): right = [right]
+    if left is None:
+        left = []
+    if right is None:
+        right = []
+    if not isinstance(left, list):
+        left = []
+    if not isinstance(right, list):
+        right = [right]
 
     res = left.copy()
     for m in right:
         if isinstance(m, RemoveMessage):
-            if res: res.pop(0)
+            if res:
+                res.pop(0)
         else:
             res.append(m)
 
@@ -23,16 +28,22 @@ def reduce_chat_history(left: list, right: list) -> list:
         return recent_msgs
     return res
 
+
 def reduce_consolidated_results(left: list, right: list) -> list:
-    if left is None: left = []
-    if right is None: right = []
-    if not isinstance(left, list): left = []
-    if not isinstance(right, list): right = [right]
-    
+    if left is None:
+        left = []
+    if right is None:
+        right = []
+    if not isinstance(left, list):
+        left = []
+    if not isinstance(right, list):
+        right = [right]
+
     combined = left + right
     if len(combined) > 15:
         combined = [combined[0]] + combined[-14:]
     return combined
+
 
 class AgentState(TypedDict):
     chat_history: Annotated[list, reduce_chat_history]
@@ -49,6 +60,9 @@ class AgentState(TypedDict):
     document_ids: list
     image_data: str
     file_data: str
+    ai_tier: str
+    role: str
+
 
 class ActingState(TypedDict):
     req_data: Dict[str, Any]
