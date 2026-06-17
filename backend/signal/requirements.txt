@@ -1,0 +1,12 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic[email]==2.5.2
+loguru==0.7.2
+httpx==0.25.1
+pymongo==4.6.0
+motor==3.3.2
+redis==5.0.1
+uuid6==2024.1.12
+aio-pika==9.3.1
+PyJWT==2.8.0
+argon2-cffi==23.1.0
