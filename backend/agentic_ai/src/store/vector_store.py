@@ -1,11 +1,22 @@
+from fastapi import Query
 import asyncio
+import os
 from typing import Dict, List, Optional
+
 import httpx
 from core.config import settings
-from fastapi import Query
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchAny, MatchValue, PointStruct, VectorParams
+from qdrant_client.http.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchAny,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
+
 
 class VectorStore:
     def __init__(self):
@@ -32,38 +43,67 @@ class VectorStore:
             except asyncio.CancelledError:
                 break
             except Exception:
-                logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
+                logger.error("The system encountered an unexpected issue while attempting to queue data for the search index")
 
     async def ensure_collection(self):
         try:
             collections = await self.client.get_collections()
-            exists = any((c.name == self.collection_name for c in collections.collections))
+            exists = any(
+                c.name == self.collection_name for c in collections.collections
+            )
             if not exists:
                 from src.rag.embedder import embedding_service
+
                 await self.client.create_collection(
                     collection_name=self.collection_name,
-                    vectors_config=VectorParams(size=embedding_service._dimensions, distance=Distance.COSINE),
+                    vectors_config=VectorParams(
+                        size=embedding_service._dimensions, distance=Distance.COSINE
+                    ),
                 )
         except Exception:
-            logger.error("Lỗi hệ thống khi tìm kiếm dữ liệu cấu trúc")
+            logger.error("The system encountered an unexpected issue while attempting to initialize the search index collection")
             raise
 
-    async def upsert(self, ids: List[str], embeddings: List[List[float]], documents: List[str], metadatas: List[Dict]):
+    async def upsert(
+        self,
+        ids: List[str],
+        embeddings: List[List[float]],
+        documents: List[str],
+        metadatas: List[Dict],
+    ):
         await self._init_worker()
         points = [
-            PointStruct(id=ids[i], vector=embeddings[i], payload={"text": documents[i], **metadatas[i]})
+            PointStruct(
+                id=ids[i],
+                vector=embeddings[i],
+                payload={"text": documents[i], **metadatas[i]},
+            )
             for i in range(len(ids))
         ]
-        await self._upsert_queue.put({"collection_name": self.collection_name, "points": points})
+        await self._upsert_queue.put(
+            {"collection_name": self.collection_name, "points": points}
+        )
 
     async def wait_upsert(self):
         if self._upsert_queue:
             await self._upsert_queue.join()
 
-    async def query(self, query_vector: List[float], document_ids: Optional[List[str]] = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[Dict]:
+    async def query(
+        self,
+        query_vector: List[float],
+        document_ids: Optional[List[str]] = None,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+    ) -> List[Dict]:
         query_filter = None
         if document_ids:
-            query_filter = Filter(must=[FieldCondition(key="document_id", match=MatchAny(any=document_ids))])
+            query_filter = Filter(
+                must=[
+                    FieldCondition(key="document_id", match=MatchAny(any=document_ids))
+                ]
+            )
+
         try:
             results = await self.client.search(
                 collection_name=self.collection_name,
@@ -73,21 +113,32 @@ class VectorStore:
                 with_payload=True,
             )
             return [
-                {"text": hit.payload.get("text", ""), "metadata": {k: v for (k, v) in hit.payload.items() if k != "text"}, "score": hit.score}
+                {
+                    "text": hit.payload.get("text", ""),
+                    "metadata": {k: v for k, v in hit.payload.items() if k != "text"},
+                    "score": hit.score,
+                }
                 for hit in results
             ]
         except Exception:
-            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
+            logger.error("The search query process failed due to an unexpected system exception")
             return []
 
     async def delete_by_document(self, document_id: str):
         try:
             await self.client.delete(
                 collection_name=self.collection_name,
-                points_selector=Filter(must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))]),
+                points_selector=Filter(
+                    must=[
+                        FieldCondition(
+                            key="document_id", match=MatchValue(value=document_id)
+                        )
+                    ]
+                ),
             )
         except Exception:
-            logger.error("Lỗi hệ thống khi tìm kiếm dữ liệu cấu trúc")
+            logger.error("The system failed to remove the specified data from the search index database")
             raise
+
 
 vector_store = VectorStore()

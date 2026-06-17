@@ -11,14 +11,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY finance/requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY finance/src/ ./src/
 COPY core/ ./core/
 
-EXPOSE 8000
+EXPOSE 8350
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8350"]
 

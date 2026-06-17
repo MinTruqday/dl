@@ -1,58 +1,99 @@
-from typing import Any, AsyncIterator, Dict, List, Optional
-from huggingface_hub import AsyncInferenceClient
-from langchain_core.callbacks import AsyncCallbackManagerForLLMRun, CallbackManagerForLLMRun
+from typing import Any, Dict, List, Optional
+
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from langchain_core.outputs import ChatGeneration, ChatResult
-from loguru import logger
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+)
+from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
+from pydantic import Field
+
 
 class HFInferenceChat(BaseChatModel):
-    client: Any
-    model: str
-    temperature: float = 0.1
-    max_tokens: int = 1024
+    client: Any = Field(default=None)
+    model: str = Field(default="")
 
-    def _generate(self, messages: List[BaseMessage], stop: Optional[List[str]] = None, run_manager: Optional[CallbackManagerForLLMRun] = None, **kwargs: Any) -> ChatResult:
-        raise NotImplementedError("The synchronous textual generation algorithmic sequence strictly lacks comprehensive implementation mapping currently")
+    def _generate(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[Any] = None,
+        **kwargs: Any
+    ) -> ChatResult:
+        import asyncio
 
-    async def _agenerate(self, messages: List[BaseMessage], stop: Optional[List[str]] = None, run_manager: Optional[AsyncCallbackManagerForLLMRun] = None, **kwargs: Any) -> ChatResult:
-        formatted_msgs = []
-        for m in messages:
-            if isinstance(m, SystemMessage):
-                formatted_msgs.append({"role": "system", "content": m.content})
-            elif isinstance(m, HumanMessage):
-                formatted_msgs.append({"role": "user", "content": m.content})
-            elif isinstance(m, AIMessage):
-                formatted_msgs.append({"role": "assistant", "content": m.content})
-                
-        try:
-            response = await self.client.chat_completion(model=self.model, messages=formatted_msgs, max_tokens=self.max_tokens, temperature=self.temperature)
-            content = response.choices[0].message.content
-            logger.info("Mất kết nối mạng tạm thời")
-            return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
-        except Exception:
-            logger.error("Từ chối truy cập API nội bộ")
-            raise
+        import nest_asyncio
 
-    async def _astream(self, messages: List[BaseMessage], stop: Optional[List[str]] = None, run_manager: Optional[AsyncCallbackManagerForLLMRun] = None, **kwargs: Any) -> AsyncIterator[ChatGeneration]:
-        formatted_msgs = []
-        for m in messages:
-            if isinstance(m, SystemMessage):
-                formatted_msgs.append({"role": "system", "content": m.content})
-            elif isinstance(m, HumanMessage):
-                formatted_msgs.append({"role": "user", "content": m.content})
-            elif isinstance(m, AIMessage):
-                formatted_msgs.append({"role": "assistant", "content": m.content})
-                
-        try:
-            async for chunk in await self.client.chat_completion(model=self.model, messages=formatted_msgs, max_tokens=self.max_tokens, temperature=self.temperature, stream=True):
+        nest_asyncio.apply()
+        return asyncio.run(self._agenerate(messages, stop, run_manager, **kwargs))
+
+    async def _agenerate(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[Any] = None,
+        **kwargs: Any
+    ) -> ChatResult:
+        hf_messages = []
+        for msg in messages:
+            if isinstance(msg, HumanMessage):
+                role = "user"
+            elif isinstance(msg, SystemMessage):
+                role = "system"
+            else:
+                role = "assistant"
+            hf_messages.append({"role": role, "content": msg.content})
+
+        response = await self.client.chat_completion(
+            messages=hf_messages,
+            max_tokens=kwargs.get("max_tokens", 1024),
+            temperature=kwargs.get("temperature", 0.1),
+        )
+        content = response.choices[0].message.content
+        return ChatResult(
+            generations=[ChatGeneration(message=AIMessage(content=content))]
+        )
+
+    async def _astream(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[Any] = None,
+        **kwargs: Any
+    ):
+        hf_messages = []
+        for msg in messages:
+            if isinstance(msg, HumanMessage):
+                role = "user"
+            elif isinstance(msg, SystemMessage):
+                role = "system"
+            else:
+                role = "assistant"
+            hf_messages.append({"role": role, "content": msg.content})
+
+        stream = await self.client.chat_completion(
+            messages=hf_messages,
+            max_tokens=kwargs.get("max_tokens", 1024),
+            temperature=kwargs.get("temperature", 0.1),
+            stream=True,
+        )
+
+        async for chunk in stream:
+            if (
+                hasattr(chunk, "choices")
+                and len(chunk.choices) > 0
+                and hasattr(chunk.choices[0], "delta")
+                and chunk.choices[0].delta.content
+            ):
                 token = chunk.choices[0].delta.content
-                if token:
-                    yield ChatGeneration(message=AIMessage(content=token))
-        except Exception:
-            logger.error("Mất kết nối mạng tạm thời")
-            raise
+                chunk_obj = ChatGenerationChunk(message=AIMessageChunk(content=token))
+                if run_manager:
+                    await run_manager.on_llm_new_token(token, chunk=chunk_obj)
+                yield chunk_obj
 
     @property
     def _llm_type(self) -> str:
-        return "huggingface_inference_async"
+        return "hf_inference_chat"

@@ -1,43 +1,80 @@
 import asyncio
+import hashlib
+import json
+import os
 from typing import List
-import httpx
+
+import redis
 from core.config import settings
 from loguru import logger
+from sentence_transformers import SentenceTransformer
+
 
 class EmbeddingService:
     def __init__(self):
-        self._model = settings.EMBEDDING_MODEL
+        self._model_name = settings.EMBEDDING_MODEL
         self._dimensions = settings.EMBEDDING_DIMENSIONS
         self._batch_size = settings.EMBEDDING_BATCH_SIZE
-        self._url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self._model}"
-        self._headers = {"Authorization": f"Bearer {settings.HF_TOKEN}"}
-        self._client = httpx.AsyncClient(timeout=60.0)
+        self._model = SentenceTransformer(self._model_name)
 
-    async def embed_query(self, text: str) -> List[float]:
+        redis_url = settings.REDIS_URI
         try:
-            response = await self._client.post(self._url, headers=self._headers, json={"inputs": [text]})
-            if response.status_code == 200:
-                return response.json()[0]
-            logger.error("Lỗi xử lý model AI")
-            return [0.0] * self._dimensions
+            self._cache = redis.from_url(redis_url, decode_responses=False)
+            self._cache.ping()
         except Exception:
-            logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
-            return [0.0] * self._dimensions
+            self._cache = None
 
-    async def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = []
-        for i in range(0, len(texts), self._batch_size):
-            batch = texts[i : i + self._batch_size]
-            try:
-                response = await self._client.post(self._url, headers=self._headers, json={"inputs": batch})
-                if response.status_code == 200:
-                    embeddings.extend(response.json())
-                else:
-                    embeddings.extend([[0.0] * self._dimensions for _ in batch])
-            except Exception:
-                logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
-                embeddings.extend([[0.0] * self._dimensions for _ in batch])
-            await asyncio.sleep(0.1)
-        return embeddings
+    def _cache_key(self, text: str) -> str:
+        return f"emb:local:{self._model_name}:{hashlib.sha256(text.encode()).hexdigest()[:24]}"
+
+    def _embed_single(self, text: str) -> List[float]:
+        if self._cache:
+            cached = self._cache.get(self._cache_key(text))
+            if cached:
+                return json.loads(cached)
+
+        embedding = self._model.encode(text, convert_to_numpy=True).tolist()
+
+        if self._cache:
+            self._cache.setex(self._cache_key(text), 86400 * 7, json.dumps(embedding))
+
+        return embedding
+
+    async def embed_query(self, query: str) -> List[float]:
+        return await asyncio.to_thread(self._embed_single, query)
+
+    def _embed_batch(self, texts: List[str]) -> List[List[float]]:
+        all_embeddings = [None] * len(texts)
+        uncached_indices = []
+        uncached_texts = []
+
+        for i, text in enumerate(texts):
+            if self._cache:
+                cached = self._cache.get(self._cache_key(text))
+                if cached:
+                    all_embeddings[i] = json.loads(cached)
+                    continue
+            uncached_indices.append(i)
+            uncached_texts.append(text)
+
+        if uncached_texts:
+            for batch_start in range(0, len(uncached_texts), self._batch_size):
+                batch = uncached_texts[batch_start : batch_start + self._batch_size]
+                batch_embeddings = self._model.encode(batch, convert_to_numpy=True)
+
+                for j, emb in enumerate(batch_embeddings):
+                    real_idx = uncached_indices[batch_start + j]
+                    emb_list = emb.tolist()
+                    all_embeddings[real_idx] = emb_list
+                    if self._cache:
+                        self._cache.setex(
+                            self._cache_key(batch[j]), 86400 * 7, json.dumps(emb_list)
+                        )
+
+        return all_embeddings
+
+    async def embed_batch(self, texts: List[str]) -> List[List[float]]:
+        return await asyncio.to_thread(self._embed_batch, texts)
+
 
 embedding_service = EmbeddingService()

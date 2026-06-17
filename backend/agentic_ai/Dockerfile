@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY agentic_ai/requirements.txt .
+RUN pip install --no-cache-dir torch>=2.2.0
 RUN pip install --no-cache-dir -r requirements.txt
 
 FROM python:3.11-slim
@@ -35,7 +36,7 @@ COPY --chown=appuser:appuser core/ ./core/
 
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8400
 
-CMD ["bash", "-c", "gunicorn src.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 --timeout 1200"]
+CMD ["bash", "-c", "gunicorn src.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8400 --timeout 1200"]
 

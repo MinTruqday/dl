@@ -1,13 +1,42 @@
+import math
+from collections import Counter
+
 from loguru import logger
+from src.harness.evaluation_harness import (
+    EvalReport,
+    EvaluationHarness,
+    _compute_bleu,
+    _compute_rouge_l,
+    _llm_judge,
+    evaluation_harness,
+)
 
-class ModelEvaluator:
-    @staticmethod
-    def evaluate_adapter(adapter_path: str, validation_data: list) -> dict:
-        try:
-            logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
-            return {"perplexity": 0.0, "accuracy": 0.0}
-        except Exception:
-            logger.error("Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý")
-            return {"error": "Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI"}
 
-model_evaluator = ModelEvaluator()
+async def llm_judge_score(
+    instruction: str,
+    expected: str,
+    actual: str,
+    hf_token: str = "",
+    judge_model: str = "",
+) -> dict:
+    return await _llm_judge(instruction, expected, actual)
+
+
+async def evaluate_model_full(
+    test_samples: list,
+    model_name: str,
+    hf_token: str = None,
+    judge_model: str = None,
+) -> dict:
+    use_judge = bool(judge_model)
+    harness = EvaluationHarness()
+    harness._dataset = test_samples
+    return await harness.run_benchmark(model_name=model_name, use_judge=use_judge)
+
+
+def compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
+    return _compute_bleu(reference, hypothesis, max_n)
+
+
+def compute_rouge_l(reference: str, hypothesis: str) -> float:
+    return _compute_rouge_l(reference, hypothesis)

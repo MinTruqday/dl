@@ -1,26 +1,48 @@
-import json
-from langchain_core.messages import HumanMessage
+from core.config import settings
+from huggingface_hub import AsyncInferenceClient
+from langchain_core.prompts import PromptTemplate
 from loguru import logger
-from src.core.prompts import PromptType, prompt_registry
-from src.workflow.graph import llm
+from pydantic import BaseModel, Field
+from typing import Literal
+from src.core.prompt_registry import PromptType, prompt_registry
+from src.utils.hf import HFInferenceChat
+
+class RouteDecision(BaseModel):
+    reasoning: str = Field(description="Step-by-step reasoning")
+    route: Literal["action", "knowledge", "chat"] = Field(description="The chosen route: 'action', 'knowledge', or 'chat'")
+    answer: str = Field(default="", description="Direct response if route is 'chat', else empty string")
 
 class SemanticRouter:
+    def __init__(self):
+        llama_model = settings.LLAMA_MODEL
+        if not llama_model:
+            raise ValueError("The language model configuration is currently missing from the system settings")
+
+        self.llama_client = AsyncInferenceClient(
+            model=settings.LLAMA_MODEL,
+            token=settings.HF_TOKEN,
+        )
+        self.router_llm = HFInferenceChat(
+            client=self.llama_client, model=settings.LLAMA_MODEL
+        )
+
     async def execute(self, query: str) -> dict:
+        prompt = PromptTemplate(
+            template=prompt_registry.get(PromptType.PRIMARY_ROUTER),
+            input_variables=["question"],
+        )
         try:
-            prompt = prompt_registry.get(PromptType.PRIMARY_ROUTER).format(question=query)
-            result = await llm.ainvoke([HumanMessage(content=prompt)])
-            raw = result.content.strip()
+            structured_llm = self.router_llm.with_structured_output(RouteDecision)
+            res: RouteDecision = await structured_llm.ainvoke(prompt.format(question=query))
             
-            if "```json" in raw:
-                raw = raw.split("```json")[1].split("```")[0]
-            elif "```" in raw:
-                raw = raw.split("```")[1].split("```")[0]
-                
-            parsed = json.loads(raw)
-            logger.info("Lỗi xử lý model AI")
-            return {"route": parsed.get("route", "rag"), "answer": parsed.get("answer", "")}
+            route = res.route.lower()
+            if route not in ["chat", "action", "knowledge"]:
+                route = "knowledge"
+
+            return {"route": route, "answer": res.answer}
+
         except Exception:
-            logger.error("Lỗi truy xuất cơ sở dữ liệu hệ thống")
-            return {"route": "rag", "answer": ""}
+            logger.exception("The semantic routing process failed due to an unexpected system exception")
+            return {"route": "knowledge", "answer": ""}
 
 semantic_router = SemanticRouter()

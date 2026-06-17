@@ -1,21 +1,18 @@
-from contextlib import asynccontextmanager
 import uvicorn
 from core.config import settings
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router import coupons, deposits, monetization, wallets, withdrawals
+from src.router import (
+    coupon_router,
+    deposit_router,
+    monetization_router,
+    wallet_router,
+    withdrawal_router,
+)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("Quá trình khởi tạo dịch vụ và kết nối cơ sở dữ liệu thành công")
-    await init_db()
-    yield
-    await close_db()
-    logger.info("Dịch vụ đã ngắt kết nối cơ sở dữ liệu và dừng an toàn")
-
-app = FastAPI(title="DocLib Finance", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="DocLib Finance", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,12 +22,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(wallets.router)
-app.include_router(deposits.router)
-app.include_router(withdrawals.router)
-app.include_router(monetization.router)
-app.include_router(coupons.router)
+app.include_router(wallet_router.router)
+app.include_router(deposit_router.router)
+app.include_router(withdrawal_router.router)
+app.include_router(monetization_router.router)
+app.include_router(coupon_router.router)
 
-@app.get("/suc-khoe")
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("The financial processing service has been successfully initialized and is now ready to handle transactions")
+    await init_db()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_db()
+
+
+@app.get("/health")
 async def health_check():
-    return {"status": "Kiểm tra sức khỏe hệ thống hoàn tất và ổn định"}
+    return {"status": "The financial management service is currently operating normally and functioning as expected without any internal issues"}

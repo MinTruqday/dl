@@ -1,33 +1,70 @@
-import json
-from langchain_core.messages import HumanMessage
+from typing import Dict, List
+from core.config import settings
 from loguru import logger
-from src.core.prompts import PromptType, prompt_registry
-from src.workflow.graph import llm
+from pydantic import BaseModel, Field
+from src.core.prompt_registry import PromptType, prompt_registry
 
-class ReasoningAgent:
+class QualityEvaluation(BaseModel):
+    is_hallucination: bool = Field(description="True if the generated answer contains hallucinated facts or is not grounded in the documents, False otherwise")
+    feedback: str = Field(description="Concise feedback explaining the reasoning")
+
+class Reasoning:
+    def __init__(self):
+        self._model = settings.LLAMA_MODEL
+        self._hf_token = settings.HF_TOKEN
+
     async def execute(self, task: str) -> str:
+        prompt = prompt_registry.get(PromptType.ANALYTICAL_ENGINE).format(task=task)
         try:
-            prompt = prompt_registry.get(PromptType.ANALYTICAL_ENGINE).format(task=task)
-            result = await llm.ainvoke([HumanMessage(content=prompt)])
-            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
-            return result.content
-        except Exception:
-            logger.error("Khởi tạo AI thành công")
-            return "Hệ thống đã gặp một lỗi không mong đợi trong quá trình xử lý"
+            from huggingface_hub import AsyncInferenceClient
+            from langchain_core.messages import HumanMessage
+            from src.utils.hf import HFInferenceChat
 
-    async def evaluate_quality(self, query: str, answer: str, context: list) -> dict:
+            client = AsyncInferenceClient(model=self._model, token=self._hf_token)
+            llm = HFInferenceChat(client=client, model=self._model)
+            result = await llm.ainvoke([HumanMessage(content=prompt)])
+            return result.content.strip()
+        except Exception:
+            logger.exception("The inference task execution failed due to an unexpected internal error")
+            return "The system encountered an error during the inference process"
+
+    async def evaluate_quality(
+        self, query: str, answer: str, context_documents: List[Dict]
+    ) -> Dict:
+        context_str = self._build_context(context_documents[:3])
+        eval_prompt = prompt_registry.get(PromptType.QUALITY_EVALUATION).format(
+            query=query, answer=answer, context_str=context_str[:3000]
+        )
         try:
-            context_str = "\n".join([f"- {d.get('text', '')}" for d in context])
-            prompt = prompt_registry.get(PromptType.QUALITY_EVALUATION).format(query=query, answer=answer, context_str=context_str)
-            result = await llm.ainvoke([HumanMessage(content=prompt)])
-            raw = result.content.strip()
-            if "```json" in raw:
-                raw = raw.split("```json")[1].split("```")[0]
-            parsed = json.loads(raw)
-            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
-            return parsed
-        except Exception:
-            logger.warning("Lỗi khi truy xuất tài liệu")
-            return {"should_retry": False}
+            from huggingface_hub import AsyncInferenceClient
+            from langchain_core.messages import HumanMessage
+            from src.utils.hf import HFInferenceChat
 
-reasoning = ReasoningAgent()
+            client = AsyncInferenceClient(model=self._model, token=self._hf_token)
+            llm = HFInferenceChat(client=client, model=self._model).with_structured_output(QualityEvaluation)
+            
+            eval_res: QualityEvaluation = await llm.ainvoke([HumanMessage(content=eval_prompt)])
+            
+            return {
+                "should_retry": eval_res.is_hallucination,
+                "feedback": eval_res.feedback
+            }
+        except Exception:
+            logger.exception("The quality evaluation process encountered an unexpected failure")
+            return {
+                "should_retry": False,
+                "feedback": "The system encountered an error during the quality evaluation phase",
+            }
+
+    def _build_context(self, documents: List[Dict]) -> str:
+        if not documents:
+            return "The system could not locate any matching documents within the knowledge base"
+        parts = []
+        for i, doc in enumerate(documents[:5], 1):
+            title = doc.get("metadata", {}).get("title", "Unknown")
+            author = doc.get("metadata", {}).get("author", "Unknown")
+            text = doc.get("text", "")[:800]
+            parts.append(f"Source Document {i} {title} authored by {author}\n{text}")
+        return "\n\n".join(parts)
+
+reasoning = Reasoning()

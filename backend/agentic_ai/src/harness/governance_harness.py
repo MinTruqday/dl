@@ -1,21 +1,60 @@
 from dataclasses import dataclass, field
 from typing import Literal, Optional
+
 from loguru import logger
 
 UserRole = Literal["guest", "reader", "author", "admin"]
 
 ROLE_POLICIES: dict[str, dict] = {
-    "guest": {"max_tool_calls_per_session": 3, "max_tokens_per_session": 2000, "allowed_tools": {"SearchEngine", "Knowledge"}, "blocked_tools": {"CodeInterpreter", "Action", "Reasoning"}, "max_plan_steps": 2},
-    "reader": {"max_tool_calls_per_session": 12, "max_tokens_per_session": 8000, "allowed_tools": {"SearchEngine", "Knowledge", "Reasoning", "CodeInterpreter", "Action"}, "blocked_tools": set(), "max_plan_steps": 6},
-    "author": {"max_tool_calls_per_session": 25, "max_tokens_per_session": 20000, "allowed_tools": {"SearchEngine", "Knowledge", "Reasoning", "CodeInterpreter", "Action"}, "blocked_tools": set(), "max_plan_steps": 10},
-    "admin": {"max_tool_calls_per_session": -1, "max_tokens_per_session": -1, "allowed_tools": None, "blocked_tools": set(), "max_plan_steps": -1},
+    "guest": {
+        "max_tool_calls_per_session": 3,
+        "max_tokens_per_session": 2000,
+        "allowed_tools": {"SearchEngine", "Knowledge"},
+        "blocked_tools": {"CodeInterpreter", "Action", "Reasoning"},
+        "max_plan_steps": 2,
+    },
+    "reader": {
+        "max_tool_calls_per_session": 12,
+        "max_tokens_per_session": 8000,
+        "allowed_tools": {
+            "SearchEngine",
+            "Knowledge",
+            "Reasoning",
+            "CodeInterpreter",
+            "Action",
+        },
+        "blocked_tools": set(),
+        "max_plan_steps": 6,
+    },
+    "author": {
+        "max_tool_calls_per_session": 25,
+        "max_tokens_per_session": 20000,
+        "allowed_tools": {
+            "SearchEngine",
+            "Knowledge",
+            "Reasoning",
+            "CodeInterpreter",
+            "Action",
+        },
+        "blocked_tools": set(),
+        "max_plan_steps": 10,
+    },
+    "admin": {
+        "max_tool_calls_per_session": -1,
+        "max_tokens_per_session": -1,
+        "allowed_tools": None,
+        "blocked_tools": set(),
+        "max_plan_steps": -1,
+    },
 }
+
 
 @dataclass
 class PolicyDecision:
     allowed: bool
     reason: str = ""
     blocked_tool: Optional[str] = None
+
 
 @dataclass
 class SessionGovernanceState:
@@ -25,8 +64,10 @@ class SessionGovernanceState:
     tool_calls_used: int = 0
     estimated_tokens_used: int = 0
 
+
 def _estimate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
+
 
 class GovernanceHarness:
     def __init__(self):
@@ -36,8 +77,14 @@ class GovernanceHarness:
         return ROLE_POLICIES.get(role, ROLE_POLICIES["guest"])
 
     def open_session(self, session_id: str, user_id: str, role: UserRole):
-        self._sessions[session_id] = SessionGovernanceState(session_id=session_id, user_id=user_id, role=role)
-        logger.info("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
+        self._sessions[session_id] = SessionGovernanceState(
+            session_id=session_id,
+            user_id=user_id,
+            role=role,
+        )
+        logger.info(
+            "The governance module successfully initialized and opened a new managed session"
+        )
 
     def close_session(self, session_id: str):
         self._sessions.pop(session_id, None)
@@ -45,18 +92,46 @@ class GovernanceHarness:
     def check_tool_allowed(self, session_id: str, tool_name: str) -> PolicyDecision:
         state = self._sessions.get(session_id)
         if not state:
-            return PolicyDecision(allowed=False, reason="Hệ thống từ chối yêu cầu do không đủ quyền truy cập")
+            return PolicyDecision(
+                allowed=False,
+                reason="The requested session is currently not registered within the active governance tracking module",
+            )
+
         policy = self._get_policy(state.role)
+
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
-            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
-            return PolicyDecision(allowed=False, reason="Hệ thống từ chối yêu cầu do không đủ quyền truy cập", blocked_tool=tool_name)
-        if policy["allowed_tools"] is not None and tool_name not in policy["allowed_tools"]:
-            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
-            return PolicyDecision(allowed=False, reason="Khởi tạo AI thành công", blocked_tool=tool_name)
+            logger.warning(
+                "The security governance system blocked an operation due to an insufficient permission level"
+            )
+            return PolicyDecision(
+                allowed=False,
+                reason="The requested operation is strictly restricted and not allowed for the current authorization level",
+                blocked_tool=tool_name,
+            )
+
+        if (
+            policy["allowed_tools"] is not None
+            and tool_name not in policy["allowed_tools"]
+        ):
+            logger.warning(
+                "The security governance system blocked an operation due to an insufficient permission level"
+            )
+            return PolicyDecision(
+                allowed=False,
+                reason="The requested operation is not present in the allowed operations list for the current session",
+                blocked_tool=tool_name,
+            )
+
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
-            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
-            return PolicyDecision(allowed=False, reason="Lỗi nghiêm trọng xảy ra trong quá trình xử lý AI")
+            logger.warning(
+                "The security governance system blocked an operation due to exceeding the maximum allowed usage limit"
+            )
+            return PolicyDecision(
+                allowed=False,
+                reason="The current session has exceeded the maximum allowed number of utility invocations",
+            )
+
         return PolicyDecision(allowed=True)
 
     def record_tool_call(self, session_id: str, query_text: str = ""):
@@ -72,19 +147,34 @@ class GovernanceHarness:
         policy = self._get_policy(state.role)
         max_steps = policy["max_plan_steps"]
         if max_steps != -1 and num_steps > max_steps:
-            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
-            return PolicyDecision(allowed=False, reason="Hệ thống từ chối yêu cầu do không đủ quyền truy cập")
+            logger.warning(
+                "The governance module blocked the request because it exceeded the maximum allowed planning steps"
+            )
+            return PolicyDecision(
+                allowed=False,
+                reason="The generated execution plan exceeds the maximum allowed complexity for the current authorization level",
+            )
         return PolicyDecision(allowed=True)
 
-    def check_token_budget(self, session_id: str, additional_tokens: int) -> PolicyDecision:
+    def check_token_budget(
+        self, session_id: str, additional_tokens: int
+    ) -> PolicyDecision:
         state = self._sessions.get(session_id)
         if not state:
             return PolicyDecision(allowed=True)
         policy = self._get_policy(state.role)
         max_tokens = policy["max_tokens_per_session"]
-        if max_tokens != -1 and (state.estimated_tokens_used + additional_tokens) > max_tokens:
-            logger.warning("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
-            return PolicyDecision(allowed=False, reason="Kiểm tra sức khỏe hệ thống hoàn tất và ổn định")
+        if (
+            max_tokens != -1
+            and (state.estimated_tokens_used + additional_tokens) > max_tokens
+        ):
+            logger.warning(
+                "The governance module blocked the request due to exceeding the allocated token processing budget"
+            )
+            return PolicyDecision(
+                allowed=False,
+                reason="The current session has exceeded its allocated token processing budget and cannot proceed",
+            )
         return PolicyDecision(allowed=True)
 
     def get_session_summary(self, session_id: str) -> dict:
@@ -92,6 +182,14 @@ class GovernanceHarness:
         if not state:
             return {}
         policy = self._get_policy(state.role)
-        return {"session_id": state.session_id, "role": state.role, "tool_calls_used": state.tool_calls_used, "tool_calls_limit": policy["max_tool_calls_per_session"], "estimated_tokens_used": state.estimated_tokens_used, "tokens_limit": policy["max_tokens_per_session"]}
+        return {
+            "session_id": state.session_id,
+            "role": state.role,
+            "tool_calls_used": state.tool_calls_used,
+            "tool_calls_limit": policy["max_tool_calls_per_session"],
+            "estimated_tokens_used": state.estimated_tokens_used,
+            "tokens_limit": policy["max_tokens_per_session"],
+        }
+
 
 governance_harness = GovernanceHarness()

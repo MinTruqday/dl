@@ -1,5 +1,9 @@
+import asyncio
 import re
+import time
 from dataclasses import dataclass, field
+from typing import Optional
+
 from loguru import logger
 
 PROMPT_INJECTION_PATTERNS = [
@@ -36,6 +40,7 @@ PII_PATTERNS = {
     "national_id_vn": (r"\b\d{9}(?:\d{3})?\b", "[CCCD_AN]"),
 }
 
+
 @dataclass
 class ScanResult:
     passed: bool
@@ -44,11 +49,19 @@ class ScanResult:
     violations: list = field(default_factory=list)
     blocked: bool = False
 
+
 class SecurityHarness:
     def __init__(self):
-        self._compiled_injection = [re.compile(p, re.IGNORECASE | re.DOTALL) for p in PROMPT_INJECTION_PATTERNS]
-        self._compiled_credential = [re.compile(p, re.IGNORECASE) for p in CREDENTIAL_LEAK_PATTERNS]
-        self._compiled_pii = {name: (re.compile(pattern, re.IGNORECASE), replacement) for name, (pattern, replacement) in PII_PATTERNS.items()}
+        self._compiled_injection = [
+            re.compile(p, re.IGNORECASE | re.DOTALL) for p in PROMPT_INJECTION_PATTERNS
+        ]
+        self._compiled_credential = [
+            re.compile(p, re.IGNORECASE) for p in CREDENTIAL_LEAK_PATTERNS
+        ]
+        self._compiled_pii = {
+            name: (re.compile(pattern, re.IGNORECASE), replacement)
+            for name, (pattern, replacement) in PII_PATTERNS.items()
+        }
 
     def _detect_injection(self, text: str) -> list[str]:
         violations = []
@@ -76,37 +89,56 @@ class SecurityHarness:
     def _anomaly_score(self, text: str) -> float:
         if not text:
             return 0.0
-        special_ratio = sum(1 for c in text if not c.isalnum() and not c.isspace()) / max(len(text), 1)
+        special_ratio = sum(
+            1 for c in text if not c.isalnum() and not c.isspace()
+        ) / max(len(text), 1)
         length_penalty = min(len(text) / 10000, 0.3)
         return min(special_ratio * 0.5 + length_penalty, 1.0)
 
-    def scan_input(self, text: str, session_id: str = "", user_id: str = "") -> ScanResult:
+    def scan_input(
+        self, text: str, session_id: str = "", user_id: str = ""
+    ) -> ScanResult:
         if not text or not text.strip():
             return ScanResult(passed=True, risk_score=0.0, sanitized_text=text or "")
+
         injection_violations = self._detect_injection(text)
         sanitized, pii_violations = self._redact_pii(text)
         all_violations = injection_violations + pii_violations
         anomaly = self._anomaly_score(text)
+
         injection_score = min(len(injection_violations) * 0.4, 1.0)
         risk_score = min(injection_score + anomaly * 0.2, 1.0)
 
         if injection_violations:
-            logger.warning("Mất kết nối mạng tạm thời")
-            return ScanResult(passed=False, blocked=True, risk_score=risk_score, sanitized_text=sanitized, violations=all_violations)
+            logger.warning("The security system has successfully blocked a malicious prompt injection attempt")
+            return ScanResult(
+                passed=False,
+                blocked=True,
+                risk_score=risk_score,
+                sanitized_text=sanitized,
+                violations=all_violations,
+            )
 
         if pii_violations:
-            logger.info("Yêu cầu của bạn đã được hệ thống tiếp nhận và xử lý thành công")
+            logger.info("The security system has successfully identified and redacted sensitive personal information")
 
-        return ScanResult(passed=True, blocked=False, risk_score=risk_score, sanitized_text=sanitized, violations=all_violations)
+        return ScanResult(
+            passed=True,
+            blocked=False,
+            risk_score=risk_score,
+            sanitized_text=sanitized,
+            violations=all_violations,
+        )
 
     def scan_output(self, text: str, session_id: str = "") -> str:
         if not text:
             return text
         credential_violations = self._detect_credential_leak(text)
         if credential_violations:
-            logger.error("Hệ thống đang tiến hành xử lý dữ liệu theo yêu cầu của bạn")
-            return "Hệ thống từ chối yêu cầu do không đủ quyền truy cập"
+            logger.error("The security system intercepted and blocked an attempt to leak sensitive credentials")
+            return "The response was blocked by the security system due to the detection of sensitive information"
         sanitized, _ = self._redact_pii(text)
         return sanitized
+
 
 security_harness = SecurityHarness()

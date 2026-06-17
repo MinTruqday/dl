@@ -1,6 +1,8 @@
 import time
 from typing import Optional
+
 from loguru import logger
+
 
 class CircuitBreaker:
     def __init__(self, threshold: int, reset_seconds: float):
@@ -13,7 +15,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("Mất kết nối mạng tạm thời")
+            logger.error("The external communication circuit has been temporarily interrupted due to multiple consecutive network failures")
 
     def record_success(self):
         self._failures = 0
