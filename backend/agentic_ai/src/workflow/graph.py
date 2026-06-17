@@ -29,6 +29,13 @@ except Exception:
     nli_model = None
     logger.error("The system was unable to load the natural language processing model during initialization")
 
+
+try:
+    from sentence_transformers import CrossEncoder
+    reranker = CrossEncoder(settings.RERANKER_MODEL)
+except Exception:
+    reranker = None
+
 try:
     redis_url = settings.REDIS_URI
     from langchain_community.cache import RedisSemanticCache
@@ -36,8 +43,8 @@ try:
         redis_url=redis_url, embedding=embedding_service
     )
     logger.info("The high speed semantic caching datastore was successfully initialized and enabled")
-except Exception:
-    logger.error("The system encountered an unexpected error while attempting to access the high speed cache storage")
+except Exception as e:
+    logger.warning(f"Cache initialization failed: {e}")
 
 from huggingface_hub import AsyncInferenceClient
 from src.utils.hf import HFInferenceChat
@@ -177,11 +184,6 @@ async def retrieve_db(state: AgentState):
 
     extracted_documents = []
     
-    try:
-        from sentence_transformers import CrossEncoder
-        reranker = CrossEncoder(settings.RERANKER_MODEL)
-    except Exception:
-        reranker = None
 
     all_raw_documents = []
     for q in list(dict.fromkeys(queries))[:3]:

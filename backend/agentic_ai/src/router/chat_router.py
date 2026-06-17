@@ -259,6 +259,8 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 finally:
                     hb_task.cancel()
                     exec_task.cancel()
+                    import asyncio
+                    await asyncio.gather(hb_task, exec_task, return_exceptions=True)
 
             if final_answer:
                 final_answer = security_harness.scan_output(
