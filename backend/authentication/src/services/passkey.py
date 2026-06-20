@@ -7,19 +7,26 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from loguru import logger
 from src.repositories.auth_repository import AuthRepository
-from webauthn import (generate_authentication_options,
-                      generate_registration_options, options_to_json,
-                      verify_authentication_response,
-                      verify_registration_response)
-from webauthn.helpers.exceptions import (InvalidAuthenticationResponse,
-                                         InvalidRegistrationResponse)
-from webauthn.helpers.structs import (AuthenticationCredential,
-                                      AuthenticatorAttachment,
-                                      AuthenticatorSelectionCriteria,
-                                      PublicKeyCredentialDescriptor,
-                                      PublicKeyCredentialType,
-                                      RegistrationCredential,
-                                      UserVerificationRequirement)
+from webauthn import (
+    generate_authentication_options,
+    generate_registration_options,
+    options_to_json,
+    verify_authentication_response,
+    verify_registration_response,
+)
+from webauthn.helpers.exceptions import (
+    InvalidAuthenticationResponse,
+    InvalidRegistrationResponse,
+)
+from webauthn.helpers.structs import (
+    AuthenticationCredential,
+    AuthenticatorAttachment,
+    AuthenticatorSelectionCriteria,
+    PublicKeyCredentialDescriptor,
+    PublicKeyCredentialType,
+    RegistrationCredential,
+    UserVerificationRequirement,
+)
 
 from core.config import settings
 from core.database import db_client
@@ -120,7 +127,7 @@ class PasskeyManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/users/by-email/{email}",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:

@@ -8,7 +8,7 @@ from src.services.bookmark import BookmarkManager
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/bookmarks")
+router = APIRouter(prefix="/danh-dau")
 
 
 class BookmarkFolderCreate(BaseModel):
@@ -44,7 +44,7 @@ async def get_bookmarks(
     )
 
 
-@router.post("/folders", response_model=APIResponse[Any])
+@router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(
     data: BookmarkFolderCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -59,7 +59,7 @@ async def create_bookmark_folder(
     )
 
 
-@router.get("/folders", response_model=APIResponse[Any])
+@router.get("/thu-muc", response_model=APIResponse[Any])
 async def get_bookmark_folders(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):

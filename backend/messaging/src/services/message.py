@@ -214,7 +214,7 @@ class MessageManager:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        f"{settings.MANAGEMENT_URL}/users/batch",
+                        f"{settings.MANAGEMENT_URL}/nguoi-dung/hang-loat",
                         json=other_user_ids,
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
@@ -742,7 +742,7 @@ class MessageManager:
         translated_content = ""
         try:
             response = await http_client.post(
-                f"{settings.AGENTIC_AI_URL}/translate",
+                f"{settings.AGENTIC_AI_URL}/dich-thuat",
                 json={"text": msg["content"], "target_lang": target_lang},
             )
             if response.status_code == 200:

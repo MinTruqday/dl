@@ -10,7 +10,7 @@ from src.services.publication import PublicationManager
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/publications")
+router = APIRouter(prefix="/xuat-ban")
 
 
 @router.post(
@@ -72,7 +72,7 @@ async def update_seo_metadata(
     )
 
 
-@router.get("/{document_id}/readability", response_model=APIResponse[Any])
+@router.get("/{document_id}/do-de-doc", response_model=APIResponse[Any])
 async def get_readability_score(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),

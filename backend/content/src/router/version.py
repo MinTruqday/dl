@@ -7,7 +7,7 @@ from src.services.version import VersionsManager
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/versions")
+router = APIRouter(prefix="/phien-ban")
 
 
 @router.post("/save/{document_id}", response_model=APIResponse[Any])

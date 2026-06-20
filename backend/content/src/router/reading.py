@@ -9,7 +9,7 @@ from src.services.reading import ReadingManager
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/reading")
+router = APIRouter(prefix="/doc-hieu")
 
 
 @router.get("/history", response_model=APIResponse[Any])

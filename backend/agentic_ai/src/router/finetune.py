@@ -381,7 +381,7 @@ async def import_documents(req: dict):
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 
-@router.post("/jobs")
+@router.post("/tien-trinh")
 async def create_job(req: dict):
     db = get_db()
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
@@ -463,7 +463,7 @@ async def start_job(job_id: str, req: dict):
     return {"status": "started", "job_id": job_id}
 
 
-@router.get("/jobs")
+@router.get("/tien-trinh")
 async def list_jobs(user_id: str):
     return (
         await get_db()["finetune_jobs"]

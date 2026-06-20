@@ -126,7 +126,7 @@ class UserManager:
             if settings.NOTIFICATION_URL:
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.NOTIFICATION_URL}/notifications/trigger",
+                        f"{settings.NOTIFICATION_URL}/thong-bao/kich-hoat",
                         json={
                             "target_user_id": user_id,
                             "title": "You have a new system administrative warning notification",

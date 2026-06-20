@@ -12,8 +12,7 @@ from uuid6 import uuid7
 from core.config import settings
 from core.database import db_client
 from core.schemas.user import RoleEnum, UserCreate, UserInDB
-from core.security import (create_access_token, get_password_hash,
-                           verify_password)
+from core.security import create_access_token, get_password_hash, verify_password
 
 
 class AuthManager:
@@ -44,7 +43,7 @@ class AuthManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.MANAGEMENT_URL}/users",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung",
                     json={
                         "email": user_in.email,
                         "full_name": user_in.full_name,
@@ -105,12 +104,12 @@ class AuthManager:
             async with httpx.AsyncClient() as client:
                 if is_email:
                     resp = await client.get(
-                        f"{settings.MANAGEMENT_URL}/users/by-email/{username}",
+                        f"{settings.MANAGEMENT_URL}/nguoi-dung/theo-email/{username}",
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                 else:
                     resp = await client.get(
-                        f"{settings.MANAGEMENT_URL}/users/by-slug/{username}",
+                        f"{settings.MANAGEMENT_URL}/nguoi-dung/theo-ten-mien/{username}",
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                 if resp.status_code == 200:
@@ -174,7 +173,7 @@ class AuthManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/users/by-email/{email}",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/theo-email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user = resp.json().get("data") if resp.status_code == 200 else None
@@ -297,7 +296,7 @@ class AuthManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/users/by-email/{email}",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/theo-email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user_doc = resp.json().get("data") if resp.status_code == 200 else None
@@ -315,7 +314,7 @@ class AuthManager:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        f"{settings.MANAGEMENT_URL}/users",
+                        f"{settings.MANAGEMENT_URL}/nguoi-dung",
                         json={
                             "email": email,
                             "full_name": google_user.get("name"),

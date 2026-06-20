@@ -8,7 +8,7 @@ from src.services.latex_engine import LatexEngine
 router = APIRouter()
 
 
-@router.post("/compile")
+@router.post("/bien-dich")
 async def compile_latex(req: CompileRequest):
     try:
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
@@ -40,12 +40,12 @@ async def export_document(format: str, req: CompileRequest):
         raise HTTPException(status_code=500, detail="Lỗi xuất tài liệu")
 
 
-@router.post("/format")
+@router.post("/dinh-dang")
 async def format_latex(req: CompileRequest):
     return LatexEngine.format_latex(req.content)
 
 
-@router.post("/export-zip")
+@router.post("/ket-xuat-zip")
 async def export_project_zip(req: CompileRequest):
     zip_bytes = LatexEngine.export_project_zip(req.content)
     return Response(content=zip_bytes, media_type="application/x-zip-compressed")

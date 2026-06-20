@@ -11,8 +11,12 @@ from fastapi import HTTPException, Query, status
 from loguru import logger
 from passlib.context import CryptContext
 from src.core.publication import trigger_document_publish_job
-from src.schemas.document import (DocumentContentUpdate, DocumentCreate,
-                                  DocumentInDB, DocumentStatus)
+from src.schemas.document import (
+    DocumentContentUpdate,
+    DocumentCreate,
+    DocumentInDB,
+    DocumentStatus,
+)
 from uuid6 import uuid7
 
 from core.config import settings
@@ -209,7 +213,7 @@ class DocumentManager:
 
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.NOTIFICATION_URL}/notifications/trigger",
+                        f"{settings.NOTIFICATION_URL}/thong-bao/kich-hoat",
                         json={
                             "target_user_id": str(current_user.id),
                             "title": "Document successfully updated",
@@ -482,7 +486,7 @@ class DocumentManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/users/by-email/{email}",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/theo-email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -570,7 +574,7 @@ class DocumentManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/users/{document['creator_id']}",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/{document['creator_id']}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:

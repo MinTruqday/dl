@@ -73,7 +73,7 @@ async def stop_collection():
         )
 
 
-@router.get("/active-jobs")
+@router.get("/cong-viec-dang-chay")
 async def get_active_jobs():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
@@ -90,7 +90,7 @@ async def get_active_jobs():
     return jobs
 
 
-@router.get("/stats")
+@router.get("/thong-ke")
 async def get_collector_stats():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
@@ -124,7 +124,7 @@ async def get_collector_stats():
     }
 
 
-@router.get("/logs")
+@router.get("/nhat-ky-hoat-dong")
 async def get_collector_logs():
     log_file = "logs/backend.log"
     logs = []

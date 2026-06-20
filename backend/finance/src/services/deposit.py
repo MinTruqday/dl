@@ -317,7 +317,7 @@ class DepositManager:
                 if settings.NOTIFICATION_URL:
                     async with httpx.AsyncClient() as client:
                         await client.post(
-                            f"{settings.NOTIFICATION_URL}/notifications/dispatch",
+                            f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",
                             json={
                                 "target_user_id": user_id,
                                 "title": "Deposit processed successfully",

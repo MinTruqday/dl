@@ -326,7 +326,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/stats",
+                    f"{settings.COLLECTOR_URL}/thong-ke",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -351,7 +351,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/trigger",
+                    f"{settings.COLLECTOR_URL}/kich-hoat",
                     json={"source": source, "pages": pages},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
@@ -376,7 +376,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/stop",
+                    f"{settings.COLLECTOR_URL}/dung",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -403,7 +403,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/logs",
+                    f"{settings.COLLECTOR_URL}/nhat-ky-hoat-dong",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -422,7 +422,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/active-jobs",
+                    f"{settings.COLLECTOR_URL}/cong-viec-dang-chay",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -497,7 +497,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.FINANCE_URL}/withdrawals/queue?status={status}&limit={limit}",
+                    f"{settings.FINANCE_URL}/rut-tien/hang-doi?status={status}&limit={limit}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -516,7 +516,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.FINANCE_URL}/withdrawals/{withdrawal_id}/verify",
+                    f"{settings.FINANCE_URL}/rut-tien/{withdrawal_id}/xac-minh",
                     params={"action": "approve"},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
@@ -546,7 +546,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.FINANCE_URL}/withdrawals/{withdrawal_id}/verify",
+                    f"{settings.FINANCE_URL}/rut-tien/{withdrawal_id}/xac-minh",
                     params={"action": "reject", "reason": reason},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )

@@ -77,7 +77,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/wallets/balance",
+            f"{INTERNAL_API_URL}/vi-tien/so-du",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -103,7 +103,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/wallets/transactions",
+            f"{INTERNAL_API_URL}/vi-tien/giao-dich",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -136,7 +136,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/coupons/redeem",
+            f"{INTERNAL_API_URL}/ma-giam-gia/su-dung",
             json={"code": code.strip()},
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
@@ -161,7 +161,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/withdrawals/revenue",
+            f"{INTERNAL_API_URL}/rut-tien/doanh-thu",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -186,7 +186,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/documents/personal",
+            f"{INTERNAL_API_URL}/tai-lieu/ca-nhan",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -217,7 +217,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/documents/trash",
+            f"{INTERNAL_API_URL}/tai-lieu/thung-rac",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -246,7 +246,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "DELETE",
-            f"{INTERNAL_API_URL}/documents/{document_id}",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -276,7 +276,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/documents/{document_id}/restore",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -301,7 +301,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/documents/{document_id}/analyze/dropoff",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/bo-do",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -320,7 +320,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
     try:
         res = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/documents/{document_id}",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
             headers={"Authorization": token},
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -414,7 +414,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/deposits",
+            f"{INTERNAL_API_URL}/nap-tien",
             json={"amount": amount},
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
@@ -466,7 +466,7 @@ async def create_document(
     try:
         res_profile = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/profile/me",
+            f"{INTERNAL_API_URL}/ho-so/ca-nhan",
             headers=headers,
             timeout=settings.DEFAULT_HTTP_TIMEOUT,
         )
@@ -520,7 +520,7 @@ async def create_document(
         }
         res_create = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/documents/",
+            f"{INTERNAL_API_URL}/tai-lieu/",
             headers=headers,
             json=create_payload,
         )
@@ -545,7 +545,7 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         res = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/documents/{document_id}", headers=headers
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
         )
         if res.status_code != 200:
             return "Failed to retrieve document info"
@@ -584,7 +584,7 @@ async def update_document(
 
     try:
         res = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/documents/{document_id}", headers=headers
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
         )
         if res.status_code != 200:
             return "Operation failed: security restriction or document missing"
@@ -638,7 +638,7 @@ async def update_document(
     try:
         res_update = await _make_api_request(
             "PUT",
-            f"{INTERNAL_API_URL}/documents/{document_id}",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
             headers=headers,
             json=payload,
         )
@@ -662,7 +662,7 @@ async def translate_document(
 
     try:
         res = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/documents/{document_id}", headers=headers
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
         )
         if res.status_code != 200:
             return "Failed to retrieve document info"
@@ -699,7 +699,7 @@ async def translate_document(
         payload = {"text": text_to_translate, "target_lang": target_language}
         trans_res = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/inference/translate",
+            f"{INTERNAL_API_URL}/suy-luan/dich-thuat",
             headers=headers,
             json=payload,
             timeout=60,
@@ -773,7 +773,7 @@ async def translate_document(
         }
         res_create = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/documents/",
+            f"{INTERNAL_API_URL}/tai-lieu/",
             headers=headers,
             json=create_payload,
         )

@@ -2,15 +2,17 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from src.router.dependency import get_current_user, get_db
-from src.schemas.highlight import (HighlightCreateRequest,
-                                   HighlightNoteUpdateRequest,
-                                   ReadingPreferenceUpdate)
+from src.schemas.highlight import (
+    HighlightCreateRequest,
+    HighlightNoteUpdateRequest,
+    ReadingPreferenceUpdate,
+)
 from src.services.highlight import HighlightManager
 
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/bookmarks")
+router = APIRouter(prefix="/danh-dau")
 
 
 @router.post("/documents/{document_id}", response_model=APIResponse[Any])
@@ -71,7 +73,7 @@ async def delete_highlight(
     )
 
 
-@router.get("/notes", response_model=APIResponse[Any])
+@router.get("/ghi-chu", response_model=APIResponse[Any])
 async def get_all_notes(
     cursor: str = Query(None),
     limit: int = Query(50, ge=1, le=200),

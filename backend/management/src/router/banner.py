@@ -16,7 +16,7 @@ class BannerRequest(BaseModel):
     is_active: bool = True
 
 
-router = APIRouter(prefix="/banners")
+router = APIRouter(prefix="/quang-cao")
 
 
 @router.get("", response_model=APIResponse[Any])

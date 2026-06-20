@@ -105,8 +105,10 @@ class AdvancedSemanticChunker:
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:
-        from langchain_text_splitters import (MarkdownHeaderTextSplitter,
-                                              RecursiveCharacterTextSplitter)
+        from langchain_text_splitters import (
+            MarkdownHeaderTextSplitter,
+            RecursiveCharacterTextSplitter,
+        )
 
         headers_to_split_on = [
             ("#", "Header 1"),

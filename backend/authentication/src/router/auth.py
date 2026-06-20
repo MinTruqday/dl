@@ -7,14 +7,19 @@ from src.services.auth import AuthManager
 
 from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import (ForgotPasswordRequest, ResetPasswordRequest,
-                               UserCreate, UserInDB, UserResponse,
-                               VerifyCodeRequest)
+from core.schemas.user import (
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    UserCreate,
+    UserInDB,
+    UserResponse,
+    VerifyCodeRequest,
+)
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/xac-thuc")
 
 
-@router.get("/me", response_model=APIResponse[UserResponse])
+@router.get("/ca-nhan", response_model=APIResponse[UserResponse])
 async def read_users_me(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -66,7 +71,7 @@ async def login(
     )
 
 
-@router.post("/forgot-password", response_model=APIResponse[Any])
+@router.post("/quen-mat-khau", response_model=APIResponse[Any])
 async def forgot_password(
     payload: ForgotPasswordRequest, request: Request, db=Depends(get_db)
 ) -> Any:
@@ -78,7 +83,7 @@ async def forgot_password(
     )
 
 
-@router.post("/reset-password", response_model=APIResponse[Any])
+@router.post("/dat-lai-mat-khau", response_model=APIResponse[Any])
 async def reset_password(
     payload: ResetPasswordRequest, request: Request, db=Depends(get_db)
 ) -> Any:
@@ -92,7 +97,7 @@ async def reset_password(
     )
 
 
-@router.post("/verify-code", response_model=APIResponse[Any])
+@router.post("/xac-nhan-ma", response_model=APIResponse[Any])
 async def verify_code(
     payload: VerifyCodeRequest, request: Request, db=Depends(get_db)
 ) -> Any:
@@ -104,7 +109,7 @@ async def verify_code(
     )
 
 
-@router.get("/google/login", response_model=APIResponse[Any])
+@router.get("/google/dang-nhap", response_model=APIResponse[Any])
 async def google_login(db=Depends(get_db)):
     auth_url = await AuthManager.get_google_auth_url(db=db)
     return APIResponse(
@@ -114,7 +119,7 @@ async def google_login(db=Depends(get_db)):
     )
 
 
-@router.get("/google/callback", response_model=APIResponse[Any])
+@router.get("/google/phan-hoi", response_model=APIResponse[Any])
 async def google_callback(code: str, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(

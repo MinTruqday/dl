@@ -12,13 +12,12 @@ from src.services.setting import SettingManager
 
 from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import (BrandPageUpdate, ProfileUpdate, SettingsUpdate,
-                               UserInDB)
+from core.schemas.user import BrandPageUpdate, ProfileUpdate, SettingsUpdate, UserInDB
 
 router = APIRouter(prefix="/profiles")
 
 
-@router.get("/me", response_model=APIResponse[Any])
+@router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_profile(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -29,7 +28,7 @@ async def get_my_profile(
     )
 
 
-@router.put("/me", response_model=APIResponse[Any])
+@router.put("/ca-nhan", response_model=APIResponse[Any])
 async def update_my_profile(
     data: ProfileUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -66,7 +65,7 @@ async def become_author(
     )
 
 
-@router.post("/kyc", response_model=APIResponse[Any])
+@router.post("/xac-minh-danh-tinh", response_model=APIResponse[Any])
 async def upload_kyc(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(get_current_user),

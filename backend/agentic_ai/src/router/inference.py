@@ -11,15 +11,22 @@ from src.core.prompt_registry import PromptType, prompt_registry
 from core.config import settings
 from core.dependency import get_current_user
 from core.repositories.base_repository import RepositoryFactory
-from core.schemas.inference import (ActionRequest, CitationRequest,
-                                    CodeRequest, GenerationRequest,
-                                    GrammarRequest, ReviewRequest,
-                                    SentimentRequest, SummarizeRequest,
-                                    SynthesisRequest, ToneRequest,
-                                    TranslationRequest)
+from core.schemas.inference import (
+    ActionRequest,
+    CitationRequest,
+    CodeRequest,
+    GenerationRequest,
+    GrammarRequest,
+    ReviewRequest,
+    SentimentRequest,
+    SummarizeRequest,
+    SynthesisRequest,
+    ToneRequest,
+    TranslationRequest,
+)
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/inference")
+router = APIRouter(prefix="/suy-luan")
 
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
@@ -28,7 +35,7 @@ async def _check_quota(current_user: UserInDB):
     try:
         async with httpx.AsyncClient() as c:
             resp = await c.get(
-                f"{settings.MANAGEMENT_URL}/quota/verify",
+                f"{settings.MANAGEMENT_URL}/han-muc/xac-minh",
                 params={
                     "user_id": str(current_user.id),
                     "role": current_user.role.value,
@@ -56,7 +63,7 @@ async def _consume_quota(
     try:
         async with httpx.AsyncClient() as c:
             await c.post(
-                f"{settings.MANAGEMENT_URL}/quota/consume",
+                f"{settings.MANAGEMENT_URL}/han-muc/su-dung",
                 json={
                     "user_id": str(current_user.id),
                     "feature": "chat",
@@ -124,7 +131,7 @@ async def generate_text(
         )
 
 
-@router.post("/translate")
+@router.post("/dich-thuat")
 async def translate_text(
     req: TranslationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -290,7 +297,7 @@ async def grammar_check(
         )
 
 
-@router.post("/summarize")
+@router.post("/tom-tat")
 async def summarize_text(
     req: SummarizeRequest, current_user: UserInDB = Depends(get_current_user)
 ):

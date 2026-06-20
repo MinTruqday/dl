@@ -8,7 +8,7 @@ from core.config import settings
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/telemetry")
+router = APIRouter(prefix="/giam-sat")
 
 
 @router.get(

@@ -1,0 +1,332 @@
+--- ROUTER PREFIXES ---
+./notification/src/router/notification.py: prefix=/notifications
+./agentic_ai/src/rag/pipeline.py: prefix=ingestion_zip_
+./agentic_ai/src/router/ingest.py: prefix=/ingestion
+./agentic_ai/src/router/feedback.py: prefix=/feedback
+./agentic_ai/src/router/chat.py: prefix=/chat
+./agentic_ai/src/router/inference.py: prefix=/inference
+./agentic_ai/src/router/finetune.py: prefix=/finetuning
+./agentic_ai/src/router/history.py: prefix=/history
+./collector/src/main.py: prefix=/collectors
+./collector/src/pipelines/ctan_collector.py: prefix=ctan_
+./collector/src/pipelines/nxbst_collector.py: prefix=nxbst_pdf_
+./management/src/router/user.py: prefix=/users
+./management/src/router/audit.py: prefix=/audit
+./management/src/router/profile.py: prefix=/profiles
+./management/src/router/quota.py: prefix=/quotas
+./management/src/router/telemetry.py: prefix=/telemetry
+./management/src/router/operation.py: prefix=/operations
+./management/src/router/banner.py: prefix=/banners
+./content/src/router/pin.py: prefix=/pins
+./content/src/router/version.py: prefix=/versions
+./content/src/router/library.py: prefix=/library
+./content/src/router/upload.py: prefix=/upload
+./content/src/router/discovery.py: prefix=/discovery
+./content/src/router/reading.py: prefix=/reading
+./content/src/router/export.py: prefix=/export
+./content/src/router/review.py: prefix=/reviews
+./content/src/router/bookmark.py: prefix=/bookmarks
+./content/src/router/collaboration.py: prefix=/collaboration
+./content/src/router/document.py: prefix=/documents
+./content/src/router/publication.py: prefix=/publications
+./content/src/router/storage.py: prefix=/storage
+./content/src/router/highlight.py: prefix=/bookmarks
+./content/src/router/draft.py: prefix=/drafts
+./realtime/src/main.py: prefix=/editor
+./realtime/src/main.py: prefix=/messages
+./finance/src/router/withdrawal.py: prefix=/withdrawals
+./finance/src/router/deposit.py: prefix=/deposits
+./finance/src/router/coupon.py: prefix=/coupons
+./finance/src/router/monetization.py: prefix=/monetization
+./finance/src/router/wallet.py: prefix=/wallets
+./messaging/src/router/message.py: prefix=/messages
+./authentication/src/router/auth.py: prefix=/auth
+./authentication/src/router/passkey.py: prefix=/auth/passkey
+./editor/src/router/editor.py: prefix=/editor
+
+--- ROUTER PATHS ---
+./notification/src/router/notification.py: GET 
+./notification/src/router/notification.py: PATCH /{notif_id}/read
+./notification/src/router/notification.py: PATCH /read-all
+./notification/src/router/notification.py: DELETE /{notif_id}
+./notification/src/router/notification.py: POST /dispatch
+./agentic_ai/src/router/ingest.py: POST /ingest
+./agentic_ai/src/router/ingest.py: DELETE /documents/{document_id}
+./agentic_ai/src/router/feedback.py: POST /feedback
+./agentic_ai/src/router/chat.py: POST /chat
+./agentic_ai/src/router/chat.py: POST /stream
+./agentic_ai/src/router/inference.py: POST /generate-content
+./agentic_ai/src/router/inference.py: POST /translate
+./agentic_ai/src/router/inference.py: POST /sentiment-analysis
+./agentic_ai/src/router/inference.py: POST /generate-code
+./agentic_ai/src/router/inference.py: POST /check-grammar
+./agentic_ai/src/router/inference.py: POST /summarize
+./agentic_ai/src/router/inference.py: POST /check-plagiarism
+./agentic_ai/src/router/inference.py: POST /actions
+./agentic_ai/src/router/inference.py: POST /synonyms
+./agentic_ai/src/router/inference.py: POST /smart-citations
+./agentic_ai/src/router/inference.py: POST /text-transform
+./agentic_ai/src/router/inference.py: POST /moderate-content
+./agentic_ai/src/router/inference.py: POST /synthesize-documents
+./agentic_ai/src/router/inference.py: POST /extract-text
+./agentic_ai/src/router/inference.py: POST /analyze-document
+./agentic_ai/src/router/inference.py: DELETE /vectors/{document_id}
+./agentic_ai/src/router/finetune.py: POST /datasets
+./agentic_ai/src/router/finetune.py: GET /datasets
+./agentic_ai/src/router/finetune.py: GET /datasets/{dataset_id}
+./agentic_ai/src/router/finetune.py: DELETE /datasets/{dataset_id}
+./agentic_ai/src/router/finetune.py: POST /datasets/{dataset_id}/samples
+./agentic_ai/src/router/finetune.py: GET /datasets/{dataset_id}/samples
+./agentic_ai/src/router/finetune.py: DELETE /datasets/{dataset_id}/samples/{sample_id}
+./agentic_ai/src/router/finetune.py: POST /inputs/feedback
+./agentic_ai/src/router/finetune.py: POST /inputs/documents
+./agentic_ai/src/router/finetune.py: POST /jobs
+./agentic_ai/src/router/finetune.py: POST /jobs/{job_id}/start
+./agentic_ai/src/router/finetune.py: GET /jobs
+./agentic_ai/src/router/finetune.py: GET /jobs/{job_id}
+./agentic_ai/src/router/finetune.py: POST /jobs/{job_id}/cancel
+./agentic_ai/src/router/finetune.py: POST /jobs/{job_id}/deploy
+./agentic_ai/src/router/finetune.py: POST /jobs/{job_id}/evaluate
+./agentic_ai/src/router/history.py: POST 
+./agentic_ai/src/router/history.py: GET 
+./agentic_ai/src/router/history.py: GET /{session_id}
+./agentic_ai/src/router/history.py: PUT /{session_id}/title
+./agentic_ai/src/router/history.py: DELETE /{session_id}
+./agentic_ai/src/router/history.py: POST /{session_id}/messages
+./collector/src/router/collector.py: POST /triggers
+./collector/src/router/collector.py: POST /pause
+./collector/src/router/collector.py: GET /active-jobs
+./collector/src/router/collector.py: GET /stats
+./collector/src/router/collector.py: GET /logs
+./management/src/router/user.py: GET /search
+./management/src/router/user.py: GET /{user_id}
+./management/src/router/user.py: GET /email/{email}
+./management/src/router/user.py: GET /slug/{slug}
+./management/src/router/user.py: POST /
+./management/src/router/profile.py: GET /me
+./management/src/router/profile.py: PUT /me
+./management/src/router/profile.py: POST /applications/author
+./management/src/router/profile.py: POST /upgrade-to-author
+./management/src/router/profile.py: POST /kyc
+./management/src/router/profile.py: GET /settings
+./management/src/router/profile.py: PUT /settings
+./management/src/router/profile.py: GET /reading-streaks
+./management/src/router/profile.py: GET /badges
+./management/src/router/profile.py: POST /block/{target_id}
+./management/src/router/profile.py: PUT /brand-page
+./management/src/router/profile.py: GET /{slug}
+./management/src/router/quota.py: GET /check
+./management/src/router/quota.py: GET /me
+./management/src/router/quota.py: PUT /{role}/config
+./management/src/router/quota.py: GET /config
+./management/src/router/quota.py: POST /consume
+./management/src/router/banner.py: GET 
+./content/src/router/pin.py: GET 
+./content/src/router/pin.py: POST /{document_id}
+./content/src/router/pin.py: DELETE /{document_id}
+./content/src/router/pin.py: PUT 
+./content/src/router/version.py: POST /save/{document_id}
+./content/src/router/version.py: GET /documents/{document_id}
+./content/src/router/version.py: POST /{version_id}/restore
+./content/src/router/library.py: POST /lists
+./content/src/router/library.py: GET /lists
+./content/src/router/library.py: GET /lists/{list_id}
+./content/src/router/upload.py: POST /images
+./content/src/router/upload.py: POST /documents
+./content/src/router/upload.py: POST /files
+./content/src/router/upload.py: GET /storage/{file_path:path}
+./content/src/router/upload.py: POST /segments
+./content/src/router/discovery.py: GET /trending
+./content/src/router/discovery.py: GET /genres
+./content/src/router/discovery.py: GET /smart-search
+./content/src/router/discovery.py: GET /ai-suggestions
+./content/src/router/discovery.py: GET /trending-hashtags
+./content/src/router/reading.py: GET /history
+./content/src/router/reading.py: POST /progress
+./content/src/router/reading.py: GET /documents/{document_id}/search
+./content/src/router/reading.py: DELETE /history
+./content/src/router/reading.py: DELETE /history/{document_id}
+./content/src/router/reading.py: GET /archive/tree
+./content/src/router/reading.py: GET /archive/content
+./content/src/router/export.py: GET /{document_id}/pdf
+./content/src/router/review.py: POST /{document_id}
+./content/src/router/review.py: GET /{document_id}
+./content/src/router/bookmark.py: POST /{document_id}
+./content/src/router/bookmark.py: GET 
+./content/src/router/bookmark.py: POST /folders
+./content/src/router/bookmark.py: GET /folders
+./content/src/router/bookmark.py: PUT /folders/{folder_id}
+./content/src/router/bookmark.py: DELETE /folders/{folder_id}
+./content/src/router/collaboration.py: POST /invitations
+./content/src/router/collaboration.py: GET /invitations
+./content/src/router/collaboration.py: PATCH /invitations/{invite_id}
+./content/src/router/collaboration.py: GET /documents/{document_id}
+./content/src/router/collaboration.py: DELETE /{collaboration_id}
+./content/src/router/collaboration.py: GET /documents/{document_id}/activity
+./content/src/router/collaboration.py: POST /documents/{document_id}/ping
+./content/src/router/collaboration.py: GET /documents/{document_id}/online
+./content/src/router/collaboration.py: PATCH /{collaboration_id}/roles
+./content/src/router/collaboration.py: POST /documents/{document_id}/messages
+./content/src/router/collaboration.py: GET /documents/{document_id}/messages
+./content/src/router/collaboration.py: PATCH /documents/{document_id}/access
+./content/src/router/collaboration.py: DELETE /invitations/{invite_id}
+./content/src/router/collaboration.py: POST /documents/{document_id}/versions
+./content/src/router/collaboration.py: GET /documents/{document_id}/versions
+./content/src/router/collaboration.py: POST /documents/{document_id}/lock
+./content/src/router/collaboration.py: POST /documents/{document_id}/unlock
+./content/src/router/collaboration.py: GET /documents/{document_id}/lock-status
+./content/src/router/collaboration.py: POST /documents/{document_id}/invite-codes
+./content/src/router/collaboration.py: POST /join/{invite_code}
+./content/src/router/collaboration.py: POST /documents/{document_id}/tasks
+./content/src/router/collaboration.py: GET /documents/{document_id}/tasks
+./content/src/router/collaboration.py: PATCH /tasks/{task_id}
+./content/src/router/collaboration.py: POST /tasks/{task_id}/comments
+./content/src/router/collaboration.py: GET /tasks/{task_id}/comments
+./content/src/router/document.py: POST 
+./content/src/router/document.py: PUT /{document_id}/content
+./content/src/router/document.py: PUT /{document_id}
+./content/src/router/document.py: GET 
+./content/src/router/document.py: GET /{document_id}
+./content/src/router/document.py: GET /d/{slug}
+./content/src/router/document.py: GET /preview/{slug}
+./content/src/router/document.py: GET /{document_id}/analytics
+./content/src/router/document.py: GET /{document_id}/academic-index
+./content/src/router/document.py: POST /{document_id}/unlock
+./content/src/router/publication.py: GET /{document_id}/readability
+./content/src/router/storage.py: POST /folders
+./content/src/router/storage.py: POST /files
+./content/src/router/storage.py: GET /lists
+./content/src/router/storage.py: GET /search
+./content/src/router/storage.py: GET /recent
+./content/src/router/storage.py: GET /quota
+./content/src/router/storage.py: GET /download-archive
+./content/src/router/storage.py: PUT /files/{item_id}
+./content/src/router/storage.py: DELETE /files/{item_id}
+./content/src/router/storage.py: POST /files/{item_id}/share
+./content/src/router/storage.py: GET /shares/{share_token}
+./content/src/router/highlight.py: POST /documents/{document_id}
+./content/src/router/highlight.py: GET /documents/{document_id}
+./content/src/router/highlight.py: PUT /{highlight_id}/notes
+./content/src/router/highlight.py: DELETE /{highlight_id}
+./content/src/router/highlight.py: GET /notes
+./content/src/router/highlight.py: GET /documents/{document_id}/export
+./realtime/src/router/editor_socket.py: WEBSOCKET /crdt/{document_id}
+./realtime/src/router/message_socket.py: WEBSOCKET /{user_id}
+./finance/src/router/withdrawal.py: POST 
+./finance/src/router/deposit.py: POST 
+./finance/src/router/monetization.py: POST /purchase/document
+./finance/src/router/monetization.py: POST /membership
+./finance/src/router/monetization.py: GET /pricing
+./finance/src/router/wallet.py: GET /balance
+./finance/src/router/wallet.py: GET /transactions
+./messaging/src/router/message.py: POST /
+./messaging/src/router/message.py: GET /{other_user_id}
+./messaging/src/router/message.py: GET /conversations
+./messaging/src/router/message.py: POST /{message_id}/pin
+./messaging/src/router/message.py: PUT /{message_id}
+./messaging/src/router/message.py: DELETE /{message_id}
+./messaging/src/router/message.py: GET /{other_user_id}/search
+./messaging/src/router/message.py: POST /{message_id}/reactions
+./messaging/src/router/message.py: POST /{other_user_id}/read
+./messaging/src/router/message.py: POST /{receiver_id}/documents/share
+./messaging/src/router/message.py: GET /{other_user_id}/documents/shared
+./messaging/src/router/message.py: POST /{other_user_id}/block
+./messaging/src/router/message.py: POST /{other_user_id}/unblock
+./messaging/src/router/message.py: GET /{other_user_id}/block-status
+./messaging/src/router/message.py: POST /conversations/{other_user_id}/pin
+./messaging/src/router/message.py: POST /{message_id}/translate
+./messaging/src/router/message.py: POST /groups
+./messaging/src/router/message.py: POST /{other_user_id}/drafts
+./messaging/src/router/message.py: GET /{other_user_id}/drafts
+./messaging/src/router/message.py: POST /{other_user_id}/self-destruct
+./messaging/src/router/message.py: POST /{other_user_id}/mute
+./messaging/src/router/message.py: GET /{other_user_id}/settings
+./messaging/src/router/message.py: DELETE /conversations/{other_user_id}
+./authentication/src/router/auth.py: GET /me
+./authentication/src/router/auth.py: POST /forgot-password
+./authentication/src/router/auth.py: POST /reset-password
+./authentication/src/router/auth.py: POST /verify-code
+./authentication/src/router/auth.py: GET /google/login
+./authentication/src/router/auth.py: GET /google/callback
+./authentication/src/router/passkey.py: POST /login/start
+./authentication/src/router/passkey.py: POST /login/finish
+./editor/src/router/editorjs.py: POST /compile
+./editor/src/router/editor.py: POST /{document_id}/plagiarism-check
+./editor/src/router/editor.py: POST /{document_id}/sync
+./editor/src/router/editor.py: POST /{document_id}/suggestions
+./editor/src/router/editor.py: PUT /suggestions/{suggestion_id}/resolve
+./editor/src/router/editor.py: POST /pomodoro
+./editor/src/router/editor.py: POST /{document_id}/auto-save
+./editor/src/router/editor.py: POST /{document_id}/submit-review
+./editor/src/router/editor.py: POST /{document_id}/find-replace
+./editor/src/router/editor.py: POST /{document_id}/ai-suggestions
+./editor/src/router/editor.py: POST /{document_id}/summarize
+./editor/src/router/editor.py: POST /{document_id}/extract-tags
+./editor/src/router/editor.py: POST /{document_id}/check-logic
+./editor/src/router/editor.py: POST /{document_id}/check-grammar
+./editor/src/router/editor.py: POST /{document_id}/comments
+./editor/src/router/editor.py: GET /{document_id}/comments
+./editor/src/router/editor.py: PUT /comments/{comment_id}/resolve
+./editor/src/router/editor.py: POST /{document_id}/compare-versions
+./editor/src/router/latex.py: POST /compile
+./editor/src/router/latex.py: POST /export/{format}
+./editor/src/router/latex.py: POST /format
+./editor/src/router/latex.py: POST /export-zip
+
+--- INTERNAL API CALLS ---
+./agentic_ai/src/tools/api_tools.py: /wallets/balance
+./agentic_ai/src/tools/api_tools.py: /wallets/transactions
+./agentic_ai/src/tools/api_tools.py: /coupons/redeem
+./agentic_ai/src/tools/api_tools.py: /withdrawals/revenue
+./agentic_ai/src/tools/api_tools.py: /documents/personal
+./agentic_ai/src/tools/api_tools.py: /documents/trash
+./agentic_ai/src/tools/api_tools.py: /documents/{document_id}
+./agentic_ai/src/tools/api_tools.py: /documents/{document_id}/restore
+./agentic_ai/src/tools/api_tools.py: /documents/{document_id}/analyze/dropoff
+./agentic_ai/src/tools/api_tools.py: /documents/{document_id}
+./agentic_ai/src/tools/api_tools.py: /deposits
+./agentic_ai/src/tools/api_tools.py: /profile/me
+./agentic_ai/src/tools/api_tools.py: /documents/
+./agentic_ai/src/tools/api_tools.py: /documents/{document_id}
+./agentic_ai/src/tools/api_tools.py: /documents/{document_id}
+./agentic_ai/src/tools/api_tools.py: /documents/{document_id}
+./agentic_ai/src/tools/api_tools.py: /documents/{document_id}
+./agentic_ai/src/tools/api_tools.py: /inference/translate
+./agentic_ai/src/tools/api_tools.py: /documents/
+./agentic_ai/src/router/chat.py: /documents/{doc_id}
+./agentic_ai/src/router/chat.py: /documents/{doc_id}
+./agentic_ai/src/router/inference.py: /quota/verify
+./agentic_ai/src/router/inference.py: /quota/consume
+./management/src/services/user.py: /notifications/trigger
+./management/src/services/operation.py: /stats
+./management/src/services/operation.py: /trigger
+./management/src/services/operation.py: /stop
+./management/src/services/operation.py: /logs
+./management/src/services/operation.py: /active-jobs
+./management/src/services/operation.py: /withdrawals/queue?status={status}&limit={limit}
+./management/src/services/operation.py: /withdrawals/{withdrawal_id}/verify
+./management/src/services/operation.py: /withdrawals/{withdrawal_id}/verify
+./content/src/services/collaboration.py: /users/by-email/{invitee_email}
+./content/src/services/collaboration.py: /users/{inv[
+./content/src/services/collaboration.py: /users/{target_user_id}
+./content/src/services/document.py: /notifications/trigger
+./content/src/services/document.py: /users/by-email/{email}
+./content/src/services/document.py: /users/{document[
+./content/src/router/document.py: /users/{new_owner_id}
+./content/src/router/dependency.py: /quota/verify
+./realtime/src/services/message_socket.py: /active-processes
+./finance/src/services/withdrawal.py: /users/{current_user.id}
+./finance/src/services/deposit.py: /{order_code}
+./finance/src/services/deposit.py: /notifications/dispatch
+./finance/src/services/purchase.py: /notifications/dispatch
+./finance/src/services/wallet.py: /notifications/dispatch
+./messaging/src/services/message.py: /users/batch
+./messaging/src/services/message.py: /translate
+./authentication/src/services/auth.py: /?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile
+./authentication/src/services/auth.py: /users
+./authentication/src/services/auth.py: /users/by-email/{username}
+./authentication/src/services/auth.py: /users/by-slug/{username}
+./authentication/src/services/auth.py: /users/by-email/{email}
+./authentication/src/services/auth.py: /users/by-email/{email}
+./authentication/src/services/auth.py: /users
+./authentication/src/services/passkey.py: /users/by-email/{email}

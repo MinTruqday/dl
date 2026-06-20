@@ -1,21 +1,23 @@
 from typing import Any, List, Optional
 
-from fastapi import (APIRouter, BackgroundTasks, Body, Depends, HTTPException,
-                     Query)
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from loguru import logger
 from src.router.dependency import get_db, require_role
-from src.schemas.storage import (StorageItemCreate, StorageItemResponse,
-                                 StorageItemUpdate)
+from src.schemas.storage import (
+    StorageItemCreate,
+    StorageItemResponse,
+    StorageItemUpdate,
+)
 from src.services.storage import StorageManager
 
 from core.config import settings
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/storage")
+router = APIRouter(prefix="/luu-tru")
 
 
-@router.post("/folders", response_model=APIResponse[StorageItemResponse])
+@router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
 async def create_folder(
     data: StorageItemCreate = Body(...),
     current_user: UserInDB = Depends(
@@ -32,7 +34,7 @@ async def create_folder(
     )
 
 
-@router.post("/files", response_model=APIResponse[StorageItemResponse])
+@router.post("/tap-tin", response_model=APIResponse[StorageItemResponse])
 async def create_file(
     background_tasks: BackgroundTasks,
     data: StorageItemCreate = Body(...),
@@ -55,7 +57,7 @@ async def create_file(
     )
 
 
-@router.get("/lists", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/danh-sach", response_model=APIResponse[List[StorageItemResponse]])
 async def list_items(
     parent_id: Optional[str] = None,
     is_trashed: bool = False,
@@ -74,7 +76,7 @@ async def list_items(
     )
 
 
-@router.get("/search", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/tim-kiem", response_model=APIResponse[List[StorageItemResponse]])
 async def search_items(
     q: str,
     type: Optional[str] = None,
@@ -91,7 +93,7 @@ async def search_items(
     )
 
 
-@router.get("/recent", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     current_user: UserInDB = Depends(
@@ -145,7 +147,7 @@ async def create_shortcut(
     )
 
 
-@router.get("/download-archive")
+@router.get("/tai-ve-luu-tru")
 async def download_zip(
     ids: str,
     current_user: UserInDB = Depends(
@@ -188,7 +190,7 @@ async def download_zip(
     )
 
 
-@router.put("/files/{item_id}", response_model=APIResponse[StorageItemResponse])
+@router.put("/tap-tin/{item_id}", response_model=APIResponse[StorageItemResponse])
 async def update_item(
     item_id: str,
     data: StorageItemUpdate = Body(...),
@@ -222,7 +224,7 @@ async def update_item(
     )
 
 
-@router.delete("/files/{item_id}", response_model=APIResponse[Any])
+@router.delete("/tap-tin/{item_id}", response_model=APIResponse[Any])
 async def delete_item(
     item_id: str,
     hard_delete: bool = False,
@@ -296,7 +298,7 @@ async def add_version(
     )
 
 
-@router.post("/files/{item_id}/share", response_model=APIResponse[Any])
+@router.post("/tap-tin/{item_id}/chia-se", response_model=APIResponse[Any])
 async def share_archive(
     item_id: str,
     email: str = Body(..., embed=True),
@@ -310,7 +312,7 @@ async def share_archive(
     return APIResponse(data=None, message=res["message"], status=200)
 
 
-@router.get("/shares/{share_token}", response_model=APIResponse[StorageItemResponse])
+@router.get("/chia-se/{share_token}", response_model=APIResponse[StorageItemResponse])
 async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageManager.get_public_item(share_token, db=db)
     if not item:

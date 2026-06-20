@@ -2,17 +2,26 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter
 from loguru import logger
-from src.schemas.editor import (AutoSaveRequest, FindReplaceRequest,
-                                InlineCommentRequest, InlineSuggestionRequest,
-                                KeystrokeSyncRequest, PomodoroSyncRequest,
-                                ResolveSuggestionRequest, VersionDiffRequest)
+from src.schemas.editor import (
+    AutoSaveRequest,
+    FindReplaceRequest,
+    InlineCommentRequest,
+    InlineSuggestionRequest,
+    KeystrokeSyncRequest,
+    PomodoroSyncRequest,
+    ResolveSuggestionRequest,
+    VersionDiffRequest,
+)
 from src.services.editor import EditorManager
 
 from core.config import settings
 from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.dependency import get_current_user_from_header as get_current_user
-from core.schemas.inference import (AISuggestionRequest, CoverGenerateRequest,
-                                    PlagiarismCheckRequest)
+from core.schemas.inference import (
+    AISuggestionRequest,
+    CoverGenerateRequest,
+    PlagiarismCheckRequest,
+)
 
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
@@ -26,10 +35,10 @@ def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_use
     return current_user
 
 
-router = APIRouter(prefix="/editor")
+router = APIRouter(prefix="/trinh-soan-thao")
 
 
-@router.post("/{document_id}/plagiarism-check")
+@router.post("/{document_id}/kiem-tra-dao-van")
 async def check_plagiarism(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -44,7 +53,7 @@ async def check_plagiarism(
     }
 
 
-@router.post("/{document_id}/sync")
+@router.post("/{document_id}/dong-bo")
 async def sync_keystroke_buffer(
     document_id: str,
     payload: KeystrokeSyncRequest,
@@ -59,7 +68,7 @@ async def sync_keystroke_buffer(
     }
 
 
-@router.post("/{document_id}/suggestions")
+@router.post("/{document_id}/goi-y")
 async def add_inline_suggestion(
     document_id: str,
     payload: InlineSuggestionRequest,
@@ -74,7 +83,7 @@ async def add_inline_suggestion(
     }
 
 
-@router.put("/suggestions/{suggestion_id}/resolve")
+@router.put("/goi-y/{suggestion_id}/giai-quyet")
 async def resolve_suggestion(
     suggestion_id: str,
     payload: ResolveSuggestionRequest,
@@ -89,7 +98,7 @@ async def resolve_suggestion(
     }
 
 
-@router.post("/pomodoro")
+@router.post("/dong-ho-pomodoro")
 async def sync_pomodoro_session(
     payload: PomodoroSyncRequest, current_user=Depends(get_current_user)
 ):
@@ -102,7 +111,7 @@ async def sync_pomodoro_session(
     }
 
 
-@router.post("/{document_id}/auto-save")
+@router.post("/{document_id}/tu-dong-luu")
 async def auto_save_draft(
     document_id: str, payload: AutoSaveRequest, current_user=Depends(get_current_user)
 ):
@@ -115,7 +124,7 @@ async def auto_save_draft(
     }
 
 
-@router.post("/{document_id}/submit-review")
+@router.post("/{document_id}/gui-danh-gia")
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorManager.submit_for_review(document_id, current_user),
@@ -124,7 +133,7 @@ async def submit_for_review(document_id: str, current_user=Depends(get_current_u
     }
 
 
-@router.post("/{document_id}/find-replace")
+@router.post("/{document_id}/tim-va-thay-the")
 async def global_find_replace(
     document_id: str,
     payload: FindReplaceRequest,
@@ -143,7 +152,7 @@ async def global_find_replace(
     }
 
 
-@router.post("/{document_id}/ai-suggestions")
+@router.post("/{document_id}/goi-y-ai")
 async def get_ai_suggestions(
     document_id: str,
     payload: AISuggestionRequest,
@@ -159,7 +168,7 @@ async def get_ai_suggestions(
     }
 
 
-@router.post("/{document_id}/summarize")
+@router.post("/{document_id}/tom-tat")
 async def summarize_document(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -174,7 +183,7 @@ async def summarize_document(
     }
 
 
-@router.post("/{document_id}/extract-tags")
+@router.post("/{document_id}/trich-xuat-the")
 async def extract_smart_tags(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -189,7 +198,7 @@ async def extract_smart_tags(
     }
 
 
-@router.post("/{document_id}/check-logic")
+@router.post("/{document_id}/kiem-tra-logic")
 async def check_logic(
     document_id: str,
     payload: dict,
@@ -205,7 +214,7 @@ async def check_logic(
     }
 
 
-@router.post("/{document_id}/check-grammar")
+@router.post("/{document_id}/kiem-tra-ngu-phap")
 async def check_grammar(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -220,7 +229,7 @@ async def check_grammar(
     }
 
 
-@router.post("/{document_id}/comments")
+@router.post("/{document_id}/binh-luan")
 async def add_inline_comment(
     document_id: str,
     payload: InlineCommentRequest,
@@ -235,7 +244,7 @@ async def add_inline_comment(
     }
 
 
-@router.get("/{document_id}/comments")
+@router.get("/{document_id}/binh-luan")
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorManager.get_inline_comments(document_id, current_user),
@@ -244,7 +253,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
     }
 
 
-@router.put("/comments/{comment_id}/resolve")
+@router.put("/binh-luan/{comment_id}/giai-quyet")
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorManager.resolve_comment(comment_id, current_user),
@@ -253,7 +262,7 @@ async def resolve_comment(comment_id: str, current_user=Depends(get_current_user
     }
 
 
-@router.post("/{document_id}/compare-versions")
+@router.post("/{document_id}/so-sanh-phien-ban")
 async def get_version_diff(
     document_id: str,
     payload: VersionDiffRequest,

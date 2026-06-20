@@ -10,7 +10,7 @@ from core.response import APIResponse
 from core.schemas.collector import CollectionRequest
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/operations")
+router = APIRouter(prefix="/van-hanh")
 
 
 @router.get(

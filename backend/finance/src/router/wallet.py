@@ -7,10 +7,10 @@ from core.dependency import get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/wallets")
+router = APIRouter(prefix="/vi-tien")
 
 
-@router.get("/balance", response_model=APIResponse[Any])
+@router.get("/so-du", response_model=APIResponse[Any])
 async def get_my_wallet(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -21,7 +21,7 @@ async def get_my_wallet(
     )
 
 
-@router.get("/transactions", response_model=APIResponse[Any])
+@router.get("/giao-dich", response_model=APIResponse[Any])
 async def get_my_transactions(
     limit: int = Query(20),
     offset: int = Query(0),

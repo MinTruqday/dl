@@ -10,7 +10,7 @@ from core.schemas.user import PasskeyFinishRequest, PasskeyRequest
 router = APIRouter(prefix="/auth/passkey")
 
 
-@router.post("/login/start", response_model=APIResponse[Any])
+@router.post("/dang-nhap/bat-dau", response_model=APIResponse[Any])
 async def passkey_login_begin(payload: PasskeyRequest, db=Depends(get_db)):
     return APIResponse(
         data=await PasskeyManager.login_begin(payload.email, db=db),
@@ -19,7 +19,7 @@ async def passkey_login_begin(payload: PasskeyRequest, db=Depends(get_db)):
     )
 
 
-@router.post("/login/finish", response_model=APIResponse[Any])
+@router.post("/dang-nhap/hoan-tat", response_model=APIResponse[Any])
 async def passkey_login_finish(payload: PasskeyFinishRequest, db=Depends(get_db)):
     return APIResponse(
         data=await PasskeyManager.login_finish(

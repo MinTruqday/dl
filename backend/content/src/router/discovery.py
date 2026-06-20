@@ -8,7 +8,7 @@ from core.config import settings
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/discovery")
+router = APIRouter(prefix="/kham-pha")
 
 
 @router.get("/trending", response_model=APIResponse[Any])

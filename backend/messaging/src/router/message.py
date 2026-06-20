@@ -2,18 +2,16 @@ import json
 from typing import Any, List
 
 from fastapi import APIRouter
-from src.schemas.message import (ConversationResponse, MessageCreate,
-                                 MessageResponse)
+from src.schemas.message import ConversationResponse, MessageCreate, MessageResponse
 from src.services.message import MessageManager
 
 from core.database import db_client
-from core.dependency import (AuthenticatedUser, Depends, Header, HTTPException,
-                             Query)
+from core.dependency import AuthenticatedUser, Depends, Header, HTTPException, Query
 from core.dependency import get_current_user_from_header as get_current_user
 from core.repositories.base_repository import RepositoryFactory
 from core.response import APIResponse
 
-router = APIRouter(prefix="/messages")
+router = APIRouter(prefix="/tin-nhan")
 
 
 async def publish_personal_message(message: dict, receiver_id: str):
@@ -70,7 +68,7 @@ async def get_messages(
     )
 
 
-@router.get("/conversations", response_model=APIResponse[Any])
+@router.get("/cuoc-tro-chuyen", response_model=APIResponse[Any])
 async def get_conversations(current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageManager.get_conversations(current_user),
@@ -79,7 +77,7 @@ async def get_conversations(current_user=Depends(get_current_user)):
     )
 
 
-@router.post("/{message_id}/pin", response_model=APIResponse[Any])
+@router.post("/{message_id}/ghim", response_model=APIResponse[Any])
 async def toggle_pin(message_id: str, current_user=Depends(get_current_user)):
     result = await MessageManager.toggle_pin(message_id, current_user)
     if result is None:
@@ -150,7 +148,7 @@ async def search_messages(
     )
 
 
-@router.post("/{message_id}/reactions", response_model=APIResponse[Any])
+@router.post("/{message_id}/bay-to-cam-xuc", response_model=APIResponse[Any])
 async def add_reaction(
     message_id: str, req: dict, current_user=Depends(get_current_user)
 ):
@@ -169,7 +167,7 @@ async def add_reaction(
     return APIResponse(data=result, message="Ghi nhận tương tác tin nhắn thành công")
 
 
-@router.post("/{other_user_id}/read", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/doc-hieu", response_model=APIResponse[Any])
 async def mark_as_read(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageManager.mark_as_read(other_user_id, current_user)
     await publish_personal_message(
@@ -178,7 +176,7 @@ async def mark_as_read(other_user_id: str, current_user=Depends(get_current_user
     return APIResponse(data=result, message="Đã đánh dấu cuộc trò chuyện là đã đọc")
 
 
-@router.post("/{receiver_id}/documents/share", response_model=APIResponse[Any])
+@router.post("/{receiver_id}/tai-lieu/chia-se", response_model=APIResponse[Any])
 async def share_document(
     receiver_id: str, req: dict, current_user=Depends(get_current_user)
 ):
@@ -194,7 +192,7 @@ async def share_document(
     return APIResponse(data=result, message="Chia sẻ tài liệu thành công", status=201)
 
 
-@router.get("/{other_user_id}/documents/shared", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/tai-lieu/da-chia-se", response_model=APIResponse[Any])
 async def get_shared_attachments(
     other_user_id: str, current_user=Depends(get_current_user)
 ):
@@ -204,7 +202,7 @@ async def get_shared_attachments(
     )
 
 
-@router.post("/{other_user_id}/block", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/chan", response_model=APIResponse[Any])
 async def block_user(other_user_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageManager.block_user(other_user_id, current_user),
@@ -212,7 +210,7 @@ async def block_user(other_user_id: str, current_user=Depends(get_current_user))
     )
 
 
-@router.post("/{other_user_id}/unblock", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/bo-chan", response_model=APIResponse[Any])
 async def unblock_user(other_user_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await MessageManager.unblock_user(other_user_id, current_user),
@@ -220,7 +218,7 @@ async def unblock_user(other_user_id: str, current_user=Depends(get_current_user
     )
 
 
-@router.get("/{other_user_id}/block-status", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/trang-thai-chan", response_model=APIResponse[Any])
 async def get_blocked_status(
     other_user_id: str, current_user=Depends(get_current_user)
 ):
@@ -233,7 +231,7 @@ async def get_blocked_status(
     )
 
 
-@router.post("/conversations/{other_user_id}/pin", response_model=APIResponse[Any])
+@router.post("/cuoc-tro-chuyen/{other_user_id}/ghim", response_model=APIResponse[Any])
 async def toggle_pin_conversation(
     other_user_id: str, current_user=Depends(get_current_user)
 ):
@@ -243,7 +241,7 @@ async def toggle_pin_conversation(
     )
 
 
-@router.post("/{message_id}/translate", response_model=APIResponse[Any])
+@router.post("/{message_id}/dich-thuat", response_model=APIResponse[Any])
 async def translate_message(
     message_id: str, req: dict, current_user=Depends(get_current_user)
 ):
@@ -265,7 +263,7 @@ async def translate_message(
     return APIResponse(data=result, message="Dịch văn bản thành công")
 
 
-@router.post("/groups", response_model=APIResponse[Any])
+@router.post("/nhom", response_model=APIResponse[Any])
 async def create_group(req: dict, current_user=Depends(get_current_user)):
     group_name = req.get("group_name")
     member_ids = req.get("member_ids", [])
@@ -277,7 +275,7 @@ async def create_group(req: dict, current_user=Depends(get_current_user)):
     )
 
 
-@router.post("/{other_user_id}/drafts", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/ban-nhap", response_model=APIResponse[Any])
 async def save_draft(
     other_user_id: str, req: dict, current_user=Depends(get_current_user)
 ):
@@ -286,13 +284,13 @@ async def save_draft(
     return APIResponse(data=result, message="Lưu bản nháp tin nhắn thành công")
 
 
-@router.get("/{other_user_id}/drafts", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/ban-nhap", response_model=APIResponse[Any])
 async def get_draft(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageManager.get_draft(other_user_id, current_user)
     return APIResponse(data=result, message="Lấy bản nháp tin nhắn thành công")
 
 
-@router.post("/{other_user_id}/self-destruct", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/tu-huy", response_model=APIResponse[Any])
 async def toggle_self_destruct(
     other_user_id: str, req: dict, current_user=Depends(get_current_user)
 ):
@@ -310,7 +308,7 @@ async def toggle_self_destruct(
     return APIResponse(data=result, message="Đã bật tự động xóa tin nhắn")
 
 
-@router.post("/{other_user_id}/mute", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/tat-thong-bao", response_model=APIResponse[Any])
 async def toggle_mute(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageManager.toggle_mute(other_user_id, current_user)
     return APIResponse(
@@ -318,7 +316,7 @@ async def toggle_mute(other_user_id: str, current_user=Depends(get_current_user)
     )
 
 
-@router.get("/{other_user_id}/settings", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/cai-dat", response_model=APIResponse[Any])
 async def get_conversation_settings(
     other_user_id: str, current_user=Depends(get_current_user)
 ):

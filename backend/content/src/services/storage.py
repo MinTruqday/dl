@@ -3,8 +3,7 @@ from typing import List, Optional
 
 from fastapi import Query
 from loguru import logger
-from src.schemas.storage import (StorageItemCreate, StorageItemInDB,
-                                 StorageItemUpdate)
+from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 
 from core.config import settings
 from core.database import db_client

@@ -152,7 +152,7 @@ class MessageSocketManager:
         try:
             async with httpx.AsyncClient() as client:
                 res = await client.get(
-                    f"{settings.COLLECTOR_URL}/active-processes",
+                    f"{settings.COLLECTOR_URL}/tien-trinh-dang-chay",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 active_collectors = res.json() if res.status_code == 200 else []

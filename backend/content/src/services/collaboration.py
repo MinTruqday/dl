@@ -49,7 +49,7 @@ class CollaborationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/users/by-email/{invitee_email}",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/theo-email/{invitee_email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -181,7 +181,7 @@ class CollaborationManager:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.get(
-                        f"{settings.MANAGEMENT_URL}/users/{inv['invitee_id']}",
+                        f"{settings.MANAGEMENT_URL}/nguoi-dung/{inv['invitee_id']}",
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if resp.status_code == 200:
@@ -295,7 +295,7 @@ class CollaborationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/users/{target_user_id}",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/{target_user_id}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:

@@ -9,7 +9,7 @@ from core.config import settings
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/drafts")
+router = APIRouter(prefix="/ban-nhap")
 
 
 @router.get(

@@ -6,9 +6,15 @@ import httpx
 from fastapi import Query
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import (Distance, FieldCondition, Filter,
-                                       MatchAny, MatchValue, PointStruct,
-                                       VectorParams)
+from qdrant_client.http.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchAny,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 
 from core.config import settings
 

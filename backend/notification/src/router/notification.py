@@ -8,7 +8,7 @@ from core.dependency import get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/notifications")
+router = APIRouter(prefix="/thong-bao")
 
 
 @router.get("", response_model=APIResponse[Any])
@@ -26,7 +26,7 @@ async def get_notifications(
     )
 
 
-@router.patch("/{notif_id}/read", response_model=APIResponse[Any])
+@router.patch("/{notif_id}/doc-hieu", response_model=APIResponse[Any])
 async def mark_as_read(
     notif_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -62,7 +62,7 @@ async def delete_notification(
     )
 
 
-@router.post("/dispatch", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False)
 async def create_notification(data: NotificationCreate, db=Depends(get_db)):
     return APIResponse(
         data=await NotificationManager.create_notification(data, db),

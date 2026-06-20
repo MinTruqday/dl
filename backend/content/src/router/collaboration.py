@@ -2,22 +2,24 @@ from typing import Any, List
 
 from fastapi import APIRouter, Depends
 from src.router.dependency import get_db, require_role
-from src.schemas.document import (CoauthorInviteRequest,
-                                  CollabMemoCreateRequest,
-                                  CollaborationResponse,
-                                  CollabTaskCreateRequest,
-                                  CreateDraftSnapshotRequest,
-                                  TaskCommentCreateRequest,
-                                  TransferOwnershipRequest,
-                                  UpdateCollabAccessRequest,
-                                  UpdateCollaboratorRoleRequest,
-                                  UpdateTaskStatusRequest)
+from src.schemas.document import (
+    CoauthorInviteRequest,
+    CollabMemoCreateRequest,
+    CollaborationResponse,
+    CollabTaskCreateRequest,
+    CreateDraftSnapshotRequest,
+    TaskCommentCreateRequest,
+    TransferOwnershipRequest,
+    UpdateCollabAccessRequest,
+    UpdateCollaboratorRoleRequest,
+    UpdateTaskStatusRequest,
+)
 from src.services.collaboration import CollaborationManager
 
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/collaboration")
+router = APIRouter(prefix="/cong-tac")
 
 
 @router.post("/invitations", response_model=APIResponse[Any])

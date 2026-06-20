@@ -9,7 +9,7 @@ from core.dependency import get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/monetization")
+router = APIRouter(prefix="/kiem-tien")
 
 
 class PurchaseRequest(BaseModel):
@@ -21,7 +21,7 @@ class MembershipRequest(BaseModel):
     tier: str
 
 
-@router.post("/purchase/document", response_model=APIResponse[Any])
+@router.post("/mua/tai-lieu", response_model=APIResponse[Any])
 async def purchase_document(
     req: PurchaseRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -36,7 +36,7 @@ async def purchase_document(
     )
 
 
-@router.post("/membership", response_model=APIResponse[Any])
+@router.post("/thanh-vien", response_model=APIResponse[Any])
 async def buy_membership(
     req: MembershipRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -49,7 +49,7 @@ async def buy_membership(
     )
 
 
-@router.get("/pricing", response_model=APIResponse[Any])
+@router.get("/bang-gia", response_model=APIResponse[Any])
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
         data=await PricingManager.get_pricing_config(db=db),

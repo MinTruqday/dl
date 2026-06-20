@@ -2,14 +2,21 @@ from datetime import datetime, timezone
 from typing import Any, List, Optional
 
 from bson import ObjectId
-from fastapi import (APIRouter, Body, Depends, Header, HTTPException, Query,
-                     status)
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel
-from src.router.dependency import (get_current_user, get_current_user_optional,
-                                   get_db, require_role)
-from src.schemas.document import (DocumentContentUpdate, DocumentCreate,
-                                  DocumentPasswordRequest, DocumentResponse,
-                                  DocumentUpdate)
+from src.router.dependency import (
+    get_current_user,
+    get_current_user_optional,
+    get_db,
+    require_role,
+)
+from src.schemas.document import (
+    DocumentContentUpdate,
+    DocumentCreate,
+    DocumentPasswordRequest,
+    DocumentResponse,
+    DocumentUpdate,
+)
 from src.services.document import DocumentManager
 
 from core.config import settings
@@ -17,7 +24,7 @@ from core.database import db_client
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/documents")
+router = APIRouter(prefix="/tai-lieu")
 
 
 @router.post("", response_model=APIResponse[DocumentResponse])
@@ -32,7 +39,7 @@ async def create_document(
     )
 
 
-@router.put("/{document_id}/content", response_model=APIResponse[DocumentResponse])
+@router.put("/{document_id}/noi-dung", response_model=APIResponse[DocumentResponse])
 async def update_document_content(
     document_id: str,
     content_in: DocumentContentUpdate,
@@ -323,7 +330,7 @@ async def transfer_document(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.MANAGEMENT_URL}/users/{new_owner_id}",
+                f"{settings.MANAGEMENT_URL}/nguoi-dung/{new_owner_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:
@@ -399,7 +406,7 @@ async def get_document_analytics(
     )
 
 
-@router.get("/{document_id}/academic-index", response_model=APIResponse[Any])
+@router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
 async def get_document_academic(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):

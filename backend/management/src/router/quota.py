@@ -27,7 +27,7 @@ async def check_quota_internal(
     )
 
 
-@router.get("/me", response_model=APIResponse[Any])
+@router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_quota(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):

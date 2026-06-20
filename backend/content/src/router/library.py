@@ -3,17 +3,20 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db
-from src.schemas.library import (BookmarkFolderAssign, BookmarkFolderCreate,
-                                 ReadingListCreate)
+from src.schemas.library import (
+    BookmarkFolderAssign,
+    BookmarkFolderCreate,
+    ReadingListCreate,
+)
 from src.services.library import LibraryManager
 
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/library")
+router = APIRouter(prefix="/thu-vien")
 
 
-@router.post("/lists", response_model=APIResponse[Any])
+@router.post("/danh-sach", response_model=APIResponse[Any])
 async def create_reading_list(
     data: ReadingListCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -26,7 +29,7 @@ async def create_reading_list(
     )
 
 
-@router.get("/lists", response_model=APIResponse[Any])
+@router.get("/danh-sach", response_model=APIResponse[Any])
 async def get_my_lists(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):

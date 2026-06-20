@@ -8,7 +8,7 @@ from src.services.export import ExportManager
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/export")
+router = APIRouter(prefix="/ket-xuat")
 
 
 @router.get("/{document_id}/pdf", response_model=APIResponse[Any])

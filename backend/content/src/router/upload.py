@@ -8,7 +8,7 @@ from src.services.upload import UploadManager
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/upload")
+router = APIRouter(prefix="/tai-len")
 
 
 async def validate_svg(file: UploadFile):
@@ -51,7 +51,7 @@ async def upload_document(
     )
 
 
-@router.post("/files", response_model=APIResponse[Any])
+@router.post("/tap-tin", response_model=APIResponse[Any])
 async def upload_asset(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(

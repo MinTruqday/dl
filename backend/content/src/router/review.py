@@ -8,7 +8,7 @@ from src.services.review import ReviewManager
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/reviews")
+router = APIRouter(prefix="/danh-gia")
 
 
 @router.post("/{document_id}", response_model=APIResponse[ReviewResponse])
