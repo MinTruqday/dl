@@ -1,9 +1,8 @@
+import math
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Union
-import math
 
 from pydantic import BaseModel, Field
-
 
 from core.schemas.user import AITierEnum
 

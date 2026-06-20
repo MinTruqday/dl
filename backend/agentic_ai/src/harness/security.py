@@ -141,4 +141,4 @@ class SecurityHarness:
         return sanitized
 
 
-security_harness = SecurityHarness()
+security = SecurityHarness()

@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
+
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 
 class PublicationService:
@@ -35,9 +36,7 @@ class PublicationService:
                 }
             },
         )
-        logger.info(
-            "Chỉnh sửa thông tin SEO thành công"
-        )
+        logger.info("Chỉnh sửa thông tin SEO thành công")
         return {"message": "Cập nhật thông tin và thẻ phân loại thành công"}
 
     @staticmethod
@@ -88,9 +87,7 @@ class PublicationService:
             {"_id": document_id, "creator_id": user_id},
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at)}},
         )
-        logger.info(
-            "Cấu hình lịch xuất bản tài liệu thành công"
-        )
+        logger.info("Cấu hình lịch xuất bản tài liệu thành công")
         return {"message": "Ghi nhận lịch xuất bản thành công"}
 
     @staticmethod

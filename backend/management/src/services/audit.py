@@ -1,6 +1,8 @@
-from core.database import db_client
 from datetime import datetime, timezone
+
 from loguru import logger
+
+from core.database import db_client
 
 
 class AuditService:
@@ -53,6 +55,4 @@ class AuditService:
                 "timestamp": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            "Ghi nhận thao tác thành công"
-        )
+        logger.info("Ghi nhận thao tác thành công")

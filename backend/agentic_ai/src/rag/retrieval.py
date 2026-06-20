@@ -2,12 +2,14 @@ import asyncio
 import json
 import re
 from typing import Dict, List, Optional
-from core.config import settings
+
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
 from src.store.vector_store import vector_store
+
+from core.config import settings
 
 _hf = HuggingFaceEndpoint(
     repo_id=settings.LLAMA_MODEL,
@@ -16,6 +18,7 @@ _hf = HuggingFaceEndpoint(
     task="conversational",
 )
 _llm = ChatHuggingFace(llm=_hf)
+
 
 class RetrievalService:
     def __init__(self):
@@ -27,6 +30,7 @@ class RetrievalService:
         if self._reranker is None:
             try:
                 from sentence_transformers import CrossEncoder
+
                 self._reranker = CrossEncoder(settings.RERANKER_MODEL)
             except Exception:
                 logger.exception("Lỗi tải mô hình xếp hạng AI")
@@ -52,8 +56,12 @@ class RetrievalService:
         try:
             try:
                 from pydantic import BaseModel, Field
+
                 class MultiQueryOutput(BaseModel):
-                    queries: List[str] = Field(description="Danh sách 3 truy vấn đã viết lại")
+                    queries: List[str] = Field(
+                        description="Danh sách 3 truy vấn đã viết lại"
+                    )
+
                 structured_llm = self.llm.with_structured_output(MultiQueryOutput)
                 response = structured_llm.invoke(prompt.format(question=question))
                 queries = [q.strip() for q in response.queries if q.strip()]
@@ -85,11 +93,12 @@ class RetrievalService:
         self, query: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
         from src.rag.embedder import embedding_service
-        query_vector = embedding_service.embed_query(query)
-        
+
+        query_vector = embedding.embed_query(query)
+
         current_reranker = self.reranker
         fetch_limit = k * 3 if current_reranker else k
-        
+
         documents = await vector_store.query(
             query_vector=query_vector, document_ids=document_ids, limit=fetch_limit
         )
@@ -164,5 +173,6 @@ class RetrievalService:
                 result[right] = doc
                 right -= 1
         return [d for d in result if d is not None]
+
 
 retrieval_service = RetrievalService()

@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Literal, Optional
 
-from core.repositories.base_repository import RepositoryFactory
 from loguru import logger
+
+from core.repositories.base_repository import RepositoryFactory
 
 
 @dataclass
@@ -48,8 +49,9 @@ class AgentOpsHarness:
     def _get_db(self):
         if self._db_client is None:
             try:
-                from core.config import settings
                 from motor.motor_asyncio import AsyncIOMotorClient
+
+                from core.config import settings
 
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
@@ -103,7 +105,9 @@ class AgentOpsHarness:
             if not success:
                 breakdown["errors"] += 1
         log_fn = logger.info if success else logger.warning
-        log_fn("The system successfully recorded the execution event for the invoked utility")
+        log_fn(
+            "The system successfully recorded the execution event for the invoked utility"
+        )
 
     def record_llm_call(
         self,
@@ -205,4 +209,4 @@ class AgentOpsHarness:
         return "\n".join(lines) + "\n"
 
 
-agentops_harness = AgentOpsHarness()
+agentops = AgentOpsHarness()

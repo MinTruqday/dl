@@ -1,12 +1,13 @@
 import uuid
 from datetime import datetime, timezone
 
-from core.config import settings
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
+
+from core.config import settings
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 
 class CollaborationService:
@@ -56,9 +57,7 @@ class CollaborationService:
         except Exception:
             pass
         if not invitee:
-            raise HTTPException(
-                status_code=404, detail="Không tìm thấy người dùng"
-            )
+            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
         invitee_id = str(invitee["_id"])
         if invitee_id == str(current_user.id):
             raise HTTPException(
@@ -73,7 +72,9 @@ class CollaborationService:
             )
         coauthors = doc.get("coauthors", [])
         if invitee_id in coauthors:
-            raise HTTPException(status_code=400, detail="Tài khoản đã tham gia cộng tác")
+            raise HTTPException(
+                status_code=400, detail="Tài khoản đã tham gia cộng tác"
+            )
         invite = {
             "_id": str(uuid7()),
             "document_id": document_id,
@@ -92,10 +93,11 @@ class CollaborationService:
             "Send invitation",
             "A new editorial collaboration invitation has been processed and dispatched via the internal notification system",
         )
-        logger.info(
-            "Gửi lời mời cộng tác thành công"
-        )
-        return {"message": "Xử lý và gửi lời mời cộng tác thành công", "invite_id": invite["_id"]}
+        logger.info("Gửi lời mời cộng tác thành công")
+        return {
+            "message": "Xử lý và gửi lời mời cộng tác thành công",
+            "invite_id": invite["_id"],
+        }
 
     @staticmethod
     async def get_my_collaboration_invites(current_user, db=None) -> list:
@@ -120,7 +122,8 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Lời mời cộng tác không hợp lệ hoặc đã được xử lý"
+                status_code=404,
+                detail="Lời mời cộng tác không hợp lệ hoặc đã được xử lý",
             )
         if status not in ["ACCEPTED", "REJECTED"]:
             raise HTTPException(
@@ -144,12 +147,8 @@ class CollaborationService:
             "Accepted" if status == "ACCEPTED" else "Declined",
             "The recipient has officially registered their response to the pending editorial collaboration invitation",
         )
-        logger.info(
-            "Đã xử lý lời mời cộng tác"
-        )
-        return {
-            "message": "Ghi nhận phản hồi lời mời thành công"
-        }
+        logger.info("Đã xử lý lời mời cộng tác")
+        return {"message": "Ghi nhận phản hồi lời mời thành công"}
 
     @staticmethod
     async def get_collaborators(document_id: str, current_user, db=None) -> list:
@@ -233,9 +232,7 @@ class CollaborationService:
             "Collaborator removed",
             "The specified collaborator has been effectively removed from the authorized modification list",
         )
-        logger.info(
-            "Xóa cộng tác viên thành công"
-        )
+        logger.info("Xóa cộng tác viên thành công")
         return {"message": "Xóa thành viên cộng tác thành công"}
 
     @staticmethod
@@ -334,9 +331,7 @@ class CollaborationService:
             "Transfer ownership",
             "The primary administrative ownership rights of the document have been securely reassigned",
         )
-        logger.info(
-            "Chuyển quyền sở hữu tài liệu cộng tác thành công"
-        )
+        logger.info("Chuyển quyền sở hữu tài liệu cộng tác thành công")
         return {"message": "Chuyển quyền sở hữu tài liệu thành công"}
 
     @staticmethod
@@ -545,7 +540,8 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy lời mời cộng tác hoặc đã được xử lý"
+                status_code=404,
+                detail="Không tìm thấy lời mời cộng tác hoặc đã được xử lý",
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
@@ -815,11 +811,11 @@ class CollaborationService:
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         if doc.get("creator_id") == str(current_user.id):
-            raise HTTPException(status_code=400, detail="Bạn đã là chủ sở hữu của tài liệu này")
-        if str(current_user.id) in doc.get("coauthors", []):
             raise HTTPException(
-                status_code=400, detail="Bạn đã tham gia cộng tác này"
+                status_code=400, detail="Bạn đã là chủ sở hữu của tài liệu này"
             )
+        if str(current_user.id) in doc.get("coauthors", []):
+            raise HTTPException(status_code=400, detail="Bạn đã tham gia cộng tác này")
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id},
             {
@@ -938,7 +934,9 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác"
+            )
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -973,7 +971,9 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác"
+            )
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -1005,7 +1005,9 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác"
+            )
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],

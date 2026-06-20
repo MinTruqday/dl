@@ -1,15 +1,15 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from core.config import settings
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from pydantic import BaseModel, Field
-
 from src.schemas.plan import ExecutionPlan, PlanStep
 from src.utils.resilience import with_retry
+
+from core.config import settings
 
 _hf_endpoint = HuggingFaceEndpoint(
     task="conversational",
@@ -19,6 +19,7 @@ _hf_endpoint = HuggingFaceEndpoint(
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
 
+
 class Planning:
     def __init__(self):
         self.llm = llm
@@ -27,19 +28,24 @@ class Planning:
     @with_retry(max_retries=3, base_wait=2, max_wait=10)
     async def _invoke_llm(self, messages):
         import httpx
+
         return await self.llm.ainvoke(messages)
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
         logger.info("Đang lập kế hoạch thực thi")
 
         from src.core.prompt_registry import PromptType, prompt_registry
+
         system_prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM)
 
         history = req_data.get("conversation_history", [])
         history_str = "\n".join(
-            [f"{msg.get('role', 'user')} said {msg.get('content', '')}" for msg in history[-5:]]
+            [
+                f"{msg.get('role', 'user')} said {msg.get('content', '')}"
+                for msg in history[-5:]
+            ]
         )
-        
+
         query = req_data.get("query", "")
         context = req_data.get("context", "None")
 
@@ -48,7 +54,11 @@ class Planning:
         try:
             format_instructions = self.parser.get_format_instructions()
             messages = [
-                SystemMessage(content=system_prompt.format(format_instructions=format_instructions)),
+                SystemMessage(
+                    content=system_prompt.format(
+                        format_instructions=format_instructions
+                    )
+                ),
                 HumanMessage(content=prompt),
             ]
 
@@ -61,12 +71,18 @@ class Planning:
             ]
 
             if not steps:
-                steps = [{"agent": "Knowledge", "task": "Inform user request exceeds capabilities"}]
+                steps = [
+                    {
+                        "agent": "Knowledge",
+                        "task": "Inform user request exceeds capabilities",
+                    }
+                ]
 
             return steps
 
         except Exception:
             logger.exception("Lỗi tạo kế hoạch")
             return [{"agent": "Knowledge", "task": "Inform user of analysis failure"}]
+
 
 planning = Planning()

@@ -1,10 +1,11 @@
 import uuid
 from datetime import datetime, timezone
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
+
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 
 class PinService:
@@ -79,7 +80,10 @@ class PinService:
             {"$pull": {"pinned_documents": document_id}},
             upsert=True,
         )
-        return {"status": "success", "message": "Xóa tài liệu khỏi bộ sưu tập ghim thành công"}
+        return {
+            "status": "success",
+            "message": "Xóa tài liệu khỏi bộ sưu tập ghim thành công",
+        }
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
@@ -90,4 +94,7 @@ class PinService:
             {"$set": {"pinned_documents": document_ids}},
             upsert=True,
         )
-        return {"status": "success", "message": "Cập nhật thứ tự tài liệu ghim thành công"}
+        return {
+            "status": "success",
+            "message": "Cập nhật thứ tự tài liệu ghim thành công",
+        }

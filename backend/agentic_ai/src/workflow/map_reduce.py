@@ -43,9 +43,7 @@ async def summarize_node(state: SummarizeState):
     from langchain_core.messages import HumanMessage
     from src.agents.planning import llm
 
-    prompt = (
-        f"Summarize the following document segment in detail:\n\n{state['chunk']}"
-    )
+    prompt = f"Summarize the following document segment in detail:\n\n{state['chunk']}"
     res = await llm.ainvoke([HumanMessage(content=prompt)])
     return {"summaries": [res.content]}
 

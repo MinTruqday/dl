@@ -7,19 +7,17 @@ import urllib.parse
 import aiohttp
 import requests
 from bs4 import BeautifulSoup
-from core.config import settings
 from loguru import logger
 from playwright.async_api import async_playwright
 from playwright_stealth import stealth_async
-from src.core.browser import (
-    download_file_with_retry,
-    get_stealth_context,
-    managed_browser,
-)
+from src.core.browser import (download_file_with_retry, get_stealth_context,
+                              managed_browser)
 from src.core.db import db_client
 from src.core.mq import mq_client
 from src.core.redis_client import dedup
 from src.core.storage import storage
+
+from core.config import settings
 
 
 class AnnaArchiveCollector:
@@ -76,7 +74,9 @@ class AnnaArchiveCollector:
 
                     document_nodes = await page.query_selector_all(list_selector)
                     if not document_nodes:
-                        logger.warning("Không tìm thấy liên kết tài liệu, đang dừng quét danh sách")
+                        logger.warning(
+                            "Không tìm thấy liên kết tài liệu, đang dừng quét danh sách"
+                        )
                         break
 
                     document_urls = set()

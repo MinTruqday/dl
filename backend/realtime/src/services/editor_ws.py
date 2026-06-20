@@ -13,9 +13,7 @@ class ConnectionManager:
         if room_id not in self.active_connections:
             self.active_connections[room_id] = []
         self.active_connections[room_id].append(websocket)
-        logger.info(
-            "Thiết bị mới đã kết nối vào không gian cộng tác"
-        )
+        logger.info("Thiết bị mới đã kết nối vào không gian cộng tác")
 
     def disconnect(self, websocket: WebSocket, room_id: str):
         if (

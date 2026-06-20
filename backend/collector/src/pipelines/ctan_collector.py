@@ -11,11 +11,8 @@ from bs4 import BeautifulSoup
 from loguru import logger
 from playwright.async_api import async_playwright
 from playwright_stealth import stealth_async
-from src.core.browser import (
-    download_file_with_retry,
-    get_stealth_context,
-    managed_browser,
-)
+from src.core.browser import (download_file_with_retry, get_stealth_context,
+                              managed_browser)
 from src.core.db import db_client
 from src.core.mq import mq_client
 from src.core.redis_client import dedup
@@ -267,7 +264,9 @@ class CTANCollector:
             book_document = {
                 "title": title,
                 "slug": slug,
-                "description": payload.get("description", "Trích xuất tự động thành công"),
+                "description": payload.get(
+                    "description", "Trích xuất tự động thành công"
+                ),
                 "file_url": minio_url_book,
                 "pdf_url": payload.get("pdf_url"),
                 "markdown_url": payload.get("markdown_url"),

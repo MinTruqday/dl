@@ -4,32 +4,26 @@ import os
 import uuid
 from datetime import datetime, timezone
 
-from core.config import settings
-from core.database import db_client
-from core.schemas.user import UserInDB
 from fastapi import HTTPException
 from loguru import logger
 from src.repositories.auth_repository import AuthRepository
-from webauthn import (
-    generate_authentication_options,
-    generate_registration_options,
-    options_to_json,
-    verify_authentication_response,
-    verify_registration_response,
-)
-from webauthn.helpers.exceptions import (
-    InvalidAuthenticationResponse,
-    InvalidRegistrationResponse,
-)
-from webauthn.helpers.structs import (
-    AuthenticationCredential,
-    AuthenticatorAttachment,
-    AuthenticatorSelectionCriteria,
-    PublicKeyCredentialDescriptor,
-    PublicKeyCredentialType,
-    RegistrationCredential,
-    UserVerificationRequirement,
-)
+from webauthn import (generate_authentication_options,
+                      generate_registration_options, options_to_json,
+                      verify_authentication_response,
+                      verify_registration_response)
+from webauthn.helpers.exceptions import (InvalidAuthenticationResponse,
+                                         InvalidRegistrationResponse)
+from webauthn.helpers.structs import (AuthenticationCredential,
+                                      AuthenticatorAttachment,
+                                      AuthenticatorSelectionCriteria,
+                                      PublicKeyCredentialDescriptor,
+                                      PublicKeyCredentialType,
+                                      RegistrationCredential,
+                                      UserVerificationRequirement)
+
+from core.config import settings
+from core.database import db_client
+from core.schemas.user import UserInDB
 
 RP_ID = settings.PASSKEY_RP_ID
 RP_NAME = settings.PASSKEY_RP_NAME

@@ -1,9 +1,11 @@
 from typing import Any
+
 from fastapi import APIRouter, Depends
-from core.dependency import get_db, require_role, get_current_user
-from core.schemas.user import UserInDB, RoleEnum
-from core.response import APIResponse
 from src.services.user import UserService
+
+from core.dependency import get_current_user, get_db, require_role
+from core.response import APIResponse
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/audit")
 

@@ -1,8 +1,9 @@
 import os
 
 import redis.asyncio as redis
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 
 class RedisDeduplicator:

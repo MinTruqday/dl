@@ -1,24 +1,25 @@
 import uvicorn
-from core.config import settings
-from loguru import logger
-from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.router.bookmark import router as bookmark_router
-from src.router.collaboration import router as collaboration_router
-from src.router.discovery import router as discovery_router
-from src.router.document import router as document_router
-from src.router.draft import router as draft_router
-from src.router.export import router as export_router
-from src.router.highlight import router as highlight_router
-from src.router.library import router as library_router
-from src.router.pin import router as pin_router
-from src.router.publication import router as publication_router
-from src.router.reading import router as reading_router
-from src.router.review import router as review_router
-from src.router.storage import router as storage_router
-from src.router.upload import router as upload_router
-from src.router.version import router as version_router
+from loguru import logger
+from src.router.bookmark import router as bookmark
+from src.router.collaboration import router as collaboration
+from src.router.discovery import router as discovery
+from src.router.document import router as document
+from src.router.draft import router as draft
+from src.router.export import router as export
+from src.router.highlight import router as highlight
+from src.router.library import router as library
+from src.router.pin import router as pin
+from src.router.publication import router as publication
+from src.router.reading import router as reading
+from src.router.review import router as review
+from src.router.storage import router as storage
+from src.router.upload import router as upload
+from src.router.version import router as version
+
+from core.config import settings
+from core.database import close_db, init_db
 
 app = FastAPI(title="DocLib Content", version=settings.VERSION)
 
@@ -34,21 +35,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(document_router)
-app.include_router(review_router)
-app.include_router(version_router)
-app.include_router(reading_router)
-app.include_router(bookmark_router)
-app.include_router(library_router)
-app.include_router(upload_router)
-app.include_router(discovery_router)
-app.include_router(export_router)
-app.include_router(collaboration_router)
-app.include_router(publication_router)
-app.include_router(storage_router)
-app.include_router(highlight_router)
-app.include_router(draft_router)
-app.include_router(pin_router)
+app.include(document)
+app.include(review)
+app.include(version)
+app.include(reading)
+app.include(bookmark)
+app.include(library)
+app.include(upload)
+app.include(discovery)
+app.include(export)
+app.include(collaboration)
+app.include(publication)
+app.include(storage)
+app.include(highlight)
+app.include(draft)
+app.include(pin)
 
 
 @app.on_event("startup")
@@ -64,4 +65,6 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "The content management service is currently operating normally and functioning as expected without any internal issues"}
+    return {
+        "status": "The content management service is currently operating normally and functioning as expected without any internal issues"
+    }

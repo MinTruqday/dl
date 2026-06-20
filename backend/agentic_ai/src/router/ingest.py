@@ -17,4 +17,7 @@ async def ingest_endpoint(req: IngestRequest):
 async def delete_document_endpoint(document_id: str):
     logger.info("Đang xóa dữ liệu vector tài liệu")
     vector_store.delete_by_document(document_id)
-    return {"status": "success", "message": "Xóa dữ liệu tài liệu khỏi bộ nhớ thành công"}
+    return {
+        "status": "success",
+        "message": "Xóa dữ liệu tài liệu khỏi bộ nhớ thành công",
+    }

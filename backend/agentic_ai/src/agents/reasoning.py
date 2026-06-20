@@ -1,12 +1,18 @@
 from typing import Dict, List
-from core.config import settings
+
 from loguru import logger
 from pydantic import BaseModel, Field
 from src.core.prompt_registry import PromptType, prompt_registry
 
+from core.config import settings
+
+
 class QualityEvaluation(BaseModel):
-    is_hallucination: bool = Field(description="Phản hồi có chứa thông tin sai lệch hay không")
+    is_hallucination: bool = Field(
+        description="Phản hồi có chứa thông tin sai lệch hay không"
+    )
     feedback: str = Field(description="Phản hồi giải thích lý do")
+
 
 class Reasoning:
     def __init__(self):
@@ -41,13 +47,17 @@ class Reasoning:
             from src.utils.hf import HFInferenceChat
 
             client = AsyncInferenceClient(model=self._model, token=self._hf_token)
-            llm = HFInferenceChat(client=client, model=self._model).with_structured_output(QualityEvaluation)
-            
-            eval_res: QualityEvaluation = await llm.ainvoke([HumanMessage(content=eval_prompt)])
-            
+            llm = HFInferenceChat(
+                client=client, model=self._model
+            ).with_structured_output(QualityEvaluation)
+
+            eval_res: QualityEvaluation = await llm.ainvoke(
+                [HumanMessage(content=eval_prompt)]
+            )
+
             return {
                 "should_retry": eval_res.is_hallucination,
-                "feedback": eval_res.feedback
+                "feedback": eval_res.feedback,
             }
         except Exception:
             logger.exception("Lỗi đánh giá chất lượng tài liệu")
@@ -66,5 +76,6 @@ class Reasoning:
             text = doc.get("text", "")[:800]
             parts.append(f"Source Document {i} {title} authored by {author}\n{text}")
         return "\n\n".join(parts)
+
 
 reasoning = Reasoning()

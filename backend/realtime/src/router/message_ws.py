@@ -3,11 +3,12 @@ import json
 import time
 
 import jwt
-from core.config import settings
-from core.database import db_client
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from loguru import logger
 from src.services.message_ws import message_manager
+
+from core.config import settings
+from core.database import db_client
 
 router = APIRouter()
 
@@ -27,7 +28,9 @@ async def websocket_endpoint(
             await websocket.close(code=1008)
             return
     except Exception:
-        logger.error("Lỗi xác thực kết nối do mã thông báo không hợp lệ hoặc đã hết hạn")
+        logger.error(
+            "Lỗi xác thực kết nối do mã thông báo không hợp lệ hoặc đã hết hạn"
+        )
         await websocket.close(code=1008)
         return
 

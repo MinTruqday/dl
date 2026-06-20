@@ -1,13 +1,14 @@
 from typing import Any, List, Optional
 
-from core.response import APIResponse
-from core.schemas.collector import CollectionRequest
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends, status
 from src.router.dependency import get_current_user, get_db, require_role
 from src.schemas.operation import CampaignRequest
 from src.services.operation import OperationService
 from src.services.user import UserService
+
+from core.response import APIResponse
+from core.schemas.collector import CollectionRequest
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/operations")
 

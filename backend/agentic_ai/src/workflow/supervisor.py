@@ -1,11 +1,10 @@
 import time
 from typing import Any, Dict, List, Literal
-from pydantic import BaseModel, Field
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from loguru import logger
-
+from pydantic import BaseModel, Field
 from src.agents.action import action
 from src.agents.code_interpreter import code_interpreter
 from src.agents.knowledge import knowledge
@@ -16,10 +15,12 @@ from src.agents.search_engine import search_engine
 from src.workflow.state import ActingState
 from uuid6 import uuid7
 
+
 class TaskEvaluation(BaseModel):
     status: Literal["PASS", "FAIL"] = Field()
     feedback: str = Field()
     revised_task: str = Field(default="")
+
 
 async def supervisor_node(state: ActingState):
     start_time = state.get("start_time")
@@ -75,6 +76,7 @@ async def supervisor_node(state: ActingState):
     next_node = route_map.get(agent_name, "action")
     return {"steps": steps, "current_step_index": idx, "next_node": next_node}
 
+
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     idx = state.get("current_step_index", 0)
     steps = state.get("steps", [])
@@ -87,12 +89,13 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     req_data = state.get("req_data", {})
 
     try:
-        from src.workflow.brain import llm
+        from src.workflow.graph import llm
+
         evaluator_llm = llm.with_structured_output(TaskEvaluation)
-        
+
         replan_count = 0
         final_res = ""
-        
+
         while replan_count < 3:
             if agent_name == "Action":
                 token = req_data.get("token")
@@ -104,12 +107,13 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 res = await tool_callable.execute(current_task)
 
             from src.core.prompt_registry import PromptType, prompt_registry
+
             prompt_template = prompt_registry.get(PromptType.SELF_REFLECTION)
             prompt = prompt_template.format(res=res)
-            
+
             try:
                 eval_res = await evaluator_llm.ainvoke(prompt)
-                
+
                 if eval_res.status == "FAIL":
                     replan_count += 1
                     logger.warning("Tự đánh giá thất bại, đang tạo lại kế hoạch")
@@ -138,20 +142,26 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "error": "Internal processing error",
         }
 
+
 async def code_interpreter_node(state: ActingState):
     return await execute_tool_node(state, code_interpreter, "CodeInterpreter")
+
 
 async def search_engine_node(state: ActingState):
     return await execute_tool_node(state, search_engine, "SearchEngine")
 
+
 async def action_agent_node(state: ActingState):
     return await execute_tool_node(state, action, "Action")
+
 
 async def knowledge_agent_node(state: ActingState):
     return await execute_tool_node(state, knowledge, "Knowledge")
 
+
 async def reasoning_agent_node(state: ActingState):
     return await execute_tool_node(state, reasoning, "Reasoning")
+
 
 async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])
@@ -162,9 +172,12 @@ async def trimmer_node(state: ActingState):
     if total_length > 12000:
         logger.info("Đang tổng hợp kết quả")
         try:
-            from src.workflow.brain import llm
+            from src.workflow.graph import llm
+
             combined = "\n\n".join(str(r) for r in results)
-            summary_prompt = f"Summarize concisely preserving facts IDs data:\n\n{combined[:20000]}"
+            summary_prompt = (
+                f"Summarize concisely preserving facts IDs data:\n\n{combined[:20000]}"
+            )
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception:
@@ -174,17 +187,22 @@ async def trimmer_node(state: ActingState):
 
     return {"next_node": "trimmer"}
 
+
 def trimmer_router(state: ActingState):
     return state.get("next_node", "aggregator")
+
 
 async def sanitizer_node(state: ActingState):
     return {"next_node": "trimmer"}
 
+
 async def aggregator_node(state: ActingState):
     return {"final_answer": ""}
 
+
 def router(state: ActingState):
     return state.get("next_node", "aggregator")
+
 
 workflow = StateGraph(ActingState)
 workflow.add_node("supervisor", supervisor_node)
@@ -223,6 +241,7 @@ workflow.add_edge("aggregator", END)
 memory = MemorySaver()
 supervisor_app = workflow.compile(checkpointer=memory, interrupt_before=["action"])
 
+
 class Supervisor:
     def __init__(self):
         self.app = supervisor_app
@@ -248,7 +267,7 @@ class Supervisor:
             "configurable": {"thread_id": session_id},
             "recursion_limit": 25,
         }
-        
+
         async for output in self.app.astream(initial_state, config=config):
             for node_name, state_update in output.items():
                 if "consolidated_results" in state_update:
@@ -258,11 +277,23 @@ class Supervisor:
                     steps = state_update.get("steps")
                     if steps and state_update.get("current_step_index") == 0:
                         yield {"type": "plan", "steps": steps}
-                elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
+                elif node_name in [
+                    "code_interpreter",
+                    "search_engine",
+                    "action",
+                    "knowledge",
+                    "reasoning",
+                ]:
                     if state_update.get("error"):
                         yield {"type": "error", "message": "Processing error"}
                     else:
-                        yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Completed")}
+                        yield {
+                            "type": "tool_result",
+                            "agent": node_name,
+                            "content": state_update.get(
+                                "last_agent_result", "Completed"
+                            ),
+                        }
 
                 elif node_name == "aggregator":
                     yield {"type": "status", "node": "Synthesizing information"}
@@ -273,5 +304,6 @@ class Supervisor:
         query = req_data.get("query", "")
         async for chunk in response_generator.aggregate_stream(query, final_results):
             yield {"type": "message", "chunk": chunk}
+
 
 supervisor = Supervisor()

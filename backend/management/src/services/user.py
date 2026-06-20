@@ -1,15 +1,16 @@
-from core.config import settings
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
-from core.schemas.user import RoleEnum
 from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
+
+from core.config import settings
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
+from core.schemas.user import RoleEnum
 
 
 class UserService:
@@ -119,6 +120,7 @@ class UserService:
         )
         try:
             import httpx
+
             from core.config import settings
 
             if settings.NOTIFICATION_URL:
@@ -166,9 +168,7 @@ class UserService:
                 "timestamp": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            "Tài khoản đã bị đình chỉ"
-        )
+        logger.info("Tài khoản đã bị đình chỉ")
         return {"message": "Tạm khóa tài khoản thành công"}
 
     @staticmethod
@@ -195,9 +195,7 @@ class UserService:
                 "timestamp": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            "Cập nhật quyền hiển thị tài khoản thành công"
-        )
+        logger.info("Cập nhật quyền hiển thị tài khoản thành công")
         return {"message": "Cập nhật trạng thái hiển thị thành công"}
 
     @staticmethod
@@ -222,9 +220,7 @@ class UserService:
                 "timestamp": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            "Xác minh danh tính thành công"
-        )
+        logger.info("Xác minh danh tính thành công")
         return {"message": "Đã cập nhật trạng thái xác minh"}
 
     @staticmethod
@@ -252,9 +248,7 @@ class UserService:
         ]
 
     @staticmethod
-    async def add_note(
-        user_id: str, note: str, current_user, db=None
-    ) -> dict:
+    async def add_note(user_id: str, note: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await RepositoryFactory.get("moderator_notes").insert_one(
@@ -266,9 +260,7 @@ class UserService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            "Đã thêm ghi chú vào hồ sơ"
-        )
+        logger.info("Đã thêm ghi chú vào hồ sơ")
         return {"message": "Ghi chú kiểm duyệt thành công"}
 
     @staticmethod
@@ -290,9 +282,7 @@ class UserService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except ValueError:
-                logger.warning(
-                    "Lỗi định dạng phân trang"
-                )
+                logger.warning("Lỗi định dạng phân trang")
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
             pipeline.append({"$skip": skip})
@@ -327,7 +317,9 @@ class UserService:
                     "description": r.get("description", ""),
                     "status": r.get("status", "pending"),
                     "reporter_name": (
-                        reporter.get("full_name", "Anonymous User") if reporter else "Anonymous User"
+                        reporter.get("full_name", "Anonymous User")
+                        if reporter
+                        else "Anonymous User"
                     ),
                     "created_at": (
                         r["created_at"].isoformat()
@@ -355,9 +347,7 @@ class UserService:
                 }
             },
         )
-        logger.info(
-            "Đã giải quyết báo cáo vi phạm"
-        )
+        logger.info("Đã giải quyết báo cáo vi phạm")
         return {"message": "Xử lý báo cáo vi phạm thành công"}
 
     @staticmethod
@@ -386,7 +376,11 @@ class UserService:
                 else (
                     "User Account"
                     if "target_user_id" in l
-                    else "Financial Transaction" if "withdrawal_id" in l else "General Object"
+                    else (
+                        "Financial Transaction"
+                        if "withdrawal_id" in l
+                        else "General Object"
+                    )
                 )
             )
             result.append(
@@ -434,7 +428,9 @@ class UserService:
         return [
             {
                 "_id": str(u["_id"]),
-                "full_name": u.get("full_name") or u.get("username") or "Anonymous User",
+                "full_name": u.get("full_name")
+                or u.get("username")
+                or "Anonymous User",
                 "username": u.get("username", ""),
                 "slug": u.get("slug", ""),
                 "avatar_url": u.get("avatar_url"),

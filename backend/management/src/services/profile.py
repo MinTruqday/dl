@@ -1,7 +1,9 @@
-from core.database import db_client
-from fastapi import HTTPException
 from datetime import datetime, timezone
+
+from fastapi import HTTPException
 from loguru import logger
+
+from core.database import db_client
 
 
 class ProfileService:
@@ -38,7 +40,9 @@ class ProfileService:
             {"_id": str(current_user.id)}, {"password_hash": 0}
         )
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin hồ sơ")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy thông tin hồ sơ"
+            )
         user["_id"] = str(user["_id"])
         return user
 
@@ -103,9 +107,7 @@ class ProfileService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         if str(current_user.id) == target_id:
-            raise HTTPException(
-                status_code=400, detail="Không thể tự chặn chính mình"
-            )
+            raise HTTPException(status_code=400, detail="Không thể tự chặn chính mình")
         target_user = await db["users"].find_one({"_id": target_id})
         if not target_user:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản đích")

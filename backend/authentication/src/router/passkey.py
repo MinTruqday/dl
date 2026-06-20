@@ -1,10 +1,11 @@
 from typing import Any
 
+from fastapi import APIRouter, Depends
+from src.services.passkey import PasskeyService
+
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import PasskeyFinishRequest, PasskeyRequest
-from fastapi import APIRouter, Depends
-from src.services.passkey import PasskeyService
 
 router = APIRouter(prefix="/auth/passkey")
 

@@ -5,11 +5,12 @@ import random
 from datetime import datetime, timezone
 
 import httpx
-from core.config import settings
-from core.database import db_client
 from fastapi import HTTPException, Response
 from loguru import logger
 from src.schemas.wallet import Transaction, TransactionType
+
+from core.config import settings
+from core.database import db_client
 
 
 class DepositService:
@@ -126,9 +127,7 @@ class DepositService:
                 {"order_code": order_code}, {"$set": {"status": "FAILED"}}
             )
             logger.error("Lỗi mạng kết nối cổng thanh toán")
-            raise HTTPException(
-                status_code=500, detail="Lỗi kết nối cổng thanh toán"
-            )
+            raise HTTPException(status_code=500, detail="Lỗi kết nối cổng thanh toán")
 
     @staticmethod
     async def deposit_webhook(request, db=None):
@@ -147,9 +146,12 @@ class DepositService:
             try:
                 received_signature = data.get("signature", "")
                 if not received_signature:
-                    logger.warning("Từ chối thông báo cổng thanh toán do thiếu chữ ký xác thực")
+                    logger.warning(
+                        "Từ chối thông báo cổng thanh toán do thiếu chữ ký xác thực"
+                    )
                     raise HTTPException(
-                        status_code=400, detail="Lỗi xác minh giao dịch do thiếu chữ ký bảo mật"
+                        status_code=400,
+                        detail="Lỗi xác minh giao dịch do thiếu chữ ký bảo mật",
                     )
 
                 expected_signature = DepositService._generate_payos_signature(
@@ -158,7 +160,8 @@ class DepositService:
                 if received_signature != expected_signature:
                     logger.warning("Từ chối thông báo cổng thanh toán do sai chữ ký số")
                     raise HTTPException(
-                        status_code=400, detail="Xác minh giao dịch thất bại do sai chữ ký số"
+                        status_code=400,
+                        detail="Xác minh giao dịch thất bại do sai chữ ký số",
                     )
 
                 paid_amount = webhook_data.get("amount", 0)
@@ -180,7 +183,9 @@ class DepositService:
 
         order = await db["orders"].find_one({"order_code": order_code})
         if not order:
-            raise HTTPException(status_code=404, detail="Không tìm thấy giao dịch nạp tiền")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy giao dịch nạp tiền"
+            )
         if order.get("user_id") != str(current_user.id):
             raise HTTPException(
                 status_code=403, detail="Không có quyền xem chi tiết giao dịch này"
@@ -227,16 +232,12 @@ class DepositService:
                     "amount_paid": payment_data.get("amountPaid", 0),
                 }
             else:
-                raise HTTPException(
-                    status_code=400, detail="Lỗi xác minh giao dịch"
-                )
+                raise HTTPException(status_code=400, detail="Lỗi xác minh giao dịch")
         except HTTPException:
             raise
         except Exception:
             logger.error("Lỗi xác minh trạng thái giao dịch")
-            raise HTTPException(
-                status_code=500, detail="Lỗi xác minh giao dịch"
-            )
+            raise HTTPException(status_code=500, detail="Lỗi xác minh giao dịch")
 
     @staticmethod
     async def process_success_order(
@@ -266,9 +267,7 @@ class DepositService:
             return
 
         if paid_amount is not None and paid_amount < order.get("amount", 0):
-            logger.warning(
-                "Số tiền nạp không đủ để hoàn thành yêu cầu"
-            )
+            logger.warning("Số tiền nạp không đủ để hoàn thành yêu cầu")
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -312,6 +311,7 @@ class DepositService:
 
             try:
                 import httpx
+
                 from core.config import settings
 
                 if settings.NOTIFICATION_URL:
@@ -328,14 +328,14 @@ class DepositService:
                         )
             except Exception:
                 logger.warning("Lỗi gửi thông báo nạp tiền thành công")
-            logger.info(
-                "Đã xác minh và nạp tiền vào tài khoản"
-            )
+            logger.info("Đã xác minh và nạp tiền vào tài khoản")
         except Exception:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi hoàn tất giao dịch nạp tiền")
-            raise HTTPException(status_code=500, detail="Tính năng thanh toán đang bảo trì")
+            raise HTTPException(
+                status_code=500, detail="Tính năng thanh toán đang bảo trì"
+            )
         finally:
             if should_close_session:
                 await session.end_session()

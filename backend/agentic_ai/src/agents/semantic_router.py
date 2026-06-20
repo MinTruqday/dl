@@ -1,16 +1,22 @@
-from core.config import settings
+from typing import Literal
+
 from huggingface_hub import AsyncInferenceClient
 from langchain_core.prompts import PromptTemplate
 from loguru import logger
 from pydantic import BaseModel, Field
-from typing import Literal
 from src.core.prompt_registry import PromptType, prompt_registry
 from src.utils.hf import HFInferenceChat
 
+from core.config import settings
+
+
 class RouteDecision(BaseModel):
     reasoning: str = Field(description="Quá trình suy luận từng bước")
-    route: Literal["action", "knowledge", "chat"] = Field(description="Định tuyến được chọn: hành động, kiến thức, hoặc trò chuyện")
+    route: Literal["action", "knowledge", "chat"] = Field(
+        description="Định tuyến được chọn: hành động, kiến thức, hoặc trò chuyện"
+    )
     answer: str = Field(default="", description="Trả về chuỗi rỗng nếu không phải chat")
+
 
 class SemanticRouter:
     def __init__(self):
@@ -33,8 +39,10 @@ class SemanticRouter:
         )
         try:
             structured_llm = self.router_llm.with_structured_output(RouteDecision)
-            res: RouteDecision = await structured_llm.ainvoke(prompt.format(question=query))
-            
+            res: RouteDecision = await structured_llm.ainvoke(
+                prompt.format(question=query)
+            )
+
             route = res.route.lower()
             if route not in ["chat", "action", "knowledge"]:
                 route = "knowledge"
@@ -44,5 +52,6 @@ class SemanticRouter:
         except Exception:
             logger.exception("Lỗi điều hướng ngữ nghĩa")
             return {"route": "knowledge", "answer": ""}
+
 
 semantic_router = SemanticRouter()

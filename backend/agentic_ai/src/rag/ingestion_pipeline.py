@@ -2,13 +2,14 @@ import os
 import uuid
 from typing import Dict, List, Optional
 
-from core.config import settings
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.rag.chunker import chunker
 from src.rag.embedder import embedding_service
 from src.store.vector_store import vector_store
 from uuid6 import uuid7
+
+from core.config import settings
 
 
 class IngestionPipeline:
@@ -61,7 +62,8 @@ class IngestionPipeline:
         async def get_summary_chunk(first_pages, extract_method):
             try:
                 from langchain_core.prompts import PromptTemplate
-                from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+                from langchain_huggingface import (ChatHuggingFace,
+                                                   HuggingFaceEndpoint)
 
                 llama_model = settings.LLAMA_MODEL
                 hf_token = settings.HF_TOKEN
@@ -135,7 +137,7 @@ class IngestionPipeline:
             raise ValueError("Lỗi phân mảnh tài liệu")
 
         texts = [c["text"] for c in chunks]
-        embeddings = await embedding_service.embed_batch(texts)
+        embeddings = await embedding.embed_batch(texts)
         ids = [c["id"] for c in chunks]
         metadatas = [c["metadata"] for c in chunks]
 

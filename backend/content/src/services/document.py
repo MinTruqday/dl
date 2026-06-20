@@ -7,21 +7,18 @@ from datetime import datetime, timezone
 from typing import Any, List
 
 from bson import ObjectId
+from fastapi import HTTPException, Query, status
+from loguru import logger
+from passlib.context import CryptContext
+from src.core.publication import trigger_document_publish_job
+from src.schemas.document import (DocumentContentUpdate, DocumentCreate,
+                                  DocumentInDB, DocumentStatus)
+from uuid6 import uuid7
+
 from core.config import settings
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 from core.storage import upload_file
-from fastapi import HTTPException, status, Query
-from loguru import logger
-from passlib.context import CryptContext
-from src.core.publication import trigger_document_publish_job
-from src.schemas.document import (
-    DocumentContentUpdate,
-    DocumentCreate,
-    DocumentInDB,
-    DocumentStatus,
-)
-from uuid6 import uuid7
 
 
 def serialize_document(document):
@@ -102,7 +99,9 @@ class DocumentService:
         docs_collection = RepositoryFactory.get("documents")
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
-            raise HTTPException(status_code=400, detail="Đường dẫn định tuyến đã được sử dụng")
+            raise HTTPException(
+                status_code=400, detail="Đường dẫn định tuyến đã được sử dụng"
+            )
 
         doc_dict = doc_in.model_dump()
         if not doc_dict.get("publisher_name"):
@@ -220,9 +219,7 @@ class DocumentService:
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
             except Exception as e:
-                logger.error(
-                    "Lỗi gửi chuỗi thông báo cập nhật tài liệu"
-                )
+                logger.error("Lỗi gửi chuỗi thông báo cập nhật tài liệu")
 
         logger.info("Cập nhật nội dung tài liệu thành công")
 
@@ -345,7 +342,9 @@ class DocumentService:
             and document.get("status") != DocumentStatus.PUBLISHED
         ):
             if not current_user or current_user.role != "ADMIN":
-                raise HTTPException(status_code=403, detail="Tài liệu đang ở trạng thái nháp")
+                raise HTTPException(
+                    status_code=403, detail="Tài liệu đang ở trạng thái nháp"
+                )
 
         if (
             document.get("is_password_protected")
@@ -373,7 +372,10 @@ class DocumentService:
                 if rl_key and hasattr(db_client, "redis") and db_client.redis:
                     await db_client.redis.incr(rl_key)
                     await db_client.redis.expire(rl_key, 900)
-                raise HTTPException(status_code=403, detail="Thông tin xác thực không khớp với hồ sơ bảo mật tài liệu")
+                raise HTTPException(
+                    status_code=403,
+                    detail="Thông tin xác thực không khớp với hồ sơ bảo mật tài liệu",
+                )
 
             if rl_key and hasattr(db_client, "redis") and db_client.redis:
                 await db_client.redis.delete(rl_key)
@@ -396,16 +398,18 @@ class DocumentService:
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
-        logger.info(
-            "Đã chuyển tài liệu vào thùng rác"
-        )
+        logger.info("Đã chuyển tài liệu vào thùng rác")
         return {"message": "Đã chuyển tài liệu vào thùng rác"}
 
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         res = await RepositoryFactory.get("documents").update_one(
-            {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": True},
+            {
+                "_id": document_id,
+                "creator_id": str(current_user.id),
+                "is_deleted": True,
+            },
             {"$set": {"is_deleted": False, "deleted_at": None}},
         )
         if res.modified_count == 0:
@@ -487,7 +491,9 @@ class DocumentService:
             logger.warning("Lỗi đồng bộ thông tin tác giả")
 
         if not target_user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản với email này")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy tài khoản với email này"
+            )
 
         if str(target_user["_id"]) in document.get("coauthors", []):
             return {"message": "Tài khoản đã là cộng tác viên"}
@@ -495,9 +501,7 @@ class DocumentService:
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}}
         )
-        logger.info(
-            "Gửi lời mời cộng tác thành công"
-        )
+        logger.info("Gửi lời mời cộng tác thành công")
         return {"message": "Bổ nhiệm cộng tác viên thành công"}
 
     @staticmethod
@@ -582,7 +586,6 @@ class DocumentService:
 
         document["has_purchased"] = has_purchased
         return document
-
 
     @staticmethod
     async def get_document_preview(slug: str) -> dict:
@@ -747,9 +750,7 @@ class DocumentService:
                 "timestamp": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            "Ghi nhận quyết định kiểm duyệt tài liệu thành công"
-        )
+        logger.info("Ghi nhận quyết định kiểm duyệt tài liệu thành công")
         return {"message": "Cập nhật trạng thái kiểm duyệt tài liệu thành công"}
 
     @staticmethod
@@ -768,9 +769,7 @@ class DocumentService:
                 }
             },
         )
-        logger.info(
-            "Giải quyết tranh chấp bản quyền thành công"
-        )
+        logger.info("Giải quyết tranh chấp bản quyền thành công")
         return {"message": "Đã giải quyết tranh chấp bản quyền"}
 
     @staticmethod

@@ -1,18 +1,17 @@
 import json
 from typing import Any, List
 
+from fastapi import APIRouter
+from src.schemas.message import (ConversationResponse, MessageCreate,
+                                 MessageResponse)
+from src.services.message import MessageService
+
 from core.database import db_client
-from core.dependency import AuthenticatedUser, Depends, Header, HTTPException, Query
+from core.dependency import (AuthenticatedUser, Depends, Header, HTTPException,
+                             Query)
 from core.dependency import get_current_user_from_header as get_current_user
 from core.repositories.base_repository import RepositoryFactory
 from core.response import APIResponse
-from fastapi import APIRouter
-from src.schemas.message import (
-    ConversationResponse,
-    MessageCreate,
-    MessageResponse,
-)
-from src.services.message import MessageService
 
 router = APIRouter(prefix="/messages")
 
@@ -50,7 +49,9 @@ async def send_message(req: MessageCreate, current_user=Depends(get_current_user
     await publish_personal_message(
         {"type": "new_message", "data": msg}, req.receiver_id
     )
-    return APIResponse(data=msg, message="Gửi tin nhắn trực tiếp thành công", status=201)
+    return APIResponse(
+        data=msg, message="Gửi tin nhắn trực tiếp thành công", status=201
+    )
 
 
 @router.get("/{other_user_id}", response_model=APIResponse[Any])
@@ -86,7 +87,9 @@ async def toggle_pin(message_id: str, current_user=Depends(get_current_user)):
             message="Không tìm thấy tin nhắn hoặc không có quyền sửa", status=404
         )
     if result == "limit_reached":
-        return APIResponse(message="Vượt quá giới hạn số lượng tin nhắn ghim", status=400)
+        return APIResponse(
+            message="Vượt quá giới hạn số lượng tin nhắn ghim", status=400
+        )
     other_id = (
         result["receiver_id"]
         if result["sender_id"] == current_user.id
@@ -94,7 +97,9 @@ async def toggle_pin(message_id: str, current_user=Depends(get_current_user)):
     )
     await publish_personal_message({"type": "message_pinned", "data": result}, other_id)
     return APIResponse(
-        data=result["is_pinned"], message="Cập nhật trạng thái ghim tin nhắn thành công", status=200
+        data=result["is_pinned"],
+        message="Cập nhật trạng thái ghim tin nhắn thành công",
+        status=200,
     )
 
 
@@ -107,16 +112,16 @@ async def edit_message(
         return APIResponse(message="Nội dung tin nhắn không được để trống", status=400)
     result = await MessageService.edit_message(message_id, content, current_user)
     if not result:
-        return APIResponse(
-            message="Không thể chỉnh sửa tin nhắn", status=403
-        )
+        return APIResponse(message="Không thể chỉnh sửa tin nhắn", status=403)
     other_id = (
         result["receiver_id"]
         if result["sender_id"] == current_user.id
         else result["sender_id"]
     )
     await publish_personal_message({"type": "message_edited", "data": result}, other_id)
-    return APIResponse(data=result, message="Cập nhật nội dung tin nhắn thành công", status=200)
+    return APIResponse(
+        data=result, message="Cập nhật nội dung tin nhắn thành công", status=200
+    )
 
 
 @router.delete("/{message_id}", response_model=APIResponse[Any])
@@ -152,9 +157,7 @@ async def add_reaction(
     reaction = req.get("reaction")
     result = await MessageService.add_reaction(message_id, reaction, current_user)
     if not result:
-        return APIResponse(
-            message="Thao tác tương tác không hợp lệ", status=400
-        )
+        return APIResponse(message="Thao tác tương tác không hợp lệ", status=400)
     other_id = (
         result["receiver_id"]
         if result["sender_id"] == current_user.id
@@ -184,7 +187,9 @@ async def share_document(
         return APIResponse(message="Lỗi chia sẻ do thiếu mã tài liệu", status=400)
     result = await MessageService.share_document(receiver_id, document_id, current_user)
     if not result:
-        return APIResponse(message="Không tìm thấy tài liệu trong kho lưu trữ", status=404)
+        return APIResponse(
+            message="Không tìm thấy tài liệu trong kho lưu trữ", status=404
+        )
     await publish_personal_message({"type": "new_message", "data": result}, receiver_id)
     return APIResponse(data=result, message="Chia sẻ tài liệu thành công", status=201)
 
@@ -223,7 +228,8 @@ async def get_blocked_status(
         str(current_user.id), other_user_id
     )
     return APIResponse(
-        data={"is_blocked": blocked}, message="Xác minh trạng thái hạn chế tương tác thành công"
+        data={"is_blocked": blocked},
+        message="Xác minh trạng thái hạn chế tương tác thành công",
     )
 
 
@@ -266,7 +272,9 @@ async def create_group(req: dict, current_user=Depends(get_current_user)):
     if not group_name:
         return APIResponse(message="Lỗi tạo nhóm do tên nhóm không hợp lệ", status=400)
     result = await MessageService.create_group(group_name, member_ids, current_user)
-    return APIResponse(data=result, message="Tạo nhóm trò chuyện thành công", status=201)
+    return APIResponse(
+        data=result, message="Tạo nhóm trò chuyện thành công", status=201
+    )
 
 
 @router.post("/{other_user_id}/drafts", response_model=APIResponse[Any])
@@ -305,7 +313,9 @@ async def toggle_self_destruct(
 @router.post("/{other_user_id}/mute", response_model=APIResponse[Any])
 async def toggle_mute(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.toggle_mute(other_user_id, current_user)
-    return APIResponse(data=result, message="Cập nhật cấu hình thông báo cuộc trò chuyện thành công")
+    return APIResponse(
+        data=result, message="Cập nhật cấu hình thông báo cuộc trò chuyện thành công"
+    )
 
 
 @router.get("/{other_user_id}/settings", response_model=APIResponse[Any])

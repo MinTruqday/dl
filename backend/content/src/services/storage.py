@@ -1,16 +1,14 @@
-from core.config import settings
 from datetime import datetime, timezone
 from typing import List, Optional
+
 from fastapi import Query
 from loguru import logger
+from src.schemas.storage import (StorageItemCreate, StorageItemInDB,
+                                 StorageItemUpdate)
 
+from core.config import settings
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
-from src.schemas.storage import (
-    StorageItemCreate,
-    StorageItemInDB,
-    StorageItemUpdate,
-)
 
 
 class StorageService:

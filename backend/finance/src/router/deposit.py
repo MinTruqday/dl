@@ -1,11 +1,12 @@
 from typing import Any
 
-from core.dependency import get_current_user, get_db
-from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from src.services.deposit import DepositService
+
+from core.dependency import get_current_user, get_db
+from core.response import APIResponse
+from core.schemas.user import UserInDB
 
 router = APIRouter(prefix="/deposits")
 

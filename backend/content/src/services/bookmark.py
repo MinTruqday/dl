@@ -1,12 +1,13 @@
 import uuid
 from datetime import datetime, timezone
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
+
 from core.config import settings
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 
 class BookmarkService:
@@ -140,7 +141,9 @@ class BookmarkService:
             },
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thư mục dấu trang")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy thư mục dấu trang"
+            )
         return {"message": "Cập nhật thư mục dấu trang thành công"}
 
     @staticmethod
@@ -151,5 +154,7 @@ class BookmarkService:
             {"_id": folder_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thư mục dấu trang")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy thư mục dấu trang"
+            )
         return {"message": "Xóa vĩnh viễn thư mục dấu trang thành công"}

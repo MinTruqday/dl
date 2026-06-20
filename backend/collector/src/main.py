@@ -3,10 +3,12 @@ import contextvars
 import sys
 import uuid
 
-from core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+
+from core.middleware import (add_trace_id_header, trace_id_ctx_var,
+                             trace_id_filter)
 
 logger.remove()
 logger.add(
@@ -16,8 +18,9 @@ logger.add(
     level="INFO",
 )
 
-from core.config import settings
 from src.router.collector import router
+
+from core.config import settings
 
 app = FastAPI(title="DocLib Crawler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
@@ -30,7 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/collectors")
+app.include(router, prefix="/collectors")
 
 
 @app.on_event("startup")
@@ -43,4 +46,7 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "The automated data collection service is currently operating normally and functioning as expected", "service": "crawler_service"}
+    return {
+        "status": "The automated data collection service is currently operating normally and functioning as expected",
+        "service": "crawler",
+    }

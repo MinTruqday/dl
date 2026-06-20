@@ -1,11 +1,12 @@
 import uuid
 from datetime import datetime, timezone
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
+
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 
 class ReviewService:
@@ -52,9 +53,7 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("typo_reports").insert_one(report)
-        logger.info(
-            "Ghi nhận báo cáo lỗi chính tả thành công"
-        )
+        logger.info("Ghi nhận báo cáo lỗi chính tả thành công")
         return {"message": "Ghi nhận đóng góp cộng tác thành công"}
 
     @staticmethod
@@ -107,9 +106,7 @@ class ReviewService:
             {"$set": review_item},
             upsert=True,
         )
-        logger.info(
-            "Thêm đánh giá và xếp hạng tài liệu thành công"
-        )
+        logger.info("Thêm đánh giá và xếp hạng tài liệu thành công")
         return review_item
 
     @staticmethod

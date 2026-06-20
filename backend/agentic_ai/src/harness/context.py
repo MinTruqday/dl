@@ -48,6 +48,7 @@ class ContextHarness:
         if self._redis_client is None:
             try:
                 import redis.asyncio as aioredis
+
                 from core.config import settings
 
                 self._redis_client = aioredis.from_url(
@@ -170,4 +171,4 @@ class ContextHarness:
         return req
 
 
-context_harness = ContextHarness()
+context = ContextHarness()

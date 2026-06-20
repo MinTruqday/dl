@@ -3,11 +3,12 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from bson import ObjectId
+from loguru import logger
+from uuid6 import uuid7
+
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 from core.schemas.user import UserInDB
-from loguru import logger
-from uuid6 import uuid7
 
 
 class TelemetryService:
@@ -29,9 +30,7 @@ class TelemetryService:
             "timestamp": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("telemetry").insert_one(telemetry_event)
-        logger.debug(
-            "Ghi nhận sự kiện thành công"
-        )
+        logger.debug("Ghi nhận sự kiện thành công")
         return {"status": "success"}
 
     @staticmethod

@@ -4,10 +4,11 @@ import uuid
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
+
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 
 class VersionsService:
@@ -63,7 +64,9 @@ class VersionsService:
             {"_id": ObjectId(version_id), "creator_id": str(current_user.id)}
         )
         if not version:
-            raise HTTPException(status_code=404, detail="Không tìm thấy bản chụp lịch sử")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy bản chụp lịch sử"
+            )
         snapshot = version.get("snapshot")
         if not snapshot:
             update_data = {
@@ -75,7 +78,5 @@ class VersionsService:
         await RepositoryFactory.get("documents").update_one(
             {"_id": version["document_id"]}, {"$set": update_data}
         )
-        logger.info(
-            "Khôi phục phiên bản lịch sử tài liệu thành công"
-        )
+        logger.info("Khôi phục phiên bản lịch sử tài liệu thành công")
         return {"message": "Khôi phục phiên bản lịch sử thành công"}

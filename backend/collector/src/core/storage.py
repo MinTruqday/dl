@@ -2,8 +2,9 @@ import os
 
 import aioboto3
 from botocore.exceptions import ClientError
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 
 class CollectorStorage:

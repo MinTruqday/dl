@@ -1,11 +1,12 @@
-from core.config import settings
 import json
 from datetime import datetime, timezone
 
-from core.database import db_client
-from fastapi import HTTPException, status, Query
+from fastapi import HTTPException, Query, status
 from loguru import logger
 from src.schemas.wallet import Transaction, TransactionType
+
+from core.config import settings
+from core.database import db_client
 
 
 class WalletService:
@@ -34,7 +35,7 @@ class WalletService:
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,
-                        detail="Truy cập bị hạn chế, vui lòng thử lại sau 5 phút"
+                        detail="Truy cập bị hạn chế, vui lòng thử lại sau 5 phút",
                     )
             except HTTPException:
                 raise
@@ -49,13 +50,15 @@ class WalletService:
                 if not is_locked:
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="Mã giảm giá đang được xử lý trong một giao dịch khác"
+                        detail="Mã giảm giá đang được xử lý trong một giao dịch khác",
                     )
             except HTTPException:
                 raise
             except Exception:
                 logger.error("Lỗi bảo mật phiên đăng nhập")
-                raise HTTPException(status_code=500, detail="Lỗi kết nối bộ đệm lưu trữ")
+                raise HTTPException(
+                    status_code=500, detail="Lỗi kết nối bộ đệm lưu trữ"
+                )
 
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -75,12 +78,15 @@ class WalletService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=404, detail="Mã giảm giá không hợp lệ hoặc không tồn tại"
+                    status_code=404,
+                    detail="Mã giảm giá không hợp lệ hoặc không tồn tại",
                 )
             if coupon.get("is_used"):
                 if should_close_session:
                     await session.abort_transaction()
-                raise HTTPException(status_code=400, detail="Mã giảm giá đã được sử dụng")
+                raise HTTPException(
+                    status_code=400, detail="Mã giảm giá đã được sử dụng"
+                )
 
             bonus_dl = coupon.get("amount_dl", coupon.get("amount_dls", 0))
             result = await WalletRepository.mark_coupon_as_used(
@@ -111,6 +117,7 @@ class WalletService:
 
             try:
                 import httpx
+
                 from core.config import settings
 
                 if settings.NOTIFICATION_URL:
@@ -127,9 +134,7 @@ class WalletService:
                         )
             except Exception:
                 logger.warning("Lỗi gửi thông báo thành công")
-            logger.info(
-                "Đổi mã giảm giá thành công"
-            )
+            logger.info("Đổi mã giảm giá thành công")
             return {
                 "message": "Đổi mã giảm giá thành công",
                 "bonus_dl": bonus_dl,
@@ -141,7 +146,10 @@ class WalletService:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi đổi mã giảm giá")
-            raise HTTPException(status_code=500, detail="Tính năng thanh toán đang bảo trì, vui lòng thử lại sau")
+            raise HTTPException(
+                status_code=500,
+                detail="Tính năng thanh toán đang bảo trì, vui lòng thử lại sau",
+            )
         finally:
             if should_close_session:
                 await session.end_session()

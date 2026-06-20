@@ -3,15 +3,17 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from core.config import settings
-from core.database import db_client
-from core.schemas.user import RoleEnum, UserCreate, UserInDB
-from core.security import create_access_token, get_password_hash, verify_password
 from fastapi import HTTPException, status
 from loguru import logger
 from src.repositories.auth_repository import AuthRepository
 from src.services.email import EmailService
 from uuid6 import uuid7
+
+from core.config import settings
+from core.database import db_client
+from core.schemas.user import RoleEnum, UserCreate, UserInDB
+from core.security import (create_access_token, get_password_hash,
+                           verify_password)
 
 
 class AuthService:
@@ -54,7 +56,9 @@ class AuthService:
                 if resp.status_code == 400:
 
                     detail = (
-                        resp.json().get("detail").replace(".", "") if resp.json() else "An unexpected system error occurred while attempting to process the registration request"
+                        resp.json().get("detail").replace(".", "")
+                        if resp.json()
+                        else "An unexpected system error occurred while attempting to process the registration request"
                     )
                     raise HTTPException(status_code=400, detail=detail)
                 elif resp.status_code != 201:
@@ -115,9 +119,7 @@ class AuthService:
             pass
 
         if not user_doc:
-            raise HTTPException(
-                status_code=401, detail="Không tìm thấy tài khoản"
-            )
+            raise HTTPException(status_code=401, detail="Không tìm thấy tài khoản")
 
         auth_cred = await AuthRepository.get_auth_credential_by_id(
             str(user_doc["_id"]), db=db
@@ -134,12 +136,14 @@ class AuthService:
                 },
                 db=db,
             )
-            logger.warning(
-                "Đăng nhập thất bại do sai thông tin xác thực"
+            logger.warning("Đăng nhập thất bại do sai thông tin xác thực")
+            raise HTTPException(
+                status_code=401, detail="Thông tin đăng nhập không chính xác"
             )
-            raise HTTPException(status_code=401, detail="Thông tin đăng nhập không chính xác")
         if not user_doc.get("is_active", True):
-            raise HTTPException(status_code=403, detail="Tài khoản đang bị khóa hoặc không hoạt động")
+            raise HTTPException(
+                status_code=403, detail="Tài khoản đang bị khóa hoặc không hoạt động"
+            )
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
         await AuthRepository.register_session(user_id_str, session_id, client_ip)
@@ -243,7 +247,9 @@ class AuthService:
     @staticmethod
     async def issue_token_for_user(user_doc: dict, client_ip: str, db=None):
         if not user_doc.get("is_active", True):
-            raise HTTPException(status_code=403, detail="Tài khoản đang bị khóa hoặc không hoạt động")
+            raise HTTPException(
+                status_code=403, detail="Tài khoản đang bị khóa hoặc không hoạt động"
+            )
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
         await AuthRepository.register_session(user_id_str, session_id, client_ip)

@@ -1,14 +1,17 @@
 import os
 from typing import Dict, List
 
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 try:
     from mem0 import Memory
+
     HAS_MEM0 = True
 except ImportError:
     HAS_MEM0 = False
+
 
 class Mem0Manager:
     def __init__(self):
@@ -46,6 +49,7 @@ class Mem0Manager:
             return
         try:
             import asyncio
+
             await asyncio.to_thread(self.memory.add, messages, user_id=user_id)
         except Exception:
             logger.exception("Record storage failed")
@@ -55,6 +59,7 @@ class Mem0Manager:
             return
         try:
             import asyncio
+
             await asyncio.to_thread(
                 self.memory.update, memory_id=memory_id, data=new_content
             )
@@ -66,6 +71,7 @@ class Mem0Manager:
             return
         try:
             import asyncio
+
             await asyncio.to_thread(self.memory.delete, memory_id=memory_id)
         except Exception:
             logger.exception("Lỗi xóa bản ghi bộ nhớ")
@@ -75,6 +81,7 @@ class Mem0Manager:
             return
         try:
             import asyncio
+
             results = await asyncio.to_thread(
                 self.memory.search, query=new_content, user_id=user_id, limit=3
             )
@@ -91,6 +98,7 @@ class Mem0Manager:
             return ""
         try:
             import asyncio
+
             results = await asyncio.to_thread(
                 self.memory.search, query=query, user_id=user_id
             )
@@ -108,5 +116,6 @@ class Mem0Manager:
         except Exception:
             logger.exception("Lỗi truy xuất dữ liệu bộ nhớ")
             return ""
+
 
 mem0_manager = Mem0Manager()

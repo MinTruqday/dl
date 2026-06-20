@@ -4,9 +4,7 @@ from pydantic import BaseModel, Field
 class CreateDocument(BaseModel):
     title: str = Field(description="Tiêu đề tài liệu")
     description: str = Field(description="Bản tóm tắt ngắn của tài liệu")
-    format: str = Field(
-        description="Phải là định dạng JSON hoặc LaTeX"
-    )
+    format: str = Field(description="Phải là định dạng JSON hoặc LaTeX")
     content: str = Field(
         description=(
             "The main body of the document "

@@ -2,11 +2,12 @@ import json
 import math
 from datetime import datetime, timezone
 
+from fastapi import HTTPException
+from loguru import logger
+
 from core.config import settings
 from core.database import db_client
 from core.schemas.quota import QuotaLimit
-from fastapi import HTTPException
-from loguru import logger
 
 
 class QuotaService:
@@ -98,8 +99,7 @@ class QuotaService:
 
         if current_reqs >= limits.daily_requests:
             raise HTTPException(
-                status_code=429,
-                detail="Đã vượt quá giới hạn yêu cầu trong ngày"
+                status_code=429, detail="Đã vượt quá giới hạn yêu cầu trong ngày"
             )
 
         token_key = f"quota:{user_id}:{feature}:token"
@@ -108,8 +108,7 @@ class QuotaService:
 
         if current_tokens >= limits.daily_tokens:
             raise HTTPException(
-                status_code=429,
-                detail="Đã hết hạn mức sử dụng mã thông báo trong ngày"
+                status_code=429, detail="Đã hết hạn mức sử dụng mã thông báo trong ngày"
             )
         return limits
 

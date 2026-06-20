@@ -1,10 +1,11 @@
 from typing import Any
 
+from fastapi import APIRouter, Depends, Query
+from src.services.wallet import WalletService
+
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import UserInDB
-from fastapi import APIRouter, Depends, Query
-from src.services.wallet import WalletService
 
 router = APIRouter(prefix="/wallets")
 

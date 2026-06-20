@@ -1,10 +1,11 @@
 import asyncio
 import io
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
+
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 try:
     import PyPDF2
@@ -34,9 +35,7 @@ class ExportService:
             {"_id": str(document_id)}
         )
         if not document:
-            raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài liệu"
-            )
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         user_email = (
             current_user.email
             if hasattr(current_user, "email") and current_user.email
@@ -46,10 +45,7 @@ class ExportService:
         if (
             document.get("is_premium")
             and document.get("creator_id") != user_id
-            and (
-                not hasattr(current_user, "role")
-                or current_user.role != "ADMIN"
-            )
+            and (not hasattr(current_user, "role") or current_user.role != "ADMIN")
         ):
             purchases_col = RepositoryFactory.get("purchases")
             purchase = await purchases_col.find_one(
@@ -57,9 +53,12 @@ class ExportService:
             )
             if not purchase:
                 raise HTTPException(
-                    status_code=403, detail="Yêu cầu có bản quyền hoặc xác nhận mua hàng"
+                    status_code=403,
+                    detail="Yêu cầu có bản quyền hoặc xác nhận mua hàng",
                 )
-        watermark_text = "Copyright Protected Material - Licensed exclusively for personal usage"
+        watermark_text = (
+            "Copyright Protected Material - Licensed exclusively for personal usage"
+        )
 
         def generate_pdf_sync(db=None):
             try:
@@ -116,7 +115,5 @@ class ExportService:
             raise HTTPException(
                 status_code=500, detail="Lỗi xuất tài liệu bảo vệ bản quyền"
             )
-        logger.info(
-            "Xuất tài liệu sang định dạng ePub thành công"
-        )
+        logger.info("Xuất tài liệu sang định dạng ePub thành công")
         return pdf_data

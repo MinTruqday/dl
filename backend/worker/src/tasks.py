@@ -3,8 +3,9 @@ import subprocess
 import tempfile
 
 from celery import Celery
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 CELERY_BROKER_URL = settings.RABBITMQ_URI
 CELERY_RESULT_BACKEND = settings.REDIS_URI
@@ -128,5 +129,5 @@ def compile_document_tectonic(document_id, tex_content):
             return {
                 "status": "error",
                 "error": "Lỗi xử lý tài liệu, vui lòng thử lại sau",
-                "document_id": document_id
+                "document_id": document_id,
             }

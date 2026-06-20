@@ -3,8 +3,10 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 import redis.asyncio as redis
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
+
 
 class MemoryManager:
     def __init__(self):
@@ -101,5 +103,6 @@ class MemoryManager:
             "avg_quality": sum(e.get("answer_quality", 0) for e in history)
             / max(len(history), 1),
         }
+
 
 memory_manager = MemoryManager()

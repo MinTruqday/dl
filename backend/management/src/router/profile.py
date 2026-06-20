@@ -1,16 +1,19 @@
+import io
+import json
 from typing import Any, Optional
-from core.response import APIResponse
-from fastapi import APIRouter, Depends, UploadFile, File, status
+
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from fastapi.responses import StreamingResponse
-from core.schemas.user import UserInDB, ProfileUpdate, SettingsUpdate, BrandPageUpdate
-from core.dependency import get_db, get_current_user, RateLimiter
-from src.services.profile import ProfileService
-from src.services.setting import SettingService
+from pydantic import BaseModel
 from src.services.identity import IdentityService
 from src.services.privacy import PrivacyService
-from pydantic import BaseModel
-import json
-import io
+from src.services.profile import ProfileService
+from src.services.setting import SettingService
+
+from core.dependency import RateLimiter, get_current_user, get_db
+from core.response import APIResponse
+from core.schemas.user import (BrandPageUpdate, ProfileUpdate, SettingsUpdate,
+                               UserInDB)
 
 router = APIRouter(prefix="/profiles")
 

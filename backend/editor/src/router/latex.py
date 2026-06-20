@@ -15,7 +15,9 @@ async def compile_latex(req: CompileRequest):
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception:
         logger.error("Lỗi biên dịch tài liệu định dạng")
-        raise HTTPException(status_code=500, detail="Lỗi biên dịch do cú pháp không hợp lệ")
+        raise HTTPException(
+            status_code=500, detail="Lỗi biên dịch do cú pháp không hợp lệ"
+        )
 
 
 @router.post("/export/{format}")

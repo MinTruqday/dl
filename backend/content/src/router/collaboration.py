@@ -1,22 +1,21 @@
 from typing import Any, List
 
-from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends
 from src.router.dependency import get_db, require_role
-from src.schemas.document import (
-    CoauthorInviteRequest,
-    CollabMemoCreateRequest,
-    CollaborationResponse,
-    CollabTaskCreateRequest,
-    CreateDraftSnapshotRequest,
-    TaskCommentCreateRequest,
-    TransferOwnershipRequest,
-    UpdateCollabAccessRequest,
-    UpdateCollaboratorRoleRequest,
-    UpdateTaskStatusRequest,
-)
+from src.schemas.document import (CoauthorInviteRequest,
+                                  CollabMemoCreateRequest,
+                                  CollaborationResponse,
+                                  CollabTaskCreateRequest,
+                                  CreateDraftSnapshotRequest,
+                                  TaskCommentCreateRequest,
+                                  TransferOwnershipRequest,
+                                  UpdateCollabAccessRequest,
+                                  UpdateCollaboratorRoleRequest,
+                                  UpdateTaskStatusRequest)
 from src.services.collaboration import CollaborationService
+
+from core.response import APIResponse
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/collaboration")
 
@@ -204,7 +203,9 @@ async def update_collab_access(
     )
 
 
-@router.get("/documents/{document_id}/sent-invitations", response_model=APIResponse[Any])
+@router.get(
+    "/documents/{document_id}/sent-invitations", response_model=APIResponse[Any]
+)
 async def get_sent_pending_invites(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),

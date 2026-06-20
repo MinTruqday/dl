@@ -1,11 +1,12 @@
-from core.config import settings
 from typing import Any, List, Optional
 
-from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query, status
 from src.router.dependency import get_current_user_optional, get_db
 from src.services.document import DocumentService
+
+from core.config import settings
+from core.response import APIResponse
+from core.schemas.user import UserInDB
 
 router = APIRouter(prefix="/discovery")
 
@@ -45,8 +46,9 @@ async def smart_search(
         )
 
     import httpx
-    from core.config import settings
     from loguru import logger
+
+    from core.config import settings
 
     rag_url = settings.AGENTIC_AI_URL
     if not rag_url:
@@ -67,13 +69,9 @@ async def smart_search(
             )
             if resp.status_code == 200:
                 result = resp.json()
-                return APIResponse(
-                    data=result, message="Tìm kiếm ngữ nghĩa thành công"
-                )
+                return APIResponse(data=result, message="Tìm kiếm ngữ nghĩa thành công")
             else:
-                logger.error(
-                    "Lỗi tìm kiếm thông minh"
-                )
+                logger.error("Lỗi tìm kiếm thông minh")
                 return APIResponse(
                     data=await DocumentService.get_text_search(query, limit),
                     message="Tìm kiếm tiêu chuẩn thành công",

@@ -82,9 +82,7 @@ class GovernanceHarness:
             user_id=user_id,
             role=role,
         )
-        logger.info(
-            "Khởi tạo phiên quản lý thành công"
-        )
+        logger.info("Khởi tạo phiên quản lý thành công")
 
     def close_session(self, session_id: str):
         self._sessions.pop(session_id, None)
@@ -100,9 +98,7 @@ class GovernanceHarness:
         policy = self._get_policy(state.role)
 
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
-            logger.warning(
-                "Operation denied: insufficient permissions"
-            )
+            logger.warning("Operation denied: insufficient permissions")
             return PolicyDecision(
                 allowed=False,
                 reason="The requested operation is strictly restricted and not allowed for the current authorization level",
@@ -113,9 +109,7 @@ class GovernanceHarness:
             policy["allowed_tools"] is not None
             and tool_name not in policy["allowed_tools"]
         ):
-            logger.warning(
-                "Operation denied: insufficient permissions"
-            )
+            logger.warning("Operation denied: insufficient permissions")
             return PolicyDecision(
                 allowed=False,
                 reason="The requested operation is not present in the allowed operations list for the current session",
@@ -124,9 +118,7 @@ class GovernanceHarness:
 
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
-            logger.warning(
-                "Operation denied: quota exceeded"
-            )
+            logger.warning("Operation denied: quota exceeded")
             return PolicyDecision(
                 allowed=False,
                 reason="The current session has exceeded the maximum allowed number of utility invocations",
@@ -147,9 +139,7 @@ class GovernanceHarness:
         policy = self._get_policy(state.role)
         max_steps = policy["max_plan_steps"]
         if max_steps != -1 and num_steps > max_steps:
-            logger.warning(
-                "Vượt quá giới hạn số bước lập kế hoạch"
-            )
+            logger.warning("Vượt quá giới hạn số bước lập kế hoạch")
             return PolicyDecision(
                 allowed=False,
                 reason="The generated execution plan exceeds the maximum allowed complexity for the current authorization level",
@@ -168,9 +158,7 @@ class GovernanceHarness:
             max_tokens != -1
             and (state.estimated_tokens_used + additional_tokens) > max_tokens
         ):
-            logger.warning(
-                "Vượt quá giới hạn xử lý token"
-            )
+            logger.warning("Vượt quá giới hạn xử lý token")
             return PolicyDecision(
                 allowed=False,
                 reason="The current session has exceeded its allocated token processing budget and cannot proceed",
@@ -192,4 +180,4 @@ class GovernanceHarness:
         }
 
 
-governance_harness = GovernanceHarness()
+governance = GovernanceHarness()

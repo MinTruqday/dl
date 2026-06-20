@@ -1,11 +1,12 @@
 import uuid
 from datetime import datetime, timezone
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
+
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 
 class LibraryService:
@@ -90,4 +91,7 @@ class LibraryService:
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy danh sách đọc")
-        return {"status": "success", "message": "Xóa tài liệu khỏi bộ sưu tập đọc thành công"}
+        return {
+            "status": "success",
+            "message": "Xóa tài liệu khỏi bộ sưu tập đọc thành công",
+        }

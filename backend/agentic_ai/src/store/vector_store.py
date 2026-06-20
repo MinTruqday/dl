@@ -1,21 +1,16 @@
-from fastapi import Query
 import asyncio
 import os
 from typing import Dict, List, Optional
 
 import httpx
-from core.config import settings
+from fastapi import Query
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import (
-    Distance,
-    FieldCondition,
-    Filter,
-    MatchAny,
-    MatchValue,
-    PointStruct,
-    VectorParams,
-)
+from qdrant_client.http.models import (Distance, FieldCondition, Filter,
+                                       MatchAny, MatchValue, PointStruct,
+                                       VectorParams)
+
+from core.config import settings
 
 
 class VectorStore:
@@ -57,7 +52,7 @@ class VectorStore:
                 await self.client.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(
-                        size=embedding_service._dimensions, distance=Distance.COSINE
+                        size=embedding._dimensions, distance=Distance.COSINE
                     ),
                 )
         except Exception:

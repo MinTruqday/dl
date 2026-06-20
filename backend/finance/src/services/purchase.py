@@ -2,11 +2,12 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from bson import ObjectId
-from core.database import db_client
 from fastapi import HTTPException
 from loguru import logger
 from src.schemas.wallet import Transaction, TransactionType
 from uuid6 import uuid7
+
+from core.database import db_client
 
 
 class PurchaseService:
@@ -208,6 +209,7 @@ class PurchaseService:
                     if hasattr(db_client, "redis") and db_client.redis:
                         try:
                             import httpx
+
                             from core.config import settings
 
                             if settings.NOTIFICATION_URL:
@@ -224,9 +226,7 @@ class PurchaseService:
                                     )
                         except Exception:
                             logger.error("Lỗi gửi thông báo giao dịch thành công")
-                logger.info(
-                    "Giao dịch mua tài liệu thành công"
-                )
+                logger.info("Giao dịch mua tài liệu thành công")
                 return {
                     "message": "Thanh toán mua tài liệu thành công",
                     "status": "purchased",
@@ -237,7 +237,9 @@ class PurchaseService:
                 if should_close_session:
                     await session.abort_transaction()
                 logger.error("Lỗi xử lý thanh toán tài liệu")
-                raise HTTPException(status_code=500, detail="Lỗi xử lý giao dịch tài chính")
+                raise HTTPException(
+                    status_code=500, detail="Lỗi xử lý giao dịch tài chính"
+                )
             finally:
                 if should_close_session:
                     await session.end_session()
@@ -273,7 +275,9 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="Không tìm thấy lịch sử giao dịch mua hàng")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy lịch sử giao dịch mua hàng"
+            )
         purchased_at = purchase.get("purchased_at", datetime.now(timezone.utc))
         if isinstance(purchased_at, str):
             purchased_at = datetime.fromisoformat(purchased_at)
@@ -281,9 +285,7 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(
-                status_code=400, detail="Từ chối hoàn tiền do quá hạn"
-            )
+            raise HTTPException(status_code=400, detail="Từ chối hoàn tiền do quá hạn")
         price = purchase.get("price", 0)
         doc_id = purchase.get("document_id")
         doc = await db["documents"].find_one({"_id": doc_id}) if doc_id else None

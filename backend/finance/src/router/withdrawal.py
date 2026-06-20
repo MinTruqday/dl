@@ -1,11 +1,12 @@
 from typing import Any
 
-from core.dependency import get_current_user, get_db, require_role
-from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends, Query
 from src.schemas.withdrawal import WithdrawalRequest
 from src.services.withdrawal import WithdrawalService
+
+from core.dependency import get_current_user, get_db, require_role
+from core.response import APIResponse
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/withdrawals")
 

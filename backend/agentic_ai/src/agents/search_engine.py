@@ -1,8 +1,9 @@
 import asyncio
 import re
 
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 _SSRF_PATTERN = re.compile(
     r"(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0"
@@ -72,7 +73,9 @@ class SearchEngine:
                     return result
                 logger.warning("Đang chuyển sang công cụ tìm kiếm thay thế")
             except Exception:
-                logger.warning("Lỗi công cụ tìm kiếm chính, đang sử dụng máy chủ dự phòng")
+                logger.warning(
+                    "Lỗi công cụ tìm kiếm chính, đang sử dụng máy chủ dự phòng"
+                )
 
         result = await self._duckduckgo_search(query)
         if result:

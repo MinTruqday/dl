@@ -2,10 +2,12 @@ import contextvars
 import sys
 import uuid
 
-from core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+
+from core.middleware import (add_trace_id_header, trace_id_ctx_var,
+                             trace_id_filter)
 
 logger.remove()
 logger.add(
@@ -15,8 +17,9 @@ logger.add(
     level="INFO",
 )
 
+from src.router.notification import router as notification
+
 from core.config import settings
-from src.router.notification import router as notification_router
 
 app = FastAPI(title="DocLib Signal", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
@@ -29,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(notification_router)
+app.include(notification)
 
 
 @app.on_event("startup")
@@ -39,4 +42,6 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "The signaling service is currently operating normally and functioning as expected without any internal issues"}
+    return {
+        "status": "The signaling service is currently operating normally and functioning as expected without any internal issues"
+    }

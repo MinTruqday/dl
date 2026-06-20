@@ -1,13 +1,14 @@
 from typing import Any, List, Optional
 
-from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Body, Depends, status
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db, require_role
 from src.schemas.document import SchedulePublishRequest, SeoMetadataRequest
 from src.services.document import DocumentService
 from src.services.publication import PublicationService
+
+from core.response import APIResponse
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/publications")
 

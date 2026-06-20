@@ -4,8 +4,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 
 class EmailService:

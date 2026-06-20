@@ -4,16 +4,10 @@ from pydantic import BaseModel, Field
 
 
 class PlanStep(BaseModel):
-    agent: str = Field(
-        description="Tên tác nhân thực thi"
-    )
+    agent: str = Field(description="Tên tác nhân thực thi")
     task: str = Field(description="Detailed task description")
 
 
 class ExecutionPlan(BaseModel):
-    reasoning: str = Field(
-        description="Chuỗi suy luận trước khi phân chia các bước"
-    )
-    steps: List[PlanStep] = Field(
-        description="Danh sách các bước thực thi"
-    )
+    reasoning: str = Field(description="Chuỗi suy luận trước khi phân chia các bước")
+    steps: List[PlanStep] = Field(description="Danh sách các bước thực thi")

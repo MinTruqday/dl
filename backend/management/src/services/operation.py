@@ -1,13 +1,14 @@
-from core.config import settings
 import uuid
 from datetime import datetime, timezone
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
-from core.schemas.user import RoleEnum
 from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
+
+from core.config import settings
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
+from core.schemas.user import RoleEnum
 
 
 class OperationService:
@@ -104,9 +105,7 @@ class OperationService:
             },
             upsert=True,
         )
-        logger.warning(
-            "Thay đổi trạng thái bảo trì thành công"
-        )
+        logger.warning("Thay đổi trạng thái bảo trì thành công")
         return {"message": "Cập nhật cấu hình bảo trì thành công"}
 
     @staticmethod
@@ -157,6 +156,7 @@ class OperationService:
         import os
 
         import httpx
+
         from core.config import settings
 
         if db is None:
@@ -319,8 +319,9 @@ class OperationService:
     @staticmethod
     async def get_collector_stats(db=None) -> dict:
         import httpx
-        from core.config import settings
         from loguru import logger
+
+        from core.config import settings
 
         try:
             async with httpx.AsyncClient() as client:
@@ -343,8 +344,9 @@ class OperationService:
     @staticmethod
     async def trigger_collection(source: str, pages: int, db=None) -> dict:
         import httpx
-        from core.config import settings
         from loguru import logger
+
+        from core.config import settings
 
         try:
             async with httpx.AsyncClient() as client:
@@ -367,8 +369,9 @@ class OperationService:
     @staticmethod
     async def stop_collection(db=None) -> dict:
         import httpx
-        from core.config import settings
         from loguru import logger
+
+        from core.config import settings
 
         try:
             async with httpx.AsyncClient() as client:
@@ -379,7 +382,10 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json()
                 else:
-                    return {"status": "error", "message": "Yêu cầu dừng thu thập dữ liệu bị từ chối"}
+                    return {
+                        "status": "error",
+                        "message": "Yêu cầu dừng thu thập dữ liệu bị từ chối",
+                    }
         except Exception:
             logger.error("Lỗi dừng quá trình thu thập dữ liệu")
         return {
@@ -390,8 +396,9 @@ class OperationService:
     @staticmethod
     async def get_collector_logs(db=None) -> list:
         import httpx
-        from core.config import settings
         from loguru import logger
+
+        from core.config import settings
 
         try:
             async with httpx.AsyncClient() as client:
@@ -408,8 +415,9 @@ class OperationService:
     @staticmethod
     async def get_active_collector_jobs(db=None) -> list:
         import httpx
-        from core.config import settings
         from loguru import logger
+
+        from core.config import settings
 
         try:
             async with httpx.AsyncClient() as client:
@@ -453,9 +461,7 @@ class OperationService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("tasks").insert_one(task)
-        logger.info(
-            "Phân công nhiệm vụ quản trị thành công"
-        )
+        logger.info("Phân công nhiệm vụ quản trị thành công")
         return {"message": "Phân công nhiệm vụ thành công"}
 
     @staticmethod
@@ -473,9 +479,7 @@ class OperationService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            "Đã gửi đề xuất chính sách"
-        )
+        logger.info("Đã gửi đề xuất chính sách")
 
     @staticmethod
     async def get_withdrawal_requests(
@@ -486,8 +490,9 @@ class OperationService:
         db=None,
     ) -> list:
         import httpx
-        from core.config import settings
         from loguru import logger
+
+        from core.config import settings
 
         try:
             async with httpx.AsyncClient() as client:
@@ -504,8 +509,9 @@ class OperationService:
     @staticmethod
     async def approve_withdrawal(withdrawal_id: str, system_id: str, db=None) -> dict:
         import httpx
-        from core.config import settings
         from loguru import logger
+
+        from core.config import settings
 
         try:
             async with httpx.AsyncClient() as client:
@@ -517,7 +523,10 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json()
                 else:
-                    return {"status": "error", "message": "Từ chối yêu cầu do điều kiện không hợp lệ"}
+                    return {
+                        "status": "error",
+                        "message": "Từ chối yêu cầu do điều kiện không hợp lệ",
+                    }
         except Exception:
             logger.error("Lỗi xử lý duyệt yêu cầu rút tiền")
         return {
@@ -530,8 +539,9 @@ class OperationService:
         withdrawal_id: str, reason: str, system_id: str, db=None
     ) -> dict:
         import httpx
-        from core.config import settings
         from loguru import logger
+
+        from core.config import settings
 
         try:
             async with httpx.AsyncClient() as client:

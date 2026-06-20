@@ -1,10 +1,12 @@
-from typing import Any
 import re
-from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
-from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
+from typing import Any
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from src.router.dependency import get_db, require_role
 from src.services.upload import UploadService
+
+from core.response import APIResponse
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/upload")
 
@@ -136,5 +138,7 @@ async def upload_chunk(
             data=result, message="Tải lên tệp tin thành công", status=201
         )
     return APIResponse(
-        data={"uploaded": chunk_index}, message="Tải lên tệp tạm thời thành công", status=200
+        data={"uploaded": chunk_index},
+        message="Tải lên tệp tạm thời thành công",
+        status=200,
     )

@@ -2,13 +2,14 @@ import time
 from typing import List, Optional
 
 import jwt
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import OAuth2PasswordBearer
+from loguru import logger
+
 from core.config import settings
 from core.database import db_client
 from core.schemas.user import RoleEnum, UserInDB
 from core.security import ALGORITHM, SECRET_KEY
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordBearer
-from loguru import logger
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -99,9 +100,7 @@ def require_role(required_roles: List[RoleEnum]):
         if current_user.role == RoleEnum.ADMIN:
             return current_user
         if current_user.role not in required_roles:
-            logger.warning(
-                "Từ chối truy cập do không đủ ủy quyền"
-            )
+            logger.warning("Từ chối truy cập do không đủ ủy quyền")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Không có quyền thực hiện thao tác này",
@@ -174,6 +173,7 @@ def get_current_user_from_header(
 ):
     if not x_user_id:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Thiếu thông tin định danh người dùng"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Thiếu thông tin định danh người dùng",
         )
     return AuthenticatedUser(x_user_id, x_user_name)

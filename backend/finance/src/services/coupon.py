@@ -2,12 +2,13 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from core.database import db_client
-from core.schemas.user import RoleEnum
 from fastapi import HTTPException
 from loguru import logger
 from src.schemas.wallet import CouponStatus, CouponTargetType
 from uuid6 import uuid7
+
+from core.database import db_client
+from core.schemas.user import RoleEnum
 
 
 class CouponService:
@@ -43,9 +44,7 @@ class CouponService:
         if existing:
             raise HTTPException(status_code=400, detail="Mã giảm giá đã được sử dụng")
         await db["coupons"].insert_one(coupon)
-        logger.info(
-            "Tạo mã giảm giá thành công"
-        )
+        logger.info("Tạo mã giảm giá thành công")
         return {
             "message": "Tạo mã giảm giá thành công",
             "coupon_id": coupon["_id"],
@@ -97,12 +96,8 @@ class CouponService:
         )
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá")
-        logger.info(
-            "Cập nhật mã giảm giá thành công"
-        )
-        return {
-            "message": "Áp dụng thao tác lên mã giảm giá thành công"
-        }
+        logger.info("Cập nhật mã giảm giá thành công")
+        return {"message": "Áp dụng thao tác lên mã giảm giá thành công"}
 
     @staticmethod
     async def validate_coupon(
@@ -136,7 +131,8 @@ class CouponService:
             )
             if purchase_count > 0:
                 raise HTTPException(
-                    status_code=400, detail="Mã giảm giá này chỉ dành cho người mua lần đầu"
+                    status_code=400,
+                    detail="Mã giảm giá này chỉ dành cho người mua lần đầu",
                 )
         return {
             "code": coupon["code"],

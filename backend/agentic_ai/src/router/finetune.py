@@ -4,13 +4,14 @@ import threading
 from datetime import datetime, timezone
 
 import httpx
-from core.config import settings
-from core.repositories.base_repository import RepositoryFactory
 from datasets import Dataset
 from fastapi import APIRouter, HTTPException, Query
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7
+
+from core.config import settings
+from core.repositories.base_repository import RepositoryFactory
 
 router = APIRouter(prefix="/finetuning")
 active_jobs = {}
@@ -494,7 +495,9 @@ async def cancel_job(job_id: str, req: dict):
     if result.modified_count > 0:
         active_jobs.pop(job_id, None)
         return {"status": "cancelled"}
-    raise HTTPException(status_code=400, detail="Không thể hủy tác vụ huấn luyện lúc này")
+    raise HTTPException(
+        status_code=400, detail="Không thể hủy tác vụ huấn luyện lúc này"
+    )
 
 
 @router.post("/jobs/{job_id}/deploy")
@@ -568,7 +571,7 @@ async def deploy_model(job_id: str, req: dict):
 
 @router.post("/jobs/{job_id}/evaluate")
 async def evaluate_model(job_id: str, req: dict):
-    from src.harness.evaluation_harness import evaluation_harness
+    from src.harness.evaluation import evaluation
 
     db = get_db()
     job = await RepositoryFactory.get("finetune_jobs").find_one(
@@ -578,8 +581,8 @@ async def evaluate_model(job_id: str, req: dict):
         raise HTTPException(status_code=404, detail="Không tìm thấy tác vụ huấn luyện")
     model_name = job.get("merged_model_name") or job.get("base_model")
     use_judge = req.get("use_judge", True)
-    evaluation_harness._dataset = req.get("test_samples", [])
-    result = await evaluation_harness.run_benchmark(
+    evaluation._dataset = req.get("test_samples", [])
+    result = await evaluation.run_benchmark(
         model_name=model_name, use_judge=use_judge
     )
     return result

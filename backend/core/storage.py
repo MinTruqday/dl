@@ -3,8 +3,9 @@ import os
 import aioboto3
 import brotli
 from botocore.exceptions import ClientError
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 MINIO_ENDPOINT = settings.MINIO_ENDPOINT
 MINIO_ACCESS_KEY = settings.MINIO_ACCESS_KEY

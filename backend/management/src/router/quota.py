@@ -1,11 +1,12 @@
 from typing import Any
 
-from core.response import APIResponse
-from core.schemas.quota import QuotaLimit
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends, HTTPException
 from src.router.dependency import get_current_user, get_db, require_role
 from src.services.quota import QuotaService
+
+from core.response import APIResponse
+from core.schemas.quota import QuotaLimit
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/quotas")
 
@@ -19,7 +20,11 @@ async def check_quota_internal(
     db=Depends(get_db),
 ):
     limits = await QuotaService.check_quota(user_id, role, ai_tier, feature, db=db)
-    return APIResponse(data=limits.model_dump(), message="Thao tác nằm trong giới hạn sử dụng cho phép", status=200)
+    return APIResponse(
+        data=limits.model_dump(),
+        message="Thao tác nằm trong giới hạn sử dụng cho phép",
+        status=200,
+    )
 
 
 @router.get("/me", response_model=APIResponse[Any])
@@ -76,4 +81,6 @@ async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
         await QuotaService.consume_tokens(
             req.user_id, req.tokens, req.feature, req.req_reset_hours, db=db
         )
-    return APIResponse(data=None, message="Sử dụng dung lượng tài nguyên thành công", status=200)
+    return APIResponse(
+        data=None, message="Sử dụng dung lượng tài nguyên thành công", status=200
+    )

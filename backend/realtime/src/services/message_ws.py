@@ -3,11 +3,12 @@ import json
 from typing import Any, List
 
 import httpx
+from fastapi import WebSocket, WebSocketDisconnect
+from loguru import logger
+
 from core.config import settings
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
-from fastapi import WebSocket, WebSocketDisconnect
-from loguru import logger
 
 
 class MessageConnectionManager:

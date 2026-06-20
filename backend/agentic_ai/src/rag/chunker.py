@@ -23,8 +23,9 @@ def _sanitize_text(text: str) -> bool:
 
 from typing import Dict, List
 
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 try:
     from chonkie import SemanticChunker, TokenChunker
@@ -51,9 +52,7 @@ class AdvancedSemanticChunker:
                 self.type = "chonkie_semantic"
                 logger.info("Khởi tạo công cụ phân mảnh ngữ nghĩa thành công")
             except Exception:
-                logger.warning(
-                    "Text chunker init failed, using standard mode"
-                )
+                logger.warning("Text chunker init failed, using standard mode")
                 try:
                     self.chunker = TokenChunker(
                         chunk_size=settings.DEFAULT_CHUNK_SIZE,
@@ -68,9 +67,7 @@ class AdvancedSemanticChunker:
         logger.info("Đang xử lý phân đoạn văn bản")
 
         if not self.chunker:
-            logger.warning(
-                "Đang dùng phương pháp phân mảnh thay thế"
-            )
+            logger.warning("Đang dùng phương pháp phân mảnh thay thế")
             return self._fallback_chunking(text, metadata)
 
         try:
@@ -100,9 +97,7 @@ class AdvancedSemanticChunker:
                     }
                 )
 
-            logger.info(
-                "Xử lý phân mảnh văn bản thành công"
-            )
+            logger.info("Xử lý phân mảnh văn bản thành công")
             return chunks
 
         except Exception:
@@ -110,10 +105,8 @@ class AdvancedSemanticChunker:
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:
-        from langchain_text_splitters import (
-            MarkdownHeaderTextSplitter,
-            RecursiveCharacterTextSplitter,
-        )
+        from langchain_text_splitters import (MarkdownHeaderTextSplitter,
+                                              RecursiveCharacterTextSplitter)
 
         headers_to_split_on = [
             ("#", "Header 1"),

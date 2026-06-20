@@ -65,7 +65,9 @@ class ToolHarness:
         if not definition:
             logger.error("Tool not registered")
             return ToolResult(
-                success=False, data=None, error="The requested utility is currently not registered or unavailable in the system"
+                success=False,
+                data=None,
+                error="The requested utility is currently not registered or unavailable in the system",
             )
 
         start_ms = time.monotonic()
@@ -120,4 +122,4 @@ class ToolHarness:
         return list(self._registry.keys())
 
 
-tool_harness = ToolHarness()
+tool = ToolHarness()

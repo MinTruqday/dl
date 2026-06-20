@@ -1,11 +1,12 @@
 from typing import Any
 
-from core.dependency import get_db, require_role
-from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.services.coupon import CouponService
+
+from core.dependency import get_db, require_role
+from core.response import APIResponse
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/coupons")
 

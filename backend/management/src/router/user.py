@@ -1,19 +1,15 @@
 from typing import Any, Optional
 
-from core.response import APIResponse
-from core.schemas.user import (
-    ModerationActionRequest,
-    NoteRequest,
-    RoleEnum,
-    UpdateRoleRequest,
-    UpdateStatusRequest,
-    UserInDB,
-)
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db, require_role
 from src.services.user import UserService
+
 from core.config import settings
+from core.response import APIResponse
+from core.schemas.user import (ModerationActionRequest, NoteRequest, RoleEnum,
+                               UpdateRoleRequest, UpdateStatusRequest,
+                               UserInDB)
 
 router = APIRouter(prefix="/users")
 
@@ -137,9 +133,7 @@ async def add_note(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UserService.add_note(
-            user_id, req.note, current_user, db=db
-        ),
+        data=await UserService.add_note(user_id, req.note, current_user, db=db),
         message="Lưu ghi chú kiểm duyệt vào hồ sơ thành công",
         status=201,
     )
@@ -160,7 +154,9 @@ async def search_users(
 @router.get("/{user_id}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user(user_id: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_id(user_id, db)
-    return APIResponse(data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công")
+    return APIResponse(
+        data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công"
+    )
 
 
 @router.post(
@@ -174,13 +170,17 @@ async def internal_get_users(user_ids: list[str], db=Depends(get_db)):
 @router.get("/email/{email}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_email(email: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_email(email, db)
-    return APIResponse(data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công")
+    return APIResponse(
+        data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công"
+    )
 
 
 @router.get("/slug/{slug}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_slug(slug, db)
-    return APIResponse(data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công")
+    return APIResponse(
+        data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công"
+    )
 
 
 class InternalCreateUserRequest(BaseModel):
@@ -195,5 +195,7 @@ class InternalCreateUserRequest(BaseModel):
 async def internal_create_user(req: InternalCreateUserRequest, db=Depends(get_db)):
     user_id = await UserService.internal_create_user(req.dict(), db)
     return APIResponse(
-        data={"user_id": user_id}, message="Tạo tài khoản người dùng thành công", status=201
+        data={"user_id": user_id},
+        message="Tạo tài khoản người dùng thành công",
+        status=201,
     )

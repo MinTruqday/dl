@@ -2,10 +2,12 @@ import contextvars
 import sys
 import uuid
 
-from core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import FastAPI, Request
 from loguru import logger
+
+from core.middleware import (add_trace_id_header, trace_id_ctx_var,
+                             trace_id_filter)
+from core.repositories.base_repository import RepositoryFactory
 
 logger.remove()
 logger.add(
@@ -14,16 +16,16 @@ logger.add(
     filter=trace_id_filter,
     level="INFO",
 )
-from src.router.chat import router as chat_router
-from src.router.feedback import router as feedback_router
-from src.router.finetune import router as finetune_router
-from src.router.history import router as history_router
-from src.router.inference import router as inference_router
-from src.router.ingest import router as ingest_router
 from fastapi.middleware.cors import CORSMiddleware
-from src.harness.agentops_harness import agentops_harness
-from src.harness.evaluation_harness import evaluation_harness
-from src.harness.orchestration_harness import orchestration_harness
+from src.harness.agentops import agentops
+from src.harness.evaluation import evaluation
+from src.harness.orchestration import orchestration
+from src.router.chat import router as chat
+from src.router.feedback import router as feedback
+from src.router.finetune import router as finetune
+from src.router.history import router as history
+from src.router.inference import router as inference
+from src.router.ingest import router as ingest
 
 app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
@@ -40,12 +42,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(inference_router)
-app.include_router(chat_router)
-app.include_router(ingest_router)
-app.include_router(feedback_router)
-app.include_router(finetune_router)
-app.include_router(history_router)
+app.include(inference)
+app.include(chat)
+app.include(ingest)
+app.include(feedback)
+app.include(finetune)
+app.include(history)
 
 
 @app.get("/health")
@@ -58,7 +60,7 @@ async def harness_metrics():
     from fastapi.responses import PlainTextResponse
 
     return PlainTextResponse(
-        content=agentops_harness.get_prometheus_metrics(),
+        content=agentops.get_prometheus_metrics(),
         media_type="text/plain; version=0.0.4",
     )
 
@@ -67,19 +69,20 @@ async def harness_metrics():
 async def harness_status():
     return {
         "orchestration": {
-            "active_sessions": orchestration_harness.get_active_sessions(),
-            "circuit_breaker": orchestration_harness.get_circuit_status(),
+            "active_sessions": orchestration.get_active_sessions(),
+            "circuit_breaker": orchestration.get_circuit_status(),
         },
-        "evaluation": evaluation_harness.get_dashboard_metrics(),
+        "evaluation": evaluation.get_dashboard_metrics(),
     }
 
 
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo AI thành công")
-    from core.config import settings
     from motor.motor_asyncio import AsyncIOMotorClient
     from src.store.vector_store import vector_store
+
+    from core.config import settings
 
     try:
         await vector_store.ensure_collection()

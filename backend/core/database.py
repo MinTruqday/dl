@@ -3,9 +3,10 @@ import os
 
 import aio_pika
 import redis.asyncio as aioredis
-from core.config import settings
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
+
+from core.config import settings
 
 
 class DBClient:

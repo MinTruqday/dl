@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+
 from core.config import settings
 
 SECRET_KEY = settings.SECRET_KEY

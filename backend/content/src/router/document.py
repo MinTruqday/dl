@@ -1,35 +1,21 @@
-from core.config import settings
 from datetime import datetime, timezone
 from typing import Any, List, Optional
 
 from bson import ObjectId
+from fastapi import (APIRouter, Body, Depends, Header, HTTPException, Query,
+                     status)
+from pydantic import BaseModel
+from src.router.dependency import (get_current_user, get_current_user_optional,
+                                   get_db, require_role)
+from src.schemas.document import (DocumentContentUpdate, DocumentCreate,
+                                  DocumentPasswordRequest, DocumentResponse,
+                                  DocumentUpdate)
+from src.services.document import DocumentService
+
+from core.config import settings
 from core.database import db_client
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
-from fastapi import (
-    APIRouter,
-    Depends,
-    Header,
-    HTTPException,
-    Query,
-    status,
-    Body
-)
-from pydantic import BaseModel
-from src.router.dependency import (
-    get_current_user,
-    get_current_user_optional,
-    get_db,
-    require_role,
-)
-from src.schemas.document import (
-    DocumentContentUpdate,
-    DocumentCreate,
-    DocumentPasswordRequest,
-    DocumentResponse,
-    DocumentUpdate,
-)
-from src.services.document import DocumentService
 
 router = APIRouter(prefix="/documents")
 
@@ -157,7 +143,9 @@ async def delete_folder(
     await db["documents"].update_many(
         {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
     )
-    return APIResponse(data={"deleted": True}, message="Xóa thư mục vĩnh viễn thành công")
+    return APIResponse(
+        data={"deleted": True}, message="Xóa thư mục vĩnh viễn thành công"
+    )
 
 
 @router.get(
@@ -297,13 +285,16 @@ async def toggle_star_document(
         {"_id": document_id, "creator_id": str(current_user.id)}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
+        raise HTTPException(
+            status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
+        )
     current_starred = doc.get("is_starred", False)
     await db["documents"].update_one(
         {"_id": document_id}, {"$set": {"is_starred": not current_starred}}
     )
     return APIResponse(
-        data={"starred": not current_starred}, message="Cập nhật trạng thái ưu tiên tài liệu thành công"
+        data={"starred": not current_starred},
+        message="Cập nhật trạng thái ưu tiên tài liệu thành công",
     )
 
 
@@ -345,7 +336,12 @@ async def transfer_document(
         )
     await db["documents"].update_one(
         {"_id": document_id},
-        {"$set": {"creator_id": new_owner_id, "updated_at": datetime.now(timezone.utc)}},
+        {
+            "$set": {
+                "creator_id": new_owner_id,
+                "updated_at": datetime.now(timezone.utc),
+            }
+        },
     )
     return APIResponse(
         data={"status": "transferred", "new_owner_id": new_owner_id},
@@ -360,7 +356,9 @@ async def get_document_analytics(
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
+        raise HTTPException(
+            status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
+        )
     views = doc.get("views", 0)
     content = doc.get("content", "")
     total_words = len(content.split()) if content else 0
@@ -408,7 +406,9 @@ async def get_document_academic(
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
+        raise HTTPException(
+            status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
+        )
     content = doc.get("content", "")
     word_count = len(content.split()) if content else 0
     sentences = (
@@ -453,7 +453,9 @@ async def update_drm_settings(
         ),
         current_user,
     )
-    return APIResponse(data=result, message="Cập nhật cấu hình bảo vệ bản quyền thành công")
+    return APIResponse(
+        data=result, message="Cập nhật cấu hình bảo vệ bản quyền thành công"
+    )
 
 
 class TagsUpdate(BaseModel):

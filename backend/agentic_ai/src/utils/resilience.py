@@ -1,12 +1,10 @@
 import asyncio
 from functools import wraps
+
 from loguru import logger
-from tenacity import (
-    AsyncRetrying,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from tenacity import (AsyncRetrying, retry_if_exception_type,
+                      stop_after_attempt, wait_exponential)
+
 
 def with_retry(max_retries=3, base_wait=2, max_wait=10):
     def decorator(func):
@@ -24,5 +22,7 @@ def with_retry(max_retries=3, base_wait=2, max_wait=10):
             except Exception as e:
                 logger.exception("Thao tác thất bại sau nhiều lần thử lại")
                 raise e
+
         return wrapper
+
     return decorator

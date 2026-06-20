@@ -159,7 +159,8 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
 def run_hf_training(job_id: str, config: dict, update_callback):
     import torch
     from peft import LoraConfig, PeftModel, get_peft_model
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                              BitsAndBytesConfig)
     from trl import SFTConfig, SFTTrainer
 
     base_model_name = config.get("base_model")
@@ -360,12 +361,8 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     import torch
     from datasets import Dataset
     from peft import LoraConfig, PeftModel, get_peft_model
-    from transformers import (
-        AutoModelForSeq2SeqLM,
-        AutoTokenizer,
-        Seq2SeqTrainer,
-        Seq2SeqTrainingArguments,
-    )
+    from transformers import (AutoModelForSeq2SeqLM, AutoTokenizer,
+                              Seq2SeqTrainer, Seq2SeqTrainingArguments)
 
     base_model_name = config.get("base_model")
     hf_token = config.get("hf_token")

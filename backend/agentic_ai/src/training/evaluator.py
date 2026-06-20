@@ -2,14 +2,9 @@ import math
 from collections import Counter
 
 from loguru import logger
-from src.harness.evaluation_harness import (
-    EvalReport,
-    EvaluationHarness,
-    _compute_bleu,
-    _compute_rouge_l,
-    _llm_judge,
-    evaluation_harness,
-)
+from src.harness.evaluation import (EvalReport, EvaluationHarness,
+                                            _compute_bleu, _compute_rouge_l,
+                                            _llm_judge, evaluation)
 
 
 async def llm_judge_score(

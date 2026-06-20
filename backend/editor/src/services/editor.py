@@ -6,11 +6,12 @@ from typing import Dict, List, Optional
 
 import httpx
 from bson import ObjectId
-from core.config import settings
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
+
+from core.config import settings
+from core.repositories.base_repository import RepositoryFactory
 
 
 class EditorService:
@@ -20,7 +21,9 @@ class EditorService:
         content: str, format_type: str, compiler_url: str = settings.EDITOR_URL
     ):
         if not content:
-            raise HTTPException(status_code=400, detail="Không thể xử lý vì tài liệu rỗng")
+            raise HTTPException(
+                status_code=400, detail="Không thể xử lý vì tài liệu rỗng"
+            )
         try:
             url = f"{compiler_url}/export/{format_type}"
             async with httpx.AsyncClient(
@@ -35,9 +38,7 @@ class EditorService:
                     )
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(
-                status_code=408, detail="Quá thời gian xuất tài liệu"
-            )
+            raise HTTPException(status_code=408, detail="Quá thời gian xuất tài liệu")
         except HTTPException:
             raise
         except Exception:
@@ -49,7 +50,9 @@ class EditorService:
         content: str, compiler_url: str = settings.EDITOR_URL
     ):
         if not content:
-            raise HTTPException(status_code=400, detail="Không thể xử lý vì tài liệu rỗng")
+            raise HTTPException(
+                status_code=400, detail="Không thể xử lý vì tài liệu rỗng"
+            )
         try:
             url = f"{compiler_url}/compile"
             async with httpx.AsyncClient(
@@ -62,7 +65,10 @@ class EditorService:
                     )
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail="Quá thời gian chờ, quá trình biên dịch tài liệu bị hủy")
+            raise HTTPException(
+                status_code=408,
+                detail="Quá thời gian chờ, quá trình biên dịch tài liệu bị hủy",
+            )
         except HTTPException:
             raise
         except Exception:
@@ -115,7 +121,9 @@ class EditorService:
             {"_id": ObjectId(suggestion_id)}
         )
         if not sug:
-            raise HTTPException(status_code=404, detail="Không tìm thấy đề xuất chỉnh sửa")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy đề xuất chỉnh sửa"
+            )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": sug["document_id"]}
         )
@@ -125,7 +133,8 @@ class EditorService:
             and sug.get("reviewer_id") != user_id
         ):
             raise HTTPException(
-                status_code=403, detail="Không có quyền giải quyết đề xuất chỉnh sửa này"
+                status_code=403,
+                detail="Không có quyền giải quyết đề xuất chỉnh sửa này",
             )
 
         action = payload.get("action", "rejected")
@@ -318,7 +327,9 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return {"suggestions": resp.json().get("result", "")}
-        return {"suggestions": "The artificial intelligence service is currently unable to generate suggestions for this content"}
+        return {
+            "suggestions": "The artificial intelligence service is currently unable to generate suggestions for this content"
+        }
 
     @staticmethod
     async def summarize_document(
@@ -355,7 +366,10 @@ class EditorService:
                     },
                 )
                 if resp.status_code == 200:
-                    summary = resp.json().get("result", "The automated content summarization process has been completed successfully")
+                    summary = resp.json().get(
+                        "result",
+                        "The automated content summarization process has been completed successfully",
+                    )
                     await RepositoryFactory.get("documents").update_one(
                         {"_id": document_id}, {"$set": {"description": summary}}
                     )
@@ -460,7 +474,9 @@ class EditorService:
             {"_id": comment_id}
         )
         if not comment:
-            raise HTTPException(status_code=404, detail="Không tìm thấy bình luận trực tiếp")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy bình luận trực tiếp"
+            )
 
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": comment["document_id"]}

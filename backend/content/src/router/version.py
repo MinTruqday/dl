@@ -1,10 +1,11 @@
 from typing import Any
 
-from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends
 from src.router.dependency import get_current_user, get_db
 from src.services.version import VersionsService
+
+from core.response import APIResponse
+from core.schemas.user import UserInDB
 
 router = APIRouter(prefix="/versions")
 

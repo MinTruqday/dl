@@ -1,31 +1,30 @@
 from typing import Any, List, Optional
 
+from fastapi import APIRouter
+from loguru import logger
+from src.schemas.editor import (AutoSaveRequest, FindReplaceRequest,
+                                InlineCommentRequest, InlineSuggestionRequest,
+                                KeystrokeSyncRequest, PomodoroSyncRequest,
+                                ResolveSuggestionRequest, VersionDiffRequest)
+from src.services.editor import EditorService
+
 from core.config import settings
 from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.dependency import get_current_user_from_header as get_current_user
-from core.schemas.inference import (
-    AISuggestionRequest,
-    CoverGenerateRequest,
-    PlagiarismCheckRequest,
-)
-from fastapi import APIRouter
-from loguru import logger
-from src.schemas.editor import (
-    AutoSaveRequest,
-    FindReplaceRequest,
-    InlineCommentRequest,
-    InlineSuggestionRequest,
-    KeystrokeSyncRequest,
-    PomodoroSyncRequest,
-    ResolveSuggestionRequest,
-    VersionDiffRequest,
-)
-from src.services.editor import EditorService
+from core.schemas.inference import (AISuggestionRequest, CoverGenerateRequest,
+                                    PlagiarismCheckRequest)
+
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
-    if current_user.ai_tier.value not in ["PREMIUM"] and current_user.role.value != "admin":
-        raise HTTPException(status_code=403, detail="Tính năng AI nâng cao chỉ dành cho gói trả phí")
+    if (
+        current_user.ai_tier.value not in ["PREMIUM"]
+        and current_user.role.value != "admin"
+    ):
+        raise HTTPException(
+            status_code=403, detail="Tính năng AI nâng cao chỉ dành cho gói trả phí"
+        )
     return current_user
+
 
 router = APIRouter(prefix="/editor")
 

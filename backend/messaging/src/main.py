@@ -1,10 +1,11 @@
 import uvicorn
-from core.config import settings
-from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router.message import router as message_router
+from src.router.message import router as message
+
+from core.config import settings
+from core.database import close_db, init_db
 
 app = FastAPI(title="DocLib Contact", version=settings.VERSION)
 
@@ -20,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(message_router)
+app.include(message)
 
 
 @app.on_event("startup")
@@ -36,4 +37,6 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "The communication service is currently operating normally and functioning as expected without any internal issues"}
+    return {
+        "status": "The communication service is currently operating normally and functioning as expected without any internal issues"
+    }

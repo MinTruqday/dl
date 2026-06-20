@@ -3,27 +3,21 @@ import base64
 from typing import Any, List, Optional
 
 import httpx
-from core.config import settings
-from core.repositories.base_repository import RepositoryFactory
-from core.schemas.inference import (
-    ActionRequest,
-    CitationRequest,
-    CodeRequest,
-    GenerationRequest,
-    GrammarRequest,
-    ReviewRequest,
-    SentimentRequest,
-    SummarizeRequest,
-    SynthesisRequest,
-    ToneRequest,
-    TranslationRequest,
-)
-from core.dependency import get_current_user
-from core.schemas.user import UserInDB, RoleEnum
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
+
+from core.config import settings
+from core.dependency import get_current_user
+from core.repositories.base_repository import RepositoryFactory
+from core.schemas.inference import (ActionRequest, CitationRequest,
+                                    CodeRequest, GenerationRequest,
+                                    GrammarRequest, ReviewRequest,
+                                    SentimentRequest, SummarizeRequest,
+                                    SynthesisRequest, ToneRequest,
+                                    TranslationRequest)
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/inference")
 
@@ -334,7 +328,7 @@ async def check_plagiarism(
         from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
 
-        query_vector = await embedding_service.embed_query(req.text[:2000])
+        query_vector = await embedding.embed_query(req.text[:2000])
         matches = await vector_store.query(query_vector=query_vector, limit=5)
 
         significant_matches = [m for m in matches if m["score"] > 0.75]
@@ -475,7 +469,7 @@ async def suggest_citations(
         from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
 
-        query_vector = await embedding_service.embed_query(req.text[:500])
+        query_vector = await embedding.embed_query(req.text[:500])
         matches = await vector_store.query(query_vector=query_vector, limit=3)
 
         sources = []
@@ -575,7 +569,7 @@ async def multi_doc_synthesis(
         from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
 
-        query_vector = await embedding_service.embed_query(req.query)
+        query_vector = await embedding.embed_query(req.query)
 
         all_context = []
         for doc_id in req.document_ids:
@@ -606,7 +600,9 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
     try:
         file_url = req.get("file_url")
         if not file_url:
-            raise HTTPException(status_code=400, detail="Thiếu thông tin vị trí tệp tin")
+            raise HTTPException(
+                status_code=400, detail="Thiếu thông tin vị trí tệp tin"
+            )
 
         from src.rag.ingestion_pipeline import ingestion_pipeline
 

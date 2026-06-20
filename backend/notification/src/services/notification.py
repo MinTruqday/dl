@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 
-from core.config import settings
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException, status
 from loguru import logger
 from src.schemas.notification import Notification, NotificationCreate
 from uuid6 import uuid7
+
+from core.config import settings
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 
 class NotificationService:
@@ -38,7 +39,8 @@ class NotificationService:
         )
         if result.matched_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy thông báo hoặc không có quyền truy cập"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy thông báo hoặc không có quyền truy cập",
             )
         return {"id": notif_id}
 
@@ -56,7 +58,8 @@ class NotificationService:
         )
         if result.deleted_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Lỗi xóa thông báo do không tìm thấy"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Lỗi xóa thông báo do không tìm thấy",
             )
         return {"id": notif_id}
 

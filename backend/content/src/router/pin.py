@@ -1,11 +1,12 @@
 from typing import Any, List
 
-from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query
 from src.router.dependency import get_current_user, get_db
 from src.schemas.library import PinnedDocumentRequest
 from src.services.pin import PinService
+
+from core.response import APIResponse
+from core.schemas.user import UserInDB
 
 router = APIRouter(prefix="/pins")
 

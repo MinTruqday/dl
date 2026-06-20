@@ -1,15 +1,13 @@
 from typing import Any, List
 
-from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db
-from src.schemas.library import (
-    PinnedDocumentRequest,
-    ProgressUpdate,
-)
+from src.schemas.library import PinnedDocumentRequest, ProgressUpdate
 from src.services.reading import ReadingService
+
+from core.response import APIResponse
+from core.schemas.user import UserInDB
 
 router = APIRouter(prefix="/reading")
 
@@ -136,10 +134,14 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
                                         "size": info.file_size,
                                     }
                                 )
-                        return APIResponse(data=tree, message="Lấy cấu trúc thư mục thành công")
+                        return APIResponse(
+                            data=tree, message="Lấy cấu trúc thư mục thành công"
+                        )
                 else:
                     return APIResponse(
-                        data=None, message="Tệp tin không khả dụng từ máy chủ", status=400
+                        data=None,
+                        message="Tệp tin không khả dụng từ máy chủ",
+                        status=400,
                     )
     except HTTPException as he:
         raise he
@@ -182,7 +184,9 @@ async def get_zip_content(
                                     message="Không thể xem trực tiếp tệp nhị phân",
                                 )
                         return APIResponse(
-                            data=None, message="Không tìm thấy tệp trong thư mục nén", status=404
+                            data=None,
+                            message="Không tìm thấy tệp trong thư mục nén",
+                            status=404,
                         )
     except HTTPException as he:
         raise he

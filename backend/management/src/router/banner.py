@@ -1,16 +1,20 @@
 from typing import Any, Optional
+
 from fastapi import APIRouter, Depends
-from core.dependency import get_db, require_role
-from core.schemas.user import RoleEnum
-from core.response import APIResponse
-from src.services.banner import BannerService
 from pydantic import BaseModel
+from src.services.banner import BannerService
+
+from core.dependency import get_db, require_role
+from core.response import APIResponse
+from core.schemas.user import RoleEnum
+
 
 class BannerRequest(BaseModel):
     title: str
     image_url: str
     target_url: Optional[str] = None
     is_active: bool = True
+
 
 router = APIRouter(prefix="/banners")
 

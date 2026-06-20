@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
 
-from core.config import settings
-from core.database import db_client
 from fastapi import HTTPException
 from loguru import logger
 from src.schemas.wallet import Transaction, TransactionType
 from uuid6 import uuid7
+
+from core.config import settings
+from core.database import db_client
 
 ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELLED"}
 ALLOWED_WITHDRAWAL_ACTIONS = {"approve", "reject"}
@@ -74,7 +75,9 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=400, detail="Tài khoản không đủ số dư để rút tiền")
+            raise HTTPException(
+                status_code=400, detail="Tài khoản không đủ số dư để rút tiền"
+            )
 
         now = datetime.now(timezone.utc)
 
@@ -202,9 +205,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
 
-            logger.info(
-                "Đã ghi nhận yêu cầu rút tiền"
-            )
+            logger.info("Đã ghi nhận yêu cầu rút tiền")
             return {
                 "message": "Gửi yêu cầu rút tiền thành công",
                 "withdrawal_id": withdrawal_id,
@@ -215,7 +216,9 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi khởi tạo giao dịch rút tiền")
-            raise HTTPException(status_code=500, detail="Không thể xử lý yêu cầu rút tiền lúc này")
+            raise HTTPException(
+                status_code=500, detail="Không thể xử lý yêu cầu rút tiền lúc này"
+            )
         finally:
             if should_close_session:
                 await session.end_session()
@@ -284,9 +287,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(
-                status_code=400, detail="Mã xác thực không hợp lệ"
-            )
+            raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ")
 
         withdrawal = await db["withdrawal_requests"].find_one({"_id": withdrawal_id})
         if not withdrawal:
@@ -294,7 +295,8 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy yêu cầu rút tiền với mã giao dịch này"
+                status_code=404,
+                detail="Không tìm thấy yêu cầu rút tiền với mã giao dịch này",
             )
 
         if str(current_user.id) == withdrawal.get("user_id"):
@@ -371,9 +373,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
 
-            logger.info(
-                "Xác minh yêu cầu rút tiền thành công"
-            )
+            logger.info("Xác minh yêu cầu rút tiền thành công")
             return {"message": "Xác minh yêu cầu rút tiền thành công"}
         except HTTPException:
             raise
@@ -381,7 +381,9 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi xác minh yêu cầu rút tiền")
-            raise HTTPException(status_code=500, detail="Giao dịch thanh toán đang gặp lỗi")
+            raise HTTPException(
+                status_code=500, detail="Giao dịch thanh toán đang gặp lỗi"
+            )
         finally:
             if should_close_session:
                 await session.end_session()
@@ -407,7 +409,8 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy yêu cầu rút tiền với mã giao dịch này"
+                status_code=404,
+                detail="Không tìm thấy yêu cầu rút tiền với mã giao dịch này",
             )
         if withdrawal.get("status") != "PENDING":
             if should_close_session:
@@ -459,9 +462,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
 
-            logger.info(
-                "Đã hủy yêu cầu rút tiền và hoàn tiền"
-            )
+            logger.info("Đã hủy yêu cầu rút tiền và hoàn tiền")
             return {"message": "Đã hủy yêu cầu rút tiền và hoàn tiền"}
         except HTTPException:
             raise
@@ -469,7 +470,9 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi hủy yêu cầu rút tiền")
-            raise HTTPException(status_code=500, detail="Giao dịch thanh toán đang gặp lỗi")
+            raise HTTPException(
+                status_code=500, detail="Giao dịch thanh toán đang gặp lỗi"
+            )
         finally:
             if should_close_session:
                 await session.end_session()

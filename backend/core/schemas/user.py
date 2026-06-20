@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from uuid6 import uuid7
+
 from core.config import settings
 
 
@@ -57,7 +58,7 @@ class UserBase(BaseModel):
     is_verified: bool = False
     storage_limit: int = Field(
         default=settings.DEFAULT_PAGE_LIMIT * 1024 * 1024 * 1024,
-        le=settings.MAX_PAGE_LIMIT * 1024 * 1024 * 1024
+        le=settings.MAX_PAGE_LIMIT * 1024 * 1024 * 1024,
     )
     ai_tier: AITierEnum = AITierEnum.BASIC
 

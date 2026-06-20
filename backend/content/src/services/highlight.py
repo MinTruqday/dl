@@ -1,12 +1,13 @@
 import uuid
 from datetime import datetime, timezone
 
-from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
+
 from core.config import settings
+from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 
 ALLOWED_HIGHLIGHT_COLORS = ["#18181b", "#71717a", "#e4e4e7"]
 
@@ -34,9 +35,7 @@ class HighlightService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("highlights").insert_one(highlight)
-        logger.info(
-            "Tạo phần văn bản nổi bật thành công"
-        )
+        logger.info("Tạo phần văn bản nổi bật thành công")
         return highlight
 
     @staticmethod
@@ -77,7 +76,9 @@ class HighlightService:
             {"$set": {"note": note, "updated_at": datetime.now(timezone.utc)}},
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy ghi chú đánh dấu")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy ghi chú đánh dấu"
+            )
         return {"message": "Cập nhật chú thích đoạn nổi bật thành công"}
 
     @staticmethod
@@ -88,7 +89,9 @@ class HighlightService:
             {"_id": highlight_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy ghi chú đánh dấu")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy ghi chú đánh dấu"
+            )
         logger.info("Xóa vĩnh viễn ghi chú và phần đánh dấu")
         return {"message": "Đã xóa phần đánh dấu văn bản"}
 

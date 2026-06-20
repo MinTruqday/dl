@@ -6,6 +6,7 @@ import tempfile
 
 from loguru import logger
 from uuid6 import uuid7
+
 from core.config import settings
 
 
@@ -141,7 +142,8 @@ class LatexEngine:
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr("main.tex", content.encode("utf-8"))
             zip_file.writestr(
-                "README.md", "Exported from the document compilation service".encode("utf-8")
+                "README.md",
+                "Exported from the document compilation service".encode("utf-8"),
             )
             zip_file.writestr(
                 ".gitignore", "*.pdf\n*.aux\n*.log\n*.out".encode("utf-8")

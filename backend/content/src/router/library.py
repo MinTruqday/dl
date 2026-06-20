@@ -1,16 +1,14 @@
 from typing import Any, List, Optional
 
-from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db
-from src.schemas.library import (
-    BookmarkFolderAssign,
-    BookmarkFolderCreate,
-    ReadingListCreate,
-)
+from src.schemas.library import (BookmarkFolderAssign, BookmarkFolderCreate,
+                                 ReadingListCreate)
 from src.services.library import LibraryService
+
+from core.response import APIResponse
+from core.schemas.user import UserInDB
 
 router = APIRouter(prefix="/library")
 
@@ -48,7 +46,9 @@ async def get_list_by_id(
     )
 
 
-@router.post("/lists/{list_id}/documents/{document_id}", response_model=APIResponse[Any])
+@router.post(
+    "/lists/{list_id}/documents/{document_id}", response_model=APIResponse[Any]
+)
 async def add_to_list(
     list_id: str,
     document_id: str,

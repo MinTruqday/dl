@@ -1,10 +1,11 @@
 import json
 
-from core.config import settings
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
 from src.tools.api_tools import llm, tools
+
+from core.config import settings
 
 
 class Action:
@@ -18,7 +19,9 @@ class Action:
             if hasattr(t, "args_schema") and t.args_schema:
                 schema = t.args_schema.schema()
                 props = schema.get("properties", {})
-                args = ", ".join([f"{k} type {v.get('type')}" for k, v in props.items()])
+                args = ", ".join(
+                    [f"{k} type {v.get('type')}" for k, v in props.items()]
+                )
             tool_descriptions.append(f"- {t.name}({args}) {t.description}")
         self.tools_prompt = "\n".join(tool_descriptions)
 

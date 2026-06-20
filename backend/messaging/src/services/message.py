@@ -1,11 +1,12 @@
-from core.config import settings
-from fastapi import Query
 import asyncio
 from datetime import datetime, timezone
 
+from fastapi import Query
+from src.schemas.message import MessageInDB
+
+from core.config import settings
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
-from src.schemas.message import MessageInDB
 
 
 class MessageService:
@@ -734,8 +735,9 @@ class MessageService:
         msg = await RepositoryFactory.get("messages").find_one({"_id": message_id})
         if not msg:
             return None
-        from core.config import settings
         from src.core.http_client import http_client
+
+        from core.config import settings
 
         translated_content = ""
         try:

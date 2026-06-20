@@ -56,12 +56,13 @@ def _check_system_access(token: str) -> bool:
         return False
 
 
-from core.config import settings
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langgraph.prebuilt import create_react_agent
 from loguru import logger
+
+from core.config import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL
 
@@ -330,8 +331,9 @@ async def _get_doc_text(document_id: str, token: str) -> str:
     return ""
 
 
-from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 from src.router.inference import peer_review, suggest_citations, transform_tone
+
+from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 
 
 @tool
@@ -471,9 +473,7 @@ async def create_document(
         if res_profile.status_code == 200:
             profile_data = res_profile.json().get("data", {})
             user_name = (
-                profile_data.get("full_name")
-                or profile_data.get("name")
-                or "User"
+                profile_data.get("full_name") or profile_data.get("name") or "User"
             )
     except Exception:
         logger.warning("Lỗi tải hồ sơ người dùng để lấy thông tin tác giả")

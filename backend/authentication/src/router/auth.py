@@ -1,19 +1,15 @@
 from typing import Any
 
-from core.dependency import RateLimiter, get_current_user, get_db
-from core.response import APIResponse
-from core.schemas.user import (
-    ForgotPasswordRequest,
-    ResetPasswordRequest,
-    UserCreate,
-    UserInDB,
-    UserResponse,
-    VerifyCodeRequest,
-)
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from src.services.auth import AuthService
+
+from core.dependency import RateLimiter, get_current_user, get_db
+from core.response import APIResponse
+from core.schemas.user import (ForgotPasswordRequest, ResetPasswordRequest,
+                               UserCreate, UserInDB, UserResponse,
+                               VerifyCodeRequest)
 
 router = APIRouter(prefix="/auth")
 
@@ -27,7 +23,9 @@ async def read_users_me(
         len(current_user.passkeys) > 0 if current_user.passkeys else False
     )
     return APIResponse(
-        data=user_data, message="Lấy thông tin cá nhân thành công", status=status.HTTP_200_OK
+        data=user_data,
+        message="Lấy thông tin cá nhân thành công",
+        status=status.HTTP_200_OK,
     )
 
 
@@ -110,7 +108,9 @@ async def verify_code(
 async def google_login(db=Depends(get_db)):
     auth_url = await AuthService.get_google_auth_url(db=db)
     return APIResponse(
-        data={"url": auth_url}, message="Tạo liên kết cổng xác thực thành công", status=200
+        data={"url": auth_url},
+        message="Tạo liên kết cổng xác thực thành công",
+        status=200,
     )
 
 

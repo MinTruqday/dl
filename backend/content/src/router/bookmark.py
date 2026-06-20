@@ -1,11 +1,12 @@
 from typing import Any, List, Optional
 
-from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db
 from src.services.bookmark import BookmarkService
+
+from core.response import APIResponse
+from core.schemas.user import UserInDB
 
 router = APIRouter(prefix="/bookmarks")
 

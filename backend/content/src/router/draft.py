@@ -1,12 +1,13 @@
 from typing import Any
 
-from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends, Query
 from src.router.dependency import get_current_user, get_db, require_role
 from src.schemas.document import ModerateDocumentRequest
 from src.services.document import DocumentService
+
 from core.config import settings
+from core.response import APIResponse
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/drafts")
 

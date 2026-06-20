@@ -3,7 +3,6 @@ import os
 from typing import Annotated, List, Literal, Optional, Sequence, TypedDict
 
 import langchain
-from core.config import settings
 from langchain_community.cache import RedisCache
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
@@ -12,7 +11,6 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 from pydantic import BaseModel, Field
 from redis import Redis
-
 from src.memory.manager import memory_manager
 from src.memory.mem0_manager import mem0_manager
 from src.rag.embedder import embedding_service
@@ -21,8 +19,11 @@ from src.store.vector_store import vector_store
 from src.utils.file_processor import extract_text_from_base64
 from src.workflow.state import AgentState
 
+from core.config import settings
+
 try:
     from sentence_transformers import CrossEncoder
+
     nli_model_name = settings.NLI_MODEL_NAME
     nli_model = CrossEncoder(nli_model_name)
 except Exception:
@@ -32,6 +33,7 @@ except Exception:
 
 try:
     from sentence_transformers import CrossEncoder
+
     reranker = CrossEncoder(settings.RERANKER_MODEL)
 except Exception:
     reranker = None
@@ -39,6 +41,7 @@ except Exception:
 try:
     redis_url = settings.REDIS_URI
     from langchain_community.cache import RedisSemanticCache
+
     langchain.llm_cache = RedisSemanticCache(
         redis_url=redis_url, embedding=embedding_service
     )
@@ -70,18 +73,27 @@ except Exception:
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
+
 class ContextQuery(BaseModel):
     question: str = Field(description="Câu hỏi đã được viết lại")
 
+
 class GraphRoute(BaseModel):
-    route: Literal["rag", "direct"] = Field(description="Tuyến đường: 'rag' hoặc 'trực tiếp'")
+    route: Literal["rag", "direct"] = Field(
+        description="Tuyến đường: 'rag' hoặc 'trực tiếp'"
+    )
+
 
 class RetrievalStrategy(BaseModel):
-    is_simple: bool = Field(description="Đúng nếu câu hỏi đơn giản, Sai nếu cần truy vấn phụ")
+    is_simple: bool = Field(
+        description="Đúng nếu câu hỏi đơn giản, Sai nếu cần truy vấn phụ"
+    )
     queries: List[str] = Field(description="Danh sách truy vấn tìm kiếm tối ưu")
+
 
 class QueryOptimization(BaseModel):
     question: str = Field(description="Lệnh tìm kiếm tối ưu")
+
 
 class DocumentGrade(BaseModel):
     is_relevant: bool = Field(description="Tài liệu có liên quan đến câu hỏi hay không")
@@ -102,7 +114,9 @@ async def contextualize_question(state: AgentState):
     )
     try:
         structured_llm = llm.with_structured_output(ContextQuery)
-        response = await structured_llm.ainvoke(prompt.format(history=history_str, question=question))
+        response = await structured_llm.ainvoke(
+            prompt.format(history=history_str, question=question)
+        )
         return {"question": response.question}
     except Exception:
         logger.error("Lỗi xử lý ngữ cảnh")
@@ -140,8 +154,11 @@ def preprocess_file(state: AgentState):
 
 def _mask_pii(text: str) -> str:
     import re
+
     text = re.sub(r"\b(0[3|5|7|8|9])+([0-9]{8})\b", "[REDACTED PHONE]", text)
-    text = re.sub(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[REDACTED EMAIL]", text)
+    text = re.sub(
+        r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[REDACTED EMAIL]", text
+    )
     text = re.sub(r"\b(?:\d[ -]*?){13,16}\b", "[REDACTED CC]", text)
     return text
 
@@ -153,7 +170,7 @@ async def retrieve_db(state: AgentState):
     if document_ids and len(document_ids) >= 2:
         logger.info("Đang xử lý tài liệu bằng truy xuất liên kết")
         try:
-            raw_documents = await retrieval_service.cross_document_retrieve(
+            raw_documents = await retrieval.cross_document_retrieve(
                 question, document_ids, k=6
             )
             extracted_documents = []
@@ -183,13 +200,12 @@ async def retrieve_db(state: AgentState):
         logger.error("Lỗi tạo chiến lược truy xuất tối ưu")
 
     extracted_documents = []
-    
 
     all_raw_documents = []
     for q in list(dict.fromkeys(queries))[:3]:
         try:
             results = await vector_store.query(
-                query_vector=await embedding_service.embed_query(q),
+                query_vector=await embedding.embed_query(q),
                 document_ids=document_ids,
                 limit=10,
             )
@@ -202,11 +218,13 @@ async def retrieve_db(state: AgentState):
     if all_raw_documents:
         if reranker:
             try:
-                pairs = [[doc["_query"], doc.get("text", "")] for doc in all_raw_documents]
+                pairs = [
+                    [doc["_query"], doc.get("text", "")] for doc in all_raw_documents
+                ]
                 scores = await asyncio.to_thread(reranker.predict, pairs)
                 scored_documents = list(zip(all_raw_documents, scores))
                 scored_documents.sort(key=lambda x: x[1], reverse=True)
-                top_documents = retrieval_service._lost_in_the_middle_reorder(
+                top_documents = retrieval._lost_in_the_middle_reorder(
                     [doc for doc, score in scored_documents[:6]]
                 )[:3]
             except Exception:
@@ -250,12 +268,14 @@ async def grade_documents(state: AgentState):
         input_variables=["context", "question"],
     )
     filtered_documents = []
-    
+
     structured_llm = llm.with_structured_output(DocumentGrade)
-    
+
     for d in documents:
         try:
-            response = await structured_llm.ainvoke(prompt.format(context=d, question=question))
+            response = await structured_llm.ainvoke(
+                prompt.format(context=d, question=question)
+            )
             if response.is_relevant:
                 filtered_documents.append(d)
         except Exception:
@@ -304,7 +324,9 @@ async def generate_direct(state: AgentState):
         return {"generation": response.content}
     except Exception:
         logger.error("Response generation failed")
-        return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
+        return {
+            "generation": "The system encountered an unexpected error during generation and requires you to try again later"
+        }
 
 
 async def generate(state: AgentState):
@@ -312,7 +334,9 @@ async def generate(state: AgentState):
     documents = state.get("documents", [])
     user_id = state.get("user_id")
     if not user_id:
-        return {"generation": "Authentication is required to proceed with this specific operation please log in and try again"}
+        return {
+            "generation": "Authentication is required to proceed with this specific operation please log in and try again"
+        }
     user_context = await memory_manager.get_user_preferences(user_id)
     if state.get("file_data"):
         documents.append(f"[Attached Personal Documents]\n{state['file_data'][:6000]}")
@@ -361,7 +385,9 @@ async def generate(state: AgentState):
         return {"generation": generation}
     except Exception:
         logger.error("Lỗi tạo nội dung tài liệu")
-        return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
+        return {
+            "generation": "The system encountered an unexpected error during generation and requires you to try again later"
+        }
 
 
 async def grade_generation(state: AgentState):
@@ -373,6 +399,7 @@ async def grade_generation(state: AgentState):
 
     try:
         import asyncio
+
         from src.agents.reasoning import reasoning
 
         documents_list = [

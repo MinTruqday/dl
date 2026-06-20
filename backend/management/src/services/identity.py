@@ -1,11 +1,13 @@
-from datetime import datetime, timezone
 import uuid
-from uuid6 import uuid7
+from datetime import datetime, timezone
+
 from fastapi import HTTPException
+from loguru import logger
+from uuid6 import uuid7
+
 from core.database import db_client
 from core.schemas.user import CreatorStatusEnum, KYCStatusEnum, RoleEnum
 from core.storage import upload_file
-from loguru import logger
 
 
 class IdentityService:
@@ -41,7 +43,8 @@ class IdentityService:
             raise HTTPException(status_code=400, detail="Tài khoản đã có quyền tác giả")
         if current_user.role != RoleEnum.READER:
             raise HTTPException(
-                status_code=403, detail="Chỉ tài khoản người đọc mới có thể đăng ký tác giả"
+                status_code=403,
+                detail="Chỉ tài khoản người đọc mới có thể đăng ký tác giả",
             )
         if current_user.creator_status == CreatorStatusEnum.PENDING:
             raise HTTPException(
@@ -89,12 +92,11 @@ class IdentityService:
         user_id = str(current_user.id)
         if current_user.kyc_status == KYCStatusEnum.PENDING:
             raise HTTPException(
-                status_code=400, detail="Tài liệu xác minh danh tính đang được xét duyệt"
+                status_code=400,
+                detail="Tài liệu xác minh danh tính đang được xét duyệt",
             )
         if current_user.kyc_status == KYCStatusEnum.VERIFIED:
-            raise HTTPException(
-                status_code=400, detail="Tài khoản đã được xác minh"
-            )
+            raise HTTPException(status_code=400, detail="Tài khoản đã được xác minh")
         file_bytes = await file.read()
         file_ext = file.filename.split(".")[-1]
         object_name = f"kyc/{user_id}_{uuid7()}.{file_ext}"
@@ -111,7 +113,10 @@ class IdentityService:
             {"_id": user_id}, {"$set": {"kyc_status": KYCStatusEnum.PENDING}}
         )
         logger.info("Tải lên tài liệu xác minh thành công")
-        return {"status": "success", "message": "Tài liệu xác minh danh tính đang chờ xét duyệt"}
+        return {
+            "status": "success",
+            "message": "Tài liệu xác minh danh tính đang chờ xét duyệt",
+        }
 
     @staticmethod
     async def get_public_profile(slug: str, db=None) -> dict:

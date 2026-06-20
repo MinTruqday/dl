@@ -2,8 +2,9 @@ import json
 import os
 
 import aio_pika
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 
 class MessageQueueConnection:

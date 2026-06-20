@@ -7,6 +7,7 @@ import tempfile
 
 from loguru import logger
 from uuid6 import uuid7
+
 from core.config import settings
 
 
@@ -151,9 +152,7 @@ class EditorJSEngine:
                 if cap
                 else ""
             )
-            return (
-                f'<figure style="margin:1em 0;text-align:center">{img}{cap_tag}</figure>'
-            )
+            return f'<figure style="margin:1em 0;text-align:center">{img}{cap_tag}</figure>'
 
         if t in ("gallery", "groupImage", "carousel"):
             files = d.get("files", d.get("images", []))
@@ -406,9 +405,7 @@ class EditorJSEngine:
                 else []
             )
         except json.JSONDecodeError:
-            raise Exception(
-                "Định dạng nội dung tài liệu không hợp lệ"
-            )
+            raise Exception("Định dạng nội dung tài liệu không hợp lệ")
 
         if not blocks:
             raise Exception("Tài liệu không có nội dung hợp lệ")

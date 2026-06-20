@@ -1,10 +1,11 @@
 import os
 
 import redis.asyncio as redis
-from core.config import settings
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
+from core.config import settings
 
 app = FastAPI(title="Background Task Service", version=settings.VERSION)
 redis_client = redis.from_url(settings.REDIS_URI, decode_responses=True)
@@ -20,14 +21,18 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/health")
 async def read_health():
     await redis_client.ping()
-    return {"status": "The background processing service is currently operating normally and ready to accept incoming requests"}
+    return {
+        "status": "The background processing service is currently operating normally and ready to accept incoming requests"
+    }
 
 
 @app.post("/documents/compile")
 def compile_document(payload: dict):
     doc_id = payload.get("document_id")
     if not doc_id:
-        raise HTTPException(status_code=400, detail="Thiếu mã tài liệu hợp lệ để biên dịch")
+        raise HTTPException(
+            status_code=400, detail="Thiếu mã tài liệu hợp lệ để biên dịch"
+        )
 
     from src.tasks import compile_document_tectonic
 

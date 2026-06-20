@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
-from core.database import db_client
+
 from loguru import logger
+
+from core.database import db_client
 
 
 class SettingService:

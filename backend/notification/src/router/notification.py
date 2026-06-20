@@ -1,11 +1,12 @@
 from typing import Any
 
-from core.dependency import get_current_user, get_db
-from core.response import APIResponse
-from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query
 from src.schemas.notification import NotificationCreate
 from src.services.notification import NotificationService
+
+from core.dependency import get_current_user, get_db
+from core.response import APIResponse
+from core.schemas.user import UserInDB
 
 router = APIRouter(prefix="/notifications")
 

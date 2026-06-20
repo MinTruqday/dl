@@ -1,16 +1,17 @@
 import uvicorn
-from core.config import settings
-from loguru import logger
-from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.router.audit import router as audit_router
-from src.router.operation import router as operation_router
-from src.router.quota import router as quota_router
-from src.router.telemetry import router as telemetry_router
-from src.router.user import router as user_router
-from src.router.profile import router as profile_router
-from src.router.banner import router as banner_router
+from loguru import logger
+from src.router.audit import router as audit
+from src.router.banner import router as banner
+from src.router.operation import router as operation
+from src.router.profile import router as profile
+from src.router.quota import router as quota
+from src.router.telemetry import router as telemetry
+from src.router.user import router as user
+
+from core.config import settings
+from core.database import close_db, init_db
 
 app = FastAPI(title="DocLib Provision", version=settings.VERSION)
 
@@ -26,13 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(user_router)
-app.include_router(audit_router)
-app.include_router(telemetry_router)
-app.include_router(operation_router)
-app.include_router(quota_router)
-app.include_router(profile_router)
-app.include_router(banner_router)
+app.include(user)
+app.include(audit)
+app.include(telemetry)
+app.include(operation)
+app.include(quota)
+app.include(profile)
+app.include(banner)
 
 
 @app.on_event("startup")
@@ -48,4 +49,6 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "The provision service is currently operating normally and functioning as expected without any internal issues"}
+    return {
+        "status": "The provision service is currently operating normally and functioning as expected without any internal issues"
+    }

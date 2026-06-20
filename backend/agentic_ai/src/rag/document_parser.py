@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Dict, List
 
 import boto3
-from core.config import settings
 from loguru import logger
+
+from core.config import settings
 
 
 class DocumentParser:

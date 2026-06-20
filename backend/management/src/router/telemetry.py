@@ -1,11 +1,12 @@
 from typing import Any
 
-from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends, Query
 from src.router.dependency import get_current_user, get_db, require_role
 from src.services.telemetry import TelemetryService
+
 from core.config import settings
+from core.response import APIResponse
+from core.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/telemetry")
 
@@ -59,8 +60,6 @@ async def get_activity(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await TelemetryService.get_activity_log(
-            str(current_user.id), db=db
-        ),
+        data=await TelemetryService.get_activity_log(str(current_user.id), db=db),
         message="Lấy nhật ký kiểm duyệt thành công",
     )

@@ -1,8 +1,9 @@
 import os
 
-from core.config import settings
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
+
+from core.config import settings
 
 
 class DocLibDatabase:

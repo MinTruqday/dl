@@ -5,9 +5,10 @@ import os
 from typing import List
 
 import redis
-from core.config import settings
 from loguru import logger
 from sentence_transformers import SentenceTransformer
+
+from core.config import settings
 
 
 class EmbeddingService:
