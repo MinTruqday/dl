@@ -42,6 +42,6 @@ class Knowledge:
             return result.get("generation", "The system could not extract any relevant information from the available documents")
         except Exception:
             logger.exception("Lỗi truy cập cơ sở kiến thức")
-            return "The system encountered an unexpected error during data retrieval and requires you to try again later"
+            return "Data retrieval error, please retry"
 
 knowledge = Knowledge()

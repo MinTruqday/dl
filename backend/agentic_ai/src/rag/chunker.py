@@ -36,7 +36,7 @@ except ImportError:
 
 class AdvancedSemanticChunker:
     def __init__(self):
-        logger.info("Đang khởi tạo phân mảnh văn bản")
+        logger.info("Initializing text chunker")
         self.chunker = None
         self.type = "fallback"
 
@@ -52,7 +52,7 @@ class AdvancedSemanticChunker:
                 logger.info("Khởi tạo công cụ phân mảnh ngữ nghĩa thành công")
             except Exception:
                 logger.warning(
-                    "Lỗi khởi tạo phân mảnh văn bản, đang dùng chế độ tiêu chuẩn"
+                    "Text chunker init failed, using standard mode"
                 )
                 try:
                     self.chunker = TokenChunker(
@@ -62,7 +62,7 @@ class AdvancedSemanticChunker:
                     self.type = "chonkie_token"
                     logger.info("Tải công cụ phân đoạn văn bản thành công")
                 except Exception:
-                    logger.error("Lỗi khởi tạo phân mảnh văn bản")
+                    logger.error("Text chunker init failed")
 
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
         logger.info("Đang xử lý phân đoạn văn bản")

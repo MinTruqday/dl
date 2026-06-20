@@ -13,7 +13,7 @@ class CodeInterpreter:
         pass
 
     async def execute(self, task_desc: str) -> str:
-        logger.info("Đang xử lý tác vụ")
+        logger.info("Processing task")
 
         try:
             from src.agents.planning import llm
@@ -99,7 +99,7 @@ class CodeInterpreter:
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.communicate()
-                    return "The execution process exceeded the maximum allowed time limit and was terminated"
+                    return "Execution exceeded time limit and terminated"
 
                 MAX_OUTPUT = 512 * 1024
                 if proc.returncode == 0:
@@ -127,8 +127,8 @@ class CodeInterpreter:
 
             return final_res
         except Exception:
-            logger.error("Lỗi thực thi nội bộ")
-            return "The system encountered an unexpected error during execution and requires you to try again later"
+            logger.error("Internal execution error")
+            return "Execution error, please retry"
 
 
 code_interpreter = CodeInterpreter()

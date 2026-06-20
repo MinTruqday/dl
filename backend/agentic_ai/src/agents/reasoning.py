@@ -26,7 +26,7 @@ class Reasoning:
             return result.content.strip()
         except Exception:
             logger.exception("Lỗi thực thi tác vụ suy luận")
-            return "The system encountered an error during the inference process"
+            return "Inference process error"
 
     async def evaluate_quality(
         self, query: str, answer: str, context_documents: List[Dict]
@@ -58,7 +58,7 @@ class Reasoning:
 
     def _build_context(self, documents: List[Dict]) -> str:
         if not documents:
-            return "The system could not locate any matching documents within the knowledge base"
+            return "No matching documents found in knowledge base"
         parts = []
         for i, doc in enumerate(documents[:5], 1):
             title = doc.get("metadata", {}).get("title", "Unknown")

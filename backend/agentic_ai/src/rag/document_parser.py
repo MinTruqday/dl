@@ -60,7 +60,7 @@ class DocumentParser:
     async def parse_document(self, file_url: str) -> Dict:
         file_bytes, file_ext = await self._download_from_minio(file_url)
         if not file_bytes:
-            return {"error": "Lỗi tải tệp tin"}
+            return {"error": "File load failed"}
 
         with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as tmp:
             tmp.write(file_bytes)

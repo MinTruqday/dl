@@ -7,7 +7,7 @@ class PlanStep(BaseModel):
     agent: str = Field(
         description="Tên tác nhân thực thi"
     )
-    task: str = Field(description="Mô tả chi tiết tác vụ")
+    task: str = Field(description="Detailed task description")
 
 
 class ExecutionPlan(BaseModel):

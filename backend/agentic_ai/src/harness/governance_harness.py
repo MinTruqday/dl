@@ -101,7 +101,7 @@ class GovernanceHarness:
 
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
             logger.warning(
-                "Từ chối thao tác do không đủ quyền"
+                "Operation denied: insufficient permissions"
             )
             return PolicyDecision(
                 allowed=False,
@@ -114,7 +114,7 @@ class GovernanceHarness:
             and tool_name not in policy["allowed_tools"]
         ):
             logger.warning(
-                "Từ chối thao tác do không đủ quyền"
+                "Operation denied: insufficient permissions"
             )
             return PolicyDecision(
                 allowed=False,
@@ -125,7 +125,7 @@ class GovernanceHarness:
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
             logger.warning(
-                "Từ chối thao tác do quá giới hạn"
+                "Operation denied: quota exceeded"
             )
             return PolicyDecision(
                 allowed=False,

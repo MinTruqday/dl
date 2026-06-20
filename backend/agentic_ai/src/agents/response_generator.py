@@ -46,7 +46,7 @@ class ResponseGenerator:
                     yield chunk.content
 
         except Exception:
-            logger.error("Lỗi tạo phản hồi")
+            logger.error("Response generation failed")
             yield "The system encountered an unexpected error during the response generation process and requires you to try again later"
 
 

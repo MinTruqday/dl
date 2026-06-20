@@ -49,7 +49,7 @@ class ToolHarness:
             max_retries=max_retries,
             is_async=is_async,
         )
-        logger.info("Đăng ký AI thành công")
+        logger.info("Tool registered successfully")
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry
@@ -63,7 +63,7 @@ class ToolHarness:
     ) -> ToolResult:
         definition = self._registry.get(tool_name)
         if not definition:
-            logger.error("Tiện ích chưa được đăng ký")
+            logger.error("Tool not registered")
             return ToolResult(
                 success=False, data=None, error="The requested utility is currently not registered or unavailable in the system"
             )

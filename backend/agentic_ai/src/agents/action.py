@@ -26,7 +26,7 @@ class Action:
         self, action: str, params: dict, user_id: str, token: str = None
     ) -> str:
         if not token and action != "public_query":
-            return "Authentication is required to proceed with this specific operation"
+            return "Authentication required"
 
         system_prompt = prompt_registry.get(PromptType.TOOL_DISPATCHER)
 
@@ -42,14 +42,14 @@ class Action:
                 res = await llm_with_tools.ainvoke(messages)
 
                 if not res.tool_calls:
-                    return "The system could not identify a suitable utility to process the given request"
+                    return "No suitable utility found"
 
                 tool_call = res.tool_calls[0]
                 tool_name = tool_call["name"]
                 tool_params = tool_call["args"]
 
                 if tool_name not in self.tool_map:
-                    return "The requested utility could not be found within the available system resources"
+                    return "Requested utility not found"
 
                 selected_tool = self.tool_map[tool_name]
 
@@ -61,7 +61,7 @@ class Action:
                     "redeem_coupon",
                 ]
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
-                    return "The requested operation requires explicit user authorization before proceeding"
+                    return "Explicit user authorization required"
 
                 logger.info("Đang khởi chạy tiện ích")
 
@@ -80,13 +80,13 @@ class Action:
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    logger.warning("Lỗi xử lý, đang thử lại")
+                    logger.warning("Processing error, retrying")
                     if attempt == 2:
-                        return "The operation failed to complete successfully after exhausting all available retry attempts"
+                        return "Operation failed after retries"
 
         except Exception:
             logger.error("Quá trình thực thi bị gián đoạn")
-            return "The system encountered an unexpected error during the execution phase and requires you to try again later"
+            return "Execution error, please retry"
 
 
 action = Action()

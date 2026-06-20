@@ -55,7 +55,7 @@ class SearchEngine:
                 formatted += f"- {res.get('title')} {res.get('body')}\n  Source link {res.get('href')}\n"
             return formatted
         except Exception:
-            logger.error("Lỗi tìm kiếm thay thế")
+            logger.error("Fallback search failed")
             return ""
 
     async def execute(self, query: str) -> str:
@@ -63,7 +63,7 @@ class SearchEngine:
 
         if _is_ssrf_attempt(query):
             logger.warning("Ngăn chặn yêu cầu mạng trái phép")
-            return "The submitted request violates network security protocols and has been blocked"
+            return "Request blocked: violates security protocols"
 
         if self.api_key_valid:
             try:
@@ -78,7 +78,7 @@ class SearchEngine:
         if result:
             return result
 
-        return "The system could not locate any relevant information from the available search sources"
+        return "No relevant info found from search sources"
 
 
 search_engine = SearchEngine()

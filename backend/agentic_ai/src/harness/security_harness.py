@@ -120,7 +120,7 @@ class SecurityHarness:
             )
 
         if pii_violations:
-            logger.info("Đã ẩn thông tin cá nhân nhạy cảm")
+            logger.info("Sensitive info masked")
 
         return ScanResult(
             passed=True,
@@ -136,7 +136,7 @@ class SecurityHarness:
         credential_violations = self._detect_credential_leak(text)
         if credential_violations:
             logger.error("Ngăn chặn rò rỉ dữ liệu nhạy cảm")
-            return "The response was blocked by the security system due to the detection of sensitive information"
+            return "Response blocked: sensitive info detected"
         sanitized, _ = self._redact_pii(text)
         return sanitized
 

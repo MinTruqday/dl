@@ -43,7 +43,7 @@ class VectorStore:
             except asyncio.CancelledError:
                 break
             except Exception:
-                logger.error("Lỗi đưa dữ liệu tìm kiếm vào hàng đợi")
+                logger.error("Failed to enqueue search data")
 
     async def ensure_collection(self):
         try:
@@ -61,7 +61,7 @@ class VectorStore:
                     ),
                 )
         except Exception:
-            logger.error("Lỗi khởi tạo danh sách chỉ mục tìm kiếm")
+            logger.error("Search index init failed")
             raise
 
     async def upsert(
@@ -121,7 +121,7 @@ class VectorStore:
                 for hit in results
             ]
         except Exception:
-            logger.error("Lỗi xử lý tìm kiếm")
+            logger.error("Search processing failed")
             return []
 
     async def delete_by_document(self, document_id: str):
@@ -137,7 +137,7 @@ class VectorStore:
                 ),
             )
         except Exception:
-            logger.error("Lỗi xóa dữ liệu chỉ mục tìm kiếm")
+            logger.error("Failed to delete search index")
             raise
 
 

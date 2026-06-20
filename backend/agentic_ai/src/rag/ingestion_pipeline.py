@@ -31,7 +31,7 @@ class IngestionPipeline:
             {"_id": __import__("bson").ObjectId(document_id)}
         )
         if not document:
-            raise ValueError("Không tìm thấy tài liệu")
+            raise ValueError("Document not found")
 
         file_url = document.get("file_url", "")
         title = document.get("title", "Untitled")
