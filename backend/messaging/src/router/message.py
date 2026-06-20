@@ -138,7 +138,7 @@ async def recall_message(message_id: str, current_user=Depends(get_current_user)
     return APIResponse(data=result, message="Thu hồi tin nhắn thành công", status=200)
 
 
-@router.get("/{other_user_id}/search", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_messages(
     other_user_id: str, q: str = Query(...), current_user=Depends(get_current_user)
 ):
@@ -326,7 +326,7 @@ async def get_conversation_settings(
     return APIResponse(data=result, message="Lấy cấu hình cuộc trò chuyện thành công")
 
 
-@router.delete("/conversations/{other_user_id}", response_model=APIResponse[Any])
+@router.delete("/cuoc-tro-chuyen/{other_user_id}", response_model=APIResponse[Any])
 async def delete_conversation(
     other_user_id: str, current_user=Depends(get_current_user)
 ):

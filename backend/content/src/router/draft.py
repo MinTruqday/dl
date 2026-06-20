@@ -13,7 +13,7 @@ router = APIRouter(prefix="/ban-nhap")
 
 
 @router.get(
-    "/queue",
+    "/hang-doi",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -29,7 +29,7 @@ async def get_approval_queue(
 
 
 @router.post(
-    "/{document_id}/moderate",
+    "/{document_id}/kiem-duyet",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

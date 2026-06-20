@@ -8,10 +8,10 @@ from core.response import APIResponse
 from core.schemas.quota import QuotaLimit
 from core.schemas.user import RoleEnum, UserInDB
 
-router = APIRouter(prefix="/quotas")
+router = APIRouter(prefix="/han-muc")
 
 
-@router.get("/check", response_model=APIResponse[Any], include_in_schema=False)
+@router.get("/kiem-tra", response_model=APIResponse[Any], include_in_schema=False)
 async def check_quota_internal(
     user_id: str,
     role: str,
@@ -37,7 +37,7 @@ async def get_my_quota(
     return APIResponse(data=usage, message="Lấy thông tin hạn mức sử dụng thành công")
 
 
-@router.put("/{role}/config", response_model=APIResponse[Any])
+@router.put("/{role}/cau-hinh", response_model=APIResponse[Any])
 async def update_role_quota(
     role: str,
     limits: QuotaLimit,
@@ -51,7 +51,7 @@ async def update_role_quota(
     )
 
 
-@router.get("/config", response_model=APIResponse[Any])
+@router.get("/cau-hinh", response_model=APIResponse[Any])
 async def get_global_config(
     current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])), db=Depends(get_db)
 ):
@@ -72,7 +72,7 @@ class ConsumeQuotaRequest(BaseModel):
     tokens: int = 0
 
 
-@router.post("/consume", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/tieu-thu", response_model=APIResponse[Any], include_in_schema=False)
 async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
     await QuotaManager.consume_request(
         req.user_id, req.feature, req.req_reset_hours, db=db

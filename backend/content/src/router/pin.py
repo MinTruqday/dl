@@ -8,7 +8,7 @@ from src.services.pin import PinManager
 from core.response import APIResponse
 from core.schemas.user import UserInDB
 
-router = APIRouter(prefix="/pins")
+router = APIRouter(prefix="/ghim")
 
 
 @router.get("", response_model=APIResponse[Any])

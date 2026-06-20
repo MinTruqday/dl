@@ -136,7 +136,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/ma-giam-gia/su-dung",
+            f"{INTERNAL_API_URL}/ma-qua-tang/su-dung",
             json={"code": code.strip()},
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,

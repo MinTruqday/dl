@@ -47,38 +47,6 @@ class ProfileManager:
         return user
 
     @staticmethod
-    async def get_badges(current_user, db=None):
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        user_record = await db["users"].find_one({"_id": str(current_user.id)})
-        badges = user_record.get("badges", []) if user_record else []
-        return {"badges": badges}
-
-    @staticmethod
-    async def get_reading_streaks(current_user, db=None):
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        user_record = await db["users"].find_one({"_id": str(current_user.id)})
-        if not user_record:
-            return {
-                "current_streak": 0,
-                "longest_streak": 0,
-                "message": "Tài khoản chưa có chuỗi ngày đọc",
-            }
-        reading_stats = user_record.get("reading_stats", {})
-        current_s = reading_stats.get("current_streak", 0)
-        longest_s = reading_stats.get("longest_streak", 0)
-        return {
-            "current_streak": current_s,
-            "longest_streak": longest_s,
-            "message": (
-                "You have successfully maintained an active reading streak for the reported duration"
-                if current_s > 0
-                else "Begin reading documents to initiate and build your daily activity streak"
-            ),
-        }
-
-    @staticmethod
     async def update_brand_page(data: dict, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()

@@ -35,7 +35,7 @@ async def read_users_me(
 
 
 @router.post(
-    "/register",
+    "/dang-ky",
     response_model=APIResponse[UserResponse],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(RateLimiter(calls=3, period=60))],
@@ -52,7 +52,7 @@ async def register_user(
 
 
 @router.post(
-    "/login",
+    "/dang-nhap",
     response_model=APIResponse[Any],
     dependencies=[Depends(RateLimiter(calls=5, period=60))],
 )

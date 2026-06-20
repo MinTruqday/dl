@@ -22,7 +22,7 @@ from core.schemas.user import RoleEnum, UserInDB
 router = APIRouter(prefix="/cong-tac")
 
 
-@router.post("/invitations", response_model=APIResponse[Any])
+@router.post("/loi-moi", response_model=APIResponse[Any])
 async def invite_collaborator(
     data: CoauthorInviteRequest,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -37,7 +37,7 @@ async def invite_collaborator(
     )
 
 
-@router.get("/invitations", response_model=APIResponse[Any])
+@router.get("/loi-moi", response_model=APIResponse[Any])
 async def get_my_collaboration_invites(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
     db=Depends(get_db),
@@ -50,7 +50,7 @@ async def get_my_collaboration_invites(
     )
 
 
-@router.patch("/invitations/{invite_id}", response_model=APIResponse[Any])
+@router.patch("/loi-moi/{invite_id}", response_model=APIResponse[Any])
 async def respond_to_collaboration_invite(
     invite_id: str,
     data: CollaborationResponse,
@@ -65,7 +65,7 @@ async def respond_to_collaboration_invite(
     )
 
 
-@router.get("/documents/{document_id}", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_collaborators(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -93,7 +93,7 @@ async def remove_collaborator(
     )
 
 
-@router.get("/documents/{document_id}/activity", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/hoat-dong", response_model=APIResponse[Any])
 async def get_activities(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -124,7 +124,7 @@ async def transfer_ownership(
     )
 
 
-@router.post("/documents/{document_id}/ping", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/ping", response_model=APIResponse[Any])
 async def ping_status(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -136,7 +136,7 @@ async def ping_status(
     )
 
 
-@router.get("/documents/{document_id}/online", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/truc-tuyen", response_model=APIResponse[Any])
 async def get_online_collaborators(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -148,7 +148,7 @@ async def get_online_collaborators(
     )
 
 
-@router.patch("/{collaboration_id}/roles", response_model=APIResponse[Any])
+@router.patch("/{collaboration_id}/vai-tro", response_model=APIResponse[Any])
 async def update_collaborator_role(
     collaboration_id: str,
     data: UpdateCollaboratorRoleRequest,
@@ -163,7 +163,7 @@ async def update_collaborator_role(
     )
 
 
-@router.post("/documents/{document_id}/messages", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/tin-nhan", response_model=APIResponse[Any])
 async def send_memo(
     document_id: str,
     data: CollabMemoCreateRequest,
@@ -178,7 +178,7 @@ async def send_memo(
     )
 
 
-@router.get("/documents/{document_id}/messages", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/tin-nhan", response_model=APIResponse[Any])
 async def get_memos(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -190,7 +190,7 @@ async def get_memos(
     )
 
 
-@router.patch("/documents/{document_id}/access", response_model=APIResponse[Any])
+@router.patch("/tai-lieu/{document_id}/quyen-truy-cap", response_model=APIResponse[Any])
 async def update_collab_access(
     document_id: str,
     data: UpdateCollabAccessRequest,
@@ -221,7 +221,7 @@ async def get_sent_pending_invites(
     )
 
 
-@router.delete("/invitations/{invite_id}", response_model=APIResponse[Any])
+@router.delete("/loi-moi/{invite_id}", response_model=APIResponse[Any])
 async def revoke_invite(
     invite_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -249,7 +249,7 @@ async def get_contribution_stats(
     )
 
 
-@router.post("/documents/{document_id}/versions", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/phien-ban", response_model=APIResponse[Any])
 async def create_snapshot(
     document_id: str,
     data: CreateDraftSnapshotRequest,
@@ -265,7 +265,7 @@ async def create_snapshot(
     )
 
 
-@router.get("/documents/{document_id}/versions", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/phien-ban", response_model=APIResponse[Any])
 async def get_snapshots(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -277,7 +277,7 @@ async def get_snapshots(
     )
 
 
-@router.post("/documents/{document_id}/lock", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/khoa", response_model=APIResponse[Any])
 async def acquire_lock(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -289,7 +289,7 @@ async def acquire_lock(
     )
 
 
-@router.post("/documents/{document_id}/unlock", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/mo-khoa", response_model=APIResponse[Any])
 async def release_lock(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -301,7 +301,7 @@ async def release_lock(
     )
 
 
-@router.get("/documents/{document_id}/lock-status", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/trang-thai-khoa", response_model=APIResponse[Any])
 async def get_lock_status(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -313,7 +313,7 @@ async def get_lock_status(
     )
 
 
-@router.post("/documents/{document_id}/invite-codes", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/ma-moi", response_model=APIResponse[Any])
 async def generate_invite_code(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -327,7 +327,7 @@ async def generate_invite_code(
     )
 
 
-@router.post("/join/{invite_code}", response_model=APIResponse[Any])
+@router.post("/tham-gia/{invite_code}", response_model=APIResponse[Any])
 async def join_via_invite_code(
     invite_code: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -341,7 +341,7 @@ async def join_via_invite_code(
     )
 
 
-@router.post("/documents/{document_id}/tasks", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/cong-viec", response_model=APIResponse[Any])
 async def create_task(
     document_id: str,
     data: CollabTaskCreateRequest,
@@ -357,7 +357,7 @@ async def create_task(
     )
 
 
-@router.get("/documents/{document_id}/tasks", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/cong-viec", response_model=APIResponse[Any])
 async def get_tasks(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -369,7 +369,7 @@ async def get_tasks(
     )
 
 
-@router.patch("/tasks/{task_id}", response_model=APIResponse[Any])
+@router.patch("/nhiem-vu/{task_id}", response_model=APIResponse[Any])
 async def update_task(
     task_id: str,
     data: UpdateTaskStatusRequest,
@@ -384,7 +384,7 @@ async def update_task(
     )
 
 
-@router.post("/tasks/{task_id}/comments", response_model=APIResponse[Any])
+@router.post("/nhiem-vu/{task_id}/binh-luan", response_model=APIResponse[Any])
 async def add_task_comment(
     task_id: str,
     data: TaskCommentCreateRequest,
@@ -400,7 +400,7 @@ async def add_task_comment(
     )
 
 
-@router.get("/tasks/{task_id}/comments", response_model=APIResponse[Any])
+@router.get("/nhiem-vu/{task_id}/binh-luan", response_model=APIResponse[Any])
 async def get_task_comments(
     task_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),

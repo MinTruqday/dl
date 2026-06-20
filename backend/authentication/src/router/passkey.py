@@ -7,7 +7,7 @@ from core.dependency import get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import PasskeyFinishRequest, PasskeyRequest
 
-router = APIRouter(prefix="/auth/passkey")
+router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")
 
 
 @router.post("/dang-nhap/bat-dau", response_model=APIResponse[Any])

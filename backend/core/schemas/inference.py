@@ -14,11 +14,6 @@ class TranslationRequest(BaseModel):
     target_lang: str
 
 
-class SentimentRequest(BaseModel):
-    texts: Optional[List[str]] = None
-    document_id: Optional[str] = None
-
-
 class CodeRequest(BaseModel):
     prompt: str
     language: str = "python"

@@ -7,10 +7,10 @@ from src.schemas.feedback import FeedbackRequest
 
 from core.config import settings
 
-router = APIRouter(prefix="/feedback")
+router = APIRouter(prefix="/phan-hoi")
 
 
-@router.post("/feedback")
+@router.post("/phan-hoi")
 async def submit_feedback(req: FeedbackRequest):
     try:
         client = AsyncIOMotorClient(settings.MONGODB_URI)

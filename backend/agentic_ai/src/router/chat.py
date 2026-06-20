@@ -106,7 +106,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         }
 
 
-@router.post("/stream")
+@router.post("/phat-truc-tiep")
 async def stream_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None

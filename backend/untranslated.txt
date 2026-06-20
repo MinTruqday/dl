@@ -1,0 +1,265 @@
+--- ROUTER PREFIXES ---
+./notification/src/router/notification.py: prefix=/thong-bao
+./agentic_ai/src/router/ingest.py: prefix=/tiếp-nap
+./agentic_ai/src/router/feedback.py: prefix=/phan-hoi
+./agentic_ai/src/router/chat.py: prefix=/tro-chuyen
+./agentic_ai/src/router/inference.py: prefix=/suy-luan
+./agentic_ai/src/router/finetune.py: prefix=/tinh-chinh
+./agentic_ai/src/router/history.py: prefix=/lich-su
+./management/src/router/user.py: prefix=/nguoi-dung
+./management/src/router/audit.py: prefix=/kiem-toan
+./management/src/router/profile.py: prefix=/ho-so
+./management/src/router/quota.py: prefix=/quotas
+./management/src/router/telemetry.py: prefix=/giam-sat
+./management/src/router/operation.py: prefix=/van-hanh
+./management/src/router/banner.py: prefix=/quang-cao
+./content/src/router/pin.py: prefix=/ghim
+./content/src/router/version.py: prefix=/phien-ban
+./content/src/router/library.py: prefix=/thu-vien
+./content/src/router/upload.py: prefix=/tai-len
+./content/src/router/discovery.py: prefix=/kham-pha
+./content/src/router/reading.py: prefix=/doc-hieu
+./content/src/router/export.py: prefix=/ket-xuat
+./content/src/router/review.py: prefix=/danh-gia
+./content/src/router/bookmark.py: prefix=/danh-dau
+./content/src/router/collaboration.py: prefix=/cong-tac
+./content/src/router/document.py: prefix=/tai-lieu
+./content/src/router/publication.py: prefix=/xuat-ban
+./content/src/router/storage.py: prefix=/luu-tru
+./content/src/router/highlight.py: prefix=/danh-dau
+./content/src/router/draft.py: prefix=/ban-nhap
+./finance/src/router/withdrawal.py: prefix=/rut-tien
+./finance/src/router/deposit.py: prefix=/nap-tien
+./finance/src/router/coupon.py: prefix=/ma-giam-gia
+./finance/src/router/monetization.py: prefix=/kiem-tien
+./finance/src/router/wallet.py: prefix=/vi-tien
+./messaging/src/router/message.py: prefix=/tin-nhan
+./authentication/src/router/auth.py: prefix=/xac-thuc
+./authentication/src/router/passkey.py: prefix=/xac-thuc/khoa-bao-mat
+./editor/src/router/editor.py: prefix=/trinh-soan-thao
+
+--- ROUTER PATHS ---
+./notification/src/router/notification.py: GET 
+./notification/src/router/notification.py: PATCH /{notif_id}/doc-hieu
+./notification/src/router/notification.py: PATCH /doc-tat-ca
+./notification/src/router/notification.py: DELETE /{notif_id}
+./notification/src/router/notification.py: POST /gui-di
+./agentic_ai/src/router/ingest.py: POST /tiep-nap
+./agentic_ai/src/router/ingest.py: DELETE /tai-lieu/{document_id}
+./agentic_ai/src/router/feedback.py: POST /phan-hoi
+./agentic_ai/src/router/chat.py: POST 
+./agentic_ai/src/router/chat.py: POST /stream
+./agentic_ai/src/router/inference.py: POST /tao-noi-dung
+./agentic_ai/src/router/inference.py: POST /dich-thuat
+./agentic_ai/src/router/inference.py: POST /tao-ma
+./agentic_ai/src/router/inference.py: POST /kiem-tra-ngu-phap
+./agentic_ai/src/router/inference.py: POST /tom-tat
+./agentic_ai/src/router/inference.py: POST /kiem-tra-dao-van
+./agentic_ai/src/router/inference.py: POST /actions
+./agentic_ai/src/router/inference.py: POST /tu-dong-nghia
+./agentic_ai/src/router/inference.py: POST /trich-dan-thong-minh
+./agentic_ai/src/router/inference.py: POST /bien-doi-van-ban
+./agentic_ai/src/router/inference.py: POST /kiem-duyet-noi-dung
+./agentic_ai/src/router/inference.py: POST /tong-hop-tai-lieu
+./agentic_ai/src/router/inference.py: POST /trich-xuat-van-ban
+./agentic_ai/src/router/inference.py: POST /phan-tich-tai-lieu
+./agentic_ai/src/router/inference.py: DELETE /vector/{document_id}
+./agentic_ai/src/router/finetune.py: POST /tap-du-lieu
+./agentic_ai/src/router/finetune.py: GET /tap-du-lieu
+./agentic_ai/src/router/finetune.py: GET /tap-du-lieu/{dataset_id}
+./agentic_ai/src/router/finetune.py: DELETE /tap-du-lieu/{dataset_id}
+./agentic_ai/src/router/finetune.py: POST /tap-du-lieu/{dataset_id}/mau-du-lieu
+./agentic_ai/src/router/finetune.py: GET /tap-du-lieu/{dataset_id}/mau-du-lieu
+./agentic_ai/src/router/finetune.py: DELETE /tap-du-lieu/{dataset_id}/mau-du-lieu/{sample_id}
+./agentic_ai/src/router/finetune.py: POST /dau-vao/phan-hoi
+./agentic_ai/src/router/finetune.py: POST /dau-vao/tai-lieu
+./agentic_ai/src/router/finetune.py: POST /tien-trinh
+./agentic_ai/src/router/finetune.py: POST /cong-viec/{job_id}/bat-dau
+./agentic_ai/src/router/finetune.py: GET /tien-trinh
+./agentic_ai/src/router/finetune.py: GET /cong-viec/{job_id}
+./agentic_ai/src/router/finetune.py: POST /cong-viec/{job_id}/huy-bo
+./agentic_ai/src/router/finetune.py: POST /cong-viec/{job_id}/trien-khai
+./agentic_ai/src/router/finetune.py: POST /cong-viec/{job_id}/danh-gia
+./agentic_ai/src/router/history.py: POST 
+./agentic_ai/src/router/history.py: GET 
+./agentic_ai/src/router/history.py: GET /{session_id}
+./agentic_ai/src/router/history.py: PUT /{session_id}/tieu-de
+./agentic_ai/src/router/history.py: DELETE /{session_id}
+./agentic_ai/src/router/history.py: POST /{session_id}/tin-nhan
+./collector/src/router/collector.py: POST /kich-hoat
+./collector/src/router/collector.py: POST /tam-dung
+./collector/src/router/collector.py: GET /cong-viec-dang-chay
+./collector/src/router/collector.py: GET /thong-ke
+./collector/src/router/collector.py: GET /nhat-ky-hoat-dong
+./management/src/router/user.py: GET /tim-kiem
+./management/src/router/user.py: GET /{user_id}
+./management/src/router/user.py: GET /email/{email}
+./management/src/router/user.py: GET /ten-mien/{slug}
+./management/src/router/user.py: POST /
+./management/src/router/profile.py: GET /ca-nhan
+./management/src/router/profile.py: PUT /ca-nhan
+./management/src/router/profile.py: POST /dang-ky-tac-gia
+./management/src/router/profile.py: POST /nang-cap-tac-gia
+./management/src/router/profile.py: POST /xac-minh-danh-tinh
+./management/src/router/profile.py: GET /cai-dat
+./management/src/router/profile.py: PUT /cai-dat
+./management/src/router/profile.py: POST /chan/{target_id}
+./management/src/router/profile.py: PUT /trang-tac-gia
+./management/src/router/profile.py: GET /{slug}
+./management/src/router/quota.py: GET /kiem-tra
+./management/src/router/quota.py: GET /ca-nhan
+./management/src/router/quota.py: PUT /{role}/cau-hinh
+./management/src/router/quota.py: GET /cau-hinh
+./management/src/router/quota.py: POST /consume
+./management/src/router/banner.py: GET 
+./content/src/router/pin.py: GET 
+./content/src/router/pin.py: POST /{document_id}
+./content/src/router/pin.py: DELETE /{document_id}
+./content/src/router/pin.py: PUT 
+./content/src/router/version.py: POST /luu/{document_id}
+./content/src/router/version.py: GET /tai-lieu/{document_id}
+./content/src/router/version.py: POST /{version_id}/khoi-phuc
+./content/src/router/library.py: POST /danh-sach
+./content/src/router/library.py: GET /danh-sach
+./content/src/router/library.py: GET /danh-sach/{list_id}
+./content/src/router/upload.py: POST /hinh-anh
+./content/src/router/upload.py: POST /tai-lieu
+./content/src/router/upload.py: POST /tap-tin
+./content/src/router/upload.py: GET /storage/{file_path:path}
+./content/src/router/upload.py: POST /phan-doan
+./content/src/router/discovery.py: GET /thinh-hanh
+./content/src/router/discovery.py: GET /the-loai
+./content/src/router/discovery.py: GET /tim-kiem-thong-minh
+./content/src/router/discovery.py: GET /goi-y-ai
+./content/src/router/discovery.py: GET /tu-khoa-thinh-hanh
+./content/src/router/reading.py: GET /lich-su
+./content/src/router/reading.py: POST /tien-do
+./content/src/router/reading.py: GET /tai-lieu/{document_id}/tim-kiem
+./content/src/router/reading.py: DELETE /lich-su
+./content/src/router/reading.py: DELETE /lich-su/{document_id}
+./content/src/router/reading.py: GET /luu-tru/cay-thu-muc
+./content/src/router/reading.py: GET /luu-tru/noi-dung
+./content/src/router/export.py: GET /{document_id}/pdf
+./content/src/router/review.py: POST /{document_id}
+./content/src/router/review.py: GET /{document_id}
+./content/src/router/bookmark.py: POST /{document_id}
+./content/src/router/bookmark.py: GET 
+./content/src/router/bookmark.py: POST /thu-muc
+./content/src/router/bookmark.py: GET /thu-muc
+./content/src/router/bookmark.py: PUT /folders/{folder_id}
+./content/src/router/bookmark.py: DELETE /folders/{folder_id}
+./content/src/router/collaboration.py: POST /loi-moi
+./content/src/router/collaboration.py: GET /loi-moi
+./content/src/router/collaboration.py: PATCH /loi-moi/{invite_id}
+./content/src/router/collaboration.py: GET /tai-lieu/{document_id}
+./content/src/router/collaboration.py: DELETE /{collaboration_id}
+./content/src/router/collaboration.py: GET /tai-lieu/{document_id}/hoat-dong
+./content/src/router/collaboration.py: POST /tai-lieu/{document_id}/ping
+./content/src/router/collaboration.py: GET /tai-lieu/{document_id}/truc-tuyen
+./content/src/router/collaboration.py: PATCH /{collaboration_id}/vai-tro
+./content/src/router/collaboration.py: POST /tai-lieu/{document_id}/tin-nhan
+./content/src/router/collaboration.py: GET /tai-lieu/{document_id}/tin-nhan
+./content/src/router/collaboration.py: PATCH /tai-lieu/{document_id}/quyen-truy-cap
+./content/src/router/collaboration.py: DELETE /loi-moi/{invite_id}
+./content/src/router/collaboration.py: POST /tai-lieu/{document_id}/phien-ban
+./content/src/router/collaboration.py: GET /tai-lieu/{document_id}/phien-ban
+./content/src/router/collaboration.py: POST /tai-lieu/{document_id}/khoa
+./content/src/router/collaboration.py: POST /tai-lieu/{document_id}/mo-khoa
+./content/src/router/collaboration.py: GET /tai-lieu/{document_id}/trang-thai-khoa
+./content/src/router/collaboration.py: POST /tai-lieu/{document_id}/ma-moi
+./content/src/router/collaboration.py: POST /tham-gia/{invite_code}
+./content/src/router/collaboration.py: POST /tai-lieu/{document_id}/cong-viec
+./content/src/router/collaboration.py: GET /tai-lieu/{document_id}/cong-viec
+./content/src/router/collaboration.py: PATCH /cong-viec/{task_id}
+./content/src/router/collaboration.py: POST /cong-viec/{task_id}/binh-luan
+./content/src/router/collaboration.py: GET /cong-viec/{task_id}/binh-luan
+./content/src/router/document.py: POST 
+./content/src/router/document.py: PUT /{document_id}/noi-dung
+./content/src/router/document.py: PUT /{document_id}
+./content/src/router/document.py: GET 
+./content/src/router/document.py: GET /{document_id}
+./content/src/router/document.py: GET /d/{slug}
+./content/src/router/document.py: GET /preview/{slug}
+./content/src/router/document.py: GET /{document_id}/analytics
+./content/src/router/document.py: GET /{document_id}/chi-so-hoc-thuat
+./content/src/router/document.py: POST /{document_id}/unlock
+./content/src/router/publication.py: GET /{document_id}/do-de-doc
+./content/src/router/storage.py: POST /thu-muc
+./content/src/router/storage.py: POST /tap-tin
+./content/src/router/storage.py: GET /danh-sach
+./content/src/router/storage.py: GET /tim-kiem
+./content/src/router/storage.py: GET /gan-day
+./content/src/router/storage.py: GET /quota
+./content/src/router/storage.py: GET /tai-ve-luu-tru
+./content/src/router/storage.py: PUT /tap-tin/{item_id}
+./content/src/router/storage.py: DELETE /tap-tin/{item_id}
+./content/src/router/storage.py: POST /tap-tin/{item_id}/chia-se
+./content/src/router/storage.py: GET /chia-se/{share_token}
+./content/src/router/highlight.py: POST /tai-lieu/{document_id}
+./content/src/router/highlight.py: GET /tai-lieu/{document_id}
+./content/src/router/highlight.py: PUT /{highlight_id}/ghi-chu
+./content/src/router/highlight.py: DELETE /{highlight_id}
+./content/src/router/highlight.py: GET /ghi-chu
+./content/src/router/highlight.py: GET /tai-lieu/{document_id}/ket-xuat
+./realtime/src/router/editor_socket.py: WEBSOCKET /crdt/{document_id}
+./realtime/src/router/message_socket.py: WEBSOCKET /{user_id}
+./finance/src/router/withdrawal.py: POST 
+./finance/src/router/deposit.py: POST 
+./finance/src/router/monetization.py: POST /mua/tai-lieu
+./finance/src/router/monetization.py: POST /thanh-vien
+./finance/src/router/monetization.py: GET /bang-gia
+./finance/src/router/wallet.py: GET /so-du
+./finance/src/router/wallet.py: GET /giao-dich
+./messaging/src/router/message.py: POST /
+./messaging/src/router/message.py: GET /{other_user_id}
+./messaging/src/router/message.py: GET /cuoc-tro-chuyen
+./messaging/src/router/message.py: POST /{message_id}/ghim
+./messaging/src/router/message.py: PUT /{message_id}
+./messaging/src/router/message.py: DELETE /{message_id}
+./messaging/src/router/message.py: GET /{other_user_id}/search
+./messaging/src/router/message.py: POST /{message_id}/bay-to-cam-xuc
+./messaging/src/router/message.py: POST /{other_user_id}/doc-hieu
+./messaging/src/router/message.py: POST /{receiver_id}/tai-lieu/chia-se
+./messaging/src/router/message.py: GET /{other_user_id}/tai-lieu/da-chia-se
+./messaging/src/router/message.py: POST /{other_user_id}/chan
+./messaging/src/router/message.py: POST /{other_user_id}/bo-chan
+./messaging/src/router/message.py: GET /{other_user_id}/trang-thai-chan
+./messaging/src/router/message.py: POST /cuoc-tro-chuyen/{other_user_id}/ghim
+./messaging/src/router/message.py: POST /{message_id}/dich-thuat
+./messaging/src/router/message.py: POST /nhom
+./messaging/src/router/message.py: POST /{other_user_id}/ban-nhap
+./messaging/src/router/message.py: GET /{other_user_id}/ban-nhap
+./messaging/src/router/message.py: POST /{other_user_id}/tu-huy
+./messaging/src/router/message.py: POST /{other_user_id}/tat-thong-bao
+./messaging/src/router/message.py: GET /{other_user_id}/cai-dat
+./messaging/src/router/message.py: DELETE /conversations/{other_user_id}
+./authentication/src/router/auth.py: GET /ca-nhan
+./authentication/src/router/auth.py: POST /quen-mat-khau
+./authentication/src/router/auth.py: POST /dat-lai-mat-khau
+./authentication/src/router/auth.py: POST /xac-nhan-ma
+./authentication/src/router/auth.py: GET /google/dang-nhap
+./authentication/src/router/auth.py: GET /google/phan-hoi
+./authentication/src/router/passkey.py: POST /dang-nhap/bat-dau
+./authentication/src/router/passkey.py: POST /dang-nhap/hoan-tat
+./editor/src/router/editorjs.py: POST /bien-dich
+./editor/src/router/editor.py: POST /{document_id}/kiem-tra-dao-van
+./editor/src/router/editor.py: POST /{document_id}/dong-bo
+./editor/src/router/editor.py: POST /{document_id}/goi-y
+./editor/src/router/editor.py: PUT /goi-y/{suggestion_id}/giai-quyet
+./editor/src/router/editor.py: POST /dong-ho-pomodoro
+./editor/src/router/editor.py: POST /{document_id}/tu-dong-luu
+./editor/src/router/editor.py: POST /{document_id}/gui-danh-gia
+./editor/src/router/editor.py: POST /{document_id}/tim-va-thay-the
+./editor/src/router/editor.py: POST /{document_id}/goi-y-ai
+./editor/src/router/editor.py: POST /{document_id}/tom-tat
+./editor/src/router/editor.py: POST /{document_id}/trich-xuat-the
+./editor/src/router/editor.py: POST /{document_id}/kiem-tra-logic
+./editor/src/router/editor.py: POST /{document_id}/kiem-tra-ngu-phap
+./editor/src/router/editor.py: POST /{document_id}/binh-luan
+./editor/src/router/editor.py: GET /{document_id}/binh-luan
+./editor/src/router/editor.py: PUT /binh-luan/{comment_id}/giai-quyet
+./editor/src/router/editor.py: POST /{document_id}/so-sanh-phien-ban
+./editor/src/router/latex.py: POST /bien-dich
+./editor/src/router/latex.py: POST /export/{format}
+./editor/src/router/latex.py: POST /dinh-dang
+./editor/src/router/latex.py: POST /ket-xuat-zip

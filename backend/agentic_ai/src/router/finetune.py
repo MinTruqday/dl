@@ -13,7 +13,7 @@ from uuid6 import uuid7
 from core.config import settings
 from core.repositories.base_repository import RepositoryFactory
 
-router = APIRouter(prefix="/finetuning")
+router = APIRouter(prefix="/tinh-chinh")
 active_jobs = {}
 
 
@@ -115,7 +115,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
         active_jobs.pop(job_id, None)
 
 
-@router.post("/datasets")
+@router.post("/tap-du-lieu")
 async def create_dataset(req: dict):
     db = get_db()
     doc = {
@@ -132,7 +132,7 @@ async def create_dataset(req: dict):
     return doc
 
 
-@router.get("/datasets")
+@router.get("/tap-du-lieu")
 async def list_datasets(user_id: str):
     return (
         await get_db()["finetune_datasets"]
@@ -142,7 +142,7 @@ async def list_datasets(user_id: str):
     )
 
 
-@router.get("/datasets/{dataset_id}")
+@router.get("/tap-du-lieu/{dataset_id}")
 async def get_dataset(dataset_id: str, user_id: str):
     doc = await get_db()["finetune_datasets"].find_one(
         {"_id": dataset_id, "user_id": user_id}
@@ -152,7 +152,7 @@ async def get_dataset(dataset_id: str, user_id: str):
     return doc
 
 
-@router.delete("/datasets/{dataset_id}")
+@router.delete("/tap-du-lieu/{dataset_id}")
 async def delete_dataset(dataset_id: str, user_id: str):
     db = get_db()
     result = await RepositoryFactory.get("finetune_datasets").delete_one(
@@ -166,7 +166,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
     raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
 
 
-@router.post("/datasets/{dataset_id}/samples")
+@router.post("/tap-du-lieu/{dataset_id}/mau-thu")
 async def add_samples(dataset_id: str, req: dict):
     db = get_db()
     user_id = req.get("user_id")
@@ -198,7 +198,7 @@ async def add_samples(dataset_id: str, req: dict):
     return {"added": len(documents), "total": total}
 
 
-@router.get("/datasets/{dataset_id}/samples")
+@router.get("/tap-du-lieu/{dataset_id}/mau-thu")
 async def get_samples(
     dataset_id: str,
     user_id: str,
@@ -220,7 +220,7 @@ async def get_samples(
     )
 
 
-@router.delete("/datasets/{dataset_id}/samples/{sample_id}")
+@router.delete("/tap-du-lieu/{dataset_id}/mau-thu/{sample_id}")
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     db = get_db()
     if not await RepositoryFactory.get("finetune_datasets").find_one(
@@ -243,7 +243,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     raise HTTPException(status_code=404, detail="Không tìm thấy mẫu yêu cầu")
 
 
-@router.post("/inputs/feedback")
+@router.post("/dau-vao/phan-hoi")
 async def import_feedback(req: dict):
     db = get_db()
     user_id = req.get("user_id")
@@ -301,7 +301,7 @@ async def import_feedback(req: dict):
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 
-@router.post("/inputs/documents")
+@router.post("/dau-vao/tai-lieu")
 async def import_documents(req: dict):
     db = get_db()
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
@@ -419,7 +419,7 @@ async def create_job(req: dict):
     return job
 
 
-@router.post("/jobs/{job_id}/start")
+@router.post("/tien-trinh/{job_id}/bat-dau")
 async def start_job(job_id: str, req: dict):
     db = get_db()
     job = await RepositoryFactory.get("finetune_jobs").find_one(
@@ -473,7 +473,7 @@ async def list_jobs(user_id: str):
     )
 
 
-@router.get("/jobs/{job_id}")
+@router.get("/tien-trinh/{job_id}")
 async def get_job(job_id: str, user_id: str):
     job = await get_db()["finetune_jobs"].find_one({"_id": job_id, "user_id": user_id})
     if not job:
@@ -481,7 +481,7 @@ async def get_job(job_id: str, user_id: str):
     return job
 
 
-@router.post("/jobs/{job_id}/cancel")
+@router.post("/tien-trinh/{job_id}/huy-bo")
 async def cancel_job(job_id: str, req: dict):
     db = get_db()
     result = await RepositoryFactory.get("finetune_jobs").update_one(
@@ -500,7 +500,7 @@ async def cancel_job(job_id: str, req: dict):
     )
 
 
-@router.post("/jobs/{job_id}/deploy")
+@router.post("/tien-trinh/{job_id}/trien-khai")
 async def deploy_model(job_id: str, req: dict):
     db = get_db()
     job = await RepositoryFactory.get("finetune_jobs").find_one(
@@ -569,7 +569,7 @@ async def deploy_model(job_id: str, req: dict):
     return {"status": "deployed", "model_name": model_name}
 
 
-@router.post("/jobs/{job_id}/evaluate")
+@router.post("/tien-trinh/{job_id}/danh-gia")
 async def evaluate_model(job_id: str, req: dict):
     from src.harness.evaluation import evaluation
 

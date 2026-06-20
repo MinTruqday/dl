@@ -12,7 +12,7 @@ from core.schemas.user import UserInDB
 router = APIRouter(prefix="/doc-hieu")
 
 
-@router.get("/history", response_model=APIResponse[Any])
+@router.get("/lich-su", response_model=APIResponse[Any])
 async def get_history(
     cursor: str = None,
     limit: int = Query(20),
@@ -27,7 +27,7 @@ async def get_history(
     )
 
 
-@router.post("/progress", response_model=APIResponse[Any])
+@router.post("/tien-do", response_model=APIResponse[Any])
 async def update_progress(
     data: ProgressUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -39,7 +39,7 @@ async def update_progress(
     )
 
 
-@router.get("/documents/{document_id}/search", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_in_document(
     document_id: str,
     q: str = Query(...),
@@ -54,7 +54,7 @@ async def search_in_document(
     )
 
 
-@router.delete("/history", response_model=APIResponse[Any])
+@router.delete("/lich-su", response_model=APIResponse[Any])
 async def clear_reading_history(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -64,7 +64,7 @@ async def clear_reading_history(
     )
 
 
-@router.delete("/history/{document_id}", response_model=APIResponse[Any])
+@router.delete("/lich-su/{document_id}", response_model=APIResponse[Any])
 async def delete_history_item(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -110,7 +110,7 @@ def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
     return True
 
 
-@router.get("/archive/tree", response_model=APIResponse[Any])
+@router.get("/luu-tru/cay-thu-muc", response_model=APIResponse[Any])
 async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
     try:
         validate_url_ssrf(file_url)
@@ -149,7 +149,7 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
         return APIResponse(data=None, message="Lỗi tải cấu trúc thư mục", status=500)
 
 
-@router.get("/archive/content", response_model=APIResponse[Any])
+@router.get("/luu-tru/noi-dung", response_model=APIResponse[Any])
 async def get_zip_content(
     file_url: str = Query(...), path: str = Query(...), db=Depends(get_db)
 ):

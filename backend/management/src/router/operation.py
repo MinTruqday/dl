@@ -14,7 +14,7 @@ router = APIRouter(prefix="/van-hanh")
 
 
 @router.get(
-    "/metrics",
+    "/chi-so",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -26,7 +26,7 @@ async def get_system_metrics(db=Depends(get_db)):
 
 
 @router.get(
-    "/maintenance",
+    "/bao-tri",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -38,7 +38,7 @@ async def get_maintenance_status(db=Depends(get_db)):
 
 
 @router.post(
-    "/maintenance",
+    "/bao-tri",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -50,7 +50,7 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
 
 
 @router.post(
-    "/backup",
+    "/sao-luu",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -62,7 +62,7 @@ async def trigger_backup(db=Depends(get_db)):
 
 
 @router.post(
-    "/api-key",
+    "/khoa-api",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -74,7 +74,7 @@ async def create_api_key(name: str, db=Depends(get_db)):
 
 
 @router.post(
-    "/marketing/campaign",
+    "/tiep-thi/chien-dich",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -89,7 +89,7 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
 
 
 @router.get(
-    "/settings",
+    "/cai-dat",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -98,7 +98,7 @@ async def get_system_config(db=Depends(get_db)):
 
 
 @router.get(
-    "/health",
+    "/tinh-trang",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -110,7 +110,7 @@ async def get_system_health(db=Depends(get_db)):
 
 
 @router.get(
-    "/reports",
+    "/bao-cao",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -122,7 +122,7 @@ async def get_admin_reports(db=Depends(get_db)):
 
 
 @router.get(
-    "/collectors/stats",
+    "/thu-thap/thong-ke",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -134,7 +134,7 @@ async def get_collector_stats(db=Depends(get_db)):
 
 
 @router.post(
-    "/collectors/trigger",
+    "/thu-thap/kich-hoat",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -146,7 +146,7 @@ async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
 
 
 @router.post(
-    "/collectors/stop",
+    "/thu-thap/dung",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -158,7 +158,7 @@ async def stop_collection(db=Depends(get_db)):
 
 
 @router.get(
-    "/collectors/logs",
+    "/thu-thap/nhat-ky",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -170,7 +170,7 @@ async def get_collector_logs(db=Depends(get_db)):
 
 
 @router.get(
-    "/collectors/active-jobs",
+    "/thu-thap/tien-trinh-dang-chay",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -182,7 +182,7 @@ async def get_active_collector_jobs(db=Depends(get_db)):
 
 
 @router.post(
-    "/users/{user_id}/shadowban",
+    "/nguoi-dung/{user_id}/cam-ngam",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -198,7 +198,7 @@ async def shadowban_user(
 
 
 @router.post(
-    "/users/{user_id}/kyc/{status}",
+    "/nguoi-dung/{user_id}/xac-minh/{status}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -214,7 +214,7 @@ async def verify_kyc(
 
 
 @router.get(
-    "/storage/stats",
+    "/luu-tru/thong-ke",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

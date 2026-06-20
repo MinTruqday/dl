@@ -12,7 +12,7 @@ router = APIRouter(prefix="/giam-sat")
 
 
 @router.get(
-    "/stats",
+    "/thong-ke",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -24,7 +24,7 @@ async def get_stats(db=Depends(get_db)):
 
 
 @router.get(
-    "/health",
+    "/tinh-trang",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -36,7 +36,7 @@ async def get_sys_health(db=Depends(get_db)):
 
 
 @router.get(
-    "/audit",
+    "/kiem-toan",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -52,7 +52,7 @@ async def get_audit_logs(
 
 
 @router.get(
-    "/activity",
+    "/hoat-dong",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

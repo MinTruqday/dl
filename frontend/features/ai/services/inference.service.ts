@@ -14,16 +14,6 @@ export async function translateTextAPI(
   return data;
 }
 
-export async function analyzeSentimentAPI(text: string) {
-  const res = await fetch(`${API_URL}/inference/reaction-analysis`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Phân tích cảm xúc thất bại");
-  return data;
-}
 
 export async function grammarCheckAPI(text: string) {
   const res = await fetch(`${API_URL}/inference/grammar-check`, {

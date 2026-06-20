@@ -14,7 +14,7 @@ from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import BrandPageUpdate, ProfileUpdate, SettingsUpdate, UserInDB
 
-router = APIRouter(prefix="/profiles")
+router = APIRouter(prefix="/ho-so")
 
 
 @router.get("/ca-nhan", response_model=APIResponse[Any])
@@ -43,7 +43,7 @@ async def update_my_profile(
     )
 
 
-@router.post("/applications/author", response_model=APIResponse[Any])
+@router.post("/dang-ky-tac-gia", response_model=APIResponse[Any])
 async def apply_author(
     data: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -54,7 +54,7 @@ async def apply_author(
     )
 
 
-@router.post("/upgrade-to-author", response_model=APIResponse[Any])
+@router.post("/nang-cap-tac-gia", response_model=APIResponse[Any])
 async def become_author(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -78,7 +78,7 @@ async def upload_kyc(
     )
 
 
-@router.get("/settings", response_model=APIResponse[Any])
+@router.get("/cai-dat", response_model=APIResponse[Any])
 async def get_settings(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -89,7 +89,7 @@ async def get_settings(
     )
 
 
-@router.put("/settings", response_model=APIResponse[Any])
+@router.put("/cai-dat", response_model=APIResponse[Any])
 async def update_settings(
     data: SettingsUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -105,7 +105,7 @@ async def update_settings(
 
 
 @router.get(
-    "/export-data",
+    "/xuat-du-lieu",
     response_model=Any,
     dependencies=[Depends(RateLimiter(calls=2, period=3600))],
 )
@@ -127,29 +127,7 @@ async def request_data_export(
     )
 
 
-@router.get("/reading-streaks", response_model=APIResponse[Any])
-async def get_reading_streaks(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
-):
-    return APIResponse(
-        data=await ProfileManager.get_reading_streaks(current_user, db=db),
-        message="Lấy dữ liệu chuỗi ngày đọc thành công",
-        status=200,
-    )
-
-
-@router.get("/badges", response_model=APIResponse[Any])
-async def get_badges(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
-):
-    return APIResponse(
-        data=await ProfileManager.get_badges(current_user, db=db),
-        message="Lấy danh sách huy hiệu thành công",
-        status=200,
-    )
-
-
-@router.post("/block/{target_id}", response_model=APIResponse[Any])
+@router.post("/chan/{target_id}", response_model=APIResponse[Any])
 async def block_user(
     target_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -162,7 +140,7 @@ async def block_user(
     )
 
 
-@router.put("/brand-page", response_model=APIResponse[Any])
+@router.put("/trang-tac-gia", response_model=APIResponse[Any])
 async def update_brand_page(
     data: BrandPageUpdate,
     current_user: UserInDB = Depends(get_current_user),

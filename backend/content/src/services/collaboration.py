@@ -49,7 +49,7 @@ class CollaborationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/theo-email/{invitee_email}",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{invitee_email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:

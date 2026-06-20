@@ -36,7 +36,7 @@ async def get_all_users(
 
 
 @router.put(
-    "/{user_id}/role",
+    "/{user_id}/vai-tro",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -48,7 +48,7 @@ async def update_user_role(user_id: str, req: UpdateRoleRequest, db=Depends(get_
 
 
 @router.put(
-    "/{user_id}/status",
+    "/{user_id}/trang-thai",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -62,7 +62,7 @@ async def update_user_status(
 
 
 @router.post(
-    "/{user_id}/warn",
+    "/{user_id}/canh-bao",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -79,7 +79,7 @@ async def warn_user(
 
 
 @router.post(
-    "/{user_id}/lock",
+    "/{user_id}/khoa",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -98,7 +98,7 @@ async def lock_user(
 
 
 @router.post(
-    "/{user_id}/shadowban",
+    "/{user_id}/cam-ngam",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -115,7 +115,7 @@ async def shadowban_user(
 
 
 @router.get(
-    "/{user_id}/notes",
+    "/{user_id}/ghi-chu",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -127,7 +127,7 @@ async def get_notes(user_id: str, db=Depends(get_db)):
 
 
 @router.post(
-    "/{user_id}/notes",
+    "/{user_id}/ghi-chu",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -164,9 +164,7 @@ async def internal_get_user(user_id: str, db=Depends(get_db)):
     )
 
 
-@router.post(
-    "/multiple-users", response_model=APIResponse[Any], include_in_schema=False
-)
+@router.post("/danh-sach", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_users(user_ids: list[str], db=Depends(get_db)):
     users = await UserManager.internal_get_users_by_ids(user_ids, db)
     return APIResponse(data=users, message="Lấy danh sách người dùng thành công")
@@ -180,7 +178,9 @@ async def internal_get_user_by_email(email: str, db=Depends(get_db)):
     )
 
 
-@router.get("/slug/{slug}", response_model=APIResponse[Any], include_in_schema=False)
+@router.get(
+    "/ten-mien/{slug}", response_model=APIResponse[Any], include_in_schema=False
+)
 async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
     user = await UserManager.internal_get_user_by_slug(slug, db)
     return APIResponse(

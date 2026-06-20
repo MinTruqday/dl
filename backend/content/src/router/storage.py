@@ -109,7 +109,7 @@ async def get_recent_items(
     )
 
 
-@router.get("/quota", response_model=APIResponse[Any])
+@router.get("/han-muc", response_model=APIResponse[Any])
 async def get_storage_quota(
     current_user: UserInDB = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])

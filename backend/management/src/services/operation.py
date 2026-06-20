@@ -422,7 +422,7 @@ class OperationManager:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/cong-viec-dang-chay",
+                    f"{settings.COLLECTOR_URL}/tien-trinh-dang-chay",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:

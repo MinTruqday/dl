@@ -87,7 +87,6 @@ class UserCreate(UserBase):
 
 class UserInDB(UserBase):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
-    read_streak: int = 0
     last_read_date: Optional[datetime] = None
     password_hash: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

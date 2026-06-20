@@ -38,7 +38,7 @@ async def mark_as_read(
     )
 
 
-@router.patch("/read-all", response_model=APIResponse[Any])
+@router.patch("/doc-tat-ca", response_model=APIResponse[Any])
 async def mark_all_as_read(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):

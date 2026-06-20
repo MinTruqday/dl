@@ -28,7 +28,7 @@ async def get_active_banners(db=Depends(get_db)):
 
 
 @router.get(
-    "/all",
+    "/tat-ca",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

@@ -35,7 +35,7 @@ prefix_translations = {
     "/messages": "/tin-nhan",
     "/withdrawals": "/rut-tien",
     "/deposits": "/nap-tien",
-    "/coupons": "/ma-giam-gia",
+    "/coupons": "/ma-qua-tang",
     "/monetization": "/kiem-tien",
     "/wallets": "/vi-tien",
     "/auth": "/xac-thuc",
@@ -78,8 +78,8 @@ path_translations = {
     "/reports/{report_id}": "/bao-cao/{report_id}",
     "/activity-log": "/nhat-ky-hoat-dong",
     "/logs": "/nhat-ky-hoat-dong",  # ensuring consistency
-    "/by-email/{email}": "/theo-email/{email}",
-    "/by-slug/{slug}": "/theo-ten-mien/{slug}",
+    "/by-email/{email}": "/email/{email}",
+    "/by-slug/{slug}": "/ten-mien/{slug}",
     # Documents / Content
     "/trash": "/thung-rac",
     "/personal": "/ca-nhan",
@@ -142,7 +142,7 @@ path_translations = {
     "/{other_user_id}/documents/shared": "/{other_user_id}/tai-lieu/da-chia-se",
     "/groups": "/nhom",
     # Operations
-    "/active-jobs": "/cong-viec-dang-chay",
+    "/active-jobs": "/tien-trinh-dang-chay",
     "/active-processes": "/tien-trinh-dang-chay",
     "/stop": "/dung",
     # Editor & Utils

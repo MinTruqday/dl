@@ -93,7 +93,7 @@ class FolderCreate(BaseModel):
 
 
 @router.get(
-    "/folders",
+    "/thu-muc",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -112,7 +112,7 @@ async def get_folders(
 
 
 @router.post(
-    "/folders",
+    "/thu-muc",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -133,7 +133,7 @@ async def create_folder(
 
 
 @router.delete(
-    "/folders/{folder_id}",
+    "/thu-muc/{folder_id}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -156,7 +156,7 @@ async def delete_folder(
 
 
 @router.get(
-    "/personal",
+    "/ca-nhan",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -174,7 +174,7 @@ async def get_my_documents(
 
 
 @router.get(
-    "/trash",
+    "/thung-rac",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -200,7 +200,7 @@ async def get_document_by_id(
     )
 
 
-@router.get("/d/{slug}", response_model=APIResponse[DocumentResponse])
+@router.get("/tai-lieu/{slug}", response_model=APIResponse[DocumentResponse])
 async def get_document_by_slug(
     slug: str, current_user: UserInDB = Depends(get_current_user_optional)
 ) -> Any:
@@ -211,7 +211,7 @@ async def get_document_by_slug(
     )
 
 
-@router.get("/preview/{slug}", response_model=APIResponse[Any])
+@router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentManager.get_document_preview(slug),
@@ -234,7 +234,7 @@ async def soft_delete_document(
 
 
 @router.post(
-    "/{document_id}/restore",
+    "/{document_id}/khoi-phuc",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -248,7 +248,7 @@ async def restore_document(
 
 
 @router.post(
-    "/{document_id}/protect",
+    "/{document_id}/bao-ve",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -266,7 +266,7 @@ async def set_document_password(
 
 
 @router.get(
-    "/{document_id}/activity-log",
+    "/{document_id}/nhat-ky-hoat-dong",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -280,7 +280,7 @@ async def get_document_audit_logs(
 
 
 @router.post(
-    "/{document_id}/star",
+    "/{document_id}/danh-dau",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -306,7 +306,7 @@ async def toggle_star_document(
 
 
 @router.post(
-    "/{document_id}/transfer",
+    "/{document_id}/chuyen-nhuong",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -356,7 +356,7 @@ async def transfer_document(
     )
 
 
-@router.get("/{document_id}/analytics", response_model=APIResponse[Any])
+@router.get("/{document_id}/thong-ke", response_model=APIResponse[Any])
 async def get_document_analytics(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -441,7 +441,7 @@ class DRMSettingsUpdate(BaseModel):
 
 
 @router.put(
-    "/{document_id}/drm",
+    "/{document_id}/ban-quyen",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -470,7 +470,7 @@ class TagsUpdate(BaseModel):
 
 
 @router.put(
-    "/{document_id}/tags",
+    "/{document_id}/the",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -490,7 +490,7 @@ class ScheduleUpdate(BaseModel):
 
 
 @router.put(
-    "/{document_id}/schedule",
+    "/{document_id}/len-lich",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -507,7 +507,7 @@ async def schedule_publish(
     return APIResponse(data=result, message="Lên lịch xuất bản tài liệu thành công")
 
 
-@router.post("/{document_id}/unlock", response_model=APIResponse[Any])
+@router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
 async def unlock_document(
     document_id: str,
     password: str = Body(..., embed=True),

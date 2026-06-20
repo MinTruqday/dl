@@ -39,7 +39,7 @@ async def get_my_lists(
     )
 
 
-@router.get("/lists/{list_id}", response_model=APIResponse[Any])
+@router.get("/danh-sach/{list_id}", response_model=APIResponse[Any])
 async def get_list_by_id(
     list_id: str, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):

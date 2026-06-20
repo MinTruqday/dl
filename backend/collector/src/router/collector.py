@@ -14,7 +14,7 @@ from core.schemas.collector import CollectionRequest
 router = APIRouter()
 
 
-@router.post("/triggers")
+@router.post("/kich-hoat")
 async def trigger_collection(req: CollectionRequest):
     source = req.source
     pages = req.pages
@@ -56,7 +56,7 @@ async def trigger_collection(req: CollectionRequest):
         )
 
 
-@router.post("/pause")
+@router.post("/tam-dung")
 async def stop_collection():
     try:
         if mq_client.channel:
@@ -73,7 +73,7 @@ async def stop_collection():
         )
 
 
-@router.get("/cong-viec-dang-chay")
+@router.get("/tien-trinh-dang-chay")
 async def get_active_jobs():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)

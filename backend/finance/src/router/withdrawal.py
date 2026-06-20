@@ -25,7 +25,7 @@ async def request_withdrawal(
 
 
 @router.get(
-    "/queue",
+    "/hang-doi",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -40,7 +40,7 @@ async def get_withdrawal_queue(
 
 
 @router.post(
-    "/{withdrawal_id}/verify",
+    "/{withdrawal_id}/xac-minh",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

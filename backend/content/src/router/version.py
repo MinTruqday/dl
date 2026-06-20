@@ -10,7 +10,7 @@ from core.schemas.user import UserInDB
 router = APIRouter(prefix="/phien-ban")
 
 
-@router.post("/save/{document_id}", response_model=APIResponse[Any])
+@router.post("/luu/{document_id}", response_model=APIResponse[Any])
 async def save_version(
     document_id: str,
     version_note: str,
@@ -26,7 +26,7 @@ async def save_version(
     )
 
 
-@router.get("/documents/{document_id}", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_document_versions(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -38,7 +38,7 @@ async def get_document_versions(
     )
 
 
-@router.post("/{version_id}/restore", response_model=APIResponse[Any])
+@router.post("/{version_id}/khoi-phuc", response_model=APIResponse[Any])
 async def restore_version(
     version_id: str,
     current_user: UserInDB = Depends(get_current_user),

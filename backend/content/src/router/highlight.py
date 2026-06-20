@@ -15,7 +15,7 @@ from core.schemas.user import UserInDB
 router = APIRouter(prefix="/danh-dau")
 
 
-@router.post("/documents/{document_id}", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def create_highlight(
     document_id: str,
     data: HighlightCreateRequest,
@@ -31,7 +31,7 @@ async def create_highlight(
     )
 
 
-@router.get("/documents/{document_id}", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_highlights(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -44,7 +44,7 @@ async def get_highlights(
     )
 
 
-@router.put("/{highlight_id}/notes", response_model=APIResponse[Any])
+@router.put("/{highlight_id}/ghi-chu", response_model=APIResponse[Any])
 async def update_highlight_note(
     highlight_id: str,
     data: HighlightNoteUpdateRequest,
@@ -90,7 +90,7 @@ async def get_all_notes(
     )
 
 
-@router.get("/documents/{document_id}/export", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/ket-xuat", response_model=APIResponse[Any])
 async def export_highlights_markdown(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),

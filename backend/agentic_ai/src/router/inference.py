@@ -18,7 +18,6 @@ from core.schemas.inference import (
     GenerationRequest,
     GrammarRequest,
     ReviewRequest,
-    SentimentRequest,
     SummarizeRequest,
     SynthesisRequest,
     ToneRequest,
@@ -113,7 +112,7 @@ async def _run_ai_with_quota(
     return result
 
 
-@router.post("/generate-content")
+@router.post("/tao-noi-dung")
 async def generate_text(
     req: GenerationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -152,94 +151,7 @@ async def translate_text(
         )
 
 
-@router.post("/sentiment-analysis")
-async def analyze_sentiment(
-    req: SentimentRequest, current_user: UserInDB = Depends(get_current_user)
-):
-    try:
-        texts_to_analyze = req.texts or []
-
-        if req.document_id:
-            from motor.motor_asyncio import AsyncIOMotorClient
-
-            mongo_client = AsyncIOMotorClient(settings.MONGODB_URI)
-            db = mongo_client.get_default_database()
-            cursor = (
-                RepositoryFactory.get("comments")
-                .find({"document_id": req.document_id}, {"content": 1})
-                .limit(20)
-            )
-            comments = await cursor.to_list(length=20)
-            texts_to_analyze.extend(
-                [c["content"] for c in comments if c.get("content")]
-            )
-            mongo_client.close()
-
-        if not texts_to_analyze:
-            return {
-                "sentiment_score": 0.0,
-                "mood": "unknown",
-                "summary": "There is no text data available to perform the sentiment analysis",
-                "top_emotions": [],
-            }
-
-        results = []
-        for text in texts_to_analyze[:10]:
-            prompt = prompt_registry.get(PromptType.SENTIMENT_ANALYSIS).format(
-                text=text
-            )
-            sentiment = await _run_ai_with_quota(
-                current_user,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=10,
-                temperature=0.1,
-            )
-            results.append(sentiment.strip())
-
-        pos = sum(1 for r in results if r.lower() in ["positive", "positive"])
-        neg = sum(1 for r in results if r.lower() in ["negative", "negative"])
-        total = len(results)
-        score = (pos - neg) / total if total > 0 else 0
-
-        mood = "neutral"
-        if score > 0.2:
-            mood = "positive"
-        elif score < -0.2:
-            mood = "negative"
-
-        summary_prompt = prompt_registry.get(PromptType.SENTIMENT_SUMMARY).format(
-            reviews="; ".join(texts_to_analyze[:5])
-        )
-        summary = await _run_ai_with_quota(
-            current_user,
-            messages=[{"role": "user", "content": summary_prompt}],
-            max_tokens=100,
-        )
-
-        from collections import Counter
-
-        emotions_map = Counter(results)
-        top_emotions = [
-            {"emotion": k, "count": v} for k, v in emotions_map.most_common()
-        ]
-
-        return {
-            "sentiment_score": score,
-            "mood": mood,
-            "summary": summary.strip(),
-            "top_emotions": top_emotions,
-            "analysis": [
-                {"text": t, "sentiment": s} for t, s in zip(texts_to_analyze, results)
-            ],
-        }
-    except Exception:
-        logger.error("Lỗi phân tích cảm xúc văn bản")
-        raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
-        )
-
-
-@router.post("/generate-code")
+@router.post("/tao-ma")
 async def generate_code(
     req: CodeRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -260,7 +172,7 @@ async def generate_code(
         )
 
 
-@router.post("/check-grammar")
+@router.post("/kiem-tra-ngu-phap")
 async def grammar_check(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -318,7 +230,7 @@ async def summarize_text(
         )
 
 
-@router.post("/check-plagiarism")
+@router.post("/kiem-tra-dao-van")
 async def check_plagiarism(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -390,7 +302,7 @@ async def check_plagiarism(
         )
 
 
-@router.post("/actions")
+@router.post("/hanh-dong")
 async def unified_action(
     req: ActionRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -431,7 +343,7 @@ async def unified_action(
         )
 
 
-@router.post("/synonyms")
+@router.post("/tu-dong-nghia")
 async def get_synonyms(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -459,7 +371,7 @@ async def get_synonyms(
         )
 
 
-@router.post("/smart-citations")
+@router.post("/trich-dan-thong-minh")
 async def suggest_citations(
     req: CitationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -502,7 +414,7 @@ async def suggest_citations(
         )
 
 
-@router.post("/text-transform")
+@router.post("/bien-doi-van-ban")
 async def transform_tone(
     req: ToneRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -533,7 +445,7 @@ async def transform_tone(
         )
 
 
-@router.post("/moderate-content")
+@router.post("/kiem-duyet-noi-dung")
 async def peer_review(
     req: ReviewRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -568,7 +480,7 @@ async def peer_review(
         )
 
 
-@router.post("/synthesize-documents")
+@router.post("/tong-hop-tai-lieu")
 async def multi_doc_synthesis(
     req: SynthesisRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -602,7 +514,7 @@ async def multi_doc_synthesis(
         )
 
 
-@router.post("/extract-text")
+@router.post("/trich-xuat-van-ban")
 async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_user)):
     try:
         file_url = req.get("file_url")
@@ -623,7 +535,7 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
         )
 
 
-@router.post("/analyze-document")
+@router.post("/phan-tich-tai-lieu")
 async def analyze_document(
     req: dict, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -656,7 +568,7 @@ async def analyze_document(
         raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
 
 
-@router.delete("/vectors/{document_id}")
+@router.delete("/vector/{document_id}")
 async def delete_vector_document(document_id: str):
     try:
         from src.store.vector import vector_store

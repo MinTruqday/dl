@@ -69,7 +69,7 @@ async def get_bookmark_folders(
     )
 
 
-@router.put("/folders/{folder_id}", response_model=APIResponse[Any])
+@router.put("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def assign_bookmarks(
     folder_id: str,
     data: BookmarkFolderAssign,
@@ -84,7 +84,7 @@ async def assign_bookmarks(
     )
 
 
-@router.delete("/folders/{folder_id}", response_model=APIResponse[Any])
+@router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def delete_bookmark_folder(
     folder_id: str,
     current_user: UserInDB = Depends(get_current_user),
