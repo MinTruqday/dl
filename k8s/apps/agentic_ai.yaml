@@ -4,19 +4,19 @@ metadata:
   name: agentic-ai-deployment
   namespace: doclib-production
   labels:
-    app: agentic-ai-service
+    app: agentic-ai
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: agentic-ai-service
+      app: agentic-ai
   template:
     metadata:
       labels:
-        app: agentic-ai-service
+        app: agentic-ai
     spec:
       containers:
-        - name: agentic-ai-service
+        - name: agentic-ai
           image: doclib-registry/agentic_ai:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: agentic-ai-service
+  name: agentic-ai
   namespace: doclib-production
 spec:
   selector:
-    app: agentic-ai-service
+    app: agentic-ai
   ports:
     - protocol: TCP
       port: 80

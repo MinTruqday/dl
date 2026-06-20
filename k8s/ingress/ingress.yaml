@@ -10,74 +10,270 @@ spec:
   rules:
   - http:
       paths:
-      - path: /wallet(/|$)(.*)
+      - path: /kiem-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: finance-service
+            name: finance
             port:
               number: 80
-      - path: /notification(/|$)(.*)
+      - path: /ma-qua-tang(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: notification-service
+            name: finance
             port:
               number: 80
-      - path: /inference(/|$)(.*)
+      - path: /nap-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: agentic-ai-service
+            name: finance
             port:
               number: 80
-      - path: /collect(/|$)(.*)
+      - path: /rut-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: collector-service
+            name: finance
             port:
               number: 80
-      - path: /compile(/|$)(.*)
+      - path: /vi-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: editor-service
+            name: finance
             port:
               number: 80
-      - path: /auth(/|$)(.*)
+      - path: /lich-su(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: authentication-service
+            name: agentic-ai
             port:
               number: 80
-      - path: /user(/|$)(.*)
+      - path: /phan-hoi(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management-service
+            name: agentic-ai
             port:
               number: 80
-      - path: /contact(/|$)(.*)
+      - path: /suy-luan(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: messaging-service
+            name: agentic-ai
             port:
               number: 80
-      - path: /message(/|$)(.*)
+      - path: /nap-du-lieu(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: realtime-service
+            name: agentic-ai
             port:
               number: 80
-      - path: /document(/|$)(.*)
+      - path: /tinh-chinh(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content-service
+            name: agentic-ai
+            port:
+              number: 80
+      - path: /tro-chuyen(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: agentic-ai
+            port:
+              number: 80
+      - path: /giam-sat(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: management
+            port:
+              number: 80
+      - path: /han-muc(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: management
+            port:
+              number: 80
+      - path: /ho-so(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: management
+            port:
+              number: 80
+      - path: /kiem-toan(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: management
+            port:
+              number: 80
+      - path: /nguoi-dung(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: management
+            port:
+              number: 80
+      - path: /quang-cao(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: management
+            port:
+              number: 80
+      - path: /van-hanh(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: management
+            port:
+              number: 80
+      - path: /ban-nhap(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /cong-tac(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /danh-dau(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /danh-gia(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /doc-hieu(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /ghim(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /ket-xuat(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /kham-pha(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /luu-tru(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /phien-ban(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /tai-len(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /tai-lieu(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /thu-vien(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /xuat-ban(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 80
+      - path: /tin-nhan(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: messaging
+            port:
+              number: 80
+      - path: /xac-thuc(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: authentication
+            port:
+              number: 80
+      - path: /trinh-soan-thao(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: editor
+            port:
+              number: 80
+      - path: /thong-bao(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: notification
+            port:
+              number: 80
+      - path: /thu-thap(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: collector
+            port:
+              number: 80
+      - path: /ws(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: realtime
             port:
               number: 80
       # Frontend default route
@@ -85,6 +281,6 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: frontend-service
+            name: frontend
             port:
               number: 80

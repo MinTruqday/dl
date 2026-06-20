@@ -4,19 +4,19 @@ metadata:
   name: notification-deployment
   namespace: doclib-production
   labels:
-    app: notification-service
+    app: notification
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: notification-service
+      app: notification
   template:
     metadata:
       labels:
-        app: notification-service
+        app: notification
     spec:
       containers:
-        - name: notification-service
+        - name: notification
           image: doclib-registry/notification:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: notification-service
+  name: notification
   namespace: doclib-production
 spec:
   selector:
-    app: notification-service
+    app: notification
   ports:
     - protocol: TCP
       port: 80

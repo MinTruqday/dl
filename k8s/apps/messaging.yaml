@@ -4,19 +4,19 @@ metadata:
   name: messaging-deployment
   namespace: doclib-production
   labels:
-    app: messaging-service
+    app: messaging
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: messaging-service
+      app: messaging
   template:
     metadata:
       labels:
-        app: messaging-service
+        app: messaging
     spec:
       containers:
-        - name: messaging-service
+        - name: messaging
           image: doclib-registry/messaging:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: messaging-service
+  name: messaging
   namespace: doclib-production
 spec:
   selector:
-    app: messaging-service
+    app: messaging
   ports:
     - protocol: TCP
       port: 80

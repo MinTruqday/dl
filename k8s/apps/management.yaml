@@ -4,19 +4,19 @@ metadata:
   name: management-deployment
   namespace: doclib-production
   labels:
-    app: management-service
+    app: management
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: management-service
+      app: management
   template:
     metadata:
       labels:
-        app: management-service
+        app: management
     spec:
       containers:
-        - name: management-service
+        - name: management
           image: doclib-registry/management:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: management-service
+  name: management
   namespace: doclib-production
 spec:
   selector:
-    app: management-service
+    app: management
   ports:
     - protocol: TCP
       port: 80

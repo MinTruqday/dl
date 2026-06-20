@@ -4,19 +4,19 @@ metadata:
   name: content-deployment
   namespace: doclib-production
   labels:
-    app: content-service
+    app: content
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: content-service
+      app: content
   template:
     metadata:
       labels:
-        app: content-service
+        app: content
     spec:
       containers:
-        - name: content-service
+        - name: content
           image: doclib-registry/content:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: content-service
+  name: content
   namespace: doclib-production
 spec:
   selector:
-    app: content-service
+    app: content
   ports:
     - protocol: TCP
       port: 80

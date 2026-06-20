@@ -4,19 +4,19 @@ metadata:
   name: finance-deployment
   namespace: doclib-production
   labels:
-    app: finance-service
+    app: finance
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: finance-service
+      app: finance
   template:
     metadata:
       labels:
-        app: finance-service
+        app: finance
     spec:
       containers:
-        - name: finance-service
+        - name: finance
           image: doclib-registry/finance:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: finance-service
+  name: finance
   namespace: doclib-production
 spec:
   selector:
-    app: finance-service
+    app: finance
   ports:
     - protocol: TCP
       port: 80

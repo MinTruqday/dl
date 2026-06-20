@@ -4,19 +4,19 @@ metadata:
   name: frontend-deployment
   namespace: doclib-production
   labels:
-    app: frontend-service
+    app: frontend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: frontend-service
+      app: frontend
   template:
     metadata:
       labels:
-        app: frontend-service
+        app: frontend
     spec:
       containers:
-        - name: frontend-service
+        - name: frontend
           image: doclib-registry/frontend:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend-service
+  name: frontend
   namespace: doclib-production
 spec:
   selector:
-    app: frontend-service
+    app: frontend
   ports:
     - protocol: TCP
       port: 80

@@ -143,7 +143,7 @@ services:
       - "8350:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`) || PathPrefix(`/kiem-tien`) || PathPrefix(`/ma-giam-gia`) || PathPrefix(`/vi-tien`)"
+      - "traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`) || PathPrefix(`/kiem-tien`) || PathPrefix(`/ma-qua-tang`) || PathPrefix(`/vi-tien`)"
       - "traefik.http.services.finance.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -191,7 +191,7 @@ services:
       - "8400:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/tro-chuyen`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nhap-lieu`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nhap-lieu`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -290,7 +290,7 @@ services:
       - "8300:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.editor.rule=PathPrefix(`/soan-thao`)"
+      - "traefik.http.routers.editor.rule=PathPrefix(`/trinh-soan-thao`)"
       - "traefik.http.services.editor.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -340,7 +340,7 @@ services:
       - "8050:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.management.rule=PathPrefix(`/ho-so`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`) || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)"
+      - "traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/han-muc`) || PathPrefix(`/ho-so`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/nguoi-dung`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`) || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)"
       - "traefik.http.services.management.loadbalancer.server.port=8000"
     env_file:
       - .env
@@ -413,7 +413,7 @@ services:
       - "8450:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`) || PathPrefix(`/danh-gia`) || PathPrefix(`/tai-len`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/cam-quyen-nhap-lieu`) || PathPrefix(`/luu-tru`) || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`) || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`) || PathPrefix(`/tai-lieu-hieu`)"
+      - "traefik.http.routers.content.rule=PathPrefix(`/ban-nhap`) || PathPrefix(`/cong-tac`) || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`) || PathPrefix(`/ghim`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/kham-pha`) || PathPrefix(`/luu-tru`) || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-len`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`) || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`) || PathPrefix(`/danh-gia`) || PathPrefix(`/tai-len`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/cam-quyen-nhap-lieu`) || PathPrefix(`/luu-tru`) || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`) || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`) || PathPrefix(`/tai-lieu-hieu`)"
       - "traefik.http.services.content.loadbalancer.server.port=8000"
     env_file:
       - .env

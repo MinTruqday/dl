@@ -4,19 +4,19 @@ metadata:
   name: collector-deployment
   namespace: doclib-production
   labels:
-    app: collector-service
+    app: collector
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: collector-service
+      app: collector
   template:
     metadata:
       labels:
-        app: collector-service
+        app: collector
     spec:
       containers:
-        - name: collector-service
+        - name: collector
           image: doclib-registry/collector:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: collector-service
+  name: collector
   namespace: doclib-production
 spec:
   selector:
-    app: collector-service
+    app: collector
   ports:
     - protocol: TCP
       port: 80

@@ -4,19 +4,19 @@ metadata:
   name: editor-deployment
   namespace: doclib-production
   labels:
-    app: editor-service
+    app: editor
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: editor-service
+      app: editor
   template:
     metadata:
       labels:
-        app: editor-service
+        app: editor
     spec:
       containers:
-        - name: editor-service
+        - name: editor
           image: doclib-registry/editor:latest
           imagePullPolicy: Always
           ports:
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: editor-service
+  name: editor
   namespace: doclib-production
 spec:
   selector:
-    app: editor-service
+    app: editor
   ports:
     - protocol: TCP
       port: 80
