@@ -4,21 +4,21 @@ from loguru import logger
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.router.bookmark_router import router as bookmark_router
-from src.router.collaboration_router import router as collaboration_router
-from src.router.discovery_router import router as discovery_router
-from src.router.document_router import router as document_router
-from src.router.draft_router import router as draft_router
-from src.router.export_router import router as export_router
-from src.router.highlight_router import router as highlight_router
-from src.router.library_router import router as library_router
-from src.router.pin_router import router as pin_router
-from src.router.publication_router import router as publication_router
-from src.router.reading_router import router as reading_router
-from src.router.review_router import router as review_router
-from src.router.storage_router import router as storage_router
-from src.router.upload_router import router as upload_router
-from src.router.version_router import router as version_router
+from src.router.bookmark import router as bookmark_router
+from src.router.collaboration import router as collaboration_router
+from src.router.discovery import router as discovery_router
+from src.router.document import router as document_router
+from src.router.draft import router as draft_router
+from src.router.export import router as export_router
+from src.router.highlight import router as highlight_router
+from src.router.library import router as library_router
+from src.router.pin import router as pin_router
+from src.router.publication import router as publication_router
+from src.router.reading import router as reading_router
+from src.router.review import router as review_router
+from src.router.storage import router as storage_router
+from src.router.upload import router as upload_router
+from src.router.version import router as version_router
 
 app = FastAPI(title="DocLib Content", version=settings.VERSION)
 

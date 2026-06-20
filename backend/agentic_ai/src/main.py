@@ -14,12 +14,12 @@ logger.add(
     filter=trace_id_filter,
     level="INFO",
 )
-from src.router.chat_router import router as chat_router
-from src.router.feedback_router import router as feedback_router
-from src.router.finetune_router import router as finetune_router
-from src.router.history_router import router as history_router
-from src.router.inference_router import router as inference_router
-from src.router.ingest_router import router as ingest_router
+from src.router.chat import router as chat_router
+from src.router.feedback import router as feedback_router
+from src.router.finetune import router as finetune_router
+from src.router.history import router as history_router
+from src.router.inference import router as inference_router
+from src.router.ingest import router as ingest_router
 from fastapi.middleware.cors import CORSMiddleware
 from src.harness.agentops_harness import agentops_harness
 from src.harness.evaluation_harness import evaluation_harness

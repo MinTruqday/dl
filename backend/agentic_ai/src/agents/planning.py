@@ -8,7 +8,7 @@ from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from src.schemas.plan_schema import ExecutionPlan, PlanStep
+from src.schemas.plan import ExecutionPlan, PlanStep
 from src.utils.resilience import with_retry
 
 _hf_endpoint = HuggingFaceEndpoint(

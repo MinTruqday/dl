@@ -39,7 +39,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/users/by-email/{email}",
+                    f"{settings.MANAGEMENT_URL}/users/by-email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user_doc = resp.json().get("data") if resp.status_code == 200 else None
@@ -60,7 +60,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/users/by-email/{email}",
+                    f"{settings.MANAGEMENT_URL}/users/by-email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user_doc = resp.json().get("data") if resp.status_code == 200 else None
