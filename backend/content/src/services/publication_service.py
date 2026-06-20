@@ -21,7 +21,7 @@ class PublicationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": str(document_id)},
@@ -36,9 +36,9 @@ class PublicationService:
             },
         )
         logger.info(
-            "The search engine optimization metadata for the specified document has been successfully modified"
+            "Chỉnh sửa thông tin SEO thành công"
         )
-        return {"message": "The descriptive metadata and optimization tags have been successfully updated and applied"}
+        return {"message": "Cập nhật thông tin và thẻ phân loại thành công"}
 
     @staticmethod
     async def get_readability_score(document_id: str, current_user, db=None):
@@ -48,7 +48,7 @@ class PublicationService:
             {"_id": str(document_id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         content = doc.get("content")
         if not content:
             return {"score": 0, "level": "No content available", "words": 0}
@@ -71,11 +71,11 @@ class PublicationService:
                 "analysis": "Readable structure" if score > 60 else "Complex structure",
             }
         except ImportError:
-            logger.error("The linguistic analysis module is currently unavailable due to a missing internal software dependency")
-            return {"error": "The automated readability evaluation system is currently undergoing maintenance and is inaccessible"}
+            logger.error("Lỗi hệ thống phân tích ngôn ngữ")
+            return {"error": "Hệ thống đánh giá khả năng đọc đang bảo trì"}
         except Exception as e:
-            logger.error("The linguistic analysis engine encountered an unexpected error while processing the document structure")
-            return {"error": "The system was unable to complete the linguistic analysis due to an unrecognizable content format"}
+            logger.error("Lỗi phân tích cấu trúc tài liệu")
+            return {"error": "Lỗi phân tích ngôn ngữ do định dạng không xác định"}
 
     @staticmethod
     async def schedule_publish(
@@ -89,9 +89,9 @@ class PublicationService:
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at)}},
         )
         logger.info(
-            "An automated publication schedule has been successfully configured for the digital document"
+            "Cấu hình lịch xuất bản tài liệu thành công"
         )
-        return {"message": "The designated publication schedule has been successfully recorded and queued in the system"}
+        return {"message": "Ghi nhận lịch xuất bản thành công"}
 
     @staticmethod
     async def publish_document(document_id: str, current_user, db=None):
@@ -103,7 +103,7 @@ class PublicationService:
             {"_id": document_id, "creator_id": user_id}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         from src.core.publication import trigger_document_publish_job
 
         await trigger_document_publish_job(document_id, user_id)
@@ -116,5 +116,5 @@ class PublicationService:
                 }
             },
         )
-        logger.info("The automated publication sequence has been initiated for the specified digital document")
+        logger.info("Đã bắt đầu quy trình xuất bản")
         return await docs_collection.find_one({"_id": document_id})

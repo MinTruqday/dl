@@ -18,7 +18,7 @@ router = APIRouter(prefix="/telemetry")
 async def get_stats(db=Depends(get_db)):
     return APIResponse(
         data=await TelemetryService.get_system_stats(db=db),
-        message="The comprehensive system performance statistics have been successfully generated and retrieved",
+        message="Lấy thống kê hiệu suất hệ thống thành công",
     )
 
 
@@ -30,7 +30,7 @@ async def get_stats(db=Depends(get_db)):
 async def get_sys_health(db=Depends(get_db)):
     return APIResponse(
         data=await TelemetryService.get_sys_health(db=db),
-        message="The system health diagnostic check has been successfully completed",
+        message="Hoàn tất kiểm tra hệ thống",
     )
 
 
@@ -46,7 +46,7 @@ async def get_audit_logs(
 ):
     return APIResponse(
         data=await TelemetryService.get_activity_stats(days=30, db=db),
-        message="The internal system activity logs have been successfully compiled and retrieved",
+        message="Lấy nhật ký hệ thống thành công",
     )
 
 
@@ -62,5 +62,5 @@ async def get_activity(
         data=await TelemetryService.get_activity_log(
             str(current_user.id), db=db
         ),
-        message="The administrative moderation activity logs have been successfully retrieved",
+        message="Lấy nhật ký kiểm duyệt thành công",
     )

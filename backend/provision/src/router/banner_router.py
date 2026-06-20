@@ -19,7 +19,7 @@ router = APIRouter(prefix="/banners")
 async def get_active_banners(db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.get_banners(active_only=True, db=db),
-        message="The active promotional banners have been successfully retrieved and are ready for display",
+        message="Tải banner quảng cáo thành công",
     )
 
 
@@ -31,7 +31,7 @@ async def get_active_banners(db=Depends(get_db)):
 async def get_all_banners(db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.get_banners(active_only=False, db=db),
-        message="The comprehensive list of all promotional banners has been successfully retrieved from the system",
+        message="Lấy danh sách banner quảng cáo thành công",
     )
 
 
@@ -43,7 +43,7 @@ async def get_all_banners(db=Depends(get_db)):
 async def create_banner(data: BannerRequest, db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.create_banner(data.model_dump(), db=db),
-        message="The new promotional banner has been successfully created and added to the active rotation",
+        message="Tạo banner quảng cáo thành công",
         status=201,
     )
 
@@ -56,5 +56,5 @@ async def create_banner(data: BannerRequest, db=Depends(get_db)):
 async def delete_banner(banner_id: str, db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.delete_banner(banner_id, db=db),
-        message="The specified promotional banner has been permanently removed from the system",
+        message="Xóa vĩnh viễn banner quảng cáo thành công",
     )

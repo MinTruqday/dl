@@ -45,5 +45,5 @@ class SettingService:
                 }
             },
         )
-        logger.info("The system configuration settings have been successfully updated by the authenticated user")
-        return {"message": "Your personal system configuration settings have been successfully updated and saved"}
+        logger.info("Cập nhật cấu hình hệ thống thành công")
+        return {"message": "Cập nhật cấu hình hệ thống cá nhân thành công"}

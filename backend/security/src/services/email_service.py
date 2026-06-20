@@ -21,12 +21,12 @@ class EmailService:
         sender_name = settings.SENDER_NAME
         subject = "Password Recovery Verification Code"
         html_body = f'\n        <!DOCTYPE html>\n        <html>\n        <head>\n            <style>\n                .container {{\n                    font-family: Arial, sans-serif;\n                    max-width: 600px;\n                    margin: 0 auto;\n                    padding: 20px;\n                    border: 1px solid #e0e0e0;\n                    border-radius: 8px;\n                    background-color: #f9f9f9;\n                }}\n                .header {{\n                    text-align: center;\n                    margin-bottom: 20px;\n                }}\n                .header h2 {{\n                    color: #333333;\n                }}\n                .content {{\n                    background-color: #ffffff;\n                    padding: 20px;\n                    border-radius: 6px;\n                    color: #555555;\n                    line-height: 1.6;\n                }}\n                .token-container {{\n                    text-align: center;\n                    margin: 20px 0;\n                }}\n                .token {{\n                    display: inline-block;\n                    font-size: 28px;\n                    font-weight: bold;\n                    letter-spacing: 6px;\n                    padding: 12px 24px;\n                    background-color: #e3f2fd;\n                    color: #1976d2;\n                    border: 2px dashed #90caf9;\n                    border-radius: 6px;\n                    margin: 10px 0;\n                }}\n                .footer {{\n                    margin-top: 20px;\n                    font-size: 12px;\n                    color: #999999;\n                    text-align: center;\n                }}\n            </style>\n        </head>\n        <body>\n            <div class="container">\n                <div class="header">\n                    <h2>Account Management System</h2>\n                </div>\n                <div class="content">\n                    <p>Hello,</p>\n                    <p>We received a password recovery request for the account <strong>{email}</strong></p>\n                    <p>Your verification code is</p>\n                    <div class="token-container">\n                        <span class="token">{token}</span>\n                    </div>\n                    <p><strong>Note:</strong> This code is only valid for <strong>1 minute</strong>. If you did not request this change, please ignore this email.</p>\n                    <p>Best regards,</p>\n                </div>\n                <div class="footer">\n                    <p>This email was sent automatically. Please do not reply to this email.</p>\n                </div>\n            </div>\n        </body>\n        </html>\n        '
-        logger.info(f"The system is initiating the dispatch process for a password recovery email to the address {email}")
+        logger.info("Đang gửi email khôi phục mật khẩu")
         if not all(
             [smtp_host, smtp_port, smtp_user, smtp_pass, sender_email, sender_name]
         ):
-            logger.error(f"The email dispatch process for the address {email} could not proceed due to incomplete or missing mailing service configurations")
-            raise Exception("The outbound mailing service is not properly configured to process this request")
+            logger.error("Lỗi cấu hình dịch vụ gửi email")
+            raise Exception("Lỗi cấu hình dịch vụ gửi email")
 
         def send_sync(db=None):
             try:
@@ -44,8 +44,8 @@ class EmailService:
                 server.quit()
                 return True
             except Exception:
-                logger.error("An unexpected network or authentication error occurred while communicating with the outbound mail server")
-                raise Exception("An unexpected network or authentication error occurred while communicating with the outbound mail server")
+                logger.error("Lỗi kết nối máy chủ gửi email")
+                raise Exception("Lỗi kết nối máy chủ gửi email")
 
         success = await asyncio.to_thread(send_sync)
-        logger.info(f"The password recovery instructions were successfully transmitted to the email address {email}")
+        logger.info("Gửi hướng dẫn khôi phục mật khẩu thành công")

@@ -26,7 +26,7 @@ app.include_router(message_ws_router.router, prefix="/messages")
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("The real-time communication service has been initialized successfully and is ready to accept incoming connections")
+    logger.info("Dịch vụ tin nhắn theo thời gian thực đã sẵn sàng")
     from core.database import init_db
 
     await init_db()

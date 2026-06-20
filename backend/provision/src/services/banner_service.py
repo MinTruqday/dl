@@ -28,7 +28,7 @@ class BannerService:
             "created_at": datetime.now(timezone.utc),
         }
         await db["banners"].insert_one(banner)
-        logger.info("A new promotional banner has been successfully created and added to the system rotation")
+        logger.info("Tạo banner quảng cáo thành công")
         return banner
 
     @staticmethod
@@ -36,5 +36,5 @@ class BannerService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db["banners"].delete_one({"_id": banner_id})
-        logger.info("The specified promotional banner has been permanently deleted from the system configuration")
-        return {"message": "The specified promotional banner has been permanently removed from the system"}
+        logger.info("Xóa vĩnh viễn banner quảng cáo thành công")
+        return {"message": "Xóa vĩnh viễn banner quảng cáo thành công"}

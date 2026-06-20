@@ -26,6 +26,6 @@ async def export_document_pdf(
         data=Response(
             content=pdf_content, media_type="application/pdf", headers=headers
         ),
-        message="The portable document format copy has been successfully generated with the appropriate copyright watermark",
+        message="Tạo bản sao đóng dấu bản quyền thành công",
         status=200,
     )

@@ -54,5 +54,5 @@ class AuditService:
             }
         )
         logger.info(
-            "The administrative system action has been successfully captured and recorded in the audit logs"
+            "Ghi nhận thao tác hệ thống thành công"
         )

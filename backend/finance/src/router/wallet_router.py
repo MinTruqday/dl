@@ -15,7 +15,7 @@ async def get_my_wallet(
 ):
     return APIResponse(
         data=await WalletService.get_wallet_balance(str(current_user.id), db=db),
-        message="The current wallet balance and associated financial metrics have been successfully retrieved",
+        message="Lấy số dư tài khoản thành công",
         status=200,
     )
 
@@ -31,6 +31,6 @@ async def get_my_transactions(
         data=await WalletService.get_transactions(
             str(current_user.id), limit, offset, db=db
         ),
-        message="The historical financial transactions for the requested account have been successfully compiled and retrieved",
+        message="Lấy lịch sử giao dịch thành công",
         status=200,
     )

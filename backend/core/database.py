@@ -24,7 +24,7 @@ async def init_db():
     rabbitmq_uri = settings.RABBITMQ_URI
 
     if not mongo_uri or not redis_uri or not rabbitmq_uri:
-        logger.error("The system initialization failed because the required database connection configurations are missing")
+        logger.error("Lỗi khởi tạo hệ thống do thiếu kết nối cơ sở dữ liệu")
         import sys
 
         sys.exit(1)
@@ -43,15 +43,15 @@ async def init_db():
                 if "@" in parsed_uri.netloc
                 else parsed_uri.netloc
             )
-            logger.info("The primary database cluster initialization sequence has started")
+            logger.info("Bắt đầu khởi tạo cụm cơ sở dữ liệu chính")
             await db_client.mongodb.admin.command(
                 "replSetInitiate",
                 {"_id": "rs0", "members": [{"_id": 0, "host": host_with_port}]},
             )
-            logger.info("The primary database cluster has been successfully initialized and is ready to accept connections")
+            logger.info("Khởi tạo cụm cơ sở dữ liệu thành công")
             await asyncio.sleep(3)
         except Exception:
-            logger.warning("The system encountered an unexpected disruption while attempting to initialize the primary database cluster")
+            logger.warning("Lỗi khởi tạo cụm cơ sở dữ liệu chính")
 
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
 
@@ -59,13 +59,13 @@ async def init_db():
     for i in range(max_retries):
         try:
             db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
-            logger.info("The background message queue connection has been successfully established and is operating normally")
+            logger.info("Kết nối hàng đợi tin nhắn nền ổn định")
             break
         except Exception as e:
             if i == max_retries - 1:
-                logger.error("The background message queue connection could not be established after multiple consecutive retry attempts")
+                logger.error("Lỗi kết nối hàng đợi tin nhắn")
                 raise e
-            logger.warning("The system experienced a temporary delay while attempting to connect to the background message queue and will automatically retry")
+            logger.warning("Đang thử kết nối lại hàng đợi")
             await asyncio.sleep(5)
 
     await setup_indexes()
@@ -155,9 +155,9 @@ async def setup_indexes():
             [("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True
         )
 
-        logger.info("The primary database indexing process has been successfully completed to optimize query performance")
+        logger.info("Hoàn tất tạo chỉ mục cơ sở dữ liệu")
     except Exception:
-        logger.error("The system encountered an unexpected disruption while attempting to build the primary database indexes")
+        logger.error("Lỗi tạo chỉ mục cơ sở dữ liệu")
 
 
 async def close_db():

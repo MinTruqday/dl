@@ -15,7 +15,7 @@ class InlineSuggestionRequest(BaseModel):
 
 
 class ResolveSuggestionRequest(BaseModel):
-    action: str = Field(..., description="Either 'accepted' or 'rejected'")
+    action: str = Field(..., description="Chọn 'chấp nhận' hoặc 'từ chối'")
 
 
 class PomodoroSyncRequest(BaseModel):

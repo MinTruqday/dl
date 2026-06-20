@@ -13,7 +13,7 @@ try:
     from reportlab.lib.utils import simpleSplit
     from reportlab.pdfgen import canvas
 except ImportError as e:
-    logger.error("The document rendering engine is currently unavailable due to missing internal dependencies")
+    logger.error("Công cụ hiển thị tài liệu bị lỗi")
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
@@ -26,7 +26,7 @@ class ExportService:
         if not REPORTLAB_AVAILABLE:
             raise HTTPException(
                 status_code=500,
-                detail="The portable document generation service is currently undergoing routine maintenance and cannot process the request",
+                detail="Dịch vụ xuất PDF đang bảo trì",
             )
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -35,7 +35,7 @@ class ExportService:
         )
         if not document:
             raise HTTPException(
-                status_code=404, detail="The requested digital document could not be located within the primary storage repository"
+                status_code=404, detail="Không tìm thấy tài liệu"
             )
         user_email = (
             current_user.email
@@ -57,7 +57,7 @@ class ExportService:
             )
             if not purchase:
                 raise HTTPException(
-                    status_code=403, detail="The requested operation requires an active commercial license or purchase verification which could not be found"
+                    status_code=403, detail="Yêu cầu có bản quyền hoặc xác nhận mua hàng"
                 )
         watermark_text = "Copyright Protected Material - Licensed exclusively for personal usage"
 
@@ -108,15 +108,15 @@ class ExportService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.error("The rendering engine encountered an unexpected disruption while generating the final portable document format")
+                logger.error("Lỗi quá trình xuất PDF")
                 return None
 
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
         if pdf_data is None:
             raise HTTPException(
-                status_code=500, detail="The system was unable to successfully compile the requested document with the appropriate copyright protection"
+                status_code=500, detail="Lỗi xuất tài liệu bảo vệ bản quyền"
             )
         logger.info(
-            "The specified document has been successfully exported to the electronic publication format"
+            "Xuất tài liệu sang định dạng ePub thành công"
         )
         return pdf_data

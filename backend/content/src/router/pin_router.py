@@ -16,7 +16,7 @@ async def get_pinned_documents(
 ):
     return APIResponse(
         data=await PinService.get_pinned_documents(current_user, db=db),
-        message="The list of your prioritized pinned documents has been successfully retrieved",
+        message="Lấy danh sách tài liệu ghim thành công",
     )
 
 
@@ -28,7 +28,7 @@ async def pin_document(
 ):
     return APIResponse(
         data=await PinService.pin_document(document_id, current_user, db=db),
-        message="The specified document has been successfully prioritized and added to your pinned list",
+        message="Thêm tài liệu vào danh sách ghim thành công",
     )
 
 
@@ -40,7 +40,7 @@ async def unpin_document(
 ):
     return APIResponse(
         data=await PinService.unpin_document(document_id, current_user, db=db),
-        message="The specified document has been successfully removed from your prioritized pinned list",
+        message="Xóa tài liệu khỏi danh sách ghim thành công",
     )
 
 
@@ -54,5 +54,5 @@ async def set_pinned_documents(
         data=await PinService.set_pinned_documents(
             data.document_ids, current_user, db=db
         ),
-        message="The arrangement of your prioritized pinned documents has been successfully updated",
+        message="Cập nhật sắp xếp tài liệu ghim thành công",
     )

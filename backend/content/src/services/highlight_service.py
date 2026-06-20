@@ -35,7 +35,7 @@ class HighlightService:
         }
         await RepositoryFactory.get("highlights").insert_one(highlight)
         logger.info(
-            "A new textual highlight segment has been successfully captured and registered in the system"
+            "Tạo phần văn bản nổi bật thành công"
         )
         return highlight
 
@@ -77,8 +77,8 @@ class HighlightService:
             {"$set": {"note": note, "updated_at": datetime.now(timezone.utc)}},
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="The requested highlight annotation could not be located in the active database records")
-        return {"message": "The textual annotation attached to the highlight has been successfully updated"}
+            raise HTTPException(status_code=404, detail="Không tìm thấy ghi chú đánh dấu")
+        return {"message": "Cập nhật chú thích đoạn nổi bật thành công"}
 
     @staticmethod
     async def delete_highlight(highlight_id: str, current_user, db=None) -> dict:
@@ -88,9 +88,9 @@ class HighlightService:
             {"_id": highlight_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="The requested highlight annotation could not be located in the active database records")
-        logger.info("A user annotation and highlight segment has been permanently removed from the storage repository")
-        return {"message": "The specified textual highlight segment has been permanently removed from the document"}
+            raise HTTPException(status_code=404, detail="Không tìm thấy ghi chú đánh dấu")
+        logger.info("Xóa vĩnh viễn ghi chú và phần đánh dấu")
+        return {"message": "Đã xóa phần đánh dấu văn bản"}
 
     @staticmethod
     async def get_all_notes(
@@ -111,7 +111,7 @@ class HighlightService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except ValueError as e:
-                logger.warning("The pagination process was interrupted because the provided chronological cursor value was incorrectly formatted")
+                logger.warning("Lỗi định dạng phân trang")
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
             pipeline.append({"$skip": skip})

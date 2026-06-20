@@ -42,7 +42,7 @@ celery_app.conf.task_queues = (
     default_retry_delay=10,
 )
 def hard_delete_document_task(document_id: str, user_id: str):
-    logger.info(f"Initiating the permanent removal process for the document with identifier {document_id}")
+    logger.info("Đang bắt đầu quá trình xóa vĩnh viễn tài liệu")
     import httpx
 
     try:
@@ -54,9 +54,9 @@ def hard_delete_document_task(document_id: str, user_id: str):
                 f"{rag_url}/inference/vector/{document_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
-        logger.info(f"The document with identifier {document_id} has been permanently removed from the storage system")
+        logger.info("Xóa vĩnh viễn tài liệu thành công")
     except Exception as e:
-        logger.error(f"Failed to complete the permanent removal process for the document with identifier {document_id} due to an unexpected network or system failure")
+        logger.error("Lỗi xóa vĩnh viễn tài liệu")
         raise hard_delete_document_task.retry(exc=e)
 
 
@@ -68,7 +68,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     default_retry_delay=10,
 )
 def compile_document_tectonic(document_id, tex_content):
-    logger.info(f"Initiating the compilation process for the document with identifier {document_id}")
+    logger.info("Đang bắt đầu quá trình biên dịch tài liệu")
     with tempfile.TemporaryDirectory() as temp_dir:
         tex_path = os.path.join(temp_dir, f"{document_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{document_id}.pdf")
@@ -78,7 +78,7 @@ def compile_document_tectonic(document_id, tex_content):
             f.write(tex_content)
 
         try:
-            logger.debug(f"Executing the underlying compilation steps for the document with identifier {document_id}")
+            logger.debug("Đang thực thi biên dịch tài liệu")
             process = subprocess.run(
                 [
                     "tectonic",
@@ -96,19 +96,19 @@ def compile_document_tectonic(document_id, tex_content):
             )
 
             if not os.path.exists(pdf_path):
-                logger.error(f"The compilation process failed to generate the final output for the document with identifier {document_id}")
+                logger.error("Lỗi biên dịch, không thể tạo kết quả cuối cùng")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
                         log_content += "\n" + lf.read()
                 return {
                     "status": "error",
-                    "error": "The document could not be processed completely due to invalid structural formatting or syntax issues",
+                    "error": "Lỗi định dạng cấu trúc tài liệu",
                     "logs": log_content,
                     "document_id": document_id,
                 }
 
-            logger.info(f"The document with identifier {document_id} has been successfully compiled and processed")
+            logger.info("Biên dịch tài liệu thành công")
 
             return {
                 "status": "success",
@@ -117,16 +117,16 @@ def compile_document_tectonic(document_id, tex_content):
                 "logs": process.stdout,
             }
         except subprocess.TimeoutExpired:
-            logger.error(f"The background compilation process exceeded the maximum allowed execution time for the document with identifier {document_id}")
+            logger.error("Quá thời gian biên dịch tài liệu")
             return {
                 "status": "error",
-                "error": "The compilation process exceeded the maximum allowed time limit so please verify the document structure and try again",
+                "error": "Quá thời gian biên dịch, vui lòng kiểm tra cấu trúc tài liệu",
                 "document_id": document_id,
             }
         except Exception as e:
-            logger.exception(f"An unexpected system failure occurred while attempting to compile the document with identifier {document_id}")
+            logger.exception("Lỗi hệ thống khi biên dịch tài liệu")
             return {
                 "status": "error",
-                "error": "An unexpected system failure occurred during document processing so please attempt your request again later",
+                "error": "Lỗi xử lý tài liệu, vui lòng thử lại sau",
                 "document_id": document_id
             }

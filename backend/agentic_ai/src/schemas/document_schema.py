@@ -2,10 +2,10 @@ from pydantic import BaseModel, Field
 
 
 class CreateDocument(BaseModel):
-    title: str = Field(description="The title of the document")
-    description: str = Field(description="A short summary of the document")
+    title: str = Field(description="Tiêu đề tài liệu")
+    description: str = Field(description="Bản tóm tắt ngắn của tài liệu")
     format: str = Field(
-        description="Must be json for Editor block or latex for LaTeX format"
+        description="Phải là định dạng JSON hoặc LaTeX"
     )
     content: str = Field(
         description=(
@@ -18,7 +18,7 @@ class CreateDocument(BaseModel):
 
 
 class UpdateDocument(BaseModel):
-    document_id: str = Field(description="The unique identifier of the document to update")
+    document_id: str = Field(description="Định danh tài liệu cần cập nhật")
     new_content: str = Field(
         description=(
             "The new content for the document "

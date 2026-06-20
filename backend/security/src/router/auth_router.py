@@ -27,7 +27,7 @@ async def read_users_me(
         len(current_user.passkeys) > 0 if current_user.passkeys else False
     )
     return APIResponse(
-        data=user_data, message="The requested personal profile information has been successfully retrieved from the system records", status=status.HTTP_200_OK
+        data=user_data, message="Lấy thông tin cá nhân thành công", status=status.HTTP_200_OK
     )
 
 
@@ -43,7 +43,7 @@ async def register_user(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.register_user(user_in, client_ip, db=db),
-        message="Your account has been registered successfully so please proceed to the login gateway to access your dashboard",
+        message="Đăng ký thành công, vui lòng đăng nhập",
         status=status.HTTP_201_CREATED,
     )
 
@@ -63,7 +63,7 @@ async def login(
         data=await AuthService.login_user(
             form_data.username, form_data.password, client_ip, db=db
         ),
-        message="The user authentication process was completed successfully and access has been granted",
+        message="Xác thực và cấp quyền truy cập thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -75,7 +75,7 @@ async def forgot_password(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.forgot_password(payload.email, client_ip, db=db),
-        message="A password reset request has been initiated and the instructions are being sent to the registered address",
+        message="Yêu cầu đặt lại mật khẩu đã được gửi đi",
         status=status.HTTP_200_OK,
     )
 
@@ -89,7 +89,7 @@ async def reset_password(
         data=await AuthService.reset_password(
             payload.token, payload.new_password, client_ip, db=db
         ),
-        message="The account password has been successfully updated and secured",
+        message="Đổi mật khẩu thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -101,7 +101,7 @@ async def verify_code(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.verify_reset_code(payload.token, client_ip, db=db),
-        message="The provided verification code has been successfully validated by the system",
+        message="Xác thực mã bảo mật thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -110,7 +110,7 @@ async def verify_code(
 async def google_login(db=Depends(get_db)):
     auth_url = await AuthService.get_google_auth_url(db=db)
     return APIResponse(
-        data={"url": auth_url}, message="The secure authentication gateway link for the external provider has been successfully generated", status=200
+        data={"url": auth_url}, message="Tạo liên kết cổng xác thực thành công", status=200
     )
 
 
@@ -119,6 +119,6 @@ async def google_callback(code: str, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.handle_google_callback(code, client_ip, db=db),
-        message="The external authentication process has been completed successfully",
+        message="Xác thực dịch vụ liên kết thành công",
         status=200,
     )

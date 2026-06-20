@@ -102,7 +102,7 @@ class DocumentService:
         docs_collection = RepositoryFactory.get("documents")
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
-            raise HTTPException(status_code=400, detail="The specified routing path is currently occupied by another resource within the system")
+            raise HTTPException(status_code=400, detail="Đường dẫn định tuyến đã được sử dụng")
 
         doc_dict = doc_in.model_dump()
         if not doc_dict.get("publisher_name"):
@@ -110,7 +110,7 @@ class DocumentService:
 
         doc_doc = DocumentInDB(**doc_dict, creator_id=str(current_user.id))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
-        logger.info("A new digital document has been successfully provisioned and registered in the system repository")
+        logger.info("Tạo tài liệu mới thành công")
         return doc_doc
 
     @staticmethod
@@ -168,7 +168,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
         if content_in.expected_version:
             db_updated = document.get("updated_at")
@@ -179,7 +179,7 @@ class DocumentService:
             ):
                 raise HTTPException(
                     status_code=409,
-                    detail="The requested modification cannot proceed because a newer version of the document currently exists in the database",
+                    detail="Không thể chỉnh sửa do đã có phiên bản mới hơn",
                 )
 
         if document.get("content"):
@@ -221,10 +221,10 @@ class DocumentService:
                     )
             except Exception as e:
                 logger.error(
-                    "The system encountered an unexpected disruption while attempting to dispatch the document update notification sequence"
+                    "Lỗi gửi chuỗi thông báo cập nhật tài liệu"
                 )
 
-        logger.info("The primary content payload of the specified digital document has been successfully updated by the author")
+        logger.info("Cập nhật nội dung tài liệu thành công")
 
         if hasattr(db_client, "redis") and db_client.redis:
             await db_client.redis.delete(f"document:{document_id}")
@@ -239,13 +239,13 @@ class DocumentService:
         docs_col = RepositoryFactory.get("documents")
         doc = await docs_col.find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         if (
             doc.get("creator_id") != str(current_user.id)
             and current_user.role != "ADMIN"
         ):
             raise HTTPException(
-                status_code=403, detail="The current account lacks the necessary authorization privileges to modify the specified document properties"
+                status_code=403, detail="Không có quyền chỉnh sửa tài liệu"
             )
 
         if hasattr(doc_update, "expected_version") and doc_update.expected_version:
@@ -257,7 +257,7 @@ class DocumentService:
             ):
                 raise HTTPException(
                     status_code=409,
-                    detail="The requested modification cannot proceed because a newer version of the document currently exists in the database",
+                    detail="Không thể chỉnh sửa do đã có phiên bản mới hơn",
                 )
 
         update_data = {
@@ -267,7 +267,7 @@ class DocumentService:
             existing = await docs_col.find_one({"slug": update_data["slug"]})
             if existing:
                 raise HTTPException(
-                    status_code=400, detail="The specified routing path is currently occupied by another resource within the system"
+                    status_code=400, detail="Đường dẫn định tuyến đã được sử dụng"
                 )
 
         if update_data:
@@ -338,14 +338,14 @@ class DocumentService:
 
         document = await docs_collection.find_one({"_id": document_id})
         if not document:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
         if (
             document.get("creator_id") != user_id
             and document.get("status") != DocumentStatus.PUBLISHED
         ):
             if not current_user or current_user.role != "ADMIN":
-                raise HTTPException(status_code=403, detail="The requested document is currently in draft status and is not yet available for public access")
+                raise HTTPException(status_code=403, detail="Tài liệu đang ở trạng thái nháp")
 
         if (
             document.get("is_password_protected")
@@ -365,7 +365,7 @@ class DocumentService:
                 if attempts and int(attempts) >= 5:
                     raise HTTPException(
                         status_code=429,
-                        detail="Account access has been temporarily restricted due to excessive authentication failures so please attempt your request again later",
+                        detail="Tạm khóa tài khoản do sai mật khẩu quá nhiều lần",
                     )
 
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -373,7 +373,7 @@ class DocumentService:
                 if rl_key and hasattr(db_client, "redis") and db_client.redis:
                     await db_client.redis.incr(rl_key)
                     await db_client.redis.expire(rl_key, 900)
-                raise HTTPException(status_code=403, detail="The provided cryptographic credentials do not match the required security profile for this document")
+                raise HTTPException(status_code=403, detail="Thông tin xác thực không khớp với hồ sơ bảo mật tài liệu")
 
             if rl_key and hasattr(db_client, "redis") and db_client.redis:
                 await db_client.redis.delete(rl_key)
@@ -394,12 +394,12 @@ class DocumentService:
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}},
         )
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
         logger.info(
-            "The designated document has been successfully flagged for removal and moved to the temporary deletion bin"
+            "Đã chuyển tài liệu vào thùng rác"
         )
-        return {"message": "The specified document has been successfully transferred to the temporary deletion bin"}
+        return {"message": "Đã chuyển tài liệu vào thùng rác"}
 
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
@@ -410,11 +410,11 @@ class DocumentService:
         )
         if res.modified_count == 0:
             raise HTTPException(
-                status_code=404, detail="The specified document could not be located within the temporary deletion bin"
+                status_code=404, detail="Không tìm thấy tài liệu trong thùng rác"
             )
 
-        logger.info("The previously deleted document has been successfully recovered and restored to active status")
-        return {"message": "The specified document has been successfully recovered from the temporary deletion bin"}
+        logger.info("Khôi phục tài liệu thành công")
+        return {"message": "Khôi phục tài liệu từ thùng rác thành công"}
 
     @staticmethod
     async def get_trash(current_user) -> list:
@@ -447,7 +447,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed = pwd_context.hash(password)
         await RepositoryFactory.get("documents").update_one(
@@ -460,8 +460,8 @@ class DocumentService:
                 }
             },
         )
-        logger.info("Cryptographic access protection has been successfully enabled for the designated document")
-        return {"message": "The security access password has been successfully configured for the document"}
+        logger.info("Bật bảo vệ mật khẩu tài liệu thành công")
+        return {"message": "Thiết lập mật khẩu tài liệu thành công"}
 
     @staticmethod
     async def invite_coauthor(document_id: str, email: str, current_user):
@@ -470,7 +470,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
         import httpx
 
@@ -484,21 +484,21 @@ class DocumentService:
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
         except Exception as e:
-            logger.warning("The system encountered a minor disruption while attempting to synchronize the author profile information via email")
+            logger.warning("Lỗi đồng bộ thông tin tác giả")
 
         if not target_user:
-            raise HTTPException(status_code=404, detail="The system was unable to locate an active account associated with the provided email address")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản với email này")
 
         if str(target_user["_id"]) in document.get("coauthors", []):
-            return {"message": "The specified user account is already registered as an active collaborator on this document"}
+            return {"message": "Tài khoản đã là cộng tác viên"}
 
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}}
         )
         logger.info(
-            "An editorial collaboration invitation has been successfully registered and applied to the targeted user account"
+            "Gửi lời mời cộng tác thành công"
         )
-        return {"message": "The specified user has been successfully designated as an editorial collaborator"}
+        return {"message": "Bổ nhiệm cộng tác viên thành công"}
 
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
@@ -512,7 +512,7 @@ class DocumentService:
             }
         )
         if not document:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
         user_id = str(current_user.id) if current_user else None
         has_purchased = False
@@ -572,7 +572,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     author = resp.json().get("data")
         except Exception as e:
-            logger.warning("The system encountered a minor disruption while attempting to synchronize the author profile information")
+            logger.warning("Lỗi đồng bộ hồ sơ tác giả")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),
@@ -595,7 +595,7 @@ class DocumentService:
             }
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
         limit = doc.get("preview_pages", 5)
         raw_content = doc.get("content", "")
@@ -628,7 +628,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}, {"_id": 1}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
 
         logs = (
             await RepositoryFactory.get("audit_logs")
@@ -736,7 +736,7 @@ class DocumentService:
             )
             if doc:
                 await trigger_document_publish_job(document_id, doc.get("creator_id"))
-                logger.info("The automated publication sequence has been initiated for the specified digital document")
+                logger.info("Đã bắt đầu quy trình xuất bản")
 
         await RepositoryFactory.get("audit_logs").insert_one(
             {
@@ -748,9 +748,9 @@ class DocumentService:
             }
         )
         logger.info(
-            "The administrative moderation decision has been successfully recorded and applied to the document"
+            "Ghi nhận quyết định kiểm duyệt tài liệu thành công"
         )
-        return {"message": "The administrative moderation status has been successfully applied to the specified document"}
+        return {"message": "Cập nhật trạng thái kiểm duyệt tài liệu thành công"}
 
     @staticmethod
     async def resolve_copyright_dispute(
@@ -769,9 +769,9 @@ class DocumentService:
             },
         )
         logger.info(
-            "An intellectual property dispute has been successfully processed and marked as resolved by the administration"
+            "Giải quyết tranh chấp bản quyền thành công"
         )
-        return {"message": "The specified intellectual property dispute has been successfully processed and marked as resolved"}
+        return {"message": "Đã giải quyết tranh chấp bản quyền"}
 
     @staticmethod
     async def get_trending_tags(

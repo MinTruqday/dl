@@ -25,6 +25,6 @@ async def create_deposit(
         data=await DepositService.create_deposit(
             req.amount, req.payment_method, current_user, db=db
         ),
-        message="The deposit transaction has been successfully initiated and is awaiting payment confirmation from the gateway",
+        message="Đã khởi tạo giao dịch nạp tiền, đang chờ xác nhận",
         status=201,
     )

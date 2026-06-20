@@ -41,7 +41,7 @@ async def create_document(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.create_document(doc_in, current_user),
-        message="The new digital document has been successfully created and added to the central repository",
+        message="Tạo tài liệu mới thành công",
         status=status.HTTP_201_CREATED,
     )
 
@@ -56,7 +56,7 @@ async def update_document_content(
         data=await DocumentService.update_document_content(
             document_id, content_in, current_user
         ),
-        message="The primary content of the specified digital document has been successfully modified and saved",
+        message="Lưu thay đổi nội dung tài liệu thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -71,7 +71,7 @@ async def update_document(
         data=await DocumentService.update_document(
             document_id, doc_update, current_user
         ),
-        message="The descriptive metadata of the specified digital document has been successfully updated",
+        message="Cập nhật dữ liệu mô tả tài liệu thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -89,7 +89,7 @@ async def list_documents(
         data=await DocumentService.list_documents(
             limit, cursor, q, sort_by, category, tag
         ),
-        message="The requested catalog of digital documents has been successfully retrieved from the system",
+        message="Lấy danh mục tài liệu thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -115,7 +115,7 @@ async def get_folders(
     folders = await cursor.to_list(length=100)
     for f in folders:
         f["_id"] = str(f["_id"])
-    return APIResponse(data=folders, message="The hierarchical folder structure has been successfully retrieved from your workspace")
+    return APIResponse(data=folders, message="Lấy cấu trúc thư mục thành công")
 
 
 @router.post(
@@ -136,7 +136,7 @@ async def create_folder(
     }
     res = await db["workspace_folders"].insert_one(folder_doc)
     folder_doc["_id"] = str(res.inserted_id)
-    return APIResponse(data=folder_doc, message="The new organizational folder has been successfully provisioned within your workspace")
+    return APIResponse(data=folder_doc, message="Tạo thư mục làm việc thành công")
 
 
 @router.delete(
@@ -152,12 +152,12 @@ async def delete_folder(
         {"_id": ObjectId(folder_id), "creator_id": str(current_user.id)}
     )
     if not folder:
-        raise HTTPException(status_code=404, detail="The system was unable to locate the specified organizational folder within the current workspace")
+        raise HTTPException(status_code=404, detail="Không tìm thấy thư mục làm việc")
     await db["workspace_folders"].delete_one({"_id": ObjectId(folder_id)})
     await db["documents"].update_many(
         {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
     )
-    return APIResponse(data={"deleted": True}, message="The specified organizational folder has been permanently removed from the system workspace")
+    return APIResponse(data={"deleted": True}, message="Xóa thư mục vĩnh viễn thành công")
 
 
 @router.get(
@@ -174,7 +174,7 @@ async def get_my_documents(
 ):
     return APIResponse(
         data=await DocumentService.get_my_documents(current_user, q, cursor, limit),
-        message="The collection of your personally authored digital documents has been successfully retrieved",
+        message="Lấy danh sách tài liệu cá nhân thành công",
     )
 
 
@@ -186,7 +186,7 @@ async def get_my_documents(
 async def get_trash(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.get_trash(current_user),
-        message="The contents of the temporary deletion bin have been successfully retrieved",
+        message="Lấy nội dung thùng rác thành công",
     )
 
 
@@ -200,7 +200,7 @@ async def get_document_by_id(
         data=await DocumentService.get_document_by_id(
             document_id, current_user, password
         ),
-        message="The detailed information for the specified digital document has been successfully retrieved",
+        message="Lấy thông tin chi tiết tài liệu thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -211,7 +211,7 @@ async def get_document_by_slug(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.get_document_by_slug(slug, current_user),
-        message="The digital document corresponding to the specified navigational path has been successfully retrieved",
+        message="Lấy tài liệu thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -220,7 +220,7 @@ async def get_document_by_slug(
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentService.get_document_preview(slug),
-        message="The publicly accessible preview of the specified digital document has been successfully retrieved",
+        message="Lấy bản xem trước tài liệu công khai thành công",
     )
 
 
@@ -234,7 +234,7 @@ async def soft_delete_document(
 ):
     return APIResponse(
         data=await DocumentService.soft_delete_document(document_id, current_user),
-        message="The specified digital document has been successfully moved to the temporary deletion bin",
+        message="Đã chuyển tài liệu vào thùng rác",
     )
 
 
@@ -248,7 +248,7 @@ async def restore_document(
 ):
     return APIResponse(
         data=await DocumentService.restore_document(document_id, current_user),
-        message="The specified digital document has been successfully recovered from the temporary deletion bin",
+        message="Khôi phục tài liệu thành công",
     )
 
 
@@ -266,7 +266,7 @@ async def set_document_password(
         data=await DocumentService.set_document_password(
             document_id, req.password, current_user
         ),
-        message="The cryptographic access protection password for the specified document has been successfully configured",
+        message="Thiết lập mật khẩu truy cập tài liệu thành công",
     )
 
 
@@ -280,7 +280,7 @@ async def get_document_audit_logs(
 ):
     return APIResponse(
         data=await DocumentService.get_document_audit_logs(document_id, current_user),
-        message="The comprehensive administrative activity log for the specified document has been successfully retrieved",
+        message="Lấy nhật ký hoạt động tài liệu thành công",
     )
 
 
@@ -297,13 +297,13 @@ async def toggle_star_document(
         {"_id": document_id, "creator_id": str(current_user.id)}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="The system was unable to locate the requested digital document within the primary repository")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
     current_starred = doc.get("is_starred", False)
     await db["documents"].update_one(
         {"_id": document_id}, {"$set": {"is_starred": not current_starred}}
     )
     return APIResponse(
-        data={"starred": not current_starred}, message="The prioritization status of the specified digital document has been successfully toggled"
+        data={"starred": not current_starred}, message="Cập nhật trạng thái ưu tiên tài liệu thành công"
     )
 
 
@@ -324,7 +324,7 @@ async def transfer_document(
     if not doc:
         raise HTTPException(
             status_code=404,
-            detail="The system was unable to locate the requested document or the current account lacks sufficient access privileges",
+            detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
         )
     import httpx
 
@@ -341,7 +341,7 @@ async def transfer_document(
         pass
     if not target:
         raise HTTPException(
-            status_code=404, detail="The target user account specified for the ownership transfer operation could not be located"
+            status_code=404, detail="Không tìm thấy tài khoản chuyển nhượng"
         )
     await db["documents"].update_one(
         {"_id": document_id},
@@ -349,7 +349,7 @@ async def transfer_document(
     )
     return APIResponse(
         data={"status": "transferred", "new_owner_id": new_owner_id},
-        message="The administrative ownership rights of the specified document have been successfully transferred to the designated account",
+        message="Đã chuyển quyền sở hữu tài liệu",
     )
 
 
@@ -360,7 +360,7 @@ async def get_document_analytics(
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="The system was unable to locate the requested digital document within the primary repository")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
     views = doc.get("views", 0)
     content = doc.get("content", "")
     total_words = len(content.split()) if content else 0
@@ -397,7 +397,7 @@ async def get_document_analytics(
             "avg_rating": round(avg_rating, 1) if avg_rating else 0,
             "purchases": purchase_count,
         },
-        message="The comprehensive reader engagement analytics for the specified document have been successfully calculated and retrieved",
+        message="Lấy dữ liệu tương tác người đọc thành công",
     )
 
 
@@ -408,7 +408,7 @@ async def get_document_academic(
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="The system was unable to locate the requested digital document within the primary repository")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
     content = doc.get("content", "")
     word_count = len(content.split()) if content else 0
     sentences = (
@@ -424,7 +424,7 @@ async def get_document_academic(
             "readability_score": round(readability_score, 1),
             "content_format": doc.get("content_format", "html"),
         },
-        message="The academic complexity and readability metrics for the specified document have been successfully analyzed and retrieved",
+        message="Lấy dữ liệu phân tích tài liệu thành công",
     )
 
 
@@ -453,7 +453,7 @@ async def update_drm_settings(
         ),
         current_user,
     )
-    return APIResponse(data=result, message="The digital rights management and copyright protection configurations have been successfully updated")
+    return APIResponse(data=result, message="Cập nhật cấu hình bảo vệ bản quyền thành công")
 
 
 class TagsUpdate(BaseModel):
@@ -473,7 +473,7 @@ async def update_tags(
     result = await DocumentService.update_document(
         document_id, DocumentUpdate(tags=req.tags), current_user
     )
-    return APIResponse(data=result, message="The thematic categorization tags for the specified digital document have been successfully updated")
+    return APIResponse(data=result, message="Cập nhật thẻ danh mục tài liệu thành công")
 
 
 class ScheduleUpdate(BaseModel):
@@ -495,7 +495,7 @@ async def schedule_publish(
         DocumentUpdate(publish_at=req.publish_at, scheduled_publish_at=req.publish_at),
         current_user,
     )
-    return APIResponse(data=result, message="The automated publication schedule for the specified digital document has been successfully configured")
+    return APIResponse(data=result, message="Lên lịch xuất bản tài liệu thành công")
 
 
 @router.post("/{document_id}/unlock", response_model=APIResponse[Any])
@@ -509,6 +509,6 @@ async def unlock_document(
         data=await DocumentService.get_document_by_id(
             document_id, current_user, password
         ),
-        message="The cryptographic access protection for the specified document has been successfully bypassed using the provided credentials",
+        message="Xác thực truy cập thành công",
         status=status.HTTP_200_OK,
     )

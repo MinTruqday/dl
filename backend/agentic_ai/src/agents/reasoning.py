@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 from src.core.prompt_registry import PromptType, prompt_registry
 
 class QualityEvaluation(BaseModel):
-    is_hallucination: bool = Field(description="True if the generated answer contains hallucinated facts or is not grounded in the documents, False otherwise")
-    feedback: str = Field(description="Concise feedback explaining the reasoning")
+    is_hallucination: bool = Field(description="Phản hồi có chứa thông tin sai lệch hay không")
+    feedback: str = Field(description="Phản hồi giải thích lý do")
 
 class Reasoning:
     def __init__(self):
@@ -25,7 +25,7 @@ class Reasoning:
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             return result.content.strip()
         except Exception:
-            logger.exception("The inference task execution failed due to an unexpected internal error")
+            logger.exception("Lỗi thực thi tác vụ suy luận")
             return "The system encountered an error during the inference process"
 
     async def evaluate_quality(
@@ -50,7 +50,7 @@ class Reasoning:
                 "feedback": eval_res.feedback
             }
         except Exception:
-            logger.exception("The quality evaluation process encountered an unexpected failure")
+            logger.exception("Lỗi đánh giá chất lượng tài liệu")
             return {
                 "should_retry": False,
                 "feedback": "The system encountered an error during the quality evaluation phase",

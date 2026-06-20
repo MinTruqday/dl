@@ -14,14 +14,14 @@ async def compile_latex(req: CompileRequest):
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception:
-        logger.error("The system encountered an unexpected error while attempting to compile the formatted typesetting document")
-        raise HTTPException(status_code=500, detail="The typesetting compilation process encountered structural errors and could not generate the final document due to invalid syntax or unrecognized commands")
+        logger.error("Lỗi biên dịch tài liệu định dạng")
+        raise HTTPException(status_code=500, detail="Lỗi biên dịch do cú pháp không hợp lệ")
 
 
 @router.post("/export/{format}")
 async def export_document(format: str, req: CompileRequest):
     if format not in ["docx", "html"]:
-        raise HTTPException(status_code=400, detail="The requested export format is not currently supported by the conversion system")
+        raise HTTPException(status_code=400, detail="Không hỗ trợ định dạng xuất này")
 
     try:
         file_bytes = await LatexEngine.export_to_format(req.content, format)
@@ -34,8 +34,8 @@ async def export_document(format: str, req: CompileRequest):
 
         return Response(content=file_bytes, media_type=media_type)
     except Exception:
-        logger.error("The system encountered an unexpected error while attempting to export the document to the requested format")
-        raise HTTPException(status_code=500, detail="The document export process could not be completed due to an internal processing interruption")
+        logger.error("Lỗi chuyển đổi định dạng tài liệu")
+        raise HTTPException(status_code=500, detail="Lỗi xuất tài liệu")
 
 
 @router.post("/format")

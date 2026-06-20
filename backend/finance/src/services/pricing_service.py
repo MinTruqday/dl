@@ -17,15 +17,15 @@ class PricingService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located in the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         update = {
             "price_dl": max(0, data.get("price_dl", 0)),
             "is_drm_protected": data.get("is_drm_protected", True),
             "updated_at": datetime.now(timezone.utc),
         }
         await db["documents"].update_one({"_id": document_id}, {"$set": update})
-        logger.info("The pricing configuration for the specified digital document has been successfully updated by the author")
-        return {"message": "The document pricing configuration has been successfully updated and applied"}
+        logger.info("Cập nhật giá tài liệu thành công")
+        return {"message": "Cập nhật cấu hình giá tài liệu thành công"}
 
     @staticmethod
     async def get_pricing_config(db=None) -> dict:

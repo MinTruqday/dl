@@ -8,6 +8,6 @@ class FeedbackRequest(BaseModel):
     message_id: str
     user_id: str
     vote_type: str = Field(
-        ..., description="Must be upvote downvote or hallucination_report"
+        ..., description="Phải chọn thích, không thích, hoặc báo cáo sai lệch"
     )
     comment: Optional[str] = ""

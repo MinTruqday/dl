@@ -18,7 +18,7 @@ async def request_withdrawal(
 ):
     return APIResponse(
         data=await WithdrawalService.request_withdrawal(req, current_user, db=db),
-        message="The withdrawal request has been successfully submitted and is currently pending administrative review",
+        message="Đã gửi yêu cầu rút tiền",
         status=201,
     )
 
@@ -33,7 +33,7 @@ async def get_withdrawal_queue(
 ):
     return APIResponse(
         data=await WithdrawalService.get_withdrawal_queue(status, limit, db=db),
-        message="The requested list of financial withdrawal transactions has been successfully retrieved from the system",
+        message="Lấy danh sách giao dịch rút tiền thành công",
         status=200,
     )
 
@@ -54,6 +54,6 @@ async def verify_withdrawal(
         data=await WithdrawalService.verify_withdrawal(
             withdrawal_id, action, reason, current_user, db=db
         ),
-        message="The administrative verification process for the specified withdrawal request has been completed successfully",
+        message="Xác minh yêu cầu rút tiền thành công",
         status=200,
     )

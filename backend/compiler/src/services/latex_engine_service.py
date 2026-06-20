@@ -27,7 +27,7 @@ class LatexEngine:
     async def compile_to_pdf(content: str) -> bytes:
         for pattern in LatexEngine.DANGEROUS_PATTERNS:
             if re.search(pattern, content):
-                raise Exception("The provided typesetting code contains unauthorized or potentially malicious commands that are blocked by the system security policies")
+                raise Exception("Mã chứa lệnh không hợp lệ")
 
         job_id = str(uuid7())
         temp_dir = tempfile.gettempdir()
@@ -61,7 +61,7 @@ class LatexEngine:
             )
 
             if not os.path.exists(pdf_path):
-                raise Exception("The typesetting compilation process encountered structural errors and could not generate the final document due to invalid syntax or unrecognized commands")
+                raise Exception("Lỗi biên dịch do cú pháp không hợp lệ")
 
             with open(pdf_path, "rb") as f:
                 return f.read()
@@ -71,15 +71,15 @@ class LatexEngine:
                 try:
                     process.kill()
                 except Exception:
-                    logger.warning("The system was unable to cleanly terminate the background compilation process")
-            raise Exception("The typesetting compilation process exceeded the maximum allowed execution time and was forcibly terminated")
+                    logger.warning("Lỗi dừng tác vụ biên dịch")
+            raise Exception("Hết thời gian chờ quá trình biên dịch tài liệu")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception:
-                    logger.warning("The system was unable to automatically clean up the temporary processing files")
+                    logger.warning("Lỗi dọn dẹp tệp tạm thời")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -105,7 +105,7 @@ class LatexEngine:
             )
 
             if not os.path.exists(out_path):
-                raise Exception("The system was unable to successfully convert the document into the requested export format")
+                raise Exception("Lỗi chuyển đổi định dạng tài liệu")
 
             with open(out_path, "rb") as f:
                 return f.read()
@@ -114,7 +114,7 @@ class LatexEngine:
                 try:
                     os.remove(filepath)
                 except Exception:
-                    logger.warning("The system was unable to automatically clean up the temporary processing files")
+                    logger.warning("Lỗi dọn dẹp tệp tạm thời")
 
     @staticmethod
     def format_latex(content: str) -> dict:

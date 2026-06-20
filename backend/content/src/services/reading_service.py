@@ -106,7 +106,7 @@ class ReadingService:
             {"_id": document_id}, {"content": 1, "title": 1}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         content = doc.get("content", "")
         query_lower = query.lower()
         content_lower = content.lower()
@@ -130,7 +130,7 @@ class ReadingService:
         await RepositoryFactory.get("reading_history").delete_many(
             {"user_id": str(current_user.id)}
         )
-        return {"status": "success", "message": "The comprehensive reading activity history has been successfully purged from the system records"}
+        return {"status": "success", "message": "Xóa toàn bộ lịch sử đọc thành công"}
 
     @staticmethod
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
@@ -139,4 +139,4 @@ class ReadingService:
         await RepositoryFactory.get("reading_history").delete_one(
             {"user_id": str(current_user.id), "document_id": document_id}
         )
-        return {"status": "success", "message": "The specific reading activity entry has been successfully expunged from your historical timeline"}
+        return {"status": "success", "message": "Xóa lịch sử đọc cá nhân thành công"}

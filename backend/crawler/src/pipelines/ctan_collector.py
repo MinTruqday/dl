@@ -25,7 +25,7 @@ from src.core.storage import storage
 class CTANCollector:
     @staticmethod
     async def run_list_collector(pages: int = 0):
-        logger.info("The system is initiating the automated alphabetical list collection process")
+        logger.info("Đang bắt đầu quá trình thu thập danh sách chữ cái")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -35,7 +35,7 @@ class CTANCollector:
             try:
                 for letter in string.ascii_uppercase:
                     search_url = f"https://www.ctan.org/pkg/:{letter}"
-                    logger.info("The collection bot is currently scanning the selected alphabetical category index")
+                    logger.info("Đang quét danh mục chữ cái")
 
                     await page.goto(search_url, timeout=60000)
                     await page.wait_for_timeout(2000)
@@ -45,7 +45,7 @@ class CTANCollector:
                     try:
                         await page.wait_for_selector("main", timeout=15000)
                     except Exception:
-                        logger.warning("The collection bot did not find any valid document entries within the current alphabetical category")
+                        logger.warning("Không tìm thấy tài liệu trong danh mục chữ cái")
                         continue
 
                     book_nodes = await page.query_selector_all(list_css)
@@ -61,7 +61,7 @@ class CTANCollector:
                             )
                             book_urls.add(full_url)
 
-                    logger.info("The collection bot has successfully gathered the available package references for the current category")
+                    logger.info("Thu thập dữ liệu chuyên mục thành công")
                     for url in book_urls:
                         if not await dedup.is_collected("ctan_url", url):
                             await mq_client.publish(
@@ -70,12 +70,12 @@ class CTANCollector:
                             await dedup.mark_collected("ctan_url", url)
 
             except Exception:
-                logger.error("An unexpected network or parsing error occurred during the alphabetical list collection process")
+                logger.error("Lỗi lấy danh sách dữ liệu chữ cái")
                 raise
 
     @staticmethod
     async def run_detail_collector(book_url: str):
-        logger.info("The collection bot is currently processing the detailed metadata for the specified software package")
+        logger.info("Đang xử lý dữ liệu gói phần mềm")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -128,7 +128,7 @@ class CTANCollector:
                         )
                         payload["download_link"] = full_download_url
 
-                        logger.info("The secure download link for the software package has been successfully extracted")
+                        logger.info("Tạo đường dẫn tải xuống thành công")
 
                         slug = urllib.parse.quote(
                             payload["title"].lower().replace(" ", "-")
@@ -140,12 +140,12 @@ class CTANCollector:
                             "download_processor_queue", {**payload, "source": "CTAN"}
                         )
                     else:
-                        logger.warning("The extraction process found an empty download link on the current package details page")
+                        logger.warning("Liên kết tải xuống không có dữ liệu")
                 else:
-                    logger.warning("The required download action button could not be located on the software package page")
+                    logger.warning("Không tìm thấy nút tải xuống trên trang")
 
             except Exception:
-                logger.error("An unexpected system error occurred while attempting to parse the software package metadata")
+                logger.error("Lỗi xử lý dữ liệu tệp nén")
                 raise
 
     @staticmethod
@@ -157,10 +157,10 @@ class CTANCollector:
         title = payload.get("title", "package")
 
         if not url:
-            logger.error("The provided download link for the package archive is structurally invalid and cannot be processed")
+            logger.error("Đường dẫn tải xuống không hợp lệ")
             return
 
-        logger.info("The system is currently downloading and preparing to extract the requested package archive")
+        logger.info("Đang tải xuống và giải nén tệp tin")
 
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         filename = payload.get("filename") or f"{slug}.zip"
@@ -174,13 +174,13 @@ class CTANCollector:
         try:
             success = await download_file_with_retry(url, target_zip_local)
             if success:
-                logger.info("The remote package archive has been successfully downloaded to the temporary workspace")
+                logger.info("Tải xuống tệp nén thành công")
 
                 minio_url_book = await storage.upload_local_file(
                     f"books/ctan/{filename}", target_zip_local
                 )
 
-                logger.info("The background worker is currently extracting the contents of the downloaded package archive")
+                logger.info("Đang giải nén tệp tải xuống")
                 os.makedirs(extracted_folder_path, exist_ok=True)
                 with zipfile.ZipFile(target_zip_local, "r") as zip_ref:
                     zip_ref.extractall(extracted_folder_path)
@@ -191,7 +191,7 @@ class CTANCollector:
                     os.path.join(extracted_folder_path, contents[0])
                 ):
                     search_root = os.path.join(extracted_folder_path, contents[0])
-                    logger.info("The extraction module is automatically adjusting the nested directory structure of the archive")
+                    logger.info("Đang xử lý cấu trúc thư mục tệp nén")
 
                 found_pdf = None
                 for root, _, files in os.walk(search_root):
@@ -208,7 +208,7 @@ class CTANCollector:
                     minio_url_pdf = await storage.upload_local_file(
                         f"documents/ctan/{pdf_filename}", found_pdf
                     )
-                    logger.info("The extracted portable document format file has been successfully uploaded to the permanent storage system")
+                    logger.info("Tải lên tệp PDF thành công")
                     payload["pdf_url"] = minio_url_pdf
 
                 md_content = f"# Source code for {title}\n\n"
@@ -238,7 +238,7 @@ class CTANCollector:
                             except UnicodeDecodeError:
                                 pass
                             except Exception:
-                                logger.warning("The automated extraction process encountered a reading error while parsing a nested source file")
+                                logger.warning("Lỗi đọc tệp tin lồng nhau")
 
                 md_filename = f"{slug}_source.md"
                 md_path = os.path.join(temp_base, md_filename)
@@ -248,26 +248,26 @@ class CTANCollector:
                 minio_url_md = await storage.upload_local_file(
                     f"documents/ctan/{md_filename}", md_path
                 )
-                logger.info("The extracted source code has been successfully compiled into a markdown format and securely uploaded")
+                logger.info("Biên dịch và tải lên mã nguồn thành công")
                 payload["markdown_url"] = minio_url_md
 
-                logger.info("The software package archive has been fully processed and all relevant assets have been stored")
+                logger.info("Xử lý tệp nén thành công")
             else:
-                logger.error("The system failed to successfully download the requested package archive from the remote server")
+                logger.error("Lỗi tải tệp nén từ máy chủ từ xa")
                 return
         except Exception:
-            logger.error("An unexpected system error occurred during the archive extraction and processing phase")
+            logger.error("Lỗi xử lý tệp nén")
             raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)
 
         if minio_url_book:
-            logger.info("The primary package archive dataset has been successfully saved to the permanent object storage system")
+            logger.info("Lưu tệp nén vĩnh viễn thành công")
 
             book_document = {
                 "title": title,
                 "slug": slug,
-                "description": payload.get("description", "Extracted via automated collection process"),
+                "description": payload.get("description", "Trích xuất tự động thành công"),
                 "file_url": minio_url_book,
                 "pdf_url": payload.get("pdf_url"),
                 "markdown_url": payload.get("markdown_url"),

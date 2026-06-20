@@ -27,10 +27,10 @@ async def supervisor_node(state: ActingState):
         start_time = time.time()
 
     if time.time() - start_time > 45:
-        logger.exception("The artificial intelligence workflow execution exceeded the predefined maximum time limit")
+        logger.exception("Quá thời gian thực thi tác vụ AI")
         return {
             "next_node": "trimmer",
-            "error": "The submitted request is highly complex and has exceeded the maximum processing time allowed by the system",
+            "error": "Yêu cầu quá phức tạp, vượt giới hạn thời gian xử lý",
         }
 
     steps = state.get("steps", [])
@@ -42,7 +42,7 @@ async def supervisor_node(state: ActingState):
             "steps": steps,
             "current_step_index": len(steps),
             "next_node": "trimmer",
-            "error": "The artificial intelligence agent has exceeded the maximum allowed number of tool execution steps",
+            "error": "Trí tuệ nhân tạo vượt quá số bước thực thi",
         }
 
     if not steps:
@@ -50,7 +50,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
 
     if state.get("error"):
-        logger.warning("The system is skipping subsequent execution steps due to a previously encountered issue")
+        logger.warning("Bỏ qua các bước tiếp theo do lỗi trước đó")
         return {
             "steps": steps,
             "current_step_index": len(steps),
@@ -112,14 +112,14 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 
                 if eval_res.status == "FAIL":
                     replan_count += 1
-                    logger.warning("Self evaluation failed initiating replanning")
+                    logger.warning("Tự đánh giá thất bại, đang tạo lại kế hoạch")
                     current_task = eval_res.revised_task or current_task
                     final_res = res
                 else:
                     final_res = res
                     break
             except Exception:
-                logger.debug("Evaluation parsing failed accepting result")
+                logger.debug("Lỗi phân tích kết quả đánh giá")
                 final_res = res
                 break
 
@@ -132,10 +132,10 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "last_agent_result": final_res,
         }
     except Exception:
-        logger.exception("The execution node encountered an unexpected failure")
+        logger.exception("Lỗi máy chủ thực thi")
         return {
             "consolidated_results": ["The execution step failed"],
-            "error": "Internal system exception",
+            "error": "Lỗi hệ thống nội bộ",
         }
 
 async def code_interpreter_node(state: ActingState):
@@ -160,7 +160,7 @@ async def trimmer_node(state: ActingState):
 
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
-        logger.info("Summarizing results")
+        logger.info("Đang tổng hợp kết quả")
         try:
             from src.workflow.brain import llm
             combined = "\n\n".join(str(r) for r in results)
@@ -168,7 +168,7 @@ async def trimmer_node(state: ActingState):
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception:
-            logger.exception("Summary failed truncating")
+            logger.exception("Lỗi rút gọn tóm tắt")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
 
@@ -228,7 +228,7 @@ class Supervisor:
         self.app = supervisor_app
 
     async def execute_plan(self, req_data):
-        logger.info("Initialized execution flow")
+        logger.info("Khởi tạo luồng thực thi")
         yield {"type": "status", "node": "The system is analyzing your request"}
 
         initial_state = {
@@ -260,7 +260,7 @@ class Supervisor:
                         yield {"type": "plan", "steps": steps}
                 elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
                     if state_update.get("error"):
-                        yield {"type": "error", "message": "The system encountered an issue"}
+                        yield {"type": "error", "message": "Lỗi hệ thống"}
                     else:
                         yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Completed")}
 

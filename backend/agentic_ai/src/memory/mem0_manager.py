@@ -39,7 +39,7 @@ class Mem0Manager:
                 }
                 self.memory = Memory.from_config(config_dict=config)
             except Exception:
-                logger.exception("The system encountered an unexpected failure while attempting to initialize the memory management subsystem")
+                logger.exception("Lỗi khởi tạo hệ thống quản lý bộ nhớ")
 
     async def add_memory(self, messages: List[Dict], user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
@@ -48,7 +48,7 @@ class Mem0Manager:
             import asyncio
             await asyncio.to_thread(self.memory.add, messages, user_id=user_id)
         except Exception:
-            logger.exception("The system failed to store the new memory record due to an unexpected internal error")
+            logger.exception("Lỗi lưu trữ bản ghi do lỗi hệ thống")
 
     async def update_memory(self, memory_id: str, new_content: str):
         if not self.memory:
@@ -59,7 +59,7 @@ class Mem0Manager:
                 self.memory.update, memory_id=memory_id, data=new_content
             )
         except Exception:
-            logger.exception("The system encountered an error while attempting to update the specified memory record")
+            logger.exception("Lỗi cập nhật bộ nhớ")
 
     async def delete_memory(self, memory_id: str):
         if not self.memory:
@@ -68,7 +68,7 @@ class Mem0Manager:
             import asyncio
             await asyncio.to_thread(self.memory.delete, memory_id=memory_id)
         except Exception:
-            logger.exception("The system encountered an issue while attempting to delete the specified memory record")
+            logger.exception("Lỗi xóa bản ghi bộ nhớ")
 
     async def search_and_resolve_conflicts(self, new_content: str, user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
@@ -84,7 +84,7 @@ class Mem0Manager:
                 if r.get("score", 0) > 0.95 and r.get("memory", "") != new_content:
                     await self.delete_memory(r["id"])
         except Exception:
-            logger.exception("The system encountered an unexpected error while attempting to resolve a data conflict")
+            logger.exception("Lỗi xử lý xung đột dữ liệu")
 
     async def get_context(self, query: str, user_id: str) -> str:
         if not self.memory or not user_id or user_id == "guess_user":
@@ -106,7 +106,7 @@ class Mem0Manager:
                 context += f"- {m}\n"
             return context
         except Exception:
-            logger.exception("The system failed to retrieve the necessary memory context due to a storage access issue")
+            logger.exception("Lỗi truy xuất dữ liệu bộ nhớ")
             return ""
 
 mem0_manager = Mem0Manager()

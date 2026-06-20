@@ -38,7 +38,7 @@ class NotificationService:
         )
         if result.matched_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="The system was unable to locate the specified notification because it does not exist or you do not have the required permissions to access it"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy thông báo hoặc không có quyền truy cập"
             )
         return {"id": notif_id}
 
@@ -56,7 +56,7 @@ class NotificationService:
         )
         if result.deleted_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="The system could not proceed with the deletion because the requested notification could not be found within the current user records"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Lỗi xóa thông báo do không tìm thấy"
             )
         return {"id": notif_id}
 
@@ -82,5 +82,5 @@ class NotificationService:
                     json.dumps({"title": data.title, "body": data.body}),
                 )
             except Exception:
-                logger.error("The system encountered an unexpected network disruption while attempting to broadcast the real-time notification payload to the message broker")
+                logger.error("Lỗi gửi thông báo theo thời gian thực")
         return {"id": notif_id}

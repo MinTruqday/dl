@@ -64,10 +64,10 @@ class UserService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="The system was unable to locate a user profile matching the provided account identifier"
+                status_code=404, detail="Không tìm thấy hồ sơ người dùng"
             )
-        logger.info("The access privileges for the specified user account have been successfully modified to the requested permission level")
-        return {"message": "The access privileges for the specified account have been successfully updated and applied"}
+        logger.info("Cập nhật quyền truy cập tài khoản thành công")
+        return {"message": "Cập nhật quyền truy cập thành công"}
 
     @staticmethod
     async def update_user_status(
@@ -86,10 +86,10 @@ class UserService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="The system was unable to locate a user profile matching the provided account identifier"
+                status_code=404, detail="Không tìm thấy hồ sơ người dùng"
             )
-        logger.info("The operational activity status for the specified user account has been successfully updated to reflect the new state")
-        return {"message": "The operational activity status for the specified account has been successfully updated"}
+        logger.info("Cập nhật trạng thái hoạt động tài khoản thành công")
+        return {"message": "Cập nhật trạng thái hoạt động thành công"}
 
     @staticmethod
     async def warn_user(user_id: str, reason: str, current_user, db=None) -> dict:
@@ -98,7 +98,7 @@ class UserService:
         user = await RepositoryFactory.get("users").find_one({"_id": user_id})
         if not user:
             raise HTTPException(
-                status_code=404, detail="The system was unable to locate a user profile matching the provided account identifier"
+                status_code=404, detail="Không tìm thấy hồ sơ người dùng"
             )
         warning = {
             "_id": str(uuid7()),
@@ -134,9 +134,9 @@ class UserService:
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
         except Exception:
-            logger.warning("The system encountered an unexpected disruption while attempting to dispatch the notification payload to the external signaling service")
-        logger.info("An official administrative warning has been successfully issued to the specified user account by the moderation staff")
-        return {"message": "The administrative warning has been successfully generated and dispatched to the targeted user account"}
+            logger.warning("Lỗi gửi thông báo cho dịch vụ bên ngoài")
+        logger.info("Gửi cảnh báo vi phạm thành công")
+        return {"message": "Gửi cảnh báo quản trị thành công"}
 
     @staticmethod
     async def lock_user(
@@ -167,9 +167,9 @@ class UserService:
             }
         )
         logger.info(
-            "The specified user account has been temporarily suspended and restricted from accessing the platform resources by the moderation staff"
+            "Tài khoản đã bị đình chỉ"
         )
-        return {"message": "The specified user account has been successfully locked and temporarily restricted from accessing the system"}
+        return {"message": "Tạm khóa tài khoản thành công"}
 
     @staticmethod
     async def shadowban_user(
@@ -196,9 +196,9 @@ class UserService:
             }
         )
         logger.info(
-            "The visibility restriction protocol for the specified user account has been successfully applied or lifted by the administrative staff"
+            "Cập nhật quyền hiển thị tài khoản thành công"
         )
-        return {"message": "The system visibility restriction status for the specified account has been updated successfully"}
+        return {"message": "Cập nhật trạng thái hiển thị thành công"}
 
     @staticmethod
     async def verify_kyc(user_id: str, status: str, current_user, db=None) -> dict:
@@ -223,9 +223,9 @@ class UserService:
             }
         )
         logger.info(
-            "The identity verification status for the specified user account has been officially verified and updated by the administration"
+            "Xác minh danh tính thành công"
         )
-        return {"message": "The submitted identity verification documents have been successfully processed and the account status has been updated"}
+        return {"message": "Đã cập nhật trạng thái xác minh"}
 
     @staticmethod
     async def get_notes(user_id: str, db=None) -> list:
@@ -267,9 +267,9 @@ class UserService:
             }
         )
         logger.info(
-            "An internal administrative note has been successfully attached to the specified user profile by the moderation staff"
+            "Đã thêm ghi chú vào hồ sơ"
         )
-        return {"message": "The internal administrative moderation note has been successfully saved and attached to the user profile"}
+        return {"message": "Ghi chú kiểm duyệt thành công"}
 
     @staticmethod
     async def get_report_queue(
@@ -291,7 +291,7 @@ class UserService:
                 }
             except ValueError:
                 logger.warning(
-                    "The requested pagination process was interrupted because the provided cursor value was incorrectly formatted"
+                    "Lỗi định dạng phân trang"
                 )
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
@@ -356,9 +356,9 @@ class UserService:
             },
         )
         logger.info(
-            "The designated violation report ticket has been successfully marked as resolved by the administrative moderation staff"
+            "Đã giải quyết báo cáo vi phạm"
         )
-        return {"message": "The system violation report has been successfully processed and marked as resolved"}
+        return {"message": "Xử lý báo cáo vi phạm thành công"}
 
     @staticmethod
     async def get_moderator_activity_log(actor_id: str, db=None) -> list:
@@ -456,7 +456,7 @@ class UserService:
             },
         )
         if res.modified_count > 0:
-            logger.info("The automated background task has successfully restored access for the accounts that have completed their suspension period")
+            logger.info("Đã khôi phục quyền truy cập tài khoản")
         return res.modified_count
 
     @staticmethod

@@ -34,12 +34,12 @@ class WalletService:
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,
-                        detail="The system has temporarily restricted your access due to excessive attempts so please wait for five minutes before trying again"
+                        detail="Truy cập bị hạn chế, vui lòng thử lại sau 5 phút"
                     )
             except HTTPException:
                 raise
             except Exception:
-                logger.error("The system encountered a cache access error while attempting to verify rate limits")
+                logger.error("Lỗi bộ đệm khi kiểm tra giới hạn")
 
         if db_client.redis:
             try:
@@ -49,13 +49,13 @@ class WalletService:
                 if not is_locked:
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="The coupon redemption process is currently actively being handled by another transaction"
+                        detail="Mã giảm giá đang được xử lý trong một giao dịch khác"
                     )
             except HTTPException:
                 raise
             except Exception:
-                logger.error("The system failed to acquire a secure session lock in the caching layer")
-                raise HTTPException(status_code=500, detail="The system encountered an internal caching connectivity issue and could not proceed")
+                logger.error("Lỗi bảo mật phiên đăng nhập")
+                raise HTTPException(status_code=500, detail="Lỗi kết nối bộ đệm lưu trữ")
 
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -75,12 +75,12 @@ class WalletService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=404, detail="The provided promotional code is either invalid or does not exist within the current campaign records"
+                    status_code=404, detail="Mã giảm giá không hợp lệ hoặc không tồn tại"
                 )
             if coupon.get("is_used"):
                 if should_close_session:
                     await session.abort_transaction()
-                raise HTTPException(status_code=400, detail="The submitted promotional code has already been successfully redeemed and cannot be used again")
+                raise HTTPException(status_code=400, detail="Mã giảm giá đã được sử dụng")
 
             bonus_dl = coupon.get("amount_dl", coupon.get("amount_dls", 0))
             result = await WalletRepository.mark_coupon_as_used(
@@ -90,7 +90,7 @@ class WalletService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="The submitted promotional code has reached its maximum redemption capacity or was claimed by another account"
+                    status_code=400, detail="Mã giảm giá đã hết lượt sử dụng"
                 )
 
             await WalletRepository.increment_balance(
@@ -126,12 +126,12 @@ class WalletService:
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
             except Exception:
-                logger.warning("The system encountered a minor disruption while attempting to dispatch the success notification")
+                logger.warning("Lỗi gửi thông báo thành công")
             logger.info(
-                "The authenticated user has successfully redeemed the promotional code for the allocated digital balance"
+                "Đổi mã giảm giá thành công"
             )
             return {
-                "message": "The promotional coupon has been successfully redeemed and the bonus balance has been credited",
+                "message": "Đổi mã giảm giá thành công",
                 "bonus_dl": bonus_dl,
                 "status": "success",
             }
@@ -140,8 +140,8 @@ class WalletService:
         except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("The system encountered an unexpected structural error during the coupon redemption sequence")
-            raise HTTPException(status_code=500, detail="The financial service is currently undergoing routine maintenance so please attempt your transaction again later")
+            logger.error("Lỗi đổi mã giảm giá")
+            raise HTTPException(status_code=500, detail="Dịch vụ tài chính đang bảo trì, vui lòng thử lại sau")
         finally:
             if should_close_session:
                 await session.end_session()
@@ -149,7 +149,7 @@ class WalletService:
                 try:
                     await db_client.redis.delete(lock_key)
                 except Exception:
-                    logger.error("The system encountered a minor issue while releasing the secure session lock")
+                    logger.error("Lỗi mở khóa phiên bảo mật")
 
     @staticmethod
     async def get_history(
@@ -173,7 +173,7 @@ class WalletService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except Exception:
-                logger.warning("The pagination process was interrupted because the provided cursor value was incorrectly formatted")
+                logger.warning("Lỗi định dạng phân trang")
         txs = await WalletRepository.get_transactions(
             query, skip=skip, limit=limit, db=db
         )

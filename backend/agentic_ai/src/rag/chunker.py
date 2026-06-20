@@ -36,7 +36,7 @@ except ImportError:
 
 class AdvancedSemanticChunker:
     def __init__(self):
-        logger.info("The advanced text segmentation engines are currently initializing")
+        logger.info("Đang khởi tạo hệ thống phân mảnh văn bản")
         self.chunker = None
         self.type = "fallback"
 
@@ -49,10 +49,10 @@ class AdvancedSemanticChunker:
                     similarity_threshold=0.5,
                 )
                 self.type = "chonkie_semantic"
-                logger.info("The advanced semantic text segmentation engine was successfully loaded and is ready for processing")
+                logger.info("Khởi tạo công cụ phân mảnh ngữ nghĩa thành công")
             except Exception:
                 logger.warning(
-                    "The advanced segmentation engine failed to initialize and the system is falling back to the standard methodology"
+                    "Lỗi khởi tạo hệ thống phân mảnh văn bản, đang dùng chế độ tiêu chuẩn"
                 )
                 try:
                     self.chunker = TokenChunker(
@@ -60,16 +60,16 @@ class AdvancedSemanticChunker:
                         chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
                     )
                     self.type = "chonkie_token"
-                    logger.info("The standard token based text segmentation engine was successfully loaded")
+                    logger.info("Tải công cụ phân đoạn văn bản thành công")
                 except Exception:
-                    logger.error("All text segmentation engines failed to initialize due to a critical system error")
+                    logger.error("Lỗi khởi tạo hệ thống phân mảnh văn bản")
 
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
-        logger.info("The segmentation engine is currently processing the submitted text document")
+        logger.info("Đang xử lý phân đoạn văn bản")
 
         if not self.chunker:
             logger.warning(
-                "The system is utilizing the alternative segmentation method due to a previous initialization failure"
+                "Đang dùng phương pháp phân mảnh thay thế"
             )
             return self._fallback_chunking(text, metadata)
 
@@ -101,12 +101,12 @@ class AdvancedSemanticChunker:
                 )
 
             logger.info(
-                "The text segmentation process was completed successfully and the document chunks are ready"
+                "Xử lý phân mảnh văn bản thành công"
             )
             return chunks
 
         except Exception:
-            logger.error("The primary text segmentation process encountered an unexpected failure and is switching to the fallback method")
+            logger.error("Lỗi phân mảnh văn bản, đang chuyển sang phương pháp thay thế")
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:

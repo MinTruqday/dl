@@ -17,7 +17,7 @@ async def validate_svg(file: UploadFile):
             "<!DOCTYPE", text, re.IGNORECASE
         ):
             raise HTTPException(
-                status_code=400, detail="The uploaded vector graphic file contains potentially unsafe structural formatting and has been rejected by the security filter"
+                status_code=400, detail="Từ chối tệp đồ họa vector do không an toàn"
             )
         await file.seek(0)
 
@@ -31,7 +31,7 @@ async def upload_image(
     await validate_svg(file)
     return APIResponse(
         data=await UploadService.upload_image(file, db=db),
-        message="The image file has been successfully uploaded and securely stored in the system",
+        message="Tải lên hình ảnh thành công",
         status=201,
     )
 
@@ -44,7 +44,7 @@ async def upload_document(
 ) -> Any:
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
-        message="The document file has been successfully uploaded and securely stored in the system",
+        message="Tải lên và lưu trữ tài liệu thành công",
         status=201,
     )
 
@@ -63,11 +63,11 @@ async def upload_asset(
     if quota["used"] >= quota["limit"]:
         raise HTTPException(
             status_code=400,
-            detail="The file upload cannot proceed because your account has exceeded the maximum allocated storage capacity",
+            detail="Lỗi tải lên do vượt giới hạn lưu trữ",
         )
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
-        message="The requested file has been successfully uploaded and securely stored in the system",
+        message="Tải lên tệp tin thành công",
         status=201,
     )
 
@@ -82,7 +82,7 @@ async def get_presigned_download_url(
 ):
     return APIResponse(
         data=await UploadService.get_presigned_url(file_path, db=db),
-        message="The secure download link for the requested file has been successfully generated",
+        message="Tạo liên kết tải xuống bảo mật thành công",
         status=200,
     )
 
@@ -133,8 +133,8 @@ async def upload_chunk(
         shutil.rmtree(chunk_dir)
         os.remove(final_path)
         return APIResponse(
-            data=result, message="The requested file has been successfully uploaded and securely stored in the system", status=201
+            data=result, message="Tải lên tệp tin thành công", status=201
         )
     return APIResponse(
-        data={"uploaded": chunk_index}, message="The designated file segment has been successfully received and securely temporarily stored", status=200
+        data={"uploaded": chunk_index}, message="Tải lên tệp tạm thời thành công", status=200
     )

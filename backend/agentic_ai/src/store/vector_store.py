@@ -43,7 +43,7 @@ class VectorStore:
             except asyncio.CancelledError:
                 break
             except Exception:
-                logger.error("The system encountered an unexpected issue while attempting to queue data for the search index")
+                logger.error("Lỗi đưa dữ liệu tìm kiếm vào hàng đợi")
 
     async def ensure_collection(self):
         try:
@@ -61,7 +61,7 @@ class VectorStore:
                     ),
                 )
         except Exception:
-            logger.error("The system encountered an unexpected issue while attempting to initialize the search index collection")
+            logger.error("Lỗi khởi tạo danh sách chỉ mục tìm kiếm")
             raise
 
     async def upsert(
@@ -121,7 +121,7 @@ class VectorStore:
                 for hit in results
             ]
         except Exception:
-            logger.error("The search query process failed due to an unexpected system exception")
+            logger.error("Lỗi xử lý tìm kiếm")
             return []
 
     async def delete_by_document(self, document_id: str):
@@ -137,7 +137,7 @@ class VectorStore:
                 ),
             )
         except Exception:
-            logger.error("The system failed to remove the specified data from the search index database")
+            logger.error("Lỗi xóa dữ liệu chỉ mục tìm kiếm")
             raise
 
 

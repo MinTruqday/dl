@@ -11,10 +11,10 @@ class UploadService:
     @staticmethod
     async def upload_image(file, db=None):
         if "svg" in file.content_type.lower() or file.filename.lower().endswith(".svg"):
-            raise HTTPException(status_code=400, detail="The uploaded vector graphic format is explicitly restricted by the system security policies")
+            raise HTTPException(status_code=400, detail="Không hỗ trợ định dạng hình ảnh vector này")
         if not file.content_type.startswith("image/"):
             raise HTTPException(
-                status_code=400, detail="The upload operation was rejected because the system currently only accepts standard image file formats"
+                status_code=400, detail="Chỉ chấp nhận các định dạng hình ảnh tiêu chuẩn"
             )
         ext = file.filename.split(".")[-1]
         filename = f"images/{uuid7().hex}.{ext}"
@@ -22,12 +22,12 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error("The object storage service encountered an unexpected disruption while attempting to save the image file")
-            raise HTTPException(status_code=500, detail="The system was unable to securely transfer the image file to the permanent storage backend")
+            logger.error("Lỗi lưu hình ảnh")
+            raise HTTPException(status_code=500, detail="Lỗi truyền tệp hình ảnh vào bộ nhớ vĩnh viễn")
         return {
             "url": filename,
             "filename": filename,
-            "message": "The visual asset has been successfully uploaded and securely stored in the remote repository",
+            "message": "Tải lên hình ảnh lưu trữ thành công",
         }
 
     @staticmethod
@@ -61,33 +61,33 @@ class UploadService:
         ext = file.filename.split(".")[-1].lower()
         if ext == "svg" or "svg" in file.content_type.lower():
             raise HTTPException(
-                status_code=400, detail="The uploaded vector graphic format is explicitly restricted by the system security policies"
+                status_code=400, detail="Không hỗ trợ định dạng hình ảnh vector này"
             )
         if ext not in allowed_extensions:
-            raise HTTPException(status_code=400, detail="The provided file extension is not currently recognized or supported by the document parsing engine")
+            raise HTTPException(status_code=400, detail="Định dạng tệp không được hỗ trợ")
         filename = f"documents/{uuid7().hex}.{ext}"
         content = await file.read()
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error("The object storage service encountered a network failure while attempting to persist the document file")
-            raise HTTPException(status_code=500, detail="The system encountered an internal storage failure and could not successfully upload the document")
+            logger.error("Lỗi mạng khi lưu trữ tài liệu")
+            raise HTTPException(status_code=500, detail="Lỗi lưu trữ, không thể tải lên tài liệu")
         return {
             "url": filename,
             "filename": filename,
             "extension": ext,
-            "message": "The digital document has been successfully uploaded and integrated into the storage workspace",
+            "message": "Tải lên tài liệu thành công",
         }
 
     @staticmethod
     async def get_presigned_url(file_path: str, db=None):
         if ".." in file_path or file_path.startswith("/"):
-            raise HTTPException(status_code=400, detail="The provided structural file path is invalid or contains restricted navigational sequences")
+            raise HTTPException(status_code=400, detail="Đường dẫn tệp tin không hợp lệ")
         try:
             url = await generate_presigned_url(file_path, 3600)
             return {"download_url": url}
         except Exception as e:
-            logger.error("The system encountered an error while attempting to generate a cryptographically signed download URL")
+            logger.error("Lỗi tạo liên kết tải xuống an toàn")
             raise HTTPException(
-                status_code=500, detail="The system was unable to successfully generate the secure access link for the requested resource"
+                status_code=500, detail="Lỗi tạo liên kết truy cập an toàn"
             )

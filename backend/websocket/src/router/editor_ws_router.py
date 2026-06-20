@@ -15,5 +15,5 @@ async def editor_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, document_id)
     except Exception:
-        logger.error(f"The real-time data connection failed unexpectedly while synchronizing the document with identifier {document_id}")
+        logger.error("Lỗi kết nối dữ liệu theo thời gian thực")
         manager.disconnect(websocket, document_id)

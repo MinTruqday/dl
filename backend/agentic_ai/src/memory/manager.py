@@ -12,7 +12,7 @@ class MemoryManager:
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
         except Exception:
-            logger.exception("The system was unable to establish a connection to the cache")
+            logger.exception("Lỗi kết nối bộ đệm")
             self._redis = None
 
         self._short_term_ttl = 3600 * 2
@@ -28,7 +28,7 @@ class MemoryManager:
             if data:
                 return json.loads(data)
         except Exception:
-            logger.exception("The system encountered an error while attempting to read data from the short term memory storage")
+            logger.exception("Lỗi đọc dữ liệu bộ nhớ")
         return []
 
     async def save_short_term(self, conversation_id: str, entry: Dict):
@@ -48,7 +48,7 @@ class MemoryManager:
                 key, self._short_term_ttl, json.dumps(history, ensure_ascii=False)
             )
         except Exception:
-            logger.exception("The system encountered an issue while attempting to persist data into the short term memory module")
+            logger.exception("Lỗi lưu dữ liệu bộ nhớ")
 
     async def save_long_term(self, user_id: str, entry: Dict):
         if not self._redis:
@@ -67,7 +67,7 @@ class MemoryManager:
                 key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
             )
         except Exception:
-            logger.exception("The system encountered an issue while attempting to save information into the long term memory module")
+            logger.exception("Lỗi lưu trữ dữ liệu")
 
     async def get_long_term(self, user_id: str) -> List[Dict]:
         if not self._redis:
@@ -79,7 +79,7 @@ class MemoryManager:
             if data:
                 return json.loads(data)
         except Exception:
-            logger.exception("The system encountered an issue while retrieving information from the long term memory module")
+            logger.exception("Lỗi truy xuất dữ liệu lưu trữ dài hạn")
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:

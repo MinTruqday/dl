@@ -35,7 +35,7 @@ app.include_router(router, prefix="/collectors")
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("The automated data collection service has been successfully initialized and is ready to process tasks")
+    logger.info("Dịch vụ thu thập dữ liệu đã sẵn sàng")
     from src.worker import run_worker
 
     asyncio.create_task(run_worker())

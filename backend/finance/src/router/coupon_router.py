@@ -25,7 +25,7 @@ class CouponCreateRequest(BaseModel):
 async def create_coupon(req: CouponCreateRequest, db=Depends(get_db)):
     return APIResponse(
         data=await CouponService.create_coupon(req.model_dump(), db=db),
-        message="The new promotional coupon has been successfully generated and added to the active campaigns",
+        message="Tạo mã giảm giá thành công",
         status=201,
     )
 
@@ -38,7 +38,7 @@ async def create_coupon(req: CouponCreateRequest, db=Depends(get_db)):
 async def get_all_coupons(db=Depends(get_db)):
     return APIResponse(
         data=await CouponService.get_all_coupons(db=db),
-        message="The comprehensive list of promotional coupons has been successfully retrieved from the system",
+        message="Lấy danh sách mã giảm giá thành công",
         status=200,
     )
 
@@ -51,6 +51,6 @@ async def get_all_coupons(db=Depends(get_db)):
 async def delete_coupon(coupon_id: str, db=Depends(get_db)):
     return APIResponse(
         data=await CouponService.delete_coupon(coupon_id, db=db),
-        message="The specified promotional coupon has been permanently removed from the active system records",
+        message="Xóa vĩnh viễn mã giảm giá thành công",
         status=200,
     )

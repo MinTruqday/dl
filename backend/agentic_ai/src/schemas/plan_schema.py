@@ -5,15 +5,15 @@ from pydantic import BaseModel, Field
 
 class PlanStep(BaseModel):
     agent: str = Field(
-        description="Name of the execution agent such as Action Knowledge CodeInterpreter SearchEngine ResponseGenerator or Reasoning"
+        description="Tên tác nhân thực thi"
     )
-    task: str = Field(description="Specific task description for the agent to execute")
+    task: str = Field(description="Mô tả chi tiết tác vụ cho hệ thống")
 
 
 class ExecutionPlan(BaseModel):
     reasoning: str = Field(
-        description="Chain of thought reasoning before decomposing the steps"
+        description="Chuỗi suy luận trước khi phân chia các bước"
     )
     steps: List[PlanStep] = Field(
-        description="Ordered list of execution steps to fulfill the request"
+        description="Danh sách các bước thực thi"
     )

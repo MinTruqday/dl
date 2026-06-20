@@ -41,13 +41,13 @@ class CouponService:
         }
         existing = await db["coupons"].find_one({"code": coupon["code"]})
         if existing:
-            raise HTTPException(status_code=400, detail="The provided promotional code is already registered within the active campaigns")
+            raise HTTPException(status_code=400, detail="Mã giảm giá đã được sử dụng")
         await db["coupons"].insert_one(coupon)
         logger.info(
-            "A new promotional coupon has been successfully configured and activated within the system"
+            "Tạo mã giảm giá thành công"
         )
         return {
-            "message": "The promotional coupon has been successfully generated and recorded",
+            "message": "Tạo mã giảm giá thành công",
             "coupon_id": coupon["_id"],
         }
 
@@ -89,19 +89,19 @@ class CouponService:
             db = db_client.mongodb.get_default_database()
         if current_user.role != RoleEnum.ADMIN:
             raise HTTPException(
-                status_code=403, detail="The current account lacks the necessary administrative privileges to perform this restricted action"
+                status_code=403, detail="Không có quyền thực hiện thao tác này"
             )
         status = CouponStatus.APPROVED if action == "approve" else CouponStatus.REJECTED
         res = await db["coupons"].update_one(
             {"_id": coupon_id}, {"$set": {"status": status}}
         )
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="The specified promotional coupon could not be located in the active database records")
+            raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá")
         logger.info(
-            "The designated promotional coupon has been successfully updated following administrative review"
+            "Cập nhật mã giảm giá thành công"
         )
         return {
-            "message": "The administrative action has been successfully applied to the specified promotional coupon"
+            "message": "Áp dụng thao tác lên mã giảm giá thành công"
         }
 
     @staticmethod
@@ -115,19 +115,19 @@ class CouponService:
         )
         if not coupon:
             raise HTTPException(
-                status_code=404, detail="The submitted promotional code is either invalid or currently awaiting administrative approval"
+                status_code=404, detail="Mã giảm giá không hợp lệ hoặc đang chờ duyệt"
             )
         if coupon.get("expires_at") and coupon["expires_at"].replace(
             tzinfo=timezone.utc
         ) < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail="The submitted promotional code has exceeded its designated expiration period and is no longer valid")
+            raise HTTPException(status_code=400, detail="Mã giảm giá đã hết hạn")
         if coupon.get("used_count", 0) >= coupon.get("max_uses", 0):
             raise HTTPException(
-                status_code=400, detail="The submitted promotional code has reached its maximum allowed redemption limit"
+                status_code=400, detail="Mã giảm giá đã đạt giới hạn sử dụng tối đa"
             )
         if coupon.get("document_id") and coupon["document_id"] != document_id:
             raise HTTPException(
-                status_code=400, detail="The submitted promotional code is not applicable to the currently selected digital document"
+                status_code=400, detail="Mã giảm giá không áp dụng cho tài liệu này"
             )
         target = coupon.get("target_type", CouponTargetType.ALL)
         if target == CouponTargetType.NEW_USER:
@@ -136,7 +136,7 @@ class CouponService:
             )
             if purchase_count > 0:
                 raise HTTPException(
-                    status_code=400, detail="The specified promotional code is exclusively reserved for first time purchasers"
+                    status_code=400, detail="Mã giảm giá này chỉ dành cho người mua lần đầu"
                 )
         return {
             "code": coupon["code"],
@@ -153,14 +153,14 @@ class CouponService:
             query["creator_id"] = str(current_user.id)
         coupon = await db["coupons"].find_one(query)
         if not coupon:
-            raise HTTPException(status_code=404, detail="The specified promotional coupon could not be located in the active database records")
+            raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá")
         new_status = not coupon.get("is_active", True)
         await db["coupons"].update_one(
             {"_id": coupon_id}, {"$set": {"is_active": new_status}}
         )
-        logger.info("The operational status of the designated promotional coupon has been successfully toggled")
+        logger.info("Cập nhật trạng thái mã giảm giá thành công")
         return {
-            "message": "The operational status of the specified promotional coupon has been successfully updated",
+            "message": "Cập nhật trạng thái mã giảm giá thành công",
             "is_active": new_status,
         }
 
@@ -173,6 +173,6 @@ class CouponService:
             query["creator_id"] = str(current_user.id)
         res = await db["coupons"].delete_one(query)
         if res.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="The specified promotional coupon could not be located in the active database records")
-        logger.info("The designated promotional coupon has been successfully and permanently removed from the system")
-        return {"message": "The specified promotional coupon has been permanently removed from the active system records"}
+            raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá")
+        logger.info("Xóa vĩnh viễn mã giảm giá thành công")
+        return {"message": "Xóa vĩnh viễn mã giảm giá thành công"}

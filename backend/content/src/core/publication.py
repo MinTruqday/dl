@@ -7,7 +7,7 @@ from loguru import logger
 
 async def publish_compile_task(document_id: str, creator_id: str, content_raw: str):
     if not db_client.rabbitmq:
-        logger.error("Failed to connect to background task queue. Compilation task rejected.")
+        logger.error("Lỗi kết nối hàng đợi tác vụ nền")
         return False
 
     try:
@@ -28,13 +28,13 @@ async def publish_compile_task(document_id: str, creator_id: str, content_raw: s
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error("Failed to initialize compilation process")
+        logger.error("Lỗi khởi tạo quá trình biên dịch")
         return False
 
 
 async def trigger_document_publish_job(document_id: str, creator_id: str):
     if not db_client.rabbitmq:
-        logger.error("Failed to connect to background task queue. Publication task rejected.")
+        logger.error("Lỗi kết nối hàng đợi tác vụ nền")
         return False
 
     try:
@@ -51,13 +51,13 @@ async def trigger_document_publish_job(document_id: str, creator_id: str):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error("Failed to initialize publication process")
+        logger.error("Lỗi khởi tạo quá trình xuất bản")
         return False
 
 
 async def publish_event(queue_name: str, payload: dict):
     if not db_client.rabbitmq:
-        logger.error("Failed to connect to background task queue. Event creation rejected")
+        logger.error("Lỗi kết nối hàng đợi tác vụ nền")
         return False
 
     try:
@@ -70,5 +70,5 @@ async def publish_event(queue_name: str, payload: dict):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error(f"Failed to publish event to {queue_name}")
+        logger.error("Lỗi xuất bản sự kiện")
         return False

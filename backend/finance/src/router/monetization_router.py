@@ -30,7 +30,7 @@ async def purchase_document(
         data=await PurchaseService.purchase_document(
             req.document_id, req.coupon_code, current_user, db=db
         ),
-        message="The digital document purchase transaction has been completed successfully and access has been granted",
+        message="Thanh toán mua tài liệu thành công",
         status=200,
     )
 
@@ -43,7 +43,7 @@ async def buy_membership(
 ):
     return APIResponse(
         data=await PurchaseService.buy_ai_tier(req.tier, current_user, db=db),
-        message="Your membership plan has been successfully upgraded and activated",
+        message="Nâng cấp gói thành viên thành công",
         status=200,
     )
 
@@ -52,6 +52,6 @@ async def buy_membership(
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
         data=await PricingService.get_pricing_config(db=db),
-        message="The current membership pricing configuration has been successfully retrieved",
+        message="Lấy cấu hình giá gói thành viên thành công",
         status=200,
     )

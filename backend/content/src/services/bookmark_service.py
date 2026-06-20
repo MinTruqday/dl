@@ -97,7 +97,7 @@ class BookmarkService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("bookmark_folders").insert_one(folder)
-        logger.info("A new structural bookmark folder has been successfully provisioned within the user workspace")
+        logger.info("Tạo thư mục dấu trang thành công")
         return folder
 
     @staticmethod
@@ -140,8 +140,8 @@ class BookmarkService:
             },
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="The specified bookmark folder could not be located within the active collection records")
-        return {"message": "The contents of the specified bookmark folder have been successfully modified and saved"}
+            raise HTTPException(status_code=404, detail="Không tìm thấy thư mục dấu trang")
+        return {"message": "Cập nhật thư mục dấu trang thành công"}
 
     @staticmethod
     async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:
@@ -151,5 +151,5 @@ class BookmarkService:
             {"_id": folder_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="The specified bookmark folder could not be located within the active collection records")
-        return {"message": "The specified bookmark folder has been permanently removed from your personal collection"}
+            raise HTTPException(status_code=404, detail="Không tìm thấy thư mục dấu trang")
+        return {"message": "Xóa vĩnh viễn thư mục dấu trang thành công"}

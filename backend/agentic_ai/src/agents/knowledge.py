@@ -6,7 +6,7 @@ class Knowledge:
         pass
 
     async def execute(self, req) -> str:
-        logger.info("The system is querying the knowledge base to retrieve relevant information")
+        logger.info("Đang truy vấn cơ sở dữ liệu")
         try:
             if isinstance(req, dict):
                 query = req.get("query", "")
@@ -41,7 +41,7 @@ class Knowledge:
             )
             return result.get("generation", "The system could not extract any relevant information from the available documents")
         except Exception:
-            logger.exception("The system encountered an error while attempting to access the knowledge base")
+            logger.exception("Lỗi truy cập cơ sở kiến thức")
             return "The system encountered an unexpected error during data retrieval and requires you to try again later"
 
 knowledge = Knowledge()

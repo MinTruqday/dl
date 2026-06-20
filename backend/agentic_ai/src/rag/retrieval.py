@@ -29,7 +29,7 @@ class RetrievalService:
                 from sentence_transformers import CrossEncoder
                 self._reranker = CrossEncoder(settings.RERANKER_MODEL)
             except Exception:
-                logger.exception("The system failed to load the artificial intelligence ranking model")
+                logger.exception("Lỗi tải mô hình xếp hạng AI")
                 self._reranker = False
         return self._reranker
 
@@ -53,7 +53,7 @@ class RetrievalService:
             try:
                 from pydantic import BaseModel, Field
                 class MultiQueryOutput(BaseModel):
-                    queries: List[str] = Field(description="List of 3 reformulated queries")
+                    queries: List[str] = Field(description="Danh sách 3 truy vấn đã viết lại")
                 structured_llm = self.llm.with_structured_output(MultiQueryOutput)
                 response = structured_llm.invoke(prompt.format(question=question))
                 queries = [q.strip() for q in response.queries if q.strip()]
@@ -64,7 +64,7 @@ class RetrievalService:
             queries = [q for q in queries if q]
             queries.append(question)
         except Exception:
-            logger.exception("The system encountered an error while attempting to generate multidimensional queries")
+            logger.exception("Lỗi tạo truy vấn đa chiều")
             queries = [question]
 
         all_documents = []
@@ -105,7 +105,7 @@ class RetrievalService:
             reranked_documents = [doc for doc, score in scored_documents]
             return reranked_documents[:k]
         except Exception:
-            logger.exception("The system encountered an exception while attempting to reorder the retrieval results")
+            logger.exception("Lỗi sắp xếp kết quả tìm kiếm")
             return documents[:k]
 
     async def cross_document_retrieve(
@@ -128,7 +128,7 @@ class RetrievalService:
             if isinstance(parsed, list) and len(parsed) == len(document_ids):
                 sub_queries = parsed
         except Exception:
-            logger.exception("The system encountered a failure during the cross document query decomposition phase")
+            logger.exception("Lỗi phân tích truy vấn chéo tài liệu")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)

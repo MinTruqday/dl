@@ -86,10 +86,10 @@ async def get_user_balance(config: RunnableConfig) -> str:
             return f"Your current account balance is {balance} credits"
         elif response.status_code == 401:
             return "The current user session has expired and authentication must be renewed"
-        raise Exception("The system encountered an unexpected error while retrieving the account balance")
+        raise Exception("Lỗi tải số dư tài khoản")
     except Exception:
-        logger.exception("The system encountered an error while attempting to access the balance reporting API")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi truy cập dữ liệu số dư")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -119,8 +119,8 @@ async def get_transaction_history(config: RunnableConfig) -> str:
             return f"Below is the history of your recent transactions\n{history_text}"
         return "The system encountered an error while attempting to load the transaction history"
     except Exception:
-        logger.exception("The system encountered an error while fetching the transaction history data")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi tải lịch sử giao dịch")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -146,8 +146,8 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
             return f"The gift code was redeemed successfully and your account has been credited with {bonus} credits"
         return "The gift code redemption process failed due to an unexpected issue"
     except Exception:
-        logger.exception("The system encountered an error while attempting to process the reward redemption request")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi xử lý yêu cầu đổi thưởng")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -171,8 +171,8 @@ async def get_revenue_report(config: RunnableConfig) -> str:
             return f"The financial report indicates a total revenue of {total} currency units with {pending} units pending withdrawal"
         return "The system was unable to retrieve the revenue reporting data"
     except Exception:
-        logger.exception("The system encountered an error while attempting to fetch the revenue report data")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi tải báo cáo doanh thu")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -199,8 +199,8 @@ async def get_my_documents(config: RunnableConfig) -> str:
             return res
         return "The system encountered an error while fetching the document list"
     except Exception:
-        logger.exception("The system encountered an error while processing the request to retrieve the document list")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi tải danh sách tài liệu")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -230,8 +230,8 @@ async def get_trash_documents(config: RunnableConfig) -> str:
             return res
         return "The system encountered an error while accessing the document trash bin"
     except Exception:
-        logger.exception("The system encountered an error while attempting to retrieve the list of deleted items")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi tải danh sách mục đã xóa")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -254,14 +254,14 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
                 from src.store.vector_store import vector_store
 
                 await vector_store.delete_by_document(document_id)
-                logger.info("The system successfully completed the index cleanup for the specified document")
+                logger.info("Dọn dẹp chỉ mục tài liệu thành công")
             except Exception:
-                logger.warning("The system encountered an issue while attempting to clean up the document index")
+                logger.warning("Lỗi dọn dẹp chỉ mục tài liệu")
             return "The specified document was deleted successfully"
         return "The system failed to delete the specified document"
     except Exception:
-        logger.exception("The system encountered a failure during the document deletion process")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi xóa tài liệu")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -283,8 +283,8 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
             return "The specified document was restored successfully"
         return "The document restoration process failed"
     except Exception:
-        logger.exception("The system encountered a failure during the document restoration process")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi khôi phục tài liệu")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -311,8 +311,8 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
             return f"The audience analysis indicates {readers} readers with a bounce rate of {rate} percent"
         return "The system was unable to retrieve the statistical analysis data"
     except Exception:
-        logger.exception("The system encountered a failure while attempting to fetch the analytical data")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi truy xuất dữ liệu phân tích")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 async def _get_doc_text(document_id: str, token: str) -> str:
@@ -326,7 +326,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
     except Exception:
-        logger.error("The system encountered a failure while loading the document text")
+        logger.error("Lỗi tải nội dung tài liệu")
     return ""
 
 
@@ -352,8 +352,8 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         data = await suggest_citations(req)
         return f"Here are the suggested citations for the document\n\n{data.get('citations', '')}"
     except Exception:
-        logger.exception("The system encountered a failure while generating the citation suggestions")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi tạo gợi ý trích dẫn")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -374,8 +374,8 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         data = await peer_review(req)
         return f"Here is the peer review report for the document\n\n{data.get('review_report', '')}"
     except Exception:
-        logger.exception("The system encountered a failure during the peer review process")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi quá trình đánh giá chéo")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -398,8 +398,8 @@ async def agent_transform_tone(
         data = await transform_tone(req)
         return f"Here is the transformed text matching the requested tone\n\n{data.get('transformed_text', '')}"
     except Exception:
-        logger.exception("The tone transformation process encountered an unexpected failure")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi thay đổi giọng văn")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 @tool
@@ -425,8 +425,8 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             return "The system was unable to generate the required payment link"
         return "The payment initialization process encountered an unexpected failure"
     except Exception:
-        logger.exception("The system encountered a failure while processing the deposit request")
-        raise Exception("The system encountered an unexpected error during the operation and requires you to try again later")
+        logger.exception("Lỗi xử lý yêu cầu nạp tiền")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 from src.workflow.map_reduce import agent_summarize_long_document
@@ -476,7 +476,7 @@ async def create_document(
                 or "User"
             )
     except Exception:
-        logger.warning("The system was unable to load the user profile to fetch the author details")
+        logger.warning("Lỗi tải hồ sơ người dùng để lấy thông tin tác giả")
 
     if format == "latex":
         if "\\documentclass" not in content:
@@ -532,7 +532,7 @@ async def create_document(
             return "The document was created successfully however the system could not retrieve the access identifier"
         return "The system failed to create the new document due to an unexpected internal error"
     except Exception:
-        raise Exception("The system encountered an unexpected error during the operation")
+        raise Exception("Lỗi hệ thống")
 
 
 @tool
@@ -551,7 +551,7 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
             return "The system was unable to retrieve the requested document information"
         doc_data = res.json().get("data", {})
     except Exception:
-        raise Exception("The system encountered an unexpected error while loading the document")
+        raise Exception("Lỗi tải tài liệu")
 
     format = doc_data.get("content_format", "json")
     content = doc_data.get("content", "")
@@ -590,7 +590,7 @@ async def update_document(
             return "The operation failed due to a security restriction or the document does not exist"
         doc_data = res.json().get("data", {})
     except Exception:
-        raise Exception("The system encountered an unexpected error while loading the document")
+        raise Exception("Lỗi tải tài liệu")
 
     payload = {}
     if title:
@@ -644,9 +644,9 @@ async def update_document(
         )
         if res_update.status_code in [200, 201]:
             return f"The document was updated successfully [View document](/editor?document_id={document_id})"
-        raise Exception("The system encountered an unexpected error during the document update process")
+        raise Exception("Lỗi cập nhật tài liệu")
     except Exception:
-        raise Exception("The system encountered an unexpected error during the operation")
+        raise Exception("Lỗi hệ thống")
 
 
 @tool
@@ -668,7 +668,7 @@ async def translate_document(
             return "The system was unable to retrieve the requested document information"
         doc_data = res.json().get("data", {})
     except Exception:
-        raise Exception("The system encountered an unexpected error while loading the document")
+        raise Exception("Lỗi tải tài liệu")
 
     original_content = doc_data.get("content", "")
     format = doc_data.get("content_format", "json")

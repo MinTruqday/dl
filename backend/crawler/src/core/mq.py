@@ -59,10 +59,10 @@ class MessageQueueConnection:
                     "ctan_queue", durable=True, arguments=queue_args
                 )
 
-                logger.info("The system has successfully established a secure connection to the asynchronous background processing queue")
+                logger.info("Kết nối hàng đợi nền thành công")
                 return
             except Exception as e:
-                logger.error("A temporary network disruption prevented connection to the processing queue so an automated retry is being scheduled")
+                logger.error("Lỗi kết nối mạng, đang thử lại")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)
@@ -76,9 +76,9 @@ class MessageQueueConnection:
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
-            logger.debug("The asynchronous message payload has been successfully dispatched to the designated background processing queue")
+            logger.debug("Gửi tin nhắn bất đồng bộ thành công")
         except Exception:
-            logger.error("The internal distribution mechanism failed to securely publish the asynchronous message payload to the required queue")
+            logger.error("Lỗi phân phối tin nhắn bất đồng bộ")
 
 
 mq_client = MessageQueueConnection()

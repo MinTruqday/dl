@@ -20,15 +20,15 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
             tmp_path = tmp.name
 
         logger.info(
-            "The system is currently extracting textual content from the uploaded file"
+            "Đang trích xuất nội dung văn bản"
         )
         md = MarkItDown()
         result = md.convert(tmp_path)
         full_text = result.text_content
 
         os.remove(tmp_path)
-        logger.info("The text extraction process completed successfully and the content is ready for further processing")
+        logger.info("Trích xuất văn bản thành công")
         return full_text
     except Exception:
-        logger.error("The system encountered a failure while attempting to extract text from the provided file")
+        logger.error("Lỗi trích xuất văn bản từ tệp tin")
         return ""

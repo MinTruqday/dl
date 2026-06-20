@@ -97,7 +97,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception:
-        logger.warning("The evaluation module encountered an error while assessing the language model output")
+        logger.warning("Lỗi đánh giá đầu ra mô hình ngôn ngữ")
         return {
             "accuracy": 0,
             "completeness": 0,
@@ -115,9 +115,9 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info("The system successfully loaded the validation dataset for the evaluation process")
+            logger.info("Tải bộ dữ liệu kiểm tra thành công")
         except Exception:
-            logger.error("The system encountered a failure while attempting to load the validation dataset")
+            logger.error("Lỗi tải bộ dữ liệu kiểm tra")
             self._dataset = []
 
     async def evaluate_rag_response(
@@ -176,7 +176,7 @@ class EvaluationHarness:
             overall_score=round(overall, 4),
         )
         self._reports.append(report)
-        logger.info("The information retrieval evaluation process completed successfully")
+        logger.info("Hoàn tất đánh giá truy xuất thông tin")
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
@@ -184,12 +184,12 @@ class EvaluationHarness:
         from huggingface_hub import AsyncInferenceClient
 
         if not self._dataset:
-            return {"error": "The evaluation process cannot proceed because no dataset has been loaded into the system"}
+            return {"error": "Lỗi đánh giá do chưa tải bộ dữ liệu"}
 
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
         except Exception:
-            return {"error": "The system failed to initialize the inference client required for the evaluation process"}
+            return {"error": "Lỗi khởi tạo máy khách đánh giá"}
 
         results = []
         for sample in self._dataset:
@@ -263,7 +263,7 @@ class EvaluationHarness:
             "average_judge_scores": avg_judge,
             "results": results,
         }
-        logger.info("The artificial intelligence model evaluation process completed successfully")
+        logger.info("Hoàn tất đánh giá mô hình AI")
         return summary
 
     def get_dashboard_metrics(self) -> dict:

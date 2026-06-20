@@ -40,7 +40,7 @@ app.include_router(editor.router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("The document compilation service has been successfully initialized and is now ready to accept incoming requests")
+    logger.info("Khởi tạo dịch vụ biên dịch thành công")
 
 
 @app.get("/health")

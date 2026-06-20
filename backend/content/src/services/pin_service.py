@@ -67,8 +67,8 @@ class PinService:
             },
             upsert=True,
         )
-        logger.info("The specified document has been successfully prioritized and pinned within the user workspace")
-        return {"status": "success", "message": "The specified document has been successfully prioritized and added to your pinned collection"}
+        logger.info("Ghim tài liệu thành công")
+        return {"status": "success", "message": "Ghim tài liệu ưu tiên thành công"}
 
     @staticmethod
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
@@ -79,7 +79,7 @@ class PinService:
             {"$pull": {"pinned_documents": document_id}},
             upsert=True,
         )
-        return {"status": "success", "message": "The specified document has been successfully removed from your prioritized pinned collection"}
+        return {"status": "success", "message": "Xóa tài liệu khỏi bộ sưu tập ghim thành công"}
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
@@ -90,4 +90,4 @@ class PinService:
             {"$set": {"pinned_documents": document_ids}},
             upsert=True,
         )
-        return {"status": "success", "message": "The arrangement of your prioritized pinned documents has been successfully synchronized and updated"}
+        return {"status": "success", "message": "Cập nhật thứ tự tài liệu ghim thành công"}

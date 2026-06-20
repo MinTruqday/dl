@@ -20,7 +20,7 @@ router = APIRouter(prefix="/operations")
 async def get_system_metrics(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_system_telemetry(db=db),
-        message="The comprehensive system operational metrics and data have been successfully retrieved",
+        message="Lấy dữ liệu hoạt động thành công",
     )
 
 
@@ -32,7 +32,7 @@ async def get_system_metrics(db=Depends(get_db)):
 async def get_maintenance_status(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_maintenance_mode(db=db),
-        message="The current system maintenance status has been successfully verified and retrieved",
+        message="Lấy trạng thái bảo trì hệ thống thành công",
     )
 
 
@@ -44,7 +44,7 @@ async def get_maintenance_status(db=Depends(get_db)):
 async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.toggle_maintenance_mode(enabled, db=db),
-        message="The global system maintenance mode configuration has been successfully updated",
+        message="Cập nhật cấu hình bảo trì hệ thống thành công",
     )
 
 
@@ -56,7 +56,7 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
 async def trigger_backup(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.trigger_backup(db=db),
-        message="The comprehensive system data backup process has been successfully initiated",
+        message="Bắt đầu quá trình sao lưu dữ liệu hệ thống",
     )
 
 
@@ -68,7 +68,7 @@ async def trigger_backup(db=Depends(get_db)):
 async def create_api_key(name: str, db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.create_api_key(name, db=db),
-        message="The new secure application access key has been generated and recorded successfully",
+        message="Tạo khóa bảo mật ứng dụng thành công",
     )
 
 
@@ -82,7 +82,7 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
         data=await OperationService.create_marketing_campaign(
             payload.model_dump(), db=db
         ),
-        message="The new marketing and promotional campaign has been successfully configured and activated",
+        message="Thiết lập chiến dịch quảng cáo thành công",
         status=201,
     )
 
@@ -93,7 +93,7 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_system_config(db=Depends(get_db)):
-    return APIResponse(data={}, message="The global system configuration settings have been successfully retrieved from the database")
+    return APIResponse(data={}, message="Lấy cấu hình hệ thống thành công")
 
 
 @router.get(
@@ -104,7 +104,7 @@ async def get_system_config(db=Depends(get_db)):
 async def get_system_health(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_system_health(db=db),
-        message="The comprehensive system health and diagnostic report has been successfully generated",
+        message="Tạo báo cáo tình trạng hệ thống thành công",
     )
 
 
@@ -116,7 +116,7 @@ async def get_system_health(db=Depends(get_db)):
 async def get_admin_reports(db=Depends(get_db)):
     return APIResponse(
         data=await UserService.get_report_queue(status_filter=None, db=db),
-        message="The administrative violation reports have been successfully retrieved for review",
+        message="Lấy danh sách báo cáo vi phạm thành công",
     )
 
 
@@ -128,7 +128,7 @@ async def get_admin_reports(db=Depends(get_db)):
 async def get_collector_stats(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_collector_stats(db=db),
-        message="The statistical data from the data collection service has been successfully compiled",
+        message="Biên dịch dữ liệu thống kê thành công",
     )
 
 
@@ -140,7 +140,7 @@ async def get_collector_stats(db=Depends(get_db)):
 async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.trigger_collection(req.source, req.pages, db=db),
-        message="The external data collection process has been successfully triggered and is now running",
+        message="Bắt đầu quá trình thu thập dữ liệu",
     )
 
 
@@ -152,7 +152,7 @@ async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
 async def stop_collection(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.stop_collection(db=db),
-        message="The halt command has been successfully transmitted to the external data collection service",
+        message="Gửi lệnh dừng thu thập dữ liệu thành công",
     )
 
 
@@ -164,7 +164,7 @@ async def stop_collection(db=Depends(get_db)):
 async def get_collector_logs(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_collector_logs(db=db),
-        message="The operational logs from the data collection service have been successfully retrieved",
+        message="Lấy nhật ký hoạt động thành công",
     )
 
 
@@ -176,7 +176,7 @@ async def get_collector_logs(db=Depends(get_db)):
 async def get_active_collector_jobs(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_active_collector_jobs(db=db),
-        message="The list of active background tasks in the data collection service has been retrieved successfully",
+        message="Lấy danh sách tác vụ chạy nền thành công",
     )
 
 
@@ -192,7 +192,7 @@ async def shadowban_user(
         data=await OperationService.bulk_update_shadowban(
             payload.user_ids, payload.status, current_user, db=db
         ),
-        message="The visibility restriction protocol has been successfully applied to the specified account",
+        message="Áp dụng quyền hiển thị thành công",
     )
 
 
@@ -208,7 +208,7 @@ async def verify_kyc(
         data=await OperationService.bulk_verify_kyc(
             payload.user_ids, payload.status, current_user, db=db
         ),
-        message="The identity verification profile has been successfully processed and updated",
+        message="Cập nhật hồ sơ xác minh danh tính thành công",
     )
 
 
@@ -220,5 +220,5 @@ async def verify_kyc(
 async def get_minio_stats(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_minio_stats(db=db),
-        message="The comprehensive storage usage statistics have been successfully retrieved from the object storage service",
+        message="Lấy thống kê sử dụng lưu trữ thành công",
     )

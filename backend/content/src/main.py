@@ -53,7 +53,7 @@ app.include_router(pin_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("The primary content management service has been initialized successfully and is now ready to process incoming requests")
+    logger.info("Dịch vụ quản lý nội dung đã sẵn sàng")
     await init_db()
 
 

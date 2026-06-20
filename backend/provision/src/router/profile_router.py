@@ -21,7 +21,7 @@ async def get_my_profile(
 ):
     return APIResponse(
         data=await ProfileService.get_user_profile(current_user, db=db),
-        message="The requested user profile information has been successfully retrieved from the database",
+        message="Lấy thông tin người dùng thành công",
         status=200,
     )
 
@@ -36,7 +36,7 @@ async def update_my_profile(
         data=await ProfileService.update_profile(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="The user profile information has been successfully updated and saved",
+        message="Cập nhật thông tin hồ sơ thành công",
         status=200,
     )
 
@@ -47,7 +47,7 @@ async def apply_author(
 ):
     return APIResponse(
         data=await IdentityService.apply_author(data, current_user, db=db),
-        message="The author application has been successfully submitted and is pending administrative review",
+        message="Đã gửi yêu cầu đăng ký tác giả",
         status=201,
     )
 
@@ -58,7 +58,7 @@ async def become_author(
 ):
     return APIResponse(
         data=await IdentityService.become_author(current_user, db=db),
-        message="The user account privileges have been successfully elevated to author status",
+        message="Nâng cấp tài khoản tác giả thành công",
         status=200,
     )
 
@@ -71,7 +71,7 @@ async def upload_kyc(
 ):
     return APIResponse(
         data=await IdentityService.upload_kyc(file, current_user, db=db),
-        message="The identity verification documents have been securely uploaded and are awaiting review",
+        message="Tải lên tài liệu xác minh danh tính thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -82,7 +82,7 @@ async def get_settings(
 ):
     return APIResponse(
         data=await SettingService.get_settings(current_user, db=db),
-        message="The system configuration settings have been successfully retrieved",
+        message="Lấy cấu hình hệ thống thành công",
         status=200,
     )
 
@@ -97,7 +97,7 @@ async def update_settings(
         data=await SettingService.update_settings(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="The system configuration settings have been successfully updated and applied",
+        message="Cập nhật cấu hình hệ thống thành công",
         status=200,
     )
 
@@ -131,7 +131,7 @@ async def get_reading_streaks(
 ):
     return APIResponse(
         data=await ProfileService.get_reading_streaks(current_user, db=db),
-        message="The reading streak statistics for the current user have been successfully retrieved",
+        message="Lấy dữ liệu chuỗi ngày đọc thành công",
         status=200,
     )
 
@@ -142,7 +142,7 @@ async def get_badges(
 ):
     return APIResponse(
         data=await ProfileService.get_badges(current_user, db=db),
-        message="The list of earned badges has been successfully retrieved from the system",
+        message="Lấy danh sách huy hiệu thành công",
         status=200,
     )
 
@@ -155,7 +155,7 @@ async def block_user(
 ):
     return APIResponse(
         data=await ProfileService.block_user(target_id, current_user, db=db),
-        message="The specified user has been successfully restricted from interacting with your account",
+        message="Hạn chế người dùng thành công",
         status=200,
     )
 
@@ -170,7 +170,7 @@ async def update_brand_page(
         data=await ProfileService.update_brand_page(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="The public author brand page has been successfully updated with the provided information",
+        message="Cập nhật trang hồ sơ tác giả thành công",
     )
 
 
@@ -178,5 +178,5 @@ async def update_brand_page(
 async def get_public_profile(slug: str, db=Depends(get_db)):
     return APIResponse(
         data=await IdentityService.get_public_profile(slug, db=db),
-        message="The public profile information for the specified user has been successfully retrieved",
+        message="Lấy hồ sơ công khai thành công",
     )

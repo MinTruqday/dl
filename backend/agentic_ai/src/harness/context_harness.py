@@ -54,7 +54,7 @@ class ContextHarness:
                     settings.REDIS_URI, decode_responses=True
                 )
             except Exception:
-                logger.error("The system encountered a failure while attempting to establish a connection with the high speed cache")
+                logger.error("Lỗi kết nối bộ đệm tốc độ cao")
         return self._redis_client
 
     async def _load_short_term_history(self, session_id: str) -> list:
@@ -75,7 +75,7 @@ class ContextHarness:
                     pass
             return history
         except Exception:
-            logger.warning("The system was unable to load the conversation history from the temporary storage")
+            logger.warning("Lỗi tải lịch sử cuộc trò chuyện từ bộ nhớ tạm")
             return []
 
     async def _load_user_preferences(self, user_id: str) -> str:
@@ -87,7 +87,7 @@ class ContextHarness:
             prefs = await mem0_manager.get_user_preferences(user_id)
             return prefs or ""
         except Exception:
-            logger.warning("The system failed to retrieve the personal preferences for the current user")
+            logger.warning("Lỗi tải cấu hình cá nhân")
             return ""
 
     async def build_context(
@@ -126,7 +126,7 @@ class ContextHarness:
             estimated_tokens=estimated,
         )
 
-        logger.info("The system successfully compiled the necessary contextual information for the execution phase")
+        logger.info("Biên dịch dữ liệu ngữ cảnh thành công")
         return ctx
 
     async def save_turn(
@@ -146,7 +146,7 @@ class ContextHarness:
                 pipe.expire(key, ttl_seconds)
                 await pipe.execute()
         except Exception:
-            logger.warning("The system encountered an issue while attempting to save the latest session interaction")
+            logger.warning("Lỗi lưu phiên tương tác")
 
     async def clear_session(self, session_id: str):
         redis = self._get_redis()
@@ -154,9 +154,9 @@ class ContextHarness:
             return
         try:
             await redis.delete(f"session:{session_id}:history")
-            logger.info("The specified session history was successfully purged from the storage system")
+            logger.info("Xóa lịch sử phiên làm việc thành công")
         except Exception:
-            logger.warning("The system was unable to completely remove the specified session from the storage")
+            logger.warning("Lỗi xóa phiên làm việc khỏi bộ nhớ")
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history

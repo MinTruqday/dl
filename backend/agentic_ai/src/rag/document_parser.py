@@ -18,14 +18,14 @@ class DocumentParser:
         self._marker_models = None
         self._ocr_engine = None
         self._pp_structure = None
-        logger.info("Advanced document analysis engines initialized successfully")
+        logger.info("Khởi tạo công cụ phân tích tài liệu thành công")
 
     def _get_marker_models(self):
         if self._marker_models is None:
             from marker.models import create_model_dict
 
             self._marker_models = create_model_dict()
-            logger.info("The document analysis configuration was successfully loaded into the system")
+            logger.info("Tải cấu hình phân tích tài liệu thành công")
         return self._marker_models
 
     def _get_ocr_engine(self, lang: str = "en"):
@@ -38,7 +38,7 @@ class DocumentParser:
                 show_log=False,
             )
             self._ocr_lang = lang
-            logger.info("The text extraction tool was initialized successfully with the specified language settings")
+            logger.info("Khởi tạo công cụ trích xuất văn bản thành công")
         return self._ocr_engine
 
     def _get_pp_structure(self, lang: str = "en"):
@@ -54,13 +54,13 @@ class DocumentParser:
                 lang=lang,
             )
             self._pp_lang = lang
-            logger.info("The advanced layout extraction engine was initialized successfully")
+            logger.info("Khởi tạo công cụ trích xuất bố cục thành công")
         return self._pp_structure
 
     async def parse_document(self, file_url: str) -> Dict:
         file_bytes, file_ext = await self._download_from_minio(file_url)
         if not file_bytes:
-            return {"error": "The system is unable to download the specified file from the storage service"}
+            return {"error": "Lỗi tải tệp tin từ hệ thống lưu trữ"}
 
         with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as tmp:
             tmp.write(file_bytes)
@@ -72,8 +72,8 @@ class DocumentParser:
                 return await self._parse_image_with_structure(tmp_path)
             return await self._parse_with_marker(tmp_path)
         except Exception:
-            logger.error("The system encountered an error while attempting to analyze the document content")
-            return {"error": "The system encountered an unexpected error during the document parsing process"}
+            logger.error("Lỗi phân tích nội dung tài liệu")
+            return {"error": "Lỗi phân tích cú pháp tài liệu"}
         finally:
             tmp_path.unlink(missing_ok=True)
 
@@ -121,7 +121,7 @@ class DocumentParser:
                 else 0
             )
 
-        logger.info("The document analysis engine successfully extracted all text segments and pages from the file")
+        logger.info("Trích xuất văn bản từ tài liệu thành công")
         return {
             "markdown": markdown,
             "chunks": chunks,
@@ -181,10 +181,10 @@ class DocumentParser:
                             }
                         )
 
-            logger.info("The system successfully extracted all available data tables from the provided document")
+            logger.info("Trích xuất bảng dữ liệu thành công")
             return tables
         except Exception:
-            logger.error("The system encountered an issue while attempting to extract data tables from the document")
+            logger.error("Lỗi trích xuất bảng dữ liệu")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -241,7 +241,7 @@ class DocumentParser:
             return await self._parse_with_raw_ocr(file_path)
 
         full_markdown = "\n\n".join(markdown_parts)
-        logger.info("The layout engine successfully extracted all structural blocks from the processed image")
+        logger.info("Trích xuất cấu trúc hình ảnh thành công")
         return {
             "markdown": full_markdown,
             "chunks": chunks,
@@ -268,7 +268,7 @@ class DocumentParser:
         full_text = "\n".join(lines)
         chunks = self._group_lines_to_chunks(lines)
 
-        logger.info("The text extraction engine successfully processed all readable segments from the image")
+        logger.info("Trích xuất văn bản từ hình ảnh thành công")
         return {
             "markdown": full_text,
             "chunks": chunks,
@@ -365,7 +365,7 @@ class DocumentParser:
     async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning("The system failed to analyze the document during the data ingestion phase")
+            logger.warning("Lỗi phân tích tài liệu")
             return []
 
         chunks = parse_result.get("chunks", [])
@@ -393,7 +393,7 @@ class DocumentParser:
                 }
             )
 
-        logger.info("The system successfully generated text segments to prepare for data ingestion")
+        logger.info("Tạo phân mảnh văn bản thành công")
         return ingestion_chunks
 
     async def get_markdown(self, file_url: str) -> str:
@@ -416,7 +416,7 @@ class DocumentParser:
                 object_key = file_url
 
             if "" in object_key:
-                logger.error("The system blocked a potential security risk related to unauthorized path traversal")
+                logger.error("Ngăn chặn rủi ro bảo mật")
                 return None, ""
 
             s3 = boto3.client(
@@ -448,11 +448,11 @@ class DocumentParser:
                     ext = mapped_ext
                     break
 
-            logger.info("The system successfully retrieved the file content from the storage bucket")
+            logger.info("Lấy nội dung tệp từ kho lưu trữ thành công")
             return data, ext
 
         except Exception:
-            logger.error("The system was unable to establish a connection to retrieve the file from storage")
+            logger.error("Lỗi kết nối tải tệp")
             return None, ""
 
 

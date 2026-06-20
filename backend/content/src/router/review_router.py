@@ -21,7 +21,7 @@ async def create_document_review(
         data=await ReviewService.create_review(
             document_id, review_in, current_user, db=db
         ),
-        message="Your personal review for the document has been successfully submitted and recorded",
+        message="Gửi đánh giá cá nhân thành công",
         status=201,
     )
 
@@ -30,6 +30,6 @@ async def create_document_review(
 async def get_document_reviews(document_id: str, db=Depends(get_db)) -> Any:
     return APIResponse(
         data=await ReviewService.get_reviews(document_id, db=db),
-        message="The public reviews associated with the specified document have been successfully retrieved",
+        message="Lấy danh sách đánh giá công khai thành công",
         status=200,
     )

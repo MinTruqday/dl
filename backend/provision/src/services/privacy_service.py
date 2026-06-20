@@ -29,7 +29,7 @@ class PrivacyService:
                 for c in comments
             ],
         }
-        logger.info("A comprehensive data takeout request has been initiated by the authenticated user")
+        logger.info("Đã gửi yêu cầu xuất dữ liệu")
         return takeout_payload
 
     @staticmethod
@@ -51,17 +51,17 @@ class PrivacyService:
         if db_client.redis:
             await db_client.redis.delete(f"active_session:{user_id}")
         await db["users"].delete_one({"_id": str(current_user.id)})
-        logger.info("The authenticated user has invoked their right to be forgotten resulting in permanent data removal")
+        logger.info("Đã xóa dữ liệu vĩnh viễn theo yêu cầu")
         return {
             "status": "success",
-            "message": "Your account and all associated personal data have been permanently removed from our systems as per your request",
+            "message": "Tài khoản của bạn đã bị xóa vĩnh viễn",
         }
 
     @staticmethod
     async def request_data_export(current_user, db=None):
-        logger.info("A data export request has been successfully registered for the authenticated user")
+        logger.info("Yêu cầu xuất dữ liệu đã được ghi nhận")
         return {
-            "message": "Your data export request has been received and a secure download link will be dispatched to your registered email address shortly"
+            "message": "Yêu cầu xuất dữ liệu thành công, liên kết sẽ được gửi qua email"
         }
 
     @staticmethod
@@ -78,5 +78,5 @@ class PrivacyService:
             .to_list(100),
             "comments": await db["comments"].find({"user_id": user_id}).to_list(500),
         }
-        logger.info("The compliance data takeout package has been successfully compiled and prepared for the user")
+        logger.info("Xuất dữ liệu hệ thống thành công")
         return {"status": "success", "data": full_data}

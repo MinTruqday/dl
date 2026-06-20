@@ -31,16 +31,16 @@ class IngestionPipeline:
             {"_id": __import__("bson").ObjectId(document_id)}
         )
         if not document:
-            raise ValueError("The requested document could not be found within the database system")
+            raise ValueError("Không tìm thấy tài liệu trong hệ thống")
 
         file_url = document.get("file_url", "")
         title = document.get("title", "Untitled")
         author = document.get("author", "Unknown")
 
         if not file_url:
-            raise ValueError("The requested document is missing the required file location parameter")
+            raise ValueError("Thiếu tham số vị trí tệp tin")
 
-        logger.info("Initiating the data ingestion process for the provided document")
+        logger.info("Khởi tạo quá trình nạp tài liệu")
 
         metadata = {
             "document_id": document_id,
@@ -92,7 +92,7 @@ class IngestionPipeline:
                     },
                 }
             except Exception:
-                logger.error("The system was unable to generate the global summary segment for the document")
+                logger.error("Lỗi tạo tóm tắt tài liệu")
                 return None
 
         if doc_chunks:
@@ -121,7 +121,7 @@ class IngestionPipeline:
         else:
             raw_text = await self._extract_text(file_url)
             if not raw_text or len(raw_text.strip()) < 100:
-                raise ValueError("The extracted text from the document is insufficient to proceed with the processing")
+                raise ValueError("Không đủ văn bản trích xuất để tiếp tục")
 
             first_few_pages = raw_text[:15000]
             summary_chunk = await get_summary_chunk(first_few_pages, "local")
@@ -132,7 +132,7 @@ class IngestionPipeline:
             chunks.extend(extracted_chunks)
 
         if not chunks:
-            raise ValueError("The system encountered an error while attempting to fragment the document content")
+            raise ValueError("Lỗi phân mảnh tài liệu")
 
         texts = [c["text"] for c in chunks]
         embeddings = await embedding_service.embed_batch(texts)
@@ -171,7 +171,7 @@ class IngestionPipeline:
         ext = os.path.splitext(file_url.split("?")[0])[1].lower()
 
         if ext == ".zip":
-            logger.info("The system detected a compressed archive file during the ingestion process")
+            logger.info("Phát hiện tệp nén")
             return await self._extract_from_zip(file_bytes)
 
         return self._extract_with_markitdown(file_bytes, file_url)
@@ -214,14 +214,14 @@ class IngestionPipeline:
                 os.path.join(extract_path, top_contents[0])
             ):
                 search_root = os.path.join(extract_path, top_contents[0])
-                logger.info("The system is navigating into a nested directory structure within the archive")
+                logger.info("Đang mở thư mục con trong tệp nén")
 
             for root, _, files in os.walk(search_root):
                 for f in files:
                     f_ext = os.path.splitext(f)[1].lower()
                     if f_ext in supported_exts:
                         f_path = os.path.join(root, f)
-                        logger.info("The system is currently extracting content from a file within the archive")
+                        logger.info("Đang giải nén nội dung tệp")
                         try:
                             with open(f_path, "rb") as f_handle:
                                 content_bytes = f_handle.read()
@@ -231,7 +231,7 @@ class IngestionPipeline:
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
                         except Exception:
-                            logger.error("The system failed to load data from the specified archive file")
+                            logger.error("Lỗi tải dữ liệu từ tệp nén")
 
         return "\n\n".join(all_text)
 
@@ -255,7 +255,7 @@ class IngestionPipeline:
                 bucket = self._bucket
                 object_key = url
 
-            logger.info("The system is downloading the required file from the cloud storage bucket")
+            logger.info("Đang tải tệp từ không gian lưu trữ đám mây")
 
             import boto3
 
@@ -268,10 +268,10 @@ class IngestionPipeline:
             )
             obj = s3.get_object(Bucket=bucket, Key=object_key)
             data = obj["Body"].read()
-            logger.info("The system successfully downloaded the file data from the remote storage")
+            logger.info("Tải xuống dữ liệu tệp thành công")
             return data
         except Exception:
-            logger.error("The system encountered an unexpected issue while attempting to download the file")
+            logger.error("Lỗi tải xuống tệp tin")
             return None
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
@@ -287,20 +287,20 @@ class IngestionPipeline:
                 tmp.write(data)
                 tmp_path = tmp.name
 
-            logger.info("The system is proceeding with the data analysis for the downloaded file")
+            logger.info("Đang phân tích dữ liệu tệp tải xuống")
             md = MarkItDown()
             result = md.convert(tmp_path)
             full_text = result.text_content
 
             os.remove(tmp_path)
 
-            logger.info("The document content analysis process was completed successfully")
+            logger.info("Phân tích nội dung tài liệu thành công")
             return full_text
         except ImportError:
-            logger.error("The system is currently missing the required content analysis libraries to proceed")
+            logger.error("Thiếu thư viện phân tích nội dung")
             return ""
         except Exception:
-            logger.error("The data analysis process failed due to an unexpected system issue")
+            logger.error("Lỗi phân tích dữ liệu")
             return ""
 
 

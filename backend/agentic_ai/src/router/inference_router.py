@@ -46,13 +46,13 @@ async def _check_quota(current_user: UserInDB):
             if resp.status_code != 200:
                 raise HTTPException(
                     status_code=429,
-                    detail="Your account has exceeded the allocated artificial intelligence quota or a system error occurred",
+                    detail="Đã hết dung lượng sử dụng AI",
                 )
             return resp.json().get("data", {})
     except HTTPException:
         raise
     except Exception:
-        logger.error("The system failed to verify the current user quota allocation")
+        logger.error("Lỗi kiểm tra dung lượng sử dụng")
         return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
 
 
@@ -72,7 +72,7 @@ async def _consume_quota(
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
     except Exception:
-        logger.error("The system failed to deduct the consumed quota from the user account")
+        logger.error("Lỗi trừ dung lượng đã sử dụng")
 
 
 async def _chat_direct(
@@ -90,8 +90,8 @@ async def _chat_direct(
         )
         return response.choices[0].message.content
     except Exception:
-        logger.error("The artificial intelligence system encountered an unexpected issue during the text generation process")
-        raise Exception("The system encountered an unexpected error and requires you to try again later")
+        logger.error("Lỗi tạo văn bản tự động")
+        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
 
 
 async def _run_ai_with_quota(
@@ -126,7 +126,7 @@ async def generate_text(
         return {"result": result}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -147,7 +147,7 @@ async def translate_text(
         return {"translation": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -232,9 +232,9 @@ async def analyze_sentiment(
             ],
         }
     except Exception:
-        logger.error("The sentiment analysis process encountered an unexpected issue")
+        logger.error("Lỗi phân tích cảm xúc văn bản")
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -255,7 +255,7 @@ async def generate_code(
         return {"code": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -270,7 +270,7 @@ async def grammar_check(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This specific feature is restricted to premium subscription plans only",
+                detail="Tính năng chỉ dành cho gói trả phí",
             )
 
         prompt = prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
@@ -288,11 +288,11 @@ async def grammar_check(
         return {
             "corrected_text": result.strip(),
             "score": grammar_score,
-            "message": "The grammar check and accuracy calculation completed successfully",
+            "message": "Hoàn tất kiểm tra ngữ pháp",
         }
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -313,7 +313,7 @@ async def summarize_text(
         return {"summary": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -328,7 +328,7 @@ async def check_plagiarism(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This specific feature is restricted to premium subscription plans only",
+                detail="Tính năng chỉ dành cho gói trả phí",
             )
 
         from src.rag.embedder import embedding_service
@@ -343,7 +343,7 @@ async def check_plagiarism(
             return {
                 "plagiarism_score": 0.0,
                 "status": "clean",
-                "message": "No similar content was found in the current data system indicating highly original content",
+                "message": "Tài liệu có tính nguyên bản cao, không phát hiện trùng lặp",
                 "matches": [],
             }
 
@@ -371,7 +371,7 @@ async def check_plagiarism(
             if json_match:
                 return json_mod.loads(json_match.group())
         except Exception:
-            logger.warning("The system encountered an error while parsing the plagiarism check data format")
+            logger.warning("Lỗi định dạng dữ liệu kiểm tra đạo văn")
 
         max_score = max([m["score"] for m in significant_matches]) * 100
         return {
@@ -379,13 +379,13 @@ async def check_plagiarism(
             "status": (
                 "warning" if max_score > 60 else "danger" if max_score > 85 else "clean"
             ),
-            "message": "The system has detected significantly similar content within the database",
+            "message": "Phát hiện nội dung trùng lặp",
             "matches": significant_matches[:3],
         }
     except Exception:
-        logger.error("The plagiarism check process encountered an unexpected issue")
+        logger.error("Lỗi kiểm tra đạo văn")
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -414,7 +414,7 @@ async def unified_action(
 
         prompt = prompts.get(req.action)
         if not prompt:
-            raise HTTPException(status_code=400, detail="The requested action is not recognized by the system")
+            raise HTTPException(status_code=400, detail="Thao tác không hợp lệ")
 
         result = await _run_ai_with_quota(
             current_user,
@@ -424,9 +424,9 @@ async def unified_action(
         )
         return {"result": result.strip()}
     except Exception:
-        logger.error("The artificial intelligence action execution encountered an unexpected issue")
+        logger.error("Lỗi thực thi tác vụ AI")
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -441,7 +441,7 @@ async def get_synonyms(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This specific feature is restricted to premium subscription plans only",
+                detail="Tính năng chỉ dành cho gói trả phí",
             )
 
         prompt = prompt_registry.get(PromptType.SYNONYMS).format(text=req.text)
@@ -454,7 +454,7 @@ async def get_synonyms(
         return {"synonyms": [s.strip() for s in result.split(",")]}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -469,7 +469,7 @@ async def suggest_citations(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This specific feature is restricted to premium subscription plans only",
+                detail="Tính năng chỉ dành cho gói trả phí",
             )
 
         from src.rag.embedder import embedding_service
@@ -497,7 +497,7 @@ async def suggest_citations(
         return {"citations": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -512,7 +512,7 @@ async def transform_tone(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This specific feature is restricted to premium subscription plans only",
+                detail="Tính năng chỉ dành cho gói trả phí",
             )
 
         action = "expand and transform" if req.expansion else "transform"
@@ -528,7 +528,7 @@ async def transform_tone(
         return {"transformed_text": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -543,7 +543,7 @@ async def peer_review(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This specific feature is restricted to premium subscription plans only",
+                detail="Tính năng chỉ dành cho gói trả phí",
             )
 
         criteria_str = (
@@ -563,7 +563,7 @@ async def peer_review(
         return {"review_report": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -597,7 +597,7 @@ async def multi_doc_synthesis(
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
+            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
         )
 
 
@@ -606,7 +606,7 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
     try:
         file_url = req.get("file_url")
         if not file_url:
-            raise HTTPException(status_code=400, detail="The submitted request is missing the required file location information")
+            raise HTTPException(status_code=400, detail="Thiếu thông tin vị trí tệp tin")
 
         from src.rag.ingestion_pipeline import ingestion_pipeline
 
@@ -614,9 +614,9 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
 
         return {"extracted_text": extracted_text}
     except Exception:
-        logger.error("The data extraction process encountered an unexpected issue")
+        logger.error("Lỗi trích xuất dữ liệu")
         raise HTTPException(
-            status_code=500, detail="The system is currently unable to extract text from the provided source"
+            status_code=500, detail="Không thể trích xuất văn bản từ nguồn cung cấp"
         )
 
 
@@ -647,10 +647,10 @@ async def analyze_document(
         if json_match:
             return json_mod.loads(json_match.group())
         else:
-            raise ValueError("The language model failed to return the expected data format")
+            raise ValueError("Mô hình ngôn ngữ trả về sai định dạng")
     except Exception:
-        logger.error("The document analysis process encountered an unexpected issue")
-        raise HTTPException(status_code=500, detail="The document analysis process encountered an unexpected issue")
+        logger.error("Lỗi phân tích tài liệu")
+        raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
 
 
 @router.delete("/vectors/{document_id}")
@@ -659,7 +659,7 @@ async def delete_vector_document(document_id: str):
         from src.store.vector_store import vector_store
 
         await vector_store.delete_by_document(document_id)
-        return {"status": "success", "message": "The document index data was deleted successfully"}
+        return {"status": "success", "message": "Xóa chỉ mục tài liệu thành công"}
     except Exception:
-        logger.error("The system failed to delete the document index data")
-        raise HTTPException(status_code=500, detail="The system encountered an issue while attempting to delete the document index data")
+        logger.error("Lỗi xóa chỉ mục tài liệu")
+        raise HTTPException(status_code=500, detail="Lỗi xóa dữ liệu chỉ mục tài liệu")

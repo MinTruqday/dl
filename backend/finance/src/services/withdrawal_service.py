@@ -66,7 +66,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="The requested withdrawal amount falls below the minimum required processing threshold"
+                status_code=400, detail="Số tiền rút dưới mức tối thiểu"
             )
 
         wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
@@ -74,7 +74,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=400, detail="The requested withdrawal cannot proceed due to insufficient available funds in the account balance")
+            raise HTTPException(status_code=400, detail="Tài khoản không đủ số dư để rút tiền")
 
         now = datetime.now(timezone.utc)
 
@@ -90,7 +90,7 @@ class WithdrawalService:
                 if resp.status_code == 200:
                     user_info = resp.json().get("data") or {}
         except Exception:
-            logger.warning("The system encountered a minor disruption while synchronizing external account profile information")
+            logger.warning("Lỗi đồng bộ hồ sơ tài khoản bên ngoài")
 
         if user_info.get("last_password_change"):
             last_pw_str = user_info["last_password_change"]
@@ -103,7 +103,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=403,
-                    detail="Financial withdrawals are temporarily restricted for security purposes following a recent password modification",
+                    detail="Khóa rút tiền tạm thời do vừa đổi mật khẩu",
                 )
 
         if wallet.get("last_bank_update"):
@@ -118,7 +118,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=403,
-                    detail="Financial withdrawals are temporarily restricted for security purposes following a recent update to the linked banking information",
+                    detail="Tạm khóa rút tiền do vừa cập nhật tài khoản ngân hàng",
                 )
 
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -152,7 +152,7 @@ class WithdrawalService:
                     await session.abort_transaction()
                     await session.end_session()
                 raise HTTPException(
-                    status_code=429, detail="The account has exceeded the maximum permissible number of daily withdrawal requests"
+                    status_code=429, detail="Vượt quá số lần rút tiền tối đa trong ngày"
                 )
             if stats["total_amount"] + amount > 20000000:
                 if should_close_session:
@@ -160,7 +160,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=429,
-                    detail="The requested amount exceeds the maximum permissible daily withdrawal limit",
+                    detail="Vượt quá giới hạn rút tiền tối đa trong ngày",
                 )
 
         withdrawal_id = str(uuid7())
@@ -174,7 +174,7 @@ class WithdrawalService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="The requested withdrawal cannot proceed due to insufficient available funds in the account balance"
+                    status_code=400, detail="Tài khoản không đủ số dư để rút tiền"
                 )
 
             withdrawal_request = {
@@ -203,10 +203,10 @@ class WithdrawalService:
                 await session.commit_transaction()
 
             logger.info(
-                "The withdrawal request has been successfully registered and the corresponding funds have been securely reserved"
+                "Đã ghi nhận yêu cầu rút tiền"
             )
             return {
-                "message": "The withdrawal request has been successfully submitted and is currently pending processing",
+                "message": "Gửi yêu cầu rút tiền thành công",
                 "withdrawal_id": withdrawal_id,
             }
         except HTTPException:
@@ -214,8 +214,8 @@ class WithdrawalService:
         except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("An unexpected structural or network failure occurred while attempting to initiate the withdrawal transaction")
-            raise HTTPException(status_code=500, detail="The financial service is currently experiencing technical difficulties and cannot process the withdrawal request")
+            logger.error("Lỗi khởi tạo giao dịch rút tiền")
+            raise HTTPException(status_code=500, detail="Không thể xử lý yêu cầu rút tiền lúc này")
         finally:
             if should_close_session:
                 await session.end_session()
@@ -227,7 +227,7 @@ class WithdrawalService:
         normalized_status = status.upper()
         if normalized_status not in ALLOWED_WITHDRAWAL_QUEUE_STATUSES:
             raise HTTPException(
-                status_code=400, detail="The requested withdrawal status filter is not recognized by the system"
+                status_code=400, detail="Trạng thái rút tiền không hợp lệ"
             )
         pipeline = [
             {"$match": {"status": normalized_status}},
@@ -285,7 +285,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="The provided administrative action code is not recognized by the transaction verification system"
+                status_code=400, detail="Mã xác thực không hợp lệ"
             )
 
         withdrawal = await db["withdrawal_requests"].find_one({"_id": withdrawal_id})
@@ -294,7 +294,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=404, detail="The system was unable to locate a withdrawal request matching the provided transaction identifier"
+                status_code=404, detail="Không tìm thấy yêu cầu rút tiền với mã giao dịch này"
             )
 
         if str(current_user.id) == withdrawal.get("user_id"):
@@ -302,7 +302,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=403, detail="Administrative policies restrict accounts from verifying their own withdrawal requests"
+                status_code=403, detail="Không thể tự duyệt yêu cầu rút tiền của mình"
             )
 
         current_status = withdrawal.get("status")
@@ -311,7 +311,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="The specified withdrawal request has already been processed by the administrative team and cannot be modified"
+                status_code=400, detail="Yêu cầu rút tiền đã được xử lý"
             )
 
         status = "APPROVED" if normalized_action == "approve" else "REJECTED"
@@ -332,7 +332,7 @@ class WithdrawalService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="The database engine encountered an issue while attempting to update the status of the withdrawal request"
+                    status_code=400, detail="Lỗi cập nhật trạng thái yêu cầu rút tiền"
                 )
 
             if status == "REJECTED":
@@ -372,16 +372,16 @@ class WithdrawalService:
                 await session.commit_transaction()
 
             logger.info(
-                "The withdrawal request has been officially verified and its status has been successfully updated"
+                "Xác minh yêu cầu rút tiền thành công"
             )
-            return {"message": "The administrative verification process for the specified withdrawal request has been completed successfully"}
+            return {"message": "Xác minh yêu cầu rút tiền thành công"}
         except HTTPException:
             raise
         except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("An unexpected error occurred while attempting to process the verification of the withdrawal request")
-            raise HTTPException(status_code=500, detail="The financial service is currently experiencing technical difficulties and cannot process the request")
+            logger.error("Lỗi xác minh yêu cầu rút tiền")
+            raise HTTPException(status_code=500, detail="Dịch vụ tài chính đang gặp lỗi")
         finally:
             if should_close_session:
                 await session.end_session()
@@ -407,14 +407,14 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=404, detail="The system was unable to locate a withdrawal request matching the provided transaction identifier"
+                status_code=404, detail="Không tìm thấy yêu cầu rút tiền với mã giao dịch này"
             )
         if withdrawal.get("status") != "PENDING":
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="The system restricts cancellation operations to withdrawal requests that are currently in a pending state"
+                status_code=400, detail="Chỉ có thể hủy yêu cầu rút tiền đang chờ xử lý"
             )
 
         try:
@@ -436,7 +436,7 @@ class WithdrawalService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="The database engine encountered an issue while attempting to update the status of the withdrawal request"
+                    status_code=400, detail="Lỗi cập nhật trạng thái yêu cầu rút tiền"
                 )
 
             await db["wallets"].update_one(
@@ -460,16 +460,16 @@ class WithdrawalService:
                 await session.commit_transaction()
 
             logger.info(
-                "The pending withdrawal request has been successfully cancelled by the account owner and funds have been restored"
+                "Đã hủy yêu cầu rút tiền và hoàn tiền"
             )
-            return {"message": "The pending withdrawal request has been successfully cancelled and the reserved funds have been refunded"}
+            return {"message": "Đã hủy yêu cầu rút tiền và hoàn tiền"}
         except HTTPException:
             raise
         except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("An unexpected system error occurred while attempting to cancel the active withdrawal request")
-            raise HTTPException(status_code=500, detail="The financial service is currently experiencing technical difficulties and cannot process the request")
+            logger.error("Lỗi hủy yêu cầu rút tiền")
+            raise HTTPException(status_code=500, detail="Dịch vụ tài chính đang gặp lỗi")
         finally:
             if should_close_session:
                 await session.end_session()

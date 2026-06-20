@@ -192,7 +192,7 @@ class StorageService:
                     except Exception:
                         pass
             except Exception as e:
-                logger.error("The automated cleanup routine encountered a permission or access issue while removing physical files from storage")
+                logger.error("Lỗi dọn dẹp bộ nhớ")
 
         return True
 
@@ -289,14 +289,14 @@ class StorageService:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=404, detail="The system was unable to locate an active user profile corresponding to the provided email address"
+                status_code=404, detail="Không tìm thấy người dùng với email này"
             )
         target_user_id = str(target_user["_id"])
         if target_user_id == owner_id:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=400, detail="The structural sharing policies prevent users from initiating a sharing protocol with their own account"
+                status_code=400, detail="Không thể chia sẻ tài liệu với chính mình"
             )
         item = await db_client.mongodb.get_default_database().storage_items.find_one(
             {"_id": item_id, "owner_id": owner_id}
@@ -305,7 +305,7 @@ class StorageService:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=404, detail="The specified storage item could not be located or the account lacks the required distribution privileges"
+                status_code=404, detail="Không tìm thấy tệp hoặc không có quyền chia sẻ"
             )
         result = (
             await db_client.mongodb.get_default_database().storage_items.update_one(
@@ -318,8 +318,8 @@ class StorageService:
             )
         )
         if result.modified_count == 0:
-            return {"message": "The specified file has already been successfully distributed to the designated user account"}
-        return {"message": "The file sharing protocol has been successfully executed with the designated access privileges"}
+            return {"message": "Tệp tin đã được chia sẻ"}
+        return {"message": "Chia sẻ tệp thành công"}
 
     @staticmethod
     async def get_recent_items(

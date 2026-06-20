@@ -14,10 +14,10 @@ class DocLibDatabase:
     async def insert_document(self, document_data: dict):
         try:
             res = await self.db.documents.insert_one(document_data)
-            logger.info("A new document record has been successfully generated and securely inserted into the primary database")
+            logger.info("Tạo bản ghi tài liệu thành công")
             return str(res.inserted_id)
         except Exception:
-            logger.error("The system failed to safely insert the new document record into the database due to a constraint or connectivity issue")
+            logger.error("Lỗi lưu tài liệu vào cơ sở dữ liệu")
             return None
 
     async def update_document(self, document_id: str, update_data: dict):
@@ -27,9 +27,9 @@ class DocLibDatabase:
             await self.db.documents.update_one(
                 {"_id": ObjectId(document_id)}, {"$set": update_data}
             )
-            logger.info("The requested document record has been successfully updated and saved within the primary database")
+            logger.info("Cập nhật bản ghi tài liệu thành công")
         except Exception:
-            logger.error("The database engine encountered an unexpected error while attempting to update the specified document record")
+            logger.error("Lỗi cập nhật dữ liệu tài liệu")
 
 
 db_client = DocLibDatabase()

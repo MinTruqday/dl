@@ -9,12 +9,12 @@ router = APIRouter(prefix="/ingestion")
 
 @router.post("/ingest")
 async def ingest_endpoint(req: IngestRequest):
-    logger.info("The system has started processing the submitted document for ingestion")
+    logger.info("Bắt đầu xử lý nạp tài liệu")
     return await ingestion_pipeline.ingest_document(req.document_id)
 
 
 @router.delete("/documents/{document_id}")
 async def delete_document_endpoint(document_id: str):
-    logger.info("The system is removing the specified document vector data")
+    logger.info("Đang xóa dữ liệu vector tài liệu")
     vector_store.delete_by_document(document_id)
-    return {"status": "success", "message": "The document data was successfully removed from the system memory"}
+    return {"status": "success", "message": "Xóa dữ liệu tài liệu khỏi bộ nhớ thành công"}

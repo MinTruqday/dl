@@ -63,7 +63,7 @@ class Action:
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
                     return "The requested operation requires explicit user authorization before proceeding"
 
-                logger.info("The system is currently invoking the designated utility with the provided parameters")
+                logger.info("Đang khởi chạy tiện ích")
 
                 try:
                     tool_result = await selected_tool.ainvoke(
@@ -80,12 +80,12 @@ class Action:
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    logger.warning("The utility encountered an operational issue and the system is initiating a retry attempt")
+                    logger.warning("Lỗi hệ thống, đang thử lại")
                     if attempt == 2:
                         return "The operation failed to complete successfully after exhausting all available retry attempts"
 
         except Exception:
-            logger.error("The task execution process was interrupted by an unexpected system exception")
+            logger.error("Quá trình thực thi bị gián đoạn")
             return "The system encountered an unexpected error during the execution phase and requires you to try again later"
 
 

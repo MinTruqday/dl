@@ -26,11 +26,11 @@ async def submit_feedback(req: FeedbackRequest):
 
         await db.rag_feedback.insert_one(feedback_doc)
         client.close()
-        logger.info("The user feedback was saved successfully into the system database")
+        logger.info("Lưu phản hồi thành công")
         return {
             "status": "success",
-            "message": "We appreciate your feedback which helps improve our artificial intelligence system",
+            "message": "Cảm ơn phản hồi của bạn",
         }
     except Exception:
-        logger.error("The system failed to save the submitted user feedback")
-        return {"status": "error", "message": "The system is currently unable to save your feedback please try again later"}
+        logger.error("Lỗi lưu phản hồi người dùng")
+        return {"status": "error", "message": "Lỗi lưu phản hồi, vui lòng thử lại sau"}

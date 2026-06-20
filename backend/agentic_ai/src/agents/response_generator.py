@@ -22,10 +22,10 @@ class ResponseGenerator:
         pass
 
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
-        logger.info("The system is currently synthesizing the results for the requested query")
+        logger.info("Đang tổng hợp kết quả tìm kiếm")
 
         if _contains_injection(query):
-            logger.warning("The security system detected a potential unauthorized modification attempt in the request")
+            logger.warning("Phát hiện thao tác không hợp lệ")
             yield "The submitted request violates the security policies and cannot be processed further"
             return
 
@@ -46,7 +46,7 @@ class ResponseGenerator:
                     yield chunk.content
 
         except Exception:
-            logger.error("The system failed to generate the final response due to an unexpected internal exception")
+            logger.error("Lỗi tạo phản hồi")
             yield "The system encountered an unexpected error during the response generation process and requires you to try again later"
 
 

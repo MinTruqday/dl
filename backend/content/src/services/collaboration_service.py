@@ -40,7 +40,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         import httpx
 
@@ -57,23 +57,23 @@ class CollaborationService:
             pass
         if not invitee:
             raise HTTPException(
-                status_code=404, detail="The target user account specified for the collaboration invitation could not be located"
+                status_code=404, detail="Không tìm thấy người dùng"
             )
         invitee_id = str(invitee["_id"])
         if invitee_id == str(current_user.id):
             raise HTTPException(
-                status_code=400, detail="The system architecture restricts accounts from dispatching collaboration invitations to themselves"
+                status_code=400, detail="Không thể gửi lời mời cộng tác cho chính mình"
             )
         existing_invite = await RepositoryFactory.get("collaboration_invites").find_one(
             {"document_id": document_id, "invitee_id": invitee_id, "status": "PENDING"}
         )
         if existing_invite:
             raise HTTPException(
-                status_code=400, detail="An active collaboration invitation has already been dispatched to this account and is currently pending review"
+                status_code=400, detail="Đã gửi lời mời cộng tác trước đó"
             )
         coauthors = doc.get("coauthors", [])
         if invitee_id in coauthors:
-            raise HTTPException(status_code=400, detail="The specified account is already registered as an active participant in this collaborative workspace")
+            raise HTTPException(status_code=400, detail="Tài khoản đã tham gia cộng tác")
         invite = {
             "_id": str(uuid7()),
             "document_id": document_id,
@@ -93,9 +93,9 @@ class CollaborationService:
             "A new editorial collaboration invitation has been processed and dispatched via the internal notification system",
         )
         logger.info(
-            "A new editorial collaboration invitation has been successfully dispatched to the designated participant"
+            "Gửi lời mời cộng tác thành công"
         )
-        return {"message": "The editorial collaboration invitation has been successfully processed and dispatched", "invite_id": invite["_id"]}
+        return {"message": "Xử lý và gửi lời mời cộng tác thành công", "invite_id": invite["_id"]}
 
     @staticmethod
     async def get_my_collaboration_invites(current_user, db=None) -> list:
@@ -120,11 +120,11 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="The specified collaboration invitation is either invalid or has already been fully processed by the system"
+                status_code=404, detail="Lời mời cộng tác không hợp lệ hoặc đã được xử lý"
             )
         if status not in ["ACCEPTED", "REJECTED"]:
             raise HTTPException(
-                status_code=400, detail="The provided invitation response status is not recognized by the validation system"
+                status_code=400, detail="Trạng thái phản hồi lời mời không hợp lệ"
             )
         await RepositoryFactory.get("collaboration_invites").update_one(
             {"_id": invite_id},
@@ -145,10 +145,10 @@ class CollaborationService:
             "The recipient has officially registered their response to the pending editorial collaboration invitation",
         )
         logger.info(
-            "The pending collaboration invitation has been successfully processed according to the user response"
+            "Đã xử lý lời mời cộng tác"
         )
         return {
-            "message": "Your response to the collaboration invitation has been successfully recorded and applied"
+            "message": "Ghi nhận phản hồi lời mời thành công"
         }
 
     @staticmethod
@@ -167,7 +167,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         invites = (
             await RepositoryFactory.get("collaboration_invites")
@@ -210,7 +210,7 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="The detailed configuration for the specified collaboration environment could not be retrieved"
+                status_code=404, detail="Lỗi tải cấu hình môi trường cộng tác"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
@@ -218,7 +218,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="The current account lacks the administrative privileges required to manage participants for this document",
+                detail="Không có quyền quản lý người tham gia",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": invite["document_id"]},
@@ -234,9 +234,9 @@ class CollaborationService:
             "The specified collaborator has been effectively removed from the authorized modification list",
         )
         logger.info(
-            "The specified collaborator has been successfully removed from the active editorial environment"
+            "Xóa cộng tác viên thành công"
         )
-        return {"message": "The specified participant has been successfully removed from the active collaborative workspace"}
+        return {"message": "Xóa thành viên cộng tác thành công"}
 
     @staticmethod
     async def get_activities(document_id: str, current_user, db=None) -> list:
@@ -254,7 +254,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         activities = (
             await RepositoryFactory.get("collaboration_activities")
@@ -290,7 +290,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         import httpx
 
@@ -308,12 +308,12 @@ class CollaborationService:
         if not target_user:
             raise HTTPException(
                 status_code=404,
-                detail="The target user account designated for the ownership transfer could not be located",
+                detail="Không tìm thấy tài khoản nhận quyền sở hữu",
             )
         if target_user_id not in doc.get("coauthors", []):
             raise HTTPException(
                 status_code=400,
-                detail="The administrative ownership transfer is restricted exclusively to existing active collaborators",
+                detail="Chỉ có thể chuyển quyền sở hữu cho cộng tác viên",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id},
@@ -335,9 +335,9 @@ class CollaborationService:
             "The primary administrative ownership rights of the document have been securely reassigned",
         )
         logger.info(
-            "The primary administrative ownership of the collaborative document has been successfully transferred"
+            "Chuyển quyền sở hữu tài liệu cộng tác thành công"
         )
-        return {"message": "The administrative ownership rights of the specified document have been successfully transferred"}
+        return {"message": "Chuyển quyền sở hữu tài liệu thành công"}
 
     @staticmethod
     async def update_status(document_id: str, current_user, db=None) -> dict:
@@ -353,7 +353,7 @@ class CollaborationService:
             },
             upsert=True,
         )
-        return {"message": "Your active presence status within the collaborative environment has been successfully synchronized"}
+        return {"message": "Đồng bộ trạng thái hoạt động thành công"}
 
     @staticmethod
     async def get_online_collaborators(document_id: str, db=None) -> list:
@@ -392,7 +392,7 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="The detailed configuration for the specified collaboration environment could not be retrieved"
+                status_code=404, detail="Lỗi tải cấu hình môi trường cộng tác"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
@@ -400,10 +400,10 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="The current account lacks the administrative privileges required to manage participants for this document",
+                detail="Không có quyền quản lý người tham gia",
             )
         if role not in ["editor", "viewer"]:
-            raise HTTPException(status_code=400, detail="The requested access role is not recognized by the collaboration permission architecture")
+            raise HTTPException(status_code=400, detail="Quyền truy cập không hợp lệ")
         await RepositoryFactory.get("collaboration_invites").update_one(
             {"_id": collaboration_id}, {"$set": {"role": role}}
         )
@@ -413,7 +413,7 @@ class CollaborationService:
             "Update role",
             "The specific access privileges and system roles for the collaborator have been modified",
         )
-        return {"message": "The specific access privileges for the designated collaborator have been successfully updated"}
+        return {"message": "Cập nhật quyền cộng tác viên thành công"}
 
     @staticmethod
     async def send_memo(document_id: str, message: str, current_user, db=None) -> dict:
@@ -431,7 +431,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         memo = {
             "_id": str(uuid7()),
@@ -442,7 +442,7 @@ class CollaborationService:
             "timestamp": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("collaboration_memos").insert_one(memo)
-        return {"message": "The internal collaborative communication message has been successfully transmitted", "memo": memo}
+        return {"message": "Gửi tin nhắn cộng tác nội bộ thành công", "memo": memo}
 
     @staticmethod
     async def get_memos(document_id: str, current_user, db=None) -> list:
@@ -460,7 +460,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         memos = (
             await RepositoryFactory.get("collaboration_memos")
@@ -496,11 +496,11 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         if access_level not in ["invite_only", "anyone_with_link"]:
             raise HTTPException(
-                status_code=400, detail="The provided document access level configuration is structurally invalid or unsupported"
+                status_code=400, detail="Cấu hình quyền truy cập không hợp lệ"
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$set": {"collab_access_level": access_level}}
@@ -512,7 +512,7 @@ class CollaborationService:
             "The core collaborative access permissions for the environment have been successfully adjusted",
         )
         return {
-            "message": "The global collaborative access permission configurations have been successfully updated",
+            "message": "Cập nhật cấu hình quyền cộng tác thành công",
             "collab_access_level": access_level,
         }
 
@@ -526,7 +526,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         invites = (
             await RepositoryFactory.get("collaboration_invites")
@@ -545,14 +545,14 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="The specified collaboration invitation could not be located or has already been processed by the recipient"
+                status_code=404, detail="Không tìm thấy lời mời cộng tác hoặc đã được xử lý"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="The current account lacks the necessary authorization privileges to revoke this specific invitation"
+                status_code=403, detail="Không có quyền thu hồi lời mời này"
             )
         await RepositoryFactory.get("collaboration_invites").delete_one(
             {"_id": invite_id}
@@ -563,7 +563,7 @@ class CollaborationService:
             "Invitation revoked",
             "The active collaboration invitation token has been securely invalidated by the document owner",
         )
-        return {"message": "The previously dispatched collaborative invitation has been successfully revoked and invalidated"}
+        return {"message": "Thu hồi lời mời cộng tác thành công"}
 
     @staticmethod
     async def get_contribution_stats(document_id: str, current_user, db=None) -> list:
@@ -581,7 +581,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         pipeline = [
             {"$match": {"document_id": document_id}},
@@ -613,7 +613,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         snapshot = {
             "_id": str(uuid7()),
@@ -630,7 +630,7 @@ class CollaborationService:
             "Create draft",
             "A structural milestone snapshot has been permanently recorded in the version control history",
         )
-        return {"message": "A new historical snapshot of the collaborative document has been successfully preserved", "snapshot": snapshot}
+        return {"message": "Lưu lịch sử tài liệu thành công", "snapshot": snapshot}
 
     @staticmethod
     async def get_snapshots(document_id: str, current_user, db=None) -> list:
@@ -648,7 +648,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         drafts = (
             await RepositoryFactory.get("collaboration_drafts")
@@ -686,7 +686,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         cutoff = datetime.now(timezone.utc).timestamp() - 60
         existing = await RepositoryFactory.get("collaboration_locks").find_one(
@@ -702,7 +702,7 @@ class CollaborationService:
             ):
                 raise HTTPException(
                     status_code=400,
-                    detail="The specified document is currently locked for exclusive editorial modification by another active session",
+                    detail="Tài liệu đang bị khóa chỉnh sửa bởi người khác",
                 )
         await RepositoryFactory.get("collaboration_locks").update_one(
             {"document_id": document_id},
@@ -721,7 +721,7 @@ class CollaborationService:
             "Document locked",
             "An exclusive access token has been acquired to prevent overlapping editorial modifications",
         )
-        return {"message": "The exclusive editorial modification lock has been successfully acquired for the current session"}
+        return {"message": "Đã khóa phiên chỉnh sửa"}
 
     @staticmethod
     async def release_lock(document_id: str, current_user, db=None) -> dict:
@@ -740,7 +740,7 @@ class CollaborationService:
                 "Unlock document",
                 "The previously acquired exclusive editorial lock has been safely released back into the available pool",
             )
-        return {"message": "The exclusive editorial modification lock has been successfully released and the session has ended"}
+        return {"message": "Đã mở khóa phiên chỉnh sửa"}
 
     @staticmethod
     async def get_lock_status(document_id: str, db=None) -> dict:
@@ -778,7 +778,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         invite_code = str(uuid7())[:8].upper()
         await RepositoryFactory.get("collaboration_invite_codes").update_one(
@@ -808,17 +808,17 @@ class CollaborationService:
         )
         if not code_entry:
             raise HTTPException(
-                status_code=404, detail="The specified collaboration code could not be verified or has exceeded its expiration window"
+                status_code=404, detail="Mã cộng tác không hợp lệ hoặc đã hết hạn"
             )
         document_id = code_entry["document_id"]
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         if doc.get("creator_id") == str(current_user.id):
-            raise HTTPException(status_code=400, detail="The authentication process has determined that you are already the primary administrative owner of this document")
+            raise HTTPException(status_code=400, detail="Bạn đã là chủ sở hữu của tài liệu này")
         if str(current_user.id) in doc.get("coauthors", []):
             raise HTTPException(
-                status_code=400, detail="The authentication process has determined that you are already an active participant in this collaborative workspace"
+                status_code=400, detail="Bạn đã tham gia cộng tác này"
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id},
@@ -848,7 +848,7 @@ class CollaborationService:
             "The authenticated user has successfully claimed the invitation token and entered the editorial workspace",
         )
         return {
-            "message": "You have successfully joined the collaborative editorial group using the provided access token",
+            "message": "Tham gia nhóm cộng tác thành công",
             "document_id": document_id,
         }
 
@@ -870,7 +870,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         task = {
             "_id": str(uuid7()),
@@ -906,7 +906,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="The specified document could not be located or the current account lacks the required access permissions",
+                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         tasks = (
             await RepositoryFactory.get("collaboration_tasks")
@@ -938,7 +938,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="The requested collaborative editorial task could not be located within the active tracking system")
+            raise HTTPException(status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -950,7 +950,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="The current account lacks the required administrative privileges to modify the specified editorial task"
+                status_code=403, detail="Không có quyền chỉnh sửa nhiệm vụ cộng tác"
             )
         await RepositoryFactory.get("collaboration_tasks").update_one(
             {"_id": task_id}, {"$set": {"is_done": is_done}}
@@ -961,7 +961,7 @@ class CollaborationService:
             "Update task",
             "The execution status of the designated collaborative task has been formally modified",
         )
-        return {"message": "The operational status of the specified editorial collaborative task has been successfully updated"}
+        return {"message": "Cập nhật trạng thái nhiệm vụ cộng tác thành công"}
 
     @staticmethod
     async def add_task_comment(
@@ -973,7 +973,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="The requested collaborative editorial task could not be located within the active tracking system")
+            raise HTTPException(status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -985,7 +985,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="The current account lacks the necessary authorization privileges to participate in this task discussion thread"
+                status_code=403, detail="Không có quyền thảo luận trong nhiệm vụ này"
             )
         comment = {
             "_id": str(uuid7()),
@@ -1005,7 +1005,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="The requested collaborative editorial task could not be located within the active tracking system")
+            raise HTTPException(status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -1017,7 +1017,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="The current account lacks the necessary authorization privileges to participate in this task discussion thread"
+                status_code=403, detail="Không có quyền thảo luận trong nhiệm vụ này"
             )
         comments = (
             await RepositoryFactory.get("collaboration_task_comments")

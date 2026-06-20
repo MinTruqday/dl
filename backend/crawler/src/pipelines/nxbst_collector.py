@@ -79,17 +79,17 @@ class NXBSTStreamState:
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info("The visual capture module has successfully collected a high resolution structural asset")
+                        logger.info("Chụp ảnh màn hình thành công")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception:
-                    logger.error("The internal asset processing loop encountered an unexpected failure while reading the network response body")
+                    logger.error("Lỗi xử lý tài sản nội bộ")
         except Exception:
-            logger.error("The external network interception loop encountered an unexpected issue while analyzing the incoming response stream")
+            logger.error("Lỗi phân tích luồng dữ liệu mạng")
 
     async def process_viewer(self, page):
         try:
-            logger.info("The collection module is actively preparing the document viewer environment for automated reading")
+            logger.info("Đang chuẩn bị môi trường xem tài liệu")
             consecutive_fails = 0
             previous_count = self.page_counter
 
@@ -103,14 +103,14 @@ class NXBSTStreamState:
                     previous_count = self.page_counter
                 else:
                     consecutive_fails += 1
-                    logger.warning("The visual capture module has not detected any new pages and is preparing to automatically retry the navigation sequence")
+                    logger.warning("Không phát hiện trang mới, đang thử lại")
                     await asyncio.sleep(2)
 
                 if consecutive_fails > 6:
-                    logger.info("The automated document scanning sequence has concluded or the secure network connection was safely interrupted")
+                    logger.info("Quá trình quét tài liệu bị gián đoạn")
                     break
         except Exception:
-            logger.error("The automated document reading sequence failed due to an unexpected interaction or synchronization issue")
+            logger.error("Lỗi đồng bộ đọc tài liệu")
 
     async def compile_and_upload(self, title: str, author: str):
         import tempfile
@@ -137,13 +137,13 @@ class NXBSTStreamState:
                     files_by_page["unknown"].append(os.path.join(self.temp_dir, f))
 
         if not files_by_page:
-            logger.warning("The document compilation process has been automatically skipped because no readable content blocks were detected")
+            logger.warning("Bỏ qua quá trình biên dịch do không có nội dung")
             return
 
         images = []
         try:
             sorted_pages = sorted([p for p in files_by_page.keys() if p != "unknown"])
-            logger.info("The rendering engine is synthesizing the collected image fragments into a structured chronological matrix")
+            logger.info("Đang tổng hợp các phân đoạn hình ảnh")
 
             for p in sorted_pages:
                 tiles_dict = files_by_page[p]
@@ -179,7 +179,7 @@ class NXBSTStreamState:
                             Image.open(t).convert("RGB").save(page_path, "JPEG")
                             images.append(page_path)
                 except Exception:
-                    logger.warning("The image stitching algorithm encountered a spatial alignment error while processing a specific document page")
+                    logger.warning("Lỗi căn chỉnh hình ảnh trang")
 
             if "unknown" in files_by_page:
                 for f in sorted(files_by_page["unknown"]):
@@ -190,15 +190,15 @@ class NXBSTStreamState:
                         Image.open(f).convert("RGB").save(page_path, "JPEG")
                         images.append(page_path)
                     except Exception:
-                        logger.error("The image processing engine failed to load an irregular visual block due to format corruption")
+                        logger.error("Lỗi tải hình ảnh do định dạng bị lỗi")
 
             if images:
-                logger.info("The rendering engine is actively compiling the sorted image sequence into a unified portable document format")
+                logger.info("Đang tổng hợp hình ảnh thành tệp PDF")
                 with open(pdf_path, "wb") as f:
                     f.write(img2pdf.convert(images))
-                logger.info("The unified document has been successfully compiled and verified by the rendering engine")
+                logger.info("Biên dịch tài liệu thành công")
 
-            logger.info("The compiled document is being securely transferred to the permanent object storage backend")
+            logger.info("Đang chuyển tài liệu biên dịch vào lưu trữ vĩnh viễn")
             minio_url = await storage.upload_local_file(
                 f"documents/nxbst/{final_pdf_name}", pdf_path
             )
@@ -207,7 +207,7 @@ class NXBSTStreamState:
                 document_metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Extracted via automated collection process",
+                    "description": "Trích xuất tự động thành công",
                     "file_url": minio_url,
                     "tags": ["Nhà Xuất bản Chính trị quốc gia Sự thật", author],
                     "content": None,
@@ -226,7 +226,7 @@ class NXBSTStreamState:
                 os.remove(pdf_path)
 
         except Exception:
-            logger.error("An unexpected system failure occurred during the final document assembly and storage sequence")
+            logger.error("Lỗi đóng gói và lưu trữ tài liệu")
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -238,7 +238,7 @@ class NXBSTCollector:
     @staticmethod
     async def run_list_collector(pages: int = 0):
         start_url = "https://stbook.vn/"
-        logger.info("The system is initializing a comprehensive categorical list scan from the designated primary data source")
+        logger.info("Đang quét danh sách từ nguồn dữ liệu chính")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -258,16 +258,16 @@ class NXBSTCollector:
                     if href and ("/category/" in href or "/chuyen-muc/" in href):
                         category_urls.add(urllib.parse.urljoin(start_url, href))
 
-                logger.info("The categorical indexing process has successfully identified all available subcategory navigational links")
+                logger.info("Phân tích danh mục thành công")
 
                 for cat_url in category_urls:
-                    logger.info("The automated collection bot is navigating into a specific subcategory view to begin the extraction phase")
+                    logger.info("Đang truy cập danh mục con để trích xuất")
                     await page.goto(cat_url, timeout=60000)
                     await asyncio.sleep(3)
 
                     current_page = 1
                     while True:
-                        logger.info("The collection bot is systematically scanning the current categorical page for nested document references")
+                        logger.info("Đang quét danh mục để tìm liên kết tài liệu")
 
                         document_nodes_css = (
                             '#main a[href*="store_detail"], #main a[href*="/sach/"]'
@@ -289,10 +289,10 @@ class NXBSTCollector:
                                     )
                                     await dedup.mark_collected("nxbst_url", full_url)
 
-                        logger.info("The newly discovered structural document references have been securely added to the processing queue")
+                        logger.info("Thêm tài liệu vào hàng đợi thành công")
 
                         if current_page >= pages:
-                            logger.info("The collection process has successfully reached the maximum designated page boundary for the active category")
+                            logger.info("Đạt giới hạn số trang thu thập cho danh mục")
                             break
 
                         next_page_idx = current_page + 1
@@ -309,12 +309,12 @@ class NXBSTCollector:
                         except Exception:
                             break
             except Exception:
-                logger.error("The systematic list scanning process encountered a critical failure and could not retrieve the required navigational details")
+                logger.error("Lỗi quét danh sách trang")
                 raise
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info("The collection bot is currently extracting the comprehensive metadata profile for the targeted document")
+        logger.info("Đang trích xuất thông tin tài liệu")
         state_manager = NXBSTStreamState()
 
         async with managed_browser() as browser:
@@ -339,7 +339,7 @@ class NXBSTCollector:
                 author_el = await page.query_selector("#detail .author a")
                 raw_author = await author_el.inner_text() if author_el else "Unknown"
 
-                logger.info("The extraction sequence has successfully identified the primary document metadata and is proceeding to the download phase")
+                logger.info("Trích xuất dữ liệu thành công, đang tải xuống")
 
                 read_btn_css = (
                     '#whatchNow, a:has-text("Read Book"), a:has-text("View Now")'
@@ -347,7 +347,7 @@ class NXBSTCollector:
                 read_btn = await page.query_selector(read_btn_css)
 
                 if read_btn:
-                    logger.info("A valid reading mechanism has been detected so the system is preparing the environment for active content collection")
+                    logger.info("Đang chuẩn bị môi trường thu thập nội dung")
 
                     import tempfile
 
@@ -358,7 +358,7 @@ class NXBSTCollector:
                     state_manager.captured_hashes = set()
                     state_manager.page_counter = 0
 
-                    logger.info("The network interception module has been successfully initialized and is actively monitoring the incoming data stream")
+                    logger.info("Khởi tạo bộ lọc mạng thành công")
                     state_manager.is_capturing = True
 
                     await read_btn.click()
@@ -370,7 +370,7 @@ class NXBSTCollector:
 
                     await state_manager.compile_and_upload(raw_title, raw_author)
                 else:
-                    logger.warning("The required reading access mechanism could not be identified within the active document viewer structure")
+                    logger.warning("Không tìm thấy cấu trúc quyền truy cập")
             except Exception:
-                logger.error("An unexpected structural or synchronization error occurred while attempting to intercept the document viewing stream")
+                logger.error("Lỗi đồng bộ luồng xem tài liệu")
                 raise

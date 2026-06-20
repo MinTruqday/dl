@@ -8,15 +8,15 @@ from src.core.prompt_registry import PromptType, prompt_registry
 from src.utils.hf import HFInferenceChat
 
 class RouteDecision(BaseModel):
-    reasoning: str = Field(description="Step-by-step reasoning")
-    route: Literal["action", "knowledge", "chat"] = Field(description="The chosen route: 'action', 'knowledge', or 'chat'")
-    answer: str = Field(default="", description="Direct response if route is 'chat', else empty string")
+    reasoning: str = Field(description="Quá trình suy luận từng bước")
+    route: Literal["action", "knowledge", "chat"] = Field(description="Định tuyến được chọn: hành động, kiến thức, hoặc trò chuyện")
+    answer: str = Field(default="", description="Trả về chuỗi rỗng nếu không phải chat")
 
 class SemanticRouter:
     def __init__(self):
         llama_model = settings.LLAMA_MODEL
         if not llama_model:
-            raise ValueError("The language model configuration is currently missing from the system settings")
+            raise ValueError("Thiếu cấu hình mô hình ngôn ngữ")
 
         self.llama_client = AsyncInferenceClient(
             model=settings.LLAMA_MODEL,
@@ -42,7 +42,7 @@ class SemanticRouter:
             return {"route": route, "answer": res.answer}
 
         except Exception:
-            logger.exception("The semantic routing process failed due to an unexpected system exception")
+            logger.exception("Lỗi điều hướng ngữ nghĩa")
             return {"route": "knowledge", "answer": ""}
 
 semantic_router = SemanticRouter()

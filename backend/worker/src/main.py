@@ -13,7 +13,7 @@ redis_client = redis.from_url(settings.REDIS_URI, decode_responses=True)
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
-        status_code=503, content={"detail": "The service is currently experiencing technical difficulties so please attempt your request again later"}
+        status_code=503, content={"detail": "Lỗi dịch vụ, vui lòng thử lại sau"}
     )
 
 
@@ -27,9 +27,9 @@ async def read_health():
 def compile_document(payload: dict):
     doc_id = payload.get("document_id")
     if not doc_id:
-        raise HTTPException(status_code=400, detail="A valid document identifier must be provided in the request payload to proceed with the compilation process")
+        raise HTTPException(status_code=400, detail="Thiếu mã tài liệu hợp lệ để biên dịch")
 
     from src.tasks import compile_document_tectonic
 
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
-    return {"message": "Your document has been successfully added to the background processing queue", "task_id": task.id}
+    return {"message": "Đã thêm tài liệu vào hàng đợi", "task_id": task.id}

@@ -27,7 +27,7 @@ try:
     nli_model = CrossEncoder(nli_model_name)
 except Exception:
     nli_model = None
-    logger.error("The system was unable to load the natural language processing model during initialization")
+    logger.error("Lỗi tải mô hình ngôn ngữ")
 
 
 try:
@@ -42,9 +42,9 @@ try:
     langchain.llm_cache = RedisSemanticCache(
         redis_url=redis_url, embedding=embedding_service
     )
-    logger.info("The high speed semantic caching datastore was successfully initialized and enabled")
+    logger.info("Khởi tạo bộ nhớ đệm ngữ nghĩa thành công")
 except Exception as e:
-    logger.warning(f"Cache initialization failed: {e}")
+    logger.warning("Lỗi khởi tạo bộ nhớ đệm")
 
 from huggingface_hub import AsyncInferenceClient
 from src.utils.hf import HFInferenceChat
@@ -64,27 +64,27 @@ try:
         client=_fallback_client, model=settings.FALLBACK_MODEL
     )
     llm = llm.with_fallbacks([_fallback_llm])
-    logger.info("The language model fallback sequence was successfully established to ensure high availability")
+    logger.info("Thiết lập dự phòng mô hình ngôn ngữ thành công")
 except Exception:
-    logger.warning("The system was unable to configure the language model fallback mechanism")
+    logger.warning("Lỗi cấu hình mô hình ngôn ngữ thay thế")
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
 class ContextQuery(BaseModel):
-    question: str = Field(description="The standalone reformulated question")
+    question: str = Field(description="Câu hỏi đã được viết lại")
 
 class GraphRoute(BaseModel):
-    route: Literal["rag", "direct"] = Field(description="The route to take: 'rag' or 'direct'")
+    route: Literal["rag", "direct"] = Field(description="Tuyến đường: 'rag' hoặc 'trực tiếp'")
 
 class RetrievalStrategy(BaseModel):
-    is_simple: bool = Field(description="True if the question is simple, False if it needs sub-queries")
-    queries: List[str] = Field(description="List of optimized search queries, empty if simple")
+    is_simple: bool = Field(description="Đúng nếu câu hỏi đơn giản, Sai nếu cần truy vấn phụ")
+    queries: List[str] = Field(description="Danh sách truy vấn tìm kiếm tối ưu")
 
 class QueryOptimization(BaseModel):
-    question: str = Field(description="The optimized search query")
+    question: str = Field(description="Lệnh tìm kiếm tối ưu")
 
 class DocumentGrade(BaseModel):
-    is_relevant: bool = Field(description="True if the document is relevant to the question, False otherwise")
+    is_relevant: bool = Field(description="Tài liệu có liên quan đến câu hỏi hay không")
 
 
 async def contextualize_question(state: AgentState):
@@ -105,7 +105,7 @@ async def contextualize_question(state: AgentState):
         response = await structured_llm.ainvoke(prompt.format(history=history_str, question=question))
         return {"question": response.question}
     except Exception:
-        logger.error("The system encountered an unexpected error during the context processing phase")
+        logger.error("Lỗi xử lý ngữ cảnh")
         return {"question": question}
 
 
@@ -121,7 +121,7 @@ async def route_question(state: AgentState):
         response = await structured_llm.ainvoke(prompt.format(question=question))
         return {"current_source": "db", "route": response.route}
     except Exception:
-        logger.error("The system encountered a routing failure while determining the appropriate execution path")
+        logger.error("Lỗi điều hướng")
         return {"current_source": "db", "route": "rag"}
 
 
@@ -151,7 +151,7 @@ async def retrieve_db(state: AgentState):
     document_ids = state.get("document_ids", [])
 
     if document_ids and len(document_ids) >= 2:
-        logger.info("The system is currently utilizing linked retrieval to process the requested documents")
+        logger.info("Đang xử lý tài liệu bằng truy xuất liên kết")
         try:
             raw_documents = await retrieval_service.cross_document_retrieve(
                 question, document_ids, k=6
@@ -165,7 +165,7 @@ async def retrieve_db(state: AgentState):
                 )
             return {"documents": list(set(extracted_documents)), "current_source": "db"}
         except Exception:
-            logger.error("The system failed to retrieve information across multiple connected documents")
+            logger.error("Lỗi truy xuất tài liệu liên kết")
 
     from src.core.prompt_registry import PromptType, prompt_registry
 
@@ -180,7 +180,7 @@ async def retrieve_db(state: AgentState):
         if not response.is_simple and response.queries:
             queries.extend(response.queries)
     except Exception:
-        logger.error("The system encountered a failure while generating the optimal retrieval strategy")
+        logger.error("Lỗi tạo chiến lược truy xuất tối ưu")
 
     extracted_documents = []
     
@@ -197,7 +197,7 @@ async def retrieve_db(state: AgentState):
                 doc["_query"] = q
                 all_raw_documents.append(doc)
         except Exception:
-            logger.error("The search engine encountered an unexpected failure during the vector similarity search")
+            logger.error("Lỗi tìm kiếm tương đồng vector")
 
     if all_raw_documents:
         if reranker:
@@ -210,7 +210,7 @@ async def retrieve_db(state: AgentState):
                     [doc for doc, score in scored_documents[:6]]
                 )[:3]
             except Exception:
-                logger.error("The system encountered an issue while attempting to reorder the search results using the ranking model")
+                logger.error("Lỗi sắp xếp kết quả tìm kiếm bằng mô hình xếp hạng")
                 top_documents = all_raw_documents[:3]
         else:
             top_documents = all_raw_documents[:3]
@@ -236,7 +236,7 @@ async def retrieve_internet(state: AgentState):
             "current_source": "internet",
         }
     except Exception:
-        logger.error("The web search module encountered an unexpected failure during information retrieval")
+        logger.error("Lỗi tìm kiếm trên web")
         return {"documents": [], "current_source": "internet"}
 
 
@@ -259,7 +259,7 @@ async def grade_documents(state: AgentState):
             if response.is_relevant:
                 filtered_documents.append(d)
         except Exception:
-            logger.error("The document evaluation module encountered an error while assessing relevance")
+            logger.error("Lỗi đánh giá mức độ liên quan của tài liệu")
             filtered_documents.append(d)
     return {"documents": filtered_documents}
 
@@ -289,7 +289,7 @@ async def transform_query(state: AgentState):
             "current_source": "db",
         }
     except Exception:
-        logger.error("The system encountered an issue while attempting to optimize the search query")
+        logger.error("Lỗi tối ưu lệnh tìm kiếm")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
 
@@ -303,7 +303,7 @@ async def generate_direct(state: AgentState):
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
     except Exception:
-        logger.error("The system failed to generate a direct response due to an internal processing error")
+        logger.error("Lỗi tạo phản hồi trực tiếp do lỗi hệ thống")
         return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
 
 
@@ -360,7 +360,7 @@ async def generate(state: AgentState):
         )
         return {"generation": generation}
     except Exception:
-        logger.error("The system encountered an unexpected failure during the content generation process")
+        logger.error("Lỗi tạo nội dung tài liệu")
         return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
 
 
@@ -394,7 +394,7 @@ async def grade_generation(state: AgentState):
 
         return {"hallucination_pass": "no" if is_hallucination else "yes"}
     except Exception:
-        logger.exception("The evaluation module encountered an error while grading the generated content")
+        logger.exception("Lỗi đánh giá nội dung tạo ra")
         return {"hallucination_pass": "yes"}
 
 

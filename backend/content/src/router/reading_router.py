@@ -25,7 +25,7 @@ async def get_history(
         data=await ReadingService.get_reading_history(
             current_user, cursor, limit, db=db
         ),
-        message="Your personal reading history has been successfully retrieved from the system records",
+        message="Lấy lịch sử đọc thành công",
     )
 
 
@@ -37,7 +37,7 @@ async def update_progress(
 ):
     return APIResponse(
         data=await ReadingService.update_progress(data, current_user, db=db),
-        message="Your current reading progress has been successfully synchronized and updated",
+        message="Đồng bộ tiến độ đọc thành công",
     )
 
 
@@ -52,7 +52,7 @@ async def search_in_document(
         data=await ReadingService.search_in_document(
             document_id, q, current_user, db=db
         ),
-        message="The search operation within the document content has been successfully executed",
+        message="Tìm kiếm trong tài liệu thành công",
     )
 
 
@@ -62,7 +62,7 @@ async def clear_reading_history(
 ):
     return APIResponse(
         data=await ReadingService.clear_reading_history(current_user, db=db),
-        message="Your entire reading history has been successfully and permanently cleared",
+        message="Xóa toàn bộ lịch sử đọc thành công",
     )
 
 
@@ -74,7 +74,7 @@ async def delete_history_item(
 ):
     return APIResponse(
         data=await ReadingService.delete_history_item(document_id, current_user, db=db),
-        message="The specified reading history entry has been successfully removed from your account",
+        message="Xóa lịch sử đọc thành công",
     )
 
 
@@ -91,17 +91,17 @@ from fastapi import HTTPException
 def validate_url_ssrf(url: str):
     parsed = urlparse(url)
     if not parsed.hostname:
-        raise HTTPException(status_code=400, detail="The requested file path is structurally invalid and cannot be processed by the system")
+        raise HTTPException(status_code=400, detail="Đường dẫn tệp không hợp lệ")
     try:
         ip = socket.gethostbyname(parsed.hostname)
         ip_obj = ipaddress.ip_address(ip)
         if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
             raise HTTPException(
                 status_code=403,
-                detail="The domain resolves to a restricted internal network address and cannot be accessed due to security policies",
+                detail="Không thể truy cập tên miền nội bộ",
             )
     except socket.gaierror:
-        raise HTTPException(status_code=400, detail="The system was unable to successfully resolve the provided domain name")
+        raise HTTPException(status_code=400, detail="Lỗi phân giải tên miền")
 
 
 def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
@@ -136,15 +136,15 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
                                         "size": info.file_size,
                                     }
                                 )
-                        return APIResponse(data=tree, message="The hierarchical directory structure has been successfully extracted and retrieved")
+                        return APIResponse(data=tree, message="Lấy cấu trúc thư mục thành công")
                 else:
                     return APIResponse(
-                        data=None, message="The requested file is currently unavailable or cannot be accessed from the remote server", status=400
+                        data=None, message="Tệp tin không khả dụng từ máy chủ", status=400
                     )
     except HTTPException as he:
         raise he
     except Exception:
-        return APIResponse(data=None, message="The system encountered an unexpected failure while attempting to retrieve the hierarchical directory structure", status=500)
+        return APIResponse(data=None, message="Lỗi tải cấu trúc thư mục", status=500)
 
 
 @router.get("/archive/content", response_model=APIResponse[Any])
@@ -163,7 +163,7 @@ async def get_zip_content(
                             if not is_safe_zip_info(info):
                                 return APIResponse(
                                     data=None,
-                                    message="The requested file has been flagged by the security system as potentially unsafe and cannot be accessed",
+                                    message="Tệp bị đánh dấu không an toàn",
                                     status=403,
                                 )
                             file_bytes = z.read(path)
@@ -171,7 +171,7 @@ async def get_zip_content(
                                 text = file_bytes.decode("utf-8")
                                 return APIResponse(
                                     data={"content": text, "type": "text"},
-                                    message="The contents of the requested file have been successfully extracted and retrieved",
+                                    message="Trích xuất nội dung tệp thành công",
                                 )
                             except UnicodeDecodeError:
                                 return APIResponse(
@@ -179,12 +179,12 @@ async def get_zip_content(
                                         "content": "Binary files do not support direct viewing",
                                         "type": "binary",
                                     },
-                                    message="The requested file contains binary data and does not support direct text viewing capabilities",
+                                    message="Không thể xem trực tiếp tệp nhị phân",
                                 )
                         return APIResponse(
-                            data=None, message="The specified file could not be located within the compressed archive", status=404
+                            data=None, message="Không tìm thấy tệp trong thư mục nén", status=404
                         )
     except HTTPException as he:
         raise he
     except Exception:
-        return APIResponse(data=None, message="The system encountered an unexpected structural error while attempting to process the requested archive file", status=500)
+        return APIResponse(data=None, message="Lỗi xử lý tệp nén", status=500)

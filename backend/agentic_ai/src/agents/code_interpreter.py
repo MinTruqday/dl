@@ -13,7 +13,7 @@ class CodeInterpreter:
         pass
 
     async def execute(self, task_desc: str) -> str:
-        logger.info("Processing the requested task via the secure execution environment")
+        logger.info("Đang xử lý tác vụ")
 
         try:
             from src.agents.planning import llm
@@ -127,7 +127,7 @@ class CodeInterpreter:
 
             return final_res
         except Exception:
-            logger.error("The execution process failed due to an unexpected internal system error")
+            logger.error("Lỗi thực thi hệ thống nội bộ")
             return "The system encountered an unexpected error during execution and requires you to try again later"
 
 

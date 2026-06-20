@@ -19,7 +19,7 @@ async def check_quota_internal(
     db=Depends(get_db),
 ):
     limits = await QuotaService.check_quota(user_id, role, ai_tier, feature, db=db)
-    return APIResponse(data=limits.model_dump(), message="The requested operation is within the allowed usage quota limits for this account tier", status=200)
+    return APIResponse(data=limits.model_dump(), message="Thao tác nằm trong giới hạn sử dụng cho phép", status=200)
 
 
 @router.get("/me", response_model=APIResponse[Any])
@@ -29,7 +29,7 @@ async def get_my_quota(
     usage = await QuotaService.get_current_usage(
         str(current_user.id), current_user.role.value, current_user.ai_tier.value, db=db
     )
-    return APIResponse(data=usage, message="The current resource usage quota information has been successfully retrieved")
+    return APIResponse(data=usage, message="Lấy thông tin hạn mức sử dụng thành công")
 
 
 @router.put("/{role}/config", response_model=APIResponse[Any])
@@ -42,7 +42,7 @@ async def update_role_quota(
     await QuotaService.update_role_quota(role, limits.model_dump(), db=db)
     return APIResponse(
         data={},
-        message="The global resource quota configuration has been successfully updated and applied",
+        message="Cập nhật giới hạn tài nguyên hệ thống thành công",
     )
 
 
@@ -53,7 +53,7 @@ async def get_global_config(
     global_cfg = await QuotaService.get_global_config_from_db(db=db)
     return APIResponse(
         data=global_cfg,
-        message="The global resource quota configuration settings have been successfully retrieved",
+        message="Lấy cấu hình tài nguyên hệ thống thành công",
     )
 
 
@@ -76,4 +76,4 @@ async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
         await QuotaService.consume_tokens(
             req.user_id, req.tokens, req.feature, req.req_reset_hours, db=db
         )
-    return APIResponse(data=None, message="The requested amount of resource quota has been successfully consumed from the allocated limits", status=200)
+    return APIResponse(data=None, message="Sử dụng dung lượng tài nguyên thành công", status=200)

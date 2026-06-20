@@ -22,7 +22,7 @@ def with_retry(max_retries=3, base_wait=2, max_wait=10):
                     with attempt:
                         return await func(*args, **kwargs)
             except Exception as e:
-                logger.exception(f"Operation failed permanently after {max_retries} retry attempts")
+                logger.exception("Thao tác thất bại sau nhiều lần thử lại")
                 raise e
         return wrapper
     return decorator

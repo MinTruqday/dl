@@ -27,7 +27,7 @@ app.include_router(passkey_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("The security and authentication service has been initialized successfully and is ready to accept incoming connections")
+    logger.info("Dịch vụ xác thực đã sẵn sàng")
     await init_db()
 
 

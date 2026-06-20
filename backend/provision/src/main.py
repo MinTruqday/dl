@@ -37,7 +37,7 @@ app.include_router(banner_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("The provision service has been successfully initialized and is now ready to process incoming requests")
+    logger.info("Dịch vụ cung cấp đã sẵn sàng")
     await init_db()
 
 

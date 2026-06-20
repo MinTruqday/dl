@@ -28,7 +28,7 @@ async def create_folder(
     item = await StorageService.create_item(data, current_user.id, db=db)
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="The new structural storage folder has been successfully created within your workspace",
+        message="Tạo thư mục mới thành công",
         status=201,
     )
 
@@ -51,7 +51,7 @@ async def create_file(
     )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="The new file has been successfully uploaded and registered in your personal storage workspace",
+        message="Tải lên tệp tin cá nhân thành công",
         status=201,
     )
 
@@ -71,7 +71,7 @@ async def list_items(
     )
     response_items = [StorageItemResponse(**item.dict()) for item in items]
     return APIResponse(
-        data=response_items, message="The requested directory contents have been successfully retrieved from your storage workspace", status=200
+        data=response_items, message="Lấy nội dung thư mục thành công", status=200
     )
 
 
@@ -87,7 +87,7 @@ async def search_items(
     items = await StorageService.search_items(q, current_user.id, type, db=db)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
-        message="The search operation has been successfully completed and the matching files are returned",
+        message="Tìm kiếm thành công",
         status=200,
     )
 
@@ -103,7 +103,7 @@ async def get_recent_items(
     items = await StorageService.get_recent_items(current_user.id, limit, db=db)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
-        message="The list of recently accessed storage items has been successfully compiled and retrieved",
+        message="Lấy danh sách tệp truy cập gần đây thành công",
         status=200,
     )
 
@@ -116,7 +116,7 @@ async def get_storage_quota(
     db=Depends(get_db),
 ):
     data = await StorageService.get_storage_quota(current_user.id, db=db)
-    return APIResponse(data=data, message="Your personal storage quota and utilization metrics have been successfully calculated", status=200)
+    return APIResponse(data=data, message="Cập nhật dung lượng lưu trữ thành công", status=200)
 
 
 @router.post(
@@ -134,9 +134,9 @@ async def create_shortcut(
         item_id, target_parent_id, current_user.id, db=db
     )
     if not item:
-        raise HTTPException(status_code=404, detail="The system was unable to locate the specified original file to create a shortcut")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp gốc để tạo lối tắt")
     return APIResponse(
-        data=StorageItemResponse(**item.dict()), message="A navigational shortcut to the specified file has been successfully created", status=201
+        data=StorageItemResponse(**item.dict()), message="Tạo lối tắt tệp thành công", status=201
     )
 
 
@@ -157,7 +157,7 @@ async def download_zip(
 
     item_ids = [i.strip() for i in ids.split(",") if i.strip()]
     if not item_ids:
-        raise HTTPException(status_code=400, detail="The archive generation request was rejected because no files were specified for download")
+        raise HTTPException(status_code=400, detail="Lỗi tạo tệp nén do không có tệp nào được chọn")
     zip_buffer = io.BytesIO()
     async with await get_storage_client() as storage_client:
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
@@ -171,7 +171,7 @@ async def download_zip(
                         file_data = await resp["Body"].read()
                         zip_file.writestr(item.name, file_data)
                     except Exception:
-                        logger.warning("The system encountered an unexpected disruption while attempting to retrieve a file for the archive package")
+                        logger.warning("Lỗi tải tệp nén")
     zip_buffer.seek(0)
     return StreamingResponse(
         zip_buffer,
@@ -207,11 +207,11 @@ async def update_item(
         item = await StorageService.update_item(item_id, current_user.id, data, db=db)
     if not item:
         raise HTTPException(
-            status_code=404, detail="The system was unable to locate the specified file or folder within your storage workspace"
+            status_code=404, detail="Không tìm thấy tệp hoặc thư mục"
         )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="The metadata associated with the specified storage item has been successfully updated",
+        message="Cập nhật dữ liệu tệp lưu trữ thành công",
         status=200,
     )
 
@@ -229,18 +229,18 @@ async def delete_item(
         success = await StorageService.delete_item(item_id, current_user.id, db=db)
         if not success:
             raise HTTPException(
-                status_code=404, detail="The system was unable to locate the specified file or folder within your storage workspace"
+                status_code=404, detail="Không tìm thấy tệp hoặc thư mục"
             )
-        return APIResponse(data=None, message="The specified storage item has been permanently and irreversibly removed from the system", status=200)
+        return APIResponse(data=None, message="Đã xóa vĩnh viễn dữ liệu lưu trữ", status=200)
     else:
         item = await StorageService.update_item(
             item_id, current_user.id, StorageItemUpdate(is_trashed=True), db=db
         )
         if not item:
             raise HTTPException(
-                status_code=404, detail="The system was unable to locate the specified file or folder within your storage workspace"
+                status_code=404, detail="Không tìm thấy tệp hoặc thư mục"
             )
-        return APIResponse(data=None, message="The specified storage item has been successfully moved to the temporary trash bin", status=200)
+        return APIResponse(data=None, message="Đã chuyển mục vào thùng rác", status=200)
 
 
 @router.post(
@@ -259,10 +259,10 @@ async def copy_item(
     )
     if not item:
         raise HTTPException(
-            status_code=404, detail="The system was unable to locate the specified file within your storage workspace"
+            status_code=404, detail="Không tìm thấy tệp tin"
         )
     return APIResponse(
-        data=StorageItemResponse(**item.dict()), message="The specified storage item has been successfully duplicated to the requested destination", status=201
+        data=StorageItemResponse(**item.dict()), message="Sao chép tệp thành công", status=201
     )
 
 
@@ -280,10 +280,10 @@ async def add_version(
 ):
     item = await StorageService.add_version(item_id, current_user.id, url, size, db=db)
     if not item:
-        raise HTTPException(status_code=404, detail="The system was unable to locate the specified file within your storage workspace")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="The new version of the specified file has been successfully uploaded and recorded",
+        message="Cập nhật phiên bản mới thành công",
         status=200,
     )
 
@@ -306,9 +306,9 @@ async def share_archive(
 async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageService.get_public_item(share_token, db=db)
     if not item:
-        raise HTTPException(status_code=404, detail="The provided public sharing link is either structurally invalid or has expired")
+        raise HTTPException(status_code=404, detail="Liên kết chia sẻ không hợp lệ hoặc đã hết hạn")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="The details of the publicly shared file have been successfully retrieved",
+        message="Lấy thông tin tệp chia sẻ thành công",
         status=200,
     )

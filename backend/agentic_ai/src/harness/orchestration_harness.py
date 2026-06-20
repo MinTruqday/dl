@@ -30,7 +30,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("The system circuit breaker was triggered due to multiple consecutive operational failures")
+            logger.error("Hệ thống bị ngắt do lỗi liên tục")
 
     def record_success(self):
         self._failures = 0
@@ -41,7 +41,7 @@ class CircuitBreaker:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info("The system circuit breaker is being reset to restore normal operational flow")
+            logger.info("Hệ thống đang khôi phục hoạt động")
             self._tripped_at = None
             self._failures = 0
             return False
@@ -82,61 +82,61 @@ class OrchestrationHarness:
         session_id: str,
     ) -> AsyncGenerator[dict, None]:
         if self._circuit_breaker.is_open():
-            logger.error("The orchestration system temporarily paused the request to prevent system overload")
+            logger.error("Hệ thống tạm dừng yêu cầu để chống quá tải")
             yield {
                 "type": "error",
-                "message": "The system is currently experiencing heavy load and requires you to try again after a short waiting period",
+                "message": "Hệ thống đang quá tải, vui lòng thử lại sau",
             }
             return
 
         self._open_session(session_id)
-        logger.info("The orchestration module successfully initialized the execution session")
+        logger.info("Khởi tạo phiên làm việc thành công")
 
         try:
             async with asyncio.timeout(SESSION_HARD_TIMEOUT_SECONDS):
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
-                        logger.info("The active execution session was forcibly terminated by the orchestration module")
-                        yield {"type": "error", "message": "The execution session was cancelled and cannot proceed further"}
+                        logger.info("Hệ thống điều phối đã bắt buộc dừng phiên làm việc")
+                        yield {"type": "error", "message": "Phiên làm việc đã bị hủy"}
                         return
                     yield event
 
             self._close_session(session_id, "done")
             self._circuit_breaker.record_success()
-            logger.info("The execution session completed all operations successfully without any errors")
+            logger.info("Phiên làm việc hoàn thành không có lỗi")
 
         except asyncio.TimeoutError:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.error("The execution session exceeded the maximum allowed processing time and was terminated")
+            logger.error("Quá thời gian thực thi, phiên làm việc bị hủy")
             yield {
                 "type": "error",
-                "message": "The request exceeded the maximum allowed processing time limit and was terminated",
+                "message": "Quá thời gian xử lý yêu cầu",
             }
 
         except asyncio.CancelledError:
             self._close_session(session_id, "cancelled")
-            logger.warning("The orchestration module detected a cancellation signal and aborted the session")
+            logger.warning("Đã hủy phiên làm việc")
             yield {
                 "type": "error",
-                "message": "The session was terminated prematurely due to a loss of connection with the client",
+                "message": "Mất kết nối",
             }
 
         except Exception:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.error("The orchestration module encountered an unexpected failure during the session execution")
+            logger.error("Lỗi điều phối phiên làm việc")
             yield {
                 "type": "error",
-                "message": "The system encountered an unexpected error during the orchestration phase and requires you to try again later",
+                "message": "Lỗi hệ thống điều phối, vui lòng thử lại sau",
             }
 
     def cancel_session(self, session_id: str):
         state = self._sessions.get(session_id)
         if state:
             state.status = "cancelled"
-            logger.info("The orchestration module received and processed a request to cancel the active session")
+            logger.info("Đã hủy phiên làm việc theo yêu cầu")
 
     def get_active_sessions(self) -> list[str]:
         return list(self._sessions.keys())

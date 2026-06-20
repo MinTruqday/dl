@@ -49,7 +49,7 @@ class ToolHarness:
             max_retries=max_retries,
             is_async=is_async,
         )
-        logger.info("The requested artificial intelligence utility was successfully registered into the system operations registry")
+        logger.info("Đăng ký dịch vụ AI thành công")
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry
@@ -63,7 +63,7 @@ class ToolHarness:
     ) -> ToolResult:
         definition = self._registry.get(tool_name)
         if not definition:
-            logger.error("The requested operation could not proceed because the specified utility is not registered within the system")
+            logger.error("Tiện ích này chưa được đăng ký trong hệ thống")
             return ToolResult(
                 success=False, data=None, error="The requested utility is currently not registered or unavailable in the system"
             )
@@ -86,7 +86,7 @@ class ToolHarness:
                     )
 
                 duration_ms = int((time.monotonic() - start_ms) * 1000)
-                logger.info("The selected artificial intelligence utility completed its execution successfully and returned the expected results")
+                logger.info("Thực thi tác vụ AI thành công")
                 return ToolResult(
                     success=True,
                     data=result_data,
@@ -96,18 +96,18 @@ class ToolHarness:
 
             except asyncio.TimeoutError:
                 last_error = "The execution of the utility exceeded the maximum allowed processing time and was forcefully terminated"
-                logger.warning("The artificial intelligence utility failed to respond within the expected timeframe and was aborted")
+                logger.warning("Trí tuệ nhân tạo không phản hồi")
 
             except Exception:
                 last_error = "The utility encountered an unexpected internal exception during its execution phase"
-                logger.warning("The artificial intelligence utility encountered a processing error and could not complete the assigned task")
+                logger.warning("Lỗi thực thi tác vụ AI")
 
             if attempt <= definition.max_retries:
                 delay = RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1))
                 await asyncio.sleep(delay)
 
         duration_ms = int((time.monotonic() - start_ms) * 1000)
-        logger.error("The artificial intelligence utility failed to execute successfully after exhausting all available retry attempts")
+        logger.error("Tiện ích AI không thể thực thi")
         return ToolResult(
             success=False,
             data=None,

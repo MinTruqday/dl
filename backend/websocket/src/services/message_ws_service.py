@@ -53,7 +53,7 @@ class MessageConnectionManager:
         except asyncio.CancelledError:
             pass
         except Exception:
-            logger.error("The background task failed to listen to incoming broadcast signals due to an unexpected connection interruption with the message broker")
+            logger.error("Lỗi kết nối nhận tín hiệu tin nhắn nền")
             self._listener_task = None
 
     async def connect(self, user_id: str, websocket: WebSocket):

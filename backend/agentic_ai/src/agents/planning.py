@@ -30,7 +30,7 @@ class Planning:
         return await self.llm.ainvoke(messages)
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
-        logger.info("Generating execution plan")
+        logger.info("Đang lập kế hoạch thực thi")
 
         from src.core.prompt_registry import PromptType, prompt_registry
         system_prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM)
@@ -66,7 +66,7 @@ class Planning:
             return steps
 
         except Exception:
-            logger.exception("Plan generation failed")
+            logger.exception("Lỗi tạo kế hoạch")
             return [{"agent": "Knowledge", "task": "Inform user of analysis failure"}]
 
 planning = Planning()

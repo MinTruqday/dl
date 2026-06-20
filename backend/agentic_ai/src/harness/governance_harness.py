@@ -83,7 +83,7 @@ class GovernanceHarness:
             role=role,
         )
         logger.info(
-            "The governance module successfully initialized and opened a new managed session"
+            "Khởi tạo phiên quản lý thành công"
         )
 
     def close_session(self, session_id: str):
@@ -101,7 +101,7 @@ class GovernanceHarness:
 
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
             logger.warning(
-                "The security governance system blocked an operation due to an insufficient permission level"
+                "Hệ thống chặn thao tác do không đủ quyền hạn"
             )
             return PolicyDecision(
                 allowed=False,
@@ -114,7 +114,7 @@ class GovernanceHarness:
             and tool_name not in policy["allowed_tools"]
         ):
             logger.warning(
-                "The security governance system blocked an operation due to an insufficient permission level"
+                "Hệ thống chặn thao tác do không đủ quyền hạn"
             )
             return PolicyDecision(
                 allowed=False,
@@ -125,7 +125,7 @@ class GovernanceHarness:
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
             logger.warning(
-                "The security governance system blocked an operation due to exceeding the maximum allowed usage limit"
+                "Hệ thống chặn thao tác do vượt quá giới hạn sử dụng"
             )
             return PolicyDecision(
                 allowed=False,
@@ -148,7 +148,7 @@ class GovernanceHarness:
         max_steps = policy["max_plan_steps"]
         if max_steps != -1 and num_steps > max_steps:
             logger.warning(
-                "The governance module blocked the request because it exceeded the maximum allowed planning steps"
+                "Vượt quá giới hạn số bước lập kế hoạch"
             )
             return PolicyDecision(
                 allowed=False,
@@ -169,7 +169,7 @@ class GovernanceHarness:
             and (state.estimated_tokens_used + additional_tokens) > max_tokens
         ):
             logger.warning(
-                "The governance module blocked the request due to exceeding the allocated token processing budget"
+                "Vượt quá giới hạn xử lý token"
             )
             return PolicyDecision(
                 allowed=False,

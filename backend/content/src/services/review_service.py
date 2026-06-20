@@ -25,7 +25,7 @@ class ReviewService:
             },
             upsert=True,
         )
-        logger.info("The authenticated user has successfully submitted a formal rating for the specified digital document")
+        logger.info("Đã gửi đánh giá tài liệu")
         return {"status": "success"}
 
     @staticmethod
@@ -53,9 +53,9 @@ class ReviewService:
         }
         await RepositoryFactory.get("typo_reports").insert_one(report)
         logger.info(
-            "An editorial typo report has been successfully registered by the user for administrative correction"
+            "Ghi nhận báo cáo lỗi chính tả thành công"
         )
-        return {"message": "Your editorial contribution has been successfully submitted and recorded"}
+        return {"message": "Ghi nhận đóng góp cộng tác thành công"}
 
     @staticmethod
     async def get_typo_reports(document_id: str, current_user, db=None) -> list:
@@ -108,7 +108,7 @@ class ReviewService:
             upsert=True,
         )
         logger.info(
-            "A comprehensive review and rating assessment has been successfully attached to the targeted document"
+            "Thêm đánh giá và xếp hạng tài liệu thành công"
         )
         return review_item
 
@@ -153,5 +153,5 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("reports").insert_one(report)
-        logger.info("A content violation report has been successfully registered by the system for immediate review")
-        return {"message": "The content violation report has been successfully submitted for administrative moderation"}
+        logger.info("Ghi nhận báo cáo vi phạm thành công")
+        return {"message": "Gửi báo cáo vi phạm thành công"}

@@ -32,8 +32,8 @@ async def check_quota(current_user: UserInDB = Depends(get_current_user)):
                 )
             elif resp.status_code != 200:
                 logger.warning(
-                    f"Failed to verify storage quota from provision subsystem: {resp.status_code}"
+                    "Lỗi xác minh dung lượng lưu trữ"
                 )
     except Exception as e:
-        logger.error("Failed to connect to provision subsystem")
+        logger.error("Lỗi kết nối hệ thống phụ")
     return current_user

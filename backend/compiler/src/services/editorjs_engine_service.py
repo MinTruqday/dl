@@ -362,7 +362,7 @@ class EditorJSEngine:
         ):
             return ""
 
-        logger.warning("The system safely ignored an invalid or unsupported content block during the rendering process")
+        logger.warning("Đã bỏ qua nội dung không hợp lệ")
         return ""
 
     @staticmethod
@@ -407,11 +407,11 @@ class EditorJSEngine:
             )
         except json.JSONDecodeError:
             raise Exception(
-                "The provided document content format is structurally invalid and cannot be processed"
+                "Định dạng nội dung tài liệu không hợp lệ"
             )
 
         if not blocks:
-            raise Exception("The submitted document does not contain any processable content blocks")
+            raise Exception("Tài liệu không có nội dung hợp lệ")
 
         html_content = EditorJSEngine._convert_blocks_to_html(blocks)
 
@@ -444,8 +444,8 @@ class EditorJSEngine:
             )
 
             if not os.path.exists(pdf_path):
-                logger.error("The system encountered a critical failure while attempting to generate the final portable document format")
-                raise Exception("The system failed to generate the final document output due to an internal rendering error")
+                logger.error("Lỗi xuất tài liệu PDF")
+                raise Exception("Lỗi xuất tài liệu do lỗi hệ thống")
 
             with open(pdf_path, "rb") as f:
                 return f.read()
@@ -455,12 +455,12 @@ class EditorJSEngine:
                 try:
                     process.kill()
                 except Exception:
-                    logger.warning("The system was unable to cleanly terminate the background compilation process")
-            raise Exception("The document compilation process exceeded the maximum allowed execution time and was forcibly terminated")
+                    logger.warning("Lỗi dừng tác vụ biên dịch")
+            raise Exception("Hết thời gian chờ quá trình biên dịch tài liệu")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception:
-                    logger.warning("The system was unable to automatically clean up the temporary processing files")
+                    logger.warning("Lỗi dọn dẹp tệp tạm thời")

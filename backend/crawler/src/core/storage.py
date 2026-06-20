@@ -17,7 +17,7 @@ class CollectorStorage:
         self.secret_key = settings.MINIO_SECRET_KEY
 
         if not self.access_key or not self.secret_key:
-            raise ValueError("Missing access or secret keys")
+            raise ValueError("Thiếu thông tin khóa bảo mật")
 
         self.bucket = settings.MINIO_BUCKET_NAME
         self.public_url = settings.MINIO_PUBLIC_URL
@@ -40,7 +40,7 @@ class CollectorStorage:
             client = await self.get_client()
             await client.head_bucket(Bucket=self.bucket)
         except ClientError:
-            logger.info("The automated provisioning sequence is preparing the primary object storage bucket for incoming multimedia assets")
+            logger.info("Đang khởi tạo không gian lưu trữ đa phương tiện")
             client = await self.get_client()
             await client.create_bucket(Bucket=self.bucket)
 
@@ -62,7 +62,7 @@ class CollectorStorage:
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.error("The system encountered a critical network failure while attempting to securely transfer the file into the permanent object storage backend")
+            logger.error("Lỗi mạng khi lưu trữ tệp vào hệ thống vĩnh viễn")
             raise e
 
 

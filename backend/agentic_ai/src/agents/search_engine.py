@@ -55,14 +55,14 @@ class SearchEngine:
                 formatted += f"- {res.get('title')} {res.get('body')}\n  Source link {res.get('href')}\n"
             return formatted
         except Exception:
-            logger.error("The alternative search engine encountered an unexpected failure during the retrieval process")
+            logger.error("Lỗi hệ thống tìm kiếm thay thế")
             return ""
 
     async def execute(self, query: str) -> str:
-        logger.info("The system is initiating a search operation to retrieve the requested information")
+        logger.info("Đang tìm kiếm thông tin")
 
         if _is_ssrf_attempt(query):
-            logger.warning("The security system blocked a potential unauthorized network request attempt")
+            logger.warning("Ngăn chặn yêu cầu mạng trái phép")
             return "The submitted request violates network security protocols and has been blocked"
 
         if self.api_key_valid:
@@ -70,9 +70,9 @@ class SearchEngine:
                 result = await self._tavily_search(query)
                 if result:
                     return result
-                logger.warning("The primary search engine yielded no results and the system is transitioning to the alternative engine")
+                logger.warning("Đang chuyển sang công cụ tìm kiếm thay thế")
             except Exception:
-                logger.warning("The primary search engine encountered a failure and the system is automatically transitioning to the alternative engine")
+                logger.warning("Lỗi công cụ tìm kiếm chính, đang sử dụng máy chủ dự phòng")
 
         result = await self._duckduckgo_search(query)
         if result:

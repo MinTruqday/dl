@@ -20,7 +20,7 @@ class VersionsService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         await RepositoryFactory.get("document_versions").insert_one(
             {
                 "document_id": document_id,
@@ -37,8 +37,8 @@ class VersionsService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("A new historical version snapshot of the document has been successfully captured and preserved")
-        return {"message": "The historical document draft version has been successfully saved to the repository"}
+        logger.info("Lưu bản chụp lịch sử tài liệu thành công")
+        return {"message": "Lưu bản nháp lịch sử thành công"}
 
     @staticmethod
     async def get_versions(document_id, current_user, db=None):
@@ -63,7 +63,7 @@ class VersionsService:
             {"_id": ObjectId(version_id), "creator_id": str(current_user.id)}
         )
         if not version:
-            raise HTTPException(status_code=404, detail="The requested historical version snapshot could not be located within the archival system")
+            raise HTTPException(status_code=404, detail="Không tìm thấy bản chụp lịch sử")
         snapshot = version.get("snapshot")
         if not snapshot:
             update_data = {
@@ -76,6 +76,6 @@ class VersionsService:
             {"_id": version["document_id"]}, {"$set": update_data}
         )
         logger.info(
-            "The specified document has been successfully restored to a previous historical version state"
+            "Khôi phục phiên bản lịch sử tài liệu thành công"
         )
-        return {"message": "The digital document has been successfully restored to the selected historical version snapshot"}
+        return {"message": "Khôi phục phiên bản lịch sử thành công"}

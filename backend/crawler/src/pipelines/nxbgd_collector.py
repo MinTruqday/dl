@@ -65,13 +65,13 @@ class NXBGDCollector:
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info("The visual capture module has successfully intercepted and saved a high resolution document page")
+                        logger.info("Chụp và lưu trang tài liệu thành công")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception:
-                    logger.warning("The visual capture module encountered an interruption while attempting to retrieve the page image data")
+                    logger.warning("Lỗi tải hình ảnh trang")
         except Exception:
-            logger.warning("An unexpected error occurred while parsing the intercepted network response from the document viewer")
+            logger.warning("Lỗi phân tích dữ liệu mạng")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -102,16 +102,16 @@ class NXBGDCollector:
         )
 
         if not image_files:
-            logger.warning("The document compilation process is being skipped because no valid image pages were successfully captured")
+            logger.warning("Bỏ qua quá trình biên dịch do không quét được ảnh hợp lệ")
             return
 
         try:
-            logger.info("The rendering engine is actively compiling the captured image sequence into a unified portable document format")
+            logger.info("Đang biên dịch hình ảnh thành file PDF")
             with open(pdf_path, "wb") as f:
                 f.write(img2pdf.convert(image_files))
-            logger.info("The unified document has been successfully compiled and saved to the local temporary workspace")
+            logger.info("Biên dịch và lưu tài liệu tạm thời thành công")
 
-            logger.info("The compiled document is being securely transferred to the permanent object storage backend")
+            logger.info("Đang chuyển tài liệu biên dịch vào lưu trữ vĩnh viễn")
             minio_url = await storage.upload_local_file(
                 f"documents/nxbgd/{final_pdf_name}", pdf_path
             )
@@ -120,7 +120,7 @@ class NXBGDCollector:
                 document_metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Extracted via automated collection process",
+                    "description": "Trích xuất tự động thành công",
                     "file_url": minio_url,
                     "tags": ["Nhà Xuất bản Giáo dục Việt Nam", "Unknown"],
                     "content": None,
@@ -138,22 +138,22 @@ class NXBGDCollector:
                     pass
 
         except Exception:
-            logger.error("An unexpected system error occurred during the final document compilation and upload sequence")
+            logger.error("Lỗi biên dịch và tải lên tài liệu")
             raise
         finally:
 
-            logger.info("The automated cleanup routine is securely removing the temporary processing directories")
+            logger.info("Đang xóa dữ liệu tạm thời")
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception:
-                logger.warning("The automated cleanup routine encountered a permission or access issue while removing temporary files")
+                logger.warning("Lỗi quyền truy cập khi xóa tệp tạm thời")
 
     async def execute(self):
         await self.init_browser()
 
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         try:
-            logger.info("The collection bot is navigating to the origin domain to begin the category scanning process")
+            logger.info("Đang truy cập tên miền gốc để quét danh mục")
             await self.page.goto(url, timeout=60000)
             await asyncio.sleep(5)
 
@@ -169,7 +169,7 @@ class NXBGDCollector:
                     if href and href not in document_urls:
                         document_urls.append(href)
 
-                logger.info("The scanning module has successfully discovered a batch of available documents on the active page")
+                logger.info("Tìm thấy tài liệu trên trang thành công")
 
                 for doc_url in document_urls:
                     full_doc_url = (
@@ -177,7 +177,7 @@ class NXBGDCollector:
                         if doc_url.startswith("/")
                         else doc_url
                     )
-                    logger.info("The system is transitioning to the details view to extract specific metadata for the selected document")
+                    logger.info("Đang truy xuất chi tiết thông tin tài liệu")
 
                     try:
                         await self.page.goto(full_doc_url, timeout=60000)
@@ -195,7 +195,7 @@ class NXBGDCollector:
                             full_title = res_name
 
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info("The collection bot is skipping the current document because it has already been successfully processed")
+                                logger.info("Bỏ qua tài liệu đã xử lý")
                                 continue
 
                             await dedup.mark_collected("taphuan_book", full_title)
@@ -204,7 +204,7 @@ class NXBGDCollector:
                             if viewer_url.startswith("/"):
                                 viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
 
-                            logger.info("The active collection module is preparing to process the detailed contents of the target resource")
+                            logger.info("Đang chuẩn bị xử lý nội dung chi tiết")
 
                             safe_title = re.sub(r'[\\/*?:"<>|]', "", full_title).strip()
                             import tempfile
@@ -236,7 +236,7 @@ class NXBGDCollector:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
                                 except Exception:
-                                    logger.warning("The automated navigation script encountered an unexpected issue while interacting with the document viewer")
+                                    logger.warning("Lỗi tương tác trình xem tài liệu")
                                 await asyncio.sleep(2)
 
                                 current_pages = len(self.captured_hashes)
@@ -246,7 +246,7 @@ class NXBGDCollector:
                                 ):
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info("The visual capture module has successfully collected a stable sequence of document pages")
+                                        logger.info("Quét tài liệu thành công")
                                         break
                                 else:
                                     stable_count = 0
@@ -256,7 +256,7 @@ class NXBGDCollector:
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
                     except Exception:
-                        logger.error("The system failed to properly inspect the document details due to an unexpected page structure or network timeout")
+                        logger.error("Lỗi kiểm tra thông tin tài liệu")
 
                 try:
                     await self.page.goto(url, timeout=60000)
@@ -268,26 +268,26 @@ class NXBGDCollector:
                         and "p-disabled"
                         not in (await next_btn.get_attribute("class") or "")
                     ):
-                        logger.info("The collection bot is executing a pagination command to access the next batch of document listings")
+                        logger.info("Đang tải thêm danh sách tài liệu")
                         await next_btn.click()
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info("The scanning sequence has reached the final page or the pagination controls are no longer available")
+                        logger.info("Đã quét đến trang cuối cùng")
                 except Exception:
-                    logger.error("The automated pagination script failed to navigate to the next page due to an unexpected layout change")
+                    logger.error("Lỗi chuyển trang tự động")
                     has_next = False
 
                 break
 
         except Exception:
-            logger.error("The primary collection sequence encountered a critical failure while navigating the target data source")
+            logger.error("Lỗi chuyển hướng khi thu thập dữ liệu nguồn")
             raise
         finally:
             await self.close()
 
 
 async def run_nxbgd_collector(target_class: str):
-    logger.info("The system is initializing a comprehensive data collection sequence across all designated target groups")
+    logger.info("Đang khởi tạo chuỗi thu thập dữ liệu")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()

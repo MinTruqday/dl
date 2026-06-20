@@ -35,19 +35,19 @@ async def managed_browser(headless=True):
         )
         yield browser
     except Exception:
-        logger.error("The automated browser environment failed to initialize or execute due to an underlying process configuration issue")
+        logger.error("Lỗi khởi tạo trình duyệt tự động")
         raise
     finally:
         if browser:
             try:
                 await browser.close()
             except Exception:
-                logger.warning("The background cleanup routine encountered a delay while attempting to safely close the automated browser instance")
+                logger.warning("Lỗi dọn dẹp trình duyệt tự động")
         if playwright:
             try:
                 await playwright.stop()
             except Exception:
-                logger.warning("The background cleanup routine encountered a resource lock while attempting to terminate the rendering engine instance")
+                logger.warning("Lỗi dừng tác vụ xuất hình ảnh")
 
 
 async def get_stealth_context(browser):
@@ -75,11 +75,11 @@ async def download_file_with_retry(
                                 f.write(chunk)
                         return True
                     else:
-                        logger.error("The network request to the specified remote resource failed due to an unexpected hyper text transfer protocol status code")
+                        logger.error("Lỗi kết nối mạng từ xa")
         except Exception:
-            logger.warning("A temporary network disruption occurred during the download process so the system is preparing an automated retry sequence")
+            logger.warning("Mất kết nối mạng khi tải, đang thử lại")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2**attempt)
             else:
-                logger.error("The remote file download process failed permanently because all automated retry attempts have been exhausted")
+                logger.error("Lỗi tải xuống tệp sau nhiều lần thử lại")
     return False

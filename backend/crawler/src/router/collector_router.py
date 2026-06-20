@@ -37,21 +37,21 @@ async def trigger_collection(req: CollectionRequest):
         payload["pages"] = pages
     else:
         raise HTTPException(
-            status_code=400, detail="The specified data collection source is currently not recognized or supported by the system"
+            status_code=400, detail="Nguồn thu thập dữ liệu không được hỗ trợ"
         )
 
     try:
         await mq_client.publish(queue_name, payload)
-        logger.info("A new background data collection process has been successfully queued and initiated for the requested source")
+        logger.info("Khởi tạo thu thập dữ liệu ngầm thành công")
         return {
             "status": "success",
             "job_id": payload["job_id"],
-            "message": "The automated data collection process has been successfully initiated and is now running in the background",
+            "message": "Bắt đầu quá trình thu thập dữ liệu ngầm",
         }
     except Exception:
-        logger.error("The system encountered an unexpected error while attempting to initiate the background data collection process")
+        logger.error("Lỗi bắt đầu thu thập dữ liệu ngầm")
         raise HTTPException(
-            status_code=500, detail="The system was unable to safely queue the requested data collection process due to an internal service interruption"
+            status_code=500, detail="Lỗi đưa quá trình thu thập dữ liệu vào hàng đợi"
         )
 
 
@@ -60,15 +60,15 @@ async def stop_collection():
     try:
         if mq_client.channel:
             await mq_client.channel.close()
-        logger.info("The active data collection process has been successfully paused following the administrative command")
+        logger.info("Tạm dừng quá trình thu thập dữ liệu thành công")
         return {
             "status": "success",
-            "message": "The administrative stop signal has been acknowledged and the active collection process is safely paused",
+            "message": "Đã tạm dừng quá trình thu thập",
         }
     except Exception:
-        logger.error("The system encountered an unexpected error while attempting to transmit the pause signal to the active collection process")
+        logger.error("Lỗi truyền tín hiệu tạm dừng quá trình thu thập")
         raise HTTPException(
-            status_code=500, detail="The system was unable to transmit the pause signal to the background workers due to a communication interruption"
+            status_code=500, detail="Lỗi gửi lệnh tạm dừng cho tiến trình nền"
         )
 
 

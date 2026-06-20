@@ -28,7 +28,7 @@ class DepositService:
     async def create_deposit_link(req, current_user, db=None):
         if req.amount < 1000:
             raise HTTPException(
-                status_code=400, detail="The requested deposit amount falls below the minimum required threshold for processing"
+                status_code=400, detail="Số tiền nạp dưới mức tối thiểu"
             )
 
         if db is None:
@@ -111,13 +111,13 @@ class DepositService:
                 )
                 return {"checkout_url": checkout_url, "order_code": order_code}
             else:
-                logger.error("The external payment gateway rejected the request to generate a secure transaction link")
+                logger.error("Từ chối tạo liên kết thanh toán")
                 await db["orders"].update_one(
                     {"order_code": order_code}, {"$set": {"status": "FAILED"}}
                 )
                 raise HTTPException(
                     status_code=400,
-                    detail="The electronic payment gateway failed to initialize the transaction session",
+                    detail="Lỗi khởi tạo phiên thanh toán",
                 )
         except HTTPException:
             raise
@@ -125,15 +125,15 @@ class DepositService:
             await db["orders"].update_one(
                 {"order_code": order_code}, {"$set": {"status": "FAILED"}}
             )
-            logger.error("The system encountered a network failure while attempting to communicate with the electronic payment gateway")
+            logger.error("Lỗi mạng kết nối cổng thanh toán")
             raise HTTPException(
-                status_code=500, detail="The system was unable to establish a secure connection with the external payment processing provider"
+                status_code=500, detail="Lỗi kết nối cổng thanh toán"
             )
 
     @staticmethod
     async def deposit_webhook(request, db=None):
         data = await request.json()
-        logger.info("The system has successfully received a status update notification from the payment gateway")
+        logger.info("Cập nhật trạng thái thanh toán thành công")
         if data.get("code") == "00" and data.get("data"):
             webhook_data = data["data"]
             order_code = webhook_data.get("orderCode")
@@ -147,18 +147,18 @@ class DepositService:
             try:
                 received_signature = data.get("signature", "")
                 if not received_signature:
-                    logger.warning("The incoming gateway notification was rejected due to a missing cryptographic authentication signature")
+                    logger.warning("Từ chối thông báo cổng thanh toán do thiếu chữ ký xác thực")
                     raise HTTPException(
-                        status_code=400, detail="The transaction verification failed because the cryptographic signature is missing"
+                        status_code=400, detail="Lỗi xác minh giao dịch do thiếu chữ ký bảo mật"
                     )
 
                 expected_signature = DepositService._generate_payos_signature(
                     signature_data
                 )
                 if received_signature != expected_signature:
-                    logger.warning("The incoming gateway notification was rejected because the cryptographic signature did not match the expected value")
+                    logger.warning("Từ chối thông báo cổng thanh toán do sai chữ ký số")
                     raise HTTPException(
-                        status_code=400, detail="The transaction verification failed because the provided cryptographic signature is invalid"
+                        status_code=400, detail="Xác minh giao dịch thất bại do sai chữ ký số"
                     )
 
                 paid_amount = webhook_data.get("amount", 0)
@@ -166,7 +166,7 @@ class DepositService:
             except HTTPException:
                 raise
             except Exception:
-                logger.error("The system encountered an unexpected structural failure while processing the payment gateway callback")
+                logger.error("Lỗi xử lý phản hồi thanh toán")
         return Response(
             content=json.dumps({"code": "00", "desc": "success"}),
             media_type="application/json",
@@ -180,10 +180,10 @@ class DepositService:
 
         order = await db["orders"].find_one({"order_code": order_code})
         if not order:
-            raise HTTPException(status_code=404, detail="The system was unable to locate a deposit transaction matching the provided gateway reference identifier")
+            raise HTTPException(status_code=404, detail="Không tìm thấy giao dịch nạp tiền")
         if order.get("user_id") != str(current_user.id):
             raise HTTPException(
-                status_code=403, detail="The current account lacks the required authorization to view the details of this specific transaction"
+                status_code=403, detail="Không có quyền xem chi tiết giao dịch này"
             )
 
         if getattr(db_client, "redis", None):
@@ -195,12 +195,12 @@ class DepositService:
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,
-                        detail="The system has temporarily throttled your requests so please wait a moment before trying again",
+                        detail="Hệ thống đang giới hạn yêu cầu, vui lòng thử lại sau",
                     )
             except HTTPException:
                 raise
             except Exception:
-                logger.warning("The transaction verification request was throttled due to excessive recent inquiries")
+                logger.warning("Quá tải yêu cầu xác minh giao dịch")
 
         try:
             async with httpx.AsyncClient() as client:
@@ -228,14 +228,14 @@ class DepositService:
                 }
             else:
                 raise HTTPException(
-                    status_code=400, detail="The system was unable to successfully verify the current status of the payment transaction"
+                    status_code=400, detail="Lỗi xác minh giao dịch"
                 )
         except HTTPException:
             raise
         except Exception:
-            logger.error("An unexpected disruption occurred while attempting to verify the transaction status with the provider")
+            logger.error("Lỗi xác minh trạng thái giao dịch")
             raise HTTPException(
-                status_code=500, detail="The system was unable to successfully verify the current status of the payment transaction"
+                status_code=500, detail="Lỗi xác minh giao dịch"
             )
 
     @staticmethod
@@ -259,7 +259,7 @@ class DepositService:
             {"order_code": order_code, "status": {"$in": ["INIT", "pending"]}}
         )
         if not order:
-            logger.warning("The designated deposit order could not be located or has already been fully processed")
+            logger.warning("Đơn nạp tiền không tồn tại hoặc đã xử lý")
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -267,7 +267,7 @@ class DepositService:
 
         if paid_amount is not None and paid_amount < order.get("amount", 0):
             logger.warning(
-                "The verified payment amount is insufficient to fulfill the requested deposit order"
+                "Số tiền nạp không đủ để hoàn thành yêu cầu"
             )
             if should_close_session:
                 await session.abort_transaction()
@@ -291,7 +291,7 @@ class DepositService:
             if result.modified_count != 1:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.warning("The database engine encountered an issue while attempting to update the status of the deposit order")
+                logger.warning("Lỗi cập nhật trạng thái đơn nạp tiền")
                 return
             await wallets.update_one(
                 {"_id": user_id},
@@ -327,15 +327,15 @@ class DepositService:
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
             except Exception:
-                logger.warning("The system encountered a minor disruption while attempting to dispatch the deposit success notification")
+                logger.warning("Lỗi gửi thông báo nạp tiền thành công")
             logger.info(
-                "The deposited funds have been successfully verified and credited to the designated account wallet"
+                "Đã xác minh và nạp tiền vào tài khoản"
             )
         except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("An unexpected error occurred while attempting to finalize the deposit transaction and update the balance")
-            raise HTTPException(status_code=500, detail="The financial service is currently undergoing routine maintenance and cannot process the request")
+            logger.error("Lỗi hoàn tất giao dịch nạp tiền")
+            raise HTTPException(status_code=500, detail="Dịch vụ tài chính đang bảo trì")
         finally:
             if should_close_session:
                 await session.end_session()

@@ -21,14 +21,14 @@ class ProfileService:
             update_fields["donation_link"] = data["donation_link"]
         if not update_fields:
             raise HTTPException(
-                status_code=400, detail="The update request could not be processed because no valid information was provided"
+                status_code=400, detail="Không thể cập nhật do thiếu thông tin hợp lệ"
             )
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await db["users"].update_one(
             {"_id": str(current_user.id)}, {"$set": update_fields}
         )
-        logger.info("The personal profile information has been successfully updated by the authenticated user")
-        return {"message": "Your personal profile information has been successfully updated and saved"}
+        logger.info("Cập nhật hồ sơ cá nhân thành công")
+        return {"message": "Cập nhật thông tin cá nhân thành công"}
 
     @staticmethod
     async def get_user_profile(current_user, db=None) -> dict:
@@ -38,7 +38,7 @@ class ProfileService:
             {"_id": str(current_user.id)}, {"password_hash": 0}
         )
         if not user:
-            raise HTTPException(status_code=404, detail="The requested profile information could not be located in the system database")
+            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin hồ sơ")
         user["_id"] = str(user["_id"])
         return user
 
@@ -59,7 +59,7 @@ class ProfileService:
             return {
                 "current_streak": 0,
                 "longest_streak": 0,
-                "message": "There is currently no reading activity streak information available for this account",
+                "message": "Tài khoản chưa có chuỗi ngày đọc",
             }
         reading_stats = user_record.get("reading_stats", {})
         current_s = reading_stats.get("current_streak", 0)
@@ -89,14 +89,14 @@ class ProfileService:
             update_fields["author_profile.custom_theme"] = data["custom_theme"]
         if not update_fields:
             raise HTTPException(
-                status_code=400, detail="The update request could not be processed because no valid information was provided"
+                status_code=400, detail="Không thể cập nhật do thiếu thông tin hợp lệ"
             )
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await db["users"].update_one(
             {"_id": str(current_user.id)}, {"$set": update_fields}
         )
-        logger.info("The public author brand page has been successfully modified by the account owner")
-        return {"message": "Your public author brand page has been successfully updated and published"}
+        logger.info("Cập nhật trang hồ sơ tác giả thành công")
+        return {"message": "Cập nhật trang hồ sơ tác giả thành công"}
 
     @staticmethod
     async def block_user(target_id: str, current_user, db=None) -> dict:
@@ -104,12 +104,12 @@ class ProfileService:
             db = db_client.mongodb.get_default_database()
         if str(current_user.id) == target_id:
             raise HTTPException(
-                status_code=400, detail="The system prevents users from applying interaction blocks to their own accounts"
+                status_code=400, detail="Không thể tự chặn chính mình"
             )
         target_user = await db["users"].find_one({"_id": target_id})
         if not target_user:
-            raise HTTPException(status_code=404, detail="The specified target account could not be located in the system records")
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản đích")
         await db["users"].update_one(
             {"_id": str(current_user.id)}, {"$addToSet": {"blocked_users": target_id}}
         )
-        return {"status": "ok", "message": "The specified account has been successfully restricted from interacting with your profile"}
+        return {"status": "ok", "message": "Đã hạn chế tài khoản tương tác"}

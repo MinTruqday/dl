@@ -73,7 +73,7 @@ class MessageService:
             {"_id": receiver_id}
         )
         if user_doc and sender_id in user_doc.get("blocked_users", []):
-            raise Exception("The communication attempt was restricted because the target account has disabled interactions from your profile")
+            raise Exception("Tài khoản này không nhận tin nhắn từ bạn")
         self_destruct_at = None
         settings_id = (
             f"settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"

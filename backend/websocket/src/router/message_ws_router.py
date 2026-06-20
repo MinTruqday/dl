@@ -23,11 +23,11 @@ async def websocket_endpoint(
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("sub") != user_id:
-            logger.warning("The connection request was rejected because the provided authentication credentials did not match the expected records")
+            logger.warning("Thông tin xác thực không chính xác")
             await websocket.close(code=1008)
             return
     except Exception:
-        logger.error(f"The system failed to authenticate the connection token for the user with identifier {user_id} due to an invalid or expired payload")
+        logger.error("Lỗi xác thực kết nối do mã thông báo không hợp lệ hoặc đã hết hạn")
         await websocket.close(code=1008)
         return
 
@@ -70,5 +70,5 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
     except Exception:
-        logger.error(f"The system encountered an unexpected error while processing direct messages for the user with identifier {user_id}")
+        logger.error("Lỗi xử lý tin nhắn trực tiếp")
         message_manager.disconnect(user_id, websocket)

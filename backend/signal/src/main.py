@@ -34,7 +34,7 @@ app.include_router(notification_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("The notification and signaling service has been successfully initialized and is now ready to process incoming requests")
+    logger.info("Khởi tạo dịch vụ thông báo thành công")
 
 
 @app.get("/health")

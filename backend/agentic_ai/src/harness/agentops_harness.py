@@ -54,7 +54,7 @@ class AgentOpsHarness:
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
             except Exception:
-                logger.error("The system encountered a failure while attempting to establish a connection to the database")
+                logger.error("Lỗi kết nối cơ sở dữ liệu")
         return self._db_client
 
     def record_session_start(
@@ -66,7 +66,7 @@ class AgentOpsHarness:
             started_at=datetime.now(timezone.utc),
         )
         self._sessions[session_id] = metrics
-        logger.info("The system has successfully initiated the recording process for the current session")
+        logger.info("Bắt đầu ghi lại phiên làm việc thành công")
 
     def record_session_end(
         self,
@@ -81,7 +81,7 @@ class AgentOpsHarness:
         metrics.total_duration_ms = int(
             (metrics.ended_at - metrics.started_at).total_seconds() * 1000
         )
-        logger.info("The system has successfully concluded the recording process for the current session")
+        logger.info("Kết thúc quá trình ghi lại phiên làm việc")
         asyncio.create_task(self._flush_session(session_id))
 
     def record_tool_call(
@@ -119,7 +119,7 @@ class AgentOpsHarness:
             metrics.total_tokens_in += prompt_tokens
             metrics.total_tokens_out += completion_tokens
             metrics.llm_latencies_ms.append(duration_ms)
-        logger.info("The system successfully recorded the language model invocation event")
+        logger.info("Ghi nhận sự kiện gọi mô hình ngôn ngữ thành công")
 
     def record_security_event(
         self,
@@ -131,7 +131,7 @@ class AgentOpsHarness:
         metrics = self._sessions.get(session_id)
         if metrics:
             metrics.security_violations += 1
-        logger.warning("The security system detected and recorded a potential policy violation")
+        logger.warning("Ghi nhận rủi ro vi phạm bảo mật")
 
     async def _flush_session(self, session_id: str):
         metrics = self._sessions.pop(session_id, None)
@@ -161,9 +161,9 @@ class AgentOpsHarness:
                 ),
             }
             await RepositoryFactory.get("agent_traces").insert_one(doc)
-            logger.info("The session history was successfully persisted into the system database")
+            logger.info("Lưu lịch sử phiên làm việc thành công")
         except Exception:
-            logger.error("The system failed to save the session history into the database due to an internal error")
+            logger.error("Lỗi lưu lịch sử phiên làm việc")
 
     def get_prometheus_metrics(self) -> str:
         active_count = len(self._sessions)

@@ -49,7 +49,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                             "route": "error",
                         }
                 except Exception:
-                    logger.error("The system encountered an error while verifying document access permissions")
+                    logger.error("Lỗi xác minh quyền truy cập tài liệu")
                     return {
                         "answer": "The system is currently unable to verify the document access permissions",
                         "route": "error",
@@ -94,13 +94,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         final_answer = security_harness.scan_output(final_answer)
         return {
-            "answer": final_answer or "The system encountered an unexpected error and requires you to try again later",
+            "answer": final_answer or "Lỗi hệ thống, vui lòng thử lại sau",
             "route": "agentic_ai",
         }
     except Exception:
-        logger.error("The artificial intelligence workflow execution encountered an unexpected issue")
+        logger.error("Lỗi thực thi quy trình AI")
         return {
-            "answer": "The system encountered an unexpected error and requires you to try again later",
+            "answer": "Lỗi hệ thống, vui lòng thử lại sau",
             "route": "error",
         }
 
@@ -154,7 +154,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             agentops_harness.record_session_end(session_id, "failed")
                             return
                     except Exception:
-                        logger.error("The system encountered an error while verifying document access permissions")
+                        logger.error("Lỗi xác minh quyền truy cập tài liệu")
                         yield f"event: message\ndata: {json.dumps({'chunk': 'The system is currently unable to verify the document access permissions'})}\n\n"
                         agentops_harness.record_session_end(session_id, "failed")
                         return
@@ -274,7 +274,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             agentops_harness.record_session_end(session_id, "done")
 
         except Exception:
-            logger.error("The artificial intelligence streaming workflow execution encountered an unexpected issue")
+            logger.error("Lỗi thực thi luồng trí tuệ nhân tạo")
             agentops_harness.record_session_end(session_id, "failed")
             yield f"event: message\ndata: {json.dumps({'chunk': 'The system encountered an unexpected issue and requires you to try again later'})}\n\n"
 
