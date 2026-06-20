@@ -3,8 +3,8 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, status
 from src.router.dependency import get_current_user, get_db, require_role
 from src.schemas.operation import CampaignRequest
-from src.services.operation import OperationService
-from src.services.user import UserService
+from src.services.operation import OperationManager
+from src.services.user import UserManager
 
 from core.response import APIResponse
 from core.schemas.collector import CollectionRequest
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/operations")
 )
 async def get_system_metrics(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.get_system_telemetry(db=db),
+        data=await OperationManager.get_system_telemetry(db=db),
         message="Lấy dữ liệu hoạt động thành công",
     )
 
@@ -32,7 +32,7 @@ async def get_system_metrics(db=Depends(get_db)):
 )
 async def get_maintenance_status(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.get_maintenance_mode(db=db),
+        data=await OperationManager.get_maintenance_mode(db=db),
         message="Lấy trạng thái bảo trì thành công",
     )
 
@@ -44,7 +44,7 @@ async def get_maintenance_status(db=Depends(get_db)):
 )
 async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.toggle_maintenance_mode(enabled, db=db),
+        data=await OperationManager.toggle_maintenance_mode(enabled, db=db),
         message="Cập nhật cấu hình bảo trì thành công",
     )
 
@@ -56,7 +56,7 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
 )
 async def trigger_backup(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.trigger_backup(db=db),
+        data=await OperationManager.trigger_backup(db=db),
         message="Bắt đầu sao lưu dữ liệu",
     )
 
@@ -68,7 +68,7 @@ async def trigger_backup(db=Depends(get_db)):
 )
 async def create_api_key(name: str, db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.create_api_key(name, db=db),
+        data=await OperationManager.create_api_key(name, db=db),
         message="Tạo khóa bảo mật ứng dụng thành công",
     )
 
@@ -80,7 +80,7 @@ async def create_api_key(name: str, db=Depends(get_db)):
 )
 async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.create_marketing_campaign(
+        data=await OperationManager.create_marketing_campaign(
             payload.model_dump(), db=db
         ),
         message="Thiết lập chiến dịch quảng cáo thành công",
@@ -104,7 +104,7 @@ async def get_system_config(db=Depends(get_db)):
 )
 async def get_system_health(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.get_system_health(db=db),
+        data=await OperationManager.get_system_health(db=db),
         message="Tạo báo cáo tình trạng thành công",
     )
 
@@ -116,7 +116,7 @@ async def get_system_health(db=Depends(get_db)):
 )
 async def get_admin_reports(db=Depends(get_db)):
     return APIResponse(
-        data=await UserService.get_report_queue(status_filter=None, db=db),
+        data=await UserManager.get_report_queue(status_filter=None, db=db),
         message="Lấy danh sách báo cáo vi phạm thành công",
     )
 
@@ -128,7 +128,7 @@ async def get_admin_reports(db=Depends(get_db)):
 )
 async def get_collector_stats(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.get_collector_stats(db=db),
+        data=await OperationManager.get_collector_stats(db=db),
         message="Biên dịch dữ liệu thống kê thành công",
     )
 
@@ -140,7 +140,7 @@ async def get_collector_stats(db=Depends(get_db)):
 )
 async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.trigger_collection(req.source, req.pages, db=db),
+        data=await OperationManager.trigger_collection(req.source, req.pages, db=db),
         message="Bắt đầu quá trình thu thập dữ liệu",
     )
 
@@ -152,7 +152,7 @@ async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
 )
 async def stop_collection(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.stop_collection(db=db),
+        data=await OperationManager.stop_collection(db=db),
         message="Gửi lệnh dừng thu thập dữ liệu thành công",
     )
 
@@ -164,7 +164,7 @@ async def stop_collection(db=Depends(get_db)):
 )
 async def get_collector_logs(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.get_collector_logs(db=db),
+        data=await OperationManager.get_collector_logs(db=db),
         message="Lấy nhật ký hoạt động thành công",
     )
 
@@ -176,7 +176,7 @@ async def get_collector_logs(db=Depends(get_db)):
 )
 async def get_active_collector_jobs(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.get_active_collector_jobs(db=db),
+        data=await OperationManager.get_active_collector_jobs(db=db),
         message="Lấy danh sách tác vụ chạy nền thành công",
     )
 
@@ -190,7 +190,7 @@ async def shadowban_user(
     payload: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await OperationService.bulk_update_shadowban(
+        data=await OperationManager.bulk_update_shadowban(
             payload.user_ids, payload.status, current_user, db=db
         ),
         message="Áp dụng quyền hiển thị thành công",
@@ -206,7 +206,7 @@ async def verify_kyc(
     payload: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await OperationService.bulk_verify_kyc(
+        data=await OperationManager.bulk_verify_kyc(
             payload.user_ids, payload.status, current_user, db=db
         ),
         message="Cập nhật hồ sơ xác minh danh tính thành công",
@@ -220,6 +220,6 @@ async def verify_kyc(
 )
 async def get_minio_stats(db=Depends(get_db)):
     return APIResponse(
-        data=await OperationService.get_minio_stats(db=db),
+        data=await OperationManager.get_minio_stats(db=db),
         message="Lấy thống kê sử dụng lưu trữ thành công",
     )

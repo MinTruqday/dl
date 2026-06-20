@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-from src.services.deposit import DepositService
+from src.services.deposit import DepositManager
 
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
@@ -23,7 +23,7 @@ async def create_deposit(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await DepositService.create_deposit(
+        data=await DepositManager.create_deposit(
             req.amount, req.payment_method, current_user, db=db
         ),
         message="Đã khởi tạo giao dịch nạp tiền, đang chờ xác nhận",

@@ -11,7 +11,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class VersionsService:
+class VersionsManager:
 
     @staticmethod
     async def save_version(document_id, version_note, current_user, db=None):

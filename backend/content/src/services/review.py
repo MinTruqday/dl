@@ -9,7 +9,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class ReviewService:
+class ReviewManager:
 
     @staticmethod
     async def rate_document(document_id: str, rating_data, current_user, db=None):
@@ -126,7 +126,7 @@ class ReviewService:
 
     @staticmethod
     async def get_document_reviews(document_id: str, db=None) -> list:
-        return await ReviewService.get_reviews(document_id)
+        return await ReviewManager.get_reviews(document_id)
 
     @staticmethod
     async def report_content(data, current_user, db=None) -> dict:

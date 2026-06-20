@@ -11,7 +11,7 @@ from core.repositories.base_repository import RepositoryFactory
 from core.schemas.user import UserInDB
 
 
-class TelemetryService:
+class TelemetryManager:
 
     @staticmethod
     async def track_event(
@@ -50,7 +50,7 @@ class TelemetryService:
     async def log_performance_metric(
         metric_name: str, value: float, current_user: Optional[UserInDB] = None, db=None
     ):
-        return await TelemetryService.track_event(
+        return await TelemetryManager.track_event(
             "performance_metric", {"metric": metric_name, "value": value}, current_user
         )
 

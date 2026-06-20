@@ -13,9 +13,9 @@ from pydantic import BaseModel, Field
 from redis import Redis
 from src.memory.manager import memory_manager
 from src.memory.mem0_manager import mem0_manager
-from src.rag.embedder import embedding_service
-from src.rag.retrieval import retrieval_service
-from src.store.vector_store import vector_store
+from src.rag.embedder import embedder
+from src.rag.retriever import retriever
+from src.store.vector import vector_store
 from src.utils.file_processor import extract_text_from_base64
 from src.workflow.state import AgentState
 
@@ -400,7 +400,7 @@ async def grade_generation(state: AgentState):
     try:
         import asyncio
 
-        from src.agents.reasoning import reasoning
+        from src.agents.reasoner import reasoner
 
         documents_list = [
             {"text": d, "metadata": {"title": "Source"}} for d in documents

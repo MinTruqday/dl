@@ -10,7 +10,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class BookmarkService:
+class BookmarkManager:
 
     @staticmethod
     async def toggle_bookmark(document_id: str, current_user, db=None) -> dict:

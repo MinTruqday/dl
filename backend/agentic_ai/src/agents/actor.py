@@ -8,7 +8,7 @@ from src.tools.api_tools import llm, tools
 from core.config import settings
 
 
-class Action:
+class Actor:
     def __init__(self):
         self.base_url = settings.INTERNAL_API_URL
         self.tool_map = {t.name: t for t in tools}
@@ -92,4 +92,4 @@ class Action:
             return "Execution error, please retry"
 
 
-action = Action()
+actor = Actor()

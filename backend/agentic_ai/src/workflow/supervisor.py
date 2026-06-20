@@ -5,11 +5,11 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from loguru import logger
 from pydantic import BaseModel, Field
-from src.agents.action import action
+from src.agents.actor import actor
 from src.agents.code_interpreter import code_interpreter
-from src.agents.knowledge import knowledge
-from src.agents.planning import planning
-from src.agents.reasoning import reasoning
+from src.agents.planner import planner
+from src.agents.reasoner import reasoner
+from src.agents.researcher import researcher
 from src.agents.response_generator import response_generator
 from src.agents.search_engine import search_engine
 from src.workflow.state import ActingState
@@ -47,7 +47,7 @@ async def supervisor_node(state: ActingState):
         }
 
     if not steps:
-        steps = await planning.create_plan(state["req_data"])
+        steps = await planner.create_plan(state["req_data"])
         idx = 0
 
     if state.get("error"):
@@ -151,15 +151,15 @@ async def search_engine_node(state: ActingState):
     return await execute_tool_node(state, search_engine, "SearchEngine")
 
 
-async def action_agent_node(state: ActingState):
+async def actor_agent_node(state: ActingState):
     return await execute_tool_node(state, action, "Action")
 
 
-async def knowledge_agent_node(state: ActingState):
+async def researcher_agent_node(state: ActingState):
     return await execute_tool_node(state, knowledge, "Knowledge")
 
 
-async def reasoning_agent_node(state: ActingState):
+async def reasoner_agent_node(state: ActingState):
     return await execute_tool_node(state, reasoning, "Reasoning")
 
 
@@ -208,9 +208,9 @@ workflow = StateGraph(ActingState)
 workflow.add_node("supervisor", supervisor_node)
 workflow.add_node("code_interpreter", code_interpreter_node)
 workflow.add_node("search_engine", search_engine_node)
-workflow.add_node("action", action_agent_node)
-workflow.add_node("knowledge", knowledge_agent_node)
-workflow.add_node("reasoning", reasoning_agent_node)
+workflow.add_node("action", actor_agent_node)
+workflow.add_node("knowledge", researcher_agent_node)
+workflow.add_node("reasoning", reasoner_agent_node)
 workflow.add_node("trimmer", trimmer_node)
 workflow.add_node("sanitizer", sanitizer_node)
 workflow.add_node("aggregator", aggregator_node)

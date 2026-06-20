@@ -11,7 +11,7 @@ from core.database import db_client
 from core.schemas.user import RoleEnum
 
 
-class CouponService:
+class CouponManager:
 
     @staticmethod
     async def create_coupon(data: dict, current_user, db=None) -> dict:

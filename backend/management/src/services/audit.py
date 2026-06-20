@@ -5,7 +5,7 @@ from loguru import logger
 from core.database import db_client
 
 
-class AuditService:
+class AuditManager:
 
     @staticmethod
     async def get_audit_logs(limit: int = 50, cursor: str = None, db=None) -> list:

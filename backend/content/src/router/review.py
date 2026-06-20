@@ -3,7 +3,7 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, status
 from src.router.dependency import get_current_user, get_db
 from src.schemas.review import ReviewCreate, ReviewResponse
-from src.services.review import ReviewService
+from src.services.review import ReviewManager
 
 from core.response import APIResponse
 from core.schemas.user import UserInDB
@@ -19,7 +19,7 @@ async def create_document_review(
     db=Depends(get_db),
 ) -> Any:
     return APIResponse(
-        data=await ReviewService.create_review(
+        data=await ReviewManager.create_review(
             document_id, review_in, current_user, db=db
         ),
         message="Gửi đánh giá cá nhân thành công",
@@ -30,7 +30,7 @@ async def create_document_review(
 @router.get("/{document_id}", response_model=APIResponse[List[ReviewResponse]])
 async def get_document_reviews(document_id: str, db=Depends(get_db)) -> Any:
     return APIResponse(
-        data=await ReviewService.get_reviews(document_id, db=db),
+        data=await ReviewManager.get_reviews(document_id, db=db),
         message="Lấy danh sách đánh giá công khai thành công",
         status=200,
     )

@@ -30,7 +30,7 @@ RP_NAME = settings.PASSKEY_RP_NAME
 ORIGIN = settings.PASSKEY_ALLOWED_ORIGINS
 
 
-class PasskeyService:
+class PasskeyManager:
 
     @staticmethod
     async def login_begin(email: str, db=None):
@@ -131,6 +131,6 @@ class PasskeyService:
         if not user_doc:
             raise HTTPException(status_code=401, detail="Không thể xác minh tài khoản")
 
-        from src.services.auth import AuthService
+        from src.services.auth import AuthManager
 
-        return await AuthService.issue_token_for_user(user_doc, "passkey_login")
+        return await AuthManager.issue_token_for_user(user_doc, "passkey_login")

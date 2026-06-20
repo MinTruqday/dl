@@ -325,8 +325,8 @@ async def check_plagiarism(
                 detail="Tính năng chỉ dành cho gói trả phí",
             )
 
-        from src.rag.embedder import embedding_service
-        from src.store.vector_store import vector_store
+        from src.rag.embedder import embedder
+        from src.store.vector import vector_store
 
         query_vector = await embedding.embed_query(req.text[:2000])
         matches = await vector_store.query(query_vector=query_vector, limit=5)
@@ -466,8 +466,8 @@ async def suggest_citations(
                 detail="Tính năng chỉ dành cho gói trả phí",
             )
 
-        from src.rag.embedder import embedding_service
-        from src.store.vector_store import vector_store
+        from src.rag.embedder import embedder
+        from src.store.vector import vector_store
 
         query_vector = await embedding.embed_query(req.text[:500])
         matches = await vector_store.query(query_vector=query_vector, limit=3)
@@ -566,8 +566,8 @@ async def multi_doc_synthesis(
     req: SynthesisRequest, current_user: UserInDB = Depends(get_current_user)
 ):
     try:
-        from src.rag.embedder import embedding_service
-        from src.store.vector_store import vector_store
+        from src.rag.embedder import embedder
+        from src.store.vector import vector_store
 
         query_vector = await embedding.embed_query(req.query)
 
@@ -604,7 +604,7 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
                 status_code=400, detail="Thiếu thông tin vị trí tệp tin"
             )
 
-        from src.rag.ingestion_pipeline import ingestion_pipeline
+        from src.rag.pipeline import ingestion_pipeline
 
         extracted_text = await ingestion_pipeline._extract_text(file_url)
 
@@ -652,7 +652,7 @@ async def analyze_document(
 @router.delete("/vectors/{document_id}")
 async def delete_vector_document(document_id: str):
     try:
-        from src.store.vector_store import vector_store
+        from src.store.vector import vector_store
 
         await vector_store.delete_by_document(document_id)
         return {"status": "success", "message": "Xóa chỉ mục tài liệu thành công"}

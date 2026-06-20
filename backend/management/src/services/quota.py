@@ -10,7 +10,7 @@ from core.database import db_client
 from core.schemas.quota import QuotaLimit
 
 
-class QuotaService:
+class QuotaManager:
     @staticmethod
     async def get_global_config_from_db(db=None) -> dict:
         config = await db_client.db.quota_configs.find_one({"_id": "global"})
@@ -59,7 +59,7 @@ class QuotaService:
 
     @staticmethod
     async def update_role_quota(tier: str, limits_dict: dict, db=None):
-        global_cfg = await QuotaService.get_global_config_from_db(db=db)
+        global_cfg = await QuotaManager.get_global_config_from_db(db=db)
         if tier in global_cfg:
             global_cfg[tier].update(limits_dict)
             await db_client.db.quota_configs.update_one(
@@ -70,7 +70,7 @@ class QuotaService:
     async def get_user_limits(
         user_id: str, role: str, ai_tier: str = "BASIC", db=None
     ) -> QuotaLimit:
-        global_cfg = await QuotaService.get_global_config_from_db(db=db)
+        global_cfg = await QuotaManager.get_global_config_from_db(db=db)
 
         target_tier = "admin" if role == "admin" else ai_tier
         tier_cfg = global_cfg.get(target_tier, global_cfg.get("BASIC", {}))
@@ -91,7 +91,7 @@ class QuotaService:
     async def check_quota(
         user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat", db=None
     ):
-        limits = await QuotaService.get_user_limits(user_id, role, ai_tier, db=db)
+        limits = await QuotaManager.get_user_limits(user_id, role, ai_tier, db=db)
 
         req_key = f"quota:{user_id}:{feature}:req"
         current_reqs = await db_client.redis.get(req_key)
@@ -140,7 +140,7 @@ class QuotaService:
     async def get_current_usage(
         user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat", db=None
     ):
-        limits = await QuotaService.get_user_limits(user_id, role, ai_tier, db=db)
+        limits = await QuotaManager.get_user_limits(user_id, role, ai_tier, db=db)
         req_key = f"quota:{user_id}:{feature}:req"
         token_key = f"quota:{user_id}:{feature}:token"
         used_reqs = int(await db_client.redis.get(req_key) or 0)

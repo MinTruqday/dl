@@ -10,7 +10,7 @@ from src.router.dependency import (get_current_user, get_current_user_optional,
 from src.schemas.document import (DocumentContentUpdate, DocumentCreate,
                                   DocumentPasswordRequest, DocumentResponse,
                                   DocumentUpdate)
-from src.services.document import DocumentService
+from src.services.document import DocumentManager
 
 from core.config import settings
 from core.database import db_client
@@ -26,7 +26,7 @@ async def create_document(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
 ) -> Any:
     return APIResponse(
-        data=await DocumentService.create_document(doc_in, current_user),
+        data=await DocumentManager.create_document(doc_in, current_user),
         message="Tạo tài liệu mới thành công",
         status=status.HTTP_201_CREATED,
     )
@@ -39,7 +39,7 @@ async def update_document_content(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
 ) -> Any:
     return APIResponse(
-        data=await DocumentService.update_document_content(
+        data=await DocumentManager.update_document_content(
             document_id, content_in, current_user
         ),
         message="Lưu thay đổi nội dung tài liệu thành công",
@@ -54,7 +54,7 @@ async def update_document(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
 ) -> Any:
     return APIResponse(
-        data=await DocumentService.update_document(
+        data=await DocumentManager.update_document(
             document_id, doc_update, current_user
         ),
         message="Cập nhật dữ liệu mô tả tài liệu thành công",
@@ -72,7 +72,7 @@ async def list_documents(
     tag: Optional[str] = None,
 ) -> Any:
     return APIResponse(
-        data=await DocumentService.list_documents(
+        data=await DocumentManager.list_documents(
             limit, cursor, q, sort_by, category, tag
         ),
         message="Lấy danh mục tài liệu thành công",
@@ -161,7 +161,7 @@ async def get_my_documents(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await DocumentService.get_my_documents(current_user, q, cursor, limit),
+        data=await DocumentManager.get_my_documents(current_user, q, cursor, limit),
         message="Lấy danh sách tài liệu cá nhân thành công",
     )
 
@@ -173,7 +173,7 @@ async def get_my_documents(
 )
 async def get_trash(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await DocumentService.get_trash(current_user),
+        data=await DocumentManager.get_trash(current_user),
         message="Lấy nội dung thùng rác thành công",
     )
 
@@ -185,7 +185,7 @@ async def get_document_by_id(
     current_user: UserInDB = Depends(get_current_user_optional),
 ) -> Any:
     return APIResponse(
-        data=await DocumentService.get_document_by_id(
+        data=await DocumentManager.get_document_by_id(
             document_id, current_user, password
         ),
         message="Lấy thông tin chi tiết tài liệu thành công",
@@ -198,7 +198,7 @@ async def get_document_by_slug(
     slug: str, current_user: UserInDB = Depends(get_current_user_optional)
 ) -> Any:
     return APIResponse(
-        data=await DocumentService.get_document_by_slug(slug, current_user),
+        data=await DocumentManager.get_document_by_slug(slug, current_user),
         message="Lấy tài liệu thành công",
         status=status.HTTP_200_OK,
     )
@@ -207,7 +207,7 @@ async def get_document_by_slug(
 @router.get("/preview/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
     return APIResponse(
-        data=await DocumentService.get_document_preview(slug),
+        data=await DocumentManager.get_document_preview(slug),
         message="Lấy bản xem trước tài liệu công khai thành công",
     )
 
@@ -221,7 +221,7 @@ async def soft_delete_document(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
     return APIResponse(
-        data=await DocumentService.soft_delete_document(document_id, current_user),
+        data=await DocumentManager.soft_delete_document(document_id, current_user),
         message="Đã chuyển tài liệu vào thùng rác",
     )
 
@@ -235,7 +235,7 @@ async def restore_document(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
     return APIResponse(
-        data=await DocumentService.restore_document(document_id, current_user),
+        data=await DocumentManager.restore_document(document_id, current_user),
         message="Khôi phục tài liệu thành công",
     )
 
@@ -251,7 +251,7 @@ async def set_document_password(
     current_user: UserInDB = Depends(get_current_user),
 ):
     return APIResponse(
-        data=await DocumentService.set_document_password(
+        data=await DocumentManager.set_document_password(
             document_id, req.password, current_user
         ),
         message="Thiết lập mật khẩu truy cập tài liệu thành công",
@@ -267,7 +267,7 @@ async def get_document_audit_logs(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
     return APIResponse(
-        data=await DocumentService.get_document_audit_logs(document_id, current_user),
+        data=await DocumentManager.get_document_audit_logs(document_id, current_user),
         message="Lấy nhật ký hoạt động tài liệu thành công",
     )
 
@@ -443,7 +443,7 @@ async def update_drm_settings(
     req: DRMSettingsUpdate,
     current_user: UserInDB = Depends(get_current_user),
 ):
-    result = await DocumentService.update_document(
+    result = await DocumentManager.update_document(
         document_id,
         DocumentUpdate(
             drm_settings={
@@ -472,7 +472,7 @@ async def update_tags(
     req: TagsUpdate,
     current_user: UserInDB = Depends(get_current_user),
 ):
-    result = await DocumentService.update_document(
+    result = await DocumentManager.update_document(
         document_id, DocumentUpdate(tags=req.tags), current_user
     )
     return APIResponse(data=result, message="Cập nhật thẻ danh mục tài liệu thành công")
@@ -492,7 +492,7 @@ async def schedule_publish(
     req: ScheduleUpdate,
     current_user: UserInDB = Depends(get_current_user),
 ):
-    result = await DocumentService.update_document(
+    result = await DocumentManager.update_document(
         document_id,
         DocumentUpdate(publish_at=req.publish_at, scheduled_publish_at=req.publish_at),
         current_user,
@@ -508,7 +508,7 @@ async def unlock_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await DocumentService.get_document_by_id(
+        data=await DocumentManager.get_document_by_id(
             document_id, current_user, password
         ),
         message="Xác thực truy cập thành công",

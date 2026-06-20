@@ -7,7 +7,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class PricingService:
+class PricingManager:
 
     @staticmethod
     async def set_document_pricing(

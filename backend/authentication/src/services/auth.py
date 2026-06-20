@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from loguru import logger
 from src.repositories.auth_repository import AuthRepository
-from src.services.email import EmailService
+from src.services.email import EmailManager
 from uuid6 import uuid7
 
 from core.config import settings
@@ -16,7 +16,7 @@ from core.security import (create_access_token, get_password_hash,
                            verify_password)
 
 
-class AuthService:
+class AuthManager:
 
     @staticmethod
     async def get_google_auth_url(db=None):
@@ -203,7 +203,7 @@ class AuthService:
                 db=db,
             )
             try:
-                await EmailService.send_reset_password_email(email, otp_code)
+                await EmailManager.send_reset_password_email(email, otp_code)
             except Exception:
                 logger.error("Lỗi gửi email khôi phục mật khẩu")
         return {"status": "ok", "message": "Đang xử lý yêu cầu khôi phục mật khẩu"}
@@ -345,4 +345,4 @@ class AuthService:
                     status_code=500, detail="Lỗi kết nối quản lý người dùng"
                 )
             logger.info("Tự động tạo tài khoản liên kết thành công")
-        return await AuthService.issue_token_for_user(user_doc, client_ip)
+        return await AuthManager.issue_token_for_user(user_doc, client_ip)

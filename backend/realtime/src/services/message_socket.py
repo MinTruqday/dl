@@ -11,7 +11,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class MessageConnectionManager:
+class MessageSocketManager:
     def __init__(self):
         self.active_connections: dict[str, set[WebSocket]] = {}
         self._pubsub = None

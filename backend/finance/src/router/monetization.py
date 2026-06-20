@@ -2,8 +2,8 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from src.services.pricing import PricingService
-from src.services.purchase import PurchaseService
+from src.services.pricing import PricingManager
+from src.services.purchase import PurchaseManager
 
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
@@ -28,7 +28,7 @@ async def purchase_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PurchaseService.purchase_document(
+        data=await PurchaseManager.purchase_document(
             req.document_id, req.coupon_code, current_user, db=db
         ),
         message="Thanh toán mua tài liệu thành công",
@@ -43,7 +43,7 @@ async def buy_membership(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PurchaseService.buy_ai_tier(req.tier, current_user, db=db),
+        data=await PurchaseManager.buy_ai_tier(req.tier, current_user, db=db),
         message="Nâng cấp gói thành viên thành công",
         status=200,
     )
@@ -52,7 +52,7 @@ async def buy_membership(
 @router.get("/pricing", response_model=APIResponse[Any])
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
-        data=await PricingService.get_pricing_config(db=db),
+        data=await PricingManager.get_pricing_config(db=db),
         message="Lấy cấu hình giá gói thành viên thành công",
         status=200,
     )

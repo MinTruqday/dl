@@ -10,7 +10,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class NotificationService:
+class NotificationManager:
 
     @staticmethod
     async def get_notifications(user_id: str, skip: int, limit: int, db):

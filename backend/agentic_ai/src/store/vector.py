@@ -13,7 +13,7 @@ from qdrant_client.http.models import (Distance, FieldCondition, Filter,
 from core.config import settings
 
 
-class VectorStore:
+class VectorDatabase:
     def __init__(self):
         self.client = AsyncQdrantClient(
             url=settings.QDRANT_URL,
@@ -47,7 +47,7 @@ class VectorStore:
                 c.name == self.collection_name for c in collections.collections
             )
             if not exists:
-                from src.rag.embedder import embedding_service
+                from src.rag.embedder import embedder
 
                 await self.client.create_collection(
                     collection_name=self.collection_name,

@@ -4,8 +4,8 @@ from fastapi import APIRouter, Body, Depends, status
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db, require_role
 from src.schemas.document import SchedulePublishRequest, SeoMetadataRequest
-from src.services.document import DocumentService
-from src.services.publication import PublicationService
+from src.services.document import DocumentManager
+from src.services.publication import PublicationManager
 
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
@@ -24,7 +24,7 @@ async def publish_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PublicationService.publish_document(
+        data=await PublicationManager.publish_document(
             document_id, current_user, db=db
         ),
         message="Tài liệu đã được xuất bản",
@@ -44,7 +44,7 @@ async def schedule_publish(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PublicationService.schedule_publish(
+        data=await PublicationManager.schedule_publish(
             document_id, req.publish_at, current_user, db=db
         ),
         message="Lên lịch xuất bản tài liệu tự động thành công",
@@ -64,7 +64,7 @@ async def update_seo_metadata(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PublicationService.update_seo_metadata(
+        data=await PublicationManager.update_seo_metadata(
             document_id, req.model_dump(), current_user, db=db
         ),
         message="Cập nhật dữ liệu chuẩn SEO thành công",
@@ -79,7 +79,7 @@ async def get_readability_score(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PublicationService.get_readability_score(
+        data=await PublicationManager.get_readability_score(
             document_id, current_user, db=db
         ),
         message="Phân tích khả năng đọc thành công",

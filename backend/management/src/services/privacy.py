@@ -5,7 +5,7 @@ from loguru import logger
 from core.database import db_client
 
 
-class PrivacyService:
+class PrivacyManager:
 
     @staticmethod
     async def request_data_takeout(current_user, db=None):

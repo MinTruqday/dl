@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query
 from src.router.dependency import get_current_user, get_db, require_role
 from src.schemas.document import ModerateDocumentRequest
-from src.services.document import DocumentService
+from src.services.document import DocumentManager
 
 from core.config import settings
 from core.response import APIResponse
@@ -23,7 +23,7 @@ async def get_approval_queue(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await DocumentService.get_approval_queue(cursor, limit, db=db),
+        data=await DocumentManager.get_approval_queue(cursor, limit, db=db),
         message="Lấy danh sách tài liệu chờ duyệt thành công",
     )
 
@@ -40,7 +40,7 @@ async def moderate_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await DocumentService.moderate_document(
+        data=await DocumentManager.moderate_document(
             document_id, req.action, req.reason, current_user, db=db
         ),
         message="Cập nhật kiểm duyệt tài liệu thành công",

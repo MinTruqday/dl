@@ -8,7 +8,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class ReadingService:
+class ReadingManager:
 
     @staticmethod
     async def get_reading_history(

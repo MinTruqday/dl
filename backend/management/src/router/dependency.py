@@ -8,7 +8,7 @@ from core.schemas.user import UserInDB
 
 
 async def check_quota(current_user: UserInDB = Depends(get_current_user)):
-    from src.services.quota import QuotaService
+    from src.services.quota import QuotaManager
 
-    await QuotaService.check_quota(str(current_user.id), current_user.role.value)
+    await QuotaManager.check_quota(str(current_user.id), current_user.role.value)
     return current_user

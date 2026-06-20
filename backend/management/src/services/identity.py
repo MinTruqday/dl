@@ -10,7 +10,7 @@ from core.schemas.user import CreatorStatusEnum, KYCStatusEnum, RoleEnum
 from core.storage import upload_file
 
 
-class IdentityService:
+class IdentityManager:
 
     @staticmethod
     async def become_author(current_user, db=None):

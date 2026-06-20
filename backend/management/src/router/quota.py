@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from src.router.dependency import get_current_user, get_db, require_role
-from src.services.quota import QuotaService
+from src.services.quota import QuotaManager
 
 from core.response import APIResponse
 from core.schemas.quota import QuotaLimit
@@ -19,7 +19,7 @@ async def check_quota_internal(
     feature: str = "chat",
     db=Depends(get_db),
 ):
-    limits = await QuotaService.check_quota(user_id, role, ai_tier, feature, db=db)
+    limits = await QuotaManager.check_quota(user_id, role, ai_tier, feature, db=db)
     return APIResponse(
         data=limits.model_dump(),
         message="Thao tác nằm trong giới hạn sử dụng cho phép",
@@ -31,7 +31,7 @@ async def check_quota_internal(
 async def get_my_quota(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
-    usage = await QuotaService.get_current_usage(
+    usage = await QuotaManager.get_current_usage(
         str(current_user.id), current_user.role.value, current_user.ai_tier.value, db=db
     )
     return APIResponse(data=usage, message="Lấy thông tin hạn mức sử dụng thành công")
@@ -44,7 +44,7 @@ async def update_role_quota(
     current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])),
     db=Depends(get_db),
 ):
-    await QuotaService.update_role_quota(role, limits.model_dump(), db=db)
+    await QuotaManager.update_role_quota(role, limits.model_dump(), db=db)
     return APIResponse(
         data={},
         message="Cập nhật giới hạn tài nguyên thành công",
@@ -55,7 +55,7 @@ async def update_role_quota(
 async def get_global_config(
     current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])), db=Depends(get_db)
 ):
-    global_cfg = await QuotaService.get_global_config_from_db(db=db)
+    global_cfg = await QuotaManager.get_global_config_from_db(db=db)
     return APIResponse(
         data=global_cfg,
         message="Lấy cấu hình tài nguyên thành công",
@@ -74,11 +74,11 @@ class ConsumeQuotaRequest(BaseModel):
 
 @router.post("/consume", response_model=APIResponse[Any], include_in_schema=False)
 async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
-    await QuotaService.consume_request(
+    await QuotaManager.consume_request(
         req.user_id, req.feature, req.req_reset_hours, db=db
     )
     if req.tokens > 0:
-        await QuotaService.consume_tokens(
+        await QuotaManager.consume_tokens(
             req.user_id, req.tokens, req.feature, req.req_reset_hours, db=db
         )
     return APIResponse(

@@ -20,7 +20,7 @@ _hf_endpoint = HuggingFaceEndpoint(
 llm = ChatHuggingFace(llm=_hf_endpoint)
 
 
-class Planning:
+class Planner:
     def __init__(self):
         self.llm = llm
         self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
@@ -85,4 +85,4 @@ class Planning:
             return [{"agent": "Knowledge", "task": "Inform user of analysis failure"}]
 
 
-planning = Planning()
+planner = Planner()

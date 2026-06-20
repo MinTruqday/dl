@@ -14,7 +14,7 @@ from core.config import settings
 from core.repositories.base_repository import RepositoryFactory
 
 
-class EditorService:
+class EditorManager:
 
     @staticmethod
     async def export_to_format(

@@ -11,7 +11,7 @@ from core.repositories.base_repository import RepositoryFactory
 from core.schemas.user import RoleEnum
 
 
-class OperationService:
+class OperationManager:
 
     @staticmethod
     async def get_all_users(

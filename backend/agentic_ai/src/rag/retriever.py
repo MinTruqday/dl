@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
-from src.store.vector_store import vector_store
+from src.store.vector import vector_store
 
 from core.config import settings
 
@@ -20,7 +20,7 @@ _hf = HuggingFaceEndpoint(
 _llm = ChatHuggingFace(llm=_hf)
 
 
-class RetrievalService:
+class Retriever:
     def __init__(self):
         self.llm = _llm
         self._reranker = None
@@ -92,7 +92,7 @@ class RetrievalService:
     async def retrieve(
         self, query: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
-        from src.rag.embedder import embedding_service
+        from src.rag.embedder import embedder
 
         query_vector = embedding.embed_query(query)
 
@@ -175,4 +175,4 @@ class RetrievalService:
         return [d for d in result if d is not None]
 
 
-retrieval_service = RetrievalService()
+retriever = Retriever()

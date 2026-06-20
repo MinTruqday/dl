@@ -9,7 +9,7 @@ from loguru import logger
 from core.config import settings
 
 
-class DocumentParser:
+class FileParser:
     def __init__(self):
         self._minio_base = settings.MINIO_ENDPOINT.rstrip("/")
         self._bucket = settings.MINIO_BUCKET_NAME
@@ -92,7 +92,7 @@ class DocumentParser:
                 "force_ocr": False,
                 "paginate_output": True,
                 "use_llm": True,
-                "llm_service": "marker.services.ollama.OllamaService",
+                "llm_service": "marker.services.ollama.OllamaManager",
                 "ollama_base_url": settings.OLLAMA_BASE_URL,
                 "ollama_model": settings.OLLAMA_MODEL,
             }
@@ -151,7 +151,7 @@ class DocumentParser:
                 config = {
                     "output_format": "json",
                     "use_llm": True,
-                    "llm_service": "marker.services.ollama.OllamaService",
+                    "llm_service": "marker.services.ollama.OllamaManager",
                     "ollama_base_url": settings.OLLAMA_BASE_URL,
                     "ollama_model": settings.OLLAMA_MODEL,
                 }

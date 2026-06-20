@@ -7,7 +7,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class PublicationService:
+class PublicationManager:
 
     @staticmethod
     async def update_seo_metadata(

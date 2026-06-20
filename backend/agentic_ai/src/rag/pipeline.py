@@ -5,8 +5,8 @@ from typing import Dict, List, Optional
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.rag.chunker import chunker
-from src.rag.embedder import embedding_service
-from src.store.vector_store import vector_store
+from src.rag.embedder import embedder
+from src.store.vector import vector_store
 from uuid6 import uuid7
 
 from core.config import settings
@@ -55,7 +55,7 @@ class IngestionPipeline:
         extraction_method = "local"
         chunks = []
 
-        from src.rag.document_parser import document_parser
+        from src.rag.parser import document_parser
 
         doc_chunks = await document_parser.get_doc_chunks_for_ingestion(file_url)
 

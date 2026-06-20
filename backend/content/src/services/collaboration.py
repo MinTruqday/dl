@@ -10,7 +10,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class CollaborationService:
+class CollaborationManager:
 
     @staticmethod
     async def log_activity(
@@ -87,7 +87,7 @@ class CollaborationService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("collaboration_invites").insert_one(invite)
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             document_id,
             current_user.full_name,
             "Send invitation",
@@ -141,7 +141,7 @@ class CollaborationService:
                     "$set": {"updated_at": datetime.now(timezone.utc)},
                 },
             )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             invite["document_id"],
             current_user.full_name,
             "Accepted" if status == "ACCEPTED" else "Declined",
@@ -226,7 +226,7 @@ class CollaborationService:
         await RepositoryFactory.get("collaboration_invites").delete_one(
             {"_id": collaboration_id}
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             invite["document_id"],
             current_user.full_name,
             "Collaborator removed",
@@ -325,7 +325,7 @@ class CollaborationService:
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$push": {"coauthors": str(current_user.id)}}
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             document_id,
             current_user.full_name,
             "Transfer ownership",
@@ -402,7 +402,7 @@ class CollaborationService:
         await RepositoryFactory.get("collaboration_invites").update_one(
             {"_id": collaboration_id}, {"$set": {"role": role}}
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             invite["document_id"],
             current_user.full_name,
             "Update role",
@@ -500,7 +500,7 @@ class CollaborationService:
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$set": {"collab_access_level": access_level}}
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             document_id,
             current_user.full_name,
             "Permission settings",
@@ -553,7 +553,7 @@ class CollaborationService:
         await RepositoryFactory.get("collaboration_invites").delete_one(
             {"_id": invite_id}
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             invite["document_id"],
             current_user.full_name,
             "Invitation revoked",
@@ -620,7 +620,7 @@ class CollaborationService:
             "timestamp": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("collaboration_drafts").insert_one(snapshot)
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             document_id,
             current_user.full_name,
             "Create draft",
@@ -711,7 +711,7 @@ class CollaborationService:
             },
             upsert=True,
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             document_id,
             current_user.full_name,
             "Document locked",
@@ -730,7 +730,7 @@ class CollaborationService:
             await RepositoryFactory.get("collaboration_locks").delete_one(
                 {"document_id": document_id}
             )
-            await CollaborationService.log_activity(
+            await CollaborationManager.log_activity(
                 document_id,
                 current_user.full_name,
                 "Unlock document",
@@ -787,7 +787,7 @@ class CollaborationService:
             },
             upsert=True,
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             document_id,
             current_user.full_name,
             "Generate collaboration code",
@@ -837,7 +837,7 @@ class CollaborationService:
                 "responded_at": datetime.now(timezone.utc),
             }
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             document_id,
             current_user.full_name,
             "Join via code",
@@ -878,7 +878,7 @@ class CollaborationService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("collaboration_tasks").insert_one(task)
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             document_id,
             current_user.full_name,
             "Create task",
@@ -953,7 +953,7 @@ class CollaborationService:
         await RepositoryFactory.get("collaboration_tasks").update_one(
             {"_id": task_id}, {"$set": {"is_done": is_done}}
         )
-        await CollaborationService.log_activity(
+        await CollaborationManager.log_activity(
             task["document_id"],
             current_user.full_name,
             "Update task",

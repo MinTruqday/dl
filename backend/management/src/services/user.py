@@ -13,7 +13,7 @@ from core.repositories.base_repository import RepositoryFactory
 from core.schemas.user import RoleEnum
 
 
-class UserService:
+class UserManager:
 
     @staticmethod
     async def get_all_users(

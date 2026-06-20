@@ -14,7 +14,7 @@ class QualityEvaluation(BaseModel):
     feedback: str = Field(description="Phản hồi giải thích lý do")
 
 
-class Reasoning:
+class Reasoner:
     def __init__(self):
         self._model = settings.LLAMA_MODEL
         self._hf_token = settings.HF_TOKEN
@@ -78,4 +78,4 @@ class Reasoning:
         return "\n\n".join(parts)
 
 
-reasoning = Reasoning()
+reasoner = Reasoner()

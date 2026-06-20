@@ -5,7 +5,7 @@ from loguru import logger
 from core.database import db_client
 
 
-class SettingService:
+class SettingManager:
 
     @staticmethod
     async def get_settings(current_user, db=None) -> dict:

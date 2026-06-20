@@ -9,7 +9,7 @@ from core.config import settings
 from core.database import db_client
 
 
-class WalletService:
+class WalletManager:
 
     @staticmethod
     async def get_balance(current_user, db=None):

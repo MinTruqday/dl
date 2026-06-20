@@ -17,9 +17,7 @@ logger.add(
     level="INFO",
 )
 
-from src.router import editor
-from src.router import editorjs
-from src.router import latex
+from src.router import editor, editorjs, latex
 
 from core.config import settings
 

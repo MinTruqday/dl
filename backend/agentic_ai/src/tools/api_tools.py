@@ -252,7 +252,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
         )
         if response.status_code == 200:
             try:
-                from src.store.vector_store import vector_store
+                from src.store.vector import vector_store
 
                 await vector_store.delete_by_document(document_id)
                 logger.info("Dọn dẹp chỉ mục tài liệu thành công")

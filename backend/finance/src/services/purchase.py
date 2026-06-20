@@ -10,7 +10,7 @@ from uuid6 import uuid7
 from core.database import db_client
 
 
-class PurchaseService:
+class PurchaseManager:
 
     @staticmethod
     async def buy_ai_tier(tier: str, current_user, db=None) -> dict:

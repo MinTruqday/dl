@@ -12,7 +12,7 @@ from core.repositories.base_repository import RepositoryFactory
 ALLOWED_HIGHLIGHT_COLORS = ["#18181b", "#71717a", "#e4e4e7"]
 
 
-class HighlightService:
+class HighlightManager:
 
     @staticmethod
     async def create_highlight(

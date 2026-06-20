@@ -118,9 +118,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
         session_id = req.session_id or ""
         user_id = req.user_id or ""
 
-        scan = security.scan_input(
-            req.query, session_id=session_id, user_id=user_id
-        )
+        scan = security.scan_input(req.query, session_id=session_id, user_id=user_id)
         if not scan.passed:
             agentops.record_security_event(
                 session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
@@ -267,9 +265,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     await asyncio.gather(hb_task, exec_task, return_exceptions=True)
 
             if final_answer:
-                final_answer = security.scan_output(
-                    final_answer, session_id=session_id
-                )
+                final_answer = security.scan_output(final_answer, session_id=session_id)
 
             if session_id and final_answer:
                 await context.save_turn(session_id, "user", req.query)

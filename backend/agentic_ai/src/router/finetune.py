@@ -61,7 +61,7 @@ async def report_progress(job_id: str, data: dict):
 
 
 def _run_training_sync(job_id: str, config: dict, loop):
-    from src.training.engine import run_finetune_job
+    from src.training.trainer import run_finetune_job
 
     async def _update(data):
         await report_progress(job_id, data)
@@ -582,7 +582,5 @@ async def evaluate_model(job_id: str, req: dict):
     model_name = job.get("merged_model_name") or job.get("base_model")
     use_judge = req.get("use_judge", True)
     evaluation._dataset = req.get("test_samples", [])
-    result = await evaluation.run_benchmark(
-        model_name=model_name, use_judge=use_judge
-    )
+    result = await evaluation.run_benchmark(model_name=model_name, use_judge=use_judge)
     return result

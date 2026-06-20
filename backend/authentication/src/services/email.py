@@ -9,7 +9,7 @@ from loguru import logger
 from core.config import settings
 
 
-class EmailService:
+class EmailManager:
 
     @staticmethod
     async def send_reset_password_email(email: str, token: str, db=None):

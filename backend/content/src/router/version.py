@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from src.router.dependency import get_current_user, get_db
-from src.services.version import VersionsService
+from src.services.version import VersionsManager
 
 from core.response import APIResponse
 from core.schemas.user import UserInDB
@@ -18,7 +18,7 @@ async def save_version(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await VersionsService.save_version(
+        data=await VersionsManager.save_version(
             document_id, version_note, current_user, db=db
         ),
         message="Lưu phiên bản lịch sử tài liệu thành công",
@@ -33,7 +33,7 @@ async def get_document_versions(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await VersionsService.get_versions(document_id, current_user, db=db),
+        data=await VersionsManager.get_versions(document_id, current_user, db=db),
         message="Lấy lịch sử phiên bản thành công",
     )
 
@@ -45,6 +45,6 @@ async def restore_version(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await VersionsService.restore_version(version_id, current_user, db=db),
+        data=await VersionsManager.restore_version(version_id, current_user, db=db),
         message="Khôi phục phiên bản lịch sử thành công",
     )

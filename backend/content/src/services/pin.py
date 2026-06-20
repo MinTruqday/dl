@@ -8,7 +8,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class PinService:
+class PinManager:
 
     @staticmethod
     async def get_pinned_documents(current_user, db=None) -> list:

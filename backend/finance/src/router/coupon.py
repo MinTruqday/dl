@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from src.services.coupon import CouponService
+from src.services.coupon import CouponManager
 
 from core.dependency import get_db, require_role
 from core.response import APIResponse
@@ -25,7 +25,7 @@ class CouponCreateRequest(BaseModel):
 )
 async def create_coupon(req: CouponCreateRequest, db=Depends(get_db)):
     return APIResponse(
-        data=await CouponService.create_coupon(req.model_dump(), db=db),
+        data=await CouponManager.create_coupon(req.model_dump(), db=db),
         message="Tạo mã giảm giá thành công",
         status=201,
     )
@@ -38,7 +38,7 @@ async def create_coupon(req: CouponCreateRequest, db=Depends(get_db)):
 )
 async def get_all_coupons(db=Depends(get_db)):
     return APIResponse(
-        data=await CouponService.get_all_coupons(db=db),
+        data=await CouponManager.get_all_coupons(db=db),
         message="Lấy danh sách mã giảm giá thành công",
         status=200,
     )
@@ -51,7 +51,7 @@ async def get_all_coupons(db=Depends(get_db)):
 )
 async def delete_coupon(coupon_id: str, db=Depends(get_db)):
     return APIResponse(
-        data=await CouponService.delete_coupon(coupon_id, db=db),
+        data=await CouponManager.delete_coupon(coupon_id, db=db),
         message="Xóa vĩnh viễn mã giảm giá thành công",
         status=200,
     )

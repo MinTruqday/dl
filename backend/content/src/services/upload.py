@@ -7,7 +7,7 @@ from uuid6 import uuid7
 from core.storage import generate_presigned_url, upload_file
 
 
-class UploadService:
+class UploadManager:
 
     @staticmethod
     async def upload_image(file, db=None):

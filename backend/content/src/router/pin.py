@@ -3,7 +3,7 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, Query
 from src.router.dependency import get_current_user, get_db
 from src.schemas.library import PinnedDocumentRequest
-from src.services.pin import PinService
+from src.services.pin import PinManager
 
 from core.response import APIResponse
 from core.schemas.user import UserInDB
@@ -16,7 +16,7 @@ async def get_pinned_documents(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await PinService.get_pinned_documents(current_user, db=db),
+        data=await PinManager.get_pinned_documents(current_user, db=db),
         message="Lấy danh sách tài liệu ghim thành công",
     )
 
@@ -28,7 +28,7 @@ async def pin_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PinService.pin_document(document_id, current_user, db=db),
+        data=await PinManager.pin_document(document_id, current_user, db=db),
         message="Thêm tài liệu vào danh sách ghim thành công",
     )
 
@@ -40,7 +40,7 @@ async def unpin_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PinService.unpin_document(document_id, current_user, db=db),
+        data=await PinManager.unpin_document(document_id, current_user, db=db),
         message="Xóa tài liệu khỏi danh sách ghim thành công",
     )
 
@@ -52,7 +52,7 @@ async def set_pinned_documents(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PinService.set_pinned_documents(
+        data=await PinManager.set_pinned_documents(
             data.document_ids, current_user, db=db
         ),
         message="Cập nhật sắp xếp tài liệu ghim thành công",

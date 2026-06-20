@@ -7,7 +7,7 @@ from uuid6 import uuid7
 from core.database import db_client
 
 
-class BannerService:
+class BannerManager:
 
     @staticmethod
     async def get_banners(active_only: bool = True, db=None) -> list:

@@ -5,7 +5,7 @@ from src.router.dependency import get_current_user, get_db
 from src.schemas.highlight import (HighlightCreateRequest,
                                    HighlightNoteUpdateRequest,
                                    ReadingPreferenceUpdate)
-from src.services.highlight import HighlightService
+from src.services.highlight import HighlightManager
 
 from core.response import APIResponse
 from core.schemas.user import UserInDB
@@ -21,7 +21,7 @@ async def create_highlight(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await HighlightService.create_highlight(
+        data=await HighlightManager.create_highlight(
             document_id, data.model_dump(), current_user, db=db
         ),
         message="Tạo đoạn văn bản nổi bật thành công",
@@ -36,7 +36,7 @@ async def get_highlights(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await HighlightService.get_highlights(document_id, current_user, db=db),
+        data=await HighlightManager.get_highlights(document_id, current_user, db=db),
         message="Lấy đoạn văn bản nổi bật thành công",
         status=200,
     )
@@ -50,7 +50,7 @@ async def update_highlight_note(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await HighlightService.update_highlight_note(
+        data=await HighlightManager.update_highlight_note(
             highlight_id, data.note, current_user, db=db
         ),
         message="Cập nhật ghi chú thành công",
@@ -65,7 +65,7 @@ async def delete_highlight(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await HighlightService.delete_highlight(highlight_id, current_user, db=db),
+        data=await HighlightManager.delete_highlight(highlight_id, current_user, db=db),
         message="Đã xóa phần đánh dấu khỏi tài liệu",
         status=200,
     )
@@ -80,7 +80,7 @@ async def get_all_notes(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await HighlightService.get_all_notes(
+        data=await HighlightManager.get_all_notes(
             current_user, cursor, limit, skip, db=db
         ),
         message="Lấy danh sách ghi chú cá nhân thành công",
@@ -95,7 +95,7 @@ async def export_highlights_markdown(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await HighlightService.export_highlights_markdown(
+        data=await HighlightManager.export_highlights_markdown(
             document_id, current_user, db=db
         ),
         message="Lấy danh sách đoạn văn bản đánh dấu thành công",

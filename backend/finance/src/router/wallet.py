@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
-from src.services.wallet import WalletService
+from src.services.wallet import WalletManager
 
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
@@ -15,7 +15,7 @@ async def get_my_wallet(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await WalletService.get_wallet_balance(str(current_user.id), db=db),
+        data=await WalletManager.get_wallet_balance(str(current_user.id), db=db),
         message="Lấy số dư tài khoản thành công",
         status=200,
     )
@@ -29,7 +29,7 @@ async def get_my_transactions(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await WalletService.get_transactions(
+        data=await WalletManager.get_transactions(
             str(current_user.id), limit, offset, db=db
         ),
         message="Lấy lịch sử giao dịch thành công",

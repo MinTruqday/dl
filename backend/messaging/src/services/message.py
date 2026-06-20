@@ -9,7 +9,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class MessageService:
+class MessageManager:
 
     @staticmethod
     async def _upsert_conversation(
@@ -110,7 +110,7 @@ class MessageService:
                 "sender_id": reply_msg.get("sender_id"),
             }
         await RepositoryFactory.get("messages").insert_one(msg_dict)
-        await MessageService._upsert_conversation(
+        await MessageManager._upsert_conversation(
             db,
             sender_id,
             receiver_id,
@@ -591,7 +591,7 @@ class MessageService:
         )
         msg_dict = message.model_dump(by_alias=True)
         await RepositoryFactory.get("messages").insert_one(msg_dict)
-        await MessageService._upsert_conversation(
+        await MessageManager._upsert_conversation(
             db,
             str(current_user.id),
             receiver_id,

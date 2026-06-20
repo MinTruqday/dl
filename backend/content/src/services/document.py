@@ -34,7 +34,7 @@ def serialize_document(document):
     return document
 
 
-class DocumentService:
+class DocumentManager:
     @staticmethod
     async def get_tags_categories():
         db = db_client.mongodb.get_default_database()

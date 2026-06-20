@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db
 from src.schemas.library import (BookmarkFolderAssign, BookmarkFolderCreate,
                                  ReadingListCreate)
-from src.services.library import LibraryService
+from src.services.library import LibraryManager
 
 from core.response import APIResponse
 from core.schemas.user import UserInDB
@@ -20,7 +20,7 @@ async def create_reading_list(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await LibraryService.create_reading_list(data, current_user, db=db),
+        data=await LibraryManager.create_reading_list(data, current_user, db=db),
         message="Tạo danh sách đọc cá nhân thành công",
         status=201,
     )
@@ -31,7 +31,7 @@ async def get_my_lists(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await LibraryService.get_my_reading_lists(current_user, db=db),
+        data=await LibraryManager.get_my_reading_lists(current_user, db=db),
         message="Lấy danh sách đọc thành công",
     )
 
@@ -41,7 +41,7 @@ async def get_list_by_id(
     list_id: str, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await LibraryService.get_reading_list_by_id(list_id, current_user, db=db),
+        data=await LibraryManager.get_reading_list_by_id(list_id, current_user, db=db),
         message="Lấy nội dung danh sách đọc thành công",
     )
 
@@ -56,7 +56,7 @@ async def add_to_list(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await LibraryService.add_document_to_list(
+        data=await LibraryManager.add_document_to_list(
             list_id, document_id, current_user, db=db
         ),
         message="Đã thêm tài liệu vào danh sách đọc",
@@ -73,7 +73,7 @@ async def remove_from_list(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await LibraryService.remove_document_from_list(
+        data=await LibraryManager.remove_document_from_list(
             list_id, document_id, current_user, db=db
         ),
         message="Xóa tài liệu khỏi danh sách đọc thành công",

@@ -12,7 +12,7 @@ ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELL
 ALLOWED_WITHDRAWAL_ACTIONS = {"approve", "reject"}
 
 
-class WithdrawalService:
+class WithdrawalManager:
 
     @staticmethod
     async def get_revenue(current_user, db=None):

@@ -17,7 +17,7 @@ class CodeInterpreter:
         logger.info("Processing task")
 
         try:
-            from src.agents.planning import llm
+            from src.agents.planner import llm
 
             system_prompt = (
                 prompt_registry.get(PromptType.CODE_INTERPRETER_SYSTEM) + "\\n"

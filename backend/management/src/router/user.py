@@ -3,7 +3,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db, require_role
-from src.services.user import UserService
+from src.services.user import UserManager
 
 from core.config import settings
 from core.response import APIResponse
@@ -25,7 +25,7 @@ async def get_all_users(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UserService.get_all_users(limit, offset, db=db),
+        data=await UserManager.get_all_users(limit, offset, db=db),
         message="Lấy danh sách người dùng thành công",
     )
 
@@ -37,7 +37,7 @@ async def get_all_users(
 )
 async def update_user_role(user_id: str, req: UpdateRoleRequest, db=Depends(get_db)):
     return APIResponse(
-        data=await UserService.update_user_role(user_id, req.role, db=db),
+        data=await UserManager.update_user_role(user_id, req.role, db=db),
         message="Cập nhật quyền truy cập tài khoản thành công",
     )
 
@@ -51,7 +51,7 @@ async def update_user_status(
     user_id: str, req: UpdateStatusRequest, db=Depends(get_db)
 ):
     return APIResponse(
-        data=await UserService.update_user_status(user_id, req.is_active, db=db),
+        data=await UserManager.update_user_status(user_id, req.is_active, db=db),
         message="Cập nhật trạng thái hoạt động thành công",
     )
 
@@ -68,7 +68,7 @@ async def warn_user(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UserService.warn_user(user_id, req.reason, current_user, db=db),
+        data=await UserManager.warn_user(user_id, req.reason, current_user, db=db),
         message="Gửi cảnh báo vi phạm thành công",
     )
 
@@ -85,7 +85,7 @@ async def lock_user(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UserService.lock_user(
+        data=await UserManager.lock_user(
             user_id, req.reason, req.duration_hours, current_user, db=db
         ),
         message="Khóa tài khoản tạm thời thành công",
@@ -104,7 +104,7 @@ async def shadowban_user(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UserService.shadowban_user(user_id, is_banned, current_user, db=db),
+        data=await UserManager.shadowban_user(user_id, is_banned, current_user, db=db),
         message="Cập nhật quyền hiển thị tài khoản thành công",
     )
 
@@ -116,7 +116,7 @@ async def shadowban_user(
 )
 async def get_notes(user_id: str, db=Depends(get_db)):
     return APIResponse(
-        data=await UserService.get_notes(user_id, db=db),
+        data=await UserManager.get_notes(user_id, db=db),
         message="Lấy ghi chú kiểm duyệt thành công",
     )
 
@@ -133,7 +133,7 @@ async def add_note(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UserService.add_note(user_id, req.note, current_user, db=db),
+        data=await UserManager.add_note(user_id, req.note, current_user, db=db),
         message="Lưu ghi chú kiểm duyệt vào hồ sơ thành công",
         status=201,
     )
@@ -146,14 +146,14 @@ async def search_users(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UserService.search_users(q, limit, db=db),
+        data=await UserManager.search_users(q, limit, db=db),
         message="Lấy kết quả tìm kiếm thành công",
     )
 
 
 @router.get("/{user_id}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user(user_id: str, db=Depends(get_db)):
-    user = await UserService.internal_get_user_by_id(user_id, db)
+    user = await UserManager.internal_get_user_by_id(user_id, db)
     return APIResponse(
         data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công"
     )
@@ -163,13 +163,13 @@ async def internal_get_user(user_id: str, db=Depends(get_db)):
     "/multiple-users", response_model=APIResponse[Any], include_in_schema=False
 )
 async def internal_get_users(user_ids: list[str], db=Depends(get_db)):
-    users = await UserService.internal_get_users_by_ids(user_ids, db)
+    users = await UserManager.internal_get_users_by_ids(user_ids, db)
     return APIResponse(data=users, message="Lấy danh sách người dùng thành công")
 
 
 @router.get("/email/{email}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_email(email: str, db=Depends(get_db)):
-    user = await UserService.internal_get_user_by_email(email, db)
+    user = await UserManager.internal_get_user_by_email(email, db)
     return APIResponse(
         data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công"
     )
@@ -177,7 +177,7 @@ async def internal_get_user_by_email(email: str, db=Depends(get_db)):
 
 @router.get("/slug/{slug}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
-    user = await UserService.internal_get_user_by_slug(slug, db)
+    user = await UserManager.internal_get_user_by_slug(slug, db)
     return APIResponse(
         data=user, message="Lấy thông tin chi tiết hồ sơ người dùng thành công"
     )
@@ -193,7 +193,7 @@ class InternalCreateUserRequest(BaseModel):
 
 @router.post("/", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_create_user(req: InternalCreateUserRequest, db=Depends(get_db)):
-    user_id = await UserService.internal_create_user(req.dict(), db)
+    user_id = await UserManager.internal_create_user(req.dict(), db)
     return APIResponse(
         data={"user_id": user_id},
         message="Tạo tài khoản người dùng thành công",

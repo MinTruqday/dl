@@ -20,7 +20,7 @@ else:
     REPORTLAB_AVAILABLE = True
 
 
-class ExportService:
+class ExportManager:
 
     @staticmethod
     async def export_document_pdf_watermarked(document_id: str, current_user, db=None):

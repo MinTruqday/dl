@@ -11,7 +11,7 @@ from sentence_transformers import SentenceTransformer
 from core.config import settings
 
 
-class EmbeddingService:
+class Embedder:
     def __init__(self):
         self._model_name = settings.EMBEDDING_MODEL
         self._dimensions = settings.EMBEDDING_DIMENSIONS
@@ -78,4 +78,4 @@ class EmbeddingService:
         return await asyncio.to_thread(self._embed_batch, texts)
 
 
-embedding_service = EmbeddingService()
+embedder = Embedder()

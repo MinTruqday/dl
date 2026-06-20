@@ -11,7 +11,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class StorageService:
+class StorageManager:
 
     @staticmethod
     async def create_item(
@@ -44,7 +44,7 @@ class StorageService:
     async def create_shortcut(
         item_id: str, parent_id: Optional[str], owner_id: str, db=None
     ) -> Optional[StorageItemInDB]:
-        target = await StorageService.get_item(item_id)
+        target = await StorageManager.get_item(item_id)
         if not target:
             return None
         shortcut = StorageItemInDB(
@@ -124,7 +124,7 @@ class StorageService:
     ) -> Optional[StorageItemInDB]:
         update_dict = {k: v for (k, v) in update_data.dict(exclude_unset=True).items()}
         if not update_dict:
-            return await StorageService.get_item(item_id, owner_id)
+            return await StorageManager.get_item(item_id, owner_id)
         update_dict["updated_at"] = datetime.now(timezone.utc)
         result = await db_client.mongodb.get_default_database().storage_items.find_one_and_update(
             {"_id": item_id, "owner_id": owner_id},
@@ -137,7 +137,7 @@ class StorageService:
 
     @staticmethod
     async def delete_item(item_id: str, owner_id: str, db=None) -> bool:
-        item = await StorageService.get_item(item_id, owner_id)
+        item = await StorageManager.get_item(item_id, owner_id)
         if not item:
             return False
 
@@ -209,7 +209,7 @@ class StorageService:
                 new_child.dict(by_alias=True)
             )
             if new_child.is_folder:
-                await StorageService._copy_children(
+                await StorageManager._copy_children(
                     str(child_id_old), str(new_child.id), owner_id
                 )
 
@@ -217,7 +217,7 @@ class StorageService:
     async def copy_item(
         item_id: str, owner_id: str, target_parent_id: Optional[str] = None, db=None
     ) -> Optional[StorageItemInDB]:
-        item = await StorageService.get_item(item_id, owner_id)
+        item = await StorageManager.get_item(item_id, owner_id)
         if not item:
             return None
         new_item_dict = item.dict()
@@ -230,14 +230,14 @@ class StorageService:
             new_item.dict(by_alias=True)
         )
         if item.is_folder:
-            await StorageService._copy_children(item_id, str(new_item.id), owner_id)
+            await StorageManager._copy_children(item_id, str(new_item.id), owner_id)
         return new_item
 
     @staticmethod
     async def add_version(
         item_id: str, owner_id: str, url: str, size: int, db=None
     ) -> Optional[StorageItemInDB]:
-        item = await StorageService.get_item(item_id, owner_id)
+        item = await StorageManager.get_item(item_id, owner_id)
         if not item:
             return None
         from src.schemas.storage import FileVersion
@@ -265,7 +265,7 @@ class StorageService:
                 {"_id": owner_id}, {"$inc": {"used_storage": size_diff}}
             )
 
-        return await StorageService.get_item(item_id, owner_id)
+        return await StorageManager.get_item(item_id, owner_id)
 
     @staticmethod
     async def get_public_item(share_token: str, db=None) -> Optional[StorageItemInDB]:

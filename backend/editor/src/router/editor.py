@@ -6,7 +6,7 @@ from src.schemas.editor import (AutoSaveRequest, FindReplaceRequest,
                                 InlineCommentRequest, InlineSuggestionRequest,
                                 KeystrokeSyncRequest, PomodoroSyncRequest,
                                 ResolveSuggestionRequest, VersionDiffRequest)
-from src.services.editor import EditorService
+from src.services.editor import EditorManager
 
 from core.config import settings
 from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
@@ -36,7 +36,7 @@ async def check_plagiarism(
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
-        "data": await EditorService.check_deep_plagiarism(
+        "data": await EditorManager.check_deep_plagiarism(
             document_id, current_user, agentic_ai_url
         ),
         "message": "Hoàn tất kiểm tra tính nguyên bản",
@@ -51,7 +51,7 @@ async def sync_keystroke_buffer(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await EditorService.sync_keystroke_buffer(
+        "data": await EditorManager.sync_keystroke_buffer(
             document_id, payload.model_dump(), current_user
         ),
         "message": "Đồng bộ hóa dữ liệu chỉnh sửa thành công",
@@ -66,7 +66,7 @@ async def add_inline_suggestion(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await EditorService.add_inline_suggestion(
+        "data": await EditorManager.add_inline_suggestion(
             document_id, payload.model_dump(), current_user
         ),
         "message": "Ghi nhận đề xuất chỉnh sửa thành công",
@@ -81,7 +81,7 @@ async def resolve_suggestion(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await EditorService.resolve_suggestion(
+        "data": await EditorManager.resolve_suggestion(
             suggestion_id, payload.model_dump(), current_user
         ),
         "message": "Xử lý đề xuất chỉnh sửa thành công",
@@ -94,7 +94,7 @@ async def sync_pomodoro_session(
     payload: PomodoroSyncRequest, current_user=Depends(get_current_user)
 ):
     return {
-        "data": await EditorService.sync_pomodoro_session(
+        "data": await EditorManager.sync_pomodoro_session(
             payload.model_dump(), current_user
         ),
         "message": "Đồng bộ dữ liệu phiên tập trung thành công",
@@ -107,7 +107,7 @@ async def auto_save_draft(
     document_id: str, payload: AutoSaveRequest, current_user=Depends(get_current_user)
 ):
     return {
-        "data": await EditorService.auto_save_draft(
+        "data": await EditorManager.auto_save_draft(
             document_id, payload.content, current_user
         ),
         "message": "Lưu bản nháp thành công",
@@ -118,7 +118,7 @@ async def auto_save_draft(
 @router.post("/{document_id}/submit-review")
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
-        "data": await EditorService.submit_for_review(document_id, current_user),
+        "data": await EditorManager.submit_for_review(document_id, current_user),
         "message": "Đã đưa tài liệu vào hàng đợi xét duyệt",
         "status": 201,
     }
@@ -131,7 +131,7 @@ async def global_find_replace(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await EditorService.global_find_replace(
+        "data": await EditorManager.global_find_replace(
             document_id,
             payload.search,
             payload.replace,
@@ -151,7 +151,7 @@ async def get_ai_suggestions(
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
-        "data": await EditorService.get_ai_suggestions(
+        "data": await EditorManager.get_ai_suggestions(
             document_id, payload.context, current_user, agentic_ai_url
         ),
         "message": "Lấy đề xuất AI thành công",
@@ -166,7 +166,7 @@ async def summarize_document(
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
-        "data": await EditorService.summarize_document(
+        "data": await EditorManager.summarize_document(
             document_id, current_user, agentic_ai_url
         ),
         "message": "Hoàn tất quá trình tóm tắt tự động",
@@ -181,7 +181,7 @@ async def extract_smart_tags(
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
-        "data": await EditorService.extract_smart_tags(
+        "data": await EditorManager.extract_smart_tags(
             document_id, current_user, agentic_ai_url
         ),
         "message": "Trích xuất thẻ thông tin từ tài liệu thành công",
@@ -197,7 +197,7 @@ async def check_logic(
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
-        "data": await EditorService.check_logic(
+        "data": await EditorManager.check_logic(
             document_id, payload.get("content", ""), current_user, agentic_ai_url
         ),
         "message": "Hoàn tất phân tích tính nhất quán logic",
@@ -212,7 +212,7 @@ async def check_grammar(
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
-        "data": await EditorService.check_grammar(
+        "data": await EditorManager.check_grammar(
             document_id, current_user, agentic_ai_url
         ),
         "message": "Hoàn tất phân tích ngữ pháp",
@@ -227,7 +227,7 @@ async def add_inline_comment(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await EditorService.add_inline_comment(
+        "data": await EditorManager.add_inline_comment(
             document_id, payload.model_dump(), current_user
         ),
         "message": "Thêm bình luận ngữ cảnh thành công",
@@ -238,7 +238,7 @@ async def add_inline_comment(
 @router.get("/{document_id}/comments")
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
-        "data": await EditorService.get_inline_comments(document_id, current_user),
+        "data": await EditorManager.get_inline_comments(document_id, current_user),
         "message": "Lấy bình luận trực tiếp thành công",
         "status": 200,
     }
@@ -247,7 +247,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
 @router.put("/comments/{comment_id}/resolve")
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
-        "data": await EditorService.resolve_comment(comment_id, current_user),
+        "data": await EditorManager.resolve_comment(comment_id, current_user),
         "message": "Người dùng đã giải quyết bình luận",
         "status": 200,
     }
@@ -260,7 +260,7 @@ async def get_version_diff(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await EditorService.get_version_diff(
+        "data": await EditorManager.get_version_diff(
             document_id, payload.version_id_a, payload.version_id_b, current_user
         ),
         "message": "Phân tích so sánh các phiên bản tài liệu thành công",

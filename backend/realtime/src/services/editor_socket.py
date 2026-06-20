@@ -4,7 +4,7 @@ from fastapi import WebSocket
 from loguru import logger
 
 
-class ConnectionManager:
+class EditorSocketManager:
     def __init__(self):
         self.active_connections: Dict[str, List[WebSocket]] = {}
 
@@ -39,4 +39,4 @@ class ConnectionManager:
                 self.disconnect(dead, room_id)
 
 
-manager = ConnectionManager()
+editor_socket_manager = EditorSocketManager()

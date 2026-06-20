@@ -9,7 +9,7 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
-class LibraryService:
+class LibraryManager:
 
     @staticmethod
     async def create_reading_list(data, current_user, db=None):

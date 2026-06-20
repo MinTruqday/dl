@@ -6,7 +6,7 @@ from loguru import logger
 from core.database import db_client
 
 
-class ProfileService:
+class ProfileManager:
 
     @staticmethod
     async def update_profile(data: dict, current_user, db=None) -> dict:

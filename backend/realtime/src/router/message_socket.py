@@ -5,7 +5,7 @@ import time
 import jwt
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from loguru import logger
-from src.services.message_ws import message_manager
+from src.services.message_socket import message_manager
 
 from core.config import settings
 from core.database import db_client

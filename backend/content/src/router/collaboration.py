@@ -12,7 +12,7 @@ from src.schemas.document import (CoauthorInviteRequest,
                                   UpdateCollabAccessRequest,
                                   UpdateCollaboratorRoleRequest,
                                   UpdateTaskStatusRequest)
-from src.services.collaboration import CollaborationService
+from src.services.collaboration import CollaborationManager
 
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
@@ -27,7 +27,7 @@ async def invite_collaborator(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.send_collaboration_invite(
+        data=await CollaborationManager.send_collaboration_invite(
             data.document_id, data.email, data.role, current_user, db=db
         ),
         message="Gửi lời mời cộng tác thành công",
@@ -41,7 +41,7 @@ async def get_my_collaboration_invites(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_my_collaboration_invites(
+        data=await CollaborationManager.get_my_collaboration_invites(
             current_user, db=db
         ),
         message="Lấy danh sách lời mời cộng tác thành công",
@@ -56,7 +56,7 @@ async def respond_to_collaboration_invite(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.respond_to_collaboration_invite(
+        data=await CollaborationManager.respond_to_collaboration_invite(
             invite_id, data.status, current_user, db=db
         ),
         message="Phản hồi lời mời cộng tác thành công",
@@ -70,7 +70,7 @@ async def get_collaborators(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_collaborators(
+        data=await CollaborationManager.get_collaborators(
             document_id, current_user, db=db
         ),
         message="Lấy danh sách cộng tác viên đang hoạt động thành công",
@@ -84,7 +84,7 @@ async def remove_collaborator(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.remove_collaborator(
+        data=await CollaborationManager.remove_collaborator(
             collaboration_id, current_user, db=db
         ),
         message="Xóa cộng tác viên thành công",
@@ -98,7 +98,7 @@ async def get_activities(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_activities(
+        data=await CollaborationManager.get_activities(
             document_id, current_user, db=db
         ),
         message="Lấy lịch sử chỉnh sửa tài liệu thành công",
@@ -115,7 +115,7 @@ async def transfer_ownership(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.transfer_ownership(
+        data=await CollaborationManager.transfer_ownership(
             document_id, data.user_id, current_user, db=db
         ),
         message="Chuyển quyền sở hữu tài liệu cộng tác thành công",
@@ -129,7 +129,7 @@ async def ping_status(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.update_status(document_id, current_user, db=db),
+        data=await CollaborationManager.update_status(document_id, current_user, db=db),
         message="Đồng bộ trạng thái hoạt động thành công",
     )
 
@@ -141,7 +141,7 @@ async def get_online_collaborators(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_online_collaborators(document_id, db=db),
+        data=await CollaborationManager.get_online_collaborators(document_id, db=db),
         message="Lấy danh sách cộng tác viên đang trực tuyến thành công",
     )
 
@@ -154,7 +154,7 @@ async def update_collaborator_role(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.update_collaborator_role(
+        data=await CollaborationManager.update_collaborator_role(
             collaboration_id, data.role, current_user, db=db
         ),
         message="Cập nhật quyền cộng tác viên thành công",
@@ -169,7 +169,7 @@ async def send_memo(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.send_memo(
+        data=await CollaborationManager.send_memo(
             document_id, data.message, current_user, db=db
         ),
         message="Gửi tin nhắn cộng tác thành công",
@@ -183,7 +183,7 @@ async def get_memos(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_memos(document_id, current_user, db=db),
+        data=await CollaborationManager.get_memos(document_id, current_user, db=db),
         message="Lấy lịch sử giao tiếp cộng tác thành công",
     )
 
@@ -196,7 +196,7 @@ async def update_collab_access(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.update_collab_access(
+        data=await CollaborationManager.update_collab_access(
             document_id, data.access_level, current_user, db=db
         ),
         message="Cập nhật cấu hình quyền cộng tác thành công",
@@ -212,7 +212,7 @@ async def get_sent_pending_invites(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_sent_pending_invites(
+        data=await CollaborationManager.get_sent_pending_invites(
             document_id, current_user, db=db
         ),
         message="Lấy danh sách lời mời cộng tác thành công",
@@ -226,7 +226,7 @@ async def revoke_invite(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.revoke_invite(invite_id, current_user, db=db),
+        data=await CollaborationManager.revoke_invite(invite_id, current_user, db=db),
         message="Thu hồi lời mời cộng tác thành công",
     )
 
@@ -240,7 +240,7 @@ async def get_contribution_stats(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_contribution_stats(
+        data=await CollaborationManager.get_contribution_stats(
             document_id, current_user, db=db
         ),
         message="Lấy thống kê đóng góp cộng tác thành công",
@@ -255,7 +255,7 @@ async def create_snapshot(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.create_snapshot(
+        data=await CollaborationManager.create_snapshot(
             document_id, data.version_name, current_user, db=db
         ),
         message="Lưu lịch sử tài liệu thành công",
@@ -270,7 +270,7 @@ async def get_snapshots(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_snapshots(document_id, current_user, db=db),
+        data=await CollaborationManager.get_snapshots(document_id, current_user, db=db),
         message="Lấy lịch sử tài liệu thành công",
     )
 
@@ -282,7 +282,7 @@ async def acquire_lock(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.acquire_lock(document_id, current_user, db=db),
+        data=await CollaborationManager.acquire_lock(document_id, current_user, db=db),
         message="Đã khóa phiên chỉnh sửa",
     )
 
@@ -294,7 +294,7 @@ async def release_lock(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.release_lock(document_id, current_user, db=db),
+        data=await CollaborationManager.release_lock(document_id, current_user, db=db),
         message="Đã mở khóa phiên chỉnh sửa",
     )
 
@@ -306,7 +306,7 @@ async def get_lock_status(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_lock_status(document_id, db=db),
+        data=await CollaborationManager.get_lock_status(document_id, db=db),
         message="Xác minh trạng thái khóa chỉnh sửa thành công",
     )
 
@@ -318,7 +318,7 @@ async def generate_invite_code(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.generate_invite_code(
+        data=await CollaborationManager.generate_invite_code(
             document_id, current_user, db=db
         ),
         message="Tạo mã truy cập cộng tác thành công",
@@ -332,7 +332,7 @@ async def join_via_invite_code(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.join_via_invite_code(
+        data=await CollaborationManager.join_via_invite_code(
             invite_code, current_user, db=db
         ),
         message="Tham gia nhóm cộng tác thành công",
@@ -347,7 +347,7 @@ async def create_task(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.create_task(
+        data=await CollaborationManager.create_task(
             document_id, data.task_desc, data.assigned_to, current_user, db=db
         ),
         message="Tạo nhiệm vụ cộng tác thành công",
@@ -362,7 +362,7 @@ async def get_tasks(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_tasks(document_id, current_user, db=db),
+        data=await CollaborationManager.get_tasks(document_id, current_user, db=db),
         message="Lấy danh sách tác vụ cộng tác thành công",
     )
 
@@ -375,7 +375,7 @@ async def update_task(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.update_task(
+        data=await CollaborationManager.update_task(
             task_id, data.is_done, current_user, db=db
         ),
         message="Cập nhật trạng thái nhiệm vụ cộng tác thành công",
@@ -390,7 +390,7 @@ async def add_task_comment(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.add_task_comment(
+        data=await CollaborationManager.add_task_comment(
             task_id, data.comment_text, current_user, db=db
         ),
         message="Gửi bình luận cộng tác thành công",
@@ -405,6 +405,6 @@ async def get_task_comments(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CollaborationService.get_task_comments(task_id, current_user, db=db),
+        data=await CollaborationManager.get_task_comments(task_id, current_user, db=db),
         message="Lấy danh sách bình luận cộng tác thành công",
     )

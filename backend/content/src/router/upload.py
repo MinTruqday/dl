@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from src.router.dependency import get_db, require_role
-from src.services.upload import UploadService
+from src.services.upload import UploadManager
 
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
@@ -32,7 +32,7 @@ async def upload_image(
 ) -> Any:
     await validate_svg(file)
     return APIResponse(
-        data=await UploadService.upload_image(file, db=db),
+        data=await UploadManager.upload_image(file, db=db),
         message="Tải lên hình ảnh thành công",
         status=201,
     )
@@ -45,7 +45,7 @@ async def upload_document(
     db=Depends(get_db),
 ) -> Any:
     return APIResponse(
-        data=await UploadService.upload_document(file, db=db),
+        data=await UploadManager.upload_document(file, db=db),
         message="Tải lên và lưu trữ tài liệu thành công",
         status=201,
     )
@@ -59,16 +59,16 @@ async def upload_asset(
     ),
     db=Depends(get_db),
 ) -> Any:
-    from src.services.storage import StorageService
+    from src.services.storage import StorageManager
 
-    quota = await StorageService.get_storage_quota(current_user.id, db=db)
+    quota = await StorageManager.get_storage_quota(current_user.id, db=db)
     if quota["used"] >= quota["limit"]:
         raise HTTPException(
             status_code=400,
             detail="Lỗi tải lên do vượt giới hạn lưu trữ",
         )
     return APIResponse(
-        data=await UploadService.upload_document(file, db=db),
+        data=await UploadManager.upload_document(file, db=db),
         message="Tải lên tệp tin thành công",
         status=201,
     )
@@ -83,7 +83,7 @@ async def get_presigned_download_url(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UploadService.get_presigned_url(file_path, db=db),
+        data=await UploadManager.get_presigned_url(file_path, db=db),
         message="Tạo liên kết tải xuống bảo mật thành công",
         status=200,
     )
@@ -129,7 +129,7 @@ async def upload_chunk(
                 self.filename = n
 
         mock_file = MockFile(final_path, filename)
-        result = await UploadService.upload_document(mock_file, db=db)
+        result = await UploadManager.upload_document(mock_file, db=db)
         import shutil
 
         shutil.rmtree(chunk_dir)

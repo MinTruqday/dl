@@ -2,8 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router import (coupon, deposit, monetization,
-                        wallet, withdrawal)
+from src.router import coupon, deposit, monetization, wallet, withdrawal
 
 from core.config import settings
 from core.database import close_db, init_db

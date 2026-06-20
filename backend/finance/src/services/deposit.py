@@ -13,7 +13,7 @@ from core.config import settings
 from core.database import db_client
 
 
-class DepositService:
+class DepositManager:
 
     @staticmethod
     def _generate_payos_signature(data: dict, db=None) -> str:
@@ -55,7 +55,7 @@ class DepositService:
             "orderCode": order_code,
             "returnUrl": return_url,
         }
-        signature = DepositService._generate_payos_signature(signature_data)
+        signature = DepositManager._generate_payos_signature(signature_data)
 
         payload = {
             "orderCode": order_code,
@@ -154,7 +154,7 @@ class DepositService:
                         detail="Lỗi xác minh giao dịch do thiếu chữ ký bảo mật",
                     )
 
-                expected_signature = DepositService._generate_payos_signature(
+                expected_signature = DepositManager._generate_payos_signature(
                     signature_data
                 )
                 if received_signature != expected_signature:
@@ -165,7 +165,7 @@ class DepositService:
                     )
 
                 paid_amount = webhook_data.get("amount", 0)
-                await DepositService.process_success_order(order_code, paid_amount)
+                await DepositManager.process_success_order(order_code, paid_amount)
             except HTTPException:
                 raise
             except Exception:
@@ -222,7 +222,7 @@ class DepositService:
                 payment_data = res_data.get("data", {})
                 status = payment_data.get("status", "UNKNOWN")
                 if status == "PAID":
-                    await DepositService.process_success_order(
+                    await DepositManager.process_success_order(
                         order_code, payment_data.get("amountPaid", 0)
                     )
                 return {

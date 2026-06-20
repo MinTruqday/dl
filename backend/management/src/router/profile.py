@@ -5,10 +5,10 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from src.services.identity import IdentityService
-from src.services.privacy import PrivacyService
-from src.services.profile import ProfileService
-from src.services.setting import SettingService
+from src.services.identity import IdentityManager
+from src.services.privacy import PrivacyManager
+from src.services.profile import ProfileManager
+from src.services.setting import SettingManager
 
 from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
@@ -23,7 +23,7 @@ async def get_my_profile(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await ProfileService.get_user_profile(current_user, db=db),
+        data=await ProfileManager.get_user_profile(current_user, db=db),
         message="Lấy thông tin người dùng thành công",
         status=200,
     )
@@ -36,7 +36,7 @@ async def update_my_profile(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ProfileService.update_profile(
+        data=await ProfileManager.update_profile(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
         message="Cập nhật thông tin hồ sơ thành công",
@@ -49,7 +49,7 @@ async def apply_author(
     data: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await IdentityService.apply_author(data, current_user, db=db),
+        data=await IdentityManager.apply_author(data, current_user, db=db),
         message="Đã gửi yêu cầu đăng ký tác giả",
         status=201,
     )
@@ -60,7 +60,7 @@ async def become_author(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await IdentityService.become_author(current_user, db=db),
+        data=await IdentityManager.become_author(current_user, db=db),
         message="Nâng cấp tài khoản tác giả thành công",
         status=200,
     )
@@ -73,7 +73,7 @@ async def upload_kyc(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await IdentityService.upload_kyc(file, current_user, db=db),
+        data=await IdentityManager.upload_kyc(file, current_user, db=db),
         message="Tải lên tài liệu xác minh danh tính thành công",
         status=status.HTTP_200_OK,
     )
@@ -84,7 +84,7 @@ async def get_settings(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await SettingService.get_settings(current_user, db=db),
+        data=await SettingManager.get_settings(current_user, db=db),
         message="Lấy cấu hình thành công",
         status=200,
     )
@@ -97,7 +97,7 @@ async def update_settings(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await SettingService.update_settings(
+        data=await SettingManager.update_settings(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
         message="Cập nhật cấu hình thành công",
@@ -113,7 +113,7 @@ async def update_settings(
 async def request_data_export(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
-    takeout_payload = await PrivacyService.request_data_takeout(current_user, db=db)
+    takeout_payload = await PrivacyManager.request_data_takeout(current_user, db=db)
     stream = io.BytesIO(
         json.dumps(takeout_payload, ensure_ascii=False, indent=2, default=str).encode(
             "utf-8"
@@ -133,7 +133,7 @@ async def get_reading_streaks(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await ProfileService.get_reading_streaks(current_user, db=db),
+        data=await ProfileManager.get_reading_streaks(current_user, db=db),
         message="Lấy dữ liệu chuỗi ngày đọc thành công",
         status=200,
     )
@@ -144,7 +144,7 @@ async def get_badges(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await ProfileService.get_badges(current_user, db=db),
+        data=await ProfileManager.get_badges(current_user, db=db),
         message="Lấy danh sách huy hiệu thành công",
         status=200,
     )
@@ -157,7 +157,7 @@ async def block_user(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ProfileService.block_user(target_id, current_user, db=db),
+        data=await ProfileManager.block_user(target_id, current_user, db=db),
         message="Hạn chế người dùng thành công",
         status=200,
     )
@@ -170,7 +170,7 @@ async def update_brand_page(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ProfileService.update_brand_page(
+        data=await ProfileManager.update_brand_page(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
         message="Cập nhật trang hồ sơ tác giả thành công",
@@ -180,6 +180,6 @@ async def update_brand_page(
 @router.get("/{slug}", response_model=APIResponse[Any])
 async def get_public_profile(slug: str, db=Depends(get_db)):
     return APIResponse(
-        data=await IdentityService.get_public_profile(slug, db=db),
+        data=await IdentityManager.get_public_profile(slug, db=db),
         message="Lấy hồ sơ công khai thành công",
     )

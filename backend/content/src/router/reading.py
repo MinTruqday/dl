@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db
 from src.schemas.library import PinnedDocumentRequest, ProgressUpdate
-from src.services.reading import ReadingService
+from src.services.reading import ReadingManager
 
 from core.response import APIResponse
 from core.schemas.user import UserInDB
@@ -20,7 +20,7 @@ async def get_history(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ReadingService.get_reading_history(
+        data=await ReadingManager.get_reading_history(
             current_user, cursor, limit, db=db
         ),
         message="Lấy lịch sử đọc thành công",
@@ -34,7 +34,7 @@ async def update_progress(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ReadingService.update_progress(data, current_user, db=db),
+        data=await ReadingManager.update_progress(data, current_user, db=db),
         message="Đồng bộ tiến độ đọc thành công",
     )
 
@@ -47,7 +47,7 @@ async def search_in_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ReadingService.search_in_document(
+        data=await ReadingManager.search_in_document(
             document_id, q, current_user, db=db
         ),
         message="Tìm kiếm trong tài liệu thành công",
@@ -59,7 +59,7 @@ async def clear_reading_history(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await ReadingService.clear_reading_history(current_user, db=db),
+        data=await ReadingManager.clear_reading_history(current_user, db=db),
         message="Xóa toàn bộ lịch sử đọc thành công",
     )
 
@@ -71,7 +71,7 @@ async def delete_history_item(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ReadingService.delete_history_item(document_id, current_user, db=db),
+        data=await ReadingManager.delete_history_item(document_id, current_user, db=db),
         message="Xóa lịch sử đọc thành công",
     )
 

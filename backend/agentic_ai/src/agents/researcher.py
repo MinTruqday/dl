@@ -2,7 +2,7 @@ from loguru import logger
 from src.workflow.graph import knowledge_app
 
 
-class Knowledge:
+class Researcher:
     def __init__(self):
         pass
 
@@ -57,4 +57,4 @@ class Knowledge:
             return "Data retrieval error, please retry"
 
 
-knowledge = Knowledge()
+researcher = Researcher()
