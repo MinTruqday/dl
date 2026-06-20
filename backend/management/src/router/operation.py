@@ -1,3 +1,4 @@
+from core.dependency import CurrentUser
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, status
@@ -7,8 +8,8 @@ from src.services.operation import OperationManager
 from src.services.user import UserManager
 
 from core.response import APIResponse
-from core.schemas.collector import CollectionRequest
-from core.schemas.user import RoleEnum, UserInDB
+from src.schemas.collector import CollectionRequest
+from src.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/van-hanh")
 
@@ -187,7 +188,7 @@ async def get_active_collector_jobs(db=Depends(get_db)):
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def shadowban_user(
-    payload: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    payload: Any, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await OperationManager.bulk_update_shadowban(
@@ -203,7 +204,7 @@ async def shadowban_user(
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def verify_kyc(
-    payload: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    payload: Any, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await OperationManager.bulk_verify_kyc(

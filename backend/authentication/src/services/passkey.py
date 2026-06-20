@@ -30,7 +30,7 @@ from webauthn.helpers.structs import (
 
 from core.config import settings
 from core.database import db_client
-from core.schemas.user import UserInDB
+from src.schemas.user import UserInDB
 
 RP_ID = settings.PASSKEY_RP_ID
 RP_NAME = settings.PASSKEY_RP_NAME

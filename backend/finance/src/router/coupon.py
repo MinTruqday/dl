@@ -6,7 +6,7 @@ from src.services.coupon import CouponManager
 
 from core.dependency import get_db, require_role
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ma-qua-tang")
 

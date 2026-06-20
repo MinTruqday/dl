@@ -6,7 +6,7 @@ from src.services.notification import NotificationManager
 
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/thong-bao")
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/thong-bao")
 async def get_notifications(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -29,7 +29,7 @@ async def get_notifications(
 @router.patch("/{notif_id}/doc-hieu", response_model=APIResponse[Any])
 async def mark_as_read(
     notif_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -40,7 +40,7 @@ async def mark_as_read(
 
 @router.patch("/doc-tat-ca", response_model=APIResponse[Any])
 async def mark_all_as_read(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await NotificationManager.mark_all_as_read(str(current_user.id), db),
@@ -51,7 +51,7 @@ async def mark_all_as_read(
 @router.delete("/{notif_id}", response_model=APIResponse[Any])
 async def delete_notification(
     notif_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

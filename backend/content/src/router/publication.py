@@ -8,7 +8,7 @@ from src.services.document import DocumentManager
 from src.services.publication import PublicationManager
 
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/xuat-ban")
 
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/xuat-ban")
 )
 async def publish_document(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -40,7 +40,7 @@ async def publish_document(
 async def schedule_publish(
     document_id: str,
     req: SchedulePublishRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -60,7 +60,7 @@ async def schedule_publish(
 async def update_seo_metadata(
     document_id: str,
     req: SeoMetadataRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -75,7 +75,7 @@ async def update_seo_metadata(
 @router.get("/{document_id}/do-de-doc", response_model=APIResponse[Any])
 async def get_readability_score(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

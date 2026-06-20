@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from core.database import db_client
+from core.config import settings
 
 
 class BaseMongoRepository:
@@ -9,7 +10,7 @@ class BaseMongoRepository:
 
     @property
     def collection(self):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb.get_database(settings.SERVICE_DB_NAME)
         return db[self.collection_name]
 
     async def find_one(self, query: Dict[str, Any], **kwargs):

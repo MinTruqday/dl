@@ -5,7 +5,7 @@ from src.router.dependency import get_current_user, get_db
 from src.services.version import VersionsManager
 
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/phien-ban")
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/phien-ban")
 async def save_version(
     document_id: str,
     version_note: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -29,7 +29,7 @@ async def save_version(
 @router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_document_versions(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -41,7 +41,7 @@ async def get_document_versions(
 @router.post("/{version_id}/khoi-phuc", response_model=APIResponse[Any])
 async def restore_version(
     version_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

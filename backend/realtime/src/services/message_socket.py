@@ -206,4 +206,4 @@ class MessageSocketManager:
         )
 
 
-message_manager = MessageConnectionManager()
+message_manager = MessageSocketManager()

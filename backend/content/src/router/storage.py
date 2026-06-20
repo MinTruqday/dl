@@ -12,7 +12,7 @@ from src.services.storage import StorageManager
 
 from core.config import settings
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/luu-tru")
 
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/luu-tru")
 @router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
 async def create_folder(
     data: StorageItemCreate = Body(...),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -38,7 +38,7 @@ async def create_folder(
 async def create_file(
     background_tasks: BackgroundTasks,
     data: StorageItemCreate = Body(...),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -62,7 +62,7 @@ async def list_items(
     parent_id: Optional[str] = None,
     is_trashed: bool = False,
     is_starred: Optional[bool] = None,
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -80,7 +80,7 @@ async def list_items(
 async def search_items(
     q: str,
     type: Optional[str] = None,
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -96,7 +96,7 @@ async def search_items(
 @router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -111,7 +111,7 @@ async def get_recent_items(
 
 @router.get("/han-muc", response_model=APIResponse[Any])
 async def get_storage_quota(
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -128,7 +128,7 @@ async def get_storage_quota(
 async def create_shortcut(
     item_id: str,
     target_parent_id: Optional[str] = Body(None, embed=True),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -150,7 +150,7 @@ async def create_shortcut(
 @router.get("/tai-ve-luu-tru")
 async def download_zip(
     ids: str,
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -194,7 +194,7 @@ async def download_zip(
 async def update_item(
     item_id: str,
     data: StorageItemUpdate = Body(...),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -228,7 +228,7 @@ async def update_item(
 async def delete_item(
     item_id: str,
     hard_delete: bool = False,
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -259,7 +259,7 @@ async def delete_item(
 async def copy_item(
     item_id: str,
     target_parent_id: Optional[str] = Body(None, embed=True),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -283,7 +283,7 @@ async def add_version(
     item_id: str,
     url: str = Body(..., embed=True),
     size: int = Body(..., embed=True),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -303,7 +303,7 @@ async def share_archive(
     item_id: str,
     email: str = Body(..., embed=True),
     role: str = Body("viewer", embed=True),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),

@@ -11,7 +11,7 @@ from uuid6 import uuid7
 
 from core.config import settings
 from core.database import db_client
-from core.schemas.user import RoleEnum, UserCreate, UserInDB
+from src.schemas.user import RoleEnum, UserCreate, UserInDB
 from core.security import create_access_token, get_password_hash, verify_password
 
 

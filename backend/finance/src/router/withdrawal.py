@@ -6,7 +6,7 @@ from src.services.withdrawal import WithdrawalManager
 
 from core.dependency import get_current_user, get_db, require_role
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/rut-tien")
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/rut-tien")
 @router.post("", response_model=APIResponse[Any])
 async def request_withdrawal(
     req: WithdrawalRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -48,7 +48,7 @@ async def verify_withdrawal(
     withdrawal_id: str,
     action: str,
     reason: str = "",
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

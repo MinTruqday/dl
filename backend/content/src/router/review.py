@@ -6,7 +6,7 @@ from src.schemas.review import ReviewCreate, ReviewResponse
 from src.services.review import ReviewManager
 
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/danh-gia")
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/danh-gia")
 async def create_document_review(
     document_id: str,
     review_in: ReviewCreate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ) -> Any:
     return APIResponse(

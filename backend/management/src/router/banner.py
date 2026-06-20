@@ -6,7 +6,7 @@ from src.services.banner import BannerManager
 
 from core.dependency import get_db, require_role
 from core.response import APIResponse
-from core.schemas.user import RoleEnum
+from src.schemas.user import RoleEnum
 
 
 class BannerRequest(BaseModel):

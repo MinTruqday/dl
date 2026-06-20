@@ -8,7 +8,7 @@ from src.schemas.wallet import CouponStatus, CouponTargetType
 from uuid6 import uuid7
 
 from core.database import db_client
-from core.schemas.user import RoleEnum
+from core.dependency import CurrentUser, RoleEnum
 
 
 class CouponManager:

@@ -74,7 +74,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = db_client.mongodb[settings.MONGODB_DB_NAME]
+        db = db_client.mongodb[settings.SERVICE_DB_NAME]
 
         await db["documents"].create_index(
             [("title", "text"), ("description", "text"), ("author", "text")],

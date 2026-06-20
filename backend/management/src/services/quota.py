@@ -7,7 +7,7 @@ from loguru import logger
 
 from core.config import settings
 from core.database import db_client
-from core.schemas.quota import QuotaLimit
+from src.schemas.quota import QuotaLimit
 
 
 class QuotaManager:

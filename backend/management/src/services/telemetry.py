@@ -8,7 +8,7 @@ from uuid6 import uuid7
 
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
-from core.schemas.user import UserInDB
+from src.schemas.user import UserInDB
 
 
 class TelemetryManager:
@@ -91,7 +91,7 @@ class TelemetryManager:
             db = db_client.mongodb.get_default_database()
         return (
             await RepositoryFactory.get("moderator_activity")
-            .find({"actor_id": actor_id})
+            .find({"actor_id": user_id})
             .sort("timestamp", -1)
             .to_list(length=100)
         )

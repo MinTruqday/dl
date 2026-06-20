@@ -1,3 +1,4 @@
+from core.dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request, status
@@ -7,7 +8,7 @@ from src.services.auth import AuthManager
 
 from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import (
+from src.schemas.user import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     UserCreate,
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/xac-thuc")
 
 @router.get("/ca-nhan", response_model=APIResponse[UserResponse])
 async def read_users_me(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     user_data = current_user.model_dump()
     user_data["has_passkey"] = (

@@ -10,7 +10,7 @@ from src.schemas.highlight import (
 from src.services.highlight import HighlightManager
 
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/danh-dau")
 
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/danh-dau")
 async def create_highlight(
     document_id: str,
     data: HighlightCreateRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -34,7 +34,7 @@ async def create_highlight(
 @router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_highlights(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -48,7 +48,7 @@ async def get_highlights(
 async def update_highlight_note(
     highlight_id: str,
     data: HighlightNoteUpdateRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -63,7 +63,7 @@ async def update_highlight_note(
 @router.delete("/{highlight_id}", response_model=APIResponse[Any])
 async def delete_highlight(
     highlight_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -78,7 +78,7 @@ async def get_all_notes(
     cursor: str = Query(None),
     limit: int = Query(50, ge=1, le=200),
     skip: int = Query(0, ge=0),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -93,7 +93,7 @@ async def get_all_notes(
 @router.get("/tai-lieu/{document_id}/ket-xuat", response_model=APIResponse[Any])
 async def export_highlights_markdown(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

@@ -6,7 +6,7 @@ from src.services.deposit import DepositManager
 
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/nap-tien")
 
@@ -19,7 +19,7 @@ class DepositRequest(BaseModel):
 @router.post("", response_model=APIResponse[Any])
 async def create_deposit(
     req: DepositRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

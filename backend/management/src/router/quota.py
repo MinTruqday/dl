@@ -1,3 +1,4 @@
+from core.dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -5,8 +6,8 @@ from src.router.dependency import get_current_user, get_db, require_role
 from src.services.quota import QuotaManager
 
 from core.response import APIResponse
-from core.schemas.quota import QuotaLimit
-from core.schemas.user import RoleEnum, UserInDB
+from src.schemas.quota import QuotaLimit
+from src.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/han-muc")
 
@@ -29,7 +30,7 @@ async def check_quota_internal(
 
 @router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_quota(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     usage = await QuotaManager.get_current_usage(
         str(current_user.id), current_user.role.value, current_user.ai_tier.value, db=db
@@ -41,7 +42,7 @@ async def get_my_quota(
 async def update_role_quota(
     role: str,
     limits: QuotaLimit,
-    current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])),
+    current_user: CurrentUser = Depends(require_role([RoleEnum.ADMIN])),
     db=Depends(get_db),
 ):
     await QuotaManager.update_role_quota(role, limits.model_dump(), db=db)
@@ -53,7 +54,7 @@ async def update_role_quota(
 
 @router.get("/cau-hinh", response_model=APIResponse[Any])
 async def get_global_config(
-    current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])), db=Depends(get_db)
+    current_user: CurrentUser = Depends(require_role([RoleEnum.ADMIN])), db=Depends(get_db)
 ):
     global_cfg = await QuotaManager.get_global_config_from_db(db=db)
     return APIResponse(

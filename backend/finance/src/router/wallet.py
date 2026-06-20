@@ -5,14 +5,14 @@ from src.services.wallet import WalletManager
 
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/vi-tien")
 
 
 @router.get("/so-du", response_model=APIResponse[Any])
 async def get_my_wallet(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await WalletManager.get_wallet_balance(str(current_user.id), db=db),
@@ -25,7 +25,7 @@ async def get_my_wallet(
 async def get_my_transactions(
     limit: int = Query(20),
     offset: int = Query(0),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

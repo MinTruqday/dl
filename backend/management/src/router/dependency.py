@@ -1,3 +1,4 @@
+from core.dependency import CurrentUser
 from fastapi import Depends
 
 from core.dependency import (
@@ -10,10 +11,10 @@ from core.dependency import (
     require_permissions,
     require_role,
 )
-from core.schemas.user import UserInDB
+from src.schemas.user import UserInDB
 
 
-async def check_quota(current_user: UserInDB = Depends(get_current_user)):
+async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
     from src.services.quota import QuotaManager
 
     await QuotaManager.check_quota(str(current_user.id), current_user.role.value)

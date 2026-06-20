@@ -6,7 +6,7 @@ from src.services.document import DocumentManager
 from src.services.export import ExportManager
 
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ket-xuat")
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/ket-xuat")
 @router.get("/{document_id}/pdf", response_model=APIResponse[Any])
 async def export_document_pdf(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     pdf_content = await ExportManager.export_document_pdf_watermarked(

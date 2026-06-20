@@ -1,3 +1,4 @@
+from core.dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -5,7 +6,7 @@ from src.services.user import UserManager
 
 from core.dependency import get_current_user, get_db, require_role
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
+from src.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/kiem-toan")
 
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/kiem-toan")
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_activity(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await UserManager.get_activity_log(str(current_user.id), db=db),

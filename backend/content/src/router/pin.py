@@ -6,14 +6,14 @@ from src.schemas.library import PinnedDocumentRequest
 from src.services.pin import PinManager
 
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ghim")
 
 
 @router.get("", response_model=APIResponse[Any])
 async def get_pinned_documents(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await PinManager.get_pinned_documents(current_user, db=db),
@@ -24,7 +24,7 @@ async def get_pinned_documents(
 @router.post("/{document_id}", response_model=APIResponse[Any])
 async def pin_document(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -36,7 +36,7 @@ async def pin_document(
 @router.delete("/{document_id}", response_model=APIResponse[Any])
 async def unpin_document(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -48,7 +48,7 @@ async def unpin_document(
 @router.put("", response_model=APIResponse[Any])
 async def set_pinned_documents(
     data: PinnedDocumentRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

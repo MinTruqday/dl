@@ -11,7 +11,7 @@ class AuthRepository:
         if db is None:
             db = db_client.mongodb[
                 (
-                    db_client.settings.MONGODB_DB_NAME
+                    settings.SERVICE_DB_NAME
                     if hasattr(db_client, "settings")
                     else "doclib"
                 )

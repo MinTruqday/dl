@@ -17,7 +17,7 @@ from src.services.editor import EditorManager
 from core.config import settings
 from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.dependency import get_current_user_from_header as get_current_user
-from core.schemas.inference import (
+from src.schemas.inference import (
     AISuggestionRequest,
     CoverGenerateRequest,
     PlagiarismCheckRequest,

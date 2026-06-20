@@ -13,10 +13,10 @@ from core.dependency import (
     require_permissions,
     require_role,
 )
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 
-async def check_quota(current_user: UserInDB = Depends(get_current_user)):
+async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
             resp = await client.get(

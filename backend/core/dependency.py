@@ -8,17 +8,40 @@ from loguru import logger
 
 from core.config import settings
 from core.database import db_client
-from core.schemas.user import RoleEnum, UserInDB
+
+from enum import Enum
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
+
+class RoleEnum(str, Enum):
+    GUEST = "guest"
+    READER = "reader"
+    AUTHOR = "author"
+    ADMIN = "admin"
+
+class CurrentUser(BaseModel):
+    id: str = Field(alias="_id")
+    email: str
+    role: RoleEnum = RoleEnum.READER
+    permissions: List[str] = []
+    is_active: bool = True
+    full_name: str = ""
+    is_premium: bool = False
+    
+    class Config:
+        populate_by_name = True
+        extra = "ignore"
+
 from core.security import ALGORITHM, SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
 async def get_db():
-    return db_client.mongodb[settings.MONGODB_DB_NAME]
+    return db_client.mongodb[settings.SERVICE_DB_NAME]
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
@@ -72,14 +95,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         raise credentials_exception
     user_id_str = str(user_doc["_id"])
     user_doc["_id"] = user_id_str
-    return UserInDB(**user_doc)
+    return CurrentUser(**user_doc)
 
 
 async def get_current_user_optional(
     token: Optional[str] = Depends(
         OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
     )
-) -> Optional[UserInDB]:
+) -> Optional[CurrentUser]:
     if not token:
         return None
     try:
@@ -88,15 +111,15 @@ async def get_current_user_optional(
         return None
 
 
-async def get_current_user_token_param(token: str) -> UserInDB:
+async def get_current_user_token_param(token: str) -> CurrentUser:
     return await get_current_user(token)
 
 
 def require_role(required_roles: List[RoleEnum]):
 
     async def role_checker(
-        current_user: UserInDB = Depends(get_current_user),
-    ) -> UserInDB:
+        current_user: CurrentUser = Depends(get_current_user),
+    ) -> CurrentUser:
         if current_user.role == RoleEnum.ADMIN:
             return current_user
         if current_user.role not in required_roles:
@@ -117,7 +140,7 @@ class RateLimiter:
         self.period = period
 
     async def __call__(self, request: Request):
-        if settings.MONGODB_DB_NAME == "doclib_test":
+        if settings.SERVICE_DB_NAME == "doclib_test":
             return True
         if not db_client.redis:
             raise HTTPException(
@@ -143,8 +166,8 @@ class RateLimiter:
 def require_permissions(required_permissions: List[str]):
 
     async def permission_checker(
-        current_user: UserInDB = Depends(get_current_user),
-    ) -> UserInDB:
+        current_user: CurrentUser = Depends(get_current_user),
+    ) -> CurrentUser:
         user_perms = current_user.permissions or []
         if current_user.role == RoleEnum.ADMIN:
             return current_user

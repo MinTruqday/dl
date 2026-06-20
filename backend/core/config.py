@@ -14,6 +14,7 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     MONGODB_DB_NAME: str = os.getenv("MONGODB_DB_NAME")
+    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME", os.getenv("MONGODB_DB_NAME"))
     REDIS_URI: str = os.getenv("REDIS_URI")
     RABBITMQ_URI: str = os.getenv("RABBITMQ_URI")
     QDRANT_URL: str = os.getenv("QDRANT_URL")

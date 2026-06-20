@@ -1,3 +1,4 @@
+from core.dependency import CurrentUser
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -7,7 +8,7 @@ from src.services.user import UserManager
 
 from core.config import settings
 from core.response import APIResponse
-from core.schemas.user import (
+from src.schemas.user import (
     ModerationActionRequest,
     NoteRequest,
     RoleEnum,
@@ -69,7 +70,7 @@ async def update_user_status(
 async def warn_user(
     user_id: str,
     req: ModerationActionRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -86,7 +87,7 @@ async def warn_user(
 async def lock_user(
     user_id: str,
     req: ModerationActionRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -105,7 +106,7 @@ async def lock_user(
 async def shadowban_user(
     user_id: str,
     is_banned: bool,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -134,7 +135,7 @@ async def get_notes(user_id: str, db=Depends(get_db)):
 async def add_note(
     user_id: str,
     req: NoteRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

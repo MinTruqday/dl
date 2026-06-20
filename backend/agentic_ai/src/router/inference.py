@@ -11,7 +11,7 @@ from src.core.prompt_registry import PromptType, prompt_registry
 from core.config import settings
 from core.dependency import get_current_user
 from core.repositories.base_repository import RepositoryFactory
-from core.schemas.inference import (
+from src.schemas.inference import (
     ActionRequest,
     CitationRequest,
     CodeRequest,
@@ -23,14 +23,14 @@ from core.schemas.inference import (
     ToneRequest,
     TranslationRequest,
 )
-from core.schemas.user import RoleEnum, UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/suy-luan")
 
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
 
-async def _check_quota(current_user: UserInDB):
+async def _check_quota(current_user: CurrentUser):
     try:
         async with httpx.AsyncClient() as c:
             resp = await c.get(
@@ -57,7 +57,7 @@ async def _check_quota(current_user: UserInDB):
 
 
 async def _consume_quota(
-    current_user: UserInDB, tokens: int, req_reset_hours: int = 24
+    current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
 ):
     try:
         async with httpx.AsyncClient() as c:
@@ -95,7 +95,7 @@ async def _chat_direct(
 
 
 async def _run_ai_with_quota(
-    current_user: UserInDB,
+    current_user: CurrentUser,
     messages: List[dict],
     max_tokens: int = 500,
     temperature: float = 0.3,
@@ -114,7 +114,7 @@ async def _run_ai_with_quota(
 
 @router.post("/tao-noi-dung")
 async def generate_text(
-    req: GenerationRequest, current_user: UserInDB = Depends(get_current_user)
+    req: GenerationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         result = await _run_ai_with_quota(
@@ -132,7 +132,7 @@ async def generate_text(
 
 @router.post("/dich-thuat")
 async def translate_text(
-    req: TranslationRequest, current_user: UserInDB = Depends(get_current_user)
+    req: TranslationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         prompt = prompt_registry.get(PromptType.TRANSLATE).format(
@@ -153,7 +153,7 @@ async def translate_text(
 
 @router.post("/tao-ma")
 async def generate_code(
-    req: CodeRequest, current_user: UserInDB = Depends(get_current_user)
+    req: CodeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         prompt = prompt_registry.get(PromptType.CODE_GENERATION).format(
@@ -174,7 +174,7 @@ async def generate_code(
 
 @router.post("/kiem-tra-ngu-phap")
 async def grammar_check(
-    req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
+    req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         if (
@@ -211,7 +211,7 @@ async def grammar_check(
 
 @router.post("/tom-tat")
 async def summarize_text(
-    req: SummarizeRequest, current_user: UserInDB = Depends(get_current_user)
+    req: SummarizeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         prompt = prompt_registry.get(PromptType.SUMMARIZE).format(
@@ -232,7 +232,7 @@ async def summarize_text(
 
 @router.post("/kiem-tra-dao-van")
 async def check_plagiarism(
-    req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
+    req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         if (
@@ -304,7 +304,7 @@ async def check_plagiarism(
 
 @router.post("/hanh-dong")
 async def unified_action(
-    req: ActionRequest, current_user: UserInDB = Depends(get_current_user)
+    req: ActionRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         prompts = {
@@ -345,7 +345,7 @@ async def unified_action(
 
 @router.post("/tu-dong-nghia")
 async def get_synonyms(
-    req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
+    req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         if (
@@ -373,7 +373,7 @@ async def get_synonyms(
 
 @router.post("/trich-dan-thong-minh")
 async def suggest_citations(
-    req: CitationRequest, current_user: UserInDB = Depends(get_current_user)
+    req: CitationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         if (
@@ -416,7 +416,7 @@ async def suggest_citations(
 
 @router.post("/bien-doi-van-ban")
 async def transform_tone(
-    req: ToneRequest, current_user: UserInDB = Depends(get_current_user)
+    req: ToneRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         if (
@@ -447,7 +447,7 @@ async def transform_tone(
 
 @router.post("/kiem-duyet-noi-dung")
 async def peer_review(
-    req: ReviewRequest, current_user: UserInDB = Depends(get_current_user)
+    req: ReviewRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         if (
@@ -482,7 +482,7 @@ async def peer_review(
 
 @router.post("/tong-hop-tai-lieu")
 async def multi_doc_synthesis(
-    req: SynthesisRequest, current_user: UserInDB = Depends(get_current_user)
+    req: SynthesisRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         from src.rag.embedder import embedder
@@ -515,7 +515,7 @@ async def multi_doc_synthesis(
 
 
 @router.post("/trich-xuat-van-ban")
-async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_user)):
+async def extract_text(req: dict, current_user: CurrentUser = Depends(get_current_user)):
     try:
         file_url = req.get("file_url")
         if not file_url:
@@ -537,7 +537,7 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
 
 @router.post("/phan-tich-tai-lieu")
 async def analyze_document(
-    req: dict, current_user: UserInDB = Depends(get_current_user)
+    req: dict, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         context = req.get("context", "")

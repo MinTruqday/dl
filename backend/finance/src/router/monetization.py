@@ -7,7 +7,7 @@ from src.services.purchase import PurchaseManager
 
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/kiem-tien")
 
@@ -24,7 +24,7 @@ class MembershipRequest(BaseModel):
 @router.post("/mua/tai-lieu", response_model=APIResponse[Any])
 async def purchase_document(
     req: PurchaseRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -39,7 +39,7 @@ async def purchase_document(
 @router.post("/thanh-vien", response_model=APIResponse[Any])
 async def buy_membership(
     req: MembershipRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

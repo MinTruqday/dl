@@ -6,7 +6,7 @@ from src.router.dependency import get_db, require_role
 from src.services.upload import UploadManager
 
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/tai-len")
 
@@ -27,7 +27,7 @@ async def validate_svg(file: UploadFile):
 @router.post("/hinh-anh", response_model=APIResponse[Any])
 async def upload_image(
     file: UploadFile = File(...),
-    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
+    current_user: CurrentUser = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
     db=Depends(get_db),
 ) -> Any:
     await validate_svg(file)
@@ -41,7 +41,7 @@ async def upload_image(
 @router.post("/tai-lieu", response_model=APIResponse[Any])
 async def upload_document(
     file: UploadFile = File(...),
-    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
+    current_user: CurrentUser = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
     db=Depends(get_db),
 ) -> Any:
     return APIResponse(
@@ -54,7 +54,7 @@ async def upload_document(
 @router.post("/tap-tin", response_model=APIResponse[Any])
 async def upload_asset(
     file: UploadFile = File(...),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN])
     ),
     db=Depends(get_db),
@@ -77,7 +77,7 @@ async def upload_asset(
 @router.get("/storage/{file_path:path}", response_model=APIResponse[Any])
 async def get_presigned_download_url(
     file_path: str,
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])
     ),
     db=Depends(get_db),
@@ -96,7 +96,7 @@ async def upload_chunk(
     chunk_index: int = Form(...),
     total_chunks: int = Form(...),
     filename: str = Form(...),
-    current_user: UserInDB = Depends(
+    current_user: CurrentUser = Depends(
         require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN])
     ),
     db=Depends(get_db),

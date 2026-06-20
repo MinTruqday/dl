@@ -7,7 +7,7 @@ from src.services.document import DocumentManager
 
 from core.config import settings
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ban-nhap")
 
@@ -36,7 +36,7 @@ async def get_approval_queue(
 async def moderate_document(
     document_id: str,
     req: ModerateDocumentRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

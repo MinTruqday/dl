@@ -6,7 +6,7 @@ from src.services.document import DocumentManager
 
 from core.config import settings
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/kham-pha")
 
@@ -36,7 +36,7 @@ async def get_tags_categories(db=Depends(get_db)):
 async def smart_search(
     query: str,
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
-    current_user: UserInDB = Depends(get_current_user_optional),
+    current_user: CurrentUser = Depends(get_current_user_optional),
     db=Depends(get_db),
 ):
     if not current_user:
@@ -87,7 +87,7 @@ async def smart_search(
 @router.get("/goi-y-ai", response_model=APIResponse[Any])
 async def get_ai_recommendations(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
-    current_user: UserInDB = Depends(get_current_user_optional),
+    current_user: CurrentUser = Depends(get_current_user_optional),
     db=Depends(get_db),
 ):
     return APIResponse(

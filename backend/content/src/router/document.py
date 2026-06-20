@@ -22,7 +22,7 @@ from src.services.document import DocumentManager
 from core.config import settings
 from core.database import db_client
 from core.response import APIResponse
-from core.schemas.user import RoleEnum, UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/tai-lieu")
 
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/tai-lieu")
 @router.post("", response_model=APIResponse[DocumentResponse])
 async def create_document(
     doc_in: DocumentCreate,
-    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
+    current_user: CurrentUser = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
 ) -> Any:
     return APIResponse(
         data=await DocumentManager.create_document(doc_in, current_user),
@@ -43,7 +43,7 @@ async def create_document(
 async def update_document_content(
     document_id: str,
     content_in: DocumentContentUpdate,
-    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
+    current_user: CurrentUser = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
 ) -> Any:
     return APIResponse(
         data=await DocumentManager.update_document_content(
@@ -58,7 +58,7 @@ async def update_document_content(
 async def update_document(
     document_id: str,
     doc_update: DocumentUpdate,
-    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
+    current_user: CurrentUser = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
 ) -> Any:
     return APIResponse(
         data=await DocumentManager.update_document(
@@ -98,7 +98,7 @@ class FolderCreate(BaseModel):
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
 async def get_folders(
-    parent_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)
+    parent_id: Optional[str] = None, current_user: CurrentUser = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
     query = {"creator_id": str(current_user.id)}
@@ -117,7 +117,7 @@ async def get_folders(
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
 async def create_folder(
-    req: FolderCreate, current_user: UserInDB = Depends(get_current_user)
+    req: FolderCreate, current_user: CurrentUser = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
     folder_doc = {
@@ -138,7 +138,7 @@ async def create_folder(
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
 async def delete_folder(
-    folder_id: str, current_user: UserInDB = Depends(get_current_user)
+    folder_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
     folder = await db["workspace_folders"].find_one(
@@ -164,7 +164,7 @@ async def get_my_documents(
     q: Optional[str] = None,
     cursor: Optional[str] = None,
     limit: int = Query(50, ge=1, le=100),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -178,7 +178,7 @@ async def get_my_documents(
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
-async def get_trash(current_user: UserInDB = Depends(get_current_user)):
+async def get_trash(current_user: CurrentUser = Depends(get_current_user)):
     return APIResponse(
         data=await DocumentManager.get_trash(current_user),
         message="Lấy nội dung thùng rác thành công",
@@ -189,7 +189,7 @@ async def get_trash(current_user: UserInDB = Depends(get_current_user)):
 async def get_document_by_id(
     document_id: str,
     password: Optional[str] = Header(None, alias="x-document-password"),
-    current_user: UserInDB = Depends(get_current_user_optional),
+    current_user: CurrentUser = Depends(get_current_user_optional),
 ) -> Any:
     return APIResponse(
         data=await DocumentManager.get_document_by_id(
@@ -202,7 +202,7 @@ async def get_document_by_id(
 
 @router.get("/tai-lieu/{slug}", response_model=APIResponse[DocumentResponse])
 async def get_document_by_slug(
-    slug: str, current_user: UserInDB = Depends(get_current_user_optional)
+    slug: str, current_user: CurrentUser = Depends(get_current_user_optional)
 ) -> Any:
     return APIResponse(
         data=await DocumentManager.get_document_by_slug(slug, current_user),
@@ -225,7 +225,7 @@ async def get_document_preview(slug: str):
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
 async def soft_delete_document(
-    document_id: str, current_user: UserInDB = Depends(get_current_user)
+    document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     return APIResponse(
         data=await DocumentManager.soft_delete_document(document_id, current_user),
@@ -239,7 +239,7 @@ async def soft_delete_document(
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
 async def restore_document(
-    document_id: str, current_user: UserInDB = Depends(get_current_user)
+    document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     return APIResponse(
         data=await DocumentManager.restore_document(document_id, current_user),
@@ -255,7 +255,7 @@ async def restore_document(
 async def set_document_password(
     document_id: str,
     req: DocumentPasswordRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     return APIResponse(
         data=await DocumentManager.set_document_password(
@@ -271,7 +271,7 @@ async def set_document_password(
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
 async def get_document_audit_logs(
-    document_id: str, current_user: UserInDB = Depends(get_current_user)
+    document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     return APIResponse(
         data=await DocumentManager.get_document_audit_logs(document_id, current_user),
@@ -285,7 +285,7 @@ async def get_document_audit_logs(
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
 async def toggle_star_document(
-    document_id: str, current_user: UserInDB = Depends(get_current_user)
+    document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one(
@@ -313,7 +313,7 @@ async def toggle_star_document(
 async def transfer_document(
     document_id: str,
     new_owner_id: str = Query(...),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one(
@@ -358,7 +358,7 @@ async def transfer_document(
 
 @router.get("/{document_id}/thong-ke", response_model=APIResponse[Any])
 async def get_document_analytics(
-    document_id: str, current_user: UserInDB = Depends(get_current_user)
+    document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
@@ -408,7 +408,7 @@ async def get_document_analytics(
 
 @router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
 async def get_document_academic(
-    document_id: str, current_user: UserInDB = Depends(get_current_user)
+    document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
@@ -448,7 +448,7 @@ class DRMSettingsUpdate(BaseModel):
 async def update_drm_settings(
     document_id: str,
     req: DRMSettingsUpdate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     result = await DocumentManager.update_document(
         document_id,
@@ -477,7 +477,7 @@ class TagsUpdate(BaseModel):
 async def update_tags(
     document_id: str,
     req: TagsUpdate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     result = await DocumentManager.update_document(
         document_id, DocumentUpdate(tags=req.tags), current_user
@@ -497,7 +497,7 @@ class ScheduleUpdate(BaseModel):
 async def schedule_publish(
     document_id: str,
     req: ScheduleUpdate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     result = await DocumentManager.update_document(
         document_id,
@@ -511,7 +511,7 @@ async def schedule_publish(
 async def unlock_document(
     document_id: str,
     password: str = Body(..., embed=True),
-    current_user: UserInDB = Depends(get_current_user_optional),
+    current_user: CurrentUser = Depends(get_current_user_optional),
     db=Depends(get_db),
 ):
     return APIResponse(

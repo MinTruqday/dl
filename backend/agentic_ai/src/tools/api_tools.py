@@ -333,7 +333,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
 
 from src.router.inference import peer_review, suggest_citations, transform_tone
 
-from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
+from src.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 
 
 @tool

@@ -7,7 +7,7 @@ from src.schemas.library import PinnedDocumentRequest, ProgressUpdate
 from src.services.reading import ReadingManager
 
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/doc-hieu")
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/doc-hieu")
 async def get_history(
     cursor: str = None,
     limit: int = Query(20),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -30,7 +30,7 @@ async def get_history(
 @router.post("/tien-do", response_model=APIResponse[Any])
 async def update_progress(
     data: ProgressUpdate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -43,7 +43,7 @@ async def update_progress(
 async def search_in_document(
     document_id: str,
     q: str = Query(...),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -56,7 +56,7 @@ async def search_in_document(
 
 @router.delete("/lich-su", response_model=APIResponse[Any])
 async def clear_reading_history(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await ReadingManager.clear_reading_history(current_user, db=db),
@@ -67,7 +67,7 @@ async def clear_reading_history(
 @router.delete("/lich-su/{document_id}", response_model=APIResponse[Any])
 async def delete_history_item(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

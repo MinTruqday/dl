@@ -1,3 +1,4 @@
+from core.dependency import CurrentUser
 import io
 import json
 from typing import Any, Optional
@@ -12,14 +13,14 @@ from src.services.setting import SettingManager
 
 from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import BrandPageUpdate, ProfileUpdate, SettingsUpdate, UserInDB
+from src.schemas.user import BrandPageUpdate, ProfileUpdate, SettingsUpdate, UserInDB
 
 router = APIRouter(prefix="/ho-so")
 
 
 @router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_profile(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await ProfileManager.get_user_profile(current_user, db=db),
@@ -31,7 +32,7 @@ async def get_my_profile(
 @router.put("/ca-nhan", response_model=APIResponse[Any])
 async def update_my_profile(
     data: ProfileUpdate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -45,7 +46,7 @@ async def update_my_profile(
 
 @router.post("/dang-ky-tac-gia", response_model=APIResponse[Any])
 async def apply_author(
-    data: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    data: Any, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await IdentityManager.apply_author(data, current_user, db=db),
@@ -56,7 +57,7 @@ async def apply_author(
 
 @router.post("/nang-cap-tac-gia", response_model=APIResponse[Any])
 async def become_author(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await IdentityManager.become_author(current_user, db=db),
@@ -68,7 +69,7 @@ async def become_author(
 @router.post("/xac-minh-danh-tinh", response_model=APIResponse[Any])
 async def upload_kyc(
     file: UploadFile = File(...),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -80,7 +81,7 @@ async def upload_kyc(
 
 @router.get("/cai-dat", response_model=APIResponse[Any])
 async def get_settings(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await SettingManager.get_settings(current_user, db=db),
@@ -92,7 +93,7 @@ async def get_settings(
 @router.put("/cai-dat", response_model=APIResponse[Any])
 async def update_settings(
     data: SettingsUpdate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -110,7 +111,7 @@ async def update_settings(
     dependencies=[Depends(RateLimiter(calls=2, period=3600))],
 )
 async def request_data_export(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     takeout_payload = await PrivacyManager.request_data_takeout(current_user, db=db)
     stream = io.BytesIO(
@@ -130,7 +131,7 @@ async def request_data_export(
 @router.post("/chan/{target_id}", response_model=APIResponse[Any])
 async def block_user(
     target_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -143,7 +144,7 @@ async def block_user(
 @router.put("/trang-tac-gia", response_model=APIResponse[Any])
 async def update_brand_page(
     data: BrandPageUpdate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

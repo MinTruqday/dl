@@ -6,7 +6,7 @@ from src.router.dependency import get_current_user, get_db
 from src.services.bookmark import BookmarkManager
 
 from core.response import APIResponse
-from core.schemas.user import UserInDB
+from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/danh-dau")
 
@@ -22,7 +22,7 @@ class BookmarkFolderAssign(BaseModel):
 @router.post("/{document_id}", response_model=APIResponse[Any])
 async def toggle_bookmark(
     document_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -35,7 +35,7 @@ async def toggle_bookmark(
 @router.get("", response_model=APIResponse[Any])
 async def get_bookmarks(
     limit: int = Query(100),
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -47,7 +47,7 @@ async def get_bookmarks(
 @router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(
     data: BookmarkFolderCreate,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -61,7 +61,7 @@ async def create_bookmark_folder(
 
 @router.get("/thu-muc", response_model=APIResponse[Any])
 async def get_bookmark_folders(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await BookmarkManager.get_bookmark_folders(current_user, db=db),
@@ -73,7 +73,7 @@ async def get_bookmark_folders(
 async def assign_bookmarks(
     folder_id: str,
     data: BookmarkFolderAssign,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
@@ -87,7 +87,7 @@ async def assign_bookmarks(
 @router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def delete_bookmark_folder(
     folder_id: str,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(

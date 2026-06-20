@@ -9,7 +9,7 @@ from uuid6 import uuid7
 
 from core.config import settings
 from core.repositories.base_repository import RepositoryFactory
-from core.schemas.collector import CollectionRequest
+from src.schemas.collector import CollectionRequest
 
 router = APIRouter()
 
