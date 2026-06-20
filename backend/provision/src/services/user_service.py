@@ -134,7 +134,7 @@ class UserService:
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
         except Exception:
-            logger.warning("Lỗi gửi thông báo cho dịch vụ bên ngoài")
+            logger.warning("Lỗi gửi thông báo bên ngoài")
         logger.info("Gửi cảnh báo vi phạm thành công")
         return {"message": "Gửi cảnh báo quản trị thành công"}
 

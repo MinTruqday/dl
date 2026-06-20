@@ -39,7 +39,7 @@ class Mem0Manager:
                 }
                 self.memory = Memory.from_config(config_dict=config)
             except Exception:
-                logger.exception("Lỗi khởi tạo hệ thống quản lý bộ nhớ")
+                logger.exception("Lỗi khởi tạo quản lý bộ nhớ")
 
     async def add_memory(self, messages: List[Dict], user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
@@ -48,7 +48,7 @@ class Mem0Manager:
             import asyncio
             await asyncio.to_thread(self.memory.add, messages, user_id=user_id)
         except Exception:
-            logger.exception("Lỗi lưu trữ bản ghi do lỗi hệ thống")
+            logger.exception("Lỗi lưu trữ bản ghi")
 
     async def update_memory(self, memory_id: str, new_content: str):
         if not self.memory:

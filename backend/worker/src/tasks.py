@@ -124,7 +124,7 @@ def compile_document_tectonic(document_id, tex_content):
                 "document_id": document_id,
             }
         except Exception as e:
-            logger.exception("Lỗi hệ thống khi biên dịch tài liệu")
+            logger.exception("Lỗi khi biên dịch tài liệu")
             return {
                 "status": "error",
                 "error": "Lỗi xử lý tài liệu, vui lòng thử lại sau",

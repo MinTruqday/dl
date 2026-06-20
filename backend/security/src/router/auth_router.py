@@ -119,6 +119,6 @@ async def google_callback(code: str, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.handle_google_callback(code, client_ip, db=db),
-        message="Xác thực dịch vụ liên kết thành công",
+        message="Xác thực liên kết thành công",
         status=200,
     )

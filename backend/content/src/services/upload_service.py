@@ -87,7 +87,7 @@ class UploadService:
             url = await generate_presigned_url(file_path, 3600)
             return {"download_url": url}
         except Exception as e:
-            logger.error("Lỗi tạo liên kết tải xuống an toàn")
+            logger.error("Lỗi tạo liên kết tải xuống bảo mật")
             raise HTTPException(
-                status_code=500, detail="Lỗi tạo liên kết truy cập an toàn"
+                status_code=500, detail="Lỗi tạo liên kết truy cập bảo mật"
             )

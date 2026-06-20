@@ -24,7 +24,7 @@ async def init_db():
     rabbitmq_uri = settings.RABBITMQ_URI
 
     if not mongo_uri or not redis_uri or not rabbitmq_uri:
-        logger.error("Lỗi khởi tạo hệ thống do thiếu kết nối cơ sở dữ liệu")
+        logger.error("Lỗi khởi tạo do thiếu kết nối cơ sở dữ liệu")
         import sys
 
         sys.exit(1)

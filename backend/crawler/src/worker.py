@@ -104,6 +104,6 @@ async def run_worker():
 
     await stop_event.wait()
 
-    logger.info("Đang đóng kết nối hàng đợi tin nhắn an toàn")
+    logger.info("Đang đóng kết nối hàng đợi tin nhắn")
     await mq_client.connection.close()
-    logger.info("Tắt hệ thống thu thập dữ liệu thành công")
+    logger.info("Tắt thu thập dữ liệu thành công")

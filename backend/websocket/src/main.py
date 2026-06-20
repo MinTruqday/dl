@@ -26,7 +26,7 @@ app.include_router(message_ws_router.router, prefix="/messages")
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Dịch vụ tin nhắn theo thời gian thực đã sẵn sàng")
+    logger.info("Tính năng tin nhắn đã sẵn sàng")
     from core.database import init_db
 
     await init_db()

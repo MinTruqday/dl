@@ -32,7 +32,7 @@ async def get_system_metrics(db=Depends(get_db)):
 async def get_maintenance_status(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_maintenance_mode(db=db),
-        message="Lấy trạng thái bảo trì hệ thống thành công",
+        message="Lấy trạng thái bảo trì thành công",
     )
 
 
@@ -44,7 +44,7 @@ async def get_maintenance_status(db=Depends(get_db)):
 async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.toggle_maintenance_mode(enabled, db=db),
-        message="Cập nhật cấu hình bảo trì hệ thống thành công",
+        message="Cập nhật cấu hình bảo trì thành công",
     )
 
 
@@ -56,7 +56,7 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
 async def trigger_backup(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.trigger_backup(db=db),
-        message="Bắt đầu quá trình sao lưu dữ liệu hệ thống",
+        message="Bắt đầu sao lưu dữ liệu",
     )
 
 
@@ -93,7 +93,7 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_system_config(db=Depends(get_db)):
-    return APIResponse(data={}, message="Lấy cấu hình hệ thống thành công")
+    return APIResponse(data={}, message="Lấy cấu hình thành công")
 
 
 @router.get(
@@ -104,7 +104,7 @@ async def get_system_config(db=Depends(get_db)):
 async def get_system_health(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_system_health(db=db),
-        message="Tạo báo cáo tình trạng hệ thống thành công",
+        message="Tạo báo cáo tình trạng thành công",
     )
 
 

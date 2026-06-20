@@ -18,7 +18,7 @@ router = APIRouter(prefix="/telemetry")
 async def get_stats(db=Depends(get_db)):
     return APIResponse(
         data=await TelemetryService.get_system_stats(db=db),
-        message="Lấy thống kê hiệu suất hệ thống thành công",
+        message="Lấy thống kê hiệu suất thành công",
     )
 
 
@@ -30,7 +30,7 @@ async def get_stats(db=Depends(get_db)):
 async def get_sys_health(db=Depends(get_db)):
     return APIResponse(
         data=await TelemetryService.get_sys_health(db=db),
-        message="Hoàn tất kiểm tra hệ thống",
+        message="Hoàn tất kiểm tra",
     )
 
 
@@ -46,7 +46,7 @@ async def get_audit_logs(
 ):
     return APIResponse(
         data=await TelemetryService.get_activity_stats(days=30, db=db),
-        message="Lấy nhật ký hệ thống thành công",
+        message="Lấy nhật ký thành công",
     )
 
 

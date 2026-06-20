@@ -195,7 +195,7 @@ class DepositService:
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,
-                        detail="Hệ thống đang giới hạn yêu cầu, vui lòng thử lại sau",
+                        detail="Đang giới hạn yêu cầu, vui lòng thử lại sau",
                     )
             except HTTPException:
                 raise
@@ -335,7 +335,7 @@ class DepositService:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi hoàn tất giao dịch nạp tiền")
-            raise HTTPException(status_code=500, detail="Dịch vụ tài chính đang bảo trì")
+            raise HTTPException(status_code=500, detail="Tính năng thanh toán đang bảo trì")
         finally:
             if should_close_session:
                 await session.end_session()

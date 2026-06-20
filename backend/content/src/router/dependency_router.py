@@ -35,5 +35,5 @@ async def check_quota(current_user: UserInDB = Depends(get_current_user)):
                     "Lỗi xác minh dung lượng lưu trữ"
                 )
     except Exception as e:
-        logger.error("Lỗi kết nối hệ thống phụ")
+        logger.error("Lỗi kết nối nền")
     return current_user

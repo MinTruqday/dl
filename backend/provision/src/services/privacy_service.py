@@ -78,5 +78,5 @@ class PrivacyService:
             .to_list(100),
             "comments": await db["comments"].find({"user_id": user_id}).to_list(500),
         }
-        logger.info("Xuất dữ liệu hệ thống thành công")
+        logger.info("Xuất dữ liệu thành công")
         return {"status": "success", "data": full_data}

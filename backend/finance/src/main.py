@@ -31,7 +31,7 @@ app.include_router(coupon_router.router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Dịch vụ thanh toán đã sẵn sàng")
+    logger.info("Tính năng thanh toán đã sẵn sàng")
     await init_db()
 
 

@@ -445,7 +445,7 @@ class EditorJSEngine:
 
             if not os.path.exists(pdf_path):
                 logger.error("Lỗi xuất tài liệu PDF")
-                raise Exception("Lỗi xuất tài liệu do lỗi hệ thống")
+                raise Exception("Lỗi xuất tài liệu")
 
             with open(pdf_path, "rb") as f:
                 return f.read()

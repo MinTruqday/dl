@@ -163,7 +163,7 @@ async def get_zip_content(
                             if not is_safe_zip_info(info):
                                 return APIResponse(
                                     data=None,
-                                    message="Tệp bị đánh dấu không an toàn",
+                                    message="Tệp có rủi ro bảo mật",
                                     status=403,
                                 )
                             file_bytes = z.read(path)

@@ -105,9 +105,9 @@ class OperationService:
             upsert=True,
         )
         logger.warning(
-            "Thay đổi trạng thái bảo trì hệ thống thành công"
+            "Thay đổi trạng thái bảo trì thành công"
         )
-        return {"message": "Cập nhật cấu hình bảo trì hệ thống thành công"}
+        return {"message": "Cập nhật cấu hình bảo trì thành công"}
 
     @staticmethod
     async def trigger_backup(action: str = "FULL", db=None) -> dict:
@@ -331,7 +331,7 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception:
-            logger.error("Lỗi lấy dữ liệu thống kê từ dịch vụ")
+            logger.error("Lỗi lấy dữ liệu thống kê")
         return {
             "total_documents": 0,
             "total_assets": 0,
@@ -356,12 +356,12 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json()
                 else:
-                    return {"status": "error", "message": "Dịch vụ từ chối yêu cầu thu thập"}
+                    return {"status": "error", "message": "Từ chối yêu cầu thu thập"}
         except Exception:
             logger.error("Lỗi kết nối thu thập dữ liệu")
         return {
             "status": "error",
-            "message": "Lỗi kết nối dịch vụ thu thập dữ liệu",
+            "message": "Lỗi kết nối bộ thu thập dữ liệu",
         }
 
     @staticmethod
@@ -384,7 +384,7 @@ class OperationService:
             logger.error("Lỗi dừng quá trình thu thập dữ liệu")
         return {
             "status": "error",
-            "message": "Lỗi kết nối dịch vụ thu thập dữ liệu",
+            "message": "Lỗi kết nối bộ thu thập dữ liệu",
         }
 
     @staticmethod
@@ -438,8 +438,8 @@ class OperationService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Ghi nhận báo cáo lỗi hệ thống thành công")
-        return {"message": "Báo cáo lỗi hệ thống thành công"}
+        logger.info("Ghi nhận báo cáo lỗi thành công")
+        return {"message": "Báo cáo sự cố thành công"}
 
     @staticmethod
     async def assign_task(data: dict, current_user, db=None) -> dict:
@@ -456,7 +456,7 @@ class OperationService:
         logger.info(
             "Phân công nhiệm vụ quản trị thành công"
         )
-        return {"message": "Giao nhiệm vụ thành công"}
+        return {"message": "Phân công nhiệm vụ thành công"}
 
     @staticmethod
     async def submit_policy_proposal(data: dict, current_user, db=None) -> dict:
@@ -517,7 +517,7 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json()
                 else:
-                    return {"status": "error", "message": "Hệ thống tài chính từ chối yêu cầu do điều kiện không hợp lệ"}
+                    return {"status": "error", "message": "Từ chối yêu cầu do điều kiện không hợp lệ"}
         except Exception:
             logger.error("Lỗi xử lý duyệt yêu cầu rút tiền")
         return {
@@ -543,7 +543,7 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json()
                 else:
-                    return {"status": "error", "message": "Lỗi hệ thống tài chính khi từ chối yêu cầu"}
+                    return {"status": "error", "message": "Lỗi xử lý từ chối yêu cầu"}
         except Exception:
             logger.error("Lỗi xử lý từ chối yêu cầu rút tiền")
         return {

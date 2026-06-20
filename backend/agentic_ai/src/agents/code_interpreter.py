@@ -127,7 +127,7 @@ class CodeInterpreter:
 
             return final_res
         except Exception:
-            logger.error("Lỗi thực thi hệ thống nội bộ")
+            logger.error("Lỗi thực thi nội bộ")
             return "The system encountered an unexpected error during execution and requires you to try again later"
 
 

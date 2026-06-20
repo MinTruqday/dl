@@ -120,7 +120,7 @@ class SecurityHarness:
             )
 
         if pii_violations:
-            logger.info("Hệ thống đã che khuất thông tin cá nhân nhạy cảm")
+            logger.info("Đã ẩn thông tin cá nhân nhạy cảm")
 
         return ScanResult(
             passed=True,

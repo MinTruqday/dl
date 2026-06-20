@@ -42,7 +42,7 @@ async def update_role_quota(
     await QuotaService.update_role_quota(role, limits.model_dump(), db=db)
     return APIResponse(
         data={},
-        message="Cập nhật giới hạn tài nguyên hệ thống thành công",
+        message="Cập nhật giới hạn tài nguyên thành công",
     )
 
 
@@ -53,7 +53,7 @@ async def get_global_config(
     global_cfg = await QuotaService.get_global_config_from_db(db=db)
     return APIResponse(
         data=global_cfg,
-        message="Lấy cấu hình tài nguyên hệ thống thành công",
+        message="Lấy cấu hình tài nguyên thành công",
     )
 
 

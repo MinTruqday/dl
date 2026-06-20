@@ -24,7 +24,7 @@ class AuthService:
             logger.error("Lỗi cấu hình nhà cung cấp xác thực")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Dịch vụ xác thực bên ngoài chưa được cấu hình đầy đủ",
+                detail="Chưa cấu hình xác thực bên ngoài",
             )
         auth_url = f"{settings.GOOGLE_AUTH_URL}/?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile"
         return auth_url
@@ -35,7 +35,7 @@ class AuthService:
         if config and (not config.get("registration_enabled", True)):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Tính năng tạo tài khoản tạm thời bị vô hiệu hóa",
+                detail="Tạo tài khoản tạm thời bị vô hiệu hóa",
             )
         import httpx
 
@@ -58,11 +58,11 @@ class AuthService:
                     )
                     raise HTTPException(status_code=400, detail=detail)
                 elif resp.status_code != 201:
-                    raise HTTPException(status_code=500, detail="Lỗi kết nối dịch vụ tài khoản")
+                    raise HTTPException(status_code=500, detail="Lỗi kết nối tài khoản")
                 user_id = resp.json().get("data", {}).get("user_id")
         except httpx.RequestError:
             raise HTTPException(
-                status_code=500, detail="Lỗi kết nối dịch vụ quản lý người dùng"
+                status_code=500, detail="Lỗi kết nối quản lý người dùng"
             )
 
         auth_cred = {
@@ -280,8 +280,8 @@ class AuthService:
             )
             token_data = token_resp.json()
             if "access_token" not in token_data:
-                logger.error("Dịch vụ liên kết từ chối yêu cầu xác thực")
-                raise HTTPException(status_code=400, detail="Lỗi xác thực với dịch vụ liên kết")
+                logger.error("Từ chối yêu cầu xác thực")
+                raise HTTPException(status_code=400, detail="Lỗi xác thực liên kết")
             user_resp = await client.get(
                 settings.GOOGLE_USERINFO_URL,
                 headers={"Authorization": f"Bearer {token_data['access_token']}"},
@@ -302,7 +302,7 @@ class AuthService:
             if config and (not config.get("registration_enabled", True)):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Tính năng tạo tài khoản tạm thời bị vô hiệu hóa",
+                    detail="Tạo tài khoản tạm thời bị vô hiệu hóa",
                 )
             import httpx
 
@@ -322,7 +322,7 @@ class AuthService:
                     )
                     if resp.status_code != 201:
                         raise HTTPException(
-                            status_code=500, detail="Lỗi kết nối dịch vụ tài khoản"
+                            status_code=500, detail="Lỗi kết nối tài khoản"
                         )
                     user_id = resp.json().get("data", {}).get("user_id")
 
@@ -336,7 +336,7 @@ class AuthService:
                     user_doc = {"_id": user_id, "email": email, "is_active": True}
             except httpx.RequestError:
                 raise HTTPException(
-                    status_code=500, detail="Lỗi kết nối dịch vụ quản lý người dùng"
+                    status_code=500, detail="Lỗi kết nối quản lý người dùng"
                 )
             logger.info("Tự động tạo tài khoản liên kết thành công")
         return await AuthService.issue_token_for_user(user_doc, client_ip)

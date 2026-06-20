@@ -89,7 +89,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
         raise Exception("Lỗi tải số dư tài khoản")
     except Exception:
         logger.exception("Lỗi truy cập dữ liệu số dư")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -120,7 +120,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         return "The system encountered an error while attempting to load the transaction history"
     except Exception:
         logger.exception("Lỗi tải lịch sử giao dịch")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -147,7 +147,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         return "The gift code redemption process failed due to an unexpected issue"
     except Exception:
         logger.exception("Lỗi xử lý yêu cầu đổi thưởng")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -172,7 +172,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
         return "The system was unable to retrieve the revenue reporting data"
     except Exception:
         logger.exception("Lỗi tải báo cáo doanh thu")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -200,7 +200,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
         return "The system encountered an error while fetching the document list"
     except Exception:
         logger.exception("Lỗi tải danh sách tài liệu")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -231,7 +231,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         return "The system encountered an error while accessing the document trash bin"
     except Exception:
         logger.exception("Lỗi tải danh sách mục đã xóa")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -261,7 +261,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
         return "The system failed to delete the specified document"
     except Exception:
         logger.exception("Lỗi xóa tài liệu")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -284,7 +284,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
         return "The document restoration process failed"
     except Exception:
         logger.exception("Lỗi khôi phục tài liệu")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -312,7 +312,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
         return "The system was unable to retrieve the statistical analysis data"
     except Exception:
         logger.exception("Lỗi truy xuất dữ liệu phân tích")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 async def _get_doc_text(document_id: str, token: str) -> str:
@@ -353,7 +353,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         return f"Here are the suggested citations for the document\n\n{data.get('citations', '')}"
     except Exception:
         logger.exception("Lỗi tạo gợi ý trích dẫn")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -375,7 +375,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         return f"Here is the peer review report for the document\n\n{data.get('review_report', '')}"
     except Exception:
         logger.exception("Lỗi quá trình đánh giá chéo")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -399,7 +399,7 @@ async def agent_transform_tone(
         return f"Here is the transformed text matching the requested tone\n\n{data.get('transformed_text', '')}"
     except Exception:
         logger.exception("Lỗi thay đổi giọng văn")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 @tool
@@ -426,7 +426,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         return "The payment initialization process encountered an unexpected failure"
     except Exception:
         logger.exception("Lỗi xử lý yêu cầu nạp tiền")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 from src.workflow.map_reduce import agent_summarize_long_document
@@ -532,7 +532,7 @@ async def create_document(
             return "The document was created successfully however the system could not retrieve the access identifier"
         return "The system failed to create the new document due to an unexpected internal error"
     except Exception:
-        raise Exception("Lỗi hệ thống")
+        raise Exception("Lỗi xử lý")
 
 
 @tool
@@ -646,7 +646,7 @@ async def update_document(
             return f"The document was updated successfully [View document](/editor?document_id={document_id})"
         raise Exception("Lỗi cập nhật tài liệu")
     except Exception:
-        raise Exception("Lỗi hệ thống")
+        raise Exception("Lỗi xử lý")
 
 
 @tool

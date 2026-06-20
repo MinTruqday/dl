@@ -28,7 +28,7 @@ replacements = {
     ],
     "security/src/services/email_service.py": [
         (r'f"The system is initiating the dispatch process for a password recovery email to the address \{[^\}]+\}"', r'"Đang gửi email khôi phục mật khẩu"'),
-        (r'f"The email dispatch process for the address \{[^\}]+\} could not proceed due to incomplete or missing mailing service configurations"', r'"Lỗi cấu hình dịch vụ gửi email"'),
+        (r'f"The email dispatch process for the address \{[^\}]+\} could not proceed due to incomplete or missing mailing service configurations"', r'"Chưa cấu hình tính năng gửi email"'),
         (r'f"The password recovery instructions were successfully transmitted to the email address \{[^\}]+\}"', r'"Gửi hướng dẫn khôi phục mật khẩu thành công"'),
     ],
     "security/src/services/passkey_service.py": [
@@ -61,7 +61,7 @@ replacements = {
         (r'f"The compilation process failed to generate the final output for the document with identifier \{[^\}]+\}"', r'"Lỗi biên dịch, không thể tạo kết quả cuối cùng"'),
         (r'f"The document with identifier \{[^\}]+\} has been successfully compiled and processed"', r'"Biên dịch tài liệu thành công"'),
         (r'f"The background compilation process exceeded the maximum allowed execution time for the document with identifier \{[^\}]+\}"', r'"Quá thời gian biên dịch tài liệu"'),
-        (r'f"An unexpected system failure occurred while attempting to compile the document with identifier \{[^\}]+\}"', r'"Lỗi hệ thống khi biên dịch tài liệu"'),
+        (r'f"An unexpected system failure occurred while attempting to compile the document with identifier \{[^\}]+\}"', r'"Lỗi khi biên dịch tài liệu"'),
     ]
 }
 

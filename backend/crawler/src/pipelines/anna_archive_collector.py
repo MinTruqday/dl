@@ -144,7 +144,7 @@ class AnnaArchiveCollector:
                             await context.add_cookies(formatted_cookies)
                         return context
         except Exception:
-            logger.error("Lỗi dịch vụ vượt rào")
+            logger.error("Lỗi vượt tường lửa")
         return await get_stealth_context(browser)
 
     @staticmethod
@@ -253,7 +253,7 @@ class AnnaArchiveCollector:
                                 if download_link:
                                     break
                             except Exception:
-                                logger.warning("Lỗi trích xuất liên kết tải xuống an toàn")
+                                logger.warning("Lỗi trích xuất liên kết tải xuống")
 
                             await page.wait_for_timeout(5000)
 
@@ -291,7 +291,7 @@ class AnnaArchiveCollector:
                     await page.close()
                     raise Exception("Không tìm thấy liên kết tải xuống")
             except Exception:
-                logger.error("Lỗi hệ thống khi trích xuất tài liệu chi tiết")
+                logger.error("Lỗi trích xuất tài liệu")
                 raise
 
     @staticmethod

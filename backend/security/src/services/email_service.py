@@ -25,8 +25,8 @@ class EmailService:
         if not all(
             [smtp_host, smtp_port, smtp_user, smtp_pass, sender_email, sender_name]
         ):
-            logger.error("Lỗi cấu hình dịch vụ gửi email")
-            raise Exception("Lỗi cấu hình dịch vụ gửi email")
+            logger.error("Chưa cấu hình tính năng gửi email")
+            raise Exception("Chưa cấu hình tính năng gửi email")
 
         def send_sync(db=None):
             try:

@@ -80,7 +80,7 @@ class Action:
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    logger.warning("Lỗi hệ thống, đang thử lại")
+                    logger.warning("Lỗi xử lý, đang thử lại")
                     if attempt == 2:
                         return "The operation failed to complete successfully after exhausting all available retry attempts"
 

@@ -15,7 +15,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("Mất kết nối với hệ thống bên ngoài")
+            logger.error("Mất kết nối với máy chủ")
 
     def record_success(self):
         self._failures = 0

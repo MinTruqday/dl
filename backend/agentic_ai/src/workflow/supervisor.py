@@ -135,7 +135,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         logger.exception("Lỗi máy chủ thực thi")
         return {
             "consolidated_results": ["The execution step failed"],
-            "error": "Lỗi hệ thống nội bộ",
+            "error": "Lỗi xử lý nội bộ",
         }
 
 async def code_interpreter_node(state: ActingState):
@@ -260,7 +260,7 @@ class Supervisor:
                         yield {"type": "plan", "steps": steps}
                 elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
                     if state_update.get("error"):
-                        yield {"type": "error", "message": "Lỗi hệ thống"}
+                        yield {"type": "error", "message": "Lỗi xử lý"}
                     else:
                         yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Completed")}
 

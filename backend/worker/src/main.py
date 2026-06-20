@@ -13,7 +13,7 @@ redis_client = redis.from_url(settings.REDIS_URI, decode_responses=True)
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
-        status_code=503, content={"detail": "Lỗi dịch vụ, vui lòng thử lại sau"}
+        status_code=503, content={"detail": "Đã xảy ra lỗi, vui lòng thử lại sau"}
     )
 
 

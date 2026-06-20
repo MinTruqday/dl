@@ -55,7 +55,7 @@ class SearchEngine:
                 formatted += f"- {res.get('title')} {res.get('body')}\n  Source link {res.get('href')}\n"
             return formatted
         except Exception:
-            logger.error("Lỗi hệ thống tìm kiếm thay thế")
+            logger.error("Lỗi tìm kiếm thay thế")
             return ""
 
     async def execute(self, query: str) -> str:

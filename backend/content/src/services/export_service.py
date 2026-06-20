@@ -26,7 +26,7 @@ class ExportService:
         if not REPORTLAB_AVAILABLE:
             raise HTTPException(
                 status_code=500,
-                detail="Dịch vụ xuất PDF đang bảo trì",
+                detail="Tính năng xuất PDF đang bảo trì",
             )
         if db is None:
             db = db_client.mongodb.get_default_database()

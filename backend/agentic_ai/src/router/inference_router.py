@@ -91,7 +91,7 @@ async def _chat_direct(
         return response.choices[0].message.content
     except Exception:
         logger.error("Lỗi tạo văn bản tự động")
-        raise Exception("Lỗi hệ thống, vui lòng thử lại sau")
+        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
 
 
 async def _run_ai_with_quota(
@@ -126,7 +126,7 @@ async def generate_text(
         return {"result": result}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -147,7 +147,7 @@ async def translate_text(
         return {"translation": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -234,7 +234,7 @@ async def analyze_sentiment(
     except Exception:
         logger.error("Lỗi phân tích cảm xúc văn bản")
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -255,7 +255,7 @@ async def generate_code(
         return {"code": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -292,7 +292,7 @@ async def grammar_check(
         }
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -313,7 +313,7 @@ async def summarize_text(
         return {"summary": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -385,7 +385,7 @@ async def check_plagiarism(
     except Exception:
         logger.error("Lỗi kiểm tra đạo văn")
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -426,7 +426,7 @@ async def unified_action(
     except Exception:
         logger.error("Lỗi thực thi tác vụ AI")
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -454,7 +454,7 @@ async def get_synonyms(
         return {"synonyms": [s.strip() for s in result.split(",")]}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -497,7 +497,7 @@ async def suggest_citations(
         return {"citations": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -528,7 +528,7 @@ async def transform_tone(
         return {"transformed_text": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -563,7 +563,7 @@ async def peer_review(
         return {"review_report": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 
@@ -597,7 +597,7 @@ async def multi_doc_synthesis(
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
         )
 
 

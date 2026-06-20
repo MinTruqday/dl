@@ -40,7 +40,7 @@ app.include_router(editor.router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Khởi tạo dịch vụ biên dịch thành công")
+    logger.info("Khởi tạo biên dịch thành công")
 
 
 @app.get("/health")

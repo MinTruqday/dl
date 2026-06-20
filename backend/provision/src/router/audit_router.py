@@ -18,5 +18,5 @@ async def get_activity(
 ):
     return APIResponse(
         data=await UserService.get_activity_log(str(current_user.id), db=db),
-        message="Lấy nhật ký hoạt động hệ thống thành công",
+        message="Lấy nhật ký hoạt động thành công",
     )

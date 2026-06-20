@@ -71,8 +71,8 @@ class PublicationService:
                 "analysis": "Readable structure" if score > 60 else "Complex structure",
             }
         except ImportError:
-            logger.error("Lỗi hệ thống phân tích ngôn ngữ")
-            return {"error": "Hệ thống đánh giá khả năng đọc đang bảo trì"}
+            logger.error("Lỗi phân tích ngôn ngữ")
+            return {"error": "Đánh giá khả năng đọc đang bảo trì"}
         except Exception as e:
             logger.error("Lỗi phân tích cấu trúc tài liệu")
             return {"error": "Lỗi phân tích ngôn ngữ do định dạng không xác định"}

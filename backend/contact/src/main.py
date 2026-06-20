@@ -25,7 +25,7 @@ app.include_router(message_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Khởi tạo dịch vụ nhắn tin thành công")
+    logger.info("Khởi tạo tin nhắn thành công")
     await init_db()
 
 

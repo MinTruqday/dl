@@ -303,7 +303,7 @@ async def generate_direct(state: AgentState):
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
     except Exception:
-        logger.error("Lỗi tạo phản hồi trực tiếp do lỗi hệ thống")
+        logger.error("Lỗi tạo phản hồi")
         return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
 
 

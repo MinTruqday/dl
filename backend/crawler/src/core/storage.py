@@ -62,7 +62,7 @@ class CollectorStorage:
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.error("Lỗi mạng khi lưu trữ tệp vào hệ thống vĩnh viễn")
+            logger.error("Lỗi mạng khi lưu tệp vĩnh viễn")
             raise e
 
 

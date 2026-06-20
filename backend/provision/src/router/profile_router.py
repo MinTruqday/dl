@@ -82,7 +82,7 @@ async def get_settings(
 ):
     return APIResponse(
         data=await SettingService.get_settings(current_user, db=db),
-        message="Lấy cấu hình hệ thống thành công",
+        message="Lấy cấu hình thành công",
         status=200,
     )
 
@@ -97,7 +97,7 @@ async def update_settings(
         data=await SettingService.update_settings(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="Cập nhật cấu hình hệ thống thành công",
+        message="Cập nhật cấu hình thành công",
         status=200,
     )
 

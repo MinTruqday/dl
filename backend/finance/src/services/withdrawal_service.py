@@ -381,7 +381,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi xác minh yêu cầu rút tiền")
-            raise HTTPException(status_code=500, detail="Dịch vụ tài chính đang gặp lỗi")
+            raise HTTPException(status_code=500, detail="Giao dịch thanh toán đang gặp lỗi")
         finally:
             if should_close_session:
                 await session.end_session()
@@ -469,7 +469,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi hủy yêu cầu rút tiền")
-            raise HTTPException(status_code=500, detail="Dịch vụ tài chính đang gặp lỗi")
+            raise HTTPException(status_code=500, detail="Giao dịch thanh toán đang gặp lỗi")
         finally:
             if should_close_session:
                 await session.end_session()

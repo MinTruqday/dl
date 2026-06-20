@@ -53,7 +53,7 @@ app.include_router(pin_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Dịch vụ quản lý nội dung đã sẵn sàng")
+    logger.info("Quản lý nội dung đã sẵn sàng")
     await init_db()
 
 

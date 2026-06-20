@@ -100,7 +100,7 @@ def require_role(required_roles: List[RoleEnum]):
             return current_user
         if current_user.role not in required_roles:
             logger.warning(
-                "Hệ thống từ chối truy cập do không đủ cấp độ ủy quyền"
+                "Từ chối truy cập do không đủ ủy quyền"
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

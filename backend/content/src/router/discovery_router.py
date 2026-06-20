@@ -72,14 +72,14 @@ async def smart_search(
                 )
             else:
                 logger.error(
-                    "Lỗi dịch vụ tìm kiếm thông minh"
+                    "Lỗi tìm kiếm thông minh"
                 )
                 return APIResponse(
                     data=await DocumentService.get_text_search(query, limit),
                     message="Tìm kiếm tiêu chuẩn thành công",
                 )
     except Exception:
-        logger.error("Lỗi hệ thống tìm kiếm ngữ nghĩa")
+        logger.error("Lỗi tìm kiếm ngữ nghĩa")
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
             message="Tìm kiếm tiêu chuẩn thành công",

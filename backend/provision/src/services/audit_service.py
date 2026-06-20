@@ -54,5 +54,5 @@ class AuditService:
             }
         )
         logger.info(
-            "Ghi nhận thao tác hệ thống thành công"
+            "Ghi nhận thao tác thành công"
         )

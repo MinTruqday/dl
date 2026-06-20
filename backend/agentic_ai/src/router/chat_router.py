@@ -94,13 +94,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         final_answer = security_harness.scan_output(final_answer)
         return {
-            "answer": final_answer or "Lỗi hệ thống, vui lòng thử lại sau",
+            "answer": final_answer or "Đã xảy ra lỗi, vui lòng thử lại sau",
             "route": "agentic_ai",
         }
     except Exception:
         logger.error("Lỗi thực thi quy trình AI")
         return {
-            "answer": "Lỗi hệ thống, vui lòng thử lại sau",
+            "answer": "Đã xảy ra lỗi, vui lòng thử lại sau",
             "route": "error",
         }
 

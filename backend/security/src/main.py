@@ -27,7 +27,7 @@ app.include_router(passkey_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Dịch vụ xác thực đã sẵn sàng")
+    logger.info("Tính năng xác thực đã sẵn sàng")
     await init_db()
 
 

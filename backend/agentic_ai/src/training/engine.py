@@ -58,7 +58,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info("Đang tải mô hình ngôn ngữ lên hệ thống tối ưu")
+    logger.info("Đang tải mô hình ngôn ngữ")
     update_callback({"progress": 10, "status": "running"})
 
     model, tokenizer = load(base_model_name)
@@ -311,14 +311,14 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         or "t5" in base_model_name
         or "bart" in base_model_name
     ):
-        logger.info("Hệ thống đang xử lý tác vụ")
+        logger.info("Đang xử lý tác vụ")
         result = run_seq2seq_training(job_id, config, update_callback)
     else:
         if sys.platform == "darwin":
-            logger.info("Đang sử dụng hệ thống huấn luyện tối ưu")
+            logger.info("Đang sử dụng cấu hình huấn luyện tối ưu")
             result = run_mlx_training(job_id, config, update_callback)
         else:
-            logger.info("Đang sử dụng hệ thống huấn luyện tiêu chuẩn")
+            logger.info("Đang sử dụng cấu hình huấn luyện tiêu chuẩn")
             result = run_hf_training(job_id, config, update_callback)
 
     merged_path = result.get("merged_path")

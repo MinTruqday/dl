@@ -141,7 +141,7 @@ class WalletService:
             if should_close_session:
                 await session.abort_transaction()
             logger.error("Lỗi đổi mã giảm giá")
-            raise HTTPException(status_code=500, detail="Dịch vụ tài chính đang bảo trì, vui lòng thử lại sau")
+            raise HTTPException(status_code=500, detail="Tính năng thanh toán đang bảo trì, vui lòng thử lại sau")
         finally:
             if should_close_session:
                 await session.end_session()

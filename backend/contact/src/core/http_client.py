@@ -18,7 +18,7 @@ class CircuitBreaker:
             if time.time() - self.last_failure_time > self.reset_timeout:
                 self.state = "HALF_OPEN"
             else:
-                raise HTTPException(status_code=503, detail="Dịch vụ đang được bảo trì")
+                raise HTTPException(status_code=503, detail="Tính năng đang được bảo trì")
 
     def on_success(self):
         self.failure_count = 0

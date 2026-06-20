@@ -17,7 +17,7 @@ async def validate_svg(file: UploadFile):
             "<!DOCTYPE", text, re.IGNORECASE
         ):
             raise HTTPException(
-                status_code=400, detail="Từ chối tệp đồ họa vector do không an toàn"
+                status_code=400, detail="Từ chối tệp đồ họa vector do có rủi ro"
             )
         await file.seek(0)
 

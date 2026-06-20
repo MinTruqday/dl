@@ -30,7 +30,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("Hệ thống bị ngắt do lỗi liên tục")
+            logger.error("Tạm ngừng do lỗi liên tục")
 
     def record_success(self):
         self._failures = 0
@@ -41,7 +41,7 @@ class CircuitBreaker:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info("Hệ thống đang khôi phục hoạt động")
+            logger.info("Đang khôi phục hoạt động")
             self._tripped_at = None
             self._failures = 0
             return False
@@ -82,10 +82,10 @@ class OrchestrationHarness:
         session_id: str,
     ) -> AsyncGenerator[dict, None]:
         if self._circuit_breaker.is_open():
-            logger.error("Hệ thống tạm dừng yêu cầu để chống quá tải")
+            logger.error("Tạm dừng yêu cầu để chống quá tải")
             yield {
                 "type": "error",
-                "message": "Hệ thống đang quá tải, vui lòng thử lại sau",
+                "message": "Đang quá tải, vui lòng thử lại sau",
             }
             return
 
@@ -97,7 +97,7 @@ class OrchestrationHarness:
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
-                        logger.info("Hệ thống điều phối đã bắt buộc dừng phiên làm việc")
+                        logger.info("Bắt buộc dừng phiên làm việc")
                         yield {"type": "error", "message": "Phiên làm việc đã bị hủy"}
                         return
                     yield event
@@ -129,7 +129,7 @@ class OrchestrationHarness:
             logger.error("Lỗi điều phối phiên làm việc")
             yield {
                 "type": "error",
-                "message": "Lỗi hệ thống điều phối, vui lòng thử lại sau",
+                "message": "Lỗi điều phối, vui lòng thử lại sau",
             }
 
     def cancel_session(self, session_id: str):

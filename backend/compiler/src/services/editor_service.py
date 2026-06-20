@@ -362,7 +362,7 @@ class EditorService:
                     return {"summary": summary}
         except Exception:
             logger.error("Lỗi tự động tóm tắt tài liệu")
-            raise HTTPException(status_code=500, detail="Lỗi kết nối dịch vụ AI")
+            raise HTTPException(status_code=500, detail="Lỗi kết nối AI")
         raise HTTPException(status_code=500, detail="Lỗi tự động tóm tắt tài liệu")
 
     @staticmethod
@@ -414,7 +414,7 @@ class EditorService:
                     return {"tags": tags}
         except Exception:
             logger.error("Lỗi trích xuất thẻ tự động")
-            raise HTTPException(status_code=500, detail="Lỗi kết nối dịch vụ AI")
+            raise HTTPException(status_code=500, detail="Lỗi kết nối AI")
         raise HTTPException(status_code=500, detail="Lỗi trích xuất thẻ ngữ cảnh")
 
     @staticmethod
@@ -532,7 +532,7 @@ class EditorService:
         return {
             "plagiarism_score": None,
             "status": "error",
-            "message": "Dịch vụ kiểm tra bản gốc đang gặp sự cố",
+            "message": "Kiểm tra bản gốc đang gặp sự cố",
         }
 
     @staticmethod
@@ -572,4 +572,4 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return resp.json()
-        return {"corrected_text": "", "score": 0, "message": "Lỗi dịch vụ phân tích ngữ pháp"}
+        return {"corrected_text": "", "score": 0, "message": "Lỗi phân tích ngữ pháp"}

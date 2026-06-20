@@ -121,7 +121,7 @@ async def shadowban_user(
 async def get_notes(user_id: str, db=Depends(get_db)):
     return APIResponse(
         data=await UserService.get_notes(user_id, db=db),
-        message="Lấy ghi chú kiểm duyệt hệ thống thành công",
+        message="Lấy ghi chú kiểm duyệt thành công",
     )
 
 

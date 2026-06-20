@@ -45,5 +45,5 @@ class SettingService:
                 }
             },
         )
-        logger.info("Cập nhật cấu hình hệ thống thành công")
-        return {"message": "Cập nhật cấu hình hệ thống cá nhân thành công"}
+        logger.info("Cập nhật cấu hình thành công")
+        return {"message": "Cập nhật cấu hình cá nhân thành công"}

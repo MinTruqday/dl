@@ -18,4 +18,4 @@ async def compile_editorjs(req: CompileRequest):
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception:
         logger.error("Lỗi biên dịch nội dung tài liệu")
-        raise HTTPException(status_code=500, detail="Lỗi biên dịch tài liệu do hệ thống nội bộ")
+        raise HTTPException(status_code=500, detail="Lỗi biên dịch tài liệu")
