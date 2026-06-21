@@ -6,11 +6,11 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH=/app
 
-COPY websocket/requirements.txt .
+COPY realtime/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY websocket/src/ ./src/
+COPY realtime/src/ ./src/
 COPY core/ ./core/
 
 EXPOSE 8200

@@ -6,11 +6,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-COPY provision/requirements.txt .
+COPY management/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY provision/src/ ./src/
+COPY management/src/ ./src/
 COPY core/ ./core/
 
 EXPOSE 8050

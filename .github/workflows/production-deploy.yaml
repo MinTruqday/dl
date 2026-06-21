@@ -53,6 +53,14 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
+      - name: Prepare environment file
+        run: |
+          echo "${{ secrets.DOCLIB_ENV }}" > .env
+
+      - name: Update image registries in manifests
+        run: |
+          find ./k8s/apps -name "*.yaml" -exec sed -i 's|doclib-registry|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g' {} +
+
       - name: Apply Kubernetes Manifests
         run: |
           kubectl apply -k ./k8s/

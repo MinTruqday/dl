@@ -6,11 +6,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-COPY security/requirements.txt .
+COPY authentication/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY security/src/ ./src/
+COPY authentication/src/ ./src/
 COPY core/ ./core/
 
 EXPOSE 8500
