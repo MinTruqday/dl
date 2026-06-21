@@ -32,7 +32,7 @@ async def check_quota_internal(
 async def get_my_quota(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
-    # Get ai_tier and role properly
+    
     role = getattr(current_user.role, "value", current_user.role)
     ai_tier = getattr(current_user, "ai_tier", "BASIC")
     if hasattr(ai_tier, "value"):

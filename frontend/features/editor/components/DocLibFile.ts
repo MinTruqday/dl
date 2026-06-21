@@ -144,17 +144,17 @@ export default class DocLibFile implements BlockTool {
                   url: res.file.url,
                   name: file.name,
                   size: file.size,
-                  extension: file.name.split(".").pop().toUpperCase(),
+                  extension: file.name.split(".").pop()?.toUpperCase() || "",
                 };
                 this.data.title = file.name;
               } else {
-                this.data.file?.url =
-                  res.url || res.data?.url || URL.createObjectURL(file);
+                const newUrl = res.url || res.data?.url || URL.createObjectURL(file);
+                if (this.data.file) this.data.file.url = newUrl;
                 this.data.file = {
-                  url: this.data.file?.url,
+                  url: newUrl,
                   name: file.name,
                   size: file.size,
-                  extension: file.name.split(".").pop().toUpperCase(),
+                  extension: file.name.split(".").pop()?.toUpperCase() || "",
                 };
                 this.data.title = file.name;
               }
@@ -162,12 +162,13 @@ export default class DocLibFile implements BlockTool {
             })
             .catch((err) => {
               console.error("Upload failed", err);
-              if (this.data.file) this.data.file.url = URL.createObjectURL(file);
+              const fallbackUrl = URL.createObjectURL(file);
+              if (this.data.file) this.data.file.url = fallbackUrl;
               this.data.file = {
-                url: this.data.file?.url,
+                url: fallbackUrl,
                 name: file.name,
                 size: file.size,
-                extension: file.name.split(".").pop().toUpperCase(),
+                extension: file.name.split(".").pop()?.toUpperCase() || "",
               };
               this.data.title = file.name;
               this.buildUI();

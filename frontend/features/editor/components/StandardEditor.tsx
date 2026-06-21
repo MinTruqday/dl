@@ -137,8 +137,7 @@ export default function StandardEditor({
       const DocLibUnderline = (await import("./DocLibUnderline")).default;
       const DocLibChecklist = (await import("./DocLibChecklist")).default;
       const DocLibLinkPreview = (await import("./DocLibLinkPreview")).default;
-      const DocLibStrikethrough = (await import("./DocLibStrikethrough"))
-        .default;
+      const DocLibStrikethrough = (await import("./DocLibStrikethrough")).default;
       const DocLibAlignmentTune = (await import("./DocLibAlignment")).default;
       const DocLibColumns = (await import("./DocLibColumns")).default;
       const DocLibFile = (await import("./DocLibFile")).default;
@@ -167,8 +166,7 @@ export default function StandardEditor({
       const DocLibTelegramPost = (await import("./DocLibTelegramPost")).default;
       const DocLibTitle = (await import("./DocLibTitle")).default;
       const DocLibStyleTune = (await import("./DocLibStyleTune")).default;
-      const DocLibNestedChecklist = (await import("./DocLibNestedChecklist"))
-        .default;
+      const DocLibNestedChecklist = (await import("./DocLibNestedChecklist")).default;
 
       const DocLibAudioPlayer = (await import("./DocLibAudioPlayer")).default;
 
@@ -191,8 +189,7 @@ export default function StandardEditor({
 
       const DocLibDrawing = (await import("./DocLibDrawing")).default;
       const DocLibGif = (await import("./DocLibGif")).default;
-      const DocLibImageWithLink = (await import("./DocLibImageWithLink"))
-        .default;
+      const DocLibImageWithLink = (await import("./DocLibImageWithLink")).default;
       const DocLibFlipbox = (await import("./DocLibFlipbox")).default;
 
       const DocLibNestedList = (await import("./DocLibNestedList")).default;
@@ -205,9 +202,7 @@ export default function StandardEditor({
       const DocLibCodeMirror = (await import("./DocLibCodeMirror")).default;
       const DocLibUndo = (await import("./DocLibUndo")).default;
       const DocLibDragDrop = (await import("./DocLibDragDrop")).default;
-      const DocLibMultiBlockSelection = (
-        await import("./DocLibMultiBlockSelection")
-      ).default;
+      const DocLibMultiBlockSelection = (await import("./DocLibMultiBlockSelection")).default;
 
       const DocLibCallout = (await import("./DocLibCallout")).default;
       const DocLibBookmark = (await import("./DocLibBookmark")).default;
@@ -219,6 +214,30 @@ export default function StandardEditor({
       const DocLibDivider = (await import("./DocLibDivider")).default;
       const DocLibBadge = (await import("./DocLibBadge")).default;
       const DocLibKeyboard = (await import("./DocLibKeyboard")).default;
+      const DocLibQRCode = (await import("./DocLibQRCode")).default;
+      const DocLibCitation = (await import("./DocLibCitation")).default;
+      const DocLibMapEmbed = (await import("./DocLibMapEmbed")).default;
+      const DocLibFlashcard = (await import("./DocLibFlashcard")).default;
+      const DocLibDiffViewer = (await import("./DocLibDiffViewer")).default;
+      const DocLibReadingTime = (await import("./DocLibReadingTime")).default;
+      const DocLibWordCloud = (await import("./DocLibWordCloud")).default;
+      const DocLibSocialCard = (await import("./DocLibSocialCard")).default;
+      const DocLibGantt = (await import("./DocLibGantt")).default;
+      const DocLibTypewriter = (await import("./DocLibTypewriter")).default;
+      const DocLibCodePlayground = (await import("./DocLibCodePlayground")).default;
+      const DocLibRecipe = (await import("./DocLibRecipe")).default;
+      const DocLibColorPalette = (await import("./DocLibColorPalette")).default;
+      const DocLibEventCard = (await import("./DocLibEventCard")).default;
+      const DocLibNumberCounter = (await import("./DocLibNumberCounter")).default;
+      const DocLibBioLink = (await import("./DocLibBioLink")).default;
+      const DocLibMusicEmbed = (await import("./DocLibMusicEmbed")).default;
+      const DocLibFeedback = (await import("./DocLibFeedback")).default;
+      const DocLibMindMap = (await import("./DocLibMindMap")).default;
+      const DocLibSignature = (await import("./DocLibSignature")).default;
+      const DocLibKanbanBoard = (await import("./DocLibKanbanBoard")).default;
+      const DocLibVerticalTimeline = (await import("./DocLibVerticalTimeline")).default;
+      const DocLibPricingTable = (await import("./DocLibPricingTable")).default;
+      const DocLibInteractiveQuiz = (await import("./DocLibInteractiveQuiz")).default;
 
       if (cancelled) {
         holderDiv.remove();
@@ -423,6 +442,30 @@ export default function StandardEditor({
       if (DocLibSuperscript) tools.superscript = DocLibSuperscript;
       if (DocLibSubscript) tools.subscript = DocLibSubscript;
       if (DocLibTextStyle) tools.textStyle = DocLibTextStyle;
+      if (DocLibQRCode) tools.qrCode = DocLibQRCode;
+      if (DocLibCitation) tools.citation = DocLibCitation;
+      if (DocLibMapEmbed) tools.mapEmbed = DocLibMapEmbed;
+      if (DocLibFlashcard) tools.flashcard = DocLibFlashcard;
+      if (DocLibDiffViewer) tools.diffViewer = DocLibDiffViewer;
+      if (DocLibReadingTime) tools.readingTime = DocLibReadingTime;
+      if (DocLibWordCloud) tools.wordCloud = DocLibWordCloud;
+      if (DocLibSocialCard) tools.socialCard = DocLibSocialCard;
+      if (DocLibGantt) tools.gantt = DocLibGantt;
+      if (DocLibTypewriter) tools.typewriter = DocLibTypewriter;
+      if (DocLibCodePlayground) tools.codePlayground = DocLibCodePlayground;
+      if (DocLibRecipe) tools.recipe = DocLibRecipe;
+      if (DocLibColorPalette) tools.colorPalette = DocLibColorPalette;
+      if (DocLibEventCard) tools.eventCard = DocLibEventCard;
+      if (DocLibNumberCounter) tools.numberCounter = DocLibNumberCounter;
+      if (DocLibBioLink) tools.bioLink = DocLibBioLink;
+      if (DocLibMusicEmbed) tools.musicEmbed = DocLibMusicEmbed;
+      if (DocLibFeedback) tools.feedback = DocLibFeedback;
+      if (DocLibMindMap) tools.mindMap = DocLibMindMap;
+      if (DocLibSignature) tools.signature = DocLibSignature;
+      if (DocLibKanbanBoard) tools.kanbanBoard = DocLibKanbanBoard;
+      if (DocLibVerticalTimeline) tools.verticalTimeline = DocLibVerticalTimeline;
+      if (DocLibPricingTable) tools.pricingTable = DocLibPricingTable;
+      if (DocLibInteractiveQuiz) tools.interactiveQuiz = DocLibInteractiveQuiz;
 
       const editor = new EditorJSModule({
         holder: holderDiv,

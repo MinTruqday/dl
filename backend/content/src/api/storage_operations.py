@@ -43,12 +43,12 @@ async def create_file(
     ),
     db=Depends(get_db),
 ):
-    # FIXME: Missing module: from src.services.ai import AIManager
+    
 
     data.is_folder = False
     item = await StorageOperations.create_item(data, current_user.id, db=db)
     background_tasks.add_task(
-        # AIManager.process_storage_file, str(item.id), current_user.id
+        
     )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),

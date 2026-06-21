@@ -4,7 +4,7 @@ export default class DocLibChart implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
-    type: "bar" | "line" | "pie";
+    type: "bar" | "line" | "pie" | "radar" | "doughnut" | "polarArea";
     labels: string[];
     datasets: { label: string; data: number[] }[];
   };
@@ -41,7 +41,7 @@ export default class DocLibChart implements BlockTool {
       datasets:
         data?.datasets && data.datasets.length > 0
           ? data.datasets
-          : [{ label: "Doanh thu", data: [10, 20, 30] }],
+          : [{ label: "Revenue", data: [10, 20, 30] }],
     };
   }
 
@@ -81,6 +81,9 @@ export default class DocLibChart implements BlockTool {
       { type: "bar", label: "Bar" },
       { type: "line", label: "Line" },
       { type: "pie", label: "Pie" },
+      { type: "radar", label: "Radar" },
+      { type: "doughnut", label: "Doughnut" },
+      { type: "polarArea", label: "Polar Area" },
     ];
 
     types.forEach((t) => {
@@ -135,7 +138,7 @@ export default class DocLibChart implements BlockTool {
                 let bg = colors[i % colors.length];
                 let border = borderColors[i % borderColors.length];
 
-                if (this.data.type === "pie") {
+                if (["pie", "doughnut", "polarArea"].includes(this.data.type)) {
                   bg = colors as any;
                   border = borderColors as any;
                 }

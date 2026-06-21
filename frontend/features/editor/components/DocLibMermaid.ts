@@ -4,6 +4,7 @@ export default class DocLibMermaid implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { code: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -16,12 +17,11 @@ export default class DocLibMermaid implements BlockTool {
     return true;
   }
 
-  constructor({ api, data }: { api: API; data: any }) {
+  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
-      code:
-        data.code ||
-        "graph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;",
+      code: data?.code || "graph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;",
     };
   }
 
@@ -33,10 +33,11 @@ export default class DocLibMermaid implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-mermaid-styles";
       style.innerHTML = `
-            .doclib-mermaid-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin: 10px 0; }
-            .doclib-mermaid-textarea { width: 100%; min-height: 120px; padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; border: none; border-bottom: 1px solid #e2e8f0; outline: none; resize: vertical; background: #f8fafc; font-size: 14px; line-height: 1.5; }
-            .doclib-mermaid-preview { padding: 24px; text-align: center; background: white; min-height: 120px; display: flex; justify-content: center; align-items: center; overflow-x: auto; }
-        `;
+        .doclib-mermaid-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin: 10px 0; }
+        .doclib-mermaid-textarea { width: 100%; min-height: 120px; padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; border: none; border-bottom: 1px solid #e2e8f0; outline: none; resize: vertical; background: #f8fafc; font-size: 14px; line-height: 1.5; box-sizing: border-box; }
+        .doclib-mermaid-preview { padding: 24px; text-align: center; background: white; min-height: 120px; display: flex; justify-content: center; align-items: center; overflow-x: auto; }
+        .doclib-mermaid-error { color: #ef4444; font-weight: 500; font-size: 13px; padding: 12px; }
+      `;
       document.head.appendChild(style);
     }
 
@@ -45,84 +46,71 @@ export default class DocLibMermaid implements BlockTool {
     return this.wrapper;
   }
 
+  private loadMermaid(): Promise<any> {
+    return new Promise((resolve) => {
+      if ((window as any).mermaid) {
+        resolve((window as any).mermaid);
+        return;
+      }
+      if (document.getElementById("mermaid-script")) {
+        window.addEventListener("mermaid-loaded", () => resolve((window as any).mermaid), { once: true });
+        return;
+      }
+      const script = document.createElement("script");
+      script.id = "mermaid-script";
+      script.src = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
+      script.onload = () => {
+        (window as any).mermaid.initialize({ startOnLoad: false, theme: "default" });
+        window.dispatchEvent(new Event("mermaid-loaded"));
+        resolve((window as any).mermaid);
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  private async renderPreview(code: string, preview: HTMLElement) {
+    preview.innerHTML = "";
+    const id = `mermaid-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    try {
+      const mermaid = await this.loadMermaid();
+      const container = document.createElement("div");
+      container.id = id;
+      preview.appendChild(container);
+      const { svg } = await mermaid.render(id, code);
+      container.innerHTML = svg;
+    } catch (e) {
+      preview.innerHTML = `<div class="doclib-mermaid-error">Mermaid Syntax Error</div>`;
+    }
+  }
+
   private buildUI() {
     if (!this.wrapper) return;
     this.wrapper.innerHTML = "";
 
-    const textarea = document.createElement("textarea");
-    textarea.classList.add("doclib-mermaid-textarea");
-    textarea.value = this.data.code;
-    textarea.placeholder = "Enter Mermaid Graph code";
-
     const preview = document.createElement("div");
     preview.classList.add("doclib-mermaid-preview");
 
-    const renderPreview = () => {
-      preview.innerHTML = "";
-      const id = `mermaid-${Math.floor(Math.random() * 1000000)}`;
-      const container = document.createElement("div");
-      container.id = id;
-      preview.appendChild(container);
+    if (this.readOnly) {
+      this.wrapper.appendChild(preview);
+      this.renderPreview(this.data.code, preview);
+      return;
+    }
 
-      if (!(window as any).mermaid) {
-        if (!document.getElementById("mermaid-script")) {
-          const script = document.createElement("script");
-          script.id = "mermaid-script";
-          script.src =
-            "https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js";
-          script.onload = () => {
-            (window as any).mermaid.initialize({
-              startOnLoad: false,
-              theme: "default",
-            });
-            window.dispatchEvent(new Event("mermaid-loaded"));
-          };
-          document.head.appendChild(script);
-          window.addEventListener(
-            "mermaid-loaded",
-            () => renderMermaid(id, textarea.value, container),
-            { once: true },
-          );
-        } else {
-          window.addEventListener(
-            "mermaid-loaded",
-            () => renderMermaid(id, textarea.value, container),
-            { once: true },
-          );
-        }
-      } else {
-        renderMermaid(id, textarea.value, container);
-      }
-    };
+    const textarea = document.createElement("textarea");
+    textarea.classList.add("doclib-mermaid-textarea");
+    textarea.value = this.data.code;
+    textarea.placeholder = "Enter Mermaid diagram code";
 
-    const renderMermaid = (
-      id: string,
-      code: string,
-      container: HTMLElement,
-    ) => {
-      try {
-        (window as any).mermaid.render(id, code, (svgCode: string) => {
-          container.innerHTML = svgCode;
-        });
-      } catch (e) {
-        container.innerHTML = `<span style="color: #ef4444; font-weight: 500;">Mermaid Syntax Error</span>`;
-      }
-    };
-
+    let timeout: ReturnType<typeof setTimeout>;
     textarea.addEventListener("input", () => {
       this.data.code = textarea.value;
-    });
-
-    let timeout: any;
-    textarea.addEventListener("input", () => {
       clearTimeout(timeout);
-      timeout = setTimeout(renderPreview, 500);
+      timeout = setTimeout(() => this.renderPreview(this.data.code, preview), 600);
     });
-
-    renderPreview();
 
     this.wrapper.appendChild(textarea);
     this.wrapper.appendChild(preview);
+    this.renderPreview(this.data.code, preview);
   }
 
   save() {

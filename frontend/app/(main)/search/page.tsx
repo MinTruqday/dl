@@ -1,20 +1,17 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getDocumentsAPI } from "@/features/content/services/document_metadata.service";
 import {
-  Search,
   Filter,
-  FileText,
   User,
   Clock,
-  Star,
   X,
   ArrowUpDown,
 } from "lucide-react";
 
-export default function SearchResultsPage() {
+function SearchResultsContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const [results, setResults] = useState<any[]>([]);
@@ -22,7 +19,6 @@ export default function SearchResultsPage() {
   const [history, setHistory] = useState<string[]>([]);
   const [filters, setFilters] = useState({
     price: "all",
-
     time: "all",
     category: "Tất cả",
     sort: "newest",
@@ -62,8 +58,6 @@ export default function SearchResultsPage() {
       if (filters.price === "paid")
         filtered = filtered.filter((b: any) => b.price_dl > 0);
 
-
-
       const now = new Date();
       if (filters.time === "today") {
         filtered = filtered.filter(
@@ -84,7 +78,6 @@ export default function SearchResultsPage() {
 
       if (filters.sort === "most_viewed") {
         filtered.sort((a: any, b: any) => (b.views || 0) - (a.views || 0));
-
       } else {
         filtered.sort(
           (a: any, b: any) =>
@@ -140,10 +133,10 @@ export default function SearchResultsPage() {
                     <button
                       key={s.id}
                       onClick={() => setFilters({ ...filters, sort: s.id })}
-                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none   ${
+                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
                         filters.sort === s.id
                           ? "bg-zinc-100 text-black border-zinc-300"
-                          : "bg-white text-zinc-500 border-transparent "
+                          : "bg-white text-zinc-500 border-transparent"
                       }`}
                     >
                       {s.label}
@@ -167,10 +160,10 @@ export default function SearchResultsPage() {
                     <button
                       key={t.id}
                       onClick={() => setFilters({ ...filters, time: t.id })}
-                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none   ${
+                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none ${
                         filters.time === t.id
                           ? "bg-zinc-100 text-black border-zinc-300"
-                          : "bg-white text-zinc-500 border-transparent "
+                          : "bg-white text-zinc-500 border-transparent"
                       }`}
                     >
                       {t.label}
@@ -192,10 +185,10 @@ export default function SearchResultsPage() {
                     <button
                       key={p.id}
                       onClick={() => setFilters({ ...filters, price: p.id })}
-                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none   ${
+                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none ${
                         filters.price === p.id
                           ? "bg-zinc-100 text-black border-zinc-300"
-                          : "bg-white text-zinc-500 border-transparent "
+                          : "bg-white text-zinc-500 border-transparent"
                       }`}
                     >
                       {p.label}
@@ -203,8 +196,6 @@ export default function SearchResultsPage() {
                   ))}
                 </div>
               </div>
-
-
             </div>
           </div>
 
@@ -216,7 +207,7 @@ export default function SearchResultsPage() {
                 </h3>
                 <button
                   onClick={clearHistory}
-                  className="text-xs font-medium text-zinc-400  "
+                  className="text-xs font-medium text-zinc-400"
                 >
                   Xóa lịch sử
                 </button>
@@ -226,7 +217,7 @@ export default function SearchResultsPage() {
                   <div key={h} className="group/item relative">
                     <Link
                       href={`/search?q=${h}`}
-                      className="block text-xs font-medium px-3 py-1.5 bg-white border border-zinc-200     rounded-none pr-8"
+                      className="block text-xs font-medium px-3 py-1.5 bg-white border border-zinc-200 rounded-none pr-8"
                     >
                       {h}
                     </Link>
@@ -240,7 +231,7 @@ export default function SearchResultsPage() {
                           JSON.stringify(newHistory),
                         );
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400  opacity-0 group-hover/item:opacity-100 "
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 opacity-0 group-hover/item:opacity-100"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -270,14 +261,14 @@ export default function SearchResultsPage() {
                 <Link
                   key={`doc-${document._id || i}`}
                   href={`/document/${document.slug}`}
-                  className="group flex flex-row gap-6 p-4 border border-zinc-200 bg-white rounded-none   "
+                  className="group flex flex-row gap-6 p-4 border border-zinc-200 bg-white rounded-none"
                 >
                   <div className="w-24 h-36 shrink-0 border border-zinc-200 bg-zinc-100 relative overflow-hidden">
                     {document.cover_url ? (
                       <img
                         src={document.cover_url}
                         alt={document.title}
-                        className="w-full h-full object-cover grayscale mix-blend-multiply group-  "
+                        className="w-full h-full object-cover grayscale mix-blend-multiply"
                       />
                     ) : (
                       <div className="w-full h-full bg-zinc-100" />
@@ -300,7 +291,7 @@ export default function SearchResultsPage() {
                       </div>
                     )}
 
-                    <h3 className="text-base font-semibold text-black line-clamp-2 leading-snug group- underline-offset-2">
+                    <h3 className="text-base font-semibold text-black line-clamp-2 leading-snug">
                       {document.title}
                     </h3>
 
@@ -331,7 +322,6 @@ export default function SearchResultsPage() {
                           lượt xem
                         </span>
                       </div>
-
                     </div>
 
                     <div className="mt-auto pt-3 flex items-center justify-between">
@@ -340,7 +330,7 @@ export default function SearchResultsPage() {
                           ? `${document.price_dl} dl`
                           : "Miễn phí"}
                       </span>
-                      <div className="text-xs font-semibold text-black border border-black px-3 py-1.5 uppercase tracking-wider group- group-  ">
+                      <div className="text-xs font-semibold text-black border border-black px-3 py-1.5 uppercase tracking-wider">
                         Xem
                       </div>
                     </div>
@@ -358,5 +348,13 @@ export default function SearchResultsPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <SearchResultsContent />
+    </Suspense>
   );
 }

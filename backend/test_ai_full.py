@@ -4,7 +4,7 @@ import json
 
 async def main():
     async with httpx.AsyncClient(timeout=120.0) as client:
-        # 1. Login as admin
+        
         login_data = {
             "username": "admin",
             "password": "adminpassword"
@@ -16,7 +16,7 @@ async def main():
         token = resp.json().get("access_token")
         print("Logged in!")
 
-        # 2. Call agentic_ai
+        
         payload = {
             "query": "Tạo 2 tài liệu mới: một tài liệu tên 'Python Latex' với nội dung là code Latex cơ bản về Python, và một tài liệu tên 'Python EditorJS' với nội dung JSON của EditorJS về Python.",
             "user_id": "admin_id",

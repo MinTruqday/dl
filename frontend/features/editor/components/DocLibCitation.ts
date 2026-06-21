@@ -1,0 +1,189 @@
+import { API, BlockTool } from "@editorjs/editorjs";
+
+type CitationStyle = "APA" | "MLA" | "Chicago";
+
+export default class DocLibCitation implements BlockTool {
+  private api: API;
+  private wrapper: HTMLElement | null = null;
+  private data: {
+    style: CitationStyle;
+    author: string;
+    year: string;
+    title: string;
+    source: string;
+    url: string;
+  };
+  private readOnly: boolean;
+
+  static get toolbox() {
+    return {
+      title: "DocLib Citation",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path></svg>',
+    };
+  }
+
+  static get isReadOnlySupported() {
+    return true;
+  }
+
+  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+    this.api = api;
+    this.readOnly = !!readOnly;
+    this.data = {
+      style: data?.style || "APA",
+      author: data?.author || "",
+      year: data?.year || "",
+      title: data?.title || "",
+      source: data?.source || "",
+      url: data?.url || "",
+    };
+  }
+
+  private formatCitation(d: typeof this.data): string {
+    const { style, author, year, title, source, url } = d;
+    if (style === "APA") {
+      let c = "";
+      if (author) c += `${author}`;
+      if (year) c += ` (${year}).`;
+      if (title) c += ` <em>${title}</em>.`;
+      if (source) c += ` ${source}.`;
+      if (url) c += ` Retrieved from <a href="${url}" target="_blank" style="color:#0284c7">${url}</a>`;
+      return c;
+    }
+    if (style === "MLA") {
+      let c = "";
+      if (author) c += `${author}.`;
+      if (title) c += ` "<em>${title}</em>."`;
+      if (source) c += ` ${source},`;
+      if (year) c += ` ${year}.`;
+      if (url) c += ` <a href="${url}" target="_blank" style="color:#0284c7">${url}</a>`;
+      return c;
+    }
+    let c = "";
+    if (author) c += `${author}.`;
+    if (title) c += ` "<em>${title}</em>."`;
+    if (source) c += ` <em>${source}</em>`;
+    if (year) c += ` (${year}).`;
+    if (url) c += ` <a href="${url}" target="_blank" style="color:#0284c7">${url}</a>`;
+    return c;
+  }
+
+  render() {
+    this.wrapper = document.createElement("div");
+    this.wrapper.classList.add(this.api.styles.block);
+
+    if (!document.getElementById("doclib-citation-styles")) {
+      const style = document.createElement("style");
+      style.id = "doclib-citation-styles";
+      style.innerHTML = `
+        .doclib-citation-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; background: #fff; margin: 12px 0; }
+        .doclib-citation-style-row { display: flex; gap: 8px; margin-bottom: 16px; }
+        .doclib-citation-style-btn { padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 4px; background: #fff; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; }
+        .doclib-citation-style-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+        .doclib-citation-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .doclib-citation-field { display: flex; flex-direction: column; gap: 4px; }
+        .doclib-citation-field label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
+        .doclib-citation-field input { padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; }
+        .doclib-citation-output { border-top: 1px solid #e2e8f0; padding-top: 14px; font-size: 14px; line-height: 1.7; color: #1e293b; background: #f8fafc; padding: 14px; border-radius: 6px; }
+        .doclib-citation-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+        .doclib-citation-copy { padding: 6px 12px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .doclib-citation-readonly { border-left: 3px solid #0284c7; padding: 12px 16px; background: #f0f9ff; border-radius: 0 6px 6px 0; font-size: 14px; line-height: 1.7; color: #1e293b; }
+      `;
+      document.head.appendChild(style);
+    }
+
+    this.buildUI();
+    return this.wrapper;
+  }
+
+  private buildUI() {
+    if (!this.wrapper) return;
+    this.wrapper.innerHTML = "";
+    this.wrapper.classList.add("doclib-citation-wrapper");
+
+    if (this.readOnly) {
+      const output = document.createElement("div");
+      output.classList.add("doclib-citation-readonly");
+      output.innerHTML = this.formatCitation(this.data) || "<em>No citation data</em>";
+      this.wrapper.appendChild(output);
+      return;
+    }
+
+    const styleRow = document.createElement("div");
+    styleRow.classList.add("doclib-citation-style-row");
+
+    const styles: CitationStyle[] = ["APA", "MLA", "Chicago"];
+    styles.forEach((s) => {
+      const btn = document.createElement("button");
+      btn.classList.add("doclib-citation-style-btn");
+      if (this.data.style === s) btn.classList.add("active");
+      btn.innerText = s;
+      btn.addEventListener("click", () => {
+        this.data.style = s;
+        styleRow.querySelectorAll(".doclib-citation-style-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        output.innerHTML = this.formatCitation(this.data);
+      });
+      styleRow.appendChild(btn);
+    });
+
+    const fields: { key: keyof typeof this.data; label: string; placeholder: string }[] = [
+      { key: "author", label: "Author", placeholder: "Jane Doe" },
+      { key: "year", label: "Year", placeholder: "2024" },
+      { key: "title", label: "Title", placeholder: "Article or book title" },
+      { key: "source", label: "Source Journal", placeholder: "Journal of" },
+      { key: "url", label: "URL", placeholder: "https://" },
+    ];
+
+    const fieldsGrid = document.createElement("div");
+    fieldsGrid.classList.add("doclib-citation-fields");
+
+    const output = document.createElement("div");
+    output.classList.add("doclib-citation-output");
+    output.innerHTML = this.formatCitation(this.data);
+
+    fields.forEach(({ key, label, placeholder }) => {
+      const field = document.createElement("div");
+      field.classList.add("doclib-citation-field");
+      if (key === "url") field.style.gridColumn = "1 / -1";
+
+      const lbl = document.createElement("label");
+      lbl.innerText = label;
+
+      const input = document.createElement("input");
+      input.value = this.data[key] as string;
+      input.placeholder = placeholder;
+      input.addEventListener("input", () => {
+        (this.data as any)[key] = input.value;
+        output.innerHTML = this.formatCitation(this.data);
+      });
+
+      field.appendChild(lbl);
+      field.appendChild(input);
+      fieldsGrid.appendChild(field);
+    });
+
+    const actions = document.createElement("div");
+    actions.classList.add("doclib-citation-actions");
+    const copyBtn = document.createElement("button");
+    copyBtn.classList.add("doclib-citation-copy");
+    copyBtn.innerText = "Copy";
+    copyBtn.addEventListener("click", () => {
+      const text = output.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.innerText = "Copied";
+        setTimeout(() => { copyBtn.innerText = "Copy"; }, 1500);
+      });
+    });
+    actions.appendChild(copyBtn);
+
+    this.wrapper.appendChild(styleRow);
+    this.wrapper.appendChild(fieldsGrid);
+    this.wrapper.appendChild(output);
+    this.wrapper.appendChild(actions);
+  }
+
+  save() {
+    return this.data;
+  }
+}
