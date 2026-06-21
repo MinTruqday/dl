@@ -172,3 +172,21 @@ class UpdateTaskStatusRequest(BaseModel):
 
 class TaskCommentCreateRequest(BaseModel):
     comment_text: str
+
+
+class FolderCreate(BaseModel):
+    name: str
+    parent_id: Optional[str] = None
+
+
+class DRMSettingsUpdate(BaseModel):
+    disable_copy: bool = False
+    hide_from_search: bool = False
+
+
+class TagsUpdate(BaseModel):
+    tags: List[str]
+
+
+class ScheduleUpdate(BaseModel):
+    publish_at: str

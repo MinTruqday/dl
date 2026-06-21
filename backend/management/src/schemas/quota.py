@@ -30,3 +30,10 @@ class GlobalQuotaConfig(BaseModel):
         "admin": QuotaLimit(daily_requests=math.inf, daily_tokens=math.inf),
     }
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ConsumeQuotaRequest(BaseModel):
+    user_id: str
+    feature: str = "chat"
+    req_reset_hours: int = 24
+    tokens: int = 0

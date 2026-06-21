@@ -6,7 +6,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from pydantic import BaseModel, Field
-from src.schemas.plan import ExecutionPlan, PlanStep
+from src.schemas.ai import ExecutionPlan, PlanStep
 from src.utils.resilience import with_retry
 
 from core.config import settings

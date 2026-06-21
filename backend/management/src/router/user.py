@@ -2,7 +2,6 @@ from core.dependency import CurrentUser
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
 from src.router.dependency import get_current_user, get_db, require_role
 from src.services.user import UserManager
 
@@ -15,6 +14,7 @@ from src.schemas.user import (
     UpdateRoleRequest,
     UpdateStatusRequest,
     UserInDB,
+    InternalCreateUserRequest,
 )
 
 router = APIRouter(prefix="/nguoi-dung")
@@ -189,12 +189,6 @@ async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
     )
 
 
-class InternalCreateUserRequest(BaseModel):
-    email: str
-    password_hash: Optional[str] = None
-    full_name: str
-    role: str = "READER"
-    slug: str
 
 
 @router.post("/", response_model=APIResponse[Any], include_in_schema=False)

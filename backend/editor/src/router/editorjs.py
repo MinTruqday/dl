@@ -2,13 +2,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from loguru import logger
 from pydantic import BaseModel, Field
+from src.schemas.editorjs import CompileRequest
 from src.services.editorjs_engine import EditorJSEngine
 
 router = APIRouter()
-
-
-class CompileRequest(BaseModel):
-    content: str = Field(...)
 
 
 @router.post("/bien-dich")

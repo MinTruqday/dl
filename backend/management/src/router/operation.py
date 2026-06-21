@@ -3,12 +3,11 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, status
 from src.router.dependency import get_current_user, get_db, require_role
-from src.schemas.operation import CampaignRequest
+from src.schemas.system import CampaignRequest, CollectionRequest
 from src.services.operation import OperationManager
 from src.services.user import UserManager
 
 from core.response import APIResponse
-from src.schemas.collector import CollectionRequest
 from src.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/van-hanh")

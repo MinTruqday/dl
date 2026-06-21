@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel
+from src.schemas.deposit import DepositRequest
 from src.services.deposit import DepositManager
 
 from core.dependency import get_current_user, get_db
@@ -10,10 +10,6 @@ from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/nap-tien")
 
-
-class DepositRequest(BaseModel):
-    amount: float
-    payment_method: str = "PAYOS"
 
 
 @router.post("", response_model=APIResponse[Any])

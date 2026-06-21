@@ -16,6 +16,10 @@ from src.schemas.document import (
     DocumentPasswordRequest,
     DocumentResponse,
     DocumentUpdate,
+    FolderCreate,
+    DRMSettingsUpdate,
+    TagsUpdate,
+    ScheduleUpdate,
 )
 from src.services.document import DocumentManager
 
@@ -87,10 +91,6 @@ async def list_documents(
     )
 
 
-class FolderCreate(BaseModel):
-    name: str
-    parent_id: Optional[str] = None
-
 
 @router.get(
     "/thu-muc",
@@ -100,14 +100,7 @@ class FolderCreate(BaseModel):
 async def get_folders(
     parent_id: Optional[str] = None, current_user: CurrentUser = Depends(get_current_user)
 ):
-    db = db_client.mongodb.get_default_database()
-    query = {"creator_id": str(current_user.id)}
-    if parent_id:
-        query["parent_id"] = parent_id
-    cursor = db["workspace_folders"].find(query).sort("created_at", 1)
-    folders = await cursor.to_list(length=100)
-    for f in folders:
-        f["_id"] = str(f["_id"])
+    folders = await DocumentManager.get_folders(parent_id, current_user)
     return APIResponse(data=folders, message="Lấy cấu trúc thư mục thành công")
 
 
@@ -119,16 +112,7 @@ async def get_folders(
 async def create_folder(
     req: FolderCreate, current_user: CurrentUser = Depends(get_current_user)
 ):
-    db = db_client.mongodb.get_default_database()
-    folder_doc = {
-        "name": req.name,
-        "parent_id": req.parent_id,
-        "creator_id": str(current_user.id),
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
-    }
-    res = await db["workspace_folders"].insert_one(folder_doc)
-    folder_doc["_id"] = str(res.inserted_id)
+    folder_doc = await DocumentManager.create_folder(req.name, req.parent_id, current_user)
     return APIResponse(data=folder_doc, message="Tạo thư mục làm việc thành công")
 
 
@@ -140,18 +124,9 @@ async def create_folder(
 async def delete_folder(
     folder_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
-    db = db_client.mongodb.get_default_database()
-    folder = await db["workspace_folders"].find_one(
-        {"_id": ObjectId(folder_id), "creator_id": str(current_user.id)}
-    )
-    if not folder:
-        raise HTTPException(status_code=404, detail="Không tìm thấy thư mục làm việc")
-    await db["workspace_folders"].delete_one({"_id": ObjectId(folder_id)})
-    await db["documents"].update_many(
-        {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
-    )
+    res = await DocumentManager.delete_folder(folder_id, current_user)
     return APIResponse(
-        data={"deleted": True}, message="Xóa thư mục vĩnh viễn thành công"
+        data=res, message="Xóa thư mục vĩnh viễn thành công"
     )
 
 
@@ -287,20 +262,9 @@ async def get_document_audit_logs(
 async def toggle_star_document(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
-    db = db_client.mongodb.get_default_database()
-    doc = await db["documents"].find_one(
-        {"_id": document_id, "creator_id": str(current_user.id)}
-    )
-    if not doc:
-        raise HTTPException(
-            status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
-        )
-    current_starred = doc.get("is_starred", False)
-    await db["documents"].update_one(
-        {"_id": document_id}, {"$set": {"is_starred": not current_starred}}
-    )
+    res = await DocumentManager.toggle_star_document(document_id, current_user)
     return APIResponse(
-        data={"starred": not current_starred},
+        data=res,
         message="Cập nhật trạng thái ưu tiên tài liệu thành công",
     )
 
@@ -315,43 +279,9 @@ async def transfer_document(
     new_owner_id: str = Query(...),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    db = db_client.mongodb.get_default_database()
-    doc = await db["documents"].find_one(
-        {"_id": document_id, "creator_id": str(current_user.id)}
-    )
-    if not doc:
-        raise HTTPException(
-            status_code=404,
-            detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
-        )
-    import httpx
-
-    target = None
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"{settings.MANAGEMENT_URL}/nguoi-dung/{new_owner_id}",
-                timeout=settings.DEFAULT_HTTP_TIMEOUT,
-            )
-            if resp.status_code == 200:
-                target = resp.json().get("data")
-    except Exception:
-        pass
-    if not target:
-        raise HTTPException(
-            status_code=404, detail="Không tìm thấy tài khoản chuyển nhượng"
-        )
-    await db["documents"].update_one(
-        {"_id": document_id},
-        {
-            "$set": {
-                "creator_id": new_owner_id,
-                "updated_at": datetime.now(timezone.utc),
-            }
-        },
-    )
+    res = await DocumentManager.transfer_document(document_id, new_owner_id, current_user)
     return APIResponse(
-        data={"status": "transferred", "new_owner_id": new_owner_id},
+        data=res,
         message="Đã chuyển quyền sở hữu tài liệu",
     )
 
@@ -360,48 +290,9 @@ async def transfer_document(
 async def get_document_analytics(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
-    db = db_client.mongodb.get_default_database()
-    doc = await db["documents"].find_one({"_id": document_id})
-    if not doc:
-        raise HTTPException(
-            status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
-        )
-    views = doc.get("views", 0)
-    content = doc.get("content", "")
-    total_words = len(content.split()) if content else 0
-    avg_read_time_min = max(1, total_words // 200)
-    comment_count = await db["comments"].count_documents(
-        {"item_id": document_id, "item_type": "document"}
-    )
-    bookmark_count = await db["bookmarks"].count_documents({"document_id": document_id})
-    review_pipeline = [
-        {"$match": {"document_id": document_id}},
-        {
-            "$group": {
-                "_id": None,
-                "avg_rating": {"$avg": "$rating"},
-                "count": {"$sum": 1},
-            }
-        },
-    ]
-    review_stats = await db["reviews"].aggregate(review_pipeline).to_list(length=1)
-    avg_rating = review_stats[0]["avg_rating"] if review_stats else 0
-    review_count = review_stats[0]["count"] if review_stats else 0
-    purchase_count = await db["transactions"].count_documents(
-        {"reference_id": document_id, "type": {"$in": ["purchase", "receive"]}}
-    )
+    res = await DocumentManager.get_document_analytics(document_id, current_user)
     return APIResponse(
-        data={
-            "views": views,
-            "avg_read_time": f"{avg_read_time_min} minutes",
-            "avg_read_time_min": avg_read_time_min,
-            "total_words": total_words,
-            "saves": bookmark_count,
-            "comments": comment_count,
-            "reviews": review_count,
-            "avg_rating": round(avg_rating, 1) if avg_rating else 0,
-            "purchases": purchase_count,
-        },
+        data=res,
         message="Lấy dữ liệu tương tác người đọc thành công",
     )
 
@@ -410,34 +301,12 @@ async def get_document_analytics(
 async def get_document_academic(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
-    db = db_client.mongodb.get_default_database()
-    doc = await db["documents"].find_one({"_id": document_id})
-    if not doc:
-        raise HTTPException(
-            status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
-        )
-    content = doc.get("content", "")
-    word_count = len(content.split()) if content else 0
-    sentences = (
-        content.count("") + content.count("!") + content.count("?") if content else 0
-    )
-    avg_sentence_len = round(word_count / max(sentences, 1), 1)
-    readability_score = max(0, min(100, 100 - (avg_sentence_len - 15) * 3))
+    res = await DocumentManager.get_document_academic(document_id, current_user)
     return APIResponse(
-        data={
-            "word_count": word_count,
-            "sentence_count": sentences,
-            "avg_sentence_length": avg_sentence_len,
-            "readability_score": round(readability_score, 1),
-            "content_format": doc.get("content_format", "html"),
-        },
+        data=res,
         message="Lấy dữ liệu phân tích tài liệu thành công",
     )
 
-
-class DRMSettingsUpdate(BaseModel):
-    disable_copy: bool = False
-    hide_from_search: bool = False
 
 
 @router.put(
@@ -465,9 +334,6 @@ async def update_drm_settings(
     )
 
 
-class TagsUpdate(BaseModel):
-    tags: List[str]
-
 
 @router.put(
     "/{document_id}/the",
@@ -484,9 +350,6 @@ async def update_tags(
     )
     return APIResponse(data=result, message="Cập nhật thẻ danh mục tài liệu thành công")
 
-
-class ScheduleUpdate(BaseModel):
-    publish_at: str
 
 
 @router.put(

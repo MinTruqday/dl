@@ -6,7 +6,7 @@ from src.router.dependency import get_current_user, get_db, require_role
 from src.services.quota import QuotaManager
 
 from core.response import APIResponse
-from src.schemas.quota import QuotaLimit
+from src.schemas.quota import QuotaLimit, ConsumeQuotaRequest
 from src.schemas.user import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/han-muc")
@@ -63,14 +63,7 @@ async def get_global_config(
     )
 
 
-from pydantic import BaseModel
 
-
-class ConsumeQuotaRequest(BaseModel):
-    user_id: str
-    feature: str = "chat"
-    req_reset_hours: int = 24
-    tokens: int = 0
 
 
 @router.post("/tieu-thu", response_model=APIResponse[Any], include_in_schema=False)

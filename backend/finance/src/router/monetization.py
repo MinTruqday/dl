@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from src.schemas.monetization import PurchaseRequest, MembershipRequest
 from src.services.pricing import PricingManager
 from src.services.purchase import PurchaseManager
 
@@ -10,15 +10,6 @@ from core.response import APIResponse
 from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/kiem-tien")
-
-
-class PurchaseRequest(BaseModel):
-    document_id: str
-    coupon_code: str = None
-
-
-class MembershipRequest(BaseModel):
-    tier: str
 
 
 @router.post("/mua/tai-lieu", response_model=APIResponse[Any])
@@ -53,6 +44,6 @@ async def buy_membership(
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
         data=await PricingManager.get_pricing_config(db=db),
-        message="Lấy cấu hình giá gói thành viên thành công",
+        message="Lấy giá gói thành viên thành công",
         status=200,
     )

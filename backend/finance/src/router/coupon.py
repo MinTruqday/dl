@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from src.schemas.coupon import CouponCreateRequest
 from src.services.coupon import CouponManager
 
 from core.dependency import get_db, require_role
@@ -9,13 +9,6 @@ from core.response import APIResponse
 from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ma-qua-tang")
-
-
-class CouponCreateRequest(BaseModel):
-    code: str
-    discount_percent: float
-    max_uses: int
-    expires_at: str
 
 
 @router.post(

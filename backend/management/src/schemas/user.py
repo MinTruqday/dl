@@ -172,3 +172,11 @@ class PasskeyRequest(BaseModel):
 class PasskeyFinishRequest(BaseModel):
     email: str
     credential: dict
+
+
+class InternalCreateUserRequest(BaseModel):
+    email: str
+    password_hash: Optional[str] = None
+    full_name: str
+    role: str = "READER"
+    slug: str

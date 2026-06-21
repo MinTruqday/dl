@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query, status
-from pydantic import BaseModel
+from src.schemas.bookmark import BookmarkFolderCreate, BookmarkFolderAssign
 from src.router.dependency import get_current_user, get_db
 from src.services.bookmark import BookmarkManager
 
@@ -9,14 +9,6 @@ from core.response import APIResponse
 from core.dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/danh-dau")
-
-
-class BookmarkFolderCreate(BaseModel):
-    name: str
-
-
-class BookmarkFolderAssign(BaseModel):
-    bookmark_ids: List[str]
 
 
 @router.post("/{document_id}", response_model=APIResponse[Any])

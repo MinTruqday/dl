@@ -1,19 +1,12 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from src.schemas.banner import BannerRequest
 from src.services.banner import BannerManager
 
 from core.dependency import get_db, require_role
 from core.response import APIResponse
 from src.schemas.user import RoleEnum
-
-
-class BannerRequest(BaseModel):
-    title: str
-    image_url: str
-    target_url: Optional[str] = None
-    is_active: bool = True
 
 
 router = APIRouter(prefix="/quang-cao")
