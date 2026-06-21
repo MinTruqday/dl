@@ -243,6 +243,32 @@ export default function StandardEditor({
       const DocLibTableOfContents = (await import("./DocLibTableOfContents")).default;
       const DocLibMailMerge = (await import("./DocLibMailMerge")).default;
       const DocLibBibliography = (await import("./DocLibBibliography")).default;
+      const DocLibDropCap = (await import("./DocLibDropCap")).default;
+      const DocLibIndex = (await import("./DocLibIndex")).default;
+      const DocLibCoverPage = (await import("./DocLibCoverPage")).default;
+      const DocLibTableOfFigures = (await import("./DocLibTableOfFigures")).default;
+      const DocLibCrossReference = (await import("./DocLibCrossReference")).default;
+      const DocLibTextDirection = (await import("./DocLibTextDirection")).default;
+      const DocLibShape = (await import("./DocLibShape")).default;
+      const DocLibPageBorder = (await import("./DocLibPageBorder")).default;
+      const DocLibLetterhead = (await import("./DocLibLetterhead")).default;
+      const DocLibBordersAndShading = (await import("./DocLibBordersAndShading")).default;
+      const DocLibPageNumber = (await import("./DocLibPageNumber")).default;
+      const DocLibHeaderBlock = (await import("./DocLibHeaderBlock")).default;
+      const DocLibFooterBlock = (await import("./DocLibFooterBlock")).default;
+      const DocLibPageColor = (await import("./DocLibPageColor")).default;
+      const DocLibSectionBreak = (await import("./DocLibSectionBreak")).default;
+      const DocLibLineNumbers = (await import("./DocLibLineNumbers")).default;
+      const DocLibTextBox = (await import("./DocLibTextBox")).default;
+      const DocLibWordArt = (await import("./DocLibWordArt")).default;
+      const DocLibSmartArtCycle = (await import("./DocLibSmartArtCycle")).default;
+      const DocLibSmartArtHierarchy = (await import("./DocLibSmartArtHierarchy")).default;
+      const DocLibWatermarkImage = (await import("./DocLibWatermarkImage")).default;
+      const DocLibDateAndTime = (await import("./DocLibDateAndTime")).default;
+      const DocLibFormCheckBox = (await import("./DocLibFormCheckBox")).default;
+      const DocLibFormDropdown = (await import("./DocLibFormDropdown")).default;
+      const DocLibMacroButton = (await import("./DocLibMacroButton")).default;
+
 
       if (cancelled) {
         holderDiv.remove();
