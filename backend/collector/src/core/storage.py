@@ -7,7 +7,7 @@ from loguru import logger
 from core.config import settings
 
 
-class CollectorStorage:
+class DataCollectionStorage:
     def __init__(self):
         endpoint = settings.MINIO_ENDPOINT or "minio:9000"
         if not endpoint.startswith("http"):
@@ -67,4 +67,4 @@ class CollectorStorage:
             raise e
 
 
-storage = CollectorStorage()
+storage = DataCollectionStorage()

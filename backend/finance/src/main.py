@@ -2,11 +2,11 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router.coupon import router as coupon
-from src.router.deposit import router as deposit
-from src.router.monetization import router as monetization
-from src.router.wallet import router as wallet
-from src.router.withdrawal import router as withdrawal
+from src.api.discount_coupon import router as coupon
+from src.api.fiat_deposit import router as deposit
+from src.api.content_monetization import router as monetization
+from src.api.account_ledger import router as wallet
+from src.api.fiat_withdrawal import router as withdrawal
 
 from core.config import settings
 from core.database import close_db, init_db

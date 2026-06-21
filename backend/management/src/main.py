@@ -2,13 +2,13 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router.audit import router as audit
-from src.router.banner import router as banner
-from src.router.operation import router as operation
-from src.router.profile import router as profile
-from src.router.quota import router as quota
-from src.router.telemetry import router as telemetry
-from src.router.user import router as user
+from src.api.audit_logs import router as audit
+from src.api.promotional_banner import router as banner
+from src.api.system_health import router as operation
+from src.api.account_profile import router as profile
+from src.api.usage_quota import router as quota
+from src.api.system_telemetry import router as telemetry
+from src.api.user_profile import router as user
 
 from core.config import settings
 from core.database import close_db, init_db

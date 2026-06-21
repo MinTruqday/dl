@@ -17,7 +17,7 @@ logger.add(
     level="INFO",
 )
 
-from src.router.collector import router as collector
+from src.api.data_collection import router as collector
 
 from core.config import settings
 

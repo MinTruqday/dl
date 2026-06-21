@@ -5,13 +5,13 @@ from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 from fastapi import HTTPException
 from loguru import logger
-from src.schemas.wallet import Transaction, TransactionType
+from src.schemas.account_ledger import Transaction, TransactionType
 from uuid6 import uuid7
 
 from core.database import db_client
 
 
-class PurchaseManager:
+class PurchaseProcess:
 
     @staticmethod
     async def buy_ai_tier(tier: str, current_user, db=None) -> dict:

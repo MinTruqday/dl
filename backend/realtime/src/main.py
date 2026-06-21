@@ -2,8 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router.editor_socket import router as editor_socket
-from src.router.message_socket import router as message_socket
+from src.api.document_sync import router as editor_socket
+from src.api.live_chat import router as message_socket
 
 from core.config import settings
 from core.database import db_client

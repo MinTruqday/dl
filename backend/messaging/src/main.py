@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router.message import router as message
+from src.api.chat_conversation import router as message
 
 from core.config import settings
 from core.database import close_db, init_db

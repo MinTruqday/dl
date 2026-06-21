@@ -19,7 +19,7 @@ class SessionState:
     started_at: float = 0.0
 
 
-class CircuitBreaker:
+class FaultTolerance:
     def __init__(self, threshold: int, reset_seconds: float):
         self._failures = 0
         self._threshold = threshold
@@ -56,7 +56,7 @@ class CircuitBreaker:
 class OrchestrationHarness:
     def __init__(self):
         self._sessions: dict[str, SessionState] = {}
-        self._circuit_breaker = CircuitBreaker(
+        self._circuit_breaker = FaultTolerance(
             threshold=CIRCUIT_BREAKER_FAILURE_THRESHOLD,
             reset_seconds=CIRCUIT_BREAKER_RESET_SECONDS,
         )

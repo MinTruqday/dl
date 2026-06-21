@@ -20,12 +20,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.harness.agentops import agentops
 from src.harness.evaluation import evaluation
 from src.harness.orchestration import orchestration
-from src.router.chat import router as chat
-from src.router.feedback import router as feedback
-from src.router.finetune import router as finetune
-from src.router.history import router as history
-from src.router.inference import router as inference
-from src.router.ingest import router as ingest
+from src.api.chat import router as chat
+from src.api.feedback import router as feedback
+from src.api.finetune import router as finetune
+from src.api.history import router as history
+from src.api.inference import router as inference
+from src.api.ingest import router as ingest
 
 app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)

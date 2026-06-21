@@ -2,21 +2,21 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router.bookmark import router as bookmark
-from src.router.collaboration import router as collaboration
-from src.router.discovery import router as discovery
-from src.router.document import router as document
-from src.router.draft import router as draft
-from src.router.export import router as export
-from src.router.highlight import router as highlight
-from src.router.library import router as library
-from src.router.pin import router as pin
-from src.router.publication import router as publication
-from src.router.reading import router as reading
-from src.router.review import router as review
-from src.router.storage import router as storage
-from src.router.upload import router as upload
-from src.router.version import router as version
+from src.api.bookmark_operations import router as bookmark
+from src.api.collaboration_sync import router as collaboration
+from src.api.content_discovery import router as discovery
+from src.api.document_metadata import router as document
+from src.api.document_drafts import router as draft
+from src.api.document_export import router as export
+from src.api.highlight_operations import router as highlight
+from src.api.personal_library import router as library
+from src.api.document_pinning import router as pin
+from src.api.publication_process import router as publication
+from src.api.reading_progress import router as reading
+from src.api.review import router as review
+from src.api.storage_operations import router as storage
+from src.api.file_upload import router as upload
+from src.api.version_history import router as version
 
 from core.config import settings
 from core.database import close_db, init_db

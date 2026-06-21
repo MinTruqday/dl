@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 
-class CircuitBreaker:
+class FaultTolerance:
     def __init__(self, max_failures=5, reset_timeout=60):
         self.max_failures = max_failures
         self.reset_timeout = reset_timeout
@@ -34,7 +34,7 @@ class CircuitBreaker:
             logger.warning("Mất kết nối do lỗi liên tục")
 
 
-ai_circuit_breaker = CircuitBreaker()
+ai_circuit_breaker = FaultTolerance()
 
 ai_http_client = httpx.AsyncClient(
     limits=httpx.Limits(max_keepalive_connections=100, max_connections=200),

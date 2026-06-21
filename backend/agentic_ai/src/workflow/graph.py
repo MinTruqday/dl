@@ -16,7 +16,7 @@ from src.memory.mem0_manager import mem0_manager
 from src.rag.embedder import embedder
 from src.rag.retriever import retriever
 from src.store.vector import vector_store
-from src.utils.file_processor import extract_text_from_base64
+from src.utils.file_processing import extract_text_from_base64
 from src.workflow.state import AgentState
 
 from core.config import settings
@@ -400,7 +400,7 @@ async def grade_generation(state: AgentState):
     try:
         import asyncio
 
-        from src.agents.reasoner import reasoner
+        from src.agents.logical_reasoning import reasoner
 
         documents_list = [
             {"text": d, "metadata": {"title": "Source"}} for d in documents

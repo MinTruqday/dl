@@ -25,7 +25,7 @@ endpoints = re.findall(r'(@router\.[a-z]+\(.*?\)\nasync def ([a-zA-Z0-9_]+)\((.*
 
 new_router_content = """from fastapi import APIRouter
 from src.services import collector as collector_service
-from src.schemas.collector import CollectionRequest
+from src.schemas.data_collection import CollectionRequest
 
 router = APIRouter()
 """

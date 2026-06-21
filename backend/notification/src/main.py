@@ -16,7 +16,7 @@ logger.add(
     level="INFO",
 )
 
-from src.router.notification import router as notification
+from src.api.push_notification import router as notification
 
 from core.config import settings
 

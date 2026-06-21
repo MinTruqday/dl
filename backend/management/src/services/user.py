@@ -10,10 +10,10 @@ from uuid6 import uuid7
 from core.config import settings
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
-from src.schemas.user import RoleEnum
+from src.schemas.user_identity_profile import RoleEnum
 
 
-class UserManager:
+class UserIdentity:
 
     @staticmethod
     async def get_all_users(

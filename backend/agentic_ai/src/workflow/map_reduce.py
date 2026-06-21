@@ -41,7 +41,7 @@ class SummarizeState(TypedDict):
 
 async def summarize_node(state: SummarizeState):
     from langchain_core.messages import HumanMessage
-    from src.agents.planner import llm
+    from src.agents.task_planning import llm
 
     prompt = f"Summarize the following document segment in detail:\n\n{state['chunk']}"
     res = await llm.ainvoke([HumanMessage(content=prompt)])
@@ -50,7 +50,7 @@ async def summarize_node(state: SummarizeState):
 
 async def hierarchical_reduce_node(state: MapReduceState):
     from langchain_core.messages import HumanMessage
-    from src.agents.planner import llm
+    from src.agents.task_planning import llm
 
     summaries = state["summaries"]
 

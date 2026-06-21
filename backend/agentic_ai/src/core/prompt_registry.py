@@ -51,9 +51,9 @@ OUTPUT_LANGUAGE The JSON values must exactly match the language of the user inpu
 AVAILABLE AGENTS
 - Action Executes system operations modifies personal data manages wallet balance deletes or restores documents
 - Knowledge Searches reads and analyzes internal documents from the library
-- CodeInterpreter Writes and executes Python code for data processing calculations and plotting
+- CodeExecution Writes and executes Python code for data processing calculations and plotting
 - SearchEngine Performs web searches to retrieve external information
-- ResponseGenerator Generates drafts writes emails formats text into Markdown or LaTeX
+- ResponseGeneration Generates drafts writes emails formats text into Markdown or LaTeX
 - Reasoning Performs deep logical analysis and evaluates quality
 
 RULES
@@ -65,10 +65,10 @@ RULES
 <user_input>Search for AI trends in 2024 on the internet and create a markdown draft document</user_input>
 <output>
 {{
-    "reasoning": "The request has two parts searching the internet for information then drafting a document SearchEngine retrieves data first then ResponseGenerator formats the output",
+    "reasoning": "The request has two parts searching the internet for information then drafting a document SearchEngine retrieves data first then ResponseGeneration formats the output",
     "steps": [
         {{"agent": "SearchEngine", "task": "Search for AI trends in 2024"}},
-        {{"agent": "ResponseGenerator", "task": "Draft a markdown document summarizing the found AI trends"}}
+        {{"agent": "ResponseGeneration", "task": "Draft a markdown document summarizing the found AI trends"}}
     ]
 }}
 </output>
@@ -78,10 +78,10 @@ RULES
 <user_input>Draw a pie chart of documents uploaded this month</user_input>
 <output>
 {{
-    "reasoning": "The user wants a chart based on system data Action fetches the statistics then CodeInterpreter draws the chart",
+    "reasoning": "The user wants a chart based on system data Action fetches the statistics then CodeExecution draws the chart",
     "steps": [
         {{"agent": "Action", "task": "Fetch document upload statistics for the current month"}},
-        {{"agent": "CodeInterpreter", "task": "Generate a pie chart using the provided upload statistics"}}
+        {{"agent": "CodeExecution", "task": "Generate a pie chart using the provided upload statistics"}}
     ]
 }}
 </output>

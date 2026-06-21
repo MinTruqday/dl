@@ -133,7 +133,7 @@ def require_role(required_roles: List[RoleEnum]):
     return role_checker
 
 
-class RateLimiter:
+class RateLimiting:
 
     def __init__(self, calls: int, period: int):
         self.calls = calls
