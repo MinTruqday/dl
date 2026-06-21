@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -19,6 +23,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Lowercase repository
+        run: |
+          echo "IMAGE_NAME_LOWER=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -36,7 +44,7 @@ jobs:
           context: ./backend
           file: ./backend/${{ matrix.service }}/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}/${{ matrix.service }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -53,13 +61,17 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
+      - name: Lowercase repository
+        run: |
+          echo "IMAGE_NAME_LOWER=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Prepare environment file
         run: |
-          echo "${{ secrets.DOCLIB_ENV }}" > .env
+          echo "${{ secrets.DOCLIB_ENV }}" > ./k8s/.env
 
       - name: Update image registries in manifests
         run: |
-          find ./k8s/apps -name "*.yaml" -exec sed -i 's|doclib-registry|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g' {} +
+          find ./k8s/apps -name "*.yaml" -exec sed -i "s|doclib-registry|${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}|g" {} +
 
       - name: Apply Kubernetes Manifests
         run: |

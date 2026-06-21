@@ -28,4 +28,4 @@ resources:
 secretGenerator:
   - name: doclib-env
     envs:
-      - ../.env
+      - .env
