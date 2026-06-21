@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import {
   Search,
   FileText,

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
 import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/content_monetization.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 
 export default function AuthorAnalyticsPage() {
   const { showToast } = useToast();

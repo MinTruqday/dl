@@ -20,7 +20,7 @@ import {
 } from "@/features/finance/services/discount_coupon.service";
 import { ingestDocumentAPI } from "@/features/ai/services/rag_pipeline.service";
 import { API_URL } from "@/features/auth/services/user_authentication.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Loader2,
   Settings,

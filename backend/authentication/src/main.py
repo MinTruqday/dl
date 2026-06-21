@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.api.login import router as auth
+from src.api.user_login import router as auth
 from src.api.passkey_authentication import router as passkey
 
 from core.config import settings

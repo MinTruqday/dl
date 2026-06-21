@@ -6,7 +6,7 @@ import {
   moderateDocumentAPI,
 } from "@/features/content/services/document_drafts.service";
 import { Loader2, ShieldCheck, Eye } from "lucide-react";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalHeader,

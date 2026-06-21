@@ -16,7 +16,7 @@ import {
   UserPlus,
   Star,
 } from "lucide-react";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 
 export default function CouponApprovalPage() {
   const { showToast } = useToast();

@@ -13,8 +13,8 @@ import {
   Loader2,
   User,
 } from "lucide-react";
-import { useToast } from "@/shared/contexts/Toast";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/ToastContext";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 interface CommentUser {
   id: string;

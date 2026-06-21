@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import Passkey from "@/features/auth/components/Passkey";
 

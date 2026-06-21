@@ -10,8 +10,8 @@ import {
   passkeyLoginFinishAPI,
   getGoogleLoginUrlAPI,
 } from "@/features/auth/services/user_authentication.service";
-import { useAuth } from "@/features/auth/contexts/Auth";
-import { useToast } from "@/shared/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useToast } from "@/shared/contexts/ToastContext";
 import Passkey from "@/features/auth/components/Passkey";
 
 function b64urlToBuffer(b64url: string): ArrayBuffer {

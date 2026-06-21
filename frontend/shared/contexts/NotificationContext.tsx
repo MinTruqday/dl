@@ -15,8 +15,8 @@ import {
   getNotificationsAPI,
   markNotificationReadAPI,
 } from "@/features/communication/services/push_notification.service";
-import { useAuth } from "@/features/auth/contexts/Auth";
-import { useToast } from "./Toast";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useToast } from "./ToastContext";
 
 interface NotificationItem {
   _id: string;
@@ -33,7 +33,7 @@ interface NotificationProps {
   markAsRead: (id: string) => Promise<void>;
 }
 
-const Notification = createContext<NotificationProps | undefined>(undefined);
+const NotificationContext = createContext<NotificationProps | undefined>(undefined);
 
 export function NotificationProvider({
   children,
@@ -105,16 +105,16 @@ export function NotificationProvider({
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <Notification.Provider
+    <NotificationContext.Provider
       value={{ notifications, unreadCount, fetchNotifications, markAsRead }}
     >
       {children}
-    </Notification.Provider>
+    </NotificationContext.Provider>
   );
 }
 
 export function useNotifications() {
-  const context = useContext(Notification);
+  const context = useContext(NotificationContext);
   if (!context) {
     throw new Error(
       "useNotifications must be used within a NotificationProvider",

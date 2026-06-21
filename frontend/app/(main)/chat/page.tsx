@@ -6,12 +6,12 @@ import {
 } from "@/features/auth/services/user_authentication.service";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import {
   getMyQuotaAPI,
   QuotaUsage,
 } from "@/features/provision/services/usage_quota.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";

@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, PenTool } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 
 export default function CreationLayout({
   children,

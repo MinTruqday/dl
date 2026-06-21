@@ -6,7 +6,7 @@ import {
   passkeyRegisterBeginAPI,
   passkeyRegisterFinishAPI,
 } from "@/features/auth/services/user_authentication.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalHeader,

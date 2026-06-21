@@ -8,9 +8,9 @@ import {
   smartSearchAPI,
 } from "@/features/content/services/content_discovery.service";
 import { getActiveBannersAPI } from "@/features/provision/services/promotional_banner.service";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import Link from "next/link";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   ChevronRight,
   LayoutGrid,

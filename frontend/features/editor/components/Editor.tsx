@@ -5,8 +5,8 @@ import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
 import StandardEditor from "./StandardEditor";
 import LatexEditor from "./LatexEditor";
-import { useToast } from "@/shared/contexts/Toast";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/ToastContext";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import {
   compilePreviewAPI,
   globalFindReplaceAPI,

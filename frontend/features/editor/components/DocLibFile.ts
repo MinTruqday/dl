@@ -139,7 +139,7 @@ export default class DocLibFile implements BlockTool {
             .then((res) => res.json())
             .then((res) => {
               if (res.success === 1 && res.file && res.file.url) {
-                this.data.url = res.file.url;
+                if (this.data.file) this.data.file.url = res.file.url;
                 this.data.file = {
                   url: res.file.url,
                   name: file.name,
@@ -148,10 +148,10 @@ export default class DocLibFile implements BlockTool {
                 };
                 this.data.title = file.name;
               } else {
-                this.data.url =
+                this.data.file?.url =
                   res.url || res.data?.url || URL.createObjectURL(file);
                 this.data.file = {
-                  url: this.data.url,
+                  url: this.data.file?.url,
                   name: file.name,
                   size: file.size,
                   extension: file.name.split(".").pop().toUpperCase(),
@@ -162,9 +162,9 @@ export default class DocLibFile implements BlockTool {
             })
             .catch((err) => {
               console.error("Upload failed", err);
-              this.data.url = URL.createObjectURL(file);
+              if (this.data.file) this.data.file.url = URL.createObjectURL(file);
               this.data.file = {
-                url: this.data.url,
+                url: this.data.file?.url,
                 name: file.name,
                 size: file.size,
                 extension: file.name.split(".").pop().toUpperCase(),
@@ -181,7 +181,7 @@ export default class DocLibFile implements BlockTool {
         e.preventDefault();
         const url = prompt("Paste direct URL:");
         if (url) {
-          this.data.url = url;
+          if (this.data.file) this.data.file.url = url;
           this.data.file = {
             url,
             name: url.split("/").pop(),

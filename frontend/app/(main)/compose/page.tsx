@@ -60,8 +60,8 @@ import {
   getDetailedHistoryAPI as getTransactionsAPI,
   getAuthorStatsAPI,
 } from "@/features/finance/services/account_ledger.service";
-import { useAuth } from "@/features/auth/contexts/Auth";
-import { useToast } from "@/shared/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalHeader,

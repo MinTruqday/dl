@@ -7,7 +7,7 @@ import {
   createCommentAPI,
   deleteCommentAPI,
 } from "@/features/communication/services/inline_comment.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2, MessageSquare, Trash2 } from "lucide-react";
 
 export default function CommentsPage() {

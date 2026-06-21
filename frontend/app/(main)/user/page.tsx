@@ -21,8 +21,8 @@ import {
   MoreVertical,
   Trash2,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/Auth";
-import { useToast } from "@/shared/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalHeader,

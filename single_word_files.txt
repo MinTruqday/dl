@@ -1,0 +1,21 @@
+=== BACKEND ISSUES ===
+backend/management/src/services/user.py
+
+=== FRONTEND ISSUES ===
+frontend/features/provision/components/Report.tsx
+frontend/features/auth/contexts/Auth.tsx
+frontend/features/auth/components/Passkey.tsx
+frontend/features/content/components/Workspace.tsx
+frontend/features/communication/components/Comment.tsx
+frontend/features/editor/components/Editor.tsx
+frontend/shared/contexts/Theme.tsx
+frontend/shared/contexts/Notification.tsx
+frontend/shared/contexts/Toast.tsx
+frontend/shared/components/ui/Button.tsx
+frontend/shared/components/ui/Modal.tsx
+frontend/shared/components/ui/Input.tsx
+frontend/shared/components/common/Menu.tsx
+frontend/shared/components/common/Toast.tsx
+frontend/shared/components/common/Navigation.tsx
+frontend/shared/lib/utils.ts
+frontend/components/Theme.tsx

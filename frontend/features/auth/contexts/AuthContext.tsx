@@ -26,7 +26,7 @@ interface AuthProps {
   logoutState: () => void;
 }
 
-const Auth = createContext<AuthProps | undefined>(undefined);
+const AuthContext = createContext<AuthProps | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <Auth.Provider
+    <AuthContext.Provider
       value={{
         user,
         isAuthenticated: !!user,
@@ -91,12 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-    </Auth.Provider>
+    </AuthContext.Provider>
   );
 }
 
 export const useAuth = () => {
-  const context = useContext(Auth);
+  const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth passed outside of AuthProvider");
   }

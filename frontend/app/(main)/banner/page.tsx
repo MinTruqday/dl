@@ -7,8 +7,8 @@ import {
   deleteBannerAPI,
 } from "@/features/provision/services/promotional_banner.service";
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/Auth";
-import { useToast } from "@/shared/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useToast } from "@/shared/contexts/ToastContext";
 
 export default function BannerManagementPage() {
   const { user, isLoading: authLoading } = useAuth() as any;

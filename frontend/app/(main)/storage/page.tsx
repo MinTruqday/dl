@@ -18,7 +18,7 @@ import {
   createShortcutAPI,
   downloadZipAPI,
 } from "@/features/content/services/file_storage.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Folder,
   File,

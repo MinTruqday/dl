@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Send, Loader2, ShieldAlert } from "lucide-react";
 import { submitReportAPI } from "@/features/provision/services/system_report.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalHeader,

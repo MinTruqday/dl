@@ -7,7 +7,7 @@ import {
   forgotPasswordAPI,
 } from "@/features/auth/services/user_authentication.service";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2 } from "lucide-react";
 
 export default function VerifyCodePage() {

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Bell,
   User,
-  Menu as MenuIcon,
+  Menu,
   LogOut,
   ChevronDown,
   Search,
@@ -15,8 +15,8 @@ import {
   MessageCircle,
   Sparkles,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/Auth";
-import { useNotifications } from "@/shared/contexts/Notification";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useNotifications } from "@/shared/contexts/NotificationContext";
 
 interface NavigationProps {
   onToggleSidebar?: () => void;
@@ -85,7 +85,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 className="p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150"
                 aria-label="Mở trình đơn"
               >
-                <MenuIcon className="w-5 h-5" />
+                <Menu className="w-5 h-5" />
               </button>
             )}
             <Link

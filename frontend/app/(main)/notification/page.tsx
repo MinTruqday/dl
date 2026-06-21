@@ -22,7 +22,7 @@ import {
   UserPlus,
   BookOpen,
 } from "lucide-react";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import Link from "next/link";
 
 export default function NotificationsPage() {

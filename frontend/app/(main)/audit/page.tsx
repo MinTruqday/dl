@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { getModeratorActivityAPI } from "@/features/provision/services/audit_logs.service";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/Auth";
-import { useToast } from "@/shared/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useToast } from "@/shared/contexts/ToastContext";
 import { useRouter } from "next/navigation";
 
 export default function LogsPage() {

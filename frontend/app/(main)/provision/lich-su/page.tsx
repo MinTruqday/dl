@@ -6,7 +6,7 @@ import {
   getDocumentVersionsAPI,
   restoreVersionAPI,
 } from "@/features/content/services/version_history.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2, Clock, Eye, RotateCcw } from "lucide-react";
 import {
   Modal,

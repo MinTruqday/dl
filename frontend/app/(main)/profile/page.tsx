@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { API_URL } from "@/features/auth/services/user_authentication.service";
 import { updateProfileAPI } from "@/features/provision/services/system_setting.service";
 import { getDetailedHistoryAPI } from "@/features/finance/services/account_ledger.service";
@@ -27,7 +27,7 @@ import {
   ArrowDownLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import Link from "next/link";
 
 export default function ProfilePage() {

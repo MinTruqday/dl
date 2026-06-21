@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import {
   History,
   CreditCard,
@@ -23,7 +23,7 @@ import {
 import { createDepositLinkAPI } from "@/features/finance/services/fiat_deposit.service";
 import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawal.service";
 import { getAuthorRevenueAPI } from "@/features/finance/services/content_monetization.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalHeader,

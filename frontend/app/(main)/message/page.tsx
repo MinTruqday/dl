@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import {
   getConversationsAPI,
   getMessagesAPI,
@@ -34,7 +34,7 @@ import {
   WS_URL,
   getToken,
 } from "@/features/auth/services/user_authentication.service";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalHeader,
@@ -83,7 +83,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { parseUTC } from "@/shared/lib/utils";
+import { parseUTC } from "@/shared/lib/app_utils";
 
 const CustomAudioPlayer = ({
   src,

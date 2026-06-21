@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
 import {
   getCollaborationInvitesAPI,
@@ -57,7 +57,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalHeader,

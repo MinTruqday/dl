@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import {
   getBookmarkFoldersAPI,
   createBookmarkFolderAPI,
@@ -45,7 +45,7 @@ import {
   ModalContent,
   ModalFooter,
 } from "@/shared/components/ui/Modal";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import { multiDocSynthesisAPI } from "@/features/ai/services/agentic_ai.service";
 import ReactMarkdown from "react-markdown";
 

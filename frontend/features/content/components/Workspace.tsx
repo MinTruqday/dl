@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/shared/components/common/Navigation";
 import Menu from "@/shared/components/common/Menu";
-import { useAuth } from "@/features/auth/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 

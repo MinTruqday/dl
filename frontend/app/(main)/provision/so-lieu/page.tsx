@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/contexts/ToastContext";
 import { getAuthorStatsAPI } from "@/features/finance/services/account_ledger.service";
 import { getAuthorRevenueAPI } from "@/features/finance/services/content_monetization.service";
 import {
