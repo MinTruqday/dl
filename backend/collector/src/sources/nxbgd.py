@@ -130,7 +130,6 @@ class NXBGDCollection:
                     "creator_id": "nxbgd",
                     "status": "published",
                     "views": 0,
-                    "average_rating": 0.0,
                 }
 
                 doc_id = await db_client.insert_document(document_metadata)

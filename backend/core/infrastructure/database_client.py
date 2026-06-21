@@ -88,7 +88,6 @@ async def setup_indexes():
             [("status", 1), ("is_deleted", 1), ("views", -1)], background=True
         )
         await db["documents"].create_index(
-            [("status", 1), ("is_deleted", 1), ("average_rating", -1)], background=True
         )
         await db["documents"].create_index(
             [("status", 1), ("is_deleted", 1), ("categories", 1), ("created_at", -1)],

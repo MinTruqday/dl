@@ -282,7 +282,6 @@ class CTANCollection:
                 "status": "published",
                 "rag_status": "pending",
                 "views": 0,
-                "average_rating": 0.0,
             }
 
             doc_id = await db_client.insert_document(book_document)

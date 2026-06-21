@@ -93,8 +93,6 @@ class DocumentInDB(DocumentBase):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     views: int = 0
-    average_rating: float = 0.0
-    rating_count: int = 0
 
 
 class DocumentResponse(DocumentBase):
@@ -103,8 +101,6 @@ class DocumentResponse(DocumentBase):
     status: DocumentStatus
     created_at: datetime
     views: int = 0
-    average_rating: float = 0.0
-    rating_count: int = 0
     has_purchased: bool = False
 
     class Config:

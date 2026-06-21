@@ -151,7 +151,6 @@ class DocumentMetadata:
                 "content_format": b.get("content_format", "json"),
                 "cover_url": b.get("cover_url"),
                 "views": b.get("views", 0),
-                "average_rating": b.get("average_rating"),
                 "created_at": (
                     b["created_at"].isoformat()
                     if isinstance(b.get("created_at"), datetime)
@@ -319,7 +318,6 @@ class DocumentMetadata:
         sort_mapping = {
             "latest": ("created_at", -1),
             "views": ("views", -1),
-            "rating": ("average_rating", -1),
         }
         sort_field, sort_dir = sort_mapping.get(sort_by, ("created_at", -1))
 
@@ -900,23 +898,7 @@ class DocumentMetadata:
         content = doc.get("content", "")
         total_words = len(content.split()) if content else 0
         avg_read_time_min = max(1, total_words // 200)
-        comment_count = await db["comments"].count_documents(
-            {"item_id": document_id, "item_type": "document"}
-        )
         bookmark_count = await db["bookmarks"].count_documents({"document_id": document_id})
-        review_pipeline = [
-            {"$match": {"document_id": document_id}},
-            {
-                "$group": {
-                    "_id": None,
-                    "avg_rating": {"$avg": "$rating"},
-                    "count": {"$sum": 1},
-                }
-            },
-        ]
-        review_stats = await db["reviews"].aggregate(review_pipeline).to_list(length=1)
-        avg_rating = review_stats[0]["avg_rating"] if review_stats else 0
-        review_count = review_stats[0]["count"] if review_stats else 0
         purchase_count = await db["transactions"].count_documents(
             {"reference_id": document_id, "type": {"$in": ["purchase", "receive"]}}
         )
@@ -926,9 +908,6 @@ class DocumentMetadata:
             "avg_read_time_min": avg_read_time_min,
             "total_words": total_words,
             "saves": bookmark_count,
-            "comments": comment_count,
-            "reviews": review_count,
-            "avg_rating": round(avg_rating, 1) if avg_rating else 0,
             "purchases": purchase_count,
         }
 
@@ -973,7 +952,6 @@ class DocumentMetadata:
                 "author": b.get("author", "Unknown"),
                 "cover_url": b.get("cover_url"),
                 "mentions": b.get("views", 0),
-                "average_rating": b.get("average_rating", 0),
             }
             for b in documents
         ]

@@ -12,7 +12,6 @@ class ContentModeration:
         if db is None:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        comments = await db["comments"].find({"user_id": user_id}).to_list(length=1000)
         documents = (
             await db["documents"].find({"creator_id": user_id}).to_list(length=1000)
         )
@@ -24,12 +23,7 @@ class ContentModeration:
             "authored_documents": [
                 {"_id": str(b["_id"]), "title": b.get("title")} for b in documents
             ],
-            "comments_written": len(comments),
             "reactions_given": len(reactions),
-            "raw_comments": [
-                {"document_id": c.get("document_id"), "content": c.get("content")}
-                for c in comments
-            ],
         }
         logger.info("Đã gửi yêu cầu xuất dữ liệu")
         return takeout_payload
@@ -39,15 +33,6 @@ class ContentModeration:
         if db is None:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        await db["comments"].update_many(
-            {"user_id": user_id},
-            {
-                "$set": {
-                    "content": "[Content removed in compliance with GDPR Right to be Forgotten]",
-                    "is_shadowbanned_content": True,
-                }
-            },
-        )
         await db["documents"].delete_many({"creator_id": user_id})
         await db["reactions"].delete_many({"user_id": user_id})
         if db_client.redis:
@@ -78,7 +63,6 @@ class ContentModeration:
             "documents": await db["documents"]
             .find({"creator_id": user_id})
             .to_list(100),
-            "comments": await db["comments"].find({"user_id": user_id}).to_list(500),
         }
         logger.info("Xuất dữ liệu thành công")
         return {"status": "success", "data": full_data}
