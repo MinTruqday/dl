@@ -31,7 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(notification)
+app.include_router(notification)
 
 
 @app.on_event("startup")

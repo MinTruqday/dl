@@ -7,7 +7,7 @@ from src.router.message import router as message
 from core.config import settings
 from core.database import close_db, init_db
 
-app = FastAPI(title="DocLib Contact", version=settings.VERSION)
+app = FastAPI(title="DocLib Massaging", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(message)
+app.include_router(message)
 
 
 @app.on_event("startup")

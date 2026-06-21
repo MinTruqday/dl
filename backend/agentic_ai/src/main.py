@@ -4,6 +4,7 @@ import uuid
 
 from fastapi import FastAPI, Request
 from loguru import logger
+from core.config import settings
 
 from core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 from core.repositories.base_repository import RepositoryFactory
@@ -41,12 +42,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(inference)
-app.include(chat)
-app.include(ingest)
-app.include(feedback)
-app.include(finetune)
-app.include(history)
+app.include_router(inference)
+app.include_router(chat)
+app.include_router(ingest)
+app.include_router(feedback)
+app.include_router(finetune)
+app.include_router(history)
 
 
 @app.get("/health")
@@ -93,18 +94,18 @@ async def startup_event():
         if settings.MONGODB_URI:
             client = AsyncIOMotorClient(settings.MONGODB_URI)
             db = client.get_default_database()
-            await RepositoryFactory.get("finetune_datasets").create_index(
+            await db["finetune_datasets"].create_index(
                 [("user_id", 1), ("created_at", -1)], background=True
             )
-            await RepositoryFactory.get("finetune_samples").create_index(
+            await db["finetune_samples"].create_index(
                 [("dataset_id", 1), ("created_at", 1)], background=True
             )
-            await RepositoryFactory.get("finetune_jobs").create_index(
+            await db["finetune_jobs"].create_index(
                 [("user_id", 1), ("created_at", -1)], background=True
             )
-            await RepositoryFactory.get("finetune_jobs").create_index(
+            await db["finetune_jobs"].create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
             logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
-    except Exception:
-        logger.error("Lỗi khởi tạo chỉ mục cơ sở dữ liệu")
+    except Exception as e:
+        logger.exception(f"Lỗi khởi tạo chỉ mục cơ sở dữ liệu: {str(e)}")

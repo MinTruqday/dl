@@ -58,7 +58,7 @@ class VectorDatabase:
                 await self.client.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(
-                        size=embedding._dimensions, distance=Distance.COSINE
+                        size=embedder._dimensions, distance=Distance.COSINE
                     ),
                 )
         except Exception:
@@ -142,4 +142,4 @@ class VectorDatabase:
             raise
 
 
-vector_store = VectorStore()
+vector_store = VectorDatabase()

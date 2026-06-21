@@ -27,13 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(user)
-app.include(audit)
-app.include(telemetry)
-app.include(operation)
-app.include(quota)
-app.include(profile)
-app.include(banner)
+app.include_router(user)
+app.include_router(audit)
+app.include_router(telemetry)
+app.include_router(operation)
+app.include_router(quota)
+app.include_router(profile)
+app.include_router(banner)
 
 
 @app.on_event("startup")

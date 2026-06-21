@@ -1,12 +1,12 @@
 import json
 from typing import Any, List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from src.schemas.message import ConversationResponse, MessageCreate, MessageResponse
 from src.services.message import MessageManager
 
 from core.database import db_client
-from core.dependency import AuthenticatedUser, Depends, Header, HTTPException, Query
+from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.dependency import get_current_user_from_header as get_current_user
 from core.repositories.base_repository import RepositoryFactory
 from core.response import APIResponse

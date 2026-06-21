@@ -2,7 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router import editor_ws, message_ws
+from src.router.editor_socket import router as editor_socket
+from src.router.message_socket import router as message_socket
 
 from core.config import settings
 from core.database import db_client
@@ -21,8 +22,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(editor_ws.router, prefix="/editor")
-app.include(message_ws.router, prefix="/messages")
+app.include_router(editor_socket)
+app.include_router(message_socket)
 
 
 @app.on_event("startup")

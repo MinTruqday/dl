@@ -16,7 +16,9 @@ logger.add(
     level="INFO",
 )
 
-from src.router import editor, editorjs, latex
+from src.router.editor import router as editor
+from src.router.editorjs import router as editorjs
+from src.router.latex import router as latex
 
 from core.config import settings
 
@@ -31,9 +33,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(latex.router)
-app.include(editorjs.router)
-app.include(editor.router)
+app.include_router(latex)
+app.include_router(editorjs)
+app.include_router(editor)
 
 
 @app.on_event("startup")

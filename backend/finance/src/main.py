@@ -2,7 +2,11 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router import coupon, deposit, monetization, wallet, withdrawal
+from src.router.coupon import router as coupon
+from src.router.deposit import router as deposit
+from src.router.monetization import router as monetization
+from src.router.wallet import router as wallet
+from src.router.withdrawal import router as withdrawal
 
 from core.config import settings
 from core.database import close_db, init_db
@@ -17,11 +21,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(wallet.router)
-app.include(deposit.router)
-app.include(withdrawal.router)
-app.include(monetization.router)
-app.include(coupon.router)
+app.include_router(wallet)
+app.include_router(deposit)
+app.include_router(withdrawal)
+app.include_router(monetization)
+app.include_router(coupon)
 
 
 @app.on_event("startup")

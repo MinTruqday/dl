@@ -22,8 +22,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(auth)
-app.include(passkey)
+app.include_router(auth)
+app.include_router(passkey)
 
 
 @app.on_event("startup")

@@ -241,6 +241,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: doclib_grafana
+    user: root
     restart: always
     ports:
       - "3001:3000"

@@ -17,7 +17,7 @@ logger.add(
     level="INFO",
 )
 
-from src.router.collector import router
+from src.router.collector import router as collector
 
 from core.config import settings
 
@@ -32,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include(router, prefix="/collectors")
+app.include_router(collector)
 
 
 @app.on_event("startup")
