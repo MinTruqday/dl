@@ -3,7 +3,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, status
 from src.router.dependency import get_current_user, get_db, require_role
-from src.schemas.system import CampaignRequest, CollectionRequest
+from src.schemas.system import CampaignRequest
 from src.services.operation import OperationManager
 from src.services.user import UserManager
 
@@ -121,64 +121,7 @@ async def get_admin_reports(db=Depends(get_db)):
     )
 
 
-@router.get(
-    "/thu-thap/thong-ke",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
-)
-async def get_collector_stats(db=Depends(get_db)):
-    return APIResponse(
-        data=await OperationManager.get_collector_stats(db=db),
-        message="Biên dịch dữ liệu thống kê thành công",
-    )
 
-
-@router.post(
-    "/thu-thap/kich-hoat",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
-)
-async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
-    return APIResponse(
-        data=await OperationManager.trigger_collection(req.source, req.pages, db=db),
-        message="Bắt đầu quá trình thu thập dữ liệu",
-    )
-
-
-@router.post(
-    "/thu-thap/dung",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
-)
-async def stop_collection(db=Depends(get_db)):
-    return APIResponse(
-        data=await OperationManager.stop_collection(db=db),
-        message="Gửi lệnh dừng thu thập dữ liệu thành công",
-    )
-
-
-@router.get(
-    "/thu-thap/nhat-ky",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
-)
-async def get_collector_logs(db=Depends(get_db)):
-    return APIResponse(
-        data=await OperationManager.get_collector_logs(db=db),
-        message="Lấy nhật ký hoạt động thành công",
-    )
-
-
-@router.get(
-    "/thu-thap/tien-trinh-dang-chay",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
-)
-async def get_active_collector_jobs(db=Depends(get_db)):
-    return APIResponse(
-        data=await OperationManager.get_active_collector_jobs(db=db),
-        message="Lấy danh sách tác vụ chạy nền thành công",
-    )
 
 
 @router.post(

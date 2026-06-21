@@ -17,11 +17,6 @@ from src.services.editor import EditorManager
 from core.config import settings
 from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.dependency import get_current_user_from_header as get_current_user
-from src.schemas.inference import (
-    AISuggestionRequest,
-    CoverGenerateRequest,
-    PlagiarismCheckRequest,
-)
 
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
@@ -36,21 +31,6 @@ def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_use
 
 
 router = APIRouter(prefix="/trinh-soan-thao")
-
-
-@router.post("/{document_id}/kiem-tra-dao-van")
-async def check_plagiarism(
-    document_id: str,
-    current_user=Depends(require_premium_ai),
-    agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
-):
-    return {
-        "data": await EditorManager.check_deep_plagiarism(
-            document_id, current_user, agentic_ai_url
-        ),
-        "message": "Hoàn tất kiểm tra tính nguyên bản",
-        "status": 200,
-    }
 
 
 @router.post("/{document_id}/dong-bo")
@@ -152,81 +132,7 @@ async def global_find_replace(
     }
 
 
-@router.post("/{document_id}/goi-y-ai")
-async def get_ai_suggestions(
-    document_id: str,
-    payload: AISuggestionRequest,
-    current_user=Depends(require_premium_ai),
-    agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
-):
-    return {
-        "data": await EditorManager.get_ai_suggestions(
-            document_id, payload.context, current_user, agentic_ai_url
-        ),
-        "message": "Lấy đề xuất AI thành công",
-        "status": 200,
-    }
 
-
-@router.post("/{document_id}/tom-tat")
-async def summarize_document(
-    document_id: str,
-    current_user=Depends(require_premium_ai),
-    agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
-):
-    return {
-        "data": await EditorManager.summarize_document(
-            document_id, current_user, agentic_ai_url
-        ),
-        "message": "Hoàn tất quá trình tóm tắt tự động",
-        "status": 200,
-    }
-
-
-@router.post("/{document_id}/trich-xuat-the")
-async def extract_smart_tags(
-    document_id: str,
-    current_user=Depends(require_premium_ai),
-    agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
-):
-    return {
-        "data": await EditorManager.extract_smart_tags(
-            document_id, current_user, agentic_ai_url
-        ),
-        "message": "Trích xuất thẻ thông tin từ tài liệu thành công",
-        "status": 200,
-    }
-
-
-@router.post("/{document_id}/kiem-tra-logic")
-async def check_logic(
-    document_id: str,
-    payload: dict,
-    current_user=Depends(require_premium_ai),
-    agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
-):
-    return {
-        "data": await EditorManager.check_logic(
-            document_id, payload.get("content", ""), current_user, agentic_ai_url
-        ),
-        "message": "Hoàn tất phân tích tính nhất quán logic",
-        "status": 200,
-    }
-
-
-@router.post("/{document_id}/kiem-tra-ngu-phap")
-async def check_grammar(
-    document_id: str,
-    current_user=Depends(require_premium_ai),
-    agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
-):
-    return {
-        "data": await EditorManager.check_grammar(
-            document_id, current_user, agentic_ai_url
-        ),
-        "message": "Hoàn tất phân tích ngữ pháp",
-        "status": 200,
-    }
 
 
 @router.post("/{document_id}/binh-luan")

@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query, status
-from src.schemas.bookmark import BookmarkFolderCreate, BookmarkFolderAssign
+from src.schemas.library import BookmarkFolderCreate, BookmarkFolderAssign
 from src.router.dependency import get_current_user, get_db
 from src.services.bookmark import BookmarkManager
 

@@ -72,17 +72,3 @@ class TopupRequest(BaseModel):
     amount: int = Field(..., gt=0)
     method: str = "payos"
 
-
-class CouponCreateRequest(BaseModel):
-    code: str
-    amount_dl: int = Field(..., gt=0)
-    expires_at: datetime
-
-
-class CouponCreateRequest(BaseModel):
-    code: str
-    discount_percent: int = 10
-    max_uses: int = 100
-    document_id: Optional[str] = None
-    expires_at: Optional[str] = None
-    target_type: CouponTargetType = CouponTargetType.ALL

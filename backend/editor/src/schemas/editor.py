@@ -1,6 +1,10 @@
 from typing import Optional
 
 from pydantic import BaseModel, Field
+from typing import Any
+
+class CompileRequest(BaseModel):
+    content: Any
 
 
 class KeystrokeSyncRequest(BaseModel):
