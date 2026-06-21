@@ -269,6 +269,26 @@ export default function StandardEditor({
       const DocLibFormDropdown = (await import("./DocLibFormDropdown")).default;
       const DocLibMacroButton = (await import("./DocLibMacroButton")).default;
 
+      const DocLibProductCard = (await import("./DocLibProductCard")).default;
+      const DocLibDonationBox = (await import("./DocLibDonationBox")).default;
+      const DocLibRestaurantMenu = (await import("./DocLibRestaurantMenu")).default;
+      const DocLibRealEstateListing = (await import("./DocLibRealEstateListing")).default;
+      const DocLibCouponCode = (await import("./DocLibCouponCode")).default;
+      const DocLibChangelog = (await import("./DocLibChangelog")).default;
+      const DocLibProductRoadmap = (await import("./DocLibProductRoadmap")).default;
+      const DocLibDirectoryTree = (await import("./DocLibDirectoryTree")).default;
+      const DocLibJsonViewer = (await import("./DocLibJsonViewer")).default;
+      const DocLibMarkdownBlock = (await import("./DocLibMarkdownBlock")).default;
+      const DocLibGithubRepo = (await import("./DocLibGithubRepo")).default;
+      const DocLibBeforeAfterImage = (await import("./DocLibBeforeAfterImage")).default;
+      const DocLibNewsTicker = (await import("./DocLibNewsTicker")).default;
+      const DocLibBreadcrumb = (await import("./DocLibBreadcrumb")).default;
+      const DocLibReviewSummary = (await import("./DocLibReviewSummary")).default;
+      const DocLibTeamRoster = (await import("./DocLibTeamRoster")).default;
+      const DocLibEventAgenda = (await import("./DocLibEventAgenda")).default;
+      const DocLibTournamentBracket = (await import("./DocLibTournamentBracket")).default;
+      const DocLibLeaderboard = (await import("./DocLibLeaderboard")).default;
+      const DocLibJobListing = (await import("./DocLibJobListing")).default;
 
       if (cancelled) {
         holderDiv.remove();
@@ -502,6 +522,27 @@ export default function StandardEditor({
       if (DocLibTableOfContents) tools.tableOfContents = DocLibTableOfContents;
       if (DocLibMailMerge) tools.mailMerge = DocLibMailMerge;
       if (DocLibBibliography) tools.bibliography = DocLibBibliography;
+
+      if (DocLibProductCard) tools.productCard = DocLibProductCard;
+      if (DocLibDonationBox) tools.donationBox = DocLibDonationBox;
+      if (DocLibRestaurantMenu) tools.restaurantMenu = DocLibRestaurantMenu;
+      if (DocLibRealEstateListing) tools.realEstateListing = DocLibRealEstateListing;
+      if (DocLibCouponCode) tools.couponCode = DocLibCouponCode;
+      if (DocLibChangelog) tools.changelog = DocLibChangelog;
+      if (DocLibProductRoadmap) tools.productRoadmap = DocLibProductRoadmap;
+      if (DocLibDirectoryTree) tools.directoryTree = DocLibDirectoryTree;
+      if (DocLibJsonViewer) tools.jsonViewer = DocLibJsonViewer;
+      if (DocLibMarkdownBlock) tools.markdownBlock = DocLibMarkdownBlock;
+      if (DocLibGithubRepo) tools.githubRepo = DocLibGithubRepo;
+      if (DocLibBeforeAfterImage) tools.beforeAfterImage = DocLibBeforeAfterImage;
+      if (DocLibNewsTicker) tools.newsTicker = DocLibNewsTicker;
+      if (DocLibBreadcrumb) tools.breadcrumb = DocLibBreadcrumb;
+      if (DocLibReviewSummary) tools.reviewSummary = DocLibReviewSummary;
+      if (DocLibTeamRoster) tools.teamRoster = DocLibTeamRoster;
+      if (DocLibEventAgenda) tools.eventAgenda = DocLibEventAgenda;
+      if (DocLibTournamentBracket) tools.tournamentBracket = DocLibTournamentBracket;
+      if (DocLibLeaderboard) tools.leaderboard = DocLibLeaderboard;
+      if (DocLibJobListing) tools.jobListing = DocLibJobListing;
 
       const editor = new EditorJSModule({
         holder: holderDiv,

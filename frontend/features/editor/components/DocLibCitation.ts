@@ -30,7 +30,7 @@ export default class DocLibCitation implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      style: data?.style || "solid",
+      style: data?.style || "APA",
       author: data?.author || "",
       year: data?.year || "",
       title: data?.title || "",
