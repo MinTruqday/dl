@@ -630,7 +630,7 @@ class DocumentMetadata:
     async def get_document_audit_logs(document_id: str, current_user) -> list:
         db = db_client.mongodb.get_default_database()
         document = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "creator_id": str(current_user.id)}, {"_id": 1}
+            {"_id": document_id, "creator_id": str(current_user.id)}, projection={"_id": 1}
         )
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
@@ -660,9 +660,8 @@ class DocumentMetadata:
     @staticmethod
     async def get_approval_queue(
         cursor: str = None,
-        limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
-        ),
+        limit: int = 50,
+        db=None,
     ) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"status": "processing_publish"}
@@ -821,11 +820,11 @@ class DocumentMetadata:
     async def delete_folder(folder_id: str, current_user):
         db = db_client.mongodb.get_default_database()
         folder = await db["workspace_folders"].find_one(
-            {"_id": ObjectId(folder_id), "creator_id": str(current_user.id)}
+            {"_id": folder_id, "creator_id": str(current_user.id)}
         )
         if not folder:
             raise HTTPException(status_code=404, detail="Không tìm thấy thư mục làm việc")
-        await db["workspace_folders"].delete_one({"_id": ObjectId(folder_id)})
+        await db["workspace_folders"].delete_one({"_id": folder_id})
         await db["documents"].update_many(
             {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
         )

@@ -55,7 +55,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                         "route": "error",
                     }
 
-        route_data = await semantic_api.execute(req.query)
+        route_data = await semantic_router.execute(req.query)
         route = route_data["route"]
         final_answer = ""
 
@@ -64,7 +64,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             if not final_answer:
                 from huggingface_hub import AsyncInferenceClient
                 from langchain_core.messages import HumanMessage
-                from src.utils.huggingface import HFInferenceChat
+                from src.utils.huggingface_client import HFInferenceChat
 
                 from core.infrastructure.app_config import settings
 
@@ -89,7 +89,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 res = await chat_llm.ainvoke([HumanMessage(content=content)])
                 final_answer = res.content
         else:
-            async for event in supervisor.execute_plan(req):
+            async for event in supervisor.execute_plan(req.model_dump()):
                 if event["type"] == "message":
                     final_answer += event.get("chunk", "")
 
@@ -99,7 +99,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             "route": "agentic_ai",
         }
     except Exception:
-        logger.error("Lỗi thực thi quy trình AI")
+        logger.exception("Lỗi thực thi quy trình AI")
         return {
             "answer": "Đã xảy ra lỗi, vui lòng thử lại sau",
             "route": "error",
@@ -166,7 +166,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             )
             req.conversation_history = ctx.chat_history
 
-            route_data = await semantic_api.execute(req.query)
+            route_data = await semantic_router.execute(req.query)
             route = route_data["route"]
             final_answer = ""
 
@@ -180,7 +180,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 else:
                     from huggingface_hub import AsyncInferenceClient
                     from langchain_core.messages import HumanMessage
-                    from src.utils.huggingface import HFInferenceChat
+                    from src.utils.huggingface_client import HFInferenceChat
 
                     from core.infrastructure.app_config import settings
 
@@ -223,7 +223,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
 
                 async def drain_supervisor():
                     async for event in orchestration.run(
-                        supervisor.execute_plan, req, session_id
+                        supervisor.execute_plan, req.model_dump(), session_id
                     ):
                         await heartbeat_queue.put(event)
                     await heartbeat_queue.put({"type": "__done__"})

@@ -82,8 +82,6 @@ export default function AuthorAnalyticsPage() {
             color: "text-zinc-100",
           },
           {
-            label: "Đánh giá TB",
-            val: revenue?.avg_rating || 0,
             icon: Star,
             color: "text-zinc-100",
           },

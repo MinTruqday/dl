@@ -13,11 +13,9 @@ class AccountLedger:
 
     @staticmethod
     async def get_balance(current_user, db=None):
-        from src.repositories.account_ledger_data import WalletRepository
-
-        wallet = await WalletRepository.get_wallet_by_user_id(
-            str(current_user.id), db=db
-        )
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
         return {"balance": wallet.get("balance", 0) if wallet else 0}
 
     @staticmethod
@@ -68,11 +66,9 @@ class AccountLedger:
             session.start_transaction()
             should_close_session = True
 
-        from src.repositories.account_ledger_data import WalletRepository
-
         try:
-            coupon = await WalletRepository.get_coupon_by_code(
-                req.code, db=db, session=session
+            coupon = await db["coupons"].find_one(
+                {"code": req.code}, session=session
             )
             if not coupon:
                 if should_close_session:
@@ -89,8 +85,10 @@ class AccountLedger:
                 )
 
             bonus_dl = coupon.get("amount_dl", coupon.get("amount_dls", 0))
-            result = await WalletRepository.mark_coupon_as_used(
-                coupon["_id"], str(current_user.id), db=db, session=session
+            result = await db["coupons"].update_one(
+                {"_id": coupon["_id"]},
+                {"$set": {"is_used": True, "used_by": str(current_user.id), "used_at": datetime.now(timezone.utc)}},
+                session=session
             )
             if result.modified_count == 0:
                 if should_close_session:
@@ -99,8 +97,11 @@ class AccountLedger:
                     status_code=400, detail="Mã giảm giá đã hết lượt sử dụng"
                 )
 
-            await WalletRepository.increment_balance(
-                str(current_user.id), bonus_dl, db=db, session=session
+            await db["wallets"].update_one(
+                {"_id": str(current_user.id)},
+                {"$inc": {"balance": bonus_dl}},
+                upsert=True,
+                session=session
             )
             tx = Transaction(
                 user_id=str(current_user.id),
@@ -108,8 +109,8 @@ class AccountLedger:
                 amount=bonus_dl,
                 note="Promotional coupon successfully redeemed and credited",
             )
-            await WalletRepository.insert_transaction(
-                tx.model_dump(by_alias=True), db=db, session=session
+            await db["transactions"].insert_one(
+                tx.model_dump(by_alias=True), session=session
             )
 
             if should_close_session:
@@ -163,15 +164,13 @@ class AccountLedger:
     async def get_history(
         current_user,
         cursor: str = None,
-        limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
-        ),
+        limit: int = 50,
         tx_type: str = None,
         skip: int = 0,
         db=None,
     ):
-        from src.repositories.account_ledger_data import WalletRepository
-
+        if db is None:
+            db = db_client.mongodb.get_default_database()
         query = {"user_id": str(current_user.id)}
         if tx_type:
             query["type"] = tx_type.lower()
@@ -182,9 +181,7 @@ class AccountLedger:
                 }
             except Exception:
                 logger.warning("Lỗi định dạng phân trang")
-        txs = await WalletRepository.get_transactions(
-            query, skip=skip, limit=limit, db=db
-        )
+        txs = await db["transactions"].find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
         type_translations = {
             "topup": "Deposit",
             "purchase": "Document Purchase",

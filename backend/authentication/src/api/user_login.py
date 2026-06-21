@@ -24,10 +24,19 @@ router = APIRouter(prefix="/xac-thuc")
 async def read_users_me(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
-    user_data = current_user.model_dump()
-    user_data["has_passkey"] = (
-        len(current_user.passkeys) > 0 if current_user.passkeys else False
-    )
+    user_doc = await db.users.find_one({"_id": current_user.id})
+    if not user_doc:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+        
+    user_data = user_doc
+    user_data["_id"] = str(user_doc["_id"])
+    if "created_at" not in user_data:
+        from datetime import datetime, timezone
+        user_data["created_at"] = datetime.now(timezone.utc)
+    passkeys = user_doc.get("passkeys", [])
+    user_data["has_passkey"] = len(passkeys) > 0
+    
     return APIResponse(
         data=user_data,
         message="Lấy thông tin cá nhân thành công",

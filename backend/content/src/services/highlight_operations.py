@@ -99,9 +99,7 @@ class HighlightOperations:
     async def get_all_notes(
         current_user,
         cursor: str = None,
-        limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
-        ),
+        limit: int = 50,
         skip: int = 0,
         db=None,
     ) -> list:
@@ -165,7 +163,7 @@ class HighlightOperations:
         if db is None:
             db = db_client.mongodb.get_default_database()
         document = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id}, {"title": 1}
+            {"_id": document_id}, projection={"title": 1}
         )
         document_title = document.get("title", "Untitled") if document else "Untitled"
         highlights = (

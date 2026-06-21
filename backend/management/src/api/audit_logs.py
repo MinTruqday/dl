@@ -20,6 +20,6 @@ async def get_activity(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await UserIdentity.get_activity_log(str(current_user.id), db=db),
+        data=await UserIdentity.get_moderator_activity_log(str(current_user.id), db=db),
         message="Lấy nhật ký hoạt động thành công",
     )

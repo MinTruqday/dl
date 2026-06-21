@@ -219,16 +219,7 @@ export default function DocumentDetailsPage() {
                 <span className="px-3 py-1 bg-black text-white text-xs font-medium rounded-none">
                   {docData.category_name || "Nội dung"}
                 </span>
-                <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                  <Star className="w-4 h-4 text-zinc-300 fill-zinc-300" />
-                  <span className="text-black">
-                    {docData.average_rating
-                      ? docData.average_rating.toFixed(1)
-                      : "0.0"}
-                  </span>
-                  <span className="text-zinc-300">/</span>
-                  <span>5.0</span>
-                </div>
+
               </div>
 
               <h1 className="font-bold tracking-tight text-black text-4xl md:text-5xl leading-tight">
@@ -306,12 +297,7 @@ export default function DocumentDetailsPage() {
                   <ShoppingCart className="w-4 h-4" /> Mua tài liệu
                 </button>
               )}
-              <button
-                onClick={() => setActiveTab("reviews")}
-                className="h-12 px-6 border border-zinc-200 bg-white text-black text-sm font-medium flex items-center justify-center gap-2 rounded-none  "
-              >
-                <Star className="w-4 h-4" /> Đánh giá
-              </button>
+
             </div>
 
             <div className="flex items-center gap-4 text-sm font-medium text-zinc-500 pt-4">
@@ -358,8 +344,7 @@ export default function DocumentDetailsPage() {
                 { id: "about", label: "Tóm lược" },
                 { id: "chapters", label: "Mục lục" },
                 { id: "preview", label: "Xem trước" },
-                { id: "reviews", label: "Đánh giá" },
-                { id: "comments", label: "Thảo luận" },
+                  { id: "comments", label: "Thảo luận" },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -531,11 +516,7 @@ export default function DocumentDetailsPage() {
                 </div>
               )}
 
-              {activeTab === "reviews" && (
-                <div className="bg-white border border-zinc-200 p-8 rounded-none">
-                  
-                </div>
-              )}
+
               {activeTab === "comments" && (
                 <div className="bg-white p-8 border border-zinc-200 rounded-none">
                   <Comment

@@ -60,8 +60,8 @@ class VersionHistory:
     async def restore_version(version_id: str, current_user, db=None):
         if db is None:
             db = db_client.mongodb.get_default_database()
-        version = await RepositoryFactory.get("document_versions").find_one(
-            {"_id": ObjectId(version_id), "creator_id": str(current_user.id)}
+        version = await db["document_versions"].find_one(
+            {"_id": version_id, "creator_id": str(current_user.id)}
         )
         if not version:
             raise HTTPException(

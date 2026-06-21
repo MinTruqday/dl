@@ -17,9 +17,7 @@ class UserIdentity:
 
     @staticmethod
     async def get_all_users(
-        limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
-        ),
+        limit: int = 50,
         offset: int = 0,
         cursor: str = None,
         db=None,
@@ -267,9 +265,7 @@ class UserIdentity:
     async def get_report_queue(
         status_filter: str = "pending",
         cursor: str = None,
-        limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
-        ),
+        limit: int = 50,
         skip: int = 0,
         db=None,
     ) -> list:
@@ -401,9 +397,7 @@ class UserIdentity:
     @staticmethod
     async def search_users(
         query: str,
-        limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
-        ),
+        limit: int = 50,
         db=None,
     ) -> List[Dict[str, Any]]:
         if db is None:

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, status
 from src.api.system_dependency import get_current_user, get_db, require_role
 from src.schemas.system_health import CampaignRequest
 from src.services.system_health import SystemHealth
+from src.services.system_telemetry import SystemTelemetry
 from src.services.user_profile import UserIdentity
 
 from core.api_response import APIResponse
@@ -20,7 +21,7 @@ router = APIRouter(prefix="/van-hanh")
 )
 async def get_system_metrics(db=Depends(get_db)):
     return APIResponse(
-        data=await SystemHealth.get_system_telemetry(db=db),
+        data=await SystemTelemetry.get_system_stats(db=db),
         message="Lấy dữ liệu hoạt động thành công",
     )
 
@@ -58,18 +59,6 @@ async def trigger_backup(db=Depends(get_db)):
     return APIResponse(
         data=await SystemHealth.trigger_backup(db=db),
         message="Bắt đầu sao lưu dữ liệu",
-    )
-
-
-@router.post(
-    "/khoa-api",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
-)
-async def create_api_key(name: str, db=Depends(get_db)):
-    return APIResponse(
-        data=await SystemHealth.create_api_key(name, db=db),
-        message="Tạo khóa bảo mật ứng dụng thành công",
     )
 
 

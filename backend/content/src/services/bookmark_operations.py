@@ -18,7 +18,7 @@ class BookmarkOperations:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         profile = await RepositoryFactory.get("user_content_profiles").find_one(
-            {"_id": user_id}, {"bookmarks": 1}
+            {"_id": user_id}, projection={"bookmarks": 1}
         )
         bookmarks = profile.get("bookmarks", []) if profile else []
         if document_id in bookmarks:
@@ -58,7 +58,7 @@ class BookmarkOperations:
         if db is None:
             db = db_client.mongodb.get_default_database()
         profile = await RepositoryFactory.get("user_content_profiles").find_one(
-            {"_id": str(current_user.id)}, {"bookmarks": 1}
+            {"_id": str(current_user.id)}, projection={"bookmarks": 1}
         )
         bookmark_ids = profile.get("bookmarks", []) if profile else []
         if not bookmark_ids:

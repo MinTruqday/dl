@@ -22,7 +22,7 @@ export default function SearchResultsPage() {
   const [history, setHistory] = useState<string[]>([]);
   const [filters, setFilters] = useState({
     price: "all",
-    rating: 0,
+
     time: "all",
     category: "Tất cả",
     sort: "newest",
@@ -62,10 +62,7 @@ export default function SearchResultsPage() {
       if (filters.price === "paid")
         filtered = filtered.filter((b: any) => b.price_dl > 0);
 
-      if (filters.rating > 0)
-        filtered = filtered.filter(
-          (b: any) => (b.average_rating || 0) >= filters.rating,
-        );
+
 
       const now = new Date();
       if (filters.time === "today") {
@@ -87,10 +84,7 @@ export default function SearchResultsPage() {
 
       if (filters.sort === "most_viewed") {
         filtered.sort((a: any, b: any) => (b.views || 0) - (a.views || 0));
-      } else if (filters.sort === "highest_rated") {
-        filtered.sort(
-          (a: any, b: any) => (b.average_rating || 0) - (a.average_rating || 0),
-        );
+
       } else {
         filtered.sort(
           (a: any, b: any) =>
@@ -142,7 +136,6 @@ export default function SearchResultsPage() {
                       label: "Xem nhiều nhất",
                       icon: ArrowUpDown,
                     },
-                    { id: "highest_rated", label: "Đánh giá cao", icon: Star },
                   ].map((s) => (
                     <button
                       key={s.id}
@@ -211,31 +204,7 @@ export default function SearchResultsPage() {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-xs font-semibold text-zinc-500">
-                  Đánh giá tối thiểu
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 0, label: "Tất cả" },
-                    { id: 3, label: "Từ 3 sao" },
-                    { id: 4, label: "Từ 4 sao" },
-                    { id: 5, label: "5 sao" },
-                  ].map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => setFilters({ ...filters, rating: r.id })}
-                      className={`text-center px-3 py-2 text-sm font-medium border rounded-none   ${
-                        filters.rating === r.id
-                          ? "bg-zinc-100 text-black border-zinc-300"
-                          : "bg-white text-zinc-500 border-zinc-200 "
-                      }`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+
             </div>
           </div>
 
@@ -362,12 +331,7 @@ export default function SearchResultsPage() {
                           lượt xem
                         </span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5" />
-                        <span>
-                          {document.average_rating?.toFixed(1) || "0.0"} sao
-                        </span>
-                      </div>
+
                     </div>
 
                     <div className="mt-auto pt-3 flex items-center justify-between">

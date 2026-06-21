@@ -18,7 +18,7 @@ async def request_withdrawal(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await FiatWithdrawal.request_withdrawal(req, current_user, db=db),
+        data=await FiatWithdrawal.request_withdrawal(req.model_dump(), current_user, db=db),
         message="Đã gửi yêu cầu rút tiền",
         status=201,
     )

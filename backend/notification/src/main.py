@@ -19,6 +19,7 @@ logger.add(
 from src.api.push_notification import router as notification
 
 from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import close_db, init_db
 
 app = FastAPI(title="DocLib Signal", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
@@ -37,6 +38,11 @@ app.include_router(notification)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo thông báo thành công")
+    await init_db()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_db()
 
 
 @app.get("/health")

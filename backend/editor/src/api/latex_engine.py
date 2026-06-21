@@ -16,7 +16,7 @@ async def compile_latex(req: CompileRequest):
     except Exception:
         logger.error("Lỗi biên dịch tài liệu định dạng")
         raise HTTPException(
-            status_code=500, detail="Lỗi biên dịch do cú pháp không hợp lệ"
+            status_code=400, detail="Lỗi biên dịch do cú pháp không hợp lệ"
         )
 
 

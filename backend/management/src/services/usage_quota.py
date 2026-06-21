@@ -13,7 +13,9 @@ from src.schemas.usage_quota import QuotaLimit
 class UsageQuota:
     @staticmethod
     async def get_global_config_from_db(db=None) -> dict:
-        config = await db_client.db.quota_configs.find_one({"_id": "global"})
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        config = await db.quota_configs.find_one({"_id": "global"})
         if config and "role_limits" in config:
             return config["role_limits"]
 
@@ -52,17 +54,19 @@ class UsageQuota:
             },
         }
 
-        await db_client.db.quota_configs.update_one(
+        await db.quota_configs.update_one(
             {"_id": "global"}, {"$set": {"role_limits": default_limits}}, upsert=True
         )
         return default_limits
 
     @staticmethod
     async def update_role_quota(tier: str, limits_dict: dict, db=None):
+        if db is None:
+            db = db_client.mongodb.get_default_database()
         global_cfg = await UsageQuota.get_global_config_from_db(db=db)
         if tier in global_cfg:
             global_cfg[tier].update(limits_dict)
-            await db_client.db.quota_configs.update_one(
+            await db.quota_configs.update_one(
                 {"_id": "global"}, {"$set": {f"role_limits.{tier}": global_cfg[tier]}}
             )
 

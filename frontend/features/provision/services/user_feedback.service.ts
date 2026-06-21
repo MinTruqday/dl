@@ -17,39 +17,6 @@ export async function submitReportAPI(payload: {
   return data;
 }
 
-export async function rateDocumentAPI(
-  documentId: string,
-  rating: number,
-  reviewText?: string,
-) {
-  const res = await fetch(`${API_URL}/phan-hoi/tai-lieu/${documentId}/danh-gia`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ rating, review_text: reviewText }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Đánh giá tài liệu thất bại");
-  return data;
-}
-
-export async function rateChapterAPI(
-  documentId: string,
-  chapterSlug: string,
-  rating: number,
-) {
-  const res = await fetch(
-    `${API_URL}/phan-hoi/tai-lieu/${documentId}/chuong/danh-gia`,
-    {
-      method: "POST",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ chapter_slug: chapterSlug, rating }),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Đánh giá chương thất bại");
-  return data;
-}
-
 export async function reportTypoAPI(
   documentId: string,
   payload: {

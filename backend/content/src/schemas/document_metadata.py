@@ -112,7 +112,7 @@ class DocumentPasswordRequest(BaseModel):
 
 
 class SchedulePublishRequest(BaseModel):
-    publish_at: str
+    publish_at: datetime
 
 
 class SeoMetadataRequest(BaseModel):
@@ -185,4 +185,4 @@ class TagsUpdate(BaseModel):
 
 
 class ScheduleUpdate(BaseModel):
-    publish_at: str
+    publish_at: datetime

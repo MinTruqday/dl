@@ -41,7 +41,7 @@ async def moderate_document(
 ):
     return APIResponse(
         data=await DocumentMetadata.moderate_document(
-            document_id, req.action, req.reason, current_user, db=db
+            document_id, req.action, req.reason, current_user
         ),
         message="Cập nhật kiểm duyệt tài liệu thành công",
     )

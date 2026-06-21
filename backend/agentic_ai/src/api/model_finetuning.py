@@ -1,6 +1,7 @@
 import asyncio
 from fastapi import APIRouter, Query, HTTPException
-from src.services import finetune as finetune_service
+from src.services import model_finetuning as finetune_service
+from core.infrastructure.app_config import settings
 
 router = APIRouter(prefix="/tinh-chinh")
 
@@ -31,7 +32,7 @@ async def get_samples(
     skip: int = 0,
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
 ):
-    return await finetune_service.get_samples(dataset_id, user_id, skip, limit, le)
+    return await finetune_service.get_samples(dataset_id, user_id, skip, limit)
 
 @router.delete("/tap-du-lieu/{dataset_id}/mau-thu/{sample_id}")
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):

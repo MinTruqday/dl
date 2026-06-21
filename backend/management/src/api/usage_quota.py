@@ -32,8 +32,14 @@ async def check_quota_internal(
 async def get_my_quota(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
+    # Get ai_tier and role properly
+    role = getattr(current_user.role, "value", current_user.role)
+    ai_tier = getattr(current_user, "ai_tier", "BASIC")
+    if hasattr(ai_tier, "value"):
+        ai_tier = ai_tier.value
+        
     usage = await UsageQuota.get_current_usage(
-        str(current_user.id), current_user.role.value, current_user.ai_tier.value, db=db
+        str(current_user.id), role, ai_tier, db=db
     )
     return APIResponse(data=usage, message="Lấy thông tin hạn mức sử dụng thành công")
 

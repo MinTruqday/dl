@@ -31,11 +31,11 @@ class DiscountCoupon:
             "used_count": 0,
             "document_id": data.get("document_id"),
             "target_type": data.get("target_type", CouponTargetType.ALL),
+            "amount_dl": data.get("amount_dl", 0),
             "status": status,
             "expires_at": (
-                datetime.fromisoformat(data["expires_at"])
-                if data.get("expires_at")
-                else None
+                datetime.fromisoformat(data["expires_at"]) if isinstance(data.get("expires_at"), str)
+                else data.get("expires_at")
             ),
             "is_active": True,
             "created_at": datetime.now(timezone.utc),

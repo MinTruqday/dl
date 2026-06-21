@@ -12,7 +12,7 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from redis import Redis
 from src.memory.memory_management import memory_manager
-from src.memory.memory_management import mem0_manager
+
 from src.rag.vector_embedding import embedder
 from src.rag.search_retrieval import retriever
 from src.store.vector_database import vector_store
@@ -50,7 +50,7 @@ except Exception as e:
     logger.warning("Lỗi khởi tạo bộ nhớ đệm")
 
 from huggingface_hub import AsyncInferenceClient
-from src.utils.huggingface import HFInferenceChat
+from src.utils.huggingface_client import HFInferenceChat
 
 llama_client = AsyncInferenceClient(
     model=settings.LLAMA_MODEL,
@@ -374,14 +374,6 @@ async def generate(state: AgentState):
     try:
         response = await llm_generate.ainvoke([HumanMessage(content=content)])
         generation = response.content
-        await mem0_manager.search_and_resolve_conflicts(question, user_id)
-        await mem0_manager.add_memory(
-            [
-                {"role": "user", "content": question},
-                {"role": "assistant", "content": generation},
-            ],
-            user_id,
-        )
         return {"generation": generation}
     except Exception:
         logger.error("Lỗi tạo nội dung tài liệu")

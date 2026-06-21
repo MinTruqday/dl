@@ -19,8 +19,8 @@ async def create_deposit(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await FiatDeposit.create_deposit(
-            req.amount, req.payment_method, current_user, db=db
+        data=await FiatDeposit.create_deposit_link(
+            req, current_user, db=db
         ),
         message="Đã khởi tạo giao dịch nạp tiền, đang chờ xác nhận",
         status=201,

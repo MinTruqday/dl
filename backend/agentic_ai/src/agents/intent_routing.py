@@ -5,7 +5,7 @@ from langchain_core.prompts import PromptTemplate
 from loguru import logger
 from pydantic import BaseModel, Field
 from src.core.prompt_registry import PromptType, prompt_registry
-from src.utils.huggingface import HFInferenceChat
+from src.utils.huggingface_client import HFInferenceChat
 
 from core.infrastructure.app_config import settings
 

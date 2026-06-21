@@ -11,7 +11,7 @@ from core.system_dependency import CurrentUser, RoleEnum
 router = APIRouter(prefix="/ket-xuat")
 
 
-@router.get("/{document_id}/pdf", response_model=APIResponse[Any])
+@router.get("/{document_id}/pdf")
 async def export_document_pdf(
     document_id: str,
     current_user: CurrentUser = Depends(get_current_user),
@@ -23,10 +23,6 @@ async def export_document_pdf(
     headers = {
         "Content-Disposition": 'attachment; filename="Document_Export_Watermarked.pdf"'
     }
-    return APIResponse(
-        data=Response(
-            content=pdf_content, media_type="application/pdf", headers=headers
-        ),
-        message="Tạo bản sao đóng dấu bản quyền thành công",
-        status=200,
+    return Response(
+        content=pdf_content, media_type="application/pdf", headers=headers
     )

@@ -224,7 +224,7 @@ class FiatWithdrawal:
                 await session.end_session()
 
     @staticmethod
-    async def get_withdrawal_queue(status: str = "pending", db=None) -> list:
+    async def get_withdrawal_queue(status: str = "pending", limit: int = 100, db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
         normalized_status = status.upper()
@@ -235,7 +235,7 @@ class FiatWithdrawal:
         pipeline = [
             {"$match": {"status": normalized_status}},
             {"$sort": {"created_at": -1}},
-            {"$limit": 100},
+            {"$limit": limit},
             {
                 "$lookup": {
                     "from": "users",

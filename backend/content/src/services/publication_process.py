@@ -85,7 +85,7 @@ class PublicationProcess:
         user_id = str(current_user.id)
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id, "creator_id": user_id},
-            {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at)}},
+            {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at) if isinstance(publish_at, str) else publish_at}},
         )
         logger.info("Cấu hình lịch xuất bản tài liệu thành công")
         return {"message": "Ghi nhận lịch xuất bản thành công"}

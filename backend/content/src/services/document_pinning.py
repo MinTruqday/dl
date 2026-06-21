@@ -15,7 +15,7 @@ class PinOperations:
         if db is None:
             db = db_client.mongodb.get_default_database()
         profile = await RepositoryFactory.get("user_content_profiles").find_one(
-            {"_id": str(current_user.id)}, {"pinned_documents": 1}
+            {"_id": str(current_user.id)}, projection={"pinned_documents": 1}
         )
         if not profile or "pinned_documents" not in profile:
             return []

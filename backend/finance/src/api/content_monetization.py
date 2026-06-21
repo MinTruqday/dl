@@ -20,7 +20,7 @@ async def purchase_document(
 ):
     return APIResponse(
         data=await PurchaseProcess.purchase_document(
-            req.document_id, req.coupon_code, current_user, db=db
+            req.document_id, current_user, db=db
         ),
         message="Thanh toán mua tài liệu thành công",
         status=200,

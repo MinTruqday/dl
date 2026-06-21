@@ -114,28 +114,6 @@ class SystemHealth:
         return {"message": "Đang chạy tác vụ sao lưu dữ liệu"}
 
     @staticmethod
-    async def create_api_key(
-        name: str, provider: str = "DEFAULT", key_value: str = "", db=None
-    ) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        if not key_value:
-            import secrets
-
-            key_value = secrets.token_urlsafe(32)
-        await RepositoryFactory.get("api_keys").insert_one(
-            {
-                "_id": str(uuid7()),
-                "name": name,
-                "provider": provider,
-                "key_value": key_value,
-                "created_at": datetime.now(timezone.utc),
-            }
-        )
-        logger.info("Tạo khóa API thành công")
-        return {"message": "Tạo khóa truy cập thành công", "key": key_value}
-
-    @staticmethod
     async def create_marketing_campaign(data: dict, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()

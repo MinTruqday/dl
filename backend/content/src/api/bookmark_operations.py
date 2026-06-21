@@ -11,31 +11,6 @@ from core.system_dependency import CurrentUser, RoleEnum
 router = APIRouter(prefix="/danh-dau")
 
 
-@router.post("/{document_id}", response_model=APIResponse[Any])
-async def toggle_bookmark(
-    document_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    return APIResponse(
-        data=await BookmarkOperations.toggle_bookmark(document_id, current_user, db=db),
-        message="Thao tác dấu trang thành công",
-        status=200,
-    )
-
-
-@router.get("", response_model=APIResponse[Any])
-async def get_bookmarks(
-    limit: int = Query(100),
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    return APIResponse(
-        data=await BookmarkOperations.get_bookmarks(current_user, limit, db=db),
-        message="Lấy danh sách dấu trang thành công",
-    )
-
-
 @router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(
     data: BookmarkFolderCreate,
@@ -88,3 +63,31 @@ async def delete_bookmark_folder(
         ),
         message="Xóa vĩnh viễn thư mục dấu trang thành công",
     )
+
+
+@router.post("/{document_id}", response_model=APIResponse[Any])
+async def toggle_bookmark(
+    document_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await BookmarkOperations.toggle_bookmark(document_id, current_user, db=db),
+        message="Thao tác dấu trang thành công",
+        status=200,
+    )
+
+
+@router.get("", response_model=APIResponse[Any])
+async def get_bookmarks(
+    limit: int = Query(100),
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await BookmarkOperations.get_bookmarks(current_user, limit, db=db),
+        message="Lấy danh sách dấu trang thành công",
+    )
+
+
+
