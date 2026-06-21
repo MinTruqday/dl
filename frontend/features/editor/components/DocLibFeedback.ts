@@ -21,13 +21,8 @@ export default class DocLibFeedback implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      question: data?.question || "Was this article helpful",
-      reactions: data?.reactions && data.reactions.length > 0 ? data.reactions : [
-        { emoji: "", label: "Amazing", count: 0 },
-        { emoji: "", label: "Helpful", count: 0 },
-        { emoji: "", label: "Neutral", count: 0 },
-        { emoji: "", label: "Not helpful", count: 0 },
-      ],
+      question: data?.question || "",
+      reactions: data?.reactions || [],
     };
   }
 

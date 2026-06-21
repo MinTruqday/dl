@@ -20,7 +20,7 @@ export default class DocLibAlert implements BlockTool {
   constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
     this.data = {
-      type: data.type || "info",
+      type: data.type || "",
       message: data.message || "",
     };
   }

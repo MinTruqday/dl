@@ -238,6 +238,11 @@ export default function StandardEditor({
       const DocLibVerticalTimeline = (await import("./DocLibVerticalTimeline")).default;
       const DocLibPricingTable = (await import("./DocLibPricingTable")).default;
       const DocLibInteractiveQuiz = (await import("./DocLibInteractiveQuiz")).default;
+      const DocLibPageBreak = (await import("./DocLibPageBreak")).default;
+      const DocLibWatermark = (await import("./DocLibWatermark")).default;
+      const DocLibTableOfContents = (await import("./DocLibTableOfContents")).default;
+      const DocLibMailMerge = (await import("./DocLibMailMerge")).default;
+      const DocLibBibliography = (await import("./DocLibBibliography")).default;
 
       if (cancelled) {
         holderDiv.remove();
@@ -466,6 +471,11 @@ export default function StandardEditor({
       if (DocLibVerticalTimeline) tools.verticalTimeline = DocLibVerticalTimeline;
       if (DocLibPricingTable) tools.pricingTable = DocLibPricingTable;
       if (DocLibInteractiveQuiz) tools.interactiveQuiz = DocLibInteractiveQuiz;
+      if (DocLibPageBreak) tools.pageBreak = DocLibPageBreak;
+      if (DocLibWatermark) tools.watermark = DocLibWatermark;
+      if (DocLibTableOfContents) tools.tableOfContents = DocLibTableOfContents;
+      if (DocLibMailMerge) tools.mailMerge = DocLibMailMerge;
+      if (DocLibBibliography) tools.bibliography = DocLibBibliography;
 
       const editor = new EditorJSModule({
         holder: holderDiv,

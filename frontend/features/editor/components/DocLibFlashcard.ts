@@ -21,8 +21,8 @@ export default class DocLibFlashcard implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      front: data?.front || "Question",
-      back: data?.back || "Answer",
+      front: data?.front || "",
+      back: data?.back || "",
       hint: data?.hint || "",
     };
   }

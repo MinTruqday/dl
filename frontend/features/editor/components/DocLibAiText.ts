@@ -35,7 +35,7 @@ export default class DocLibAiText implements BlockTool {
     this.data = {
       prompt: data.prompt || "",
       response: data.response || "",
-      status: data.status || "idle",
+      status: data.status || "",
     };
   }
 

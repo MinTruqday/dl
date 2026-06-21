@@ -21,7 +21,7 @@ export default class DocLibToggle implements BlockTool {
     this.data = {
       title: data.title || "",
       content: data.content || "",
-      status: data.status || "closed",
+      status: data.status || "",
     };
   }
 

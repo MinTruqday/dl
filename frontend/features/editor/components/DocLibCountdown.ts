@@ -30,7 +30,7 @@ export default class DocLibCountdown implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      title: data.title || "Upcoming Event",
+      title: data.title || "",
       targetDate:
         data.targetDate || new Date(Date.now() + 86400000 * 7).toISOString(),
     };

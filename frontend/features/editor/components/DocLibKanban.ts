@@ -36,19 +36,7 @@ export default class DocLibKanban implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      columns:
-        data.columns && data.columns.length > 0
-          ? data.columns
-          : [
-              {
-                id: "c1",
-                title: "To Do",
-                color: "#cbd5e1",
-                tasks: [{ id: "t1", text: "Task 1" }],
-              },
-              { id: "c2", title: "In Progress", color: "#60a5fa", tasks: [] },
-              { id: "c3", title: "Done", color: "#34d399", tasks: [] },
-            ],
+      columns: data?.columns || [],
     };
   }
 

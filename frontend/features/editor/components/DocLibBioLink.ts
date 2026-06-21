@@ -26,12 +26,10 @@ export default class DocLibBioLink implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      name: data?.name || "Your name",
-      bio: data?.bio || "Short bio",
+      name: data?.name || "",
+      bio: data?.bio || "",
       avatar: data?.avatar || "",
-      links: data?.links && data.links.length > 0 ? data.links : [
-        { label: "Website", url: "https://example.com", icon: "", color: "#0f172a" },
-      ],
+      links: data?.links || [],
     };
   }
 

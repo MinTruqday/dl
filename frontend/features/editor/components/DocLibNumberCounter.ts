@@ -22,12 +22,7 @@ export default class DocLibNumberCounter implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      stats: data?.stats && data.stats.length > 0 ? data.stats : [
-        { value: "10000", label: "Users", prefix: "", suffix: "+", color: "#0284c7" },
-        { value: "500", label: "Documents", prefix: "", suffix: "K", color: "#059669" },
-        { value: "99", label: "Satisfaction", prefix: "", suffix: "%", color: "#7c3aed" },
-        { value: "24", label: "Support", prefix: "", suffix: "/7", color: "#d97706" },
-      ],
+      stats: data?.stats || [],
     };
   }
 

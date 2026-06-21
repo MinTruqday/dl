@@ -25,11 +25,7 @@ export default class DocLibVerticalTimeline implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      events: data?.events && data.events.length > 0 ? data.events : [
-        { id: this.mkId(), date: "Jan 2024", title: "Project Start", description: "Initial kickoff and planning phase", color: "#3b82f6" },
-        { id: this.mkId(), date: "Mar 2024", title: "Beta Release", description: "First public beta available to testers", color: "#10b981" },
-        { id: this.mkId(), date: "Jun 2024", title: "Version 1.0", description: "Official production release", color: "#8b5cf6" },
-      ],
+      events: data?.events || [],
     };
   }
 

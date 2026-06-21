@@ -29,9 +29,9 @@ export default class DocLibProgressBar implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      label: data.label || "Project Progress",
+      label: data.label || "",
       percentage: data.percentage !== undefined ? data.percentage : 50,
-      color: data.color || "#3b82f6",
+      color: data.color || "",
     };
   }
 

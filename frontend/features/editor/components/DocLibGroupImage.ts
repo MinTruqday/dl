@@ -30,7 +30,7 @@ export default class DocLibGroupImage implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       urls: Array.isArray(data.urls) ? data.urls : [],
-      layout: data.layout || "grid",
+      layout: data.layout || "",
     };
   }
 

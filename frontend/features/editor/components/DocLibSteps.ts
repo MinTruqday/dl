@@ -32,7 +32,7 @@ export default class DocLibSteps implements BlockTool {
       steps:
         data.steps && data.steps.length > 0
           ? data.steps
-          : [{ title: "Step 1", desc: "Detailed step description 1" }],
+          : [],
     };
   }
 

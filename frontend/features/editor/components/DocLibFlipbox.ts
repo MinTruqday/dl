@@ -21,7 +21,7 @@ export default class DocLibFlipbox implements BlockTool {
     this.data = {
       front: data.front || "",
       back: data.back || "",
-      bgColor: data.bgColor || "#3b82f6",
+      bgColor: data.bgColor || "",
     };
   }
 

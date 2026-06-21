@@ -21,7 +21,7 @@ export default class DocLibMermaid implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      code: data?.code || "graph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;",
+      code: data?.code || "",
     };
   }
 

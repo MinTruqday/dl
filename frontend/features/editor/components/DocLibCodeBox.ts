@@ -23,8 +23,8 @@ export default class DocLibCodeBox implements BlockTool {
     this.api = api;
     this.data = {
       code: data.code || "",
-      language: data.language || "javascript",
-      theme: data.theme || "dark",
+      language: data.language || "",
+      theme: data.theme || "",
     };
   }
 

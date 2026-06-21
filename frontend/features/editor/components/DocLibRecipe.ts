@@ -31,14 +31,14 @@ export default class DocLibRecipe implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      title: data?.title || "Recipe name",
-      description: data?.description || "Short description",
-      prepTime: data?.prepTime || "15 minutes",
-      cookTime: data?.cookTime || "30 minutes",
-      servings: data?.servings || "4",
-      difficulty: data?.difficulty || "Easy",
-      ingredients: data?.ingredients && data.ingredients.length > 0 ? data.ingredients : ["200g flour", "2 eggs", "100ml milk"],
-      steps: data?.steps && data.steps.length > 0 ? data.steps : ["Mix all dry ingredients", "Add eggs and milk to the mix", "Bake at 180 C for 30 minutes"],
+      title: data?.title || "",
+      description: data?.description || "",
+      prepTime: data?.prepTime || "",
+      cookTime: data?.cookTime || "",
+      servings: data?.servings || "",
+      difficulty: data?.difficulty || "",
+      ingredients: data?.ingredients || [],
+      steps: data?.steps || [],
       image: data?.image || "",
     };
   }

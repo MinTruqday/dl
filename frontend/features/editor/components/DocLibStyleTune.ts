@@ -12,7 +12,7 @@ export default class DocLibStyleTune {
   constructor({ api, data }: { api: API; data?: any }) {
     this.api = api;
     this.data = {
-      bg: data?.bg || "transparent",
+      bg: data?.bg || "",
       radius: data?.radius || 0,
       shadow: data?.shadow || false,
     };

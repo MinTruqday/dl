@@ -29,7 +29,7 @@ export default class DocLibMath implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      formula: data.formula || "E = mc^2",
+      formula: data.formula || "",
     };
   }
 

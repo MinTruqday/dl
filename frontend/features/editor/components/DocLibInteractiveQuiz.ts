@@ -25,14 +25,9 @@ export default class DocLibInteractiveQuiz implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      question: data?.question || "What is the capital of France",
-      options: data?.options && data.options.length > 0 ? data.options : [
-        { text: "London", isCorrect: false },
-        { text: "Berlin", isCorrect: false },
-        { text: "Paris", isCorrect: true },
-        { text: "Madrid", isCorrect: false },
-      ],
-      explanation: data?.explanation || "Paris is the capital and most populous city of France",
+      question: data?.question || "",
+      options: data?.options || [],
+      explanation: data?.explanation || "",
     };
   }
 

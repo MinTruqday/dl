@@ -19,7 +19,7 @@ export default class DocLibDivider implements BlockTool {
   constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
     this.data = {
-      style: data.style || "solid",
+      style: data.style || "",
     };
   }
 

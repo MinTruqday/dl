@@ -21,7 +21,7 @@ export default class DocLibQRCode implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      content: data?.content || "https://example.com",
+      content: data?.content || "",
       size: data?.size || 200,
     };
   }

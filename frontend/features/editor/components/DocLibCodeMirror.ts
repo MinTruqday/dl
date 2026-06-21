@@ -30,7 +30,7 @@ export default class DocLibCodeMirror implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       code: data.code || "",
-      language: data.language || "javascript",
+      language: data.language || "",
     };
   }
 

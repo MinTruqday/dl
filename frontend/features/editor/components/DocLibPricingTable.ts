@@ -25,11 +25,7 @@ export default class DocLibPricingTable implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      tiers: data?.tiers && data.tiers.length > 0 ? data.tiers : [
-        { id: this.mkId(), name: "Basic", price: "$0", period: "/month", features: [{ text: "1 User", included: true }, { text: "10 Projects", included: true }, { text: "Priority Support", included: false }], recommended: false, btnText: "Start Free", btnUrl: "#", color: "#64748b" },
-        { id: this.mkId(), name: "Pro", price: "$29", period: "/month", features: [{ text: "5 Users", included: true }, { text: "Unlimited Projects", included: true }, { text: "Priority Support", included: true }], recommended: true, btnText: "Upgrade Now", btnUrl: "#", color: "#0284c7" },
-        { id: this.mkId(), name: "Enterprise", price: "$99", period: "/month", features: [{ text: "Unlimited Users", included: true }, { text: "Unlimited Projects", included: true }, { text: "24/7 Dedicated Support", included: true }], recommended: false, btnText: "Contact Us", btnUrl: "#", color: "#0f172a" },
-      ],
+      tiers: data?.tiers || [],
     };
   }
 

@@ -21,9 +21,9 @@ export default class DocLibDiffViewer implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      oldCode: data?.oldCode || "function hello() {\n  console.log('Hello');\n  return false;\n}",
-      newCode: data?.newCode || "function hello(name) {\n  console.log(`Hello, ${name}!`);\n  return true;\n}",
-      language: data?.language || "javascript",
+      oldCode: data?.oldCode || "",
+      newCode: data?.newCode || "",
+      language: data?.language || "",
     };
   }
 

@@ -24,7 +24,7 @@ export default class DocLibChecklist implements BlockTool {
     this.data = {
       items: Array.isArray(data?.items)
         ? data.items
-        : [{ text: "", checked: false }],
+        : [],
     };
   }
 

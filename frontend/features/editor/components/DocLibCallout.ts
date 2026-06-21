@@ -31,7 +31,7 @@ export default class DocLibCallout implements BlockTool {
     this.data = {
       icon: data.icon || "",
       text: data.text || "",
-      bgColor: data.bgColor || "#f8fafc",
+      bgColor: data.bgColor || "",
     };
   }
 

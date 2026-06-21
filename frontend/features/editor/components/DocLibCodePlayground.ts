@@ -21,10 +21,10 @@ export default class DocLibCodePlayground implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      html: data?.html || "<h1>Hello DocLib!</h1>\n<p>Edit this HTML</p>",
-      css: data?.css || "body {\n  font-family: sans-serif;\n  padding: 20px;\n  color: #1e293b;\n}",
-      js: data?.js || "document.querySelector('h1').style.color = '#0284c7';",
-      activeTab: data?.activeTab || "html",
+      html: data?.html || "",
+      css: data?.css || "",
+      js: data?.js || "",
+      activeTab: data?.activeTab || "",
     };
   }
 

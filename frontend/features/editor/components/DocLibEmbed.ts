@@ -26,7 +26,7 @@ export default class DocLibEmbed implements BlockTool {
   constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
     this.data = {
-      service: data.service || "youtube",
+      service: data.service || "",
       source: data.source || "",
       embed: data.embed || "",
       width: data.width || 580,

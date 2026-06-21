@@ -22,7 +22,7 @@ export default class DocLibNestedChecklist implements BlockTool {
       items:
         data.items && data.items.length > 0
           ? data.items
-          : [{ text: "", checked: false, depth: 0 }],
+          : [],
     };
   }
 

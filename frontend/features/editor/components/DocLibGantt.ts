@@ -28,15 +28,9 @@ export default class DocLibGantt implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      title: data?.title || "Project Timeline",
+      title: data?.title || "",
       totalDays: data?.totalDays || 30,
-      tasks: data?.tasks && data.tasks.length > 0 ? data.tasks : [
-        { name: "Planning", start: 0, end: 5, color: "#0284c7" },
-        { name: "Design", start: 4, end: 12, color: "#7c3aed" },
-        { name: "Development", start: 10, end: 24, color: "#059669" },
-        { name: "Testing", start: 22, end: 28, color: "#d97706" },
-        { name: "Deployment", start: 27, end: 30, color: "#dc2626" },
-      ],
+      tasks: data?.tasks || [],
     };
   }
 

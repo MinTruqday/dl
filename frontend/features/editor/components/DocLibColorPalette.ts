@@ -21,15 +21,8 @@ export default class DocLibColorPalette implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      title: data?.title || "Color Palette",
-      colors: data?.colors && data.colors.length > 0 ? data.colors : [
-        { hex: "#0f172a", name: "Slate 950" },
-        { hex: "#0284c7", name: "Sky 600" },
-        { hex: "#059669", name: "Emerald 600" },
-        { hex: "#d97706", name: "Amber 600" },
-        { hex: "#dc2626", name: "Red 600" },
-        { hex: "#7c3aed", name: "Violet 600" },
-      ],
+      title: data?.title || "",
+      colors: data?.colors || [],
     };
   }
 

@@ -32,11 +32,11 @@ export default class DocLibNestedList implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      style: data.style || "unordered",
+      style: data.style || "",
       items:
         data.items && data.items.length > 0
           ? data.items
-          : [{ content: "", items: [] }],
+          : [],
     };
   }
 

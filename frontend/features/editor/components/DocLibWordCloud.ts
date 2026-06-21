@@ -21,18 +21,7 @@ export default class DocLibWordCloud implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      words: data?.words && data.words.length > 0
-        ? data.words
-        : [
-            { text: "EditorJS", weight: 5 },
-            { text: "DocLib", weight: 4 },
-            { text: "Design", weight: 3 },
-            { text: "Content", weight: 3 },
-            { text: "Learning", weight: 2 },
-            { text: "Documents", weight: 4 },
-            { text: "Creative", weight: 2 },
-            { text: "Sharing", weight: 3 },
-          ],
+      words: data?.words || [],
     };
   }
 

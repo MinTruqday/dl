@@ -31,7 +31,7 @@ export default class DocLibQuote implements BlockTool {
     this.data = {
       text: data.text || "",
       caption: data.caption || "",
-      alignment: data.alignment || config?.defaultAlignment || "left",
+      alignment: data.alignment || config?.defaultAlignment || "",
     };
 
     this._CSS = {

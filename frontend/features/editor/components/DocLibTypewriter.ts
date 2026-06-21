@@ -22,7 +22,7 @@ export default class DocLibTypewriter implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      phrases: data?.phrases && data.phrases.length > 0 ? data.phrases : ["Welcome to DocLib", "Digital document platform", "Learn and share knowledge"],
+      phrases: data?.phrases || [],
       speed: data?.speed || 80,
       loop: data?.loop !== undefined ? data.loop : true,
     };

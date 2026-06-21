@@ -32,13 +32,13 @@ export default class DocLibEventCard implements BlockTool {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 7);
     this.data = {
-      title: data?.title || "Event name",
-      description: data?.description || "Event description",
+      title: data?.title || "",
+      description: data?.description || "",
       date: data?.date || tomorrow.toISOString().split("T")[0],
-      time: data?.time || "09:00",
-      location: data?.location || "Venue",
+      time: data?.time || "",
+      location: data?.location || "",
       url: data?.url || "",
-      color: data?.color || "#0284c7",
+      color: data?.color || "",
     };
   }
 

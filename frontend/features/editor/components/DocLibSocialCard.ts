@@ -31,12 +31,12 @@ export default class DocLibSocialCard implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      platform: data?.platform || "github",
-      username: data?.username || "username",
-      displayName: data?.displayName || "Display name",
-      bio: data?.bio || "Short bio",
+      platform: data?.platform || "",
+      username: data?.username || "",
+      displayName: data?.displayName || "",
+      bio: data?.bio || "",
       avatar: data?.avatar || "",
-      followers: data?.followers || "0",
+      followers: data?.followers || "",
       url: data?.url || "",
     };
   }
