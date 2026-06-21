@@ -116,7 +116,7 @@ export default class DocLibQRCode implements BlockTool {
     const input = document.createElement("input");
     input.classList.add("doclib-qr-input");
     input.value = this.data.content;
-    input.placeholder = "https://example.com";
+    input.placeholder = "DocLib URL";
 
     let timeout: ReturnType<typeof setTimeout>;
     input.addEventListener("input", () => {

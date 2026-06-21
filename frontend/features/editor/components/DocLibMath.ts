@@ -102,7 +102,7 @@ export default class DocLibMath implements BlockTool {
       const input = document.createElement("input");
       input.classList.add("doclib-math-input");
       input.value = this.data.formula;
-      input.placeholder = "Enter LaTeX formula";
+      input.placeholder = "DocLib Code";
       input.addEventListener("input", () => {
         this.data.formula = input.value;
         renderMath();

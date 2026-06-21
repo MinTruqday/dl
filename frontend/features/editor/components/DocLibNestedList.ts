@@ -51,7 +51,7 @@ export default class DocLibNestedList implements BlockTool {
             .doclib-nl-wrapper { margin: 8px 0; padding-left: 24px; outline: none; }
             .doclib-nl-item { margin: 4px 0; line-height: 1.6; }
             .doclib-nl-content { outline: none; display: inline-block; min-width: 50px; }
-            .doclib-nl-content:empty::before { content: 'Enter list'; color: #94a3b8; pointer-events: none; }
+            .doclib-nl-content:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
             ul.doclib-nl-wrapper { list-style-type: disc; }
             ol.doclib-nl-wrapper { list-style-type: decimal; }
         `;

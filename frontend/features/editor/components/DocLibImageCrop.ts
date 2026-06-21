@@ -173,7 +173,7 @@ export default class DocLibImageCrop implements BlockTool {
 
       const input = document.createElement("input");
       input.classList.add(this.api.styles.input);
-      input.placeholder = "Paste Image URL to Crop/Zoom";
+      input.placeholder = "DocLib URL";
 
       const btn = document.createElement("button");
       btn.classList.add(this.api.styles.button);

@@ -113,7 +113,7 @@ export default class DocLibButton implements BlockTool {
       this.CSS.inputText,
     );
     this.textInput.contentEditable = (!this.readOnly).toString();
-    this.textInput.dataset.placeholder = "Button Text";
+    this.textInput.dataset.placeholder = "DocLib Text";
 
     this.linkInput = document.createElement("div");
     this.linkInput.classList.add(
@@ -122,7 +122,7 @@ export default class DocLibButton implements BlockTool {
       this.CSS.inputLink,
     );
     this.linkInput.contentEditable = (!this.readOnly).toString();
-    this.linkInput.dataset.placeholder = "Link URL (https://)";
+    this.linkInput.dataset.placeholder = "DocLib URL";
 
     this.registButton = document.createElement("button");
     this.registButton.classList.add(this.CSS.registButton);

@@ -46,7 +46,7 @@ export default class DocLibFile implements BlockTool {
         .doclib-file-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: #0284c7; border-radius: 8px; margin-right: 16px; font-weight: bold; font-size: 12px; text-transform: uppercase; }
         .doclib-file-info { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
         .doclib-file-title { font-weight: 600; font-size: 1em; outline: none; }
-        .doclib-file-title:empty::before { content: 'Enter attachment name'; color: #94a3b8; pointer-events: none; }
+        .doclib-file-title:empty::before { content: 'DocLib Name'; color: #94a3b8; pointer-events: none; }
         .doclib-file-meta { font-size: 0.85em; color: #64748b; }
         .doclib-file-download { color: #0284c7; cursor: pointer; padding: 8px; }
         .doclib-file-input-container { display: flex; align-items: center; gap: 8px; }

@@ -37,7 +37,7 @@ export default class DocLibVideo implements BlockTool {
             .doclib-video-wrapper { text-align: center; }
             .doclib-video-player { max-width: 100%; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); outline: none; }
             .doclib-video-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 4px; }
-            .doclib-video-caption:empty::before { content: 'Enter video caption'; color: #94a3b8; pointer-events: none; }
+            .doclib-video-caption:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
             .doclib-video-input-container { display: flex; align-items: center; }
             .doclib-video-input { flex-grow: 1; margin-right: 12px; }
         `;

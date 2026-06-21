@@ -76,7 +76,7 @@ export default class DocLibHyperlink implements InlineTool {
   renderActions() {
     this.spanTooltip = this.api.selection.findParentTag("A");
     this.tooltipInput = document.createElement("input");
-    this.tooltipInput.placeholder = "Enter URL (press Enter to save)";
+    this.tooltipInput.placeholder = "DocLib URL";
     this.tooltipInput.classList.add(this.api.styles.input);
     this.tooltipInput.style.display = "block";
     this.tooltipInput.style.width = "100%";

@@ -128,7 +128,7 @@ export default class DocLibBibliography implements BlockTool {
         const input = document.createElement("input");
         input.classList.add("doclib-bib-input");
         input.value = text;
-        input.placeholder = "Citation text eg Smith J 2020 Book Title";
+        input.placeholder = "";
         input.addEventListener("input", () => {
           this.data.entries[index] = input.value;
         });

@@ -119,7 +119,7 @@ export default class DocLibFeedback implements BlockTool {
       const qInput = document.createElement("input");
       qInput.classList.add("doclib-fb-q-input");
       qInput.value = this.data.question;
-      qInput.placeholder = "Feedback question";
+      qInput.placeholder = "DocLib Question";
       qInput.addEventListener("input", () => { this.data.question = qInput.value; question.innerText = qInput.value; });
 
       edit.appendChild(qInput);

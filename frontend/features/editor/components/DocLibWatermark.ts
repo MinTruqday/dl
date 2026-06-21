@@ -104,7 +104,7 @@ export default class DocLibWatermark implements BlockTool {
 
     const input = document.createElement("input");
     input.classList.add("doclib-watermark-input");
-    input.placeholder = "Watermark text";
+    input.placeholder = "DocLib Text";
     input.value = this.data.text;
     input.addEventListener("input", () => {
       this.data.text = input.value;

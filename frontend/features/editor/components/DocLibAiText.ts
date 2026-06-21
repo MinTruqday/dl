@@ -88,7 +88,7 @@ export default class DocLibAiText implements BlockTool {
 
       const input = document.createElement("input");
       input.classList.add("doclib-ai-input");
-      input.placeholder = "Enter AI prompt";
+      input.placeholder = "DocLib Input";
       input.value = this.data.prompt;
 
       const btn = document.createElement("button");

@@ -83,7 +83,7 @@ export default class DocLibTooltip implements InlineTool {
   renderActions() {
     this.spanTooltip = this.api.selection.findParentTag("SPAN", "cdx-tooltip");
     this.tooltipInput = document.createElement("input");
-    this.tooltipInput.placeholder = "Enter a tooltip";
+    this.tooltipInput.placeholder = "DocLib Input";
     this.tooltipInput.classList.add(
       this.api.styles.input,
       "tooltip-tool__input",

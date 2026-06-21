@@ -86,7 +86,7 @@ export default class DocLibMusicEmbed implements BlockTool {
       const urlInput = document.createElement("input");
       urlInput.classList.add("doclib-music-url-input");
       urlInput.value = this.data.url;
-      urlInput.placeholder = "Paste Spotify / SoundCloud / YouTube link";
+      urlInput.placeholder = "DocLib URL";
 
       const embedBtn = document.createElement("button");
       embedBtn.classList.add("doclib-music-embed-btn");

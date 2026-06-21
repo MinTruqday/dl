@@ -105,7 +105,7 @@ export default class DocLibCodeBox implements BlockTool {
     const textarea = document.createElement("textarea");
     textarea.classList.add("doclib-codebox-textarea");
     textarea.value = this.data.code;
-    textarea.placeholder = "Enter source code";
+    textarea.placeholder = "DocLib Code";
     textarea.spellcheck = false;
 
     textarea.addEventListener("input", () => (this.data.code = textarea.value));

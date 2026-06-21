@@ -43,14 +43,14 @@ export default class DocLibQuiz implements BlockTool {
       style.innerHTML = `
             .doclib-quiz-wrapper { padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; margin: 16px 0; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
             .doclib-quiz-question { font-weight: 700; font-size: 1.1em; margin-bottom: 16px; outline: none; }
-            .doclib-quiz-question:empty::before { content: 'Enter quiz question'; color: #94a3b8; pointer-events: none; }
+            .doclib-quiz-question:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
             .doclib-quiz-answers { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
             .doclib-quiz-answer { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; transition: all 0.2s; }
             .doclib-quiz-answer:hover { border-color: #cbd5e1; }
             .doclib-quiz-answer.correct { border-color: #22c55e; background: #f0fdf4; }
             .doclib-quiz-radio { width: 18px; height: 18px; cursor: pointer; accent-color: #22c55e; }
             .doclib-quiz-text { flex-grow: 1; outline: none; font-size: 0.95em; }
-            .doclib-quiz-text:empty::before { content: 'Enter answer'; color: #94a3b8; pointer-events: none; }
+            .doclib-quiz-text:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
             .doclib-quiz-add { color: #3b82f6; cursor: pointer; font-size: 0.9em; font-weight: 500; display: inline-block; padding: 4px 8px; border-radius: 4px; }
             .doclib-quiz-add:hover { background: #eff6ff; }
             .doclib-quiz-remove { color: #ef4444; cursor: pointer; padding: 4px; opacity: 0.5; transition: opacity 0.2s; }

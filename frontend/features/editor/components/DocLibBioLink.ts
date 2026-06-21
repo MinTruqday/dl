@@ -164,13 +164,13 @@ export default class DocLibBioLink implements BlockTool {
           const labelInput = document.createElement("input");
           labelInput.classList.add("doclib-bl-link-input");
           labelInput.value = link.label;
-          labelInput.placeholder = "Link label";
+          labelInput.placeholder = "DocLib URL";
           labelInput.addEventListener("input", () => { link.label = labelInput.value; this.buildUI(); });
 
           const urlInput = document.createElement("input");
           urlInput.classList.add("doclib-bl-link-input");
           urlInput.value = link.url;
-          urlInput.placeholder = "https://";
+          urlInput.placeholder = "DocLib URL";
           urlInput.addEventListener("input", () => { link.url = urlInput.value; });
 
           const del = document.createElement("button");

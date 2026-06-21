@@ -41,9 +41,9 @@ export default class DocLibToggle implements BlockTool {
             .doclib-toggle-icon { margin-right: 8px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
             .doclib-toggle-details[open] .doclib-toggle-icon { transform: rotate(90deg); }
             .doclib-toggle-title { flex-grow: 1; outline: none; }
-            .doclib-toggle-title:empty::before { content: 'Enter hidden title'; color: #94a3b8; pointer-events: none; }
+            .doclib-toggle-title:empty::before { content: 'DocLib Title'; color: #94a3b8; pointer-events: none; }
             .doclib-toggle-content { padding: 16px; min-height: 80px; outline: none; line-height: 1.6; }
-            .doclib-toggle-content:empty::before { content: 'Enter inner content'; color: #94a3b8; pointer-events: none; }
+            .doclib-toggle-content:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
         `;
       document.head.appendChild(style);
     }

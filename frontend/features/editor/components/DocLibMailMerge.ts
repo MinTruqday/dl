@@ -79,7 +79,7 @@ export default class DocLibMailMerge implements BlockTool {
 
     const fieldInput = document.createElement("input");
     fieldInput.classList.add("doclib-mailmerge-input");
-    fieldInput.placeholder = "Merge Field eg FirstName";
+    fieldInput.placeholder = "";
     fieldInput.value = this.data.field;
     fieldInput.addEventListener("input", () => {
       this.data.field = fieldInput.value;
@@ -87,7 +87,7 @@ export default class DocLibMailMerge implements BlockTool {
 
     const fallbackInput = document.createElement("input");
     fallbackInput.classList.add("doclib-mailmerge-input");
-    fallbackInput.placeholder = "Fallback eg Customer";
+    fallbackInput.placeholder = "";
     fallbackInput.value = this.data.fallback;
     fallbackInput.addEventListener("input", () => {
       this.data.fallback = fallbackInput.value;

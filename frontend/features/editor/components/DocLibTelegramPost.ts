@@ -66,7 +66,7 @@ export default class DocLibTelegramPost implements BlockTool {
 
       const input = document.createElement("input");
       input.classList.add(this.api.styles.input, "doclib-telegram-input");
-      input.placeholder = "Enter Telegram Post link";
+      input.placeholder = "DocLib URL";
 
       const btn = document.createElement("button");
       btn.classList.add(this.api.styles.button);
@@ -78,7 +78,7 @@ export default class DocLibTelegramPost implements BlockTool {
           this.buildUI();
         } else {
           input.value = "";
-          input.placeholder = "Invalid link!";
+          input.placeholder = "DocLib URL";
         }
       };
 

@@ -42,7 +42,7 @@ export default class DocLibChecklist implements BlockTool {
             .doclib-checklist-checkbox.checked::after { content: ''; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); margin-bottom: 2px; }
             .doclib-checklist-text { flex-grow: 1; outline: none; min-height: 24px; line-height: 1.5; padding: 2px 0; }
             .doclib-checklist-item.checked .doclib-checklist-text { text-decoration: line-through; color: #999; }
-            .doclib-checklist-text:empty::before { content: 'Enter text'; color: #aaa; pointer-events: none; }
+            .doclib-checklist-text:empty::before { content: 'DocLib Input'; color: #aaa; pointer-events: none; }
         `;
       document.head.appendChild(style);
     }

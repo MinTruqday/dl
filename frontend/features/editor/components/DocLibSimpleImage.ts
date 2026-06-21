@@ -35,7 +35,7 @@ export default class DocLibSimpleImage implements BlockTool {
             .doclib-simple-img-wrapper { text-align: center; }
             .doclib-simple-img { max-width: 100%; border-radius: 8px; margin-bottom: 8px; }
             .doclib-simple-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 4px; }
-            .doclib-simple-caption:empty::before { content: 'Enter image caption'; color: #94a3b8; pointer-events: none; }
+            .doclib-simple-caption:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
             .doclib-simple-input-container { display: flex; align-items: center; }
             .doclib-simple-input { flex-grow: 1; margin-right: 12px; }
         `;
@@ -73,7 +73,7 @@ export default class DocLibSimpleImage implements BlockTool {
 
       const input = document.createElement("input");
       input.classList.add(this.api.styles.input, "doclib-simple-input");
-      input.placeholder = "Enter image URL";
+      input.placeholder = "DocLib URL";
 
       const btn = document.createElement("button");
       btn.classList.add(this.api.styles.button);

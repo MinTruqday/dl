@@ -137,7 +137,7 @@ export default class DocLibBookmark implements BlockTool {
 
       const input = document.createElement("input");
       input.classList.add(this.api.styles.input);
-      input.placeholder = "Paste Web Bookmark Link";
+      input.placeholder = "DocLib URL";
 
       const btn = document.createElement("button");
       btn.classList.add(this.api.styles.button);

@@ -62,7 +62,7 @@ export default class DocLibWarning implements BlockTool {
     title.classList.add(this._CSS.title);
     title.contentEditable = "true";
     title.innerHTML = this.data.title;
-    title.dataset.placeholder = "Title";
+    title.dataset.placeholder = "DocLib Title";
     title.style.outline = "none";
     title.style.fontWeight = "bold";
     title.style.marginBottom = "5px";
@@ -71,7 +71,7 @@ export default class DocLibWarning implements BlockTool {
     message.classList.add(this._CSS.message);
     message.contentEditable = "true";
     message.innerHTML = this.data.message;
-    message.dataset.placeholder = "Message";
+    message.dataset.placeholder = "DocLib Text";
     message.style.outline = "none";
 
     contentWrapper.appendChild(title);

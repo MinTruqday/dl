@@ -155,7 +155,7 @@ export default class DocLibSignature implements BlockTool {
       const labelInput = document.createElement("input");
       labelInput.style.cssText = "padding:4px 8px;border:1px solid #e2e8f0;border-radius:5px;font-size:12px;outline:none;color:#475569;";
       labelInput.value = this.data.label;
-      labelInput.placeholder = "Signature label";
+      labelInput.placeholder = "DocLib Input";
       labelInput.addEventListener("input", () => {
         this.data.label = labelInput.value;
         label.innerText = ` ${this.data.label}`;

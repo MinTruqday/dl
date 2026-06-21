@@ -92,7 +92,7 @@ export default class DocLibAnnotation implements InlineTool {
       "cdx-annotation",
     );
     this.tooltipInput = document.createElement("input");
-    this.tooltipInput.placeholder = "Add caption";
+    this.tooltipInput.placeholder = "DocLib Input";
     this.tooltipInput.classList.add(this.api.styles.input);
     this.tooltipInput.style.display = "block";
     this.tooltipInput.style.width = "100%";

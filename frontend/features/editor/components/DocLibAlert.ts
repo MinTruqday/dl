@@ -58,7 +58,7 @@ export default class DocLibAlert implements BlockTool {
     this.messageEl = document.createElement("div");
     this.messageEl.contentEditable = "true";
     this.messageEl.innerHTML = this.data.message;
-    this.messageEl.dataset.placeholder = "Type alert message here";
+    this.messageEl.dataset.placeholder = "DocLib Text";
     this.messageEl.style.outline = "none";
 
     alertDiv.appendChild(this.messageEl);

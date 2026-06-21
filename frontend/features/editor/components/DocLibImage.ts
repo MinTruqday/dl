@@ -47,7 +47,7 @@ export default class DocLibImage implements BlockTool {
             .doclib-image-container { position: relative; border-radius: 8px; overflow: hidden; display: inline-block; max-width: 100%; transition: all 0.3s; line-height: 0; }
             .doclib-image-img { max-width: 100%; display: block; border-radius: inherit; }
             .doclib-image-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 8px 4px 4px 4px; }
-            .doclib-image-caption:empty::before { content: 'Enter image caption'; color: #94a3b8; pointer-events: none; }
+            .doclib-image-caption:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
             .doclib-image-container.with-border { border: 2px solid #e2e8f0; }
             .doclib-image-container.with-background { padding: 24px; background: #f1f5f9; border-radius: 12px; }
             .doclib-image-container.stretched { width: 100%; display: block; }

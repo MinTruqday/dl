@@ -104,7 +104,7 @@ export default class DocLibWordCloud implements BlockTool {
 
       const input = document.createElement("input");
       input.classList.add("doclib-wc-new-input");
-      input.placeholder = "Add new word";
+      input.placeholder = "DocLib Input";
 
       const addBtn = document.createElement("button");
       addBtn.classList.add("doclib-wc-add-btn");

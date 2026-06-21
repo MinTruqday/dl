@@ -93,13 +93,13 @@ export default class DocLibGist implements BlockTool {
       const urlInput = document.createElement("input");
       urlInput.classList.add(this.api.styles.input, "doclib-gist-input");
       urlInput.placeholder =
-        "URL GitHub Gist (VD: https://gist.github.com/user/id)";
+        "DocLib URL";
       urlInput.value = this.data.url;
 
       const fileInput = document.createElement("input");
       fileInput.classList.add(this.api.styles.input);
       fileInput.style.width = "150px";
-      fileInput.placeholder = "File name (optional)";
+      fileInput.placeholder = "DocLib Name";
       fileInput.value = this.data.file;
 
       const btn = document.createElement("button");
@@ -113,7 +113,7 @@ export default class DocLibGist implements BlockTool {
           this.buildUI();
         } else {
           urlInput.value = "";
-          urlInput.placeholder = "Invalid Gist link!";
+          urlInput.placeholder = "DocLib URL";
         }
       };
 

@@ -123,7 +123,7 @@ export default class DocLibIframeEmbed implements BlockTool {
       const input = document.createElement("input");
       input.classList.add("doclib-if-input");
       input.placeholder =
-        "Paste embed link (CodePen, CodeSandbox, Figma, Typeform, etc)";
+        "DocLib URL";
 
       const btn = document.createElement("button");
       btn.classList.add("doclib-if-btn");

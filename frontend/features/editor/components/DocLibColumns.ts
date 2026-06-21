@@ -51,7 +51,7 @@ export default class DocLibColumns implements BlockTool {
             .doclib-cols-wrapper { display: flex; gap: 16px; margin: 16px 0; }
             .doclib-cols-col { flex: 1; min-height: 60px; padding: 12px; border: 1px dashed transparent; border-radius: 8px; transition: border 0.2s, background 0.2s; outline: none; line-height: 1.6; }
             .doclib-cols-col:focus-within { border-color: #cbd5e1; background: #f8fafc; }
-            .doclib-cols-col:empty::before { content: 'Enter column text'; color: #94a3b8; pointer-events: none; }
+            .doclib-cols-col:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
         `;
       document.head.appendChild(style);
     }

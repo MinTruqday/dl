@@ -108,9 +108,9 @@ export default class DocLibFlashcard implements BlockTool {
       editArea.classList.add("doclib-fc-edit");
 
       const fields: { key: keyof typeof this.data; label: string }[] = [
-        { key: "front", label: "Question front" },
-        { key: "back", label: "Answer back" },
-        { key: "hint", label: "Hint optional" },
+        { key: "front", label: "Question" },
+        { key: "back", label: "Answer" },
+        { key: "hint", label: "Hint" },
       ];
 
       fields.forEach(({ key, label }) => {

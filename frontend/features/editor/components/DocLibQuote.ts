@@ -58,14 +58,14 @@ export default class DocLibQuote implements BlockTool {
     text.classList.add(this._CSS.text);
     text.contentEditable = "true";
     text.innerHTML = this.data.text;
-    text.dataset.placeholder = "Quote";
+    text.dataset.placeholder = "DocLib Text";
     text.style.outline = "none";
 
     const caption = document.createElement("div");
     caption.classList.add(this._CSS.caption);
     caption.contentEditable = "true";
     caption.innerHTML = this.data.caption;
-    caption.dataset.placeholder = "Author";
+    caption.dataset.placeholder = "DocLib Input";
     caption.style.outline = "none";
     caption.style.marginTop = "10px";
     caption.style.fontSize = "14px";

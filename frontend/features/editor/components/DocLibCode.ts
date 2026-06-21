@@ -46,7 +46,7 @@ export default class DocLibCode implements BlockTool {
     this.textarea = document.createElement("textarea");
     this.textarea.classList.add(this._CSS.textarea);
     this.textarea.value = this.data.code;
-    this.textarea.placeholder = "Enter a code";
+    this.textarea.placeholder = "DocLib Code";
 
     this.wrapper.style.position = "relative";
     this.textarea.style.minHeight = "150px";

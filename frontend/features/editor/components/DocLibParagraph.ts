@@ -63,7 +63,7 @@ export default class DocLibParagraph implements BlockTool {
 
     if (!this.readOnly) {
       this.wrapper.contentEditable = "true";
-      this.wrapper.dataset.placeholder = 'Type "/" for commands';
+      this.wrapper.dataset.placeholder = 'DocLib Input"/" for commands';
     }
 
     this.wrapper.innerHTML = this.data.text;

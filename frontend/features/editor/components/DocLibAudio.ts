@@ -37,7 +37,7 @@ export default class DocLibAudio implements BlockTool {
             .doclib-audio-wrapper { text-align: center; }
             .doclib-audio-player { width: 100%; border-radius: 8px; margin-bottom: 8px; outline: none; }
             .doclib-audio-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 4px; }
-            .doclib-audio-caption:empty::before { content: 'Enter audio caption'; color: #94a3b8; pointer-events: none; }
+            .doclib-audio-caption:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
             .doclib-audio-input-container { display: flex; align-items: center; }
             .doclib-audio-input { flex-grow: 1; margin-right: 12px; }
         `;

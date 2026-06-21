@@ -44,7 +44,7 @@ export default class DocLibLatex implements BlockTool {
     this.editor.classList.add(this.api.styles.input);
     this.editor.contentEditable = "true";
     this.editor.textContent = this.data.code;
-    this.editor.dataset.placeholder = "Enter LaTeX code here";
+    this.editor.dataset.placeholder = "DocLib Code";
 
     this.editor.style.fontFamily = "monospace";
     this.editor.style.minHeight = "60px";

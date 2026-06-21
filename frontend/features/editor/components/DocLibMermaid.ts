@@ -99,7 +99,7 @@ export default class DocLibMermaid implements BlockTool {
     const textarea = document.createElement("textarea");
     textarea.classList.add("doclib-mermaid-textarea");
     textarea.value = this.data.code;
-    textarea.placeholder = "Enter Mermaid diagram code";
+    textarea.placeholder = "DocLib Code";
 
     let timeout: ReturnType<typeof setTimeout>;
     textarea.addEventListener("input", () => {

@@ -128,7 +128,7 @@ export default class DocLibColorPalette implements BlockTool {
           const nameInput = document.createElement("input");
           nameInput.classList.add("doclib-pal-name-input");
           nameInput.value = color.name;
-          nameInput.placeholder = "Color name";
+          nameInput.placeholder = "DocLib Name";
           nameInput.addEventListener("input", () => { color.name = nameInput.value; });
 
           const del = document.createElement("button");

@@ -51,7 +51,7 @@ export default class DocLibComment implements InlineTool {
 
     const input = document.createElement("input");
     input.classList.add("doclib-comment-input");
-    input.placeholder = "Enter comment/note";
+    input.placeholder = "DocLib Input";
 
     const btn = document.createElement("button");
     btn.classList.add("doclib-comment-btn");

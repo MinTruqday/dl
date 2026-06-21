@@ -49,7 +49,7 @@ export default class DocLibLinkSearch implements InlineTool {
 
     const input = document.createElement("input");
     input.classList.add("doclib-ls-input");
-    input.placeholder = "Search document or paste Link";
+    input.placeholder = "DocLib URL";
 
     const resultsDiv = document.createElement("div");
     resultsDiv.classList.add("doclib-ls-results");

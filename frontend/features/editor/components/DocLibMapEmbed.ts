@@ -80,7 +80,7 @@ export default class DocLibMapEmbed implements BlockTool {
 
     const input = document.createElement("input");
     input.classList.add("doclib-map-input");
-    input.placeholder = "Search address";
+    input.placeholder = "DocLib Input";
     input.value = this.data.label;
 
     const searchBtn = document.createElement("button");

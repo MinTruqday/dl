@@ -36,7 +36,7 @@ export default class DocLibGif implements BlockTool {
             .doclib-gif-container { position: relative; border-radius: 12px; overflow: hidden; display: inline-block; max-width: 100%; border: 4px solid #f1f5f9; line-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
             .doclib-gif-img { max-width: 100%; display: block; border-radius: 8px; }
             .doclib-gif-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 12px 4px 4px 4px; font-style: italic; }
-            .doclib-gif-caption:empty::before { content: 'Enter GIF caption'; color: #cbd5e1; pointer-events: none; }
+            .doclib-gif-caption:empty::before { content: 'DocLib Input'; color: #cbd5e1; pointer-events: none; }
             .doclib-gif-input-container { display: flex; align-items: center; gap: 8px; padding: 16px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; }
         `;
       document.head.appendChild(style);
@@ -112,7 +112,7 @@ export default class DocLibGif implements BlockTool {
       const input = document.createElement("input");
       input.classList.add(this.api.styles.input);
       input.style.flexGrow = "1";
-      input.placeholder = "Paste Giphy link here";
+      input.placeholder = "DocLib URL";
 
       const btn = document.createElement("button");
       btn.classList.add(this.api.styles.button);
