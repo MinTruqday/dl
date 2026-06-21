@@ -3,7 +3,7 @@ import json
 from aio_pika import DeliveryMode, Message
 from loguru import logger
 
-from core.database import db_client
+from core.infrastructure.database_client import db_client
 
 
 async def publish_compile_task(document_id: str, creator_id: str, content_raw: str):

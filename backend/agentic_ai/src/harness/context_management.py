@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 CHARS_PER_TOKEN_APPROX = settings.CHARS_PER_TOKEN_APPROX
 DEFAULT_MAX_CONTEXT_TOKENS = settings.MAX_CONTEXT_TOKENS
@@ -49,7 +49,7 @@ class ContextHarness:
             try:
                 import redis.asyncio as aioredis
 
-                from core.config import settings
+                from core.infrastructure.app_config import settings
 
                 self._redis_client = aioredis.from_url(
                     settings.REDIS_URI, decode_responses=True

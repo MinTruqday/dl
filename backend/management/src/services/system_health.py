@@ -5,10 +5,10 @@ from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 from core.repositories.base_repository import RepositoryFactory
-from src.schemas.user_identity_profile import RoleEnum
+from src.schemas.user_identity import RoleEnum
 
 
 class SystemHealth:
@@ -157,7 +157,7 @@ class SystemHealth:
 
         import httpx
 
-        from core.config import settings
+        from core.infrastructure.app_config import settings
 
         if db is None:
             db = db_client.mongodb.get_default_database()

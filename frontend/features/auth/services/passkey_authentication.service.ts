@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
 
 export async function getPasskeyRegistrationOptionsAPI() {
-  const res = await fetch(`${API_URL}/auth/passkey/register/start`, {
+  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-ky/bat-dau`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -13,7 +13,7 @@ export async function getPasskeyRegistrationOptionsAPI() {
 }
 
 export async function verifyPasskeyRegistrationAPI(attestationResponse: any) {
-  const res = await fetch(`${API_URL}/auth/passkey/register/finish`, {
+  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-ky/hoan-tat`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(attestationResponse),
@@ -26,7 +26,7 @@ export async function verifyPasskeyRegistrationAPI(attestationResponse: any) {
 
 export async function getPasskeyLoginOptionsAPI(email: string) {
   const res = await fetch(
-    `${API_URL}/auth/passkey/login/start?email=${encodeURIComponent(email)}`,
+    `${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/bat-dau?email=${encodeURIComponent(email)}`,
   );
   const data = await res.json();
   if (!res.ok)
@@ -37,7 +37,7 @@ export async function getPasskeyLoginOptionsAPI(email: string) {
 }
 
 export async function verifyPasskeyLoginAPI(assertionResponse: any) {
-  const res = await fetch(`${API_URL}/auth/passkey/login/finish`, {
+  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/hoan-tat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(assertionResponse),

@@ -4,7 +4,7 @@ import os
 import aio_pika
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class MessageQueueConnection:

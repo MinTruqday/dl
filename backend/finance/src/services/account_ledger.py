@@ -5,8 +5,8 @@ from fastapi import HTTPException, Query, status
 from loguru import logger
 from src.schemas.account_ledger import Transaction, TransactionType
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 
 
 class AccountLedger:
@@ -118,7 +118,7 @@ class AccountLedger:
             try:
                 import httpx
 
-                from core.config import settings
+                from core.infrastructure.app_config import settings
 
                 if settings.NOTIFICATION_URL:
                     async with httpx.AsyncClient() as client:

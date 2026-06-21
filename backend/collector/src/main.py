@@ -19,7 +19,7 @@ logger.add(
 
 from src.api.data_collection import router as collector
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 app = FastAPI(title="DocLib Crawler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)

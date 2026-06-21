@@ -9,7 +9,7 @@ from src.rag.embedder import embedder
 from src.store.vector import vector_store
 from uuid6 import uuid7
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class IngestionPipeline:

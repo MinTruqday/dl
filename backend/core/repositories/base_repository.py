@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from core.database import db_client
-from core.config import settings
+from core.infrastructure.database_client import db_client
+from core.infrastructure.app_config import settings
 
 
 class BaseMongoRepository:

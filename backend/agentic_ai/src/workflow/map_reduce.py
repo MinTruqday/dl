@@ -5,7 +5,7 @@ from langchain_core.tools import tool
 from langgraph.graph import END, StateGraph
 from langgraph.types import Send
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 BATCH_SIZE = settings.MAP_REDUCE_BATCH_SIZE
 MAX_CHUNKS = settings.MAP_REDUCE_MAX_CHUNKS

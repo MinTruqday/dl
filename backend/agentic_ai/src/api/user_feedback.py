@@ -5,7 +5,7 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.schemas.ai import FeedbackRequest
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 router = APIRouter(prefix="/phan-hoi")
 

@@ -5,14 +5,14 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
 from loguru import logger
-from src.repositories.auth_repository import AuthenticationData
+from src.repositories.authentication_data import AuthenticationData
 from src.services.email_delivery import EmailDelivery
 from uuid6 import uuid7
 
-from core.config import settings
-from core.database import db_client
-from src.schemas.user_identity_profile import RoleEnum, UserCreate, UserInDB
-from core.security import create_access_token, get_password_hash, verify_password
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
+from src.schemas.user_identity import RoleEnum, UserCreate, UserInDB
+from core.security.role_based_access import create_access_token, get_password_hash, verify_password
 
 
 class AuthenticationFlow:
@@ -43,7 +43,7 @@ class AuthenticationFlow:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung",
+                    f"{settings.MANAGEMENT_URL}/nguoi-dung/",
                     json={
                         "email": user_in.email,
                         "full_name": user_in.full_name,
@@ -314,7 +314,7 @@ class AuthenticationFlow:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        f"{settings.MANAGEMENT_URL}/nguoi-dung",
+                        f"{settings.MANAGEMENT_URL}/nguoi-dung/",
                         json={
                             "email": email,
                             "full_name": google_user.get("name"),

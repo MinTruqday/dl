@@ -7,7 +7,7 @@ from src.services.quota import UsageQuota
 
 from core.api_response import APIResponse
 from src.schemas.usage_quota import QuotaLimit, ConsumeQuotaRequest
-from src.schemas.user_identity_profile import RoleEnum, UserInDB
+from src.schemas.user_identity import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/han-muc")
 

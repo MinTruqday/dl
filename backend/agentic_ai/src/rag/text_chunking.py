@@ -25,7 +25,7 @@ from typing import Dict, List
 
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 try:
     from chonkie import SemanticChunker, TokenChunker

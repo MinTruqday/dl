@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from src.core.prompt_registry import PromptType, prompt_registry
 from src.utils.hf import HFInferenceChat
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class RouteDecision(BaseModel):

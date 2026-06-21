@@ -66,7 +66,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 from langchain_core.messages import HumanMessage
                 from src.utils.hf import HFInferenceChat
 
-                from core.config import settings
+                from core.infrastructure.app_config import settings
 
                 llama_client = AsyncInferenceClient(
                     model=settings.LLAMA_MODEL, token=settings.HF_TOKEN
@@ -182,7 +182,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     from langchain_core.messages import HumanMessage
                     from src.utils.hf import HFInferenceChat
 
-                    from core.config import settings
+                    from core.infrastructure.app_config import settings
 
                     llama_client = AsyncInferenceClient(
                         model=settings.LLAMA_MODEL, token=settings.HF_TOKEN

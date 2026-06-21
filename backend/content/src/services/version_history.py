@@ -7,7 +7,7 @@ from bson import ObjectId
 from fastapi import HTTPException
 from loguru import logger
 
-from core.database import db_client
+from core.infrastructure.database_client import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 

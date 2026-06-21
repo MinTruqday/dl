@@ -10,7 +10,7 @@ export interface QuotaUsage {
 }
 
 export async function getMyQuotaAPI(): Promise<QuotaUsage> {
-  const res = await fetch(`${API_URL}/han-muc/cua-toi`, {
+  const res = await fetch(`${API_URL}/han-muc/ca-nhan`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -20,7 +20,7 @@ export async function getMyQuotaAPI(): Promise<QuotaUsage> {
 }
 
 export async function updateRoleQuotaAPI(role: string, limits: any) {
-  const res = await fetch(`${API_URL}/han-muc/config/${role}`, {
+  const res = await fetch(`${API_URL}/han-muc/cai-dat/${role}`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(limits),
@@ -31,7 +31,7 @@ export async function updateRoleQuotaAPI(role: string, limits: any) {
 }
 
 export async function getGlobalQuotaConfigAPI() {
-  const res = await fetch(`${API_URL}/han-muc/config`, {
+  const res = await fetch(`${API_URL}/han-muc/cai-dat`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

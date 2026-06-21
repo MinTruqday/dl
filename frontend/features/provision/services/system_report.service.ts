@@ -6,7 +6,7 @@ export async function getReportsAPI(
   limit: number = 30,
 ) {
   const res = await fetch(
-    `${API_URL}/bao-cao/hang-doi?status=${status}&skip=${skip}&limit=${limit}`,
+    `${API_URL}/van-hanh/bao-cao/hang-doi?status=${status}&skip=${skip}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },
@@ -18,7 +18,7 @@ export async function getReportsAPI(
 }
 
 export async function resolveReportAPI(reportId: string, action: string) {
-  const res = await fetch(`${API_URL}/bao-cao/${reportId}/resolve`, {
+  const res = await fetch(`${API_URL}/van-hanh/bao-cao/${reportId}/resolve`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),

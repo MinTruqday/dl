@@ -38,7 +38,7 @@ export async function login(email: string, password: string) {
   formData.append("username", email);
   formData.append("password", password);
 
-  const res = await fetch(`${API_URL}/auth/login`, {
+  const res = await fetch(`${API_URL}/xac-thuc/dang-nhap`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -59,7 +59,7 @@ export async function register(
   slug: string,
   agreed_to_terms: boolean,
 ) {
-  const res = await fetch(`${API_URL}/auth/register`, {
+  const res = await fetch(`${API_URL}/xac-thuc/dang-ky`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export async function getUserMe() {
 
   userMePromise = (async () => {
     try {
-      const res = await fetch(`${API_URL}/auth/ca-nhan`, {
+      const res = await fetch(`${API_URL}/xac-thuc/ca-nhan`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -102,7 +102,7 @@ export async function getUserMe() {
 }
 
 export const forgotPasswordAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+  const res = await fetch(`${API_URL}/xac-thuc/quen-mat-khau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -115,7 +115,7 @@ export const resetPasswordAPI = async (
   token: string,
   newPassword: string,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/reset-password`, {
+  const res = await fetch(`${API_URL}/xac-thuc/dat-lai-mat-khau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, new_password: newPassword }),
@@ -127,7 +127,7 @@ export const resetPasswordAPI = async (
 };
 
 export const verifyCodeAPI = async (token: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/verify-code`, {
+  const res = await fetch(`${API_URL}/xac-thuc/xac-nhan-ma`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),
@@ -139,7 +139,7 @@ export const verifyCodeAPI = async (token: string): Promise<any> => {
 };
 
 export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/login/start`, {
+  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/bat-dau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -156,7 +156,7 @@ export const passkeyLoginFinishAPI = async (
   email: string,
   credential: any,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/login/finish`, {
+  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/hoan-tat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, credential }),
@@ -170,7 +170,7 @@ export const passkeyLoginFinishAPI = async (
 };
 
 export const passkeyRegisterBeginAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/register/start`, {
+  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-ky/bat-dau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -187,7 +187,7 @@ export const passkeyRegisterFinishAPI = async (
   email: string,
   credential: any,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/register/finish`, {
+  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-ky/hoan-tat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, credential }),
@@ -200,7 +200,7 @@ export const passkeyRegisterFinishAPI = async (
   return data.data || data;
 };
 export const getGoogleLoginUrlAPI = async (): Promise<string> => {
-  const res = await fetch(`${API_URL}/auth/google/login`);
+  const res = await fetch(`${API_URL}/xac-thuc/google/dang-nhap`);
   const data = await res.json();
   if (!res.ok || !data.data?.url)
     throw new Error("Không thể lấy liên kết đăng nhập Google");

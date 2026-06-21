@@ -10,8 +10,8 @@ from src.api.usage_quota import router as quota
 from src.api.system_telemetry import router as telemetry
 from src.api.user_profile import router as user
 
-from core.config import settings
-from core.database import close_db, init_db
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import close_db, init_db
 
 app = FastAPI(title="DocLib Provision", version=settings.VERSION)
 

@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class EmailDelivery:

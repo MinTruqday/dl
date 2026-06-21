@@ -14,7 +14,7 @@ export const createDatasetAPI = async (
   description: string,
   source: string = "manual",
 ) => {
-  const res = await fetch(`${API_URL}/finetune/dataset`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tap-du-lieu`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ name, description, source }),
@@ -25,7 +25,7 @@ export const createDatasetAPI = async (
 };
 
 export const listDatasetsAPI = async () => {
-  const res = await fetch(`${API_URL}/finetune/dataset`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tap-du-lieu`, {
     headers: authHeaders(),
   });
   const data = await res.json();
@@ -34,7 +34,7 @@ export const listDatasetsAPI = async () => {
 };
 
 export const getDatasetAPI = async (datasetId: string) => {
-  const res = await fetch(`${API_URL}/finetune/dataset/${datasetId}`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}`, {
     headers: authHeaders(),
   });
   const data = await res.json();
@@ -43,7 +43,7 @@ export const getDatasetAPI = async (datasetId: string) => {
 };
 
 export const deleteDatasetAPI = async (datasetId: string) => {
-  const res = await fetch(`${API_URL}/finetune/dataset/${datasetId}`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}`, {
     method: "DELETE",
     headers: authHeaders(),
   });
@@ -53,7 +53,7 @@ export const deleteDatasetAPI = async (datasetId: string) => {
 };
 
 export const addSamplesAPI = async (datasetId: string, samples: any[]) => {
-  const res = await fetch(`${API_URL}/finetune/dataset/${datasetId}/sample`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/sample`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ samples }),
@@ -69,7 +69,7 @@ export const getSamplesAPI = async (
   limit: number = 50,
 ) => {
   const res = await fetch(
-    `${API_URL}/finetune/dataset/${datasetId}/sample?skip=${skip}&limit=${limit}`,
+    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/sample?skip=${skip}&limit=${limit}`,
     { headers: authHeaders() },
   );
   const data = await res.json();
@@ -79,7 +79,7 @@ export const getSamplesAPI = async (
 
 export const deleteSampleAPI = async (datasetId: string, sampleId: string) => {
   const res = await fetch(
-    `${API_URL}/finetune/dataset/${datasetId}/sample/${sampleId}`,
+    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/sample/${sampleId}`,
     { method: "DELETE", headers: authHeaders() },
   );
   const data = await res.json();
@@ -88,7 +88,7 @@ export const deleteSampleAPI = async (datasetId: string, sampleId: string) => {
 };
 
 export const importFromFeedbackAPI = async () => {
-  const res = await fetch(`${API_URL}/finetune/input/phan-hoi`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/dau-vao/phan-hoi`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -98,7 +98,7 @@ export const importFromFeedbackAPI = async () => {
 };
 
 export const importFromDocumentsAPI = async (documentIds: string[]) => {
-  const res = await fetch(`${API_URL}/finetune/input/tai-lieu`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/dau-vao/tai-lieu`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ document_ids: documentIds }),
@@ -109,7 +109,7 @@ export const importFromDocumentsAPI = async (documentIds: string[]) => {
 };
 
 export const createJobAPI = async (config: any) => {
-  const res = await fetch(`${API_URL}/finetune/jobs`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(config),
@@ -120,7 +120,7 @@ export const createJobAPI = async (config: any) => {
 };
 
 export const startTrainingAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}/start`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/start`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -130,7 +130,7 @@ export const startTrainingAPI = async (jobId: string) => {
 };
 
 export const listJobsAPI = async () => {
-  const res = await fetch(`${API_URL}/finetune/jobs`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh`, {
     headers: authHeaders(),
   });
   const data = await res.json();
@@ -139,7 +139,7 @@ export const listJobsAPI = async () => {
 };
 
 export const getJobAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}`, {
     headers: authHeaders(),
   });
   const data = await res.json();
@@ -148,7 +148,7 @@ export const getJobAPI = async (jobId: string) => {
 };
 
 export const cancelJobAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}/huy`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/huy`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -158,7 +158,7 @@ export const cancelJobAPI = async (jobId: string) => {
 };
 
 export const deployModelAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}/deploy`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/deploy`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -168,7 +168,7 @@ export const deployModelAPI = async (jobId: string) => {
 };
 
 export const evaluateModelAPI = async (jobId: string, testSamples: any[]) => {
-  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}/danh-gia`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/danh-gia`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ test_samples: testSamples }),

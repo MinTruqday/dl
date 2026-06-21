@@ -3,12 +3,12 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, status
 from src.api.system_dependency import get_current_user, get_db, require_role
-from src.schemas.system import CampaignRequest
+from src.schemas.system_health import CampaignRequest
 from src.services.operation import SystemHealth
-from src.services.user import UserIdentity
+from src.services.user_profile import UserIdentity
 
 from core.api_response import APIResponse
-from src.schemas.user_identity_profile import RoleEnum, UserInDB
+from src.schemas.user_identity import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/van-hanh")
 

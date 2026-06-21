@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
 
 export async function toggleBookmarkAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/dau-trang/${documentId}`, {
+  const res = await fetch(`${API_URL}/danh-dau/${documentId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -11,7 +11,7 @@ export async function toggleBookmarkAPI(documentId: string) {
 }
 
 export async function getBookmarksAPI(limit: number = 100) {
-  const res = await fetch(`${API_URL}/dau-trang?limit=${limit}`, {
+  const res = await fetch(`${API_URL}/danh-dau?limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -21,7 +21,7 @@ export async function getBookmarksAPI(limit: number = 100) {
 }
 
 export async function createBookmarkFolderAPI(name: string) {
-  const res = await fetch(`${API_URL}/dau-trang/thu-muc`, {
+  const res = await fetch(`${API_URL}/danh-dau/thu-muc`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
@@ -33,7 +33,7 @@ export async function createBookmarkFolderAPI(name: string) {
 }
 
 export async function getBookmarkFoldersAPI() {
-  const res = await fetch(`${API_URL}/dau-trang/thu-muc`, {
+  const res = await fetch(`${API_URL}/danh-dau/thu-muc`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -48,7 +48,7 @@ export async function assignBookmarksToFolderAPI(
   folderId: string,
   bookmarkIds: string[],
 ) {
-  const res = await fetch(`${API_URL}/dau-trang/thu-muc/${folderId}`, {
+  const res = await fetch(`${API_URL}/danh-dau/thu-muc/${folderId}`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ bookmark_ids: bookmarkIds }),
@@ -59,7 +59,7 @@ export async function assignBookmarksToFolderAPI(
 }
 
 export async function deleteBookmarkFolderAPI(folderId: string) {
-  const res = await fetch(`${API_URL}/dau-trang/thu-muc/${folderId}`, {
+  const res = await fetch(`${API_URL}/danh-dau/thu-muc/${folderId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

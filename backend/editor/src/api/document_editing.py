@@ -14,7 +14,7 @@ from src.schemas.document_editing import (
 )
 from src.services.document_editing import EditorProcess
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 from core.system_dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.system_dependency import get_current_user_from_header as get_current_user
 

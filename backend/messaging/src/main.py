@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.chat_conversation import router as message
 
-from core.config import settings
-from core.database import close_db, init_db
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import close_db, init_db
 
 app = FastAPI(title="DocLib Massaging", version=settings.VERSION)
 

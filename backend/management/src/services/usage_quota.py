@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from loguru import logger
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 from src.schemas.usage_quota import QuotaLimit
 
 

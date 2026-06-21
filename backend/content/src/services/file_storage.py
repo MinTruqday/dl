@@ -5,8 +5,8 @@ from fastapi import Query
 from loguru import logger
 from src.schemas.storage_operations import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
@@ -173,7 +173,7 @@ class StorageOperations:
         )
 
         if should_delete_physical:
-            from core.config import settings
+            from core.infrastructure.app_config import settings
             from core.file_storage import get_storage_client
 
             try:

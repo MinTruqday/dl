@@ -1,4 +1,4 @@
-from core.config import settings
+from core.infrastructure.app_config import settings
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -8,7 +8,7 @@ from loguru import logger
 from src.schemas.account_ledger import Transaction, TransactionType
 from uuid6 import uuid7
 
-from core.database import db_client
+from core.infrastructure.database_client import db_client
 
 
 class PurchaseProcess:
@@ -211,7 +211,7 @@ class PurchaseProcess:
                         try:
                             import httpx
 
-                            from core.config import settings
+                            from core.infrastructure.app_config import settings
 
                             if settings.NOTIFICATION_URL:
                                 async with httpx.AsyncClient() as client:

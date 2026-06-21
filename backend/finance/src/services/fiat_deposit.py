@@ -9,8 +9,8 @@ from fastapi import HTTPException, Response
 from loguru import logger
 from src.schemas.account_ledger import Transaction, TransactionType
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 
 
 class FiatDeposit:
@@ -312,7 +312,7 @@ class FiatDeposit:
             try:
                 import httpx
 
-                from core.config import settings
+                from core.infrastructure.app_config import settings
 
                 if settings.NOTIFICATION_URL:
                     async with httpx.AsyncClient() as client:

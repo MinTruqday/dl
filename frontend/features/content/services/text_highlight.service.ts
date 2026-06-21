@@ -21,7 +21,7 @@ export async function createHighlightAPI(
     };
   }
 
-  const res = await fetch(`${API_URL}/to-dam/tai-lieu/${documentId}`, {
+  const res = await fetch(`${API_URL}/danh-dau/tai-lieu/${documentId}`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(bodyData),
@@ -32,7 +32,7 @@ export async function createHighlightAPI(
 }
 
 export async function getHighlightsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/to-dam/tai-lieu/${documentId}`, {
+  const res = await fetch(`${API_URL}/danh-dau/tai-lieu/${documentId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -45,7 +45,7 @@ export async function updateHighlightNoteAPI(
   highlightId: string,
   note: string,
 ) {
-  const res = await fetch(`${API_URL}/to-dam/${highlightId}/ghi-chu`, {
+  const res = await fetch(`${API_URL}/danh-dau/${highlightId}/ghi-chu`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ note }),
@@ -57,7 +57,7 @@ export async function updateHighlightNoteAPI(
 }
 
 export async function deleteHighlightAPI(highlightId: string) {
-  const res = await fetch(`${API_URL}/to-dam/${highlightId}`, {
+  const res = await fetch(`${API_URL}/danh-dau/${highlightId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -68,7 +68,7 @@ export async function deleteHighlightAPI(highlightId: string) {
 
 export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
   const res = await fetch(
-    `${API_URL}/to-dam/ghi-chu?skip=${skip}&limit=${limit}`,
+    `${API_URL}/danh-dau/ghi-chu?skip=${skip}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },
@@ -80,7 +80,7 @@ export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
 }
 
 export async function getReadingPreferencesAPI() {
-  const res = await fetch(`${API_URL}/setting`, {
+  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -96,7 +96,7 @@ export async function updateReadingPreferencesAPI(data: {
   font_family?: string;
   is_dyslexic_mode?: boolean;
 }) {
-  const res = await fetch(`${API_URL}/setting`, {
+  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -109,7 +109,7 @@ export async function updateReadingPreferencesAPI(data: {
 
 export async function exportHighlightsMarkdownAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/to-dam/tai-lieu/${documentId}/xuat`,
+    `${API_URL}/danh-dau/tai-lieu/${documentId}/xuat`,
     {
       headers: getAuthHeaders(),
     },

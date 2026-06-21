@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from loguru import logger
 from uuid6 import uuid7
 
-from core.database import db_client
+from core.infrastructure.database_client import db_client
 
 
 class PromotionalBanner:

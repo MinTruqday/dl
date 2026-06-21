@@ -39,7 +39,7 @@ export const getAIRecommendationsAPI = async (limit: number = 10) => {
 
 export const getTrendingTagsAPI = async (limit: number = 10) => {
   const res = await fetch(
-    `${API_URL}/kham-pha/trending-hashtags?limit=${limit}`,
+    `${API_URL}/kham-pha/xu-huong-hashtag?limit=${limit}`,
   );
   const data = await res.json();
   if (!res.ok)

@@ -8,8 +8,8 @@ from src.api.content_monetization import router as monetization
 from src.api.account_ledger import router as wallet
 from src.api.fiat_withdrawal import router as withdrawal
 
-from core.config import settings
-from core.database import close_db, init_db
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import close_db, init_db
 
 app = FastAPI(title="DocLib Finance", version=settings.VERSION)
 

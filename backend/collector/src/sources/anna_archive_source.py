@@ -20,7 +20,7 @@ from src.core.mq import mq_client
 from src.core.redis_client import dedup
 from src.core.storage import storage
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class AnnaArchiveCollection:

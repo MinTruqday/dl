@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, Query
 from src.api.system_dependency import get_current_user, get_db, require_role
 from src.services.telemetry import SystemTelemetry
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 from core.api_response import APIResponse
-from src.schemas.user_identity_profile import RoleEnum, UserInDB
+from src.schemas.user_identity import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/giam-sat")
 

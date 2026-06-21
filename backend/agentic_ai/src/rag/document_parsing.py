@@ -6,7 +6,7 @@ from typing import Dict, List
 import boto3
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class FileParsing:

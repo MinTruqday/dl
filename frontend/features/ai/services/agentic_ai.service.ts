@@ -6,7 +6,7 @@ export async function processTextAPI(
   context: string = "",
   targetLang: string = "Vietnamese",
 ) {
-  const res = await fetch(`${API_URL}/inference/tao-noi-dung`, {
+  const res = await fetch(`${API_URL}/suy-luan/tao-noi-dung`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, action, context, target_lang: targetLang }),
@@ -19,7 +19,7 @@ export async function processTextAPI(
 
 export async function smartSearchAIAPI(query: string) {
   const res = await fetch(
-    `${API_URL}/ai/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`,
+    `${API_URL}/suy-luan/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`,
     {
       headers: getAuthHeaders(),
     },
@@ -121,7 +121,7 @@ export async function translateTextAPI(
 }
 
 export async function suggestCitationsAPI(text: string, style: string = "APA") {
-  const res = await fetch(`${API_URL}/inference/trich-dan-thong-minh`, {
+  const res = await fetch(`${API_URL}/suy-luan/trich-dan-thong-minh`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, style }),
@@ -136,7 +136,7 @@ export async function transformToneAPI(
   tone: string,
   expansion: boolean = false,
 ) {
-  const res = await fetch(`${API_URL}/inference/bien-doi-van-ban`, {
+  const res = await fetch(`${API_URL}/suy-luan/bien-doi-van-ban`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, tone, expansion }),
@@ -147,7 +147,7 @@ export async function transformToneAPI(
 }
 
 export async function peerReviewAPI(text: string, criteria: string[] = []) {
-  const res = await fetch(`${API_URL}/inference/content-moderation`, {
+  const res = await fetch(`${API_URL}/suy-luan/kiem-duyet-noi-dung`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, criteria }),
@@ -161,7 +161,7 @@ export async function multiDocSynthesisAPI(
   documentIds: string[],
   query: string,
 ) {
-  const res = await fetch(`${API_URL}/inference/tong-hop-nhieu-tai-lieu`, {
+  const res = await fetch(`${API_URL}/suy-luan/tong-hop-tai-lieu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_ids: documentIds, query }),

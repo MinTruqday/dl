@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from loguru import logger
-from src.repositories.auth_repository import AuthenticationData
+from src.repositories.authentication_data import AuthenticationData
 from webauthn import (
     generate_authentication_options,
     generate_registration_options,
@@ -28,9 +28,9 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-from core.config import settings
-from core.database import db_client
-from src.schemas.user_identity_profile import UserInDB
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
+from src.schemas.user_identity import UserInDB
 
 RP_ID = settings.PASSKEY_RP_ID
 RP_NAME = settings.PASSKEY_RP_NAME

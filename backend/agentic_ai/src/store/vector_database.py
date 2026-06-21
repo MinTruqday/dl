@@ -16,7 +16,7 @@ from qdrant_client.http.models import (
     VectorParams,
 )
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class VectorDatabase:

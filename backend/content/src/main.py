@@ -18,8 +18,8 @@ from src.api.storage_operations import router as storage
 from src.api.file_upload import router as upload
 from src.api.version_history import router as version
 
-from core.config import settings
-from core.database import close_db, init_db
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import close_db, init_db
 
 app = FastAPI(title="DocLib Content", version=settings.VERSION)
 

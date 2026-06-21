@@ -5,8 +5,8 @@ from loguru import logger
 from src.api.document_sync import router as editor_socket
 from src.api.live_chat import router as message_socket
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 
 app = FastAPI(title="WebSocket Service", version=settings.VERSION)
 
@@ -29,14 +29,14 @@ app.include_router(message_socket)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng tin nhắn đã sẵn sàng")
-    from core.database import init_db
+    from core.infrastructure.database_client import init_db
 
     await init_db()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    from core.database import close_db
+    from core.infrastructure.database_client import close_db
 
     await close_db()
 

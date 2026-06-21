@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from src.schemas.chat_conversation import ConversationResponse, MessageCreate, MessageResponse
 from src.services.message import ChatConversation
 
-from core.database import db_client
+from core.infrastructure.database_client import db_client
 from core.system_dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.system_dependency import get_current_user_from_header as get_current_user
 from core.repositories.base_repository import RepositoryFactory

@@ -5,8 +5,8 @@ from loguru import logger
 from src.schemas.push_notification import Notification, NotificationCreate
 from uuid6 import uuid7
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 

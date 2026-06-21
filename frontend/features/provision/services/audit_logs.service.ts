@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
 
 export async function getModeratorActivityAPI() {
-  const res = await fetch(`${API_URL}/audit/log`, {
+  const res = await fetch(`${API_URL}/kiem-toan/nhat-ky`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

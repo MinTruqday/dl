@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from fastapi import Query
 from src.schemas.chat_conversation import MessageInDB
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 from core.repositories.base_repository import RepositoryFactory
 
 
@@ -737,7 +737,7 @@ class ChatConversation:
             return None
         from src.core.http_client import http_client
 
-        from core.config import settings
+        from core.infrastructure.app_config import settings
 
         translated_content = ""
         try:

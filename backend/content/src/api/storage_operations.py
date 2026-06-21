@@ -10,7 +10,7 @@ from src.schemas.storage_operations import (
 )
 from src.services.storage import StorageOperations
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 from core.api_response import APIResponse
 from core.system_dependency import CurrentUser, RoleEnum
 
@@ -160,7 +160,7 @@ async def download_zip(
 
     from fastapi.responses import StreamingResponse
 
-    from core.config import settings
+    from core.infrastructure.app_config import settings
     from core.file_storage import get_storage_client
 
     item_ids = [i.strip() for i in ids.split(",") if i.strip()]

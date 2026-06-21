@@ -5,7 +5,7 @@ import brotli
 from botocore.exceptions import ClientError
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 MINIO_ENDPOINT = settings.MINIO_ENDPOINT
 MINIO_ACCESS_KEY = settings.MINIO_ACCESS_KEY

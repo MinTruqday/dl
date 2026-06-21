@@ -6,7 +6,7 @@ from src.services.banner import PromotionalBanner
 
 from core.system_dependency import get_db, require_role
 from core.api_response import APIResponse
-from src.schemas.user_identity_profile import RoleEnum
+from src.schemas.user_identity import RoleEnum
 
 
 router = APIRouter(prefix="/quang-cao")

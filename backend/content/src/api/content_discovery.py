@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from src.api.system_dependency import get_current_user_optional, get_db
 from src.services.document import DocumentMetadata
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 from core.api_response import APIResponse
 from core.system_dependency import CurrentUser, RoleEnum
 
@@ -48,7 +48,7 @@ async def smart_search(
     import httpx
     from loguru import logger
 
-    from core.config import settings
+    from core.infrastructure.app_config import settings
 
     rag_url = settings.AGENTIC_AI_URL
     if not rag_url:

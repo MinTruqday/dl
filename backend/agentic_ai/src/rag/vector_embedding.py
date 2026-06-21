@@ -8,7 +8,7 @@ import redis
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class VectorEmbedding:

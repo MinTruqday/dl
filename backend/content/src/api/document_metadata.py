@@ -23,8 +23,8 @@ from src.schemas.document_metadata import (
 )
 from src.services.document import DocumentMetadata
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 from core.api_response import APIResponse
 from core.system_dependency import CurrentUser, RoleEnum
 

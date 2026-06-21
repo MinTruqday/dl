@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
 
 export async function exportDocumentPdfAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat/${documentId}/pdf`, {
+  const res = await fetch(`${API_URL}/ket-xuat/${documentId}/pdf`, {
     headers: getAuthHeaders(),
   });
   if (!res.ok) {
@@ -12,7 +12,7 @@ export async function exportDocumentPdfAPI(documentId: string) {
 }
 
 export async function exportDocumentDocxAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat/${documentId}/docx`, {
+  const res = await fetch(`${API_URL}/ket-xuat/${documentId}/docx`, {
     headers: getAuthHeaders(),
   });
   if (!res.ok) {

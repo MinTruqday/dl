@@ -32,7 +32,7 @@ export async function getAuthorRevenueAPI() {
 }
 
 export async function buyMembershipAPI(tier: "PRO" | "PREMIUM") {
-  const res = await fetch(`${API_URL}/finance/monetization/membership`, {
+  const res = await fetch(`${API_URL}/kiem-tien/goi-hoi-vien`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ tier }),

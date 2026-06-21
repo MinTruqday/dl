@@ -5,7 +5,7 @@ from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
 from src.tools.api_tools import llm, tools
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class TaskExecution:

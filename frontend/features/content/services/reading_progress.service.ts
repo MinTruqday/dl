@@ -5,7 +5,7 @@ export async function getReadingHistoryAPI(
   limit: number = 20,
 ) {
   const res = await fetch(
-    `${API_URL}/doc-sach/lich-su?skip=${skip}&limit=${limit}`,
+    `${API_URL}/doc-hieu/lich-su?skip=${skip}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },
@@ -20,7 +20,7 @@ export async function updateReadingProgressAPI(data: {
   progress_percentage: number;
   current_chapter_slug?: string;
 }) {
-  const res = await fetch(`${API_URL}/doc-sach/tien-do`, {
+  const res = await fetch(`${API_URL}/doc-hieu/tien-do`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -31,7 +31,7 @@ export async function updateReadingProgressAPI(data: {
 }
 
 export async function getPinnedDocumentsAPI() {
-  const res = await fetch(`${API_URL}/to-dam`, {
+  const res = await fetch(`${API_URL}/danh-dau`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -40,7 +40,7 @@ export async function getPinnedDocumentsAPI() {
 }
 
 export async function pinDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/to-dam/${documentId}`, {
+  const res = await fetch(`${API_URL}/danh-dau/${documentId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -50,7 +50,7 @@ export async function pinDocumentAPI(documentId: string) {
 }
 
 export async function unpinDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/to-dam/${documentId}`, {
+  const res = await fetch(`${API_URL}/danh-dau/${documentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -61,7 +61,7 @@ export async function unpinDocumentAPI(documentId: string) {
 
 export async function searchInDocumentAPI(documentId: string, query: string) {
   const res = await fetch(
-    `${API_URL}/doc-sach/tai-lieu/${documentId}/tim-kiem?q=${encodeURIComponent(query)}`,
+    `${API_URL}/doc-hieu/tai-lieu/${documentId}/tim-kiem?q=${encodeURIComponent(query)}`,
     {
       headers: getAuthHeaders(),
     },
@@ -73,7 +73,7 @@ export async function searchInDocumentAPI(documentId: string, query: string) {
 }
 
 export async function clearReadingHistoryAPI() {
-  const res = await fetch(`${API_URL}/doc-sach/lich-su`, {
+  const res = await fetch(`${API_URL}/doc-hieu/lich-su`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -83,7 +83,7 @@ export async function clearReadingHistoryAPI() {
 }
 
 export async function deleteReadingHistoryItemAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/doc-sach/lich-su/${documentId}`, {
+  const res = await fetch(`${API_URL}/doc-hieu/lich-su/${documentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

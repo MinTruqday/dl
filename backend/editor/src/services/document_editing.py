@@ -10,7 +10,7 @@ from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 from core.repositories.base_repository import RepositoryFactory
 
 

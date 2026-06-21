@@ -47,7 +47,7 @@ import jwt
 
 def _check_system_access(token: str) -> bool:
     try:
-        from core.config import settings
+        from core.infrastructure.app_config import settings
 
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "guest")
@@ -62,7 +62,7 @@ from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langgraph.prebuilt import create_react_agent
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL
 

@@ -33,7 +33,7 @@ export async function getDetailedHistoryAPI(
 }
 
 export async function redeemVoucherAPI(code: string) {
-  const res = await fetch(`${API_URL}/vi-tien/coupon-code/redeem`, {
+  const res = await fetch(`${API_URL}/vi-tien/doi-ma-qua-tang`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ code }),

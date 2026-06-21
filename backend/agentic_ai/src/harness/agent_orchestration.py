@@ -6,7 +6,7 @@ from typing import AsyncGenerator, Literal, Optional
 from loguru import logger
 
 SESSION_HARD_TIMEOUT_SECONDS = 120
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 CIRCUIT_BREAKER_FAILURE_THRESHOLD = settings.CIRCUIT_BREAKER_THRESHOLD
 CIRCUIT_BREAKER_RESET_SECONDS = settings.CIRCUIT_BREAKER_RESET_SECONDS

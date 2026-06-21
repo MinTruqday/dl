@@ -1,6 +1,6 @@
 from loguru import logger
 
-from core.database import db_client
+from core.infrastructure.database_client import db_client
 
 
 class WalletRepository:

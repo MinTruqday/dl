@@ -20,7 +20,7 @@ from src.api.document_editing import router as editor
 from src.api.document_editingjs import router as editorjs
 from src.api.latex_engine import router as latex
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 app = FastAPI(title="DocLib Compiler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)

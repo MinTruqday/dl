@@ -8,7 +8,7 @@ from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 from core.system_dependency import get_current_user
 from core.repositories.base_repository import RepositoryFactory
 from src.schemas.inference import (

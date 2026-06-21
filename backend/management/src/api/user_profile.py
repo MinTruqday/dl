@@ -3,11 +3,11 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
 from src.api.system_dependency import get_current_user, get_db, require_role
-from src.services.user import UserIdentity
+from src.services.user_profile import UserIdentity
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 from core.api_response import APIResponse
-from src.schemas.user_identity_profile import (
+from src.schemas.user_identity import (
     ModerationActionRequest,
     NoteRequest,
     RoleEnum,

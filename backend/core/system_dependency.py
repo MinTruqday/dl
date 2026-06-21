@@ -6,8 +6,8 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
-from core.config import settings
-from core.database import db_client
+from core.infrastructure.app_config import settings
+from core.infrastructure.database_client import db_client
 
 from enum import Enum
 from pydantic import BaseModel, Field
@@ -32,7 +32,7 @@ class CurrentUser(BaseModel):
         populate_by_name = True
         extra = "ignore"
 
-from core.security import ALGORITHM, SECRET_KEY
+from core.security.role_based_access import ALGORITHM, SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 

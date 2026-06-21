@@ -5,7 +5,7 @@ from src.services.passkey_authentication import PasskeyAuthentication
 
 from core.system_dependency import get_current_user, get_db
 from core.api_response import APIResponse
-from src.schemas.user_identity_profile import PasskeyFinishRequest, PasskeyRequest
+from src.schemas.user_identity import PasskeyFinishRequest, PasskeyRequest
 
 router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")
 

@@ -5,7 +5,7 @@ import tempfile
 from celery import Celery
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 CELERY_BROKER_URL = settings.RABBITMQ_URI
 CELERY_RESULT_BACKEND = settings.REDIS_URI
@@ -47,7 +47,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     import httpx
 
     try:
-        from core.database import db_client
+        from core.infrastructure.database_client import db_client
 
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:

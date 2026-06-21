@@ -32,7 +32,7 @@ export async function updatePrivacySettingsAPI(settings: any) {
 export async function updateTypographyAPI(typography: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/doc-sach/giao-dien`, {
+  const res = await fetch(`${API_URL}/doc-hieu/giao-dien`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,

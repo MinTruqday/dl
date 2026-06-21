@@ -2,7 +2,7 @@ import httpx
 from fastapi import Depends, HTTPException
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 from core.system_dependency import (
     RateLimiting,
     get_current_user,

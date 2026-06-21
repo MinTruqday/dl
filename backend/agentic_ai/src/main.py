@@ -4,7 +4,7 @@ import uuid
 
 from fastapi import FastAPI, Request
 from loguru import logger
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 from core.system_middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 from core.repositories.base_repository import RepositoryFactory
@@ -82,7 +82,7 @@ async def startup_event():
     from motor.motor_asyncio import AsyncIOMotorClient
     from src.store.vector import vector_store
 
-    from core.config import settings
+    from core.infrastructure.app_config import settings
 
     try:
         await vector_store.ensure_collection()

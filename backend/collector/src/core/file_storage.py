@@ -4,7 +4,7 @@ import aioboto3
 from botocore.exceptions import ClientError
 from loguru import logger
 
-from core.config import settings
+from core.infrastructure.app_config import settings
 
 
 class DataCollectionStorage:

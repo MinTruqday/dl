@@ -1,0 +1,370 @@
+--- backend/agentic_ai/src/api/__init__.py ---
+No prefix
+No routes
+--- backend/agentic_ai/src/api/chat_interaction.py ---
+router = APIRouter(prefix="/tro-chuyen")
+@router.post("")
+@router.post("/phat-truc-tiep")
+--- backend/agentic_ai/src/api/data_ingestion.py ---
+router = APIRouter(prefix="/tiep-nap")
+@router.post("")
+@router.delete("/tai-lieu/{document_id}")
+--- backend/agentic_ai/src/api/model_finetuning.py ---
+router = APIRouter(prefix="/tinh-chinh")
+@router.post("/tap-du-lieu")
+@router.get("/tap-du-lieu")
+@router.get("/tap-du-lieu/{dataset_id}")
+@router.delete("/tap-du-lieu/{dataset_id}")
+@router.post("/tap-du-lieu/{dataset_id}/mau-thu")
+@router.get("/tap-du-lieu/{dataset_id}/mau-thu")
+@router.delete("/tap-du-lieu/{dataset_id}/mau-thu/{sample_id}")
+@router.post("/dau-vao/phan-hoi")
+@router.post("/dau-vao/tai-lieu")
+@router.post("/tien-trinh")
+@router.post("/tien-trinh/{job_id}/bat-dau")
+@router.get("/tien-trinh")
+@router.get("/tien-trinh/{job_id}")
+@router.post("/tien-trinh/{job_id}/huy-bo")
+@router.post("/tien-trinh/{job_id}/trien-khai")
+@router.post("/tien-trinh/{job_id}/danh-gia")
+--- backend/agentic_ai/src/api/model_inference.py ---
+router = APIRouter(prefix="/suy-luan")
+@router.post("/tao-noi-dung")
+@router.post("/dich-thuat")
+@router.post("/tao-ma")
+@router.post("/kiem-tra-ngu-phap")
+@router.post("/tom-tat")
+@router.post("/kiem-tra-dao-van")
+@router.post("/hanh-dong")
+@router.post("/tu-dong-nghia")
+@router.post("/trich-dan-thong-minh")
+@router.post("/bien-doi-van-ban")
+@router.post("/kiem-duyet-noi-dung")
+@router.post("/tong-hop-tai-lieu")
+@router.post("/trich-xuat-van-ban")
+@router.post("/phan-tich-tai-lieu")
+@router.delete("/vector/{document_id}")
+--- backend/agentic_ai/src/api/session_history.py ---
+router = APIRouter(prefix="/lich-su")
+@router.post("", response_model=Dict[str, Any])
+@router.get("", response_model=List[dict])
+@router.get("/{session_id}", response_model=Dict[str, Any])
+@router.put("/{session_id}/tieu-de", response_model=Dict[str, Any])
+@router.delete("/{session_id}", response_model=Dict[str, Any])
+@router.post("/{session_id}/tin-nhan", response_model=Dict[str, Any])
+--- backend/agentic_ai/src/api/user_feedback.py ---
+router = APIRouter(prefix="/phan-hoi")
+@router.post("/phan-hoi")
+--- backend/authentication/src/api/passkey_authentication.py ---
+router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")
+@router.post("/dang-nhap/bat-dau", response_model=APIResponse[Any])
+@router.post("/dang-nhap/hoan-tat", response_model=APIResponse[Any])
+--- backend/authentication/src/api/user_login.py ---
+router = APIRouter(prefix="/xac-thuc")
+@router.get("/ca-nhan", response_model=APIResponse[UserResponse])
+@router.post(
+@router.post(
+@router.post("/quen-mat-khau", response_model=APIResponse[Any])
+@router.post("/dat-lai-mat-khau", response_model=APIResponse[Any])
+@router.post("/xac-nhan-ma", response_model=APIResponse[Any])
+@router.get("/google/dang-nhap", response_model=APIResponse[Any])
+@router.get("/google/phan-hoi", response_model=APIResponse[Any])
+--- backend/collector/src/api/data_collection.py ---
+router = APIRouter(prefix="/thu-thap")
+@router.post("/kich-hoat", dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.post("/tam-dung", dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.get("/tien-trinh-dang-chay", dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.get("/thong-ke", dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.get("/nhat-ky-hoat-dong", dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+--- backend/content/src/api/bookmark_operations.py ---
+router = APIRouter(prefix="/danh-dau")
+@router.post("/{document_id}", response_model=APIResponse[Any])
+@router.get("", response_model=APIResponse[Any])
+@router.post("/thu-muc", response_model=APIResponse[Any])
+@router.get("/thu-muc", response_model=APIResponse[Any])
+@router.put("/thu-muc/{folder_id}", response_model=APIResponse[Any])
+@router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any])
+--- backend/content/src/api/collaboration_sync.py ---
+router = APIRouter(prefix="/cong-tac")
+@router.post("/loi-moi", response_model=APIResponse[Any])
+@router.get("/loi-moi", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.delete("/{collaboration_id}", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/hoat-dong", response_model=APIResponse[Any])
+@router.post(
+@router.post("/tai-lieu/{document_id}/ping", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/truc-tuyen", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/tin-nhan", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/tin-nhan", response_model=APIResponse[Any])
+@router.get(
+@router.delete("/loi-moi/{invite_id}", response_model=APIResponse[Any])
+@router.get(
+@router.post("/tai-lieu/{document_id}/phien-ban", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/phien-ban", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/khoa", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/mo-khoa", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/trang-thai-khoa", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/ma-moi", response_model=APIResponse[Any])
+@router.post("/tham-gia/{invite_code}", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}/cong-viec", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/cong-viec", response_model=APIResponse[Any])
+@router.post("/nhiem-vu/{task_id}/binh-luan", response_model=APIResponse[Any])
+@router.get("/nhiem-vu/{task_id}/binh-luan", response_model=APIResponse[Any])
+--- backend/content/src/api/content_discovery.py ---
+router = APIRouter(prefix="/kham-pha")
+@router.get("/thinh-hanh", response_model=APIResponse[Any])
+@router.get("/the-loai", response_model=APIResponse[Any])
+@router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
+@router.get("/goi-y-ai", response_model=APIResponse[Any])
+@router.get("/tu-khoa-thinh-hanh", response_model=APIResponse[Any])
+--- backend/content/src/api/document_drafts.py ---
+router = APIRouter(prefix="/ban-nhap")
+@router.get(
+@router.post(
+--- backend/content/src/api/document_export.py ---
+router = APIRouter(prefix="/ket-xuat")
+@router.get("/{document_id}/pdf", response_model=APIResponse[Any])
+--- backend/content/src/api/document_metadata.py ---
+router = APIRouter(prefix="/tai-lieu")
+@router.post("", response_model=APIResponse[DocumentResponse])
+@router.put("/{document_id}/noi-dung", response_model=APIResponse[DocumentResponse])
+@router.put("/{document_id}", response_model=APIResponse[DocumentResponse])
+@router.get("", response_model=APIResponse[List[DocumentResponse]])
+@router.get(
+@router.post(
+@router.delete(
+@router.get(
+@router.get(
+@router.get("/{document_id}", response_model=APIResponse[DocumentResponse])
+@router.get("/tai-lieu/{slug}", response_model=APIResponse[DocumentResponse])
+@router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
+@router.delete(
+@router.post(
+@router.post(
+@router.get(
+@router.post(
+@router.post(
+@router.get("/{document_id}/thong-ke", response_model=APIResponse[Any])
+@router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
+@router.put(
+@router.put(
+@router.put(
+@router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
+--- backend/content/src/api/document_pinning.py ---
+router = APIRouter(prefix="/ghim")
+@router.get("", response_model=APIResponse[Any])
+@router.post("/{document_id}", response_model=APIResponse[Any])
+@router.delete("/{document_id}", response_model=APIResponse[Any])
+@router.put("", response_model=APIResponse[Any])
+--- backend/content/src/api/file_upload.py ---
+router = APIRouter(prefix="/tai-len")
+@router.post("/hinh-anh", response_model=APIResponse[Any])
+@router.post("/tai-lieu", response_model=APIResponse[Any])
+@router.post("/tap-tin", response_model=APIResponse[Any])
+@router.get("/storage/{file_path:path}", response_model=APIResponse[Any])
+@router.post("/phan-doan", response_model=APIResponse[Any])
+--- backend/content/src/api/highlight_operations.py ---
+router = APIRouter(prefix="/danh-dau")
+@router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.put("/{highlight_id}/ghi-chu", response_model=APIResponse[Any])
+@router.delete("/{highlight_id}", response_model=APIResponse[Any])
+@router.get("/ghi-chu", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/ket-xuat", response_model=APIResponse[Any])
+--- backend/content/src/api/personal_library.py ---
+router = APIRouter(prefix="/thu-vien")
+@router.post("/danh-sach", response_model=APIResponse[Any])
+@router.get("/danh-sach", response_model=APIResponse[Any])
+@router.get("/danh-sach/{list_id}", response_model=APIResponse[Any])
+@router.post(
+@router.delete(
+--- backend/content/src/api/publication_process.py ---
+router = APIRouter(prefix="/xuat-ban")
+@router.post(
+@router.post(
+@router.put(
+@router.get("/{document_id}/do-de-doc", response_model=APIResponse[Any])
+--- backend/content/src/api/reading_progress.py ---
+router = APIRouter(prefix="/doc-hieu")
+@router.get("/lich-su", response_model=APIResponse[Any])
+@router.post("/tien-do", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
+@router.delete("/lich-su", response_model=APIResponse[Any])
+@router.delete("/lich-su/{document_id}", response_model=APIResponse[Any])
+@router.get("/luu-tru/cay-thu-muc", response_model=APIResponse[Any])
+@router.get("/luu-tru/noi-dung", response_model=APIResponse[Any])
+--- backend/content/src/api/storage_operations.py ---
+router = APIRouter(prefix="/luu-tru")
+@router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
+@router.post("/tap-tin", response_model=APIResponse[StorageItemResponse])
+@router.get("/danh-sach", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/tim-kiem", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/han-muc", response_model=APIResponse[Any])
+@router.post(
+@router.get("/tai-ve-luu-tru")
+@router.put("/tap-tin/{item_id}", response_model=APIResponse[StorageItemResponse])
+@router.delete("/tap-tin/{item_id}", response_model=APIResponse[Any])
+@router.post(
+@router.post(
+@router.post("/tap-tin/{item_id}/chia-se", response_model=APIResponse[Any])
+@router.get("/chia-se/{share_token}", response_model=APIResponse[StorageItemResponse])
+--- backend/content/src/api/system_dependency.py ---
+No prefix
+No routes
+--- backend/content/src/api/version_history.py ---
+router = APIRouter(prefix="/phien-ban")
+@router.post("/luu/{document_id}", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.post("/{version_id}/khoi-phuc", response_model=APIResponse[Any])
+--- backend/editor/src/api/document_editing.py ---
+router = APIRouter(prefix="/trinh-soan-thao")
+@router.post("/{document_id}/dong-bo")
+@router.post("/{document_id}/goi-y")
+@router.put("/goi-y/{suggestion_id}/giai-quyet")
+@router.post("/dong-ho-pomodoro")
+@router.post("/{document_id}/tu-dong-luu")
+@router.post("/{document_id}/gui-danh-gia")
+@router.post("/{document_id}/tim-va-thay-the")
+@router.post("/{document_id}/binh-luan")
+@router.get("/{document_id}/binh-luan")
+@router.put("/binh-luan/{comment_id}/giai-quyet")
+@router.post("/{document_id}/so-sanh-phien-ban")
+--- backend/editor/src/api/editorjs_engine.py ---
+No prefix
+@router.post("/bien-dich")
+--- backend/editor/src/api/latex_engine.py ---
+No prefix
+@router.post("/bien-dich")
+@router.post("/ket-xuat/{format}")
+@router.post("/dinh-dang")
+@router.post("/ket-xuat-zip")
+--- backend/finance/src/api/account_ledger.py ---
+router = APIRouter(prefix="/vi-tien")
+@router.get("/so-du", response_model=APIResponse[Any])
+@router.get("/giao-dich", response_model=APIResponse[Any])
+--- backend/finance/src/api/content_monetization.py ---
+router = APIRouter(prefix="/kiem-tien")
+@router.post("/mua/tai-lieu", response_model=APIResponse[Any])
+@router.post("/thanh-vien", response_model=APIResponse[Any])
+@router.get("/bang-gia", response_model=APIResponse[Any])
+--- backend/finance/src/api/discount_coupon.py ---
+router = APIRouter(prefix="/ma-qua-tang")
+@router.post(
+@router.get(
+@router.delete(
+--- backend/finance/src/api/fiat_deposit.py ---
+router = APIRouter(prefix="/nap-tien")
+@router.post("", response_model=APIResponse[Any])
+--- backend/finance/src/api/fiat_withdrawal.py ---
+router = APIRouter(prefix="/rut-tien")
+@router.post("", response_model=APIResponse[Any])
+@router.get(
+@router.post(
+--- backend/management/src/api/account_profile.py ---
+router = APIRouter(prefix="/ho-so")
+@router.get("/ca-nhan", response_model=APIResponse[Any])
+@router.put("/ca-nhan", response_model=APIResponse[Any])
+@router.post("/dang-ky-tac-gia", response_model=APIResponse[Any])
+@router.post("/nang-cap-tac-gia", response_model=APIResponse[Any])
+@router.post("/xac-minh-danh-tinh", response_model=APIResponse[Any])
+@router.get("/cai-dat", response_model=APIResponse[Any])
+@router.put("/cai-dat", response_model=APIResponse[Any])
+@router.get(
+@router.post("/chan/{target_id}", response_model=APIResponse[Any])
+@router.put("/trang-tac-gia", response_model=APIResponse[Any])
+@router.get("/{slug}", response_model=APIResponse[Any])
+--- backend/management/src/api/audit_logs.py ---
+router = APIRouter(prefix="/kiem-toan")
+@router.get(
+--- backend/management/src/api/promotional_banner.py ---
+router = APIRouter(prefix="/quang-cao")
+@router.get("", response_model=APIResponse[Any])
+@router.get(
+@router.post(
+@router.delete(
+--- backend/management/src/api/system_dependency.py ---
+No prefix
+No routes
+--- backend/management/src/api/system_health.py ---
+router = APIRouter(prefix="/van-hanh")
+@router.get(
+@router.get(
+@router.post(
+@router.post(
+@router.post(
+@router.post(
+@router.get(
+@router.get(
+@router.get(
+@router.post(
+@router.post(
+@router.get(
+--- backend/management/src/api/system_telemetry.py ---
+router = APIRouter(prefix="/giam-sat")
+@router.get(
+@router.get(
+@router.get(
+@router.get(
+--- backend/management/src/api/usage_quota.py ---
+router = APIRouter(prefix="/han-muc")
+@router.get("/kiem-tra", response_model=APIResponse[Any], include_in_schema=False)
+@router.get("/ca-nhan", response_model=APIResponse[Any])
+@router.put("/{role}/cau-hinh", response_model=APIResponse[Any])
+@router.get("/cau-hinh", response_model=APIResponse[Any])
+@router.post("/tieu-thu", response_model=APIResponse[Any], include_in_schema=False)
+--- backend/management/src/api/user_profile.py ---
+router = APIRouter(prefix="/nguoi-dung")
+@router.get(
+@router.put(
+@router.put(
+@router.post(
+@router.post(
+@router.post(
+@router.get(
+@router.post(
+@router.get("/tim-kiem", response_model=APIResponse[Any])
+@router.get("/{user_id}", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/danh-sach", response_model=APIResponse[Any], include_in_schema=False)
+@router.get("/email/{email}", response_model=APIResponse[Any], include_in_schema=False)
+@router.get(
+@router.post("/", response_model=APIResponse[Any], include_in_schema=False)
+--- backend/messaging/src/api/chat_conversation.py ---
+router = APIRouter(prefix="/tin-nhan")
+@router.post("/", response_model=APIResponse[Any])
+@router.get("/{other_user_id}", response_model=APIResponse[Any])
+@router.get("/cuoc-tro-chuyen", response_model=APIResponse[Any])
+@router.post("/{message_id}/ghim", response_model=APIResponse[Any])
+@router.put("/{message_id}", response_model=APIResponse[Any])
+@router.delete("/{message_id}", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/tim-kiem", response_model=APIResponse[Any])
+@router.post("/{message_id}/bay-to-cam-xuc", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/doc-hieu", response_model=APIResponse[Any])
+@router.post("/{receiver_id}/tai-lieu/chia-se", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/tai-lieu/da-chia-se", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/chan", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/bo-chan", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/trang-thai-chan", response_model=APIResponse[Any])
+@router.post("/cuoc-tro-chuyen/{other_user_id}/ghim", response_model=APIResponse[Any])
+@router.post("/{message_id}/dich-thuat", response_model=APIResponse[Any])
+@router.post("/nhom", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/ban-nhap", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/ban-nhap", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/tu-huy", response_model=APIResponse[Any])
+@router.post("/{other_user_id}/tat-thong-bao", response_model=APIResponse[Any])
+@router.get("/{other_user_id}/cai-dat", response_model=APIResponse[Any])
+@router.delete("/cuoc-tro-chuyen/{other_user_id}", response_model=APIResponse[Any])
+--- backend/notification/src/api/__init__.py ---
+No prefix
+No routes
+--- backend/notification/src/api/push_notification.py ---
+router = APIRouter(prefix="/thong-bao")
+@router.get("", response_model=APIResponse[Any])
+@router.delete("/{notif_id}", response_model=APIResponse[Any])
+@router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False)
+--- backend/realtime/src/api/document_sync.py ---
+No prefix
+No routes
+--- backend/realtime/src/api/live_chat.py ---
+No prefix
+No routes
