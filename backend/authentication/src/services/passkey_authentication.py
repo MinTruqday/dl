@@ -138,6 +138,6 @@ class PasskeyAuthentication:
         if not user_doc:
             raise HTTPException(status_code=401, detail="Không thể xác minh tài khoản")
 
-        from src.services.auth import AuthenticationFlow
+        from src.services.passkey_authentication import AuthenticationFlow
 
         return await AuthenticationFlow.issue_token_for_user(user_doc, "passkey_login")

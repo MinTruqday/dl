@@ -2,11 +2,11 @@ import asyncio
 import json
 
 from loguru import logger
-from src.core.mq import mq_client
-from src.pipelines.anna_archive_collector import AnnaArchiveCollection
-from src.pipelines.ctan_collector import CTANCollection
-from src.pipelines.nxbgd_collector import NXBGDCollection
-from src.pipelines.nxbst_collector import NXBSTCollection
+from src.core.message_queue import mq_client
+from src.pipelines.anna_archive import AnnaArchiveCollection
+from src.pipelines.ctan import CTANCollection
+from src.pipelines.nxbgd import NXBGDCollection
+from src.pipelines.nxbst import NXBSTCollection
 
 
 async def run_worker():

@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query
 from src.api.system_dependency import get_current_user, get_db, require_role
 from src.schemas.document_metadata import ModerateDocumentRequest
-from src.services.document import DocumentMetadata
+from src.services.document_metadata import DocumentMetadata
 
 from core.infrastructure.app_config import settings
 from core.api_response import APIResponse

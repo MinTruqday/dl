@@ -4,13 +4,13 @@ import httpx
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from loguru import logger
-from src.agents.semantic_router import semantic_router
+from src.agents.intent_routing import semantic_router
 from src.core.prompt_registry import PromptType, prompt_registry
-from src.harness.agentops import agentops
-from src.harness.context import context
-from src.harness.orchestration import orchestration
-from src.harness.security import security
-from src.schemas.chat import ChatRequest
+from src.harness.agent_operations import agentops
+from src.harness.context_management import context
+from src.harness.agent_orchestration import orchestration
+from src.harness.security_guardrails import security
+from src.schemas.chat_interaction import ChatRequest
 from src.workflow.task_orchestration import supervisor
 
 router = APIRouter(prefix="/tro-chuyen")
@@ -64,7 +64,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             if not final_answer:
                 from huggingface_hub import AsyncInferenceClient
                 from langchain_core.messages import HumanMessage
-                from src.utils.hf import HFInferenceChat
+                from src.utils.huggingface import HFInferenceChat
 
                 from core.infrastructure.app_config import settings
 
@@ -180,7 +180,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 else:
                     from huggingface_hub import AsyncInferenceClient
                     from langchain_core.messages import HumanMessage
-                    from src.utils.hf import HFInferenceChat
+                    from src.utils.huggingface import HFInferenceChat
 
                     from core.infrastructure.app_config import settings
 

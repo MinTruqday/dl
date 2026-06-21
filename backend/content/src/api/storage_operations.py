@@ -8,7 +8,7 @@ from src.schemas.storage_operations import (
     StorageItemResponse,
     StorageItemUpdate,
 )
-from src.services.storage import StorageOperations
+from src.services.file_storage import StorageOperations
 
 from core.infrastructure.app_config import settings
 from core.api_response import APIResponse

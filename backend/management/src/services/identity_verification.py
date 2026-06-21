@@ -6,7 +6,7 @@ from loguru import logger
 from uuid6 import uuid7
 
 from core.infrastructure.database_client import db_client
-from src.schemas.user_identity import CreatorStatusEnum, KYCStatusEnum, RoleEnum
+from src.schemas.user_profile import CreatorStatusEnum, KYCStatusEnum, RoleEnum
 from core.file_storage import upload_file
 
 

@@ -11,13 +11,13 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 from pydantic import BaseModel, Field
 from redis import Redis
-from src.memory.manager import memory_manager
-from src.memory.mem0_manager import mem0_manager
-from src.rag.embedder import embedder
-from src.rag.retriever import retriever
-from src.store.vector import vector_store
+from src.memory.memory_management import memory_manager
+from src.memory.memory_management import mem0_manager
+from src.rag.vector_embedding import embedder
+from src.rag.search_retrieval import retriever
+from src.store.vector_database import vector_store
 from src.utils.file_processing import extract_text_from_base64
-from src.workflow.state import AgentState
+from src.workflow.workflow_state import AgentState
 
 from core.infrastructure.app_config import settings
 
@@ -50,7 +50,7 @@ except Exception as e:
     logger.warning("Lỗi khởi tạo bộ nhớ đệm")
 
 from huggingface_hub import AsyncInferenceClient
-from src.utils.hf import HFInferenceChat
+from src.utils.huggingface import HFInferenceChat
 
 llama_client = AsyncInferenceClient(
     model=settings.LLAMA_MODEL,

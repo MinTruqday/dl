@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from src.schemas.fiat_deposit import DepositRequest
-from src.services.deposit import FiatDeposit
+from src.services.fiat_deposit import FiatDeposit
 
 from core.system_dependency import get_current_user, get_db
 from core.api_response import APIResponse

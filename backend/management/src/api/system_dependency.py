@@ -11,11 +11,11 @@ from core.system_dependency import (
     require_permissions,
     require_role,
 )
-from src.schemas.user_identity import UserInDB
+from src.schemas.user_profile import UserInDB
 
 
 async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
-    from src.services.quota import UsageQuota
+    from src.services.usage_quota import UsageQuota
 
     await UsageQuota.check_quota(str(current_user.id), current_user.role.value)
     return current_user

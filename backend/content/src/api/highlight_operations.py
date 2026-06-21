@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from src.api.system_dependency import get_current_user, get_db
-from src.schemas.highlight import (
+from src.schemas.text_highlight import (
     HighlightCreateRequest,
     HighlightNoteUpdateRequest,
     ReadingPreferenceUpdate,

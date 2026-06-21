@@ -17,15 +17,15 @@ logger.add(
     level="INFO",
 )
 from fastapi.middleware.cors import CORSMiddleware
-from src.harness.agentops import agentops
-from src.harness.evaluation import evaluation
-from src.harness.orchestration import orchestration
-from src.api.chat import router as chat
-from src.api.feedback import router as feedback
-from src.api.finetune import router as finetune
-from src.api.history import router as history
-from src.api.inference import router as inference
-from src.api.ingest import router as ingest
+from src.harness.agent_operations import agentops
+from src.harness.model_evaluation import evaluation
+from src.harness.agent_orchestration import orchestration
+from src.api.chat_interaction import router as chat
+from src.api.user_feedback import router as feedback
+from src.api.model_finetuning import router as finetune
+from src.api.session_history import router as history
+from src.api.model_inference import router as inference
+from src.api.data_ingestion import router as ingest
 
 app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
@@ -80,7 +80,7 @@ async def harness_status():
 async def startup_event():
     logger.info("Khởi tạo AI thành công")
     from motor.motor_asyncio import AsyncIOMotorClient
-    from src.store.vector import vector_store
+    from src.store.vector_database import vector_store
 
     from core.infrastructure.app_config import settings
 

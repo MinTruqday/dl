@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from src.schemas.push_notification import NotificationCreate
-from src.services.notification import PushNotification
+from src.services.push_notification import PushNotification
 
 from core.system_dependency import get_current_user, get_db
 from core.api_response import APIResponse

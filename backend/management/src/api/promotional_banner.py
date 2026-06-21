@@ -2,11 +2,11 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends
 from src.schemas.promotional_banner import BannerRequest
-from src.services.banner import PromotionalBanner
+from src.services.promotional_banner import PromotionalBanner
 
 from core.system_dependency import get_db, require_role
 from core.api_response import APIResponse
-from src.schemas.user_identity import RoleEnum
+from src.schemas.user_profile import RoleEnum
 
 
 router = APIRouter(prefix="/quang-cao")

@@ -59,7 +59,7 @@ async def upload_asset(
     ),
     db=Depends(get_db),
 ) -> Any:
-    from src.services.storage import StorageOperations
+    from src.services.file_storage import StorageOperations
 
     quota = await StorageOperations.get_storage_quota(current_user.id, db=db)
     if quota["used"] >= quota["limit"]:

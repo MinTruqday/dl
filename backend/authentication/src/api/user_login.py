@@ -4,7 +4,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
-from src.services.user_profile_login import AuthenticationFlow
+from src.services.user_login import AuthenticationFlow
 
 from core.system_dependency import RateLimiting, get_current_user, get_db
 from core.api_response import APIResponse

@@ -60,7 +60,7 @@ async def report_progress(job_id: str, data: dict):
 
 
 def _run_training_sync(job_id: str, config: dict, loop):
-    from src.training.trainer import run_finetune_job
+    from src.training.model_training import run_finetune_job
 
     async def _update(data):
         await report_progress(job_id, data)
@@ -554,7 +554,7 @@ async def deploy_model(job_id: str, req: dict):
 
 
 async def evaluate_model(job_id: str, req: dict):
-    from src.harness.evaluation import evaluation
+    from src.harness.model_evaluation import evaluation
 
     db = get_db()
     job = await RepositoryFactory.get("finetune_jobs").find_one(

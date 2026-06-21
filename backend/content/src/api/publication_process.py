@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, Depends, status
 from pydantic import BaseModel
 from src.api.system_dependency import get_current_user, get_db, require_role
 from src.schemas.document_metadata import SchedulePublishRequest, SeoMetadataRequest
-from src.services.document import DocumentMetadata
+from src.services.document_metadata import DocumentMetadata
 from src.services.publication_process import PublicationProcess
 
 from core.api_response import APIResponse

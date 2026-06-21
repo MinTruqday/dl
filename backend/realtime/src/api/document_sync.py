@@ -1,6 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
-from src.services.document_editing_socket import editor_socket_manager
+from src.sockets.document_sync import editor_socket_manager
 
 router = APIRouter()
 

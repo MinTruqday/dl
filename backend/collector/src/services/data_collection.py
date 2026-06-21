@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
-from src.core.mq import mq_client
+from src.core.message_queue import mq_client
 from uuid6 import uuid7
 
 from core.infrastructure.app_config import settings

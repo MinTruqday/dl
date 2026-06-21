@@ -34,7 +34,7 @@ def compile_document(payload: dict):
             status_code=400, detail="Thiếu mã tài liệu hợp lệ để biên dịch"
         )
 
-    from src.tasks import compile_document_tectonic
+    from src.jobs.async_task import compile_document_tectonic
 
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
     return {"message": "Đã thêm tài liệu vào hàng đợi", "task_id": task.id}

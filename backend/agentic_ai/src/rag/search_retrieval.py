@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
-from src.store.vector import vector_store
+from src.store.vector_database import vector_store
 
 from core.infrastructure.app_config import settings
 
@@ -92,7 +92,7 @@ class SearchRetrieval:
     async def retrieve(
         self, query: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
-        from src.rag.embedder import embedder
+        from src.rag.vector_embedding import embedder
 
         query_vector = embedding.embed_query(query)
 

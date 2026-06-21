@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from src.schemas.user_identity import AITierEnum
+from src.schemas.user_profile import AITierEnum
 
 
 class QuotaLimit(BaseModel):

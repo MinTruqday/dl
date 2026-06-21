@@ -24,7 +24,7 @@ class LogicalReasoning:
         try:
             from huggingface_hub import AsyncInferenceClient
             from langchain_core.messages import HumanMessage
-            from src.utils.hf import HFInferenceChat
+            from src.utils.huggingface import HFInferenceChat
 
             client = AsyncInferenceClient(model=self._model, token=self._hf_token)
             llm = HFInferenceChat(client=client, model=self._model)
@@ -44,7 +44,7 @@ class LogicalReasoning:
         try:
             from huggingface_hub import AsyncInferenceClient
             from langchain_core.messages import HumanMessage
-            from src.utils.hf import HFInferenceChat
+            from src.utils.huggingface import HFInferenceChat
 
             client = AsyncInferenceClient(model=self._model, token=self._hf_token)
             llm = HFInferenceChat(

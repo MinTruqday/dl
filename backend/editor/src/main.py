@@ -17,7 +17,7 @@ logger.add(
 )
 
 from src.api.document_editing import router as editor
-from src.api.document_editingjs import router as editorjs
+from src.api.document_editing import router as editorjs
 from src.api.latex_engine import router as latex
 
 from core.infrastructure.app_config import settings

@@ -3,7 +3,7 @@ from fastapi.responses import Response
 from loguru import logger
 from pydantic import BaseModel, Field
 from src.schemas.document_editing import CompileRequest
-from src.services.document_editingjs_engine import EditorJSEngine
+from src.services.document_editing import EditorJSEngine
 
 router = APIRouter()
 

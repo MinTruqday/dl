@@ -10,7 +10,7 @@ from bson import ObjectId
 from fastapi import HTTPException, Query, status
 from loguru import logger
 from passlib.context import CryptContext
-from src.core.publication import trigger_document_publish_job
+from src.core.document_publication import trigger_document_publish_job
 from src.schemas.document_metadata import (
     DocumentContentUpdate,
     DocumentCreate,

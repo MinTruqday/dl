@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from src.schemas.discount_coupon import CouponCreateRequest
-from src.services.coupon import DiscountCoupon
+from src.services.discount_coupon import DiscountCoupon
 
 from core.system_dependency import get_db, require_role
 from core.api_response import APIResponse

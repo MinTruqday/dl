@@ -101,7 +101,7 @@ class PublicationProcess:
         )
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
-        from src.core.publication import trigger_document_publish_job
+        from src.core.document_publication import trigger_document_publish_job
 
         await trigger_document_publish_job(document_id, user_id)
         await docs_collection.update_one(

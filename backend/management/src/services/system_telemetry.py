@@ -8,7 +8,7 @@ from uuid6 import uuid7
 
 from core.infrastructure.database_client import db_client
 from core.repositories.base_repository import RepositoryFactory
-from src.schemas.user_identity import UserInDB
+from src.schemas.user_profile import UserInDB
 
 
 class SystemTelemetry:

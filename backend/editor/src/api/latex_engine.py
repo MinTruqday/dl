@@ -3,7 +3,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import Response
 from loguru import logger
 from src.schemas.document_editing import CompileRequest
-from src.services.latex_engine import LatexEngine
+from src.engines.latex_engine import LatexEngine
 
 router = APIRouter()
 

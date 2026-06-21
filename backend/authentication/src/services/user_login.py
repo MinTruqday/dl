@@ -60,7 +60,7 @@ class AuthenticationFlow:
                         else "An unexpected system error occurred while attempting to process the registration request"
                     )
                     raise HTTPException(status_code=400, detail=detail)
-                elif resp.status_code != 201:
+                elif resp.status_code not in (200, 201):
                     raise HTTPException(status_code=500, detail="Lỗi kết nối tài khoản")
                 user_id = resp.json().get("data", {}).get("user_id")
         except httpx.RequestError:
@@ -325,7 +325,7 @@ class AuthenticationFlow:
                         },
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
-                    if resp.status_code != 201:
+                    if resp.status_code not in (200, 201):
                         raise HTTPException(
                             status_code=500, detail="Lỗi kết nối tài khoản"
                         )

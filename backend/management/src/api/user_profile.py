@@ -7,7 +7,7 @@ from src.services.user_profile import UserIdentity
 
 from core.infrastructure.app_config import settings
 from core.api_response import APIResponse
-from src.schemas.user_identity import (
+from src.schemas.user_profile import (
     ModerationActionRequest,
     NoteRequest,
     RoleEnum,

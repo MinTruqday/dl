@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from src.api.system_dependency import get_current_user_optional, get_db
-from src.services.document import DocumentMetadata
+from src.services.document_metadata import DocumentMetadata
 
 from core.infrastructure.app_config import settings
 from core.api_response import APIResponse

@@ -2,8 +2,8 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Response
 from src.api.system_dependency import get_current_user, get_db
-from src.services.document import DocumentMetadata
-from src.services.export import DocumentExport
+from src.services.document_metadata import DocumentMetadata
+from src.services.document_export import DocumentExport
 
 from core.api_response import APIResponse
 from core.system_dependency import CurrentUser, RoleEnum

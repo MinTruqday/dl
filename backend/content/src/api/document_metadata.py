@@ -21,7 +21,7 @@ from src.schemas.document_metadata import (
     TagsUpdate,
     ScheduleUpdate,
 )
-from src.services.document import DocumentMetadata
+from src.services.document_metadata import DocumentMetadata
 
 from core.infrastructure.app_config import settings
 from core.infrastructure.database_client import db_client

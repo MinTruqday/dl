@@ -6,13 +6,13 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 from pydantic import BaseModel, Field
 from src.agents.task_execution import actor
-from src.agents.code_interpreter import code_interpreter
+from src.agents.code_execution import code_interpreter
 from src.agents.task_planning import planner
 from src.agents.logical_reasoning import reasoner
 from src.agents.research_analysis import researcher
-from src.agents.response_generator import response_generator
+from src.agents.response_generation import response_generator
 from src.agents.search_engine import search_engine
-from src.workflow.state import ActingState
+from src.workflow.workflow_state import ActingState
 from uuid6 import uuid7
 
 
@@ -89,7 +89,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     req_data = state.get("req_data", {})
 
     try:
-        from src.workflow.graph import llm
+        from src.workflow.execution_graph import llm
 
         evaluator_llm = llm.with_structured_output(TaskEvaluation)
 
@@ -172,7 +172,7 @@ async def trimmer_node(state: ActingState):
     if total_length > 12000:
         logger.info("Đang tổng hợp kết quả")
         try:
-            from src.workflow.graph import llm
+            from src.workflow.execution_graph import llm
 
             combined = "\n\n".join(str(r) for r in results)
             summary_prompt = (

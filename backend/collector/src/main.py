@@ -38,7 +38,7 @@ app.include_router(collector)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng thu thập dữ liệu đã sẵn sàng")
-    from src.worker import run_worker
+    from src.services.task_queue import run_worker
 
     asyncio.create_task(run_worker())
 

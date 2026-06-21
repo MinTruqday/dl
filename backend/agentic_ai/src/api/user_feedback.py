@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
-from src.schemas.ai import FeedbackRequest
+from src.schemas.ai_schema import FeedbackRequest
 
 from core.infrastructure.app_config import settings
 

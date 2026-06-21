@@ -8,7 +8,7 @@ from src.schemas.personal_library import (
     BookmarkFolderCreate,
     ReadingListCreate,
 )
-from src.services.library import PersonalLibrary
+from src.services.personal_library import PersonalLibrary
 
 from core.api_response import APIResponse
 from core.system_dependency import CurrentUser, RoleEnum

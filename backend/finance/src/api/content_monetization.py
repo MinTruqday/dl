@@ -2,8 +2,8 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from src.schemas.content_monetization import PurchaseRequest, MembershipRequest
-from src.services.pricing import PricingStrategy
-from src.services.purchase import PurchaseProcess
+from src.services.pricing_strategy import PricingStrategy
+from src.services.document_purchase import PurchaseProcess
 
 from core.system_dependency import get_current_user, get_db
 from core.api_response import APIResponse

@@ -3,7 +3,7 @@ from typing import Any, List
 
 from fastapi import APIRouter, Query
 from src.schemas.chat_conversation import ConversationResponse, MessageCreate, MessageResponse
-from src.services.message import ChatConversation
+from src.services.chat_conversation import ChatConversation
 
 from core.infrastructure.database_client import db_client
 from core.system_dependency import AuthenticatedUser, Depends, Header, HTTPException

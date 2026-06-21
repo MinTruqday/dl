@@ -6,14 +6,14 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from src.services.identity import IdentityVerification
-from src.services.privacy import ContentModeration
+from src.services.identity_verification import IdentityVerification
+from src.services.content_moderation import ContentModeration
 from src.services.account_profile import ProfileManagement
 from src.services.app_configuration import AppConfiguration
 
 from core.system_dependency import RateLimiting, get_current_user, get_db
 from core.api_response import APIResponse
-from src.schemas.user_identity import BrandPageUpdate, ProfileUpdate, SettingsUpdate, UserInDB
+from src.schemas.user_profile import BrandPageUpdate, ProfileUpdate, SettingsUpdate, UserInDB
 
 router = APIRouter(prefix="/ho-so")
 

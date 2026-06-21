@@ -83,7 +83,7 @@ class ContextHarness:
         if not user_id:
             return ""
         try:
-            from src.memory.mem0_manager import mem0_manager
+            from src.memory.manager import mem0_manager
 
             prefs = await mem0_manager.get_user_preferences(user_id)
             return prefs or ""

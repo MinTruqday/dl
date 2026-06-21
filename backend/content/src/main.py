@@ -13,7 +13,7 @@ from src.api.personal_library import router as library
 from src.api.document_pinning import router as pin
 from src.api.publication_process import router as publication
 from src.api.reading_progress import router as reading
-from src.api.review import router as review
+from src.api.content_discovery import router as review
 from src.api.storage_operations import router as storage
 from src.api.file_upload import router as upload
 from src.api.version_history import router as version

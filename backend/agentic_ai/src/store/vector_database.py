@@ -53,7 +53,7 @@ class VectorDatabase:
                 c.name == self.collection_name for c in collections.collections
             )
             if not exists:
-                from src.rag.embedder import embedder
+                from src.rag.vector_embedding import embedder
 
                 await self.client.create_collection(
                     collection_name=self.collection_name,

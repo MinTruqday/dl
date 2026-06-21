@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7
 
 from core.infrastructure.app_config import settings
-from src.services.history import HistoryService
+from src.services.session_history import HistoryService
 
 router = APIRouter(prefix="/lich-su")
 

@@ -12,11 +12,11 @@ from loguru import logger
 from PIL import Image
 from playwright.async_api import Response, async_playwright
 from playwright_stealth import stealth_async
-from src.core.browser import get_stealth_context, managed_browser
-from src.core.db import db_client
-from src.core.mq import mq_client
+from src.core.browser_client import get_stealth_context, managed_browser
+from src.core.database_client import db_client
+from src.core.message_queue import mq_client
 from src.core.redis_client import dedup
-from src.core.storage import storage
+from src.core.file_storage import storage
 from uuid6 import uuid7
 
 from core.infrastructure.app_config import settings

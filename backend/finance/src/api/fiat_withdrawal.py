@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from src.schemas.fiat_withdrawal import WithdrawalRequest
-from src.services.withdrawal import FiatWithdrawal
+from src.services.fiat_withdrawal import FiatWithdrawal
 
 from core.system_dependency import get_current_user, get_db, require_role
 from core.api_response import APIResponse

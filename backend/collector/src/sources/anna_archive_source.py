@@ -10,15 +10,15 @@ from bs4 import BeautifulSoup
 from loguru import logger
 from playwright.async_api import async_playwright
 from playwright_stealth import stealth_async
-from src.core.browser import (
+from src.core.browser_client import (
     download_file_with_retry,
     get_stealth_context,
     managed_browser,
 )
-from src.core.db import db_client
-from src.core.mq import mq_client
+from src.core.database_client import db_client
+from src.core.message_queue import mq_client
 from src.core.redis_client import dedup
-from src.core.storage import storage
+from src.core.file_storage import storage
 
 from core.infrastructure.app_config import settings
 

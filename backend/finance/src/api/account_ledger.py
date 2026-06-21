@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
-from src.services.wallet import AccountLedger
+from src.services.account_ledger import AccountLedger
 
 from core.system_dependency import get_current_user, get_db
 from core.api_response import APIResponse

@@ -2,7 +2,7 @@ import math
 from collections import Counter
 
 from loguru import logger
-from src.harness.evaluation import (
+from src.harness.model_evaluation import (
     EvalReport,
     EvaluationHarness,
     _compute_bleu,

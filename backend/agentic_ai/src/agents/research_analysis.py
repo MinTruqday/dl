@@ -1,5 +1,5 @@
 from loguru import logger
-from src.workflow.graph import knowledge_app
+from src.workflow.execution_graph import knowledge_app
 
 
 class ResearchAnalysis:
