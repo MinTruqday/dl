@@ -21,7 +21,7 @@ export default class DocLibFormCheckBox implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      label: data?.label || "",
+      label: data?.label || "DocLib Button",
       checked: data?.checked || false,
     };
   }

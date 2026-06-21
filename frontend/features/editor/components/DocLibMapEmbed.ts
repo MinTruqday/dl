@@ -24,7 +24,7 @@ export default class DocLibMapEmbed implements BlockTool {
       lat: data?.lat ?? 21.0285,
       lng: data?.lng ?? 105.8542,
       zoom: data?.zoom ?? 13,
-      label: data?.label || "",
+      label: data?.label || "DocLib Button",
     };
   }
 

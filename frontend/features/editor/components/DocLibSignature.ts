@@ -25,7 +25,7 @@ export default class DocLibSignature implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       dataUrl: data?.dataUrl || "",
-      label: data?.label || "",
+      label: data?.label || "DocLib Button",
     };
   }
 

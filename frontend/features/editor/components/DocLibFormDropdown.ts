@@ -21,7 +21,7 @@ export default class DocLibFormDropdown implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      label: data?.label || "",
+      label: data?.label || "DocLib Button",
       options: data?.options && data.options.length > 0 ? data.options : ["DocLib Text", "DocLib Text"],
       selected: data?.selected || 0,
     };

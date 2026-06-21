@@ -20,7 +20,7 @@ export default class DocLibReadingTime implements BlockTool {
     this.api = api;
     this.data = {
       avgReadingSpeed: data?.avgReadingSpeed || 200,
-      label: data?.label || "",
+      label: data?.label || "DocLib Button",
     };
   }
 

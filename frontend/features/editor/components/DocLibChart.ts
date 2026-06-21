@@ -33,7 +33,7 @@ export default class DocLibChart implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      type: data?.type || "",
+      type: data?.type || "continuous",
       labels:
         data?.labels || [],
       datasets:

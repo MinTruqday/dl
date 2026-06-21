@@ -38,7 +38,7 @@ export default class DocLibEventCard implements BlockTool {
       time: data?.time || "",
       location: data?.location || "",
       url: data?.url || "",
-      color: data?.color || "",
+      color: data?.color || "#ffffff",
     };
   }
 

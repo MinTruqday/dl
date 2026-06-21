@@ -21,9 +21,9 @@ export default class DocLibPageBorder implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      style: data?.style || "",
-      color: data?.color || "",
-      width: data?.width || "",
+      style: data?.style || "solid",
+      color: data?.color || "#0f172a",
+      width: data?.width || "4px",
     };
   }
 

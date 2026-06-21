@@ -21,8 +21,8 @@ export default class DocLibPageNumber implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      position: data?.position || "",
-      format: data?.format || "",
+      position: data?.position || "bottom-right",
+      format: data?.format || "1, 2, 3",
     };
   }
 

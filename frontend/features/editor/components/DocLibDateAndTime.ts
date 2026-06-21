@@ -21,7 +21,7 @@ export default class DocLibDateAndTime implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      format: data?.format || "",
+      format: data?.format || "locale",
       timestamp: data?.timestamp || Date.now(),
     };
   }

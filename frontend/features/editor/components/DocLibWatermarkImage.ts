@@ -22,8 +22,8 @@ export default class DocLibWatermarkImage implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       url: data?.url || "",
-      opacity: data?.opacity || "",
-      scale: data?.scale || "",
+      opacity: data?.opacity || "0.2",
+      scale: data?.scale || "100%",
     };
   }
 

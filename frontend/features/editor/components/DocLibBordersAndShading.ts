@@ -22,10 +22,10 @@ export default class DocLibBordersAndShading implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       text: data?.text || "",
-      borderWidth: data?.borderWidth || "",
-      borderStyle: data?.borderStyle || "",
-      borderColor: data?.borderColor || "",
-      bgColor: data?.bgColor || "",
+      borderWidth: data?.borderWidth || "2px",
+      borderStyle: data?.borderStyle || "solid",
+      borderColor: data?.borderColor || "#3b82f6",
+      bgColor: data?.bgColor || "#eff6ff",
     };
   }
 

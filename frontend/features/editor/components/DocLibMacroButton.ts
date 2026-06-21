@@ -21,8 +21,8 @@ export default class DocLibMacroButton implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      label: data?.label || "",
-      macroId: data?.macroId || "",
+      label: data?.label || "DocLib Button",
+      macroId: data?.macroId || "macro_1",
     };
   }
 

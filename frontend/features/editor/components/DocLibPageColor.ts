@@ -21,7 +21,7 @@ export default class DocLibPageColor implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      color: data?.color || "",
+      color: data?.color || "#ffffff",
     };
   }
 

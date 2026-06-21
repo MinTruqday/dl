@@ -21,9 +21,9 @@ export default class DocLibShape implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      shape: data?.shape || "",
-      fill: data?.fill || "",
-      stroke: data?.stroke || "",
+      shape: data?.shape || "rectangle",
+      fill: data?.fill || "#3b82f6",
+      stroke: data?.stroke || "#1d4ed8",
       text: data?.text || "",
     };
   }

@@ -22,7 +22,7 @@ export default class DocLibWordArt implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       text: data?.text || "",
-      styleId: data?.styleId || "",
+      styleId: data?.styleId || "style1",
     };
   }
 

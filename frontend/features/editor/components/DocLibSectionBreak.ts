@@ -21,7 +21,7 @@ export default class DocLibSectionBreak implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      type: data?.type || "",
+      type: data?.type || "continuous",
     };
   }
 

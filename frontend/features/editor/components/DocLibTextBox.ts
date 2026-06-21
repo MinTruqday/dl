@@ -22,8 +22,8 @@ export default class DocLibTextBox implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       text: data?.text || "",
-      float: data?.float || "",
-      width: data?.width || "",
+      float: data?.float || "none",
+      width: data?.width || "100%",
     };
   }
 
