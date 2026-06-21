@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronRight, Ticket, Activity, Users } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useEffect, useState } from "react";
-import { getCouponsAPI } from "@/features/finance/services/coupon.service";
+import { getCouponsAPI } from "@/features/finance/services/discount_coupon.service";
 
 export default function PromotionLayout({
   children,

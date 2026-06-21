@@ -11,8 +11,8 @@ from src.schemas.storage_operations import (
 from src.services.storage import StorageOperations
 
 from core.config import settings
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/luu-tru")
 
@@ -161,7 +161,7 @@ async def download_zip(
     from fastapi.responses import StreamingResponse
 
     from core.config import settings
-    from core.storage import get_storage_client
+    from core.file_storage import get_storage_client
 
     item_ids = [i.strip() for i in ids.split(",") if i.strip()]
     if not item_ids:

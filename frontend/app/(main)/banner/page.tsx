@@ -5,7 +5,7 @@ import {
   getAllBannersAPI,
   createBannerAPI,
   deleteBannerAPI,
-} from "@/features/provision/services/banner.service";
+} from "@/features/provision/services/promotional_banner.service";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "@/shared/contexts/Toast";

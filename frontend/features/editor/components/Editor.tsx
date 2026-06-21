@@ -5,7 +5,7 @@ import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
 import StandardEditor from "./StandardEditor";
 import LatexEditor from "./LatexEditor";
-import { useToast } from "@/shared/hooks/useToast";
+import { useToast } from "@/shared/contexts/Toast";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import {
   compilePreviewAPI,
@@ -16,16 +16,16 @@ import {
   summarizeDocumentAPI,
   extractSmartTagsAPI,
   checkDeepPlagiarismAPI,
-} from "@/features/editor/services/editor.service";
+} from "@/features/editor/services/document_editing.service";
 import {
   grammarCheckAPI,
   getSynonymsAPI,
   translateTextAPI,
-} from "@/features/ai/services/inference.service";
+} from "@/features/ai/services/model_inference.service";
 import {
   API_URL,
   getAuthHeaders,
-} from "@/features/auth/services/authentication.service";
+} from "@/features/auth/services/user_authentication.service";
 import {
   Sparkles,
   CheckSquare,
@@ -218,7 +218,7 @@ ${latexCode}
     showToast("Đang xuất tài liệu sang Word", "info");
     try {
       const { exportToWordAPI } =
-        await import("@/features/editor/services/editor.service");
+        await import("@/features/editor/services/document_editing.service");
       const blob = await exportToWordAPI(documentId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -346,7 +346,7 @@ ${latexCode}
     try {
       if (activeSidebar === "history") {
         const { getDocumentVersionsAPI } =
-          await import("@/features/content/services/version.service");
+          await import("@/features/content/services/version_history.service");
         const data = await getDocumentVersionsAPI(documentId);
         setSidebarData(data || []);
       } else if (activeSidebar === "comments") {

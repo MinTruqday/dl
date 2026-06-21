@@ -1,11 +1,11 @@
-from core.dependency import CurrentUser
+from core.system_dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from src.api.system_dependency import get_current_user, get_db, require_role
 from src.services.quota import UsageQuota
 
-from core.response import APIResponse
+from core.api_response import APIResponse
 from src.schemas.usage_quota import QuotaLimit, ConsumeQuotaRequest
 from src.schemas.user_identity_profile import RoleEnum, UserInDB
 

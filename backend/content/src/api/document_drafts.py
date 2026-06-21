@@ -6,8 +6,8 @@ from src.schemas.document_metadata import ModerateDocumentRequest
 from src.services.document import DocumentMetadata
 
 from core.config import settings
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ban-nhap")
 

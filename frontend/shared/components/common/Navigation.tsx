@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
-import { smartSearchAPI } from "@/features/content/services/discovery.service";
+import { smartSearchAPI } from "@/features/content/services/content_discovery.service";
 import { useRouter } from "next/navigation";
 import {
   Bell,

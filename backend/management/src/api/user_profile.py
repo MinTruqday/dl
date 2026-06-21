@@ -1,4 +1,4 @@
-from core.dependency import CurrentUser
+from core.system_dependency import CurrentUser
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -6,7 +6,7 @@ from src.api.system_dependency import get_current_user, get_db, require_role
 from src.services.user import UserIdentity
 
 from core.config import settings
-from core.response import APIResponse
+from core.api_response import APIResponse
 from src.schemas.user_identity_profile import (
     ModerationActionRequest,
     NoteRequest,

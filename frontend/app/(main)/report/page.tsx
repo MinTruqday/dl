@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getReportsAPI as getAdminReportsAPI,
   resolveReportAPI,
-} from "@/features/provision/services/report.service";
+} from "@/features/provision/services/system_report.service";
 import { Loader2, Search } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "@/shared/contexts/Toast";

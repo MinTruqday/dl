@@ -6,7 +6,7 @@ import {
   triggerCollectionAPI,
   getCollectorLogsAPI,
   stopCollectionAPI,
-} from "@/features/provision/services/collector.service";
+} from "@/features/provision/services/data_collection.service";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "@/shared/contexts/Toast";

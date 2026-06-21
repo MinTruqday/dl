@@ -1,4 +1,4 @@
-from core.dependency import CurrentUser
+from core.system_dependency import CurrentUser
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, status
@@ -7,7 +7,7 @@ from src.schemas.system import CampaignRequest
 from src.services.operation import SystemHealth
 from src.services.user import UserIdentity
 
-from core.response import APIResponse
+from core.api_response import APIResponse
 from src.schemas.user_identity_profile import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/van-hanh")

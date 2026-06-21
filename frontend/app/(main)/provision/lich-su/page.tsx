@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyDocumentsAPI } from "@/features/content/services/document.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
 import {
   getDocumentVersionsAPI,
   restoreVersionAPI,
-} from "@/features/content/services/version.service";
+} from "@/features/content/services/version_history.service";
 import { useToast } from "@/shared/contexts/Toast";
 import { Loader2, Clock, Eye, RotateCcw } from "lucide-react";
 import {
@@ -143,7 +143,7 @@ export default function HistoryPage() {
     setIsComparing(true);
     try {
       const { getVersionDiffAPI } =
-        await import("@/features/editor/services/editor.service");
+        await import("@/features/editor/services/document_editing.service");
       const data = await getVersionDiffAPI(
         selectedDocumentId,
         selectedVersions[0],

@@ -3,9 +3,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query
 from src.services.wallet import AccountLedger
 
-from core.dependency import get_current_user, get_db
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.system_dependency import get_current_user, get_db
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/vi-tien")
 

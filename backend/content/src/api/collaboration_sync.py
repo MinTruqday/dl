@@ -16,8 +16,8 @@ from src.schemas.document_metadata import (
 )
 from src.services.collaboration_sync import CollaborationSync
 
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/cong-tac")
 

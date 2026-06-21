@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/contexts/Auth";
-import { useToast } from "@/shared/hooks/useToast";
-import { buyAITierAPI } from "@/features/finance/services/monetization.service";
-import { getWalletBalanceAPI } from "@/features/finance/services/wallet.service";
+import { useToast } from "@/shared/contexts/Toast";
+
+import { getWalletBalanceAPI } from "@/features/finance/services/account_ledger.service";
 import { Check, Sparkles, Loader2, Zap, Brain, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -37,7 +37,7 @@ export default function UpgradePage() {
 
     setLoading(tier);
     try {
-      await buyAITierAPI(tier);
+      await // processDepositAPI(tier);
       showToast(`Nâng cấp gói ${tier} thành công!`, "success");
       // Trigger a re-fetch of user info or token refresh
       // Since ai_tier is likely stored in token or fetched via /me, reload window

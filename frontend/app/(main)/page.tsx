@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { getDocumentsAPI } from "@/features/content/services/document.service";
+import { getDocumentsAPI } from "@/features/content/services/document_metadata.service";
 import {
   getTagsCategoriesAPI,
   getTrendingDocumentsAPI,
   getAIRecommendationsAPI,
   smartSearchAPI,
-} from "@/features/content/services/discovery.service";
-import { getActiveBannersAPI } from "@/features/provision/services/banner.service";
+} from "@/features/content/services/content_discovery.service";
+import { getActiveBannersAPI } from "@/features/provision/services/promotional_banner.service";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import Link from "next/link";
 import { useToast } from "@/shared/contexts/Toast";

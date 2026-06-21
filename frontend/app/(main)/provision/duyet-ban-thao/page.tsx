@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   getApprovalQueueAPI,
   moderateDocumentAPI,
-} from "@/features/content/services/draft.service";
+} from "@/features/content/services/document_drafts.service";
 import { Loader2, ShieldCheck, Eye } from "lucide-react";
 import { useToast } from "@/shared/contexts/Toast";
 import {

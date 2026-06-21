@@ -18,10 +18,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "@/shared/contexts/Toast";
-import { getDocumentBySlugAPI } from "@/features/content/services/document.service";
-import { purchaseDocumentAPI } from "@/features/finance/services/wallet.service";
-import { toggleBookmarkAPI } from "@/features/content/services/bookmark.service";
-import Review from "@/features/content/components/Review";
+import { getDocumentBySlugAPI } from "@/features/content/services/document_metadata.service";
+import { purchaseDocumentAPI } from "@/features/finance/services/account_ledger.service";
+import { toggleBookmarkAPI } from "@/features/content/services/document_bookmark.service";
+
 import Comment from "@/features/communication/components/Comment";
 import Report from "@/features/provision/components/Report";
 import { QRCodeSVG } from "qrcode.react";
@@ -533,7 +533,7 @@ export default function DocumentDetailsPage() {
 
               {activeTab === "reviews" && (
                 <div className="bg-white border border-zinc-200 p-8 rounded-none">
-                  <Review documentId={docData._id || docData.id} />
+                  
                 </div>
               )}
               {activeTab === "comments" && (

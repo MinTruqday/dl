@@ -5,8 +5,8 @@ from src.api.system_dependency import get_current_user, get_db
 from src.services.document import DocumentMetadata
 from src.services.export import DocumentExport
 
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ket-xuat")
 

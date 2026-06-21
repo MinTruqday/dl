@@ -223,7 +223,7 @@ class SystemHealth:
 
     @staticmethod
     async def get_minio_stats(db=None) -> dict:
-        from core.storage import get_storage_client
+        from core.file_storage import get_storage_client
 
         try:
             async with await get_storage_client() as storage_client:

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   getTrashAPI,
   restoreDocumentAPI,
-} from "@/features/content/services/document.service";
+} from "@/features/content/services/document_metadata.service";
 import { useToast } from "@/shared/contexts/Toast";
 import { Loader2, Trash2, X, FileText, RotateCcw } from "lucide-react";
 

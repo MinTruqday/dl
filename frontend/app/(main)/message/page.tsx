@@ -26,14 +26,14 @@ import {
   toggleMuteAPI,
   getConversationSettingsAPI,
   deleteConversationAPI,
-} from "@/features/communication/services/message.service";
-import { searchUsersAPI } from "@/features/provision/services/user.service";
-import { getMyDocumentsAPI } from "@/features/content/services/document.service";
+} from "@/features/communication/services/chat_conversation.service";
+import { searchUsersAPI } from "@/features/provision/services/user_profile.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
 import {
   API_URL,
   WS_URL,
   getToken,
-} from "@/features/auth/services/authentication.service";
+} from "@/features/auth/services/user_authentication.service";
 import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,

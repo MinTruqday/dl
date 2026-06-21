@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
 
-from core.storage import generate_presigned_url, upload_file
+from core.file_storage import generate_presigned_url, upload_file
 
 
 class FileUpload:

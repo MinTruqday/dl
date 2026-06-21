@@ -22,7 +22,7 @@ from uuid6 import uuid7
 from core.config import settings
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
-from core.storage import upload_file
+from core.file_storage import upload_file
 
 
 def serialize_document(document):

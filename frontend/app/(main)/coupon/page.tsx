@@ -6,7 +6,7 @@ import {
   createCouponAPI,
   toggleCouponStatusAPI,
   deleteCouponAPI,
-} from "@/features/finance/services/coupon.service";
+} from "@/features/finance/services/discount_coupon.service";
 import {
   Ticket,
   Plus,

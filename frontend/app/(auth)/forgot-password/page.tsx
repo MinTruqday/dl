@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, useState } from "react";
 import Navigation from "@/shared/components/common/Navigation";
-import { forgotPasswordAPI } from "@/features/auth/services/authentication.service";
+import { forgotPasswordAPI } from "@/features/auth/services/user_authentication.service";
 import { useToast } from "@/shared/contexts/Toast";
 import { Loader2 } from "lucide-react";
 

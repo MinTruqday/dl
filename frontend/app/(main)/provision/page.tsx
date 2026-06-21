@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createDocumentAPI } from "@/features/content/services/document.service";
+import { createDocumentAPI } from "@/features/content/services/document_metadata.service";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/shared/contexts/Toast";
 import { useAuth } from "@/features/auth/contexts/Auth";

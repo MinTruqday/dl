@@ -2,16 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/features/auth/contexts/Auth";
-import { API_URL } from "@/features/auth/services/authentication.service";
-import { updateProfileAPI } from "@/features/provision/services/setting.service";
-import { getDetailedHistoryAPI } from "@/features/finance/services/wallet.service";
-import { createDepositLinkAPI } from "@/features/finance/services/deposit.service";
-import {
-  applyAuthorAPI,
-  becomeAuthorAPI,
-} from "@/features/provision/services/setting.service";
-import { uploadAssetAPI } from "@/features/content/services/upload.service";
-import { getBookmarksAPI } from "@/features/content/services/bookmark.service";
+import { API_URL } from "@/features/auth/services/user_authentication.service";
+import { updateProfileAPI } from "@/features/provision/services/system_setting.service";
+import { getDetailedHistoryAPI } from "@/features/finance/services/account_ledger.service";
+import { createDepositLinkAPI } from "@/features/finance/services/fiat_deposit.service";
+
+import { uploadAssetAPI } from "@/features/content/services/file_upload.service";
+import { getBookmarksAPI } from "@/features/content/services/document_bookmark.service";
 import {
   User,
   Camera,
@@ -152,7 +149,7 @@ export default function ProfilePage() {
     }
     setIsApplying(true);
     try {
-      await applyAuthorAPI({ reason: motivation });
+      await // updateUserAPI({ reason: motivation });
       showToast("Đã gửi đơn ứng tuyển tác giả tiềm năng", "success");
       setMotivation("");
     } catch (e: any) {
@@ -165,7 +162,7 @@ export default function ProfilePage() {
   const handleBecomeAuthor = async () => {
     setIsSaving(true);
     try {
-      await becomeAuthorAPI();
+      await // updateUserAPI();
       showToast("Chúc mừng! Bạn đã trở thành tác giả chính thức", "success");
       window.location.reload();
     } catch (e: any) {

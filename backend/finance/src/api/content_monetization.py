@@ -5,9 +5,9 @@ from src.schemas.content_monetization import PurchaseRequest, MembershipRequest
 from src.services.pricing import PricingStrategy
 from src.services.purchase import PurchaseProcess
 
-from core.dependency import get_current_user, get_db
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.system_dependency import get_current_user, get_db
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/kiem-tien")
 

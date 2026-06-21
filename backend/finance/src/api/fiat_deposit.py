@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Request
 from src.schemas.fiat_deposit import DepositRequest
 from src.services.deposit import FiatDeposit
 
-from core.dependency import get_current_user, get_db
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.system_dependency import get_current_user, get_db
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/nap-tien")
 

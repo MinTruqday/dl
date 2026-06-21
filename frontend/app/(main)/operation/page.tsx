@@ -7,11 +7,11 @@ import {
   toggleMaintenanceModeAPI,
   triggerBackupAPI,
   getMinioStatsAPI,
-} from "@/features/provision/services/operation.service";
+} from "@/features/provision/services/system_operation.service";
 import {
   getGlobalQuotaConfigAPI,
   updateRoleQuotaAPI,
-} from "@/features/provision/services/quota.service";
+} from "@/features/provision/services/usage_quota.service";
 import { Loader2, Save } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "@/shared/contexts/Toast";

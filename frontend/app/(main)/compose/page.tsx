@@ -26,40 +26,40 @@ import {
   updateTagsAPI,
   schedulePublishAPI,
   updateChapterPaywallAPI,
-} from "@/features/content/services/document.service";
-import { compileDocumentAPI } from "@/features/editor/services/compilation.service";
+} from "@/features/content/services/document_metadata.service";
+import { compileDocumentAPI } from "@/features/editor/services/document_compilation.service";
 import {
   exportDocumentPdfAPI,
   exportDocumentDocxAPI,
-} from "@/features/provision/services/export.service";
+} from "@/features/provision/services/data_export.service";
 import {
   getCommentsByItemAPI,
   createCommentAPI,
   deleteCommentAPI,
-} from "@/features/communication/services/comment.service";
+} from "@/features/communication/services/inline_comment.service";
 import {
   inviteCollaboratorAPI,
   getCollaboratorsAPI,
   removeCollaboratorAPI,
-} from "@/features/content/services/collaboration.service";
+} from "@/features/content/services/collaboration_sync.service";
 import {
   createCouponAPI,
   getCouponsAPI,
-} from "@/features/finance/services/coupon.service";
-import { publishDocumentAPI } from "@/features/content/services/publication.service";
+} from "@/features/finance/services/discount_coupon.service";
+import { publishDocumentAPI } from "@/features/content/services/publication_process.service";
 import {
   getDocumentVersionsAPI,
   restoreVersionAPI,
-} from "@/features/content/services/version.service";
-import { ingestDocumentAPI } from "@/features/ai/services/rag.service";
-import { requestWithdrawalAPI } from "@/features/finance/services/withdrawal.service";
-import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/monetization.service";
-import { API_URL } from "@/features/auth/services/authentication.service";
+} from "@/features/content/services/version_history.service";
+import { ingestDocumentAPI } from "@/features/ai/services/rag_pipeline.service";
+import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawal.service";
+import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/content_monetization.service";
+import { API_URL } from "@/features/auth/services/user_authentication.service";
 import {
   getWalletBalanceAPI as getWalletAPI,
   getDetailedHistoryAPI as getTransactionsAPI,
   getAuthorStatsAPI,
-} from "@/features/finance/services/wallet.service";
+} from "@/features/finance/services/account_ledger.service";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "@/shared/contexts/Toast";
 import {
@@ -115,7 +115,7 @@ const Editor = dynamic(() => import("@/features/editor/components/Editor"), {
   ssr: false,
 });
 import edjsHTML from "editorjs-html";
-import { compileLatexPreviewAPI } from "@/features/editor/services/latex.service";
+import { compileLatexPreviewAPI } from "@/features/editor/services/latex_compilation.service";
 
 const customParsers = {
   alert: (block: any) =>
@@ -653,7 +653,7 @@ function StudioContent() {
     setIsComparing(true);
     try {
       const { getVersionDiffAPI } =
-        await import("@/features/editor/services/editor.service");
+        await import("@/features/editor/services/document_editing.service");
       const data = await getVersionDiffAPI(
         selectedDocumentId,
         selectedVersions[0],
@@ -1090,12 +1090,12 @@ function StudioContent() {
       if (newDoc) {
         setDocuments((prev) => {
           const exists = prev.find(
-            (d) => (d._id || d.id) === (newDoc._id || newDoc.id),
+            (d) => (d._id || d.id) === (newDoc._id || (newDoc as any).id),
           );
           if (exists) return prev;
           return [newDoc, ...prev];
         });
-        setSelectedDocumentId(newDoc._id || newDoc.id);
+        setSelectedDocumentId(newDoc._id || (newDoc as any).id);
       }
       fetchDocuments();
     } catch (e: any) {
@@ -1127,7 +1127,7 @@ function StudioContent() {
       await toggleStarDocumentAPI(id);
       setDocuments((prev) =>
         prev.map((doc) => {
-          if ((doc._id || doc.id) === id) {
+          if ((doc._id || (doc as any).id) === id) {
             return { ...doc, is_starred: !doc.is_starred };
           }
           return doc;

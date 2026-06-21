@@ -11,8 +11,8 @@ import {
   FileText,
   Upload,
 } from "lucide-react";
-import { useAuth } from "../../../context/AuthContext";
-import { useToast } from "../../../context/ToastContext";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   listDatasetsAPI,
   listJobsAPI,
@@ -20,7 +20,7 @@ import {
   createJobAPI,
   startTrainingAPI,
   importFromFeedbackAPI,
-} from "../../../services/finetune.service";
+} from "@/features/ai/services/model_finetuning.service";
 
 export default function FineTuningPage() {
   const { user } = useAuth();

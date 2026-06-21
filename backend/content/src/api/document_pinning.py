@@ -5,8 +5,8 @@ from src.api.system_dependency import get_current_user, get_db
 from src.schemas.personal_library import PinnedDocumentRequest
 from src.services.document_pinning import PinOperations
 
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ghim")
 

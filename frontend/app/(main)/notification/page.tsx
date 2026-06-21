@@ -7,7 +7,7 @@ import {
   markAllNotificationsReadAPI,
   getNotificationSettingsAPI,
   updateNotificationSettingsAPI,
-} from "@/features/communication/services/notification.service";
+} from "@/features/communication/services/push_notification.service";
 import {
   Bell,
   Check,

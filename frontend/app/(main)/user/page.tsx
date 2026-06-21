@@ -6,7 +6,7 @@ import {
   updateUserRoleAPI,
   updateUserStatusAPI,
   deleteUserAPI,
-} from "@/features/provision/services/user.service";
+} from "@/features/provision/services/user_profile.service";
 import {
   Loader2,
   Search,

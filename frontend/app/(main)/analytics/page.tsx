@@ -11,8 +11,8 @@ import {
   BookOpen,
   Award,
 } from "lucide-react";
-import { getMyDocumentsAPI } from "@/features/content/services/document.service";
-import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/monetization.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
+import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/content_monetization.service";
 import { useToast } from "@/shared/contexts/Toast";
 
 export default function AuthorAnalyticsPage() {

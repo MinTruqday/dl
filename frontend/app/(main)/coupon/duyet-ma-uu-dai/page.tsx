@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getCouponsAPI,
   approveCouponAPI,
-} from "@/features/finance/services/coupon.service";
+} from "@/features/finance/services/discount_coupon.service";
 import {
   Ticket,
   Loader2,

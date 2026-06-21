@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Query
 from src.schemas.fiat_withdrawal import WithdrawalRequest
 from src.services.withdrawal import FiatWithdrawal
 
-from core.dependency import get_current_user, get_db, require_role
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.system_dependency import get_current_user, get_db, require_role
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/rut-tien")
 

@@ -5,6 +5,7 @@ import {
   getDocumentsAPI,
   getMyDocumentsAPI,
   createDocumentAPI,
+  updateDocumentAPI,
   deleteAuthorDocumentAPI,
   deleteAdminDocumentAPI,
   getFoldersAPI,
@@ -12,8 +13,8 @@ import {
   deleteFolderAPI,
   lockDocumentAPI,
   toggleStarDocumentAPI,
-} from "@/features/content/services/document.service";
-import { uploadDocumentAPI } from "@/features/content/services/upload.service";
+} from "@/features/content/services/document_metadata.service";
+import { uploadDocumentAPI } from "@/features/content/services/file_upload.service";
 import { QRCodeSVG } from "qrcode.react";
 import {
   AlertTriangle,

@@ -8,18 +8,18 @@ import {
   updateDocumentAPI,
   getFoldersAPI,
   transferDocumentAPI,
-} from "@/features/content/services/document.service";
+} from "@/features/content/services/document_metadata.service";
 import {
   getCollaboratorsAPI,
   inviteCollaboratorAPI,
   removeCollaboratorAPI,
-} from "@/features/content/services/collaboration.service";
+} from "@/features/content/services/collaboration_sync.service";
 import {
   createCouponAPI,
   getCouponsAPI,
-} from "@/features/finance/services/coupon.service";
-import { ingestDocumentAPI } from "@/features/ai/services/rag.service";
-import { API_URL } from "@/features/auth/services/authentication.service";
+} from "@/features/finance/services/discount_coupon.service";
+import { ingestDocumentAPI } from "@/features/ai/services/rag_pipeline.service";
+import { API_URL } from "@/features/auth/services/user_authentication.service";
 import { useToast } from "@/shared/contexts/Toast";
 import {
   Loader2,

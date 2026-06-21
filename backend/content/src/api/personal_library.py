@@ -10,8 +10,8 @@ from src.schemas.personal_library import (
 )
 from src.services.library import PersonalLibrary
 
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/thu-vien")
 

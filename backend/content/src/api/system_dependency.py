@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException
 from loguru import logger
 
 from core.config import settings
-from core.dependency import (
+from core.system_dependency import (
     RateLimiting,
     get_current_user,
     get_current_user_optional,
@@ -13,7 +13,7 @@ from core.dependency import (
     require_permissions,
     require_role,
 )
-from core.dependency import CurrentUser, RoleEnum
+from core.system_dependency import CurrentUser, RoleEnum
 
 
 async def check_quota(current_user: CurrentUser = Depends(get_current_user)):

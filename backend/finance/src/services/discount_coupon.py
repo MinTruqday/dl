@@ -8,7 +8,7 @@ from src.schemas.account_ledger import CouponStatus, CouponTargetType
 from uuid6 import uuid7
 
 from core.database import db_client
-from core.dependency import CurrentUser, RoleEnum
+from core.system_dependency import CurrentUser, RoleEnum
 
 
 class DiscountCoupon:

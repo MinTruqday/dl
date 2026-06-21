@@ -5,8 +5,8 @@ from src.api.system_dependency import get_current_user_optional, get_db
 from src.services.document import DocumentMetadata
 
 from core.config import settings
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/kham-pha")
 

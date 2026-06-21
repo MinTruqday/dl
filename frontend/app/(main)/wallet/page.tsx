@@ -19,10 +19,10 @@ import {
   getWalletBalanceAPI,
   getWalletHistoryAPI,
   redeemVoucherAPI,
-} from "@/features/finance/services/wallet.service";
-import { createDepositLinkAPI } from "@/features/finance/services/deposit.service";
-import { requestWithdrawalAPI } from "@/features/finance/services/withdrawal.service";
-import { getAuthorRevenueAPI } from "@/features/finance/services/monetization.service";
+} from "@/features/finance/services/account_ledger.service";
+import { createDepositLinkAPI } from "@/features/finance/services/fiat_deposit.service";
+import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawal.service";
+import { getAuthorRevenueAPI } from "@/features/finance/services/content_monetization.service";
 import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,

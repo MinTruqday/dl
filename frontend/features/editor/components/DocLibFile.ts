@@ -62,7 +62,7 @@ export default class DocLibFile implements BlockTool {
     if (!this.wrapper) return;
     this.wrapper.innerHTML = "";
 
-    if (this.data.file.url) {
+    if (this.data?.file?.url) {
       const card = document.createElement("div");
       card.classList.add("doclib-file-card");
 
@@ -94,7 +94,7 @@ export default class DocLibFile implements BlockTool {
 
       const download = document.createElement("a");
       download.classList.add("doclib-file-download");
-      download.href = this.data.file.url;
+      download.href = this.data?.file?.url;
       download.target = "_blank";
       download.innerHTML =
         '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>';

@@ -7,7 +7,7 @@ from uuid6 import uuid7
 
 from core.database import db_client
 from src.schemas.user_identity_profile import CreatorStatusEnum, KYCStatusEnum, RoleEnum
-from core.storage import upload_file
+from core.file_storage import upload_file
 
 
 class IdentityVerification:

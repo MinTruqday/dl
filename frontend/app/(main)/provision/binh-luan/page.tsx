@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyDocumentsAPI } from "@/features/content/services/document.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
 import {
   getCommentsByItemAPI,
   createCommentAPI,
   deleteCommentAPI,
-} from "@/features/communication/services/comment.service";
+} from "@/features/communication/services/inline_comment.service";
 import { useToast } from "@/shared/contexts/Toast";
 import { Loader2, MessageSquare, Trash2 } from "lucide-react";
 

@@ -9,8 +9,8 @@ from src.schemas.highlight import (
 )
 from src.services.highlight_operations import HighlightOperations
 
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/danh-dau")
 

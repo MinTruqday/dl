@@ -10,11 +10,11 @@ import React, {
 import {
   API_URL,
   getToken,
-} from "@/features/auth/services/authentication.service";
+} from "@/features/auth/services/user_authentication.service";
 import {
   getNotificationsAPI,
   markNotificationReadAPI,
-} from "@/features/communication/services/notification.service";
+} from "@/features/communication/services/push_notification.service";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "./Toast";
 

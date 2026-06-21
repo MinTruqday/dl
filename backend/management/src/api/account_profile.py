@@ -1,4 +1,4 @@
-from core.dependency import CurrentUser
+from core.system_dependency import CurrentUser
 import io
 import json
 from typing import Any, Optional
@@ -11,8 +11,8 @@ from src.services.privacy import ContentModeration
 from src.services.account_profile import ProfileManagement
 from src.services.app_configuration import AppConfiguration
 
-from core.dependency import RateLimiting, get_current_user, get_db
-from core.response import APIResponse
+from core.system_dependency import RateLimiting, get_current_user, get_db
+from core.api_response import APIResponse
 from src.schemas.user_identity_profile import BrandPageUpdate, ProfileUpdate, SettingsUpdate, UserInDB
 
 router = APIRouter(prefix="/ho-so")

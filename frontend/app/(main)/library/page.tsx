@@ -5,18 +5,18 @@ import { useAuth } from "@/features/auth/contexts/Auth";
 import {
   getBookmarkFoldersAPI,
   createBookmarkFolderAPI,
-} from "@/features/content/services/bookmark.service";
+} from "@/features/content/services/document_bookmark.service";
 import {
   createReadingListAPI,
   getMyReadingListsAPI as getReadingListsAPI,
-} from "@/features/content/services/library.service";
+} from "@/features/content/services/personal_library.service";
 import {
   getPinnedDocumentsAPI,
   getReadingHistoryAPI,
   clearReadingHistoryAPI,
   deleteReadingHistoryItemAPI,
-} from "@/features/content/services/reading.service";
-import { API_URL } from "@/features/auth/services/authentication.service";
+} from "@/features/content/services/reading_progress.service";
+import { API_URL } from "@/features/auth/services/user_authentication.service";
 import {
   LayoutGrid,
   List as ListIcon,
@@ -46,7 +46,7 @@ import {
   ModalFooter,
 } from "@/shared/components/ui/Modal";
 import { useToast } from "@/shared/contexts/Toast";
-import { multiDocSynthesisAPI } from "@/features/ai/services/ai.service";
+import { multiDocSynthesisAPI } from "@/features/ai/services/agentic_ai.service";
 import ReactMarkdown from "react-markdown";
 
 interface PinnedDocument {

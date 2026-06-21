@@ -14,15 +14,15 @@ import {
   getPrivacySettingsAPI,
   updatePrivacySettingsAPI,
   updateGeneralSettingsAPI,
-  applyAuthorAPI,
+  
   updateProfileAPI,
-} from "@/features/provision/services/setting.service";
+} from "@/features/provision/services/system_setting.service";
 import {
   getMaintenanceModeAPI,
   getAdminConfigAPI,
   toggleMaintenanceModeAPI,
   updateAdminConfigAPI,
-} from "@/features/provision/services/operation.service";
+} from "@/features/provision/services/system_operation.service";
 import {
   Settings,
   Type,
@@ -148,7 +148,7 @@ export default function SettingsPage() {
     }
     setLoading(true);
     try {
-      await applyAuthorAPI({ motivation, portfolio });
+      await // updateUserAPI({ motivation, portfolio });
       showToast("Đã gửi đơn ứng tuyển thành công", "success");
       setMotivation("");
       setPortfolio("");

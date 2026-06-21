@@ -1,11 +1,11 @@
-from core.dependency import CurrentUser
+from core.system_dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends
 from src.services.user import UserIdentity
 
-from core.dependency import get_current_user, get_db, require_role
-from core.response import APIResponse
+from core.system_dependency import get_current_user, get_db, require_role
+from core.api_response import APIResponse
 from src.schemas.user_identity_profile import RoleEnum, UserInDB
 
 router = APIRouter(prefix="/kiem-toan")

@@ -6,10 +6,10 @@ from src.schemas.chat_conversation import ConversationResponse, MessageCreate, M
 from src.services.message import ChatConversation
 
 from core.database import db_client
-from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
-from core.dependency import get_current_user_from_header as get_current_user
+from core.system_dependency import AuthenticatedUser, Depends, Header, HTTPException
+from core.system_dependency import get_current_user_from_header as get_current_user
 from core.repositories.base_repository import RepositoryFactory
-from core.response import APIResponse
+from core.api_response import APIResponse
 
 router = APIRouter(prefix="/tin-nhan")
 

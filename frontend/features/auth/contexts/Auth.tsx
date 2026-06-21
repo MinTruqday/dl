@@ -4,7 +4,7 @@ import {
   getUserMe,
   getToken,
   removeToken,
-} from "@/features/auth/services/authentication.service";
+} from "@/features/auth/services/user_authentication.service";
 import { useRouter, usePathname } from "next/navigation";
 
 interface User {

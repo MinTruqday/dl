@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { getToken as getAuthToken } from "@/features/auth/services/authentication.service";
+import { getToken as getAuthToken } from "@/features/auth/services/user_authentication.service";
 import {
   StorageItem,
   listStorageItemsAPI,
@@ -17,7 +17,7 @@ import {
   getStorageQuotaAPI,
   createShortcutAPI,
   downloadZipAPI,
-} from "@/features/content/services/storage.service";
+} from "@/features/content/services/file_storage.service";
 import { useToast } from "@/shared/contexts/Toast";
 import {
   Folder,
@@ -178,7 +178,7 @@ export default function StoragePage() {
 
   useEffect(() => {
     if (detailsItem && activeSidebarTab === "info") {
-      import("@/features/content/services/storage.service").then((m) => {
+      import("@/features/content/services/file_storage.service").then((m) => {
         m.getRelatedStorageItemsAPI(detailsItem._id)
           .then((data) => setRelatedItems(data))
           .catch((err) => console.error(err));
@@ -1846,7 +1846,7 @@ export default function StoragePage() {
                           ]);
                           try {
                             const { translateStorageDocumentAPI } =
-                              await import("@/features/content/services/storage.service");
+                              await import("@/features/content/services/file_storage.service");
                             await translateStorageDocumentAPI(
                               detailsItem._id,
                               "vi",

@@ -108,7 +108,7 @@ export default class DocLibImage implements BlockTool {
     const outer = document.createElement("div");
     outer.classList.add("doclib-image-wrapper");
 
-    if (this.data.file.url) {
+    if (this.data.file?.url) {
       const container = document.createElement("div");
       container.classList.add("doclib-image-container");
       if (this.data.withBorder) container.classList.add("with-border");
@@ -117,7 +117,7 @@ export default class DocLibImage implements BlockTool {
 
       const img = document.createElement("img");
       img.classList.add("doclib-image-img");
-      img.src = this.data.file.url;
+      img.src = this.data.file?.url;
 
       const caption = document.createElement("div");
       caption.classList.add("doclib-image-caption");
@@ -162,17 +162,17 @@ export default class DocLibImage implements BlockTool {
             .then((res) => res.json())
             .then((res) => {
               if (res.success === 1 && res.file && res.file.url) {
-                this.data.file.url = res.file.url;
+                if (this.data.file) this.data.file.url = res.file.url;
               } else {
                 // Fallback if backend doesn't match EditorJS format
-                this.data.file.url =
+                if (this.data.file) this.data.file.url =
                   res.url || res.data?.url || URL.createObjectURL(file);
               }
               this.buildUI();
             })
             .catch((err) => {
               console.error("Upload failed", err);
-              this.data.file.url = URL.createObjectURL(file);
+              if (this.data.file) this.data.file.url = URL.createObjectURL(file);
               this.buildUI();
             });
         }
@@ -185,7 +185,7 @@ export default class DocLibImage implements BlockTool {
         e.preventDefault();
         const url = prompt("Paste direct Image URL:");
         if (url) {
-          this.data.file.url = url;
+          if (this.data.file) this.data.file.url = url;
           this.buildUI();
         }
       });

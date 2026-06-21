@@ -478,7 +478,7 @@ export default function StandardEditor({
               if (documentId) {
                 try {
                   const { autoSaveDraftAPI } =
-                    await import("@/features/editor/services/editor.service");
+                    await import("@/features/editor/services/document_editing.service");
                   await autoSaveDraftAPI(documentId, saved);
                   if (setSaveStatus) setSaveStatus("Đã lưu");
                 } catch (e: any) {

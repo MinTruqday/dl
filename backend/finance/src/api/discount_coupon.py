@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends
 from src.schemas.discount_coupon import CouponCreateRequest
 from src.services.coupon import DiscountCoupon
 
-from core.dependency import get_db, require_role
-from core.response import APIResponse
-from core.dependency import CurrentUser, RoleEnum
+from core.system_dependency import get_db, require_role
+from core.api_response import APIResponse
+from core.system_dependency import CurrentUser, RoleEnum
 
 router = APIRouter(prefix="/ma-qua-tang")
 

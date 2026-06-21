@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getCommentsByItemAPI,
   createCommentAPI,
-} from "@/features/communication/services/comment.service";
+} from "@/features/communication/services/inline_comment.service";
 import {
   MessageSquare,
   CornerDownRight,

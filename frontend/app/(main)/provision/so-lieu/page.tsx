@@ -2,16 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/shared/contexts/Toast";
-import { getAuthorStatsAPI } from "@/features/finance/services/wallet.service";
-import { getAuthorRevenueAPI } from "@/features/finance/services/monetization.service";
+import { getAuthorStatsAPI } from "@/features/finance/services/account_ledger.service";
+import { getAuthorRevenueAPI } from "@/features/finance/services/content_monetization.service";
 import {
   getDocumentAnalyticsAPI,
   getAcademicMetricsAPI,
-} from "@/features/content/services/document.service";
-  createDocumentAPI,
-} from "@/features/content/services/document.service";
-import { ingestDocumentAPI } from "@/features/ai/services/rag.service";
-import { requestWithdrawalAPI } from "@/features/finance/services/withdrawal.service";
+} from "@/features/content/services/document_metadata.service";
+import { ingestDocumentAPI } from "@/features/ai/services/rag_pipeline.service";
+import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawal.service";
 import {
   Eye,
   Database,

@@ -15,8 +15,8 @@ from src.schemas.document_editing import (
 from src.services.document_editing import EditorProcess
 
 from core.config import settings
-from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
-from core.dependency import get_current_user_from_header as get_current_user
+from core.system_dependency import AuthenticatedUser, Depends, Header, HTTPException
+from core.system_dependency import get_current_user_from_header as get_current_user
 
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
