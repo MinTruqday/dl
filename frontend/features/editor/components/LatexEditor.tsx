@@ -5,32 +5,70 @@ import MonacoEditor from "@monaco-editor/react";
 
 interface LatexEditorProps {
   initialContent?: string;
+  documentId?: string;
   onChange?: (data: string) => void;
   setReadingTime?: (time: number) => void;
   setStats?: (stats: any) => void;
   setLastKeystroke?: (time: number) => void;
 }
 
+import { cloudAutoSaveAPI, cleanTempFilesAPI, getLatexDraftAPI } from "@/features/editor/services/latex_compilation.service";
+import { useToast } from "@/shared/contexts/ToastContext";
+
 export default function LatexEditor({
   initialContent,
+  documentId,
   onChange,
   setReadingTime,
   setStats,
   setLastKeystroke,
 }: LatexEditorProps) {
+  const { showToast } = useToast();
   const editorRef = React.useRef<any>(null);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (editorRef.current && initialContent !== undefined) {
-      if (editorRef.current.getValue() !== initialContent) {
-        editorRef.current.setValue(initialContent);
+    const initContent = async () => {
+      try {
+        const draftRes = await getLatexDraftAPI();
+        const draftContent = draftRes?.data?.content;
+        const targetContent = draftContent || initialContent || "";
+        if (editorRef.current && editorRef.current.getValue() !== targetContent) {
+          editorRef.current.setValue(targetContent);
+        }
+      } catch (err) {
+        if (editorRef.current && initialContent !== undefined) {
+          if (editorRef.current.getValue() !== initialContent) {
+            editorRef.current.setValue(initialContent);
+          }
+        }
       }
+    };
+    if (editorRef.current) {
+        initContent();
     }
   }, [initialContent]);
 
-  const handleEditorDidMount = (editor: any, monaco: any) => {
+  useEffect(() => {
+    return () => {
+      // Clean temp files on unmount
+      cleanTempFilesAPI().catch(() => {});
+    };
+  }, []);
+
+  const handleEditorDidMount = async (editor: any, monaco: any) => {
     editorRef.current = editor;
+    try {
+      const draftRes = await getLatexDraftAPI();
+      const draftContent = draftRes?.data?.content;
+      const targetContent = draftContent || initialContent || "";
+      if (editor.getValue() !== targetContent) {
+        editor.setValue(targetContent);
+      }
+    } catch (err) {
+        // fallback to initialContent
+    }
   };
 
   const handleLatexChange = (value: string | undefined) => {
@@ -38,6 +76,9 @@ export default function LatexEditor({
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+    }
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
     }
 
     timeoutRef.current = setTimeout(() => {
@@ -58,6 +99,14 @@ export default function LatexEditor({
         if (setReadingTime) setReadingTime(Math.max(1, Math.ceil(words / 200)));
       }
     }, 1000);
+
+    if (documentId) {
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        cloudAutoSaveAPI(documentId, text)
+          .then(() => showToast("Đã lưu nháp LaTeX lên đám mây", "success"))
+          .catch(() => {});
+      }, 5000); // 5 seconds auto save
+    }
   };
 
   return (

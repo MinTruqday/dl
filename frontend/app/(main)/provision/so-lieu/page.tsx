@@ -33,6 +33,10 @@ import {
 } from "@/shared/components/ui/Modal";
 import { useRouter } from "next/navigation";
 
+import { getAuthorRevenueAPI } from "@/features/finance/services/content_monetization.service";
+
+import { setDocumentPricingAPI } from "@/features/finance/services/content_monetization.service";
+
 export default function StatsPage() {
   const { showToast } = useToast();
   const router = useRouter();
@@ -57,6 +61,13 @@ export default function StatsPage() {
   });
   const [requestingWithdrawal, setRequestingWithdrawal] = useState(false);
 
+  // Pricing Modal
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [pricingDocId, setPricingDocId] = useState("");
+  const [pricingDocTitle, setPricingDocTitle] = useState("");
+  const [newPrice, setNewPrice] = useState(0);
+  const [settingPrice, setSettingPrice] = useState(false);
+  
   useEffect(() => {
     fetchStatsData();
   }, []);
@@ -64,9 +75,10 @@ export default function StatsPage() {
   const fetchStatsData = async () => {
     setLoading(true);
     try {
-      // API doanh thu đã bị gỡ bỏ ở Backend
-      setStats(null);
-      setRevenue(null);
+      // Khôi phục API doanh thu
+      const revData = await getAuthorRevenueAPI();
+      setRevenue(revData.data || revData);
+      setStats(revData.data || revData); // Tạm dùng chung object
     } catch (err: any) {
       showToast("Không thể tải số liệu thống kê", "error");
     } finally {
@@ -93,6 +105,23 @@ export default function StatsPage() {
       showToast("Không thể tải chi tiết", "error");
     } finally {
       setLoadingAnalytics(false);
+    }
+  };
+
+  const handleSetPricing = async () => {
+    if (newPrice < 0) {
+      showToast("Giá không hợp lệ", "error");
+      return;
+    }
+    setSettingPrice(true);
+    try {
+      await setDocumentPricingAPI(pricingDocId, newPrice);
+      showToast("Thiết lập giá thành công", "success");
+      setShowPricingModal(false);
+    } catch (e: any) {
+      showToast(e.message || "Thiết lập giá thất bại", "error");
+    } finally {
+      setSettingPrice(false);
     }
   };
 
@@ -235,8 +264,23 @@ export default function StatsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="w-8 h-8 ml-auto rounded-xl flex items-center justify-center group-hover:bg-black group-hover:text-white text-zinc-300 transition-all shadow-sm group-hover:shadow-md bg-white border border-zinc-100">
-                          <ArrowUpRight className="w-4 h-4" />
+                        <div className="flex justify-end items-center gap-2">
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPricingDocId(doc.id);
+                              setPricingDocTitle(doc.title);
+                              setNewPrice(doc.price_dl || 0);
+                              setShowPricingModal(true);
+                            }}
+                            className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-zinc-100 text-zinc-400 transition-all shadow-sm bg-white border border-zinc-100"
+                            title="Thiết lập giá"
+                          >
+                            <Banknote className="w-4 h-4" />
+                          </div>
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center group-hover:bg-black group-hover:text-white text-zinc-300 transition-all shadow-sm group-hover:shadow-md bg-white border border-zinc-100">
+                            <ArrowUpRight className="w-4 h-4" />
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -451,6 +495,52 @@ export default function StatsPage() {
             ) : (
               "Gửi yêu cầu"
             )}
+          </button>
+        </ModalFooter>
+      </Modal>
+      {/* Pricing Modal */}
+      <Modal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} className="max-w-md rounded-3xl p-6">
+        <ModalHeader>
+          <ModalTitle className="text-xl font-bold tracking-tight">Thiết lập giá bán</ModalTitle>
+          <ModalDescription className="text-xs text-zinc-500 mt-2">
+            Thay đổi giá bán (dl) cho tác phẩm <span className="font-bold text-black">{pricingDocTitle}</span>
+          </ModalDescription>
+        </ModalHeader>
+        <ModalContent className="my-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              Giá bán mới (dl)
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                value={newPrice}
+                onChange={(e) => setNewPrice(Number(e.target.value))}
+                className="w-full h-12 pl-4 pr-12 rounded-xl border border-zinc-200 text-sm font-bold bg-zinc-50 focus:bg-white focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                placeholder="0"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                dl
+              </span>
+            </div>
+            <p className="text-[10px] text-zinc-500 font-medium">Lưu ý: Bạn có thể nhập 0 để phát hành miễn phí tác phẩm này.</p>
+          </div>
+        </ModalContent>
+        <ModalFooter className="flex gap-2 justify-end">
+          <button
+            onClick={() => setShowPricingModal(false)}
+            className="px-6 py-3 rounded-xl border border-zinc-200 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-50 transition-colors"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={handleSetPricing}
+            disabled={settingPrice}
+            className="px-6 py-3 rounded-xl bg-black text-white text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-transform active:scale-95"
+          >
+            {settingPrice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
+            Xác nhận
           </button>
         </ModalFooter>
       </Modal>

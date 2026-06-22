@@ -60,6 +60,7 @@ export default function DocumentViewer() {
   const [password, setPassword] = useState("");
   const [isLocked, setIsLocked] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [decryptedContent, setDecryptedContent] = useState<string>("");
 
   const [messages, setMessages] = useState<any[]>([]);
   const [question, setQuestion] = useState("");
@@ -217,6 +218,53 @@ export default function DocumentViewer() {
   useEffect(() => {
     if (!loading) requestAnimationFrame(() => setVisible(true));
   }, [loading]);
+
+  useEffect(() => {
+    if (!document) return;
+    if (document.content_fragments && Array.isArray(document.content_fragments)) {
+      const decrypt = async () => {
+        try {
+          const token = getToken();
+          const docId = document._id || document.id || id;
+          const keyRes = await fetch(`${API_URL}/tai-lieu/${docId}/khoa-giai-ma`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!keyRes.ok) throw new Error("Key fetch failed");
+          const keyData = await keyRes.json();
+          const keyB64 = keyData.data.key;
+
+          const keyRaw = atob(keyB64);
+          const keyBytes = new Uint8Array(keyRaw.length);
+          for (let i = 0; i < keyRaw.length; i++) keyBytes[i] = keyRaw.charCodeAt(i);
+          const cryptoKey = await window.crypto.subtle.importKey(
+              "raw", keyBytes, { name: "AES-GCM" }, false, ["decrypt"]
+          );
+
+          let fullText = "";
+          for (const frag of document.content_fragments) {
+              const fragRaw = atob(frag);
+              const fragBytes = new Uint8Array(fragRaw.length);
+              for (let i = 0; i < fragRaw.length; i++) fragBytes[i] = fragRaw.charCodeAt(i);
+              
+              const iv = fragBytes.slice(0, 12);
+              const ct = fragBytes.slice(12);
+              
+              const decrypted = await window.crypto.subtle.decrypt(
+                  { name: "AES-GCM", iv: iv }, cryptoKey, ct
+              );
+              fullText += new TextDecoder().decode(decrypted);
+          }
+          setDecryptedContent(fullText);
+        } catch (err) {
+          console.error("Lỗi giải mã:", err);
+          setDecryptedContent("Lỗi giải mã hoặc chứng thực bảo mật không thành công. Hãy thử tải lại trang.");
+        }
+      };
+      decrypt();
+    } else {
+      setDecryptedContent(document.content || document.description || "Không có nội dung hiển thị");
+    }
+  }, [document, id]);
 
   useEffect(() => {
     if (chatEndRef.current)
@@ -432,32 +480,103 @@ export default function DocumentViewer() {
       );
     }
 
-    const decodeFragments = (fragments: string[]) => {
-      try {
-        return fragments.map(f => decodeURIComponent(escape(atob(f)))).join('');
-      } catch (e) {
-        return "Lỗi giải mã nội dung bảo mật";
-      }
+    const CanvasRenderer = ({ text }: { text: string }) => {
+      const canvasRef = useRef<HTMLCanvasElement>(null);
+      const containerRef = useRef<HTMLDivElement>(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container || !text) return;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const padding = 0;
+        const width = container.clientWidth;
+        const fontSize = 14;
+        const lineHeight = 1.7;
+
+        const paragraphs = text.split("\n");
+        let totalHeight = padding * 2;
+        ctx.font = `500 ${fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
+        
+        const wrapText = (text: string, maxWidth: number) => {
+            const words = text.split(" ");
+            const lines: string[] = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = ctx.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        };
+
+        paragraphs.forEach(p => {
+            if (!p.trim()) {
+                totalHeight += fontSize * lineHeight;
+                return;
+            }
+            const lines = wrapText(p, width - padding * 2);
+            totalHeight += lines.length * fontSize * lineHeight + fontSize;
+        });
+
+        canvas.width = width * dpr;
+        canvas.height = totalHeight * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${totalHeight}px`;
+
+        ctx.scale(dpr, dpr);
+        ctx.fillStyle = "#18181b";
+        ctx.font = `500 ${fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
+        ctx.textBaseline = "top";
+
+        let y = padding;
+        paragraphs.forEach(p => {
+            if (!p.trim()) {
+                y += fontSize * lineHeight;
+                return;
+            }
+            const lines = wrapText(p, width - padding * 2);
+            lines.forEach(line => {
+                ctx.fillText(line, padding, y);
+                y += fontSize * lineHeight;
+            });
+            y += fontSize;
+        });
+      }, [text, readingMode, zoom]);
+
+      return (
+        <div ref={containerRef} className="w-full relative select-none">
+          <canvas ref={canvasRef} className="block w-full select-none" />
+          <div className="absolute inset-0 z-10" onContextMenu={(e) => e.preventDefault()} />
+        </div>
+      );
     };
 
-    const content =
-      (document?.content_fragments && Array.isArray(document.content_fragments))
-        ? decodeFragments(document.content_fragments)
-        : (document?.content || document?.description || "Không có nội dung hiển thị");
     if (readingMode === "double" && document?.content_format !== "zip") {
       return (
         <div
           className="prose prose-zinc max-w-none text-zinc-900 leading-relaxed text-sm font-medium whitespace-pre-wrap"
           style={{ columnCount: 2, columnGap: "4rem" }}
         >
-          {content}
+          <CanvasRenderer text={decryptedContent} />
         </div>
       );
     }
 
     return (
       <div className="prose prose-zinc max-w-none text-zinc-900 leading-relaxed text-sm font-medium whitespace-pre-wrap">
-        {content}
+        <CanvasRenderer text={decryptedContent} />
       </div>
     );
   };

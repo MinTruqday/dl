@@ -12,6 +12,8 @@ import {
   globalFindReplaceAPI,
   addInlineCommentAPI,
   getVersionDiffAPI,
+  getAiSuggestionsAPI,
+  summarizeDocumentAPI,
 } from "@/features/editor/services/document_editing.service";
 import {
   grammarCheckAPI,
@@ -630,6 +632,7 @@ ${latexCode}
           {contentFormat === "latex" ? (
             <LatexEditor
               initialContent={localText}
+              documentId={documentId}
               onChange={(val) => {
                 latexValueRef.current = val;
                 if (onSave) onSave(val);

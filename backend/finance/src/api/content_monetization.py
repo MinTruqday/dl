@@ -47,3 +47,52 @@ async def get_pricing_config(db=Depends(get_db)):
         message="Lấy giá gói thành viên thành công",
         status=200,
     )
+
+
+@router.get("/doanh-thu", response_model=APIResponse[Any])
+async def get_author_revenue(current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)):
+    revenue_data = await PurchaseProcess.get_author_revenue(current_user, db=db)
+    return APIResponse(
+        data=revenue_data,
+        message="Lấy số liệu doanh thu thành công",
+        status=200
+    )
+
+
+from pydantic import BaseModel
+
+class PricingUpdate(BaseModel):
+    document_id: str
+    price_dl: float
+    is_drm_protected: bool = True
+
+@router.put("/thiet-lap-gia", response_model=APIResponse[Any])
+async def set_document_pricing(
+    req: PricingUpdate,
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db)
+):
+    from fastapi import HTTPException
+    from core.repositories.base_repository import RepositoryFactory
+    
+    doc = await RepositoryFactory.get("documents").find_one({"_id": req.document_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+    if doc.get("creator_id") != str(current_user.id) and current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Chỉ tác giả mới được thay đổi giá bán")
+        
+    await RepositoryFactory.get("documents").update_one(
+        {"_id": req.document_id},
+        {"$set": {
+            "price_dl": req.price_dl, 
+            "is_drm_protected": req.is_drm_protected,
+            "is_premium": req.price_dl > 0
+        }}
+    )
+
+    return APIResponse(
+        data={"document_id": req.document_id, "price_dl": req.price_dl, "is_drm_protected": req.is_drm_protected},
+        message="Cập nhật giá bán thành công",
+        status=200
+    )
+

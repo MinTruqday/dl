@@ -69,3 +69,21 @@ async def create_notification(data: NotificationCreate, db=Depends(get_db)):
         message="Gửi thông báo thành công",
         status=201,
     )
+
+
+@router.post("/cai-dat", response_model=APIResponse[Any])
+async def update_settings(
+    settings: dict,
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    from core.repositories.base_repository import RepositoryFactory
+    await RepositoryFactory.get("users").update_one(
+        {"_id": current_user.id}, 
+        {"$set": {"notification_settings": settings}}
+    )
+    return APIResponse(
+        data=settings,
+        message="Cập nhật cài đặt thông báo thành công",
+        status=200,
+    )

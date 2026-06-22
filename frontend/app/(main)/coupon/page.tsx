@@ -5,6 +5,7 @@ import {
   getCouponsAPI,
   createCouponAPI,
   deleteCouponAPI,
+  toggleCouponStatusAPI,
 } from "@/features/finance/services/discount_coupon.service";
 import {
   Ticket,
@@ -104,7 +105,7 @@ export default function ManageCouponsPage() {
     if (!deleteConfirm) return;
     setIsDeleting(true);
     try {
-      await deleteCouponAPI(deleteConfirm.id);
+      await deleteCouponAPI(deleteConfirm.id || deleteConfirm._id);
       showToast("Đã xóa mã ưu đãi thành công.", "success");
       fetchCoupons();
       setDeleteConfirm(null);
@@ -112,6 +113,16 @@ export default function ManageCouponsPage() {
       showToast(err.message || "Lỗi xóa mã ưu đãi.", "error");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const toggleStatus = async (id: string) => {
+    try {
+      await toggleCouponStatusAPI(id);
+      showToast("Đã cập nhật trạng thái mã ưu đãi.", "success");
+      fetchCoupons();
+    } catch (err: any) {
+      showToast(err.message || "Lỗi cập nhật trạng thái.", "error");
     }
   };
 
@@ -272,6 +283,16 @@ export default function ManageCouponsPage() {
                         </span>
                       )}
                     </div>
+                    <button
+                      onClick={() => toggleStatus(c.id || c._id)}
+                      className={`h-8 px-3 text-[9px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm flex items-center justify-center ${
+                        c.is_active
+                          ? "bg-black text-white hover:bg-zinc-800"
+                          : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 border border-zinc-200"
+                      }`}
+                    >
+                      {c.is_active ? "Hoạt động" : "Tạm ngưng"}
+                    </button>
                   </div>
                 </div>
 

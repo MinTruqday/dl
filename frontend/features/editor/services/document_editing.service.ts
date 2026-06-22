@@ -32,7 +32,7 @@ export async function exportToWordAPI(documentId: string) {
     try {
       const data = await res.json();
       errMsg = data.detail || data.message || errMsg;
-    } catch (err: any) {}
+    } catch (err: any) { }
     throw new Error(errMsg);
   }
   return await res.blob();
@@ -169,4 +169,39 @@ export async function getVersionDiffAPI(
   if (!res.ok)
     throw new Error(data.message || "Lấy so sánh phiên bản thất bại");
   return data.data;
+}
+
+export async function analyzeInternalPlagiarismAPI(
+  documentId: string,
+  content: any,
+) {
+  const res = await fetch(`${API_URL}/kiem-tra-dao-van`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(content),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Phân tích đạo văn thất bại");
+  return data;
+}
+
+export async function getAiSuggestionsAPI(documentId: string, context: string) {
+  const res = await fetch(`${API_URL}/goi-y-ai`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ context }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lấy gợi ý AI thất bại");
+  return data.data;
+}
+
+export async function summarizeDocumentAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/tom-tat`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tóm tắt tài liệu thất bại");
+  return data;
 }

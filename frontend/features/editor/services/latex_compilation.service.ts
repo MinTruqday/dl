@@ -1,6 +1,36 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
 
+export async function cleanTempFilesAPI() {
+  const res = await fetch(`${API_URL}/don-dep`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Dọn dẹp tập tin tạm thời thất bại");
+  return data;
+}
 
+export async function cloudAutoSaveAPI(documentId: string, content: string) {
+  const res = await fetch(`${API_URL}/tu-dong-luu`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ document_id: documentId, content }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tự động lưu mã nguồn thất bại");
+  return data;
+}
+
+export async function getLatexDraftAPI() {
+  const res = await fetch(`${API_URL}/ban-nhap`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lấy bản nháp thất bại");
+  return data;
+}
 
 export async function compileLatexPreviewAPI(
   content: string,

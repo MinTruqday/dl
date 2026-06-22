@@ -24,6 +24,9 @@ import { purchaseDocumentAPI } from "@/features/finance/services/content_monetiz
 import Comment from "@/features/communication/components/Comment";
 import Report from "@/features/provision/components/Report";
 import { QRCodeSVG } from "qrcode.react";
+import { getToken } from "@/shared/utils/token";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export default function DocumentDetailsPage() {
   const params = useParams();
@@ -41,6 +44,54 @@ export default function DocumentDetailsPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [decryptedContent, setDecryptedContent] = useState<string>("");
+
+  useEffect(() => {
+    if (!docData) return;
+    if (docData.content_fragments && Array.isArray(docData.content_fragments)) {
+      const decrypt = async () => {
+        try {
+          const token = getToken();
+          const docId = docData._id || docData.id;
+          const keyRes = await fetch(`${API_URL}/tai-lieu/${docId}/khoa-giai-ma`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          });
+          if (!keyRes.ok) throw new Error("Key fetch failed");
+          const keyData = await keyRes.json();
+          const keyB64 = keyData.data.key;
+
+          const keyRaw = atob(keyB64);
+          const keyBytes = new Uint8Array(keyRaw.length);
+          for (let i = 0; i < keyRaw.length; i++) keyBytes[i] = keyRaw.charCodeAt(i);
+          const cryptoKey = await window.crypto.subtle.importKey(
+              "raw", keyBytes, { name: "AES-GCM" }, false, ["decrypt"]
+          );
+
+          let fullText = "";
+          for (const frag of docData.content_fragments) {
+              const fragRaw = atob(frag);
+              const fragBytes = new Uint8Array(fragRaw.length);
+              for (let i = 0; i < fragRaw.length; i++) fragBytes[i] = fragRaw.charCodeAt(i);
+              
+              const iv = fragBytes.slice(0, 12);
+              const ct = fragBytes.slice(12);
+              
+              const decrypted = await window.crypto.subtle.decrypt(
+                  { name: "AES-GCM", iv: iv }, cryptoKey, ct
+              );
+              fullText += new TextDecoder().decode(decrypted);
+          }
+          setDecryptedContent(fullText);
+        } catch (err) {
+          console.error("Lỗi giải mã:", err);
+          setDecryptedContent("Lỗi giải mã hoặc chứng thực bảo mật không thành công.");
+        }
+      };
+      decrypt();
+    } else {
+      setDecryptedContent(docData.content || docData.description || "Không có nội dung hiển thị");
+    }
+  }, [docData]);
 
   const fetchDocument = useCallback(async () => {
     if (!slug) return;
@@ -443,22 +494,98 @@ export default function DocumentDetailsPage() {
                   const hasPaid =
                     docData.has_purchased || !docData.is_premium;
                   const canSeeFull = isPrivileged || hasPaid;
-                  const contentToDisplay = docData.content || "";
+                  const contentToDisplay = decryptedContent || "";
+
+                  const CanvasRenderer = ({ text }: { text: string }) => {
+                    const canvasRef = useRef<HTMLCanvasElement>(null);
+                    const containerRef = useRef<HTMLDivElement>(null);
+
+                    useEffect(() => {
+                      const canvas = canvasRef.current;
+                      const container = containerRef.current;
+                      if (!canvas || !container || !text) return;
+
+                      const ctx = canvas.getContext("2d");
+                      if (!ctx) return;
+
+                      const dpr = window.devicePixelRatio || 1;
+                      const padding = 0;
+                      const width = container.clientWidth;
+                      const fontSize = 14;
+                      const lineHeight = 1.7;
+
+                      const paragraphs = text.split("\n");
+                      let totalHeight = padding * 2;
+                      ctx.font = `500 ${fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
+                      
+                      const wrapText = (text: string, maxWidth: number) => {
+                          const words = text.split(" ");
+                          const lines: string[] = [];
+                          let currentLine = words[0];
+
+                          for (let i = 1; i < words.length; i++) {
+                              const word = words[i];
+                              const width = ctx.measureText(currentLine + " " + word).width;
+                              if (width < maxWidth) {
+                                  currentLine += " " + word;
+                              } else {
+                                  lines.push(currentLine);
+                                  currentLine = word;
+                              }
+                          }
+                          lines.push(currentLine);
+                          return lines;
+                      };
+
+                      paragraphs.forEach(p => {
+                          if (!p.trim()) {
+                              totalHeight += fontSize * lineHeight;
+                              return;
+                          }
+                          const lines = wrapText(p, width - padding * 2);
+                          totalHeight += lines.length * fontSize * lineHeight + fontSize;
+                      });
+
+                      canvas.width = width * dpr;
+                      canvas.height = totalHeight * dpr;
+                      canvas.style.width = `${width}px`;
+                      canvas.style.height = `${totalHeight}px`;
+
+                      ctx.scale(dpr, dpr);
+                      ctx.fillStyle = "#18181b";
+                      ctx.font = `500 ${fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
+                      ctx.textBaseline = "top";
+
+                      let y = padding;
+                      paragraphs.forEach(p => {
+                          if (!p.trim()) {
+                              y += fontSize * lineHeight;
+                              return;
+                          }
+                          const lines = wrapText(p, width - padding * 2);
+                          lines.forEach(line => {
+                              ctx.fillText(line, padding, y);
+                              y += fontSize * lineHeight;
+                          });
+                          y += fontSize;
+                      });
+                    }, [text]);
+
+                    return (
+                      <div ref={containerRef} className="w-full relative select-none">
+                        <canvas ref={canvasRef} className="block w-full select-none" />
+                        <div className="absolute inset-0 z-10" onContextMenu={(e) => e.preventDefault()} />
+                      </div>
+                    );
+                  };
 
                   return (
                     <div className="bg-white border border-zinc-100 min-h-[600px] relative rounded-3xl overflow-hidden shadow-sm">
                       <div className="p-8 md:p-12 space-y-8">
                         <article className="prose prose-zinc max-w-none">
                           <div className="text-zinc-900 leading-relaxed text-sm font-medium space-y-6">
-                            {docData.content ? (
-                              <div
-                                dangerouslySetInnerHTML={{
-                                  __html: contentToDisplay.replace(
-                                    /\n/g,
-                                    "<br/><br/>",
-                                  ),
-                                }}
-                              />
+                            {contentToDisplay ? (
+                              <CanvasRenderer text={contentToDisplay} />
                             ) : (
                               <div className="flex flex-col items-center text-center py-24 gap-3 bg-zinc-50 rounded-3xl border border-zinc-100">
                                 <Loader2 className="w-8 h-8 text-zinc-300 animate-spin" />

@@ -27,7 +27,31 @@ export const markAllNotificationsReadAPI = async () => {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
+  const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể đánh dấu tất cả thông báo");
   return data;
+};
+
+export const getNotificationSettingsAPI = async () => {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/thong-bao/cai-dat`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Không thể tải cấu hình thông báo.");
+  return await res.json();
+};
+
+export const updateNotificationSettingsAPI = async (settings: any) => {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/thong-bao/cai-dat`, {
+    method: "POST",
+    headers: { 
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(settings)
+  });
+  if (!res.ok) throw new Error("Không thể cập nhật cấu hình thông báo.");
+  return await res.json();
 };

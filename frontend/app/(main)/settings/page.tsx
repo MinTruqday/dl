@@ -17,6 +17,10 @@ import {
   updateGeneralSettingsAPI,
 } from "@/features/provision/services/system_setting.service";
 import {
+  getNotificationSettingsAPI,
+  updateNotificationSettingsAPI,
+} from "@/features/communication/services/push_notification.service";
+import {
   getMaintenanceModeAPI,
   getAdminConfigAPI,
   toggleMaintenanceModeAPI,
@@ -76,11 +80,18 @@ export default function SettingsPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
 
+  const [notifSettings, setNotifSettings] = useState<any>({});
+
   const fetchData = useCallback(async () => {
     try {
       const privacyRes = await getPrivacySettingsAPI();
       setHideActivity(privacyRes.data?.hide_reading_activity || false);
       setHideLibrary(privacyRes.data?.hide_library || false);
+
+      try {
+        const notifRes = await getNotificationSettingsAPI();
+        setNotifSettings(notifRes.data || {});
+      } catch (e) {}
 
       if (user?.role === "admin") {
         const maintData = await getMaintenanceModeAPI();
@@ -103,6 +114,7 @@ export default function SettingsPage() {
       showToast("Không thể đồng bộ dữ liệu cài đặt", "error");
     }
   }, [user, showToast]);
+
 
   useEffect(() => {
     if (user) {
@@ -704,17 +716,77 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "notifications" && (
-            <div className="bg-white/90 backdrop-blur-md border border-zinc-100 flex flex-col items-center justify-center min-h-[400px] text-center p-8 rounded-3xl shadow-sm">
-              <div className="w-16 h-16 bg-zinc-50 border border-zinc-100 shadow-sm flex items-center justify-center rounded-2xl mb-4">
-                <Bell className="w-8 h-8 text-zinc-300 stroke-[1.5]" />
+            <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-6 md:p-8 rounded-3xl shadow-sm space-y-8">
+              <div className="border-b border-zinc-100 pb-4 mb-6">
+                <h3 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
+                  Cài đặt thông báo
+                </h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  Tùy chỉnh kênh nhận thông báo
+                </p>
               </div>
-              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-2">
-                Trung tâm thông báo
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 max-w-xs leading-relaxed">
-                Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản của
-                bạn.
-              </p>
+
+              <div className="space-y-4">
+                {[
+                  { id: "notifyCommunity", label: "Tương tác cộng đồng", desc: "Thông báo khi có người bình chọn, bình luận hoặc nhắc đến bạn." },
+                  { id: "notifyFinance", label: "Giao dịch & Tài chính", desc: "Thông báo về việc mua tài liệu, tặng coin hoặc yêu cầu rút tiền." },
+                  { id: "notifyUpdates", label: "Cập nhật tài liệu", desc: "Thông báo khi các tài liệu bạn theo dõi có chương mới." },
+                  { id: "notifyNewsletter", label: "Bản tin DocLib", desc: "Cập nhật về các tính năng mới và cuộc thi sắp tới." }
+                ].map((item, i) => (
+                  <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-5 border border-zinc-100 bg-zinc-50 rounded-3xl gap-4 transition-all duration-300 hover:border-zinc-200">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-zinc-900">{item.label}</h4>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 max-w-sm leading-relaxed">{item.desc}</p>
+                    </div>
+                    <div className="flex gap-6">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-bold tracking-widest uppercase text-zinc-500">Email</span>
+                        <CustomSwitch
+                          active={notifSettings[item.id]?.email ?? false}
+                          onToggle={async () => {
+                            const currentVal = notifSettings[item.id]?.email ?? false;
+                            const newVal = !currentVal;
+                            const newSettings = {
+                              ...notifSettings,
+                              [item.id]: { ...(notifSettings[item.id] || {}), email: newVal }
+                            };
+                            setNotifSettings(newSettings);
+                            try {
+                              await updateNotificationSettingsAPI(newSettings);
+                              showToast("Đã cập nhật thông báo", "success");
+                            } catch (e) {
+                              setNotifSettings(notifSettings); // revert
+                              showToast("Lỗi cập nhật", "error");
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-bold tracking-widest uppercase text-zinc-500">Hệ thống</span>
+                        <CustomSwitch
+                          active={notifSettings[item.id]?.inapp ?? false}
+                          onToggle={async () => {
+                            const currentVal = notifSettings[item.id]?.inapp ?? false;
+                            const newVal = !currentVal;
+                            const newSettings = {
+                              ...notifSettings,
+                              [item.id]: { ...(notifSettings[item.id] || {}), inapp: newVal }
+                            };
+                            setNotifSettings(newSettings);
+                            try {
+                              await updateNotificationSettingsAPI(newSettings);
+                              showToast("Đã cập nhật thông báo", "success");
+                            } catch (e) {
+                              setNotifSettings(notifSettings); // revert
+                              showToast("Lỗi cập nhật", "error");
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

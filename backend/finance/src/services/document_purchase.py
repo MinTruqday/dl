@@ -14,6 +14,51 @@ from core.infrastructure.database_client import db_client
 class PurchaseProcess:
 
     @staticmethod
+    async def get_revenue(current_user, db=None) -> dict:
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+            
+        docs_cursor = db["documents"].find({"creator_id": str(current_user.id)})
+        documents = await docs_cursor.to_list(length=None)
+        doc_ids = [str(doc["_id"]) for doc in documents]
+        
+        total_views = sum(doc.get("view_count", 0) for doc in documents)
+        
+        pipeline = [
+            {"$match": {"document_id": {"$in": doc_ids}, "status": {"$ne": "CANCELLED"}}},
+            {"$group": {"_id": "$document_id", "revenue": {"$sum": "$price"}, "purchases": {"$sum": 1}}}
+        ]
+        revenue_res = await db["purchases"].aggregate(pipeline).to_list(length=None)
+        
+        revenue_map = {item["_id"]: {"revenue": item["revenue"], "purchases": item["purchases"]} for item in revenue_res}
+        total_revenue = sum(item["revenue"] for item in revenue_res)
+        
+        user_doc = await db["users"].find_one({"_id": str(current_user.id)})
+        wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
+        
+        available_balance = wallet.get("balance", total_revenue) if wallet else total_revenue
+        total_points = user_doc.get("reward_points", 0) if user_doc else 0
+
+        revenue_data = {
+            "total_revenue": total_revenue,
+            "total_views": total_views,
+            "total_points": total_points,
+            "available_balance": available_balance,
+            "documents": [
+                {
+                    "id": str(doc["_id"]),
+                    "title": doc.get("title", "Không có tiêu đề"),
+                    "views": doc.get("view_count", 0),
+                    "price": doc.get("price_dl", doc.get("price_dls", 0)),
+                    "purchases": revenue_map.get(str(doc["_id"]), {}).get("purchases", 0),
+                    "revenue": revenue_map.get(str(doc["_id"]), {}).get("revenue", 0)
+                }
+                for doc in documents
+            ]
+        }
+        return revenue_data
+
+    @staticmethod
     async def buy_ai_tier(tier: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()

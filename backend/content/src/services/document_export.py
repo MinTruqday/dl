@@ -13,6 +13,8 @@ try:
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.utils import simpleSplit
     from reportlab.pdfgen import canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
 except ImportError as e:
     logger.error("Công cụ hiển thị tài liệu bị lỗi")
     REPORTLAB_AVAILABLE = False
@@ -56,6 +58,21 @@ class DocumentExport:
                     status_code=403,
                     detail="Yêu cầu có bản quyền hoặc xác nhận mua hàng",
                 )
+        
+        # Ghi log Audit đối với Admin tải tài liệu premium của người khác
+        if (
+            document.get("is_premium")
+            and document.get("creator_id") != user_id
+            and hasattr(current_user, "role") and current_user.role == "ADMIN"
+        ):
+            import datetime
+            await RepositoryFactory.get("audit_logs").insert_one({
+                "action": "ADMIN_FORCE_EXPORT_PREMIUM",
+                "actor_id": user_id,
+                "document_id": str(document["_id"]),
+                "reason": "Admin exported premium document",
+                "timestamp": datetime.datetime.now(datetime.timezone.utc)
+            })
         watermark_text = (
             "Copyright Protected Material - Licensed exclusively for personal usage"
         )
@@ -69,9 +86,19 @@ class DocumentExport:
             try:
                 raw_pdf_buffer = io.BytesIO()
                 c = canvas.Canvas(raw_pdf_buffer, pagesize=A4)
-                c.setFont("Helvetica-Bold", 16)
+                
+                import os
+                font_path = os.path.join(os.path.dirname(__file__), "Roboto-Regular.ttf")
+                font_name = "Helvetica-Bold"
+                font_name_regular = "Helvetica"
+                if os.path.exists(font_path):
+                    pdfmetrics.registerFont(TTFont('Roboto-Regular', font_path))
+                    font_name = "Roboto-Regular"
+                    font_name_regular = "Roboto-Regular"
+                
+                c.setFont(font_name, 16)
                 c.drawString(50, 800, document.get("title", "Anonymous work"))
-                c.setFont("Helvetica", 12)
+                c.setFont(font_name_regular, 12)
                 y_pos = 750
                 content = str(
                     document.get("content", "Creative content pending review")
@@ -84,13 +111,13 @@ class DocumentExport:
                         continue
                     # Bơm mã rỗng vào cuối mỗi đoạn văn
                     para = para.strip() + zw_watermark
-                    wrapped_lines = simpleSplit(para, "Helvetica", 12, 450)
+                    wrapped_lines = simpleSplit(para, font_name_regular, 12, 450)
                     for line in wrapped_lines:
                         c.drawString(50, y_pos, line)
                         y_pos -= 18
                         if y_pos < 50:
                             c.showPage()
-                            c.setFont("Helvetica", 12)
+                            c.setFont(font_name_regular, 12)
                             y_pos = 800
                 c.save()
                 raw_pdf_buffer.seek(0)
@@ -102,10 +129,13 @@ class DocumentExport:
                     page = raw_pdf.pages[page_num]
                     output_pdf.add_page(page)
                 
+                import base64
+                encoded_id = base64.b64encode(user_id.encode("utf-8")).decode("utf-8")
+                
                 metadata = raw_pdf.metadata if raw_pdf.metadata else {}
                 output_pdf.add_metadata({
                     **metadata,
-                    "/Custom_Trace_ID": user_id
+                    "/Producer": encoded_id
                 })
                 
                 final_buffer = io.BytesIO()
@@ -130,9 +160,13 @@ class DocumentExport:
         matches = re.findall(r'\u200D([\u200B\u200C]+)\u200D', text)
         if not matches:
             return None
-        binary = matches[0].replace('\u200B', '0').replace('\u200C', '1')
-        try:
-            chars = [chr(int(binary[i:i+8], 2)) for i in range(0, len(binary), 8)]
-            return "".join(chars)
-        except Exception:
-            return None
+        for match in matches:
+            binary = match.replace('\u200B', '0').replace('\u200C', '1')
+            try:
+                chars = [chr(int(binary[i:i+8], 2)) for i in range(0, len(binary), 8)]
+                decoded = "".join(chars)
+                if decoded:
+                    return decoded
+            except Exception:
+                continue
+        return None

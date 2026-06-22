@@ -26,3 +26,28 @@ export async function buyMembershipAPI(tier: "PRO" | "PREMIUM") {
   }
   return data;
 }
+
+export async function getAuthorRevenueAPI() {
+  const res = await fetch(`${API_URL}/kiem-tien/doanh-thu`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || data.message || "Lấy doanh thu thất bại");
+  }
+  return data;
+}
+
+export async function setDocumentPricingAPI(documentId: string, priceDl: number, isDrmProtected: boolean = true) {
+  const res = await fetch(`${API_URL}/kiem-tien/thiet-lap-gia`, {
+    method: "PUT",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ document_id: documentId, price_dl: priceDl, is_drm_protected: isDrmProtected }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || data.message || "Thiết lập giá thất bại");
+  }
+  return data;
+}

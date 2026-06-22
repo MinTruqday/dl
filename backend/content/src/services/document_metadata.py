@@ -40,17 +40,35 @@ def serialize_document(document):
 
 class DocumentMetadata:
     @staticmethod
-    def _fragment_document_content(content: str) -> list:
+    def _fragment_document_content(content: str, key: bytes = None) -> list:
         if not content:
             return []
         import base64
-        chunk_size = 50
-        chunks = [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
-        fragments = []
-        for chunk in chunks:
-            encoded = base64.b64encode(chunk.encode('utf-8')).decode('utf-8')
-            fragments.append(encoded)
-        return fragments
+        import os
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        except ImportError:
+            AESGCM = None
+
+        if key and AESGCM:
+            aesgcm = AESGCM(key)
+            chunk_size = 50000
+            chunks = [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
+            fragments = []
+            for chunk in chunks:
+                nonce = os.urandom(12)
+                ct = aesgcm.encrypt(nonce, chunk.encode('utf-8'), None)
+                encoded = base64.b64encode(nonce + ct).decode('utf-8')
+                fragments.append(encoded)
+            return fragments
+        else:
+            chunk_size = 50
+            chunks = [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
+            fragments = []
+            for chunk in chunks:
+                encoded = base64.b64encode(chunk.encode('utf-8')).decode('utf-8')
+                fragments.append(encoded)
+            return fragments
 
     @staticmethod
     async def get_tags_categories():
@@ -397,8 +415,20 @@ class DocumentMetadata:
 
         document = serialize_document(document)
 
+        aes_key = None
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            aes_key = AESGCM.generate_key(bit_length=256)
+            import base64
+            b64_key = base64.b64encode(aes_key).decode('utf-8')
+            if hasattr(db_client, "redis") and db_client.redis:
+                uid_str = user_id or "guest"
+                await db_client.redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
+        except ImportError:
+            pass
+
         if document.get("content"):
-            document["content_fragments"] = DocumentMetadata._fragment_document_content(document.get("content"))
+            document["content_fragments"] = DocumentMetadata._fragment_document_content(document.get("content"), aes_key)
             del document["content"]
 
         return document
@@ -604,12 +634,32 @@ class DocumentMetadata:
             }
 
         document["has_purchased"] = has_purchased
+        aes_key = None
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            aes_key = AESGCM.generate_key(bit_length=256)
+            import base64
+            b64_key = base64.b64encode(aes_key).decode('utf-8')
+            if hasattr(db_client, "redis") and db_client.redis:
+                uid_str = user_id or "guest"
+                await db_client.redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
+        except ImportError:
+            pass
         
         if document.get("content"):
-            document["content_fragments"] = DocumentMetadata._fragment_document_content(document.get("content"))
+            document["content_fragments"] = DocumentMetadata._fragment_document_content(document.get("content"), aes_key)
             del document["content"]
             
         return document
+
+    @staticmethod
+    async def get_document_decryption_key(document_id: str, current_user):
+        user_id = str(current_user.id) if current_user else "guest"
+        if hasattr(db_client, "redis") and db_client.redis:
+            b64_key = await db_client.redis.get(f"aes_key:{document_id}:{user_id}")
+            if b64_key:
+                return {"key": b64_key.decode('utf-8') if isinstance(b64_key, bytes) else b64_key}
+        raise HTTPException(status_code=403, detail="Khóa giải mã không tồn tại hoặc đã hết hạn")
 
     @staticmethod
     async def get_document_preview(slug: str) -> dict:

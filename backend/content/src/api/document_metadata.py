@@ -185,6 +185,16 @@ async def get_document_by_slug(
         status=status.HTTP_200_OK,
     )
 
+@router.get("/{document_id}/khoa-giai-ma", response_model=APIResponse[Any])
+async def get_document_decryption_key(
+    document_id: str, current_user: CurrentUser = Depends(get_current_user_optional)
+) -> Any:
+    return APIResponse(
+        data=await DocumentMetadata.get_document_decryption_key(document_id, current_user),
+        message="Lấy khoá giải mã thành công",
+        status=status.HTTP_200_OK,
+    )
+
 
 @router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
