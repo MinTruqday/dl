@@ -136,10 +136,10 @@ export default function ExplorePage() {
             <nav className="flex flex-col gap-1">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl ${
+                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 ${
                   !selectedCategory
-                    ? "bg-zinc-900 text-white"
-                    : "text-zinc-500"
+                    ? "bg-zinc-900 text-white shadow-md"
+                    : "text-zinc-500 hover:bg-zinc-50"
                 }`}
               >
                 <span>Tất cả tài liệu</span>
@@ -151,10 +151,10 @@ export default function ExplorePage() {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat ? null : cat)
                   }
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl ${
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 ${
                     selectedCategory === cat
-                      ? "bg-zinc-900 text-white"
-                      : "text-zinc-500"
+                      ? "bg-zinc-900 text-white shadow-md"
+                      : "text-zinc-500 hover:bg-zinc-50"
                   }`}
                 >
                   <span className="truncate text-left">{cat}</span>
@@ -175,7 +175,7 @@ export default function ExplorePage() {
                   <Link
                     key={`trending-${document._id || i}`}
                     href={`/document/${document.slug}`}
-                    className="flex gap-3 items-start px-2 py-2.5 rounded-2xl"
+                    className="flex gap-3 items-start px-2 py-2.5 rounded-2xl transition-all duration-200 hover:scale-105 hover:-translate-y-1 hover:bg-zinc-50 hover:shadow-sm"
                   >
                     <span className="text-xs font-bold text-zinc-300 w-4 text-center shrink-0 mt-0.5">
                       {i + 1}
@@ -203,12 +203,12 @@ export default function ExplorePage() {
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <h2 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gợi ý dành cho bạn</h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/document/${doc.slug}`}
-                    className="flex gap-3 p-3 border border-zinc-100 bg-zinc-50 rounded-2xl"
+                    className="flex gap-3 p-3 border border-zinc-100 bg-white rounded-2xl shadow-sm transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-md"
                   >
                     <div className="w-16 h-22 shrink-0 bg-zinc-200 rounded-xl overflow-hidden relative" style={{ height: "88px" }}>
                       {doc.cover_url ? (
@@ -247,7 +247,7 @@ export default function ExplorePage() {
                 <div className="flex border border-zinc-200 bg-zinc-50 rounded-2xl overflow-hidden p-0.5 gap-0.5">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 rounded-xl ${
+                    className={`p-1.5 rounded-xl transition-all duration-200 hover:scale-110 ${
                       viewMode === "grid"
                         ? "bg-white text-zinc-900 shadow-sm"
                         : "bg-transparent text-zinc-400"
@@ -257,7 +257,7 @@ export default function ExplorePage() {
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 rounded-xl ${
+                    className={`p-1.5 rounded-xl transition-all duration-200 hover:scale-110 ${
                       viewMode === "list"
                         ? "bg-white text-zinc-900 shadow-sm"
                         : "bg-transparent text-zinc-400"
@@ -271,7 +271,7 @@ export default function ExplorePage() {
 
             {loading ? (
               <div
-                className={`grid gap-4 ${
+                className={`grid gap-5 ${
                   viewMode === "grid"
                     ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
@@ -283,7 +283,7 @@ export default function ExplorePage() {
               </div>
             ) : documents.length > 0 ? (
               <div
-                className={`grid gap-4 ${
+                className={`grid gap-5 ${
                   viewMode === "grid"
                     ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
@@ -295,7 +295,7 @@ export default function ExplorePage() {
                     href={`/document/${document.slug}`}
                     className={`flex ${
                       viewMode === "grid" ? "flex-col" : "flex-row gap-5 p-3"
-                    } border border-zinc-100 bg-white rounded-2xl overflow-hidden`}
+                    } border border-zinc-100 bg-white rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-md hover:border-zinc-200`}
                   >
                     <div
                       className={`${
