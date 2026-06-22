@@ -290,6 +290,47 @@ export default function StandardEditor({
       const DocLibLeaderboard = (await import("./DocLibLeaderboard")).default;
       const DocLibJobListing = (await import("./DocLibJobListing")).default;
 
+      const DocLibFormRadioButton = (await import("./DocLibFormRadioButton")).default;
+      const DocLibFormComboBox = (await import("./DocLibFormComboBox")).default;
+      const DocLibFormListBox = (await import("./DocLibFormListBox")).default;
+      const DocLibFormToggleButton = (await import("./DocLibFormToggleButton")).default;
+      const DocLibFormSpinButton = (await import("./DocLibFormSpinButton")).default;
+      const DocLibDatePicker = (await import("./DocLibDatePicker")).default;
+      const DocLibDropList = (await import("./DocLibDropList")).default;
+      const DocLibAddressBlock = (await import("./DocLibAddressBlock")).default;
+      const DocLibGreetingLine = (await import("./DocLibGreetingLine")).default;
+      const DocLibEnvelope = (await import("./DocLibEnvelope")).default;
+      const DocLibLabelConfig = (await import("./DocLibLabelConfig")).default;
+      const DocLibColumnBreak = (await import("./DocLibColumnBreak")).default;
+      const DocLibTextWrappingBreak = (await import("./DocLibTextWrappingBreak")).default;
+      const DocLibEvenPageBreak = (await import("./DocLibEvenPageBreak")).default;
+      const DocLibOddPageBreak = (await import("./DocLibOddPageBreak")).default;
+      const DocLibPrintPreview = (await import("./DocLibPrintPreview")).default;
+      const DocLibHyphenation = (await import("./DocLibHyphenation")).default;
+      const DocLibSmartArtProcess = (await import("./DocLibSmartArtProcess")).default;
+      const DocLibSmartArtList = (await import("./DocLibSmartArtList")).default;
+      const DocLibSmartArtMatrix = (await import("./DocLibSmartArtMatrix")).default;
+      const DocLibSmartArtPyramid = (await import("./DocLibSmartArtPyramid")).default;
+      const DocLibSmartArtRelationship = (await import("./DocLibSmartArtRelationship")).default;
+      const DocLibDocumentProperty = (await import("./DocLibDocumentProperty")).default;
+      const DocLibDocumentStats = (await import("./DocLibDocumentStats")).default;
+      const DocLibTrackChanges = (await import("./DocLibTrackChanges")).default;
+      const DocLibCombineDocuments = (await import("./DocLibCombineDocuments")).default;
+      const DocLibProtectDocument = (await import("./DocLibProtectDocument")).default;
+      const DocLibDigitalSignature = (await import("./DocLibDigitalSignature")).default;
+      const DocLibCompatibilityChecker = (await import("./DocLibCompatibilityChecker")).default;
+      const DocLibVersionHistory = (await import("./DocLibVersionHistory")).default;
+      const DocLibTableOfAuthorities = (await import("./DocLibTableOfAuthorities")).default;
+      const DocLibCaption = (await import("./DocLibCaption")).default;
+      const DocLibQuickParts = (await import("./DocLibQuickParts")).default;
+      const DocLibMasterDocument = (await import("./DocLibMasterDocument")).default;
+      const DocLibSubdocument = (await import("./DocLibSubdocument")).default;
+      const DocLibOutlineLevel = (await import("./DocLibOutlineLevel")).default;
+      const DocLibBarcode = (await import("./DocLibBarcode")).default;
+      const DocLibTranslation = (await import("./DocLibTranslation")).default;
+      const DocLibThesaurus = (await import("./DocLibThesaurus")).default;
+      const DocLibEquationArray = (await import("./DocLibEquationArray")).default;
+
       if (cancelled) {
         holderDiv.remove();
         return;
@@ -543,6 +584,47 @@ export default function StandardEditor({
       if (DocLibTournamentBracket) tools.tournamentBracket = DocLibTournamentBracket;
       if (DocLibLeaderboard) tools.leaderboard = DocLibLeaderboard;
       if (DocLibJobListing) tools.jobListing = DocLibJobListing;
+
+      if (DocLibFormRadioButton) tools.formRadioButton = DocLibFormRadioButton;
+      if (DocLibFormComboBox) tools.formComboBox = DocLibFormComboBox;
+      if (DocLibFormListBox) tools.formListBox = DocLibFormListBox;
+      if (DocLibFormToggleButton) tools.formToggleButton = DocLibFormToggleButton;
+      if (DocLibFormSpinButton) tools.formSpinButton = DocLibFormSpinButton;
+      if (DocLibDatePicker) tools.datePicker = DocLibDatePicker;
+      if (DocLibDropList) tools.dropList = DocLibDropList;
+      if (DocLibAddressBlock) tools.addressBlock = DocLibAddressBlock;
+      if (DocLibGreetingLine) tools.greetingLine = DocLibGreetingLine;
+      if (DocLibEnvelope) tools.envelope = DocLibEnvelope;
+      if (DocLibLabelConfig) tools.labelConfig = DocLibLabelConfig;
+      if (DocLibColumnBreak) tools.columnBreak = DocLibColumnBreak;
+      if (DocLibTextWrappingBreak) tools.textWrappingBreak = DocLibTextWrappingBreak;
+      if (DocLibEvenPageBreak) tools.evenPageBreak = DocLibEvenPageBreak;
+      if (DocLibOddPageBreak) tools.oddPageBreak = DocLibOddPageBreak;
+      if (DocLibPrintPreview) tools.printPreview = DocLibPrintPreview;
+      if (DocLibHyphenation) tools.hyphenation = DocLibHyphenation;
+      if (DocLibSmartArtProcess) tools.smartArtProcess = DocLibSmartArtProcess;
+      if (DocLibSmartArtList) tools.smartArtList = DocLibSmartArtList;
+      if (DocLibSmartArtMatrix) tools.smartArtMatrix = DocLibSmartArtMatrix;
+      if (DocLibSmartArtPyramid) tools.smartArtPyramid = DocLibSmartArtPyramid;
+      if (DocLibSmartArtRelationship) tools.smartArtRelationship = DocLibSmartArtRelationship;
+      if (DocLibDocumentProperty) tools.documentProperty = DocLibDocumentProperty;
+      if (DocLibDocumentStats) tools.documentStats = DocLibDocumentStats;
+      if (DocLibTrackChanges) tools.trackChanges = DocLibTrackChanges;
+      if (DocLibCombineDocuments) tools.combineDocuments = DocLibCombineDocuments;
+      if (DocLibProtectDocument) tools.protectDocument = DocLibProtectDocument;
+      if (DocLibDigitalSignature) tools.digitalSignature = DocLibDigitalSignature;
+      if (DocLibCompatibilityChecker) tools.compatibilityChecker = DocLibCompatibilityChecker;
+      if (DocLibVersionHistory) tools.versionHistory = DocLibVersionHistory;
+      if (DocLibTableOfAuthorities) tools.tableOfAuthorities = DocLibTableOfAuthorities;
+      if (DocLibCaption) tools.caption = DocLibCaption;
+      if (DocLibQuickParts) tools.quickParts = DocLibQuickParts;
+      if (DocLibMasterDocument) tools.masterDocument = DocLibMasterDocument;
+      if (DocLibSubdocument) tools.subdocument = DocLibSubdocument;
+      if (DocLibOutlineLevel) tools.outlineLevel = DocLibOutlineLevel;
+      if (DocLibBarcode) tools.barcode = DocLibBarcode;
+      if (DocLibTranslation) tools.translation = DocLibTranslation;
+      if (DocLibThesaurus) tools.thesaurus = DocLibThesaurus;
+      if (DocLibEquationArray) tools.equationArray = DocLibEquationArray;
 
       const editor = new EditorJSModule({
         holder: holderDiv,
