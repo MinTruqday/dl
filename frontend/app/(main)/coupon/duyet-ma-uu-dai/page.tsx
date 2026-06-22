@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   getCouponsAPI,
-  approveCouponAPI,
 } from "@/features/finance/services/discount_coupon.service";
 import {
   Ticket,
@@ -45,18 +44,7 @@ export default function CouponApprovalPage() {
     fetchCoupons();
   }, [fetchCoupons]);
 
-  const handleApprove = async (id: string, action: "approve" | "reject") => {
-    try {
-      await approveCouponAPI(id, action);
-      showToast(
-        action === "approve" ? "Đã duyệt mã ưu đãi" : "Đã từ chối mã ưu đãi",
-        "success",
-      );
-      fetchCoupons();
-    } catch (err: any) {
-      showToast(err.message || "Lỗi xử lý phê duyệt", "error");
-    }
-  };
+
 
   return (
     <div className="flex flex-col h-full space-y-6">
@@ -162,20 +150,7 @@ export default function CouponApprovalPage() {
                     </div>
                   </div>
 
-                  <div className="mt-auto pt-4 flex gap-3 border-t border-zinc-100">
-                    <button
-                      onClick={() => handleApprove(c.id, "reject")}
-                      className="flex-1 h-11 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-sm"
-                    >
-                      <XCircle className="w-4 h-4" /> Từ chối
-                    </button>
-                    <button
-                      onClick={() => handleApprove(c.id, "approve")}
-                      className="flex-1 h-11 bg-black text-white hover:bg-zinc-800 text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-md"
-                    >
-                      <CheckCircle className="w-4 h-4" /> Phê duyệt
-                    </button>
-                  </div>
+
                 </div>
               </div>
             ))}

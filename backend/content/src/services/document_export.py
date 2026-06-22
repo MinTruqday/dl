@@ -60,6 +60,11 @@ class DocumentExport:
             "Copyright Protected Material - Licensed exclusively for personal usage"
         )
 
+        def encode_watermark(payload: str) -> str:
+            binary = "".join(format(ord(c), "08b") for c in payload)
+            zero_width = binary.replace("0", "\u200B").replace("1", "\u200C")
+            return f"\u200D{zero_width}\u200D"
+
         def generate_pdf_sync(db=None):
             try:
                 raw_pdf_buffer = io.BytesIO()
@@ -71,11 +76,15 @@ class DocumentExport:
                 content = str(
                     document.get("content", "Creative content pending review")
                 )
+                
+                zw_watermark = encode_watermark(user_id)
                 lines = content.split("\n")
                 for para in lines:
                     if not para.strip():
                         continue
-                    wrapped_lines = simpleSplit(para.strip(), "Helvetica", 12, 450)
+                    # Bơm mã rỗng vào cuối mỗi đoạn văn
+                    para = para.strip() + zw_watermark
+                    wrapped_lines = simpleSplit(para, "Helvetica", 12, 450)
                     for line in wrapped_lines:
                         c.drawString(50, y_pos, line)
                         y_pos -= 18
@@ -85,23 +94,20 @@ class DocumentExport:
                             y_pos = 800
                 c.save()
                 raw_pdf_buffer.seek(0)
-                watermark_buffer = io.BytesIO()
-                watermark_canvas = canvas.Canvas(watermark_buffer, pagesize=A4)
-                watermark_canvas.setFillColor(colors.lightgrey, alpha=0.3)
-                watermark_canvas.setFont("Helvetica-Oblique", 25)
-                watermark_canvas.translate(A4[0] / 2, A4[1] / 2)
-                watermark_canvas.rotate(45)
-                watermark_canvas.drawCentredString(0, 0, watermark_text)
-                watermark_canvas.save()
-                watermark_buffer.seek(0)
-                raw_pdf = PyPDF2.PdfReader(raw_pdf_buffer)
-                watermark_pdf = PyPDF2.PdfReader(watermark_buffer)
-                watermark_page = watermark_pdf.pages[0]
+                
+                # Gắn Trace ID vào siêu dữ liệu PDF
                 output_pdf = PyPDF2.PdfWriter()
+                raw_pdf = PyPDF2.PdfReader(raw_pdf_buffer)
                 for page_num in range(len(raw_pdf.pages)):
                     page = raw_pdf.pages[page_num]
-                    page.merge_page(watermark_page)
                     output_pdf.add_page(page)
+                
+                metadata = raw_pdf.metadata if raw_pdf.metadata else {}
+                output_pdf.add_metadata({
+                    **metadata,
+                    "/Custom_Trace_ID": user_id
+                })
+                
                 final_buffer = io.BytesIO()
                 output_pdf.write(final_buffer)
                 final_buffer.seek(0)
@@ -117,3 +123,16 @@ class DocumentExport:
             )
         logger.info("Xuất tài liệu sang định dạng ePub thành công")
         return pdf_data
+
+    @staticmethod
+    async def verify_watermark(text: str) -> str:
+        import re
+        matches = re.findall(r'\u200D([\u200B\u200C]+)\u200D', text)
+        if not matches:
+            return None
+        binary = matches[0].replace('\u200B', '0').replace('\u200C', '1')
+        try:
+            chars = [chr(int(binary[i:i+8], 2)) for i in range(0, len(binary), 8)]
+            return "".join(chars)
+        except Exception:
+            return None

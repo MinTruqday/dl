@@ -18,8 +18,8 @@ import {
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { getDocumentBySlugAPI } from "@/features/content/services/document_metadata.service";
-import { purchaseDocumentAPI } from "@/features/finance/services/account_ledger.service";
 import { toggleBookmarkAPI } from "@/features/content/services/document_bookmark.service";
+import { purchaseDocumentAPI } from "@/features/finance/services/content_monetization.service";
 
 import Comment from "@/features/communication/components/Comment";
 import Report from "@/features/provision/components/Report";
@@ -40,6 +40,7 @@ export default function DocumentDetailsPage() {
   >("about");
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const fetchDocument = useCallback(async () => {
     if (!slug) return;
@@ -119,25 +120,18 @@ export default function DocumentDetailsPage() {
   const handlePurchase = async () => {
     if (!docData) return;
     if (!user) {
-      showToast("Vui lòng đăng nhập để thực hiện giao dịch", "error");
+      showToast("Vui lòng đăng nhập để mua tài liệu", "error");
       return;
     }
-    setLoading(true);
+    setIsPurchasing(true);
     try {
-      const res = await purchaseDocumentAPI(docData._id || docData.id);
-      if (res.status === 200 || res.status === "purchased") {
-        showToast("Giao dịch thành công", "success");
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        showToast(
-          res.message || "Số dư không đủ để thực hiện giao dịch",
-          "error",
-        );
-      }
+      await purchaseDocumentAPI(docData._id || docData.id);
+      showToast("Mua tài liệu thành công!", "success");
+      setDocData({ ...docData, has_purchased: true });
     } catch (err: any) {
-      showToast("Giao dịch thất bại. Vui lòng thử lại sau", "error");
+      showToast(err.message || "Giao dịch thất bại", "error");
     } finally {
-      setLoading(false);
+      setIsPurchasing(false);
     }
   };
 
@@ -279,6 +273,16 @@ export default function DocumentDetailsPage() {
                 >
                   <BookOpen className="w-4 h-4" /> Đọc ngay
                 </button>
+                {docData.is_premium && !docData.has_purchased && (
+                  <button
+                    onClick={handlePurchase}
+                    disabled={isPurchasing}
+                    className="h-11 px-6 bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-2 rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 shadow-md disabled:opacity-70 disabled:hover:scale-100 disabled:hover:translate-y-0"
+                  >
+                    <ShoppingCart className="w-4 h-4" /> 
+                    {isPurchasing ? "Đang xử lý..." : "Mua ngay"}
+                  </button>
+                )}
                 <button
                   onClick={handleBookmark}
                   className={`h-11 px-6 border flex items-center justify-center gap-2 text-xs font-bold rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 ${isBookmarked ? "bg-black text-white border-black shadow-md" : "bg-white text-zinc-900 border-zinc-200 shadow-sm"}`}
@@ -288,14 +292,6 @@ export default function DocumentDetailsPage() {
                   />{" "}
                   {isBookmarked ? "Đã lưu" : "Lưu"}
                 </button>
-                {docData.is_premium && (
-                  <button
-                    onClick={handlePurchase}
-                    className="h-11 px-6 bg-white text-zinc-900 border border-zinc-200 text-xs font-bold flex items-center justify-center gap-2 rounded-2xl shadow-sm transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1"
-                  >
-                    <ShoppingCart className="w-4 h-4" /> Mua tài liệu
-                  </button>
-                )}
               </div>
 
               <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400 pt-4">
@@ -489,15 +485,8 @@ export default function DocumentDetailsPage() {
                                   Giới hạn xem trước
                                 </h3>
                                 <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest leading-relaxed">
-                                  Bạn đã đọc hết phần xem trước. Mở khóa để
-                                  khám phá toàn bộ nội dung.
+                                  Bạn đã đọc hết phần xem trước.
                                 </p>
-                                <button
-                                  onClick={handlePurchase}
-                                  className="mt-4 w-full h-11 bg-black text-white text-xs font-bold rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 shadow-md"
-                                >
-                                  Sở hữu tài liệu
-                                </button>
                               </div>
                             </div>
                           </div>

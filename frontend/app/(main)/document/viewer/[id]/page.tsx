@@ -432,10 +432,18 @@ export default function DocumentViewer() {
       );
     }
 
+    const decodeFragments = (fragments: string[]) => {
+      try {
+        return fragments.map(f => decodeURIComponent(escape(atob(f)))).join('');
+      } catch (e) {
+        return "Lỗi giải mã nội dung bảo mật";
+      }
+    };
+
     const content =
-      document?.content ||
-      document?.description ||
-      "Không có nội dung hiển thị";
+      (document?.content_fragments && Array.isArray(document.content_fragments))
+        ? decodeFragments(document.content_fragments)
+        : (document?.content || document?.description || "Không có nội dung hiển thị");
     if (readingMode === "double" && document?.content_format !== "zip") {
       return (
         <div

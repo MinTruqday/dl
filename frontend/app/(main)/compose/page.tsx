@@ -53,12 +53,11 @@ import {
 } from "@/features/content/services/version_history.service";
 import { ingestDocumentAPI } from "@/features/ai/services/rag_pipeline.service";
 import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawal.service";
-import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/content_monetization.service";
+
 import { API_URL } from "@/features/auth/services/user_authentication.service";
 import {
   getWalletBalanceAPI as getWalletAPI,
   getDetailedHistoryAPI as getTransactionsAPI,
-  getAuthorStatsAPI,
 } from "@/features/finance/services/account_ledger.service";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
@@ -475,14 +474,9 @@ function StudioContent() {
   }, [selectedDocumentId, showToast]);
 
   const fetchStatsData = useCallback(async () => {
-    try {
-      const sRes = await getAuthorStatsAPI();
-      const data = sRes.data || sRes;
-      setStats(data);
-      setRevenue(data);
-    } catch (err: any) {
-      showToast("Không thể tải số liệu thống kê", "error");
-    }
+    // API doanh thu đã bị loại bỏ ở backend
+    setStats(null);
+    setRevenue(null);
   }, [showToast]);
 
   const fetchVersions = useCallback(async () => {

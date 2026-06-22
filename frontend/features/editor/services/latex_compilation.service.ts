@@ -1,21 +1,12 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
 
-export async function cleanTempFilesAPI() {
-  const res = await fetch(`${API_URL}/ket-xuat/don-dep`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Dọn dẹp tập tin tạm thời thất bại");
-  return data;
-}
+
 
 export async function compileLatexPreviewAPI(
   content: string,
   isFragment: boolean = false,
 ) {
-  const res = await fetch(`${API_URL}/ket-xuat/bien-dich-xem-truoc`, {
+  const res = await fetch(`${API_URL}/bien-dich`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, is_fragment: isFragment }),
@@ -28,7 +19,7 @@ export async function compileLatexPreviewAPI(
 }
 
 export async function formatLatexAPI(content: string) {
-  const res = await fetch(`${API_URL}/ket-xuat/dinh-dang`, {
+  const res = await fetch(`${API_URL}/dinh-dang`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
@@ -40,7 +31,7 @@ export async function formatLatexAPI(content: string) {
 }
 
 export async function exportLatexAPI(content: string, format: string = "docx") {
-  const res = await fetch(`${API_URL}/ket-xuat/xuat`, {
+  const res = await fetch(`${API_URL}/ket-xuat/${format}`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, format }),
@@ -52,19 +43,10 @@ export async function exportLatexAPI(content: string, format: string = "docx") {
   return res.blob();
 }
 
-export async function cloudAutoSaveAPI(documentId: string, content: string) {
-  const res = await fetch(`${API_URL}/ket-xuat/tu-dong-luu`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId, content }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tự động lưu mã nguồn thất bại");
-  return data;
-}
+
 
 export async function exportProjectZipAPI(content: string) {
-  const res = await fetch(`${API_URL}/ket-xuat/xuat-zip`, {
+  const res = await fetch(`${API_URL}/ket-xuat-zip`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),

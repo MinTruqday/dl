@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
   getNotificationsAPI,
   markNotificationReadAPI,
   markAllNotificationsReadAPI,
-  getNotificationSettingsAPI,
-  updateNotificationSettingsAPI,
 } from "@/features/communication/services/push_notification.service";
 import {
   Bell,
@@ -53,14 +50,12 @@ export default function NotificationsPage() {
   }, [showToast]);
 
   const fetchSettings = useCallback(async () => {
-    try {
-      const res = await getNotificationSettingsAPI();
-      if (res && (res.data || res.settings)) {
-        setSettings(res.data || res.settings);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    // API cài đặt đã bị gỡ bỏ ở Backend
+    setSettings({
+      comments: true,
+      follows: true,
+      digests: true,
+    });
   }, []);
 
   useEffect(() => {
@@ -95,15 +90,8 @@ export default function NotificationsPage() {
   };
 
   const updateSetting = async (key: string, value: boolean) => {
-    try {
-      const newSettings = { ...settings, [key]: value };
-      setSettings(newSettings);
-      await updateNotificationSettingsAPI(newSettings);
-    } catch (err: any) {
-      console.error(err.message || err);
-      showToast("Không thể cập nhật cài đặt", "error");
-      setSettings(settings);
-    }
+    // Không thao tác API do backend đã loại bỏ
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const filteredNotifications =
@@ -292,44 +280,6 @@ export default function NotificationsPage() {
         </div>
 
         <aside className="md:col-span-4 space-y-6 flex flex-col shrink-0">
-          <div className="bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm p-6 space-y-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Settings className="w-4 h-4 text-black" />
-              <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-900">
-                  Tùy chọn thông báo
-                </h3>
-              </div>
-            </div>
-
-            <div className="space-y-5">
-              <div className="flex items-center justify-between group">
-                <span className="text-xs font-bold text-zinc-700 group-hover:text-black transition-colors">Bình luận mới</span>
-                <Toggle
-                  checked={settings.comments}
-                  onChange={() =>
-                    updateSetting("comments", !settings.comments)
-                  }
-                />
-              </div>
-              <div className="h-px bg-zinc-100 w-full" />
-              <div className="flex items-center justify-between group">
-                <span className="text-xs font-bold text-zinc-700 group-hover:text-black transition-colors">Người theo dõi mới</span>
-                <Toggle
-                  checked={settings.follows}
-                  onChange={() => updateSetting("follows", !settings.follows)}
-                />
-              </div>
-              <div className="h-px bg-zinc-100 w-full" />
-              <div className="flex items-center justify-between group">
-                <span className="text-xs font-bold text-zinc-700 group-hover:text-black transition-colors">Bản tin tóm tắt</span>
-                <Toggle
-                  checked={settings.digests}
-                  onChange={() => updateSetting("digests", !settings.digests)}
-                />
-              </div>
-            </div>
-          </div>
 
           <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-6 space-y-3 shadow-sm">
             <h3 className="text-[10px] font-bold uppercase tracking-widest text-blue-800 flex items-center gap-2">

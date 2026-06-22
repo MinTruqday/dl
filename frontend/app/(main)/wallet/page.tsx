@@ -18,7 +18,6 @@ import {
 } from "@/features/finance/services/account_ledger.service";
 import { createDepositLinkAPI } from "@/features/finance/services/fiat_deposit.service";
 import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawal.service";
-import { getAuthorRevenueAPI } from "@/features/finance/services/content_monetization.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
@@ -109,12 +108,7 @@ export default function WalletPage() {
       setHistory(historyRes.data || historyRes || []);
 
       if (user?.role === "author" || user?.role === "admin") {
-        try {
-          const revRes = await getAuthorRevenueAPI();
-          setRevenue(revRes.data || revRes || {});
-        } catch (e) {
-          console.error("Error loading revenue", e);
-        }
+        setRevenue({});
       }
     } catch (error) {
       showToast("Lỗi tải dữ liệu ví", "error");

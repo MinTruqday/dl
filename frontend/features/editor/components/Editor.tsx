@@ -10,12 +10,8 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import {
   compilePreviewAPI,
   globalFindReplaceAPI,
-  getAiSuggestionsAPI,
   addInlineCommentAPI,
   getVersionDiffAPI,
-  summarizeDocumentAPI,
-  extractSmartTagsAPI,
-  checkDeepPlagiarismAPI,
 } from "@/features/editor/services/document_editing.service";
 import {
   grammarCheckAPI,
@@ -94,15 +90,9 @@ export default function Editor({
   };
 
   const [isExportingWord, setIsExportingWord] = useState(false);
-  const [isSummarizing, setIsSummarizing] = useState(false);
-  const [isExtractingTags, setIsExtractingTags] = useState(false);
-  const [isScanningPlagiarism, setIsScanningPlagiarism] = useState(false);
-  const [plagiarismScore, setPlagiarismScore] = useState<number | null>(null);
   const [tocData, setTocData] = useState<
     { id: string; text: string; level: number }[]
   >([]);
-  const [tags, setTags] = useState<string[]>([]);
-  const [documentSummary, setDocumentSummary] = useState<string>("");
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [findText, setFindText] = useState("");
   const [replaceText, setReplaceText] = useState("");
@@ -284,61 +274,7 @@ ${latexCode}
     }
   };
 
-  const handleSummarize = async () => {
-    if (!checkPremiumAI()) return;
-    if (!documentId) return;
-    setIsSummarizing(true);
-    showToast("Đang tóm tắt tài liệu bằng AI", "info");
-    try {
-      const res = await summarizeDocumentAPI(documentId);
-      setDocumentSummary(res.summary || res.data?.summary || "");
-      showToast("Tóm tắt thành công", "success");
-    } catch (err: any) {
-      showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
-    } finally {
-      setIsSummarizing(false);
-    }
-  };
 
-  const handleExtractTags = async () => {
-    if (!checkPremiumAI()) return;
-    if (!documentId) return;
-    setIsExtractingTags(true);
-    showToast("Đang phân tích thẻ tự động", "info");
-    try {
-      const res = await extractSmartTagsAPI(documentId);
-      setTags(res.tags || res.data?.tags || []);
-      showToast("Trích xuất thẻ thành công", "success");
-    } catch (err: any) {
-      showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
-    } finally {
-      setIsExtractingTags(false);
-    }
-  };
-
-  const handlePlagiarismScan = async () => {
-    if (!checkPremiumAI()) return;
-    if (!documentId || !editorRef.current) return;
-    setIsScanningPlagiarism(true);
-    showToast("Đang quét đạo văn nội bộ", "info");
-    try {
-      const data = await editorRef.current.save();
-      const text = data.blocks.map((b: any) => b.data?.text || "").join(" ");
-      if (text.length < 50) throw new Error("Văn bản quá ngắn để quét đạo văn");
-
-      const res = await checkDeepPlagiarismAPI(documentId);
-      const score = res.data?.duplication_score || res.duplication_score || 0;
-      setPlagiarismScore(score);
-      showToast(
-        `Quét hoàn tất: ${score}% trùng lặp.`,
-        score > 20 ? "info" : "success",
-      );
-    } catch (err: any) {
-      showToast(err.message || "Lỗi hệ thống quét", "error");
-    } finally {
-      setIsScanningPlagiarism(false);
-    }
-  };
 
   const fetchSidebarData = useCallback(async () => {
     if (!documentId || activeSidebar === "none") return;
@@ -399,34 +335,7 @@ ${latexCode}
     }
   };
 
-  const handleAiWritingPartner = async () => {
-    if (!checkPremiumAI()) return;
-    if (!editorRef.current || !documentId) return;
-    setIsSuggesting(true);
-    try {
-      const data = await editorRef.current.save();
-      let lastText = "";
-      if (data.blocks.length > 0) {
-        const lastBlocks = data.blocks.slice(-5);
-        lastText = lastBlocks.map((b: any) => b.data?.text || "").join(" ");
-      }
 
-      const res = await getAiSuggestionsAPI(documentId, lastText);
-      const suggestion = res.suggestions || "";
-      if (suggestion) {
-        editorRef.current.blocks.insert("paragraph", {
-          text: `<i>[Gợi ý AI]: ${suggestion}</i>`,
-        });
-        showToast("Đã chèn gợi ý AI vào cuối văn bản", "success");
-      } else {
-        showToast("AI chưa có gợi ý phù hợp lúc này", "info");
-      }
-    } catch (err: any) {
-      showToast(err.message || "Không thể gọi trợ lý AI", "error");
-    } finally {
-      setIsSuggesting(false);
-    }
-  };
 
   const handleTranslate = async () => {
     if (!checkPremiumAI()) return;
@@ -513,14 +422,7 @@ ${latexCode}
             >
               Gợi ý từ ngữ
             </button>
-            <button
-              onClick={handleAiWritingPartner}
-              disabled={isSuggesting}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
-            >
-              <Bot className="w-3.5 h-3.5" />
-              Trợ lý AI
-            </button>
+
             <button
               onClick={handleConsistencyCheck}
               disabled={isSuggesting}
@@ -559,30 +461,7 @@ ${latexCode}
 
             <div className="w-px h-6 bg-zinc-200 mx-1 shrink-0" />
 
-            <button
-              onClick={handleSummarize}
-              disabled={isSummarizing}
-              className="px-4 py-1.5 bg-black text-white text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-800"
-            >
-              {isSummarizing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-              ) : (
-                <Wand2 className="w-3.5 h-3.5 text-white" />
-              )}
-              Tóm tắt bằng AI
-            </button>
-            <button
-              onClick={handleExtractTags}
-              disabled={isExtractingTags}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
-            >
-              {isExtractingTags ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Languages className="w-3.5 h-3.5" />
-              )}
-              Tự động tạo thẻ
-            </button>
+
             <button
               onClick={() =>
                 originalContentForUndo
@@ -599,18 +478,7 @@ ${latexCode}
               )}
               {originalContentForUndo ? "Nguyên bản" : "Dịch tài liệu"}
             </button>
-            <button
-              onClick={handlePlagiarismScan}
-              disabled={isScanningPlagiarism}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
-            >
-              {isScanningPlagiarism ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <ShieldCheck className="w-3.5 h-3.5" />
-              )}
-              Kiểm tra bản quyền
-            </button>
+
           </div>
           <div className="flex gap-2 shrink-0">
             <button

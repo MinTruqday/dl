@@ -40,6 +40,19 @@ def serialize_document(document):
 
 class DocumentMetadata:
     @staticmethod
+    def _fragment_document_content(content: str) -> list:
+        if not content:
+            return []
+        import base64
+        chunk_size = 50
+        chunks = [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
+        fragments = []
+        for chunk in chunks:
+            encoded = base64.b64encode(chunk.encode('utf-8')).decode('utf-8')
+            fragments.append(encoded)
+        return fragments
+
+    @staticmethod
     async def get_tags_categories():
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
@@ -384,6 +397,10 @@ class DocumentMetadata:
 
         document = serialize_document(document)
 
+        if document.get("content"):
+            document["content_fragments"] = DocumentMetadata._fragment_document_content(document.get("content"))
+            del document["content"]
+
         return document
 
     @staticmethod
@@ -587,6 +604,11 @@ class DocumentMetadata:
             }
 
         document["has_purchased"] = has_purchased
+        
+        if document.get("content"):
+            document["content_fragments"] = DocumentMetadata._fragment_document_content(document.get("content"))
+            del document["content"]
+            
         return document
 
     @staticmethod

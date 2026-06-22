@@ -2,8 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/shared/contexts/ToastContext";
-import { getAuthorStatsAPI } from "@/features/finance/services/account_ledger.service";
-import { getAuthorRevenueAPI } from "@/features/finance/services/content_monetization.service";
 import {
   getDocumentAnalyticsAPI,
   getAcademicMetricsAPI,
@@ -66,10 +64,9 @@ export default function StatsPage() {
   const fetchStatsData = async () => {
     setLoading(true);
     try {
-      const sRes = await getAuthorStatsAPI();
-      const data = sRes.data || sRes;
-      setStats(data);
-      setRevenue(data);
+      // API doanh thu đã bị gỡ bỏ ở Backend
+      setStats(null);
+      setRevenue(null);
     } catch (err: any) {
       showToast("Không thể tải số liệu thống kê", "error");
     } finally {

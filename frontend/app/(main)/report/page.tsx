@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import {
-  getReportsAPI as getAdminReportsAPI,
-  resolveReportAPI,
-} from "@/features/provision/services/system_report.service";
+
 import { Loader2, Search, AlertOctagon, CheckCircle2, XCircle, RefreshCcw, FileWarning, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
@@ -37,8 +34,7 @@ export default function ReportsManagementPage() {
   const fetchData = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      const data = await getAdminReportsAPI();
-      setReports(data.data || data || []);
+      setReports([]);
     } catch (err: any) {
       showToast("Không thể kết nối máy chủ báo cáo.", "error");
     } finally {
@@ -62,15 +58,7 @@ export default function ReportsManagementPage() {
     if (!confirmModal) return;
     setIsProcessing(true);
     try {
-      await resolveReportAPI(confirmModal.reportId, confirmModal.action);
-      showToast(
-        confirmModal.action === "RESOLVED"
-          ? "Đã xử lý vi phạm thành công."
-          : "Đã bỏ qua báo cáo.",
-        "success",
-      );
       setConfirmModal(null);
-      fetchData();
     } catch (err: any) {
       showToast(err.message || "Lỗi xử lý báo cáo.", "error");
     } finally {

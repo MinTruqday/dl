@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getCouponsAPI,
   createCouponAPI,
-  toggleCouponStatusAPI,
   deleteCouponAPI,
 } from "@/features/finance/services/discount_coupon.service";
 import {
@@ -99,15 +98,7 @@ export default function ManageCouponsPage() {
     }
   };
 
-  const toggleStatus = async (id: string) => {
-    try {
-      await toggleCouponStatusAPI(id);
-      showToast("Đã cập nhật trạng thái mã ưu đãi.", "success");
-      fetchCoupons();
-    } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật trạng thái.", "error");
-    }
-  };
+
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
@@ -281,17 +272,6 @@ export default function ManageCouponsPage() {
                         </span>
                       )}
                     </div>
-
-                    <button
-                      onClick={() => toggleStatus(c.id)}
-                      className={`h-8 px-3 text-[9px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm flex items-center justify-center ${
-                        c.is_active
-                          ? "bg-black text-white hover:bg-zinc-800"
-                          : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 border border-zinc-200"
-                      }`}
-                    >
-                      {c.is_active ? "Hoạt động" : "Tạm ngưng"}
-                    </button>
                   </div>
                 </div>
 

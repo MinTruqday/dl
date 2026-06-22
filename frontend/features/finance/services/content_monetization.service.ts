@@ -1,38 +1,21 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
 
-export async function setDocumentPricingAPI(
-  documentId: string,
-  priceDl: number,
-  isDrmProtected: boolean = true,
-) {
-  const res = await fetch(
-    `${API_URL}/kiem-tien/tai-lieu/${documentId}/gia-ban`,
-    {
-      method: "PUT",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({
-        price_dl: priceDl,
-        is_drm_protected: isDrmProtected,
-      }),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật giá bán thất bại");
-  return data;
-}
-
-export async function getAuthorRevenueAPI() {
-  const res = await fetch(`${API_URL}/kiem-tien/thong-ke/doanh-thu`, {
-    headers: getAuthHeaders(),
+export async function purchaseDocumentAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/kiem-tien/mua/tai-lieu`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ document_id: documentId }),
   });
   const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tải số liệu doanh thu");
+  if (!res.ok) {
+    throw new Error(data.detail || data.message || "Mua tài liệu thất bại");
+  }
   return data;
 }
 
+
 export async function buyMembershipAPI(tier: "PRO" | "PREMIUM") {
-  const res = await fetch(`${API_URL}/kiem-tien/goi-hoi-vien`, {
+  const res = await fetch(`${API_URL}/kiem-tien/thanh-vien`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ tier }),

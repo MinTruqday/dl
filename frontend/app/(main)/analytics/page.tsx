@@ -8,11 +8,9 @@ import {
   Star,
   TrendingUp,
   BarChart3,
-  BookOpen,
   Award,
 } from "lucide-react";
 import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
-import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/content_monetization.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 
 export default function AuthorAnalyticsPage() {
@@ -24,13 +22,9 @@ export default function AuthorAnalyticsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [docData, revData] = await Promise.all([
-        getMyDocumentsAPI(),
-        getRevenueAPI(),
-      ]);
-
+      const docData = await getMyDocumentsAPI();
       setDocuments(docData.data || docData || []);
-      setRevenue(revData.data || revData);
+      setRevenue(null);
     } catch (err: any) {
       showToast("Lỗi tải dữ liệu phân tích", "error");
     } finally {
