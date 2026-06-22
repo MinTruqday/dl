@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Navigation from "@/shared/components/common/Navigation";
-import Menu from "@/shared/components/common/Menu";
+import Dock from "@/shared/components/common/Dock";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -15,29 +15,12 @@ export default function Workspace({
   children,
   requireAuth = false,
 }: WorkspaceProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { user, isLoading } = useAuth() as any;
   const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        setSidebarOpen(false);
-      } else {
-        const saved = localStorage.getItem("doclib_sidebar_open");
-        setSidebarOpen(saved !== "false");
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -45,22 +28,6 @@ export default function Workspace({
       router.push("/login");
     }
   }, [requireAuth, isLoading, user, router]);
-
-  const toggleSidebar = () => {
-    if (isMobile) {
-      setMobileMenuOpen((v) => !v);
-    } else {
-      const next = !sidebarOpen;
-      setSidebarOpen(next);
-      localStorage.setItem("doclib_sidebar_open", String(next));
-    }
-  };
-
-  const sidebarIsOpen = mounted
-    ? isMobile
-      ? mobileMenuOpen
-      : sidebarOpen
-    : true;
 
   if (requireAuth && (isLoading || (!user && mounted))) {
     return (
@@ -71,34 +38,21 @@ export default function Workspace({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-black font-sans selection:bg-black selection:text-white overflow-x-hidden">
-      <Navigation onToggleSidebar={toggleSidebar} />
-
-      <Menu
-        isOpen={sidebarIsOpen}
-        onToggle={toggleSidebar}
-        isMobileOverlay={isMobile}
-        onMobileClose={() => setMobileMenuOpen(false)}
-      />
-
+    <div className="min-h-screen bg-zinc-50 text-black font-sans selection:bg-black selection:text-white overflow-x-hidden relative pb-28">
+      <Navigation />
+      
       <main
-        className="relative pr-2 md:pr-4 pb-2 md:pb-4 transition-all duration-300"
+        className="relative px-2 md:px-4"
         style={{
-          paddingTop: isMobile
-            ? "calc(var(--navbar-height) + 16px)"
-            : "calc(var(--navbar-height) + 32px)",
-          marginLeft: !mounted
-            ? "calc(var(--sidebar-width-expanded) + 32px)"
-            : isMobile
-              ? "8px"
-              : sidebarOpen
-                ? "calc(var(--sidebar-width-expanded) + 32px)"
-                : "calc(var(--sidebar-width-collapsed) + 32px)",
+          paddingTop: "calc(var(--navbar-height) + 32px)",
           minHeight: "100vh",
         }}
       >
         {children}
       </main>
+
+      {/* MacOS Style Bottom Dock */}
+      {mounted && <Dock />}
     </div>
   );
 }

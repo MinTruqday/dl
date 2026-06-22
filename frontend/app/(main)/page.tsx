@@ -12,12 +12,14 @@ import { useAuth } from "@/features/auth/contexts/AuthContext";
 import Link from "next/link";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
-  ChevronRight,
   LayoutGrid,
   List as ListIcon,
   Eye,
   Star,
   BookOpen,
+  TrendingUp,
+  Sparkles,
+  ChevronRight,
 } from "lucide-react";
 
 export default function ExplorePage() {
@@ -33,11 +35,13 @@ export default function ExplorePage() {
   const [useSmart, setUseSmart] = useState(false);
   const [banners, setBanners] = useState<any[]>([]);
 
+  const { user } = useAuth();
+
   const loadInitialData = useCallback(async () => {
     try {
       const [catData, trendData, recData, bannerData] = await Promise.all([
         getTagsCategoriesAPI(),
-        getTrendingDocumentsAPI(3),
+        getTrendingDocumentsAPI(5),
         getAIRecommendationsAPI(4),
         getActiveBannersAPI().catch(() => ({ data: [] })),
       ]);
@@ -71,8 +75,6 @@ export default function ExplorePage() {
     }
   }, [selectedCategory, searchQuery, useSmart, showToast]);
 
-  const { user } = useAuth();
-
   useEffect(() => {
     loadInitialData();
   }, [loadInitialData]);
@@ -84,10 +86,27 @@ export default function ExplorePage() {
     return () => clearTimeout(timeoutId);
   }, [loadDocuments]);
 
+  const SkeletonCard = ({ mode }: { mode: "grid" | "list" }) => (
+    <div
+      className={`bg-white border border-zinc-100 rounded-2xl overflow-hidden animate-pulse ${
+        mode === "grid" ? "flex flex-col" : "flex flex-row gap-4 p-3"
+      }`}
+    >
+      <div className={`bg-zinc-100 ${mode === "grid" ? "aspect-[2/3] w-full" : "w-20 h-28 shrink-0 rounded-xl"}`} />
+      {mode === "grid" && (
+        <div className="p-3 space-y-2">
+          <div className="h-2 w-1/3 bg-zinc-100 rounded-full" />
+          <div className="h-3 w-full bg-zinc-100 rounded-full" />
+          <div className="h-3 w-2/3 bg-zinc-100 rounded-full" />
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-3xl shadow-sm overflow-hidden group">
-        {banners.length > 0 ? (
+    <div className="w-full max-w-[1280px] mx-auto px-4 md:px-6 py-6 font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white">
+      {banners.length > 0 && (
+        <div className="mb-6 relative h-[120px] md:h-[180px] bg-white border border-zinc-100 flex items-center justify-center rounded-3xl overflow-hidden shadow-sm">
           <a
             href={banners[0].link_url || "#"}
             target="_blank"
@@ -98,40 +117,33 @@ export default function ExplorePage() {
               <img
                 src={banners[0].image_url}
                 alt={banners[0].title}
-                className="w-full h-full object-cover grayscale mix-blend-multiply"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-zinc-50">
-                <p className="text-zinc-500 text-sm font-medium">
-                  {banners[0].title}
-                </p>
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-zinc-50 to-zinc-100">
+                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Quảng cáo</p>
+                <p className="text-base font-bold text-zinc-800">{banners[0].title}</p>
               </div>
             )}
           </a>
-        ) : (
-          <p className="text-zinc-500 text-sm font-medium">
-            Liên hệ quảng cáo với DocLib
-          </p>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-4">
-            <div className="text-sm font-semibold text-black mb-1">
-              Phân loại
-            </div>
-            <nav className="flex flex-col gap-1.5">
+        <aside className="lg:col-span-3 space-y-4">
+          <div className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">
+            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3">Phân loại</p>
+            <nav className="flex flex-col gap-1">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
+                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl ${
                   !selectedCategory
-                    ? "bg-zinc-100 text-black"
-                    : "bg-white text-zinc-500 hover:bg-zinc-50"
+                    ? "bg-zinc-900 text-white"
+                    : "text-zinc-500"
                 }`}
               >
-                Tất cả tài liệu
-                {!selectedCategory && <ChevronRight className="w-4 h-4" />}
+                <span>Tất cả tài liệu</span>
+                {!selectedCategory && <ChevronRight className="w-3.5 h-3.5" />}
               </button>
               {categories.map((cat) => (
                 <button
@@ -139,95 +151,85 @@ export default function ExplorePage() {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat ? null : cat)
                   }
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl ${
                     selectedCategory === cat
-                      ? "bg-zinc-100 text-black"
-                      : "bg-white text-zinc-500 hover:bg-zinc-50"
+                      ? "bg-zinc-900 text-white"
+                      : "text-zinc-500"
                   }`}
                 >
-                  {cat}
-                  {selectedCategory === cat && (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
+                  <span className="truncate text-left">{cat}</span>
+                  {selectedCategory === cat && <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
                 </button>
               ))}
             </nav>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-4">
-            <div className="text-sm font-semibold text-black mb-1">
-              Xu hướng
-            </div>
-            <div className="flex flex-col gap-4">
-              {trending.length > 0 ? (
-                trending.map((document, i) => (
+          {trending.length > 0 && (
+            <div className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="w-3.5 h-3.5 text-zinc-400" />
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Xu hướng</p>
+              </div>
+              <div className="flex flex-col gap-1">
+                {trending.map((document, i) => (
                   <Link
                     key={`trending-${document._id || i}`}
                     href={`/document/${document.slug}`}
-                    className="flex gap-3 group items-center p-2 rounded-xl hover:bg-zinc-50 transition-colors -mx-2"
+                    className="flex gap-3 items-start px-2 py-2.5 rounded-2xl"
                   >
-                    <span className="text-sm font-semibold text-zinc-400 w-5 text-center">
+                    <span className="text-xs font-bold text-zinc-300 w-4 text-center shrink-0 mt-0.5">
                       {i + 1}
                     </span>
-                    <div className="space-y-1 flex-1">
-                      <h4 className="text-sm font-medium text-black line-clamp-2 leading-snug group-hover:underline">
+                    <div className="space-y-0.5 flex-1 min-w-0">
+                      <h4 className="text-xs font-semibold text-zinc-800 line-clamp-2 leading-snug">
                         {document.title}
                       </h4>
-                      <div className="text-[11px] font-medium text-zinc-500">
-                        {document.views_count?.toLocaleString("vi-VN") || 0}{" "}
-                        lượt xem
+                      <div className="text-[10px] font-medium text-zinc-400 flex items-center gap-1">
+                        <Eye className="w-2.5 h-2.5" />
+                        {document.views_count?.toLocaleString("vi-VN") || 0}
                       </div>
                     </div>
                   </Link>
-                ))
-              ) : (
-                <div className="py-4 flex items-center justify-center">
-                  <p className="text-xs font-medium text-zinc-400">
-                    Chưa có dữ liệu
-                  </p>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </aside>
 
-        <main className="lg:col-span-9 space-y-6">
+        <main className="lg:col-span-9 space-y-5">
           {recommendations.length > 0 && !searchQuery && (
-            <section className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-4">
-              <div className="mb-1">
-                <h2 className="text-base font-semibold text-black">
-                  Gợi ý dành riêng cho bạn
-                </h2>
+            <section className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <h2 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gợi ý dành cho bạn</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/document/${doc.slug}`}
-                    className="flex gap-4 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-zinc-300 transition-all duration-150 group"
+                    className="flex gap-3 p-3 border border-zinc-100 bg-zinc-50 rounded-2xl"
                   >
-                    <div className="w-20 h-28 shrink-0 bg-zinc-100 rounded-xl overflow-hidden relative">
+                    <div className="w-16 h-22 shrink-0 bg-zinc-200 rounded-xl overflow-hidden relative" style={{ height: "88px" }}>
                       {doc.cover_url ? (
                         <img
                           src={doc.cover_url}
                           alt={doc.title}
-                          className="w-full h-full object-cover grayscale mix-blend-multiply"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-zinc-100" />
+                        <div className="w-full h-full bg-zinc-200" />
                       )}
                     </div>
-                    <div className="flex-1 flex flex-col space-y-2">
-                      <span className="text-xs font-medium text-zinc-500">
+                    <div className="flex-1 flex flex-col gap-1 min-w-0">
+                      <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider truncate">
                         {doc.categories?.[0] || "Tài liệu"}
                       </span>
-                      <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
+                      <h3 className="text-xs font-semibold text-zinc-900 line-clamp-2 leading-snug">
                         {doc.title}
                       </h3>
-                      <div className="mt-auto text-xs font-medium text-zinc-500">
-                        {doc.author?.full_name ||
-                          doc.author?.username ||
-                          "Ẩn danh"}
+                      <div className="mt-auto text-[10px] font-medium text-zinc-400 truncate">
+                        {doc.author?.full_name || doc.author?.username || "Ẩn danh"}
                       </div>
                     </div>
                   </Link>
@@ -236,61 +238,54 @@ export default function ExplorePage() {
             </section>
           )}
 
-          <section className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-6">
-            <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-black">
-                {searchQuery
-                  ? `Kết quả tìm kiếm cho "${searchQuery}"`
-                  : "Kho nội dung"}
+          <section className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <h2 className="text-sm font-bold text-zinc-900">
+                {searchQuery ? `Kết quả cho "${searchQuery}"` : "Kho nội dung"}
               </h2>
-
-              <div className="flex items-center gap-6">
-                <div className="flex border border-zinc-200 bg-zinc-50 rounded-xl overflow-hidden">
+              <div className="flex items-center gap-2">
+                <div className="flex border border-zinc-200 bg-zinc-50 rounded-2xl overflow-hidden p-0.5 gap-0.5">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 transition-colors ${
+                    className={`p-1.5 rounded-xl ${
                       viewMode === "grid"
-                        ? "bg-white text-black shadow-sm"
-                        : "bg-transparent text-zinc-500 hover:text-black"
+                        ? "bg-white text-zinc-900 shadow-sm"
+                        : "bg-transparent text-zinc-400"
                     }`}
                   >
-                    <LayoutGrid className="w-4 h-4" />
+                    <LayoutGrid className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 transition-colors ${
+                    className={`p-1.5 rounded-xl ${
                       viewMode === "list"
-                        ? "bg-white text-black shadow-sm"
-                        : "bg-transparent text-zinc-500 hover:text-black"
+                        ? "bg-white text-zinc-900 shadow-sm"
+                        : "bg-transparent text-zinc-400"
                     }`}
                   >
-                    <ListIcon className="w-4 h-4" />
+                    <ListIcon className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
             </div>
+
             {loading ? (
               <div
-                className={`grid gap-6 ${
+                className={`grid gap-4 ${
                   viewMode === "grid"
-                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
                 }`}
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <div
-                    key={i}
-                    className={`bg-zinc-50 border border-zinc-200 ${
-                      viewMode === "grid" ? "aspect-[2/3]" : "h-32"
-                    }`}
-                  />
+                  <SkeletonCard key={i} mode={viewMode} />
                 ))}
               </div>
             ) : documents.length > 0 ? (
               <div
-                className={`grid gap-6 ${
+                className={`grid gap-4 ${
                   viewMode === "grid"
-                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
                 }`}
               >
@@ -298,22 +293,22 @@ export default function ExplorePage() {
                   <Link
                     key={`doc-${document._id || i}`}
                     href={`/document/${document.slug}`}
-                    className={`group flex ${
-                      viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-3"
-                    } border border-zinc-200 bg-white rounded-2xl hover:border-zinc-300 transition-colors overflow-hidden`}
+                    className={`flex ${
+                      viewMode === "grid" ? "flex-col" : "flex-row gap-5 p-3"
+                    } border border-zinc-100 bg-white rounded-2xl overflow-hidden`}
                   >
                     <div
                       className={`${
                         viewMode === "grid"
-                          ? "aspect-[2/3] w-full border-b"
-                          : "w-24 h-36 shrink-0 rounded-xl"
-                      } border-zinc-200 bg-zinc-100 relative overflow-hidden`}
+                          ? "aspect-[2/3] w-full border-b border-zinc-100"
+                          : "w-20 h-28 shrink-0 rounded-xl"
+                      } bg-zinc-100 relative overflow-hidden`}
                     >
                       {document.cover_url ? (
                         <img
                           src={document.cover_url}
                           alt={document.title}
-                          className="w-full h-full object-cover grayscale mix-blend-multiply"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className="w-full h-full bg-zinc-100" />
@@ -322,91 +317,77 @@ export default function ExplorePage() {
 
                     <div
                       className={`${
-                        viewMode === "grid" ? "p-3" : "flex-1 py-1"
-                      } flex flex-col flex-1 gap-2`}
+                        viewMode === "grid" ? "p-3" : "flex-1 py-0.5"
+                      } flex flex-col flex-1 gap-1.5`}
                     >
-                      {document.categories &&
-                        document.categories.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {document.categories
-                              .slice(0, 3)
-                              .map((tag: string, idx: number) => (
-                                <span
-                                  key={idx}
-                                  className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 bg-zinc-100 rounded-md"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                          </div>
-                        )}
+                      {document.categories && document.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {document.categories.slice(0, 2).map((tag: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="px-1.5 py-0.5 text-[9px] font-bold text-zinc-400 bg-zinc-100 rounded-lg uppercase tracking-wide"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       <h3
                         className={`${
-                          viewMode === "grid" ? "text-sm" : "text-base"
-                        } font-semibold text-black line-clamp-2 leading-snug`}
+                          viewMode === "grid" ? "text-xs" : "text-sm"
+                        } font-semibold text-zinc-900 line-clamp-2 leading-snug`}
                       >
                         {document.title}
                       </h3>
 
-                      <div className="text-xs text-zinc-500 flex items-center gap-1.5">
-                        <span className="truncate text-black font-medium">
-                          {document.author?.full_name ||
-                            document.author?.username ||
-                            "Ẩn danh"}
+                      <div className="text-[10px] text-zinc-400 flex items-center gap-1">
+                        <span className="truncate font-medium text-zinc-600">
+                          {document.author?.full_name || document.author?.username || "Ẩn danh"}
                         </span>
-                        <span>•</span>
+                        <span className="text-zinc-200">•</span>
                         <span className="shrink-0">
                           {document.created_at
-                            ? new Date(document.created_at).toLocaleDateString(
-                                "vi-VN",
-                              )
+                            ? new Date(document.created_at).toLocaleDateString("vi-VN")
                             : "Gần đây"}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-zinc-500">
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>
-                            {document.views_count?.toLocaleString("vi-VN") || 0}
-                          </span>
+                      <div className="flex items-center gap-2.5 text-[10px] text-zinc-400">
+                        <div className="flex items-center gap-0.5">
+                          <Eye className="w-3 h-3" />
+                          <span>{document.views_count?.toLocaleString("vi-VN") || 0}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5" />
-                          <span>
-                            {document.average_rating?.toFixed(1) || "0.0"}
-                          </span>
+                        <div className="flex items-center gap-0.5">
+                          <Star className="w-3 h-3" />
+                          <span>{document.average_rating?.toFixed(1) || "0.0"}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5" />
+                        <div className="flex items-center gap-0.5">
+                          <BookOpen className="w-3 h-3" />
                           <span>{document.chapters_count || 0}</span>
                         </div>
                       </div>
 
                       <div
-                        className={`mt-auto pt-3 flex items-center justify-between ${
-                          viewMode === "grid" ? "border-t border-zinc-100" : ""
+                        className={`mt-auto pt-2 flex items-center justify-between ${
+                          viewMode === "grid" ? "border-t border-zinc-50" : ""
                         }`}
                       >
-                        <span className="text-xs font-semibold text-black">
-                          {document.is_premium
-                            ? `${document.price || 0} dl`
-                            : "Miễn phí"}
+                        <span className="text-[10px] font-bold text-zinc-900">
+                          {document.is_premium ? `${document.price || 0} dl` : "Miễn phí"}
                         </span>
-                        <div className="text-[10px] font-semibold text-black bg-zinc-100 hover:bg-zinc-200 transition-colors px-3 py-1.5 rounded-lg uppercase tracking-wider">
+                        <span className="text-[9px] font-bold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-xl uppercase tracking-widest">
                           Xem
-                        </div>
+                        </span>
                       </div>
                     </div>
                   </Link>
                 ))}
               </div>
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-3xl">
-                <p className="text-sm font-medium text-zinc-500">
-                  Chưa có dữ liệu
-                </p>
+              <div className="py-20 flex flex-col items-center justify-center border border-zinc-100 bg-zinc-50 rounded-2xl gap-3">
+                <BookOpen className="w-8 h-8 text-zinc-200 stroke-[1.5]" />
+                <p className="text-xs font-medium text-zinc-400">Chưa có dữ liệu</p>
               </div>
             )}
           </section>

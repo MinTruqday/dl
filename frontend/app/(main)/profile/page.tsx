@@ -149,7 +149,6 @@ export default function ProfilePage() {
     }
     setIsApplying(true);
     try {
-      await // updateUserAPI({ reason: motivation });
       showToast("Đã gửi đơn ứng tuyển tác giả tiềm năng", "success");
       setMotivation("");
     } catch (e: any) {
@@ -162,7 +161,6 @@ export default function ProfilePage() {
   const handleBecomeAuthor = async () => {
     setIsSaving(true);
     try {
-      await // updateUserAPI();
       showToast("Chúc mừng! Bạn đã trở thành tác giả chính thức", "success");
       window.location.reload();
     } catch (e: any) {
@@ -226,7 +224,7 @@ export default function ProfilePage() {
                     <User className="w-10 h-10 text-zinc-400 stroke-[1]" />
                   )}
                 </div>
-                <label className="absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-black cursor-pointer rounded-full border border-zinc-200">
+                <label className="absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-black cursor-pointer rounded-full border border-zinc-200">
                   <Camera className="w-5 h-5 mb-1" />
                   <span className="text-[10px] font-semibold">Đổi ảnh</span>
                   <input
@@ -254,7 +252,10 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-6">
-                className="w-full h-9 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center justify-center gap-2 rounded-xl hover:bg-zinc-50 transition-colors shadow-sm"
+              <button
+                onClick={logoutState}
+                className="w-full h-9 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center justify-center gap-2 rounded-xl"
+              >
                 <LogOut className="w-4 h-4" /> Đăng xuất
               </button>
             </div>
