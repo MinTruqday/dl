@@ -76,7 +76,7 @@ export default function UpgradePage() {
 
         <div className="grid md:grid-cols-3 gap-8 items-start">
           {/* BASIC TIER */}
-          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full transition-transform hover:-translate-y-2">
+          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full">
             <div className="mb-8">
               <h3 className="text-xl font-bold text-black mb-2">Cơ bản</h3>
               <p className="text-sm text-zinc-500 font-medium min-h-[40px]">Trải nghiệm AI giới hạn dành cho người dùng mới.</p>
@@ -113,7 +113,7 @@ export default function UpgradePage() {
           </div>
 
           {/* PRO TIER */}
-          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full transition-transform hover:-translate-y-2">
+          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full">
             <div className="absolute top-0 right-0 bg-black text-white px-4 py-1 text-[10px] font-bold uppercase tracking-widest rounded-bl-xl">
               Phổ biến nhất
             </div>
@@ -154,10 +154,10 @@ export default function UpgradePage() {
             <button
               onClick={() => handleUpgrade("PRO", 750)}
               disabled={!!loading || getTierState("PRO") !== "AVAILABLE"}
-              className={`w-full py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 ${
                 getTierState("PRO") === "CURRENT" ? "bg-zinc-100 text-zinc-500" :
                 getTierState("PRO") === "DOWNGRADE" || getTierState("PRO") === "ADMIN" ? "bg-zinc-100 text-zinc-400 cursor-not-allowed" :
-                "bg-black text-white hover:bg-zinc-800 hover:shadow-lg active:scale-[0.98]"
+                "bg-black text-white hover:bg-zinc-800"
               }`}
             >
               {loading === "PRO" ? <Loader2 className="w-5 h-5 animate-spin" /> : 
@@ -169,11 +169,8 @@ export default function UpgradePage() {
           </div>
 
           {/* PREMIUM TIER */}
-          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full transition-transform hover:-translate-y-2">
-            <div className="absolute -right-12 -top-12 opacity-5">
-              <Brain className="w-48 h-48 text-black" />
-            </div>
-            <div className="mb-8 relative z-10">
+          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full">
+            <div className="mb-8 relative z-10 mt-4">
               <h3 className="text-xl font-bold text-black mb-2 flex items-center gap-2">
                 Cao cấp
               </h3>
@@ -214,16 +211,16 @@ export default function UpgradePage() {
             <button
               onClick={() => handleUpgrade("PREMIUM", 2500)}
               disabled={!!loading || getTierState("PREMIUM") !== "AVAILABLE"}
-              className={`w-full py-4 rounded-xl text-sm font-bold transition-all relative z-10 flex items-center justify-center gap-2 ${
+              className={`w-full py-4 rounded-xl text-sm font-bold relative z-10 flex items-center justify-center gap-2 ${
                 getTierState("PREMIUM") === "CURRENT" ? "bg-zinc-100 text-zinc-500 cursor-not-allowed" :
                 getTierState("PREMIUM") === "ADMIN" ? "bg-zinc-100 text-zinc-500 cursor-not-allowed" :
-                "bg-black text-white hover:bg-zinc-800 hover:shadow-lg active:scale-[0.98]"
+                "bg-black text-white hover:bg-zinc-800"
               }`}
             >
               {loading === "PREMIUM" ? <Loader2 className="w-5 h-5 animate-spin" /> : 
                 getTierState("PREMIUM") === "CURRENT" ? "Gói hiện tại" : 
                 getTierState("PREMIUM") === "ADMIN" ? "Quản trị viên" :
-                "Nâng cấp lên Cao cấp"
+                "Nâng cấp ngay"
               }
             </button>
           </div>

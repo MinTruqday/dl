@@ -120,7 +120,7 @@ export default function ManageCouponsPage() {
   };
 
   return (
-    <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
+    <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 ">
       <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-lg font-semibold text-black">Danh sách ưu đãi</h2>
         <div className="flex items-center gap-3">
@@ -163,8 +163,8 @@ export default function ManageCouponsPage() {
         </div>
       ) : coupons.length > 0 ? (
         <div
-          className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"} animate-in fade-in slide-in-from-bottom-8 duration-300`}
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"} `}
+          
         >
           {coupons.map((c: any) => (
             <div
@@ -297,8 +297,8 @@ export default function ManageCouponsPage() {
         </div>
       ) : (
         <div
-          className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl "
+          
         >
           <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
         </div>
@@ -406,7 +406,7 @@ export default function ManageCouponsPage() {
       <Modal
         isOpen={!!deleteConfirm}
         onClose={() => !isDeleting && setDeleteConfirm(null)}
-        className="max-w-sm rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-sm rounded-xl border border-zinc-200 bg-white p-0"
       >
         <ModalHeader className="border-b border-zinc-200 p-6">
           <ModalTitle className="text-sm font-semibold text-black">

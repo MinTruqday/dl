@@ -212,7 +212,7 @@ export default function ProfilePage() {
         style={{ opacity: visible ? 1 : 0 }}
       >
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-full border border-zinc-200 overflow-hidden bg-zinc-50 flex items-center justify-center shrink-0">
@@ -254,10 +254,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-6">
-              <button
-                onClick={logoutState}
-                className="w-full h-9 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center justify-center gap-2 rounded-2xl hover:bg-zinc-50 transition-colors shadow-sm"
-              >
+                className="w-full h-9 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center justify-center gap-2 rounded-xl hover:bg-zinc-50 transition-colors shadow-sm"
                 <LogOut className="w-4 h-4" /> Đăng xuất
               </button>
             </div>
@@ -265,10 +262,7 @@ export default function ProfilePage() {
         </aside>
 
         <main className="lg:col-span-9 space-y-6">
-          <div
-            className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "150ms", animationFillMode: "both" }}
-          >
+          <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-6">
             <div className="flex items-center justify-between mb-2">
               <div>
                 <h2 className="text-lg font-semibold text-black">
@@ -282,7 +276,7 @@ export default function ProfilePage() {
                 <label className="text-xs font-semibold text-black">
                   Địa chỉ Email
                 </label>
-                <div className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 flex items-center text-zinc-500 text-sm font-medium cursor-not-allowed rounded-2xl">
+                <div className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 flex items-center text-zinc-500 text-sm font-medium cursor-not-allowed rounded-xl">
                   {user.email}
                 </div>
               </div>
@@ -293,7 +287,7 @@ export default function ProfilePage() {
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
+                  className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-xl"
                 />
               </div>
             </div>
@@ -306,7 +300,7 @@ export default function ProfilePage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Nhập thông tin giới thiệu ngắn gọn"
-                className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
+                className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-xl"
               />
             </div>
 
@@ -314,7 +308,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50 rounded-2xl hover:bg-zinc-800 transition-colors"
+                className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50 rounded-xl hover:bg-zinc-800 transition-colors"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -337,7 +331,7 @@ export default function ProfilePage() {
                 <button
                   onClick={handleBecomeAuthor}
                   disabled={isSaving}
-                  className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 rounded-2xl hover:bg-zinc-800 transition-colors"
+                  className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 rounded-xl hover:bg-zinc-800 transition-colors"
                 >
                   {isSaving ? "Đang xử lý..." : "Trở thành tác giả ngay"}
                 </button>
@@ -358,12 +352,12 @@ export default function ProfilePage() {
                     value={motivation}
                     onChange={(e) => setMotivation(e.target.value)}
                     placeholder="Lý do ứng tuyển tác giả tiềm năng"
-                    className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-2xl"
+                    className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
                   />
                   <button
                     onClick={handleApplyAuthor}
                     disabled={isApplying}
-                    className="h-10 px-6 border border-black bg-white text-black text-xs font-medium disabled:opacity-50 rounded-2xl shrink-0 hover:bg-zinc-50 transition-colors"
+                    className="h-10 px-6 border border-black bg-white text-black text-xs font-medium disabled:opacity-50 rounded-xl shrink-0 hover:bg-zinc-50 transition-colors"
                   >
                     {isApplying ? "Đang gửi" : "Gửi yêu cầu"}
                   </button>

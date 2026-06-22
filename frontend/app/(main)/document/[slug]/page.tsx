@@ -174,7 +174,7 @@ export default function DocumentDetailsPage() {
         </p>
         <button
           onClick={() => router.back()}
-          className="h-10 px-6 bg-black text-white text-sm font-medium rounded-none  "
+          className="h-10 px-6 bg-black text-white text-sm font-medium rounded-xl"
         >
           Quay lại
         </button>
@@ -193,9 +193,9 @@ export default function DocumentDetailsPage() {
           />
         )}
 
-        <div className="flex flex-col md:flex-row gap-12 mb-16 items-start animate-in fade-in slide-in-from-bottom-8 duration-300">
+        <div className="flex flex-col md:flex-row gap-12 mb-16 items-start">
           <div className="w-full md:w-64 shrink-0 flex justify-center md:justify-start">
-            <div className="w-48 md:w-full aspect-[2/3] border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none overflow-hidden relative">
+            <div className="w-48 md:w-full aspect-[2/3] border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-2xl overflow-hidden relative">
               {docData.cover_image ? (
                 <img
                   src={docData.cover_image}
@@ -216,7 +216,7 @@ export default function DocumentDetailsPage() {
           <div className="flex-1 space-y-8 w-full">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-4">
-                <span className="px-3 py-1 bg-black text-white text-xs font-medium rounded-none">
+                <span className="px-3 py-1 bg-black text-white text-xs font-medium rounded-xl">
                   {docData.category_name || "Nội dung"}
                 </span>
 
@@ -235,7 +235,7 @@ export default function DocumentDetailsPage() {
                   }
                   className="flex items-center gap-3   group"
                 >
-                  <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center overflow-hidden rounded-none">
+                  <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center overflow-hidden rounded-xl">
                     {docData.author?.avatar_url ? (
                       <img
                         src={docData.author.avatar_url}
@@ -276,13 +276,13 @@ export default function DocumentDetailsPage() {
             <div className="flex flex-wrap gap-4 border-t border-zinc-200 pt-8">
               <button
                 onClick={handleRead}
-                className="h-12 px-6 bg-black text-white text-sm font-medium flex items-center justify-center gap-2 rounded-none  "
+                className="h-12 px-6 bg-black text-white text-sm font-medium flex items-center justify-center gap-2 rounded-xl"
               >
                 <BookOpen className="w-4 h-4" /> Đọc ngay
               </button>
               <button
                 onClick={handleBookmark}
-                className={`h-12 px-6 border flex items-center justify-center gap-2 text-sm font-medium  rounded-none ${isBookmarked ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 "}`}
+                className={`h-12 px-6 border flex items-center justify-center gap-2 text-sm font-medium rounded-xl ${isBookmarked ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 "}`}
               >
                 <Bookmark
                   className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`}
@@ -292,7 +292,7 @@ export default function DocumentDetailsPage() {
               {docData.is_premium && (
                 <button
                   onClick={handlePurchase}
-                  className="h-12 px-6 bg-white text-black border border-zinc-200 text-sm font-medium flex items-center justify-center gap-2 rounded-none  "
+                  className="h-12 px-6 bg-white text-black border border-zinc-200 text-sm font-medium flex items-center justify-center gap-2 rounded-xl"
                 >
                   <ShoppingCart className="w-4 h-4" /> Mua tài liệu
                 </button>
@@ -316,7 +316,7 @@ export default function DocumentDetailsPage() {
               </button>
             </div>
 
-            <div className="p-4 border border-zinc-200 bg-zinc-50 flex items-start gap-3 rounded-none mt-6">
+            <div className="p-4 border border-zinc-200 bg-zinc-50 flex items-start gap-3 rounded-3xl mt-6">
               <ShieldCheck className="w-5 h-5 text-zinc-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="text-sm font-medium text-black">
@@ -331,10 +331,7 @@ export default function DocumentDetailsPage() {
           </div>
         </div>
 
-        <div
-          className="grid grid-cols-1 gap-12 items-start animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
-        >
+        <div className="grid grid-cols-1 gap-12 items-start">
           <div className="w-full space-y-8">
             <div
               id="document-tabs"
@@ -386,7 +383,7 @@ export default function DocumentDetailsPage() {
                         {docData.tags.map((tag: string, i: number) => (
                           <span
                             key={i}
-                            className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-sm font-medium text-zinc-600 rounded-none cursor-pointer  "
+                            className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-sm font-medium text-zinc-600 rounded-xl cursor-pointer"
                           >
                             #{tag}
                           </span>
@@ -398,7 +395,7 @@ export default function DocumentDetailsPage() {
               )}
 
               {activeTab === "chapters" && (
-                <div className="space-y-0 border border-zinc-200 rounded-none overflow-hidden">
+                <div className="space-y-0 border border-zinc-200 rounded-3xl overflow-hidden">
                   {docData.chapters && docData.chapters.length > 0 ? (
                     <table className="w-full text-left text-sm border-collapse">
                       <thead>
@@ -458,7 +455,7 @@ export default function DocumentDetailsPage() {
                     const contentToDisplay = docData.content || "";
 
                     return (
-                      <div className="bg-white border border-zinc-200 min-h-[600px] relative rounded-none">
+                      <div className="bg-white border border-zinc-200 min-h-[600px] relative rounded-3xl overflow-hidden">
                         <div className="p-8 md:p-16 space-y-8">
                           <article className="prose prose-zinc max-w-none">
                             <div className="text-black leading-relaxed text-base space-y-6">
@@ -488,7 +485,7 @@ export default function DocumentDetailsPage() {
                             <div className="mt-20 pt-20 border-t border-zinc-200 flex flex-col items-center text-center space-y-8 relative">
                               <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
                               <div className="relative z-20 space-y-6 pb-16">
-                                <div className="w-16 h-16 bg-zinc-50 border border-zinc-200 flex items-center justify-center mx-auto rounded-none">
+                                <div className="w-16 h-16 bg-zinc-50 border border-zinc-200 flex items-center justify-center mx-auto rounded-2xl">
                                   <Lock className="w-6 h-6 text-zinc-400" />
                                 </div>
                                 <div className="space-y-2">
@@ -502,7 +499,7 @@ export default function DocumentDetailsPage() {
                                 </div>
                                 <button
                                   onClick={handlePurchase}
-                                  className="h-12 px-8 bg-black text-white text-sm font-medium rounded-none  "
+                                  className="h-12 px-8 bg-black text-white text-sm font-medium rounded-xl"
                                 >
                                   Sở hữu tài liệu
                                 </button>
@@ -518,7 +515,7 @@ export default function DocumentDetailsPage() {
 
 
               {activeTab === "comments" && (
-                <div className="bg-white p-8 border border-zinc-200 rounded-none">
+                <div className="bg-white p-8 border border-zinc-200 rounded-3xl">
                   <Comment
                     itemId={docData._id || docData.id}
                     itemType="document"

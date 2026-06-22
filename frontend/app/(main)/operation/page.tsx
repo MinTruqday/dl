@@ -168,8 +168,8 @@ export default function OperationDashboard() {
         </header>
 
         <div
-          className="space-y-12 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="space-y-12 mb-16 "
+          
         >
           <div className="space-y-12">
             <section className="space-y-6">
@@ -370,7 +370,7 @@ export default function OperationDashboard() {
                               className="py-3 flex items-center justify-between"
                             >
                               <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 bg-black rounded-none"></div>
+                                <div className="w-1.5 h-1.5 bg-black rounded-xl"></div>
                                 <span className="text-xs font-semibold text-black">
                                   {c.name}
                                 </span>
@@ -414,7 +414,7 @@ export default function OperationDashboard() {
                   <button
                     onClick={toggleMaintenance}
                     disabled={isProcessing}
-                    className={`h-10 px-6 text-xs font-semibold border   disabled:opacity-50 rounded-none ${
+                    className={`h-10 px-6 text-xs font-semibold border   disabled:opacity-50 rounded-xl ${
                       maintenanceMode
                         ? "bg-black text-white border-black"
                         : "bg-white text-black border-zinc-200 "
@@ -436,7 +436,7 @@ export default function OperationDashboard() {
                   <button
                     onClick={triggerBackup}
                     disabled={isProcessing}
-                    className="h-10 px-6 bg-white text-black text-xs font-semibold border border-black     disabled:opacity-50 rounded-none"
+                    className="h-10 px-6 bg-white text-black text-xs font-semibold border border-black     disabled:opacity-50 rounded-xl"
                   >
                     Tiến hành sao lưu
                   </button>
@@ -447,7 +447,7 @@ export default function OperationDashboard() {
         </div>
 
         <div
-          className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300"
+          className="space-y-12 "
           style={{ animationDelay: "300ms", animationFillMode: "both" }}
         >
           <section>
@@ -489,7 +489,7 @@ export default function OperationDashboard() {
                               <button
                                 onClick={() => handleUpdateQuota(role)}
                                 disabled={!!isSavingQuota}
-                                className="p-1 text-zinc-400    rounded-none disabled:opacity-50"
+                                className="p-1 text-zinc-400    rounded-xl disabled:opacity-50"
                               >
                                 {isSavingQuota === role ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -521,7 +521,7 @@ export default function OperationDashboard() {
                                     e.target.value,
                                   )
                                 }
-                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none   rounded-none ${isAdmin ? "bg-zinc-100 border-transparent text-zinc-400" : "bg-zinc-50 border-zinc-200 focus:border-black"}`}
+                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none   rounded-xl ${isAdmin ? "bg-zinc-100 border-transparent text-zinc-400" : "bg-zinc-50 border-zinc-200 focus:border-black"}`}
                               />
                             </div>
 
@@ -545,7 +545,7 @@ export default function OperationDashboard() {
                                     e.target.value,
                                   )
                                 }
-                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none   rounded-none ${isAdmin ? "bg-zinc-100 border-transparent text-zinc-400" : "bg-zinc-50 border-zinc-200 focus:border-black"}`}
+                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none   rounded-xl ${isAdmin ? "bg-zinc-100 border-transparent text-zinc-400" : "bg-zinc-50 border-zinc-200 focus:border-black"}`}
                               />
                             </div>
                           </div>

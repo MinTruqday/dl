@@ -79,7 +79,7 @@ function QuotaIndicator() {
   );
 
   return (
-    <div className="flex flex-col gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-none animate-in fade-in slide-in-from-top-2 ">
+    <div className="flex flex-col gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-xl  slide-in-from-top-2 ">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Activity className="w-3.5 h-3.5 text-black" />
@@ -97,7 +97,7 @@ function QuotaIndicator() {
               {usage.used_requests} / {usage.limit_requests}
             </span>
           </div>
-          <div className="h-1 w-full bg-zinc-200 rounded-none overflow-hidden">
+          <div className="h-1 w-full bg-zinc-200 rounded-xl overflow-hidden">
             <div
               className={`h-full   ${reqPercent > 90 ? "bg-black" : "bg-zinc-800"}`}
               style={{ width: `${reqPercent}%` }}
@@ -113,7 +113,7 @@ function QuotaIndicator() {
               {usage.limit_tokens.toLocaleString()}
             </span>
           </div>
-          <div className="h-1 w-full bg-zinc-200 rounded-none overflow-hidden">
+          <div className="h-1 w-full bg-zinc-200 rounded-xl overflow-hidden">
             <div
               className={`h-full   ${tokenPercent > 90 ? "bg-black" : "bg-zinc-800"}`}
               style={{ width: `${tokenPercent}%` }}
@@ -551,7 +551,7 @@ export default function TroChuyenPage() {
       <div className="grid lg:grid-cols-12 gap-6 h-full w-full items-start">
         {/* SESSIONS SIDEBAR */}
         {true && (
-          <aside className="lg:col-span-3 bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-[calc(100vh-140px)] w-full animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <aside className="lg:col-span-3 bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-[calc(100vh-140px)] w-full ">
             <div className="p-5 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-semibold text-black">Lịch sử</h2>
               <div className="flex items-center gap-3">
@@ -577,8 +577,8 @@ export default function TroChuyenPage() {
               </button>
             </div>
             <div
-              className="overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-2 overflow-x-hidden min-h-0 shrink animate-in fade-in slide-in-from-bottom-8 duration-300"
-              style={{ animationDelay: "150ms", animationFillMode: "both" }}
+              className="overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-2 overflow-x-hidden min-h-0 shrink "
+              
             >
               {sessions.length === 0 ? (
                 <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
@@ -768,11 +768,11 @@ export default function TroChuyenPage() {
 
         {/* MAIN CHAT AREA */}
         {true && (
-          <main className="lg:col-span-9 flex flex-col h-[calc(100vh-140px)] bg-white border border-zinc-200 rounded-2xl shadow-sm relative overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <main className="lg:col-span-9 flex flex-col h-[calc(100vh-140px)] bg-white border border-zinc-200 rounded-2xl shadow-sm relative overflow-hidden ">
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto flex flex-col min-h-0 no-scrollbar relative animate-in fade-in slide-in-from-bottom-8 duration-300"
-              style={{ animationDelay: "150ms", animationFillMode: "both" }}
+              className="flex-1 overflow-y-auto flex flex-col min-h-0 no-scrollbar relative "
+              
             >
               {messages.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
@@ -806,7 +806,7 @@ export default function TroChuyenPage() {
                     return (
                       <div
                         key={idx}
-                        className="flex justify-start animate-in fade-in slide-in-from-left-4"
+                        className="flex justify-start  slide-in-from-left-4"
                       >
                         <div className="w-full">
                           <div className="py-2 w-full relative group">
@@ -896,7 +896,7 @@ export default function TroChuyenPage() {
                                     prose-td:p-3 prose-td:border-t prose-td:border-zinc-100"
                                       components={{
                                         pre: ({ children }) => (
-                                          <pre className="relative group bg-zinc-950 p-6 overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 rounded-none">
+                                          <pre className="relative group bg-zinc-950 p-6 overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 rounded-xl">
                                             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100">
                                               <button
                                                 onClick={() => {
@@ -911,7 +911,7 @@ export default function TroChuyenPage() {
                                                     );
                                                   }
                                                 }}
-                                                className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest    rounded-none"
+                                                className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest    rounded-xl"
                                               >
                                                 Sao chép
                                               </button>
@@ -929,7 +929,7 @@ export default function TroChuyenPage() {
                                           if (inline) {
                                             return (
                                               <code
-                                                className="bg-zinc-100 text-black px-1.5 py-0.5 font-medium rounded-none"
+                                                className="bg-zinc-100 text-black px-1.5 py-0.5 font-medium rounded-xl"
                                                 {...props}
                                               >
                                                 {children}
@@ -978,7 +978,7 @@ export default function TroChuyenPage() {
                                           );
                                         },
                                         table: ({ children }) => (
-                                          <div className="my-6 border border-zinc-200 overflow-x-auto rounded-none">
+                                          <div className="my-6 border border-zinc-200 overflow-x-auto rounded-xl">
                                             <table className="w-full border-collapse">
                                               {children}
                                             </table>
@@ -1021,25 +1021,25 @@ export default function TroChuyenPage() {
                           <img
                             src={selectedImage.data}
                             alt=""
-                            className="h-16 w-16 object-cover border border-zinc-200 rounded-none"
+                            className="h-16 w-16 object-cover border border-zinc-200 rounded-xl"
                           />
                           <button
                             onClick={() => setSelectedImage(null)}
-                            className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center  rounded-none"
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center  rounded-xl"
                           >
                             <X className="w-3 h-3" />
                           </button>
                         </div>
                       )}
                       {selectedFile && (
-                        <div className="relative group shrink-0 h-16 px-4 bg-white border border-zinc-200 flex items-center gap-3 rounded-none">
+                        <div className="relative group shrink-0 h-16 px-4 bg-white border border-zinc-200 flex items-center gap-3 rounded-xl">
                           <FileText className="w-5 h-5 text-black shrink-0" />
                           <span className="text-sm font-medium text-black truncate max-w-[150px]">
                             {selectedFile.name}
                           </span>
                           <button
                             onClick={() => setSelectedFile(null)}
-                            className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center  rounded-none"
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center  rounded-xl"
                           >
                             <X className="w-3 h-3" />
                           </button>

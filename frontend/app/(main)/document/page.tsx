@@ -380,11 +380,11 @@ export default function DocumentsPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => setConfirmModal(null)}
-        className="max-w-md rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-md rounded-3xl border border-zinc-200 bg-white p-0 overflow-hidden"
       >
         <ModalHeader className="border-b border-zinc-200 p-6">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none">
+            <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-xl">
               <AlertTriangle className="w-5 h-5 text-black" />
             </div>
             <div>
@@ -400,13 +400,13 @@ export default function DocumentsPage() {
         <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
           <button
             onClick={() => setConfirmModal(null)}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-none"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black rounded-xl"
           >
             Hủy bỏ
           </button>
           <button
             onClick={executeDelete}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-none"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium rounded-xl"
           >
             Xác nhận
           </button>
@@ -416,7 +416,7 @@ export default function DocumentsPage() {
       <Modal
         isOpen={createDocModal}
         onClose={() => setCreateDocModal(false)}
-        className="max-w-3xl rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-3xl rounded-3xl border border-zinc-200 bg-white p-0 overflow-hidden"
       >
         <ModalHeader className="border-b border-zinc-200 p-6">
           <ModalTitle className="text-sm font-semibold text-black">
@@ -438,7 +438,7 @@ export default function DocumentsPage() {
                 onChange={(e) =>
                   setNewDoc({ ...newDoc, title: e.target.value })
                 }
-                className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
+                className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -451,7 +451,7 @@ export default function DocumentsPage() {
                   onChange={(e) =>
                     setNewDoc({ ...newDoc, category: e.target.value })
                   }
-                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none  rounded-none"
+                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none rounded-xl"
                 >
                   <option value="Chưa phân loại">Chưa phân loại</option>
                   <option value="Giáo trình">Giáo trình</option>
@@ -465,7 +465,7 @@ export default function DocumentsPage() {
                 </label>
                 <input
                   type="number"
-                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
+                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
                   value={newDoc.price_dl}
                   onChange={(e) =>
                     setNewDoc({
@@ -485,7 +485,7 @@ export default function DocumentsPage() {
                 onChange={(e) =>
                   setNewDoc({ ...newDoc, description: e.target.value })
                 }
-                className="w-full h-24 p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  resize-none rounded-none"
+                className="w-full h-24 p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black resize-none rounded-xl"
               />
             </div>
           </div>
@@ -504,9 +504,9 @@ export default function DocumentsPage() {
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border border-zinc-200 bg-zinc-50   p-6 flex flex-col items-center justify-center gap-3  cursor-pointer rounded-none"
+                className="border border-zinc-200 bg-zinc-50 p-6 flex flex-col items-center justify-center gap-3 cursor-pointer rounded-xl"
               >
-                <div className="w-10 h-10 flex items-center justify-center bg-white border border-zinc-200 text-black rounded-none">
+                <div className="w-10 h-10 flex items-center justify-center bg-white border border-zinc-200 text-black rounded-xl">
                   {file ? (
                     <FileCheck className="w-5 h-5" />
                   ) : (
@@ -536,7 +536,7 @@ export default function DocumentsPage() {
                   onChange={(e) =>
                     setNewDoc({ ...newDoc, visibility: e.target.value })
                   }
-                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none  rounded-none"
+                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none rounded-xl"
                 >
                   <option value="public">Công khai</option>
                   <option value="private">Riêng tư</option>
@@ -551,7 +551,7 @@ export default function DocumentsPage() {
                   onChange={(e) =>
                     setNewDoc({ ...newDoc, status: e.target.value })
                   }
-                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none  rounded-none"
+                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none rounded-xl"
                 >
                   <option value="published">Xuất bản</option>
                   <option value="draft">Bản nháp</option>
@@ -564,7 +564,7 @@ export default function DocumentsPage() {
           <button
             onClick={handleCreateDocument}
             disabled={isCreating || !file || !newDoc.title}
-            className="w-full py-2 bg-black text-white text-xs font-medium   flex items-center justify-center gap-2 rounded-none disabled:opacity-50"
+            className="w-full py-2 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 rounded-xl disabled:opacity-50"
           >
             {isCreating ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -579,7 +579,7 @@ export default function DocumentsPage() {
       <Modal
         isOpen={createFolderModal}
         onClose={() => setCreateFolderModal(false)}
-        className="max-w-md rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-md rounded-3xl border border-zinc-200 bg-white p-0 overflow-hidden"
       >
         <ModalHeader className="border-b border-zinc-200 p-6">
           <ModalTitle className="text-sm font-semibold text-black">
@@ -599,21 +599,21 @@ export default function DocumentsPage() {
               value={folderName}
               onChange={(e) => setFolderName(e.target.value)}
               autoFocus
-              className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
+              className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
             />
           </div>
         </ModalContent>
         <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
           <button
             onClick={() => setCreateFolderModal(false)}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-none"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-xl"
           >
             Hủy bỏ
           </button>
           <button
             onClick={handleCreateFolder}
             disabled={!folderName}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-none disabled:opacity-50"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium rounded-xl disabled:opacity-50"
           >
             Tạo thư mục
           </button>
@@ -623,11 +623,11 @@ export default function DocumentsPage() {
       <Modal
         isOpen={!!lockModal}
         onClose={() => setLockModal(null)}
-        className="max-w-md rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-md rounded-3xl border border-zinc-200 bg-white p-0 overflow-hidden"
       >
         <ModalHeader className="border-b border-zinc-200 p-6">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none">
+            <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-xl">
               <Lock className="w-5 h-5 text-black" />
             </div>
             <div>
@@ -652,7 +652,7 @@ export default function DocumentsPage() {
             <input
               type="password"
               autoFocus
-              className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
+              className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
               value={lockPassword}
               onChange={(e) => setLockPassword(e.target.value)}
               required
@@ -663,14 +663,14 @@ export default function DocumentsPage() {
           <button
             type="button"
             onClick={() => setLockModal(null)}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-none"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-xl"
           >
             Hủy bỏ
           </button>
           <button
             type="submit"
             form="lock-form"
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-none"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-xl"
           >
             Kích hoạt khóa
           </button>
@@ -680,11 +680,11 @@ export default function DocumentsPage() {
       <Modal
         isOpen={!!shareModal}
         onClose={() => setShareModal(null)}
-        className="max-w-2xl rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-2xl rounded-3xl border border-zinc-200 bg-white p-0 overflow-hidden"
       >
         <ModalHeader className="border-b border-zinc-200 p-6">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none">
+            <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-xl">
               <Globe className="w-5 h-5 text-black" />
             </div>
             <div>
@@ -703,12 +703,12 @@ export default function DocumentsPage() {
             onSubmit={handleShareSubmit}
             className="space-y-6"
           >
-            <div className="flex items-center gap-3 bg-zinc-50 p-4 border border-zinc-200 rounded-none">
+            <div className="flex items-center gap-3 bg-zinc-50 p-4 border border-zinc-200 rounded-xl">
               <input
                 type="checkbox"
                 checked={isPublic}
                 onChange={(e) => setIsPublic(e.target.checked)}
-                className="w-4 h-4 accent-black cursor-pointer rounded-none"
+                className="w-4 h-4 accent-black cursor-pointer rounded-xl"
               />
               <label className="text-xs font-semibold text-black uppercase tracking-widest cursor-pointer">
                 Công khai tài liệu
@@ -723,7 +723,7 @@ export default function DocumentsPage() {
                   type="password"
                   value={sharePassword}
                   onChange={(e) => setSharePassword(e.target.value)}
-                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-none "
+                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
                 />
               </div>
               <div className="space-y-2">
@@ -733,7 +733,7 @@ export default function DocumentsPage() {
                 <select
                   value={shareExpires}
                   onChange={(e) => setShareExpires(e.target.value)}
-                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium uppercase tracking-widest focus:outline-none focus:border-black rounded-none  appearance-none"
+                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium uppercase tracking-widest focus:outline-none focus:border-black rounded-xl appearance-none"
                 >
                   <option value="1">24 giờ</option>
                   <option value="7">07 ngày</option>
@@ -742,11 +742,11 @@ export default function DocumentsPage() {
               </div>
             </div>
             {publicUrl && (
-              <div className="p-6 bg-zinc-50 border border-zinc-200 flex flex-col items-center gap-6 animate-in fade-in rounded-none">
-                <div className="text-[10px] font-semibold text-black break-all select-all text-center uppercase tracking-widest bg-white p-3 border border-zinc-200 w-full rounded-none">
+              <div className="p-6 bg-zinc-50 border border-zinc-200 flex flex-col items-center gap-6  rounded-xl">
+                <div className="text-[10px] font-semibold text-black break-all select-all text-center uppercase tracking-widest bg-white p-3 border border-zinc-200 w-full rounded-xl">
                   {publicUrl}
                 </div>
-                <div className="p-4 bg-white border border-zinc-200 rounded-none">
+                <div className="p-4 bg-white border border-zinc-200 rounded-xl">
                   <QRCodeSVG value={publicUrl} size={128} />
                 </div>
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
@@ -763,14 +763,14 @@ export default function DocumentsPage() {
               setShareModal(null);
               setPublicUrl("");
             }}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-none"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-xl"
           >
             Đóng
           </button>
           <button
             type="submit"
             form="share-form"
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-none"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-xl"
           >
             Cập nhật giao thức
           </button>
@@ -781,8 +781,8 @@ export default function DocumentsPage() {
         className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0"
         style={{ opacity: visible ? 1 : 0 }}
       >
-        <aside className="lg:col-span-3 flex flex-col gap-6 overflow-y-auto custom-scrollbar pb-6 pr-2 animate-in fade-in slide-in-from-bottom-8 duration-300">
-          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-4">
+        <aside className="lg:col-span-3 flex flex-col gap-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
+          <div className="border border-zinc-200 bg-white p-5 rounded-3xl shadow-sm space-y-4">
             <h3 className="text-sm font-semibold text-black flex items-center gap-2">
               <Search className="w-4 h-4" /> Tìm kiếm tài liệu
             </h3>
@@ -795,7 +795,7 @@ export default function DocumentsPage() {
             />
           </div>
 
-          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-4">
+          <div className="border border-zinc-200 bg-white p-5 rounded-3xl shadow-sm space-y-4">
             <h3 className="text-sm font-semibold text-black flex items-center gap-2">
               <Database className="w-4 h-4" /> Lọc dữ liệu
             </h3>
@@ -841,11 +841,8 @@ export default function DocumentsPage() {
           </div>
         </aside>
 
-        <main
-          className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
-        >
-          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <main className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0 overflow-hidden">
+          <div className="border border-zinc-200 bg-white rounded-3xl shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
               <button
                 onClick={() => {
@@ -923,7 +920,7 @@ export default function DocumentsPage() {
                   setCurrentFolder(null);
                   setBreadcrumbs([]);
                 }}
-                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium  rounded-none border ${!currentFolder ? "bg-zinc-100 border-zinc-200 text-black font-semibold" : "bg-white text-zinc-500 border-transparent   "}`}
+                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium  rounded-xl border ${!currentFolder ? "bg-zinc-100 border-zinc-200 text-black font-semibold" : "bg-white text-zinc-500 border-transparent   "}`}
               >
                 <Home className="w-3.5 h-3.5" />
                 Gốc
@@ -937,7 +934,7 @@ export default function DocumentsPage() {
                       setBreadcrumbs(newBread);
                       setCurrentFolder(newBread[newBread.length - 1]);
                     }}
-                    className={`px-3 py-1.5 text-xs font-medium  rounded-none border ${idx === breadcrumbs.length - 1 ? "bg-zinc-100 border-zinc-200 text-black font-semibold" : "bg-white text-zinc-500 border-transparent   "}`}
+                    className={`px-3 py-1.5 text-xs font-medium  rounded-xl border ${idx === breadcrumbs.length - 1 ? "bg-zinc-100 border-zinc-200 text-black font-semibold" : "bg-white text-zinc-500 border-transparent   "}`}
                   >
                     {b.name}
                   </button>
@@ -949,20 +946,20 @@ export default function DocumentsPage() {
               <div className="flex bg-zinc-50 border border-zinc-200 p-0.5">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-1.5  rounded-none ${viewMode === "grid" ? "bg-white border border-zinc-200 text-black" : "text-zinc-500 "}`}
+                  className={`p-1.5  rounded-xl ${viewMode === "grid" ? "bg-white border border-zinc-200 text-black" : "text-zinc-500 "}`}
                 >
                   <LayoutGrid className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-1.5  rounded-none ${viewMode === "list" ? "bg-white border border-zinc-200 text-black" : "text-zinc-500 "}`}
+                  className={`p-1.5  rounded-xl ${viewMode === "list" ? "bg-white border border-zinc-200 text-black" : "text-zinc-500 "}`}
                 >
                   <List className="w-4 h-4" />
                 </button>
               </div>
               <button
                 onClick={fetchData}
-                className="h-8 w-8 border border-zinc-200 bg-white flex items-center justify-center text-zinc-500    rounded-none"
+                className="h-8 w-8 border border-zinc-200 bg-white flex items-center justify-center text-zinc-500    rounded-xl"
               >
                 {isRefreshing ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -974,7 +971,7 @@ export default function DocumentsPage() {
           </div>
 
           {viewMode === "list" ? (
-            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+            <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
               <div className="overflow-y-auto custom-scrollbar flex-1">
                 <table className="w-full text-left text-xs">
                   <thead className="sticky top-0 bg-zinc-50/90 backdrop-blur-sm z-10">
@@ -1051,7 +1048,7 @@ export default function DocumentsPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span
-                            className={`inline-block px-2 py-1 text-[10px] font-semibold uppercase border rounded-none ${
+                            className={`inline-block px-2 py-1 text-[10px] font-semibold uppercase border rounded-xl ${
                               doc.status === "published"
                                 ? "border-black text-black"
                                 : "border-zinc-300 text-zinc-500"
@@ -1149,7 +1146,7 @@ export default function DocumentsPage() {
                     setCurrentFolder(folder);
                     setBreadcrumbs([...breadcrumbs, folder]);
                   }}
-                  className="bg-white border border-zinc-200 p-6 flex flex-col items-center justify-center gap-4 cursor-pointer rounded-2xl shadow-sm hover:border-black transition-colors group"
+                  className="bg-white border border-zinc-200 p-6 flex flex-col items-center justify-center gap-4 cursor-pointer rounded-3xl shadow-sm hover:border-zinc-300 transition-colors group"
                 >
                   <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center text-zinc-400 rounded-xl group-hover:text-black group-hover:bg-zinc-100 transition-colors">
                     <Folder className="w-5 h-5" />
@@ -1162,7 +1159,7 @@ export default function DocumentsPage() {
               {documents.map((doc: any) => (
                 <div
                   key={doc._id || doc.id}
-                  className="bg-white border border-zinc-200 p-5 flex flex-col rounded-2xl shadow-sm hover:border-zinc-300 transition-colors group relative"
+                  className="bg-white border border-zinc-200 p-5 flex flex-col rounded-3xl shadow-sm hover:border-zinc-300 transition-colors group relative"
                 >
                   <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <button
@@ -1237,7 +1234,7 @@ export default function DocumentsPage() {
           )}
 
           {documents.length === 0 && folders.length === 0 && (
-            <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl shadow-sm">
+            <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-3xl shadow-sm">
               <Search className="w-8 h-8 text-zinc-300 mb-4" />
               <h2 className="text-sm font-semibold text-black mb-1">
                 Không tìm thấy tài liệu

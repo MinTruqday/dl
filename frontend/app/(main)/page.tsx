@@ -86,7 +86,7 @@ export default function ExplorePage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-2xl shadow-sm overflow-hidden group animate-in fade-in duration-500">
+      <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-3xl shadow-sm overflow-hidden group">
         {banners.length > 0 ? (
           <a
             href={banners[0].link_url || "#"}
@@ -98,7 +98,7 @@ export default function ExplorePage() {
               <img
                 src={banners[0].image_url}
                 alt={banners[0].title}
-                className="w-full h-full object-cover grayscale mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-cover grayscale mix-blend-multiply"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-zinc-50">
@@ -117,14 +117,11 @@ export default function ExplorePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-4">
             <div className="text-sm font-semibold text-black mb-1">
               Phân loại
             </div>
-            <nav
-              className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-bottom-8 duration-300"
-              style={{ animationDelay: "150ms", animationFillMode: "both" }}
-            >
+            <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => setSelectedCategory(null)}
                 className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
@@ -157,10 +154,7 @@ export default function ExplorePage() {
             </nav>
           </div>
 
-          <div
-            className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "150ms", animationFillMode: "both" }}
-          >
+          <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-4">
             <div className="text-sm font-semibold text-black mb-1">
               Xu hướng
             </div>
@@ -199,28 +193,25 @@ export default function ExplorePage() {
 
         <main className="lg:col-span-9 space-y-6">
           {recommendations.length > 0 && !searchQuery && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <section className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-4">
               <div className="mb-1">
                 <h2 className="text-base font-semibold text-black">
                   Gợi ý dành riêng cho bạn
                 </h2>
               </div>
-              <div
-                className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/document/${doc.slug}`}
-                    className="flex gap-4 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-all duration-150 group"
+                    className="flex gap-4 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-zinc-300 transition-all duration-150 group"
                   >
                     <div className="w-20 h-28 shrink-0 bg-zinc-100 rounded-xl overflow-hidden relative">
                       {doc.cover_url ? (
                         <img
                           src={doc.cover_url}
                           alt={doc.title}
-                          className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover grayscale mix-blend-multiply"
                         />
                       ) : (
                         <div className="w-full h-full bg-zinc-100" />
@@ -245,7 +236,7 @@ export default function ExplorePage() {
             </section>
           )}
 
-          <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <section className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-6">
             <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-black">
                 {searchQuery
@@ -278,15 +269,13 @@ export default function ExplorePage() {
                 </div>
               </div>
             </div>
-
             {loading ? (
               <div
                 className={`grid gap-6 ${
                   viewMode === "grid"
                     ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
-                } animate-in fade-in slide-in-from-bottom-8 duration-300`}
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                }`}
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                   <div
@@ -303,8 +292,7 @@ export default function ExplorePage() {
                   viewMode === "grid"
                     ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
-                } animate-in fade-in slide-in-from-bottom-8 duration-300`}
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                }`}
               >
                 {documents.map((document, i) => (
                   <Link
@@ -312,7 +300,7 @@ export default function ExplorePage() {
                     href={`/document/${document.slug}`}
                     className={`group flex ${
                       viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-3"
-                    } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden`}
+                    } border border-zinc-200 bg-white rounded-2xl hover:border-zinc-300 transition-colors overflow-hidden`}
                   >
                     <div
                       className={`${
@@ -325,7 +313,7 @@ export default function ExplorePage() {
                         <img
                           src={document.cover_url}
                           alt={document.title}
-                          className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover grayscale mix-blend-multiply"
                         />
                       ) : (
                         <div className="w-full h-full bg-zinc-100" />
@@ -415,10 +403,7 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : (
-              <div
-                className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300"
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
-              >
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-3xl">
                 <p className="text-sm font-medium text-zinc-500">
                   Chưa có dữ liệu
                 </p>

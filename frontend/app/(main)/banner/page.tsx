@@ -102,8 +102,8 @@ export default function BannerManagementPage() {
         </header>
 
         <div
-          className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="space-y-12 "
+          
         >
           <section>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -122,7 +122,7 @@ export default function BannerManagementPage() {
                       onChange={(e) =>
                         setNewBanner({ ...newBanner, title: e.target.value })
                       }
-                      className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-none"
+                      className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
                       placeholder="Khuyến mãi mùa hè"
                     />
                   </div>
@@ -139,7 +139,7 @@ export default function BannerManagementPage() {
                           image_url: e.target.value,
                         })
                       }
-                      className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-none"
+                      className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
                       placeholder="https://example.com/image.png"
                     />
                   </div>
@@ -153,7 +153,7 @@ export default function BannerManagementPage() {
                       onChange={(e) =>
                         setNewBanner({ ...newBanner, link_url: e.target.value })
                       }
-                      className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-none"
+                      className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
                       placeholder="https://example.com"
                     />
                   </div>
@@ -170,13 +170,13 @@ export default function BannerManagementPage() {
                           priority: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-none"
+                      className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
                     />
                   </div>
                   <button
                     onClick={handleAddBanner}
                     disabled={isAddingBanner}
-                    className="w-full mt-2 h-10 bg-black text-white text-xs font-semibold   disabled:opacity-50 flex justify-center items-center gap-2 rounded-none"
+                    className="w-full mt-2 h-10 bg-black text-white text-xs font-semibold   disabled:opacity-50 flex justify-center items-center gap-2 rounded-xl"
                   >
                     {isAddingBanner ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -219,7 +219,7 @@ export default function BannerManagementPage() {
                           </div>
                           <button
                             onClick={() => handleDeleteBanner(banner._id)}
-                            className="p-2 text-red-500   opacity-0 group- rounded-none shrink-0"
+                            className="p-2 text-red-500   opacity-0 group- rounded-xl shrink-0"
                             title="Xoá biểu ngữ"
                           >
                             <Trash2 className="w-4 h-4" />

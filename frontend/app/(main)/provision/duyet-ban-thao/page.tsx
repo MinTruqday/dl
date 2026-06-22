@@ -78,8 +78,8 @@ export default function ApprovalPage() {
         </div>
       ) : (
         <div
-          className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="space-y-6 "
+          
         >
           {pendingDocs.map((doc: any) => (
             <div
@@ -155,7 +155,7 @@ export default function ApprovalPage() {
         <ModalFooter>
           <button
             onClick={() => setConfirmModal(null)}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black rounded-none"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black rounded-xl"
           >
             Hủy
           </button>
@@ -167,7 +167,7 @@ export default function ApprovalPage() {
               )
             }
             disabled={isProcessing}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black flex items-center justify-center gap-2 rounded-none"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black flex items-center justify-center gap-2 rounded-xl"
           >
             {isProcessing && <Loader2 className="w-3 h-3 animate-spin" />} Xác
             nhận

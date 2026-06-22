@@ -1288,7 +1288,7 @@ function StudioContent() {
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               placeholder="Nhập tên thư mục"
-              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-xl bg-white placeholder:text-zinc-400"
               autoFocus
             />
           </div>
@@ -1330,7 +1330,7 @@ function StudioContent() {
                     Tương tác độc giả
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Lượt xem
                       </p>
@@ -1338,7 +1338,7 @@ function StudioContent() {
                         {(selectedAnalytics?.views || 0).toLocaleString()}
                       </p>
                     </div>
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Thời gian đọc TB
                       </p>
@@ -1346,7 +1346,7 @@ function StudioContent() {
                         {selectedAnalytics?.avg_read_time || "0 phút"}
                       </p>
                     </div>
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Lượt lưu
                       </p>
@@ -1354,7 +1354,7 @@ function StudioContent() {
                         {selectedAnalytics?.saves || 0}
                       </p>
                     </div>
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Bình luận
                       </p>
@@ -1362,7 +1362,7 @@ function StudioContent() {
                         {selectedAnalytics?.comments || 0}
                       </p>
                     </div>
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Đánh giá
                       </p>
@@ -1371,7 +1371,7 @@ function StudioContent() {
                         {selectedAnalytics?.avg_rating || 0}/5)
                       </p>
                     </div>
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Lượt mua
                       </p>
@@ -1387,7 +1387,7 @@ function StudioContent() {
                     Chỉ số học thuật
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Tổng số từ
                       </p>
@@ -1395,7 +1395,7 @@ function StudioContent() {
                         {(selectedAcademic?.word_count || 0).toLocaleString()}
                       </p>
                     </div>
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Độ đọc hiểu
                       </p>
@@ -1403,7 +1403,7 @@ function StudioContent() {
                         {selectedAcademic?.readability_score || 0}/100
                       </p>
                     </div>
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Số câu
                       </p>
@@ -1411,7 +1411,7 @@ function StudioContent() {
                         {selectedAcademic?.sentence_count || 0}
                       </p>
                     </div>
-                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
                         Độ dài câu TB
                       </p>
@@ -1444,7 +1444,7 @@ function StudioContent() {
               value={newChapterTitle}
               onChange={(e) => setNewChapterTitle(e.target.value)}
               placeholder="Nhập tiêu đề"
-              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-xl bg-white placeholder:text-zinc-400"
               autoFocus
             />
           </div>
@@ -1485,7 +1485,7 @@ function StudioContent() {
                 onChange={(e) =>
                   setWithdrawalAmount(parseInt(e.target.value) || 0)
                 }
-                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-xl outline-none focus:border-black  bg-white"
               />
             </div>
             <div className="space-y-1.5">
@@ -1497,7 +1497,7 @@ function StudioContent() {
                 onChange={(e) =>
                   setBankInfo({ ...bankInfo, bank_name: e.target.value })
                 }
-                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-xl outline-none focus:border-black  bg-white"
               />
             </div>
             <div className="space-y-1.5">
@@ -1509,7 +1509,7 @@ function StudioContent() {
                 onChange={(e) =>
                   setBankInfo({ ...bankInfo, account_number: e.target.value })
                 }
-                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-xl outline-none focus:border-black  bg-white"
               />
             </div>
             <div className="space-y-1.5">
@@ -1521,7 +1521,7 @@ function StudioContent() {
                 onChange={(e) =>
                   setBankInfo({ ...bankInfo, account_name: e.target.value })
                 }
-                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-xl outline-none focus:border-black  bg-white"
               />
             </div>
           </div>
@@ -1565,7 +1565,7 @@ function StudioContent() {
                 value={newDocTitle}
                 onChange={(e) => setNewDocTitle(e.target.value)}
                 placeholder="Nhập tiêu đề"
-                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400"
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-xl bg-white placeholder:text-zinc-400"
                 autoFocus
               />
             </div>
@@ -1578,7 +1578,7 @@ function StudioContent() {
                 onChange={(e) => setNewDocDescription(e.target.value)}
                 placeholder="Giới thiệu ngắn về tác phẩm"
                 rows={3}
-                className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400 resize-none"
+                className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black  rounded-xl bg-white placeholder:text-zinc-400 resize-none"
               />
             </div>
             <div className="space-y-1.5">
@@ -1589,7 +1589,7 @@ function StudioContent() {
                 type="number"
                 value={newDocPrice}
                 onChange={(e) => setNewDocPrice(parseInt(e.target.value) || 0)}
-                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-xl outline-none focus:border-black  bg-white"
               />
             </div>
             <div className="space-y-2">
@@ -1665,7 +1665,7 @@ function StudioContent() {
               value={editingChapterTitle}
               onChange={(e) => setEditingChapterTitle(e.target.value)}
               placeholder="Nhập tiêu đề chương"
-              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-xl bg-white placeholder:text-zinc-400"
               autoFocus
             />
           </div>
@@ -1686,10 +1686,10 @@ function StudioContent() {
         </ModalFooter>
       </Modal>
 
-      <div className="h-16 border border-zinc-200 px-6 flex items-center justify-between bg-white rounded-2xl shadow-sm shrink-0 z-30 animate-in fade-in slide-in-from-bottom-8 duration-300">
+      <div className="h-16 border border-zinc-200 px-6 flex items-center justify-between bg-white rounded-2xl shadow-sm shrink-0 z-30 ">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
+            <div className="w-8 h-8 bg-black flex items-center justify-center rounded-xl">
               <FileText className="w-4 h-4 text-white" />
             </div>
             <span className="text-base font-medium text-black truncate max-w-[200px]">
@@ -1765,8 +1765,8 @@ function StudioContent() {
       </div>
 
       <div
-        className="flex flex-1 overflow-hidden w-full animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        className="flex flex-1 overflow-hidden w-full "
+        
       >
         <main className="flex-1 w-full flex flex-col bg-white overflow-hidden relative border border-zinc-200 rounded-2xl shadow-sm">
           <div className="h-12 border-b border-zinc-200 bg-white px-4 lg:px-6 flex items-center justify-between shrink-0">
@@ -1791,7 +1791,7 @@ function StudioContent() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
-            <div className="w-full h-full animate-in fade-in ">
+            <div className="w-full h-full  ">
               {editorMode === "edit" ? (
                 <div className="flex flex-col h-full">
                   {selectedChapterIndex !== null && (
@@ -1805,12 +1805,12 @@ function StudioContent() {
                           onChange={(e) => setAuthorNote(e.target.value)}
                           placeholder="Ghi chú dành cho độc giả ở đầu chương"
                           rows={2}
-                          className="flex-1 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400 resize-none"
+                          className="flex-1 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black  rounded-xl bg-white placeholder:text-zinc-400 resize-none"
                         />
                         <button
                           onClick={handleSaveAuthorNote}
                           disabled={savingNote}
-                          className="h-full px-4 bg-black text-white text-xs font-medium  disabled:opacity-50 rounded-none shrink-0"
+                          className="h-full px-4 bg-black text-white text-xs font-medium  disabled:opacity-50 rounded-xl shrink-0"
                         >
                           {savingNote ? (
                             <Loader2 className="w-3 h-3 animate-spin" />

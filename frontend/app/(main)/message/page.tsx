@@ -1203,7 +1203,7 @@ export default function MessagesPage() {
 
       <div className="flex flex-1 min-h-0 gap-4">
         <div
-          className={`w-full md:w-[320px] lg:w-[380px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-full animate-in fade-in slide-in-from-bottom-8 duration-300 ${
+          className={`w-full md:w-[320px] lg:w-[380px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-full  ${
             selectedConv ? "hidden md:flex" : "flex"
           }`}
         >
@@ -1227,8 +1227,8 @@ export default function MessagesPage() {
             </div>
           </div>
           <div
-            className="overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-2 overflow-x-hidden min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+            className="overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-2 overflow-x-hidden min-h-0 "
+            
           >
             {loadingConv ? (
               <div className="p-12 flex flex-col items-center gap-4">
@@ -1367,7 +1367,7 @@ export default function MessagesPage() {
           className={`flex-1 flex flex-col min-w-0 ${!selectedConv ? "hidden md:flex" : "flex"}`}
         >
           {selectedConv ? (
-            <div className="flex-1 flex flex-col bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 overflow-hidden gap-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <div className="flex-1 flex flex-col bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 overflow-hidden gap-4 ">
               <div className="flex items-center justify-between shrink-0 relative z-30">
                 <div className="flex items-center gap-4">
                   <button
@@ -1578,8 +1578,8 @@ export default function MessagesPage() {
               </div>
 
               <div
-                className="flex-1 flex overflow-hidden border border-zinc-200 bg-white rounded-2xl relative animate-in fade-in slide-in-from-bottom-8 duration-300"
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                className="flex-1 flex overflow-hidden border border-zinc-200 bg-white rounded-2xl relative "
+                
               >
                 <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 no-scrollbar relative">
                   {!(showSearchMsgBar || messages.some((m) => m.is_pinned)) && (
@@ -2372,7 +2372,7 @@ export default function MessagesPage() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <div className="flex-1 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-2xl shadow-sm ">
               <p className="text-sm font-semibold text-black">
                 DocLib Tin nhắn
               </p>

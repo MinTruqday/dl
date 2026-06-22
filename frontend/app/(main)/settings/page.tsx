@@ -205,7 +205,7 @@ export default function SettingsPage() {
   }) => (
     <button
       onClick={onToggle}
-      className={`w-10 h-5 relative shrink-0 rounded-none border border-zinc-200 ${
+      className={`w-10 h-5 relative shrink-0 rounded-xl border border-zinc-200 ${
         active ? "bg-black border-black" : "bg-zinc-100"
       }`}
     >
@@ -283,7 +283,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300">
+        <aside className="lg:col-span-3 space-y-12 ">
           <div className="space-y-4">
             <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
               Cài đặt
@@ -293,7 +293,7 @@ export default function SettingsPage() {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id as TabKey)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-xl ${
                     activeSection === section.id
                       ? "bg-zinc-100 text-black border-zinc-300"
                       : "bg-white text-zinc-500 border-transparent"
@@ -313,7 +313,7 @@ export default function SettingsPage() {
               Định danh hiện tại
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-black flex items-center justify-center text-white text-xs font-bold uppercase rounded-none shrink-0">
+              <div className="w-10 h-10 bg-black flex items-center justify-center text-white text-xs font-bold uppercase rounded-xl shrink-0">
                 {user?.role?.slice(0, 3)}
               </div>
               <div className="flex flex-col min-w-0">
@@ -329,8 +329,8 @@ export default function SettingsPage() {
         </aside>
 
         <main
-          className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="lg:col-span-9 space-y-6 "
+          
         >
           {activeSection === "privacy" && (
             <div className="space-y-8">
@@ -345,7 +345,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-semibold text-black">
                         Chế độ đọc ẩn danh
@@ -361,7 +361,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-semibold text-black">
                         Thư viện nội bộ
@@ -382,7 +382,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleSavePrivacy}
                     disabled={loading}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 disabled:opacity-50"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-xl flex items-center gap-2 disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -409,7 +409,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-semibold text-black">
                         Tự động sao lưu bản thảo
@@ -444,7 +444,7 @@ export default function SettingsPage() {
                             });
                             if (success) setDefaultVisibility(mode);
                           }}
-                          className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-none ${
+                          className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-xl ${
                             defaultVisibility === mode
                               ? "bg-black text-white border-black"
                               : "bg-zinc-50 text-zinc-500 border-zinc-200"
@@ -463,7 +463,7 @@ export default function SettingsPage() {
                     <textarea
                       value={payoutInfo}
                       onChange={(e) => setPayoutInfo(e.target.value)}
-                      className="w-full min-h-[120px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none rounded-none"
+                      className="w-full min-h-[120px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none rounded-xl"
                     />
                   </div>
                 </div>
@@ -476,7 +476,7 @@ export default function SettingsPage() {
                       setLoading(false);
                       showToast("Đã lưu thông tin thụ hưởng", "success");
                     }}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-xl flex items-center gap-2"
                   >
                     <Save className="w-4 h-4" /> Lưu cấu hình
                   </button>
@@ -498,7 +498,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-semibold text-black">
                         Thông báo vi phạm thời gian thực
@@ -525,7 +525,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-semibold text-black">
                         Tự động làm mới hàng chờ duyệt
@@ -568,7 +568,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-semibold text-red-600">
                         Chế độ bảo trì hệ thống
@@ -589,7 +589,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-semibold text-black">
                         Đăng ký tài khoản mới
@@ -627,7 +627,7 @@ export default function SettingsPage() {
                 </div>
 
                 {user?.author_status === "pending" ? (
-                  <div className="py-16 text-center space-y-4 border border-dashed border-zinc-200 bg-zinc-50 rounded-none">
+                  <div className="py-16 text-center space-y-4 border border-dashed border-zinc-200 bg-zinc-50 rounded-xl">
                     <Clock className="w-8 h-8 text-zinc-400 mx-auto" />
                     <div>
                       <h4 className="text-sm font-semibold text-black">
@@ -641,7 +641,7 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="p-6 border border-zinc-200 bg-zinc-50 space-y-4 rounded-none">
+                    <div className="p-6 border border-zinc-200 bg-zinc-50 space-y-4 rounded-xl">
                       <div className="flex items-center gap-2 text-black border-b border-zinc-200 pb-3">
                         <Award className="w-4 h-4" />
                         <h4 className="text-[10px] font-semibold uppercase tracking-widest">
@@ -673,7 +673,7 @@ export default function SettingsPage() {
                         <textarea
                           value={motivation}
                           onChange={(e) => setMotivation(e.target.value)}
-                          className="w-full min-h-[140px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none  rounded-none"
+                          className="w-full min-h-[140px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none  rounded-xl"
                         />
                       </div>
                       <div className="space-y-2">
@@ -684,7 +684,7 @@ export default function SettingsPage() {
                           type="text"
                           value={portfolio}
                           onChange={(e) => setPortfolio(e.target.value)}
-                          className="w-full h-10 px-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none  rounded-none"
+                          className="w-full h-10 px-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none  rounded-xl"
                         />
                       </div>
                     </div>
@@ -693,7 +693,7 @@ export default function SettingsPage() {
                       <button
                         onClick={handleApplyAuthor}
                         disabled={loading}
-                        className="w-full h-10 bg-black text-white text-xs font-medium uppercase tracking-widest rounded-none flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="w-full h-10 bg-black text-white text-xs font-medium uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         {loading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -735,7 +735,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="p-4 border border-zinc-200 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-none bg-zinc-50">
+                  <div className="p-4 border border-zinc-200 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl bg-zinc-50">
                     <div>
                       <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1">
                         Trạng thái xác thực
@@ -745,12 +745,12 @@ export default function SettingsPage() {
                         danh cấp cao
                       </div>
                     </div>
-                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-none">
+                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-xl">
                       Đổi mật khẩu
                     </button>
                   </div>
 
-                  <div className="p-4 border border-zinc-200 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-none bg-zinc-50">
+                  <div className="p-4 border border-zinc-200 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl bg-zinc-50">
                     <div>
                       <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1">
                         Địa chỉ Email liên kết
@@ -759,7 +759,7 @@ export default function SettingsPage() {
                         {user?.email || "Chưa định danh"}
                       </div>
                     </div>
-                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-none">
+                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-xl">
                       Cập nhật Email
                     </button>
                   </div>
@@ -802,7 +802,7 @@ export default function SettingsPage() {
                           "success",
                         )
                       }
-                      className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-none"
+                      className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-xl"
                     >
                       Yêu cầu trích xuất
                     </button>
@@ -822,7 +822,7 @@ export default function SettingsPage() {
                       onClick={() =>
                         showToast("Chức năng đang bảo trì", "error")
                       }
-                      className="px-6 py-2 border border-red-600 bg-black text-white text-xs font-medium rounded-none"
+                      className="px-6 py-2 border border-red-600 bg-black text-white text-xs font-medium rounded-xl"
                     >
                       Xóa tài khoản
                     </button>
@@ -837,7 +837,7 @@ export default function SettingsPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => !loading && setConfirmModal(null)}
-        className="max-w-md rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-md rounded-xl border border-zinc-200 bg-white p-0"
       >
         <ModalHeader className="border-b border-zinc-200 p-6">
           <ModalTitle className="text-sm font-semibold text-black">
@@ -859,7 +859,7 @@ export default function SettingsPage() {
           <button
             onClick={() => setConfirmModal(null)}
             disabled={loading}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black rounded-none disabled:opacity-50"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black rounded-xl disabled:opacity-50"
           >
             Hủy bỏ
           </button>
@@ -871,7 +871,7 @@ export default function SettingsPage() {
                 handleToggleRegistration();
             }}
             disabled={loading}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium rounded-none flex items-center justify-center disabled:opacity-50"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium rounded-xl flex items-center justify-center disabled:opacity-50"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

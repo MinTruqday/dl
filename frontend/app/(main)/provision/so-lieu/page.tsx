@@ -135,8 +135,8 @@ export default function StatsPage() {
   return (
     <div className="space-y-8">
       <div
-        className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 "
+        
       >
         {[
           { label: "Tổng lượt xem", val: stats?.total_views || 0, icon: Eye },
@@ -169,7 +169,7 @@ export default function StatsPage() {
       </div>
 
       <div
-        className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300"
+        className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden "
         style={{ animationDelay: "200ms", animationFillMode: "both" }}
       >
         <div className="p-6 border-b border-zinc-200 flex justify-between items-center">

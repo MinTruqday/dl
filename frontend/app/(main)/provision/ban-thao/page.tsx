@@ -41,8 +41,8 @@ export default function DraftsPage() {
         </div>
       ) : (
         <div
-          className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 "
+          
         >
           {drafts.map((draft: any) => (
             <button

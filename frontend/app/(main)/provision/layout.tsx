@@ -42,7 +42,7 @@ export default function CreationLayout({
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
       <div className="grid lg:grid-cols-12 gap-6 h-full">
         <aside className="lg:col-span-3 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 ">
             <div className="text-sm font-semibold text-black mb-1">
               Sáng tác
             </div>
@@ -66,7 +66,7 @@ export default function CreationLayout({
         </aside>
 
         <main className="lg:col-span-9 h-full overflow-y-auto pr-2 custom-scrollbar">
-          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm ">
             {children}
           </div>
         </main>

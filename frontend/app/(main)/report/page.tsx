@@ -109,7 +109,7 @@ export default function ReportsManagementPage() {
           </div>
         </header>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-bottom-8 duration-300">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 ">
           <div className="flex border-b border-zinc-200 w-full md:w-auto">
             <div className="pb-3 px-4 text-sm font-medium border-b-2 border-black text-black whitespace-nowrap">
               Hàng đợi báo cáo
@@ -123,14 +123,14 @@ export default function ReportsManagementPage() {
               placeholder="Tìm kiếm báo cáo"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black rounded-xl bg-white placeholder:text-zinc-400"
             />
           </div>
         </div>
 
         <div
-          className="border border-zinc-200 bg-white overflow-x-auto animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="border border-zinc-200 bg-white overflow-x-auto "
+          
         >
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
@@ -281,14 +281,14 @@ export default function ReportsManagementPage() {
           <button
             onClick={() => !isProcessing && setConfirmModal(null)}
             disabled={isProcessing}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center rounded-none"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center rounded-xl"
           >
             Hủy
           </button>
           <button
             onClick={confirmResolve}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black disabled:opacity-50 flex items-center justify-center gap-2 rounded-none"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black disabled:opacity-50 flex items-center justify-center gap-2 rounded-xl"
           >
             {isProcessing && <Loader2 className="w-3 h-3 animate-spin" />} Xác
             nhận

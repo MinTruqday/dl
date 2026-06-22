@@ -222,14 +222,11 @@ export default function LibraryPage() {
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-4">
             <div className="text-sm font-semibold text-black mb-1">
               Quản lý thư viện
             </div>
-            <nav
-              className="flex flex-col gap-1 animate-in fade-in slide-in-from-bottom-8 duration-300"
-              style={{ animationDelay: "150ms", animationFillMode: "both" }}
-            >
+            <nav className="flex flex-col gap-1">
               {tabs.map((t) => (
                 <button
                   key={t.id}
@@ -254,10 +251,7 @@ export default function LibraryPage() {
             </nav>
           </div>
 
-          <div
-            className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "150ms", animationFillMode: "both" }}
-          >
+          <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-4">
             <div className="text-sm font-semibold text-black mb-1">
               Tài liệu đã ghim
             </div>
@@ -267,7 +261,7 @@ export default function LibraryPage() {
                   <Link
                     key={doc.id}
                     href={`/document/${doc.slug}`}
-                    className="flex items-start gap-3 p-3 bg-white border border-zinc-200 rounded-2xl hover:border-black transition-colors group"
+                    className="flex items-start gap-3 p-3 bg-white border border-zinc-200 rounded-2xl hover:border-zinc-300 transition-colors group"
                   >
                     <div className="w-10 h-14 bg-zinc-100 rounded-xl shrink-0 overflow-hidden relative">
                       {doc.cover_url ? (
@@ -309,7 +303,7 @@ export default function LibraryPage() {
 
         <main className="lg:col-span-9 space-y-6">
           {activeTab === "history" && continueDocs.length > 0 && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <section className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-6">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">Đang đọc</h2>
                 <div className="flex items-center gap-3">
@@ -331,12 +325,11 @@ export default function LibraryPage() {
               </div>
 
               <div
-                className={`grid gap-6 animate-in fade-in slide-in-from-bottom-8 duration-300 ${
+                className={`grid gap-6 ${
                   viewMode === "grid"
                     ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
                 }`}
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
               >
                 {continueDocs.map((doc) => (
                   <Link
@@ -344,7 +337,7 @@ export default function LibraryPage() {
                     href={`/document/${doc.document_slug}`}
                     className={`group flex ${
                       viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-3"
-                    } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden`}
+                    } border border-zinc-200 bg-white rounded-2xl hover:border-zinc-300 transition-colors overflow-hidden`}
                   >
                     <div
                       className={`${
@@ -360,7 +353,7 @@ export default function LibraryPage() {
                               ? doc.cover_url
                               : `${API_URL}/storage/${doc.cover_url}`
                           }
-                          className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover grayscale mix-blend-multiply transition-transform duration-500"
                           alt={doc.document_title}
                         />
                       ) : (
@@ -412,7 +405,7 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "history" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <section className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-6">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Lịch sử đọc
@@ -443,12 +436,11 @@ export default function LibraryPage() {
               </div>
 
               <div
-                className={`grid gap-6 animate-in fade-in slide-in-from-bottom-8 duration-300 ${
+                className={`grid gap-6 ${
                   viewMode === "grid"
                     ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
                 }`}
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
               >
                 {history.length > 0 ? (
                   history.map((item, idx) => (
@@ -456,7 +448,7 @@ export default function LibraryPage() {
                       key={item.document_id + idx}
                       className={`relative group flex ${
                         viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-3"
-                      } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden ${
+                      } border border-zinc-200 bg-white rounded-2xl hover:border-zinc-300 transition-colors overflow-hidden ${
                         isDeletingHistory === item.document_id
                           ? "opacity-50"
                           : ""
@@ -477,7 +469,7 @@ export default function LibraryPage() {
                                 ? item.cover_url
                                 : `${API_URL}/storage/${item.cover_url}`
                             }
-                            className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover grayscale mix-blend-multiply transition-transform duration-500"
                             alt=""
                           />
                         ) : (
@@ -559,7 +551,7 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "folders" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <section className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-6">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Thư mục lưu trữ
@@ -578,19 +570,16 @@ export default function LibraryPage() {
                 </div>
               </div>
 
-              <div
-                className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
-              >
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {folders.length > 0 ? (
                   folders.map((folder) => (
                     <Link
                       key={folder.id}
                       href={`/library/folder/${folder.id}`}
-                      className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden"
+                      className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-zinc-300 transition-colors overflow-hidden"
                     >
                       <div className="aspect-[2/3] w-full border-b border-zinc-200 bg-zinc-50 relative overflow-hidden flex items-center justify-center">
-                        <FolderPlus className="w-12 h-12 text-zinc-300 stroke-[1] group-hover:scale-110 transition-transform duration-500" />
+                        <FolderPlus className="w-12 h-12 text-zinc-300 stroke-[1]" />
                       </div>
                       <div className="p-3 flex flex-col flex-1 gap-2">
                         <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
@@ -624,7 +613,7 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "lists" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <section className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-5 space-y-6">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Danh sách đọc
@@ -643,16 +632,13 @@ export default function LibraryPage() {
                 </div>
               </div>
 
-              <div
-                className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
-              >
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {readingLists.length > 0 ? (
                   readingLists.map((list) => (
                     <Link
                       key={list._id}
                       href={`/collection/${list._id}`}
-                      className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden"
+                      className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-zinc-300 transition-colors overflow-hidden"
                     >
                       <div className="aspect-[2/3] w-full border-b border-zinc-200 bg-zinc-50 relative overflow-hidden flex flex-col items-center justify-center p-6 text-center">
                         {list.description ? (
@@ -660,7 +646,7 @@ export default function LibraryPage() {
                             "{list.description}"
                           </p>
                         ) : (
-                          <Layers className="w-12 h-12 text-zinc-300 stroke-[1] group-hover:scale-110 transition-transform duration-500" />
+                          <Layers className="w-12 h-12 text-zinc-300 stroke-[1]" />
                         )}
                       </div>
                       <div className="p-3 flex flex-col flex-1 gap-2">
@@ -868,8 +854,8 @@ function LibraryAISynthesisModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in ">
-      <div className="bg-white w-full max-w-5xl h-[85vh] border border-zinc-200 flex flex-col overflow-hidden animate-in zoom-in-95  rounded-none ">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-5xl h-[85vh] border border-zinc-200 flex flex-col overflow-hidden rounded-3xl">
         <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-200 bg-white">
           <div className="flex items-center gap-3">
             <Combine className="w-6 h-6 text-black" />
@@ -927,14 +913,14 @@ function LibraryAISynthesisModal({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Nhập câu hỏi tổng hợp (ví dụ: 'Tìm điểm chung về phương pháp luận giữa các bài viết này')"
-                  className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 focus:outline-none focus:border-black text-sm font-medium  rounded-none"
+                  className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 focus:outline-none focus:border-black text-sm font-medium"
                   onKeyDown={(e) => e.key === "Enter" && handleSynthesize()}
                 />
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                 <button
                   onClick={handleSynthesize}
                   disabled={loading || selectedIds.length === 0}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 bg-black text-white text-xs font-bold uppercase tracking-widest disabled:opacity-30  active:scale-95"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 bg-black text-white text-xs font-bold uppercase tracking-widest disabled:opacity-30"
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -963,7 +949,7 @@ function LibraryAISynthesisModal({
                   </div>
                 </div>
               ) : result ? (
-                <div className="animate-in fade-in  prose prose-zinc max-w-none text-sm leading-relaxed">
+                <div className="prose prose-zinc max-w-none text-sm leading-relaxed">
                   <div className="flex items-center gap-3 mb-8 pb-4 border-b border-zinc-100">
                     <div className="w-8 h-8 bg-black flex items-center justify-center">
                       <Sparkles className="w-4 h-4 text-white" />

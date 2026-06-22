@@ -95,9 +95,9 @@ export default function PaymentResultPage() {
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-in fade-in slide-in-from-bottom-8 duration-300">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 ">
         <div
-          className={`w-20 h-20 flex items-center justify-center border ${current.bgClass} rounded-none`}
+          className={`w-20 h-20 flex items-center justify-center border ${current.bgClass} rounded-xl`}
         >
           <IconComponent
             className={`w-8 h-8 ${status === "loading" ? "animate-spin" : ""}`}
@@ -105,8 +105,8 @@ export default function PaymentResultPage() {
         </div>
 
         <div
-          className="text-center space-y-3 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="text-center space-y-3 "
+          
         >
           <h1 className="text-2xl font-semibold text-black tracking-tight">
             {current.title}
@@ -118,8 +118,8 @@ export default function PaymentResultPage() {
 
         {paymentInfo && status === "success" && (
           <div
-            className="border border-zinc-200 bg-white p-6 w-full max-w-sm space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+            className="border border-zinc-200 bg-white p-6 w-full max-w-sm space-y-4 "
+            
           >
             <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">
@@ -145,7 +145,7 @@ export default function PaymentResultPage() {
                 Trạng thái
               </span>
               <span className="text-xs font-semibold text-black flex items-center gap-1.5 uppercase tracking-tight">
-                <div className="w-1.5 h-1.5 bg-black rounded-none"></div>
+                <div className="w-1.5 h-1.5 bg-black rounded-xl"></div>
                 Hoàn tất
               </span>
             </div>
@@ -155,14 +155,14 @@ export default function PaymentResultPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/wallet"
-            className="h-11 px-8 bg-black text-white text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-none  active:scale-[0.98]"
+            className="h-11 px-8 bg-black text-white text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-xl  active:scale-[0.98]"
           >
             <ArrowLeft className="w-4 h-4" /> Về ví tiền
           </Link>
           {(status === "failed" || status === "cancelled") && (
             <button
               onClick={verifyPayment}
-              className="h-11 px-8 border border-zinc-200 bg-white text-black text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-none  active:scale-[0.98]"
+              className="h-11 px-8 border border-zinc-200 bg-white text-black text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-xl  active:scale-[0.98]"
             >
               Thử lại
             </button>

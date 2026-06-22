@@ -74,7 +74,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
   return (
     <>
       <nav
-        className="fixed top-2 left-2 right-2 md:top-4 md:left-4 md:right-4 z-[100] bg-white border border-zinc-200 rounded-2xl shadow-sm font-sans animate-in fade-in slide-in-from-top-8 duration-300"
+        className="fixed top-2 left-2 right-2 md:top-4 md:left-4 md:right-4 z-[100] bg-white border border-zinc-200 rounded-2xl shadow-sm font-sans"
         style={{ height: "var(--navbar-height)" }}
       >
         <div className="h-full flex items-center justify-between px-6 max-w-[1440px] mx-auto w-full">

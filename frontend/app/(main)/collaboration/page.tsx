@@ -502,7 +502,7 @@ export default function StudioCollabPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
-        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2 animate-in fade-in slide-in-from-bottom-8 duration-300">
+        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2 ">
           <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
             <h2 className="text-sm font-semibold text-black mb-1">
               Cài đặt tài liệu cộng tác
@@ -756,7 +756,7 @@ export default function StudioCollabPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-2">
                             <span
-                              className={`w-2 h-2 rounded-none flex-shrink-0 ${
+                              className={`w-2 h-2 rounded-xl flex-shrink-0 ${
                                 status === "online" ? "bg-black" : "bg-zinc-200"
                               }`}
                             />
@@ -830,8 +830,8 @@ export default function StudioCollabPage() {
         </aside>
 
         <main
-          className="lg:col-span-9 space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="lg:col-span-9 space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2 "
+          
         >
           {selectedDocumentId && contributionStats.length > 0 && (
             <div className="border border-zinc-200 bg-zinc-50 rounded-2xl shadow-sm p-5 space-y-4">
@@ -1052,7 +1052,7 @@ export default function StudioCollabPage() {
                       className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-zinc-200 bg-white gap-4"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center shrink-0 rounded-none">
+                        <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center shrink-0 rounded-xl">
                           <span className="text-xs font-bold text-black uppercase">
                             {invite.inviter_name?.charAt(0) || "U"}
                           </span>

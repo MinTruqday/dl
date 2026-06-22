@@ -227,7 +227,7 @@ export default function WalletPage() {
         </div>
         <button
           onClick={() => (window.location.href = "/login")}
-          className="bg-black text-white h-10 px-8 text-xs font-medium flex items-center justify-center rounded-none"
+          className="bg-black text-white h-10 px-8 text-xs font-medium flex items-center justify-center rounded-xl"
         >
           Đăng nhập ngay
         </button>
@@ -281,7 +281,7 @@ export default function WalletPage() {
                   <button
                     key={amt}
                     onClick={() => setTopupAmount(amt)}
-                    className={`py-3 text-xs font-medium border rounded-none ${
+                    className={`py-3 text-xs font-medium border rounded-xl ${
                       topupAmount === amt
                         ? "bg-zinc-100 border-zinc-200 text-black font-semibold"
                         : "bg-white border-zinc-200 text-zinc-500"
@@ -303,7 +303,7 @@ export default function WalletPage() {
                     onChange={(e) =>
                       setTopupAmount(parseInt(e.target.value) || 0)
                     }
-                    className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
+                    className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-xl"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">
                     VNĐ
@@ -369,7 +369,7 @@ export default function WalletPage() {
                 type="number"
                 value={withdrawalAmount}
                 onChange={(e) => setWithdrawalAmount(e.target.value)}
-                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-none"
+                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
                 placeholder="Tối thiểu 50.000"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">
@@ -386,7 +386,7 @@ export default function WalletPage() {
               type="text"
               value={bankInfo}
               onChange={(e) => setBankInfo(e.target.value)}
-              className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-none"
+              className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-xl"
               placeholder="VD: VCB - 123456789 - NGUYEN VAN A"
             />
           </div>
@@ -428,8 +428,8 @@ export default function WalletPage() {
       <div className="grid lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
           <div
-            className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+            className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm "
+            
           >
             <div className="text-sm font-semibold text-black mb-1">
               Số dư hiện tại
@@ -460,8 +460,8 @@ export default function WalletPage() {
           </div>
 
           <div
-            className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+            className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm "
+            
           >
             <div className="text-sm font-semibold text-black mb-1">
               Kích hoạt Voucher
@@ -491,8 +491,8 @@ export default function WalletPage() {
 
         <main className="lg:col-span-9 space-y-6">
           <div
-            className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+            className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-6 "
+            
           >
             <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-black">
@@ -506,8 +506,8 @@ export default function WalletPage() {
             <div>
               {isLoading ? (
                 <div
-                  className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300"
-                  style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                  className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl "
+                  
                 >
                   <Loader2 className="animate-spin w-4 h-4 text-zinc-400 mb-2" />
                   <p className="text-sm font-medium text-zinc-500">
@@ -516,8 +516,8 @@ export default function WalletPage() {
                 </div>
               ) : history.length === 0 ? (
                 <div
-                  className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300"
-                  style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                  className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl "
+                  
                 >
                   <p className="text-sm font-medium text-zinc-500">
                     Chưa có dữ liệu
@@ -525,8 +525,8 @@ export default function WalletPage() {
                 </div>
               ) : (
                 <div
-                  className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-                  style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                  className="space-y-4 "
+                  
                 >
                   {history.map((tx) => (
                     <div
@@ -571,12 +571,12 @@ export default function WalletPage() {
                         <span className="text-[10px] font-medium text-zinc-500 mt-1 flex items-center gap-1.5">
                           {tx.status === "COMPLETED" ? (
                             <>
-                              <div className="w-1.5 h-1.5 bg-black rounded-none"></div>{" "}
+                              <div className="w-1.5 h-1.5 bg-black rounded-xl"></div>{" "}
                               Hoàn tất
                             </>
                           ) : (
                             <>
-                              <div className="w-1.5 h-1.5 bg-zinc-300 rounded-none"></div>{" "}
+                              <div className="w-1.5 h-1.5 bg-zinc-300 rounded-xl"></div>{" "}
                               {tx.status}
                             </>
                           )}

@@ -109,7 +109,7 @@ function SearchResultsContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300">
+        <aside className="lg:col-span-3 space-y-12 ">
           <div className="space-y-6">
             <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2 flex items-center justify-between">
               Bộ lọc nâng cao
@@ -133,7 +133,7 @@ function SearchResultsContent() {
                     <button
                       key={s.id}
                       onClick={() => setFilters({ ...filters, sort: s.id })}
-                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
+                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-xl ${
                         filters.sort === s.id
                           ? "bg-zinc-100 text-black border-zinc-300"
                           : "bg-white text-zinc-500 border-transparent"
@@ -160,7 +160,7 @@ function SearchResultsContent() {
                     <button
                       key={t.id}
                       onClick={() => setFilters({ ...filters, time: t.id })}
-                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none ${
+                      className={`text-left px-3 py-2 text-sm font-medium border rounded-xl ${
                         filters.time === t.id
                           ? "bg-zinc-100 text-black border-zinc-300"
                           : "bg-white text-zinc-500 border-transparent"
@@ -185,7 +185,7 @@ function SearchResultsContent() {
                     <button
                       key={p.id}
                       onClick={() => setFilters({ ...filters, price: p.id })}
-                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none ${
+                      className={`text-left px-3 py-2 text-sm font-medium border rounded-xl ${
                         filters.price === p.id
                           ? "bg-zinc-100 text-black border-zinc-300"
                           : "bg-white text-zinc-500 border-transparent"
@@ -217,7 +217,7 @@ function SearchResultsContent() {
                   <div key={h} className="group/item relative">
                     <Link
                       href={`/search?q=${h}`}
-                      className="block text-xs font-medium px-3 py-1.5 bg-white border border-zinc-200 rounded-none pr-8"
+                      className="block text-xs font-medium px-3 py-1.5 bg-white border border-zinc-200 rounded-xl pr-8"
                     >
                       {h}
                     </Link>
@@ -243,8 +243,8 @@ function SearchResultsContent() {
         </aside>
 
         <main
-          className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="lg:col-span-9 space-y-6 "
+          
         >
           <div className="grid grid-cols-1 gap-6">
             {loading ? (
@@ -252,7 +252,7 @@ function SearchResultsContent() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="h-40 bg-zinc-50 animate-pulse border border-zinc-200 rounded-none"
+                    className="h-40 bg-zinc-50 animate-pulse border border-zinc-200 rounded-xl"
                   />
                 ))}
               </div>
@@ -261,7 +261,7 @@ function SearchResultsContent() {
                 <Link
                   key={`doc-${document._id || i}`}
                   href={`/document/${document.slug}`}
-                  className="group flex flex-row gap-6 p-4 border border-zinc-200 bg-white rounded-none"
+                  className="group flex flex-row gap-6 p-4 border border-zinc-200 bg-white rounded-xl"
                 >
                   <div className="w-24 h-36 shrink-0 border border-zinc-200 bg-zinc-100 relative overflow-hidden">
                     {document.cover_url ? (
@@ -338,7 +338,7 @@ function SearchResultsContent() {
                 </Link>
               ))
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-none">
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-xl">
                 <p className="text-sm font-medium text-zinc-500">
                   Chưa có kết quả nào phù hợp
                 </p>

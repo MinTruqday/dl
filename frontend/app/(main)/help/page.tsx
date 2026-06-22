@@ -43,7 +43,7 @@ export default function HelpPage() {
 
   return (
     <>
-      <div className="max-w-4xl mx-auto px-6 py-12 md:py-20 font-sans animate-in fade-in slide-in-from-bottom-8 duration-300">
+      <div className="max-w-4xl mx-auto px-6 py-12 md:py-20 font-sans ">
         <div className="text-center mb-20 space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black">
             Trung tâm hỗ trợ
@@ -56,7 +56,7 @@ export default function HelpPage() {
             <input
               type="text"
               placeholder=""
-              className="w-full h-14 pl-12 pr-4 bg-white border border-zinc-200 rounded-none focus:outline-none focus:border-black focus:bg-white text-sm font-bold"
+              className="w-full h-14 pl-12 pr-4 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-black focus:bg-white text-sm font-bold"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -64,8 +64,8 @@ export default function HelpPage() {
         </div>
 
         <div
-          className="grid md:grid-cols-3 gap-6 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="grid md:grid-cols-3 gap-6 mb-20 "
+          
         >
           {[
             {
@@ -86,7 +86,7 @@ export default function HelpPage() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="p-8 border border-zinc-200 rounded-none group cursor-pointer active:scale-[0.98]"
+              className="p-8 border border-zinc-200 rounded-xl group cursor-pointer active:scale-[0.98]"
             >
               <item.icon className="w-8 h-8 mb-6 text-zinc-200 " />
               <h3 className="font-bold text-black mb-3">{item.title}</h3>
@@ -98,8 +98,8 @@ export default function HelpPage() {
         </div>
 
         <div
-          className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="space-y-12 "
+          
         >
           <h2 className="text-2xl font-bold text-black border-b border-zinc-100 pb-6 tracking-tight">
             Câu hỏi thường gặp
@@ -108,7 +108,7 @@ export default function HelpPage() {
             {filteredFaqs.map((faq, i) => (
               <div
                 key={i}
-                className="p-8 bg-white border border-zinc-200 rounded-none "
+                className="p-8 bg-white border border-zinc-200 rounded-xl "
               >
                 <h4 className="font-bold text-black mb-3 flex items-center gap-3">
                   <HelpCircle className="w-4 h-4 text-zinc-400" />
@@ -127,7 +127,7 @@ export default function HelpPage() {
           </div>
         </div>
 
-        <div className="mt-24 p-12 bg-black text-white rounded-none text-center animate-in slide-in-from-bottom-8 ">
+        <div className="mt-24 p-12 bg-black text-white rounded-xl text-center animate-in slide-in-from-bottom-8 ">
           <MessageCircle className="w-10 h-10 mx-auto mb-6 text-zinc-400" />
           <h2 className="text-2xl font-bold mb-3 tracking-tight">
             Cần thêm thông tin?

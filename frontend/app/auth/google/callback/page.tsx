@@ -58,7 +58,7 @@ function GoogleCallbackContent() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white font-sans">
-        <div className="bg-white p-12 border border-zinc-200 max-w-md w-full text-center rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300">
+        <div className="bg-white p-12 border border-zinc-200 max-w-md w-full text-center rounded-2xl ">
           <h2 className="text-2xl font-bold text-black tracking-tight">
             Lỗi xác thực
           </h2>
@@ -76,7 +76,7 @@ function GoogleCallbackContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white font-sans">
-      <div className="text-center animate-in fade-in slide-in-from-bottom-8 duration-300">
+      <div className="text-center ">
         <Loader2 className="h-10 w-10 animate-spin text-black mx-auto" />
         <p className="mt-6 text-base font-bold text-black">
           Đang xử lý đăng nhập bằng Google

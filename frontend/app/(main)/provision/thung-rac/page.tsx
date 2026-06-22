@@ -42,8 +42,8 @@ export default function TrashPage() {
   return (
     <div className="space-y-8">
       <div
-        className="bg-white border border-zinc-200 p-8 rounded-2xl shadow-sm flex items-center justify-between animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        className="bg-white border border-zinc-200 p-8 rounded-2xl shadow-sm flex items-center justify-between "
+        
       >
         <div className="space-y-1">
           <h2 className="text-xl font-medium text-black">Thùng rác nội dung</h2>
@@ -55,8 +55,8 @@ export default function TrashPage() {
       </div>
 
       <div
-        className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        className="space-y-4 "
+        
       >
         {loading ? (
           <div className="py-12 flex justify-center">

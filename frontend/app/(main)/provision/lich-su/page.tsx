@@ -180,8 +180,8 @@ export default function HistoryPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div
-        className="bg-white border border-zinc-200 p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        className="bg-white border border-zinc-200 p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 "
+        
       >
         <div className="space-y-1">
           <h2 className="text-xl font-medium text-black flex items-center gap-2">
@@ -206,8 +206,8 @@ export default function HistoryPage() {
 
       {selectedDocumentId ? (
         <div
-          className="bg-white border border-zinc-200 p-8 rounded-2xl shadow-sm space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          className="bg-white border border-zinc-200 p-8 rounded-2xl shadow-sm space-y-8 "
+          
         >
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-zinc-500">

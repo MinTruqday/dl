@@ -133,8 +133,8 @@ export default function UsersManagementPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 font-sans text-black selection:bg-black selection:text-white">
-      <div className="flex flex-col gap-6 h-full min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-300">
-        <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
+      <div className="flex flex-col gap-6 h-full min-h-0">
+        <div className="border border-zinc-200 bg-white rounded-3xl shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
           <div className="relative w-full md:w-96">
             <div className="absolute left-4 top-1/2 -translate-y-1/2">
               <Search className="w-4 h-4 text-zinc-400" />
@@ -168,10 +168,7 @@ export default function UsersManagementPage() {
           </div>
         </div>
 
-        <div
-          className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
-        >
+        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="overflow-y-auto custom-scrollbar flex-1">
             <table className="w-full text-left text-sm border-collapse">
               <thead className="sticky top-0 bg-zinc-50/90 backdrop-blur-sm z-10">
@@ -285,7 +282,7 @@ export default function UsersManagementPage() {
                                 setOpenDropdownId(null);
                               }}
                             />
-                            <div className="absolute right-0 top-full mt-1 w-44 p-1.5 bg-white border border-zinc-200 rounded-2xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-100">
+                            <div className="absolute right-0 top-full mt-1 w-44 p-1.5 bg-white border border-zinc-200 rounded-2xl shadow-lg z-50">
                               <button
                                 className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors flex items-center gap-2"
                                 onClick={(e) => {
@@ -357,7 +354,7 @@ export default function UsersManagementPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => !isUpdating && setConfirmModal(null)}
-        className="max-w-md rounded-2xl border border-zinc-200 bg-white p-0 shadow-xl"
+        className="max-w-md rounded-3xl border border-zinc-200 bg-white p-0 shadow-xl overflow-hidden"
       >
         <ModalHeader className="border-b border-zinc-200 pb-4">
           <ModalTitle className="text-lg font-medium text-black">
@@ -381,7 +378,7 @@ export default function UsersManagementPage() {
               : `Bạn có chắc chắn muốn ${confirmModal?.value ? "kích hoạt" : "vô hiệu hóa"} tài khoản của "${confirmModal?.user.full_name || confirmModal?.user.email}"?`}
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-3 p-4 bg-zinc-50 border-t border-zinc-200 rounded-b-2xl">
+        <ModalFooter className="flex gap-3 p-4 bg-zinc-50 border-t border-zinc-200">
           <button
             onClick={() => setConfirmModal(null)}
             disabled={isUpdating}

@@ -58,7 +58,7 @@ export default function AuthorAnalyticsPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-16 border-b border-zinc-100 pb-12 animate-in fade-in slide-in-from-bottom-8 duration-300">
+      <div className="mb-16 border-b border-zinc-100 pb-12 ">
         <div className="space-y-4">
           <h1 className="text-6xl font-bold tracking-tighter leading-none text-black">
             Phân tích dữ liệu
@@ -71,8 +71,8 @@ export default function AuthorAnalyticsPage() {
       </div>
 
       <div
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20 "
+        
       >
         {[
           {

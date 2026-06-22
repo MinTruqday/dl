@@ -459,8 +459,8 @@ export default function DocumentViewer() {
   if (isLocked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-6 font-sans">
-        <div className="bg-white p-12 w-full max-w-md border border-zinc-200 flex flex-col items-center text-center rounded-none ">
-          <div className="w-16 h-16 bg-black flex items-center justify-center mb-8 rounded-none">
+        <div className="bg-white p-12 w-full max-w-md border border-zinc-200 flex flex-col items-center text-center rounded-3xl ">
+          <div className="w-16 h-16 bg-black flex items-center justify-center mb-8 rounded-2xl">
             <Lock className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-xl font-medium text-black mb-2">
@@ -472,7 +472,7 @@ export default function DocumentViewer() {
           <div className="w-full space-y-4">
             <input
               type="password"
-              className="w-full h-12 bg-white border border-zinc-200 px-4 text-center text-sm focus:outline-none focus:border-black rounded-none "
+              className="w-full h-12 bg-white border border-zinc-200 px-4 text-center text-sm focus:outline-none focus:border-black rounded-xl "
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchDocument(password)}
@@ -480,7 +480,7 @@ export default function DocumentViewer() {
             />
             <button
               onClick={() => fetchDocument(password)}
-              className="w-full h-12 bg-black text-white text-sm font-medium rounded-none  "
+              className="w-full h-12 bg-black text-white text-sm font-medium rounded-xl"
             >
               Xác thực quyền truy cập
             </button>
@@ -497,7 +497,7 @@ export default function DocumentViewer() {
         <p className="text-sm font-medium text-zinc-500 mb-8">{error}</p>
         <button
           onClick={() => router.back()}
-          className="h-10 px-6 bg-black text-white text-sm font-medium rounded-none  "
+          className="h-10 px-6 bg-black text-white text-sm font-medium rounded-xl"
         >
           Quay lại
         </button>
@@ -507,38 +507,38 @@ export default function DocumentViewer() {
 
   return (
     <div
-      className={`flex h-screen bg-white overflow-hidden font-sans animate-in fade-in slide-in-from-bottom-8 duration-300 ${document?.is_protected ? "select-none" : ""}`}
+      className={`flex h-screen bg-white overflow-hidden font-sans ${document?.is_protected ? "select-none" : ""}`}
       onMouseUp={handleTextSelection}
     >
       <div className="w-16 border-r border-zinc-200 bg-white flex flex-col items-center py-6 gap-6 shrink-0">
         <button
           onClick={() => setSidebarTab("chat")}
-          className={`p-3 rounded-none  ${sidebarTab === "chat" ? "bg-black text-white" : "text-zinc-500 "}`}
+          className={`p-3 rounded-xl ${sidebarTab === "chat" ? "bg-black text-white" : "text-zinc-500 hover:bg-zinc-50"}`}
         >
           <Bot className="w-5 h-5" />
         </button>
         <button
           onClick={() => setSidebarTab("highlights")}
-          className={`p-3 rounded-none  ${sidebarTab === "highlights" ? "bg-black text-white" : "text-zinc-500 "}`}
+          className={`p-3 rounded-xl ${sidebarTab === "highlights" ? "bg-black text-white" : "text-zinc-500 hover:bg-zinc-50"}`}
         >
           <Highlighter className="w-5 h-5" />
         </button>
         <button
           onClick={() => setSidebarTab("thumbnails")}
-          className={`p-3 rounded-none  ${sidebarTab === "thumbnails" ? "bg-black text-white" : "text-zinc-500 "}`}
+          className={`p-3 rounded-xl ${sidebarTab === "thumbnails" ? "bg-black text-white" : "text-zinc-500 hover:bg-zinc-50"}`}
         >
           <BookOpen className="w-5 h-5" />
         </button>
         <button
           onClick={() => setSidebarTab("history")}
-          className={`p-3 rounded-none  ${sidebarTab === "history" ? "bg-black text-white" : "text-zinc-500 "}`}
+          className={`p-3 rounded-xl ${sidebarTab === "history" ? "bg-black text-white" : "text-zinc-500 hover:bg-zinc-50"}`}
         >
           <History className="w-5 h-5" />
         </button>
         {document?.content_format === "zip" && (
           <button
             onClick={() => setSidebarTab("zip")}
-            className={`p-3 rounded-none  ${sidebarTab === "zip" ? "bg-black text-white" : "text-zinc-500 "}`}
+            className={`p-3 rounded-xl ${sidebarTab === "zip" ? "bg-black text-white" : "text-zinc-500 hover:bg-zinc-50"}`}
           >
             <Folder className="w-5 h-5" />
           </button>
@@ -550,7 +550,7 @@ export default function DocumentViewer() {
           <div className="flex items-center gap-4 flex-1">
             <button
               onClick={() => router.back()}
-              className="p-2 text-zinc-500   rounded-none"
+              className="p-2 text-zinc-500 rounded-xl hover:bg-zinc-50"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -568,7 +568,7 @@ export default function DocumentViewer() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => changeZoom(-10)}
-                className="p-2 text-zinc-500   rounded-none"
+                className="p-2 text-zinc-500 rounded-xl hover:bg-zinc-50"
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
@@ -577,7 +577,7 @@ export default function DocumentViewer() {
               </span>
               <button
                 onClick={() => changeZoom(10)}
-                className="p-2 text-zinc-500   rounded-none"
+                className="p-2 text-zinc-500 rounded-xl hover:bg-zinc-50"
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
@@ -588,13 +588,13 @@ export default function DocumentViewer() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setReadingMode("single")}
-                className={`p-2 rounded-none  ${readingMode === "single" ? "text-black" : "text-zinc-400 "}`}
+                className={`p-2 rounded-xl ${readingMode === "single" ? "text-black bg-zinc-100" : "text-zinc-400 hover:bg-zinc-50"}`}
               >
                 <Square className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setReadingMode("double")}
-                className={`p-2 rounded-none  ${readingMode === "double" ? "text-black" : "text-zinc-400 "}`}
+                className={`p-2 rounded-xl ${readingMode === "double" ? "text-black bg-zinc-100" : "text-zinc-400 hover:bg-zinc-50"}`}
               >
                 <Columns className="w-4 h-4" />
               </button>
@@ -604,7 +604,7 @@ export default function DocumentViewer() {
 
             <button
               onClick={toggleBookmark}
-              className={`p-2 rounded-none  ${isBookmarked ? "text-black" : "text-zinc-500 "}`}
+              className={`p-2 rounded-xl ${isBookmarked ? "text-black" : "text-zinc-500 hover:bg-zinc-50"}`}
             >
               {isBookmarked ? (
                 <BookmarkCheck className="w-5 h-5" />
@@ -615,12 +615,9 @@ export default function DocumentViewer() {
           </div>
         </header>
 
-        <main
-          className="flex-1 overflow-auto bg-zinc-50 p-8 md:p-12 relative flex justify-center animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
-        >
+        <main className="flex-1 overflow-auto bg-zinc-50 p-8 md:p-12 relative flex justify-center">
           <div
-            className={`mx-auto bg-white border border-zinc-200 ${document?.content_format === "zip" ? "p-0 h-full max-w-full" : "p-12 md:p-24 min-h-full origin-top"} rounded-none ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-6xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`}
+            className={`mx-auto bg-white border border-zinc-200 ${document?.content_format === "zip" ? "p-0 h-full max-w-full" : "p-12 md:p-24 min-h-full origin-top"} rounded-3xl ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-6xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`}
             style={{
               transform:
                 document?.content_format === "zip"
@@ -632,8 +629,7 @@ export default function DocumentViewer() {
           </div>
 
           {selection && (
-            <div
-              className="fixed z-50 flex gap-1 bg-white p-1 border border-zinc-200 rounded-none  animate-in fade-in"
+              className="fixed z-50 flex gap-1 bg-white p-1 border border-zinc-200 rounded-2xl shadow-lg"
               style={{
                 left: selection.x,
                 top: selection.y,
@@ -689,7 +685,7 @@ export default function DocumentViewer() {
             {sidebarTab === "chat" && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-1 text-zinc-500  "
+                className="p-1 text-zinc-500 rounded-xl hover:bg-zinc-100"
               >
                 {isExpanded ? (
                   <Minimize2 className="w-4 h-4" />
@@ -702,26 +698,23 @@ export default function DocumentViewer() {
           {sidebarTab === "chat" && (
             <button
               onClick={() => setUseSmart(!useSmart)}
-              className={`px-3 py-1 text-xs font-medium border rounded-none  ${useSmart ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200  "}`}
+              className={`px-3 py-1 text-xs font-medium border rounded-xl ${useSmart ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
             >
               {useSmart ? "Chuyên sâu" : "Tiêu chuẩn"}
             </button>
           )}
         </div>
 
-        <div
-          className="flex-1 overflow-y-auto p-6 scrollbar-thin animate-in fade-in slide-in-from-bottom-8 duration-300"
-          style={{ animationDelay: "150ms", animationFillMode: "both" }}
-        >
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
           {sidebarTab === "chat" ? (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <div className="space-y-6">
               {messages.map((msg, i) => (
                 <div
                   key={i}
                   className={`flex gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""} group`}
                 >
                   <div
-                    className={`w-8 h-8 shrink-0 border flex items-center justify-center rounded-none ${msg.role === "user" ? "bg-zinc-50 border-zinc-200" : "bg-black text-white border-black"}`}
+                    className={`w-8 h-8 shrink-0 border flex items-center justify-center rounded-xl ${msg.role === "user" ? "bg-zinc-50 border-zinc-200" : "bg-black text-white border-black"}`}
                   >
                     {msg.role === "user" ? (
                       <User className="w-4 h-4 text-zinc-500" />
@@ -731,13 +724,13 @@ export default function DocumentViewer() {
                   </div>
                   <div className="flex flex-col gap-2 max-w-[85%]">
                     <div
-                      className={`text-sm leading-relaxed p-4 border rounded-none relative ${msg.role === "user" ? "bg-zinc-50 border-zinc-200 text-black font-medium" : "bg-white border-zinc-200 text-black"}`}
+                      className={`text-sm leading-relaxed p-4 border rounded-3xl relative ${msg.role === "user" ? "bg-zinc-50 border-zinc-200 text-black font-medium" : "bg-white border-zinc-200 text-black"}`}
                     >
                       {msg.content}
                       {msg.role === "user" && !asking && (
                         <button
                           onClick={() => setEditingMessageId(msg.id)}
-                          className="absolute -left-10 top-0 opacity-0 group- p-2 text-zinc-400   rounded-none"
+                          className="absolute -left-10 top-0 opacity-0 group-hover:opacity-100 p-2 text-zinc-400 rounded-xl hover:bg-zinc-50"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
@@ -747,7 +740,7 @@ export default function DocumentViewer() {
                       <div className="flex flex-col gap-3 mt-2">
                         <textarea
                           defaultValue={msg.content}
-                          className="w-full p-3 text-sm border border-zinc-200 focus:outline-none focus:border-black rounded-none bg-white text-black"
+                          className="w-full p-3 text-sm border border-zinc-200 focus:outline-none focus:border-black rounded-xl bg-white text-black"
                           onKeyDown={(e: any) =>
                             e.key === "Enter" &&
                             !e.shiftKey &&
@@ -758,7 +751,7 @@ export default function DocumentViewer() {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => setEditingMessageId(null)}
-                            className="text-xs font-medium px-4 py-2 border border-zinc-200  rounded-none text-black "
+                            className="text-xs font-medium px-4 py-2 border border-zinc-200 rounded-xl text-black hover:bg-zinc-50"
                           >
                             Hủy bỏ
                           </button>
@@ -768,7 +761,7 @@ export default function DocumentViewer() {
                                 ?.previousElementSibling as HTMLTextAreaElement;
                               handleEditAndResend(msg.id, ta.value);
                             }}
-                            className="text-xs font-medium px-4 py-2 bg-black text-white  rounded-none "
+                            className="text-xs font-medium px-4 py-2 bg-black text-white rounded-xl hover:bg-zinc-800"
                           >
                             Cập nhật
                           </button>
@@ -793,7 +786,7 @@ export default function DocumentViewer() {
                 highlights.map((h, i) => (
                   <div
                     key={i}
-                    className="p-4 border border-zinc-200 group rounded-none bg-zinc-50  "
+                    className="p-4 border border-zinc-200 group rounded-3xl bg-zinc-50"
                   >
                     <p className="text-sm font-medium text-black mb-4">
                       "{h.text}"
@@ -814,7 +807,7 @@ export default function DocumentViewer() {
               )}
             </div>
           ) : sidebarTab === "history" ? (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
+            <div className="space-y-4 ">
               {sessions.length === 0 ? (
                 <div className="py-20 text-center flex flex-col items-center gap-4">
                   <History className="w-8 h-8 text-zinc-300" />
@@ -831,7 +824,7 @@ export default function DocumentViewer() {
                       setMessages(s.messages || []);
                       setSidebarTab("chat");
                     }}
-                    className={`p-4 border cursor-pointer rounded-none group relative  ${currentSessionId === s._id ? "border-black bg-white" : "border-zinc-200 bg-zinc-50 "}`}
+                    className={`p-4 border cursor-pointer rounded-xl group relative  ${currentSessionId === s._id ? "border-black bg-white" : "border-zinc-200 bg-zinc-50 "}`}
                   >
                     <p className="text-sm font-medium text-black truncate pr-8">
                       {s.title}
@@ -847,7 +840,7 @@ export default function DocumentViewer() {
               )}
             </div>
           ) : sidebarTab === "zip" ? (
-            <div className="space-y-1 overflow-x-auto text-sm animate-in fade-in">
+            <div className="space-y-1 overflow-x-auto text-sm ">
               {zipTree.map((item, i) => (
                 <div
                   key={i}
@@ -869,7 +862,7 @@ export default function DocumentViewer() {
                         .finally(() => setZipLoading(false));
                     }
                   }}
-                  className={`flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-100 cursor-pointer rounded-none whitespace-nowrap ${!item.is_dir && selectedZipFile?.name === item.name ? "bg-zinc-100 font-medium" : "text-zinc-600"}`}
+                  className={`flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-100 cursor-pointer rounded-xl whitespace-nowrap ${!item.is_dir && selectedZipFile?.name === item.name ? "bg-zinc-100 font-medium" : "text-zinc-600"}`}
                   style={{
                     paddingLeft: `${item.path.split("/").length * 12}px`,
                   }}
@@ -894,7 +887,7 @@ export default function DocumentViewer() {
                 <div
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`aspect-[3/4] border flex flex-col items-center justify-center gap-2 cursor-pointer rounded-none  ${currentPage === p ? "bg-black text-white border-black" : "bg-white border-zinc-200 text-zinc-500 "}`}
+                  className={`aspect-[3/4] border flex flex-col items-center justify-center gap-2 cursor-pointer rounded-xl  ${currentPage === p ? "bg-black text-white border-black" : "bg-white border-zinc-200 text-zinc-500 "}`}
                 >
                   <span className="text-sm font-medium">{p}</span>
                   <span className="text-xs uppercase">Trang</span>
@@ -907,7 +900,7 @@ export default function DocumentViewer() {
         {sidebarTab === "chat" && (
           <div className="p-6 border-t border-zinc-200 bg-white relative shrink-0">
             {showAttachments && (
-              <div className="absolute bottom-full left-6 right-6 mb-4 p-4 bg-white border border-zinc-200 rounded-none z-[60]  animate-in fade-in">
+              <div className="absolute bottom-full left-6 right-6 mb-4 p-4 bg-white border border-zinc-200 rounded-xl z-[60]  ">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-xs font-medium text-black uppercase tracking-wide">
                     Đính kèm tài liệu
@@ -920,10 +913,10 @@ export default function DocumentViewer() {
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="flex items-center gap-2 p-3 border border-zinc-200 rounded-none text-xs font-medium   text-black">
+                  <button className="flex items-center gap-2 p-3 border border-zinc-200 rounded-xl text-xs font-medium   text-black">
                     <FileText className="w-4 h-4" /> Thư viện
                   </button>
-                  <button className="flex items-center gap-2 p-3 border border-zinc-200 rounded-none text-xs font-medium   text-black">
+                  <button className="flex items-center gap-2 p-3 border border-zinc-200 rounded-xl text-xs font-medium   text-black">
                     <ImageIcon className="w-4 h-4" /> Hình ảnh
                   </button>
                 </div>
@@ -938,14 +931,14 @@ export default function DocumentViewer() {
                   !e.shiftKey &&
                   (e.preventDefault(), handleAskAI())
                 }
-                className="w-full min-h-[120px] p-4 pb-16 text-sm font-medium border border-zinc-200 focus:outline-none focus:border-black resize-none rounded-none  placeholder:text-zinc-400 text-black bg-zinc-50 focus:bg-white"
+                className="w-full min-h-[120px] p-4 pb-16 text-sm font-medium border border-zinc-200 focus:outline-none focus:border-black resize-none rounded-xl  placeholder:text-zinc-400 text-black bg-zinc-50 focus:bg-white"
                 placeholder="Hỏi bất cứ điều gì về tài liệu này"
                 disabled={asking}
               />
               <div className="absolute bottom-4 left-4 flex items-center gap-3">
                 <button
                   onClick={() => setShowAttachments(!showAttachments)}
-                  className="w-8 h-8 flex items-center justify-center text-zinc-500   rounded-none"
+                  className="w-8 h-8 flex items-center justify-center text-zinc-500   rounded-xl"
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
@@ -953,7 +946,7 @@ export default function DocumentViewer() {
               <button
                 onClick={() => handleAskAI()}
                 disabled={asking || !question.trim()}
-                className="absolute bottom-4 right-4 w-8 h-8 bg-black text-white flex items-center justify-center disabled:opacity-50 rounded-none "
+                className="absolute bottom-4 right-4 w-8 h-8 bg-black text-white flex items-center justify-center disabled:opacity-50 rounded-xl "
               >
                 {asking ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

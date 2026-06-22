@@ -67,7 +67,7 @@ export default function PromotionLayout({
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 font-sans text-black selection:bg-black selection:text-white overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
         <aside className="lg:col-span-3 space-y-6 overflow-y-auto max-h-full pr-1 shrink-0">
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 ">
             <div className="text-sm font-semibold text-black mb-1">
               Phân loại
             </div>
@@ -97,8 +97,8 @@ export default function PromotionLayout({
           </div>
 
           <div
-            className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-            style={{ animationDelay: "100ms", animationFillMode: "both" }}
+            className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 "
+            
           >
             <div className="text-sm font-semibold text-black mb-1">
               Thống kê nhanh
