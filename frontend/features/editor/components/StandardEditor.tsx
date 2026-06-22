@@ -138,6 +138,7 @@ export default function StandardEditor({
       const DocLibChecklist = (await import("./DocLibChecklist")).default;
       const DocLibLinkPreview = (await import("./DocLibLinkPreview")).default;
       const DocLibStrikethrough = (await import("./DocLibStrikethrough")).default;
+      const DocLibTextHighlight = (await import("./DocLibTextHighlight")).default;
       const DocLibAlignmentTune = (await import("./DocLibAlignment")).default;
       const DocLibColumns = (await import("./DocLibColumns")).default;
       const DocLibFile = (await import("./DocLibFile")).default;
@@ -507,6 +508,7 @@ export default function StandardEditor({
       if (DocLibQuiz) tools.quiz = DocLibQuiz;
 
       if (DocLibMarker) tools.marker = DocLibMarker;
+      if (DocLibTextHighlight) tools.textHighlight = DocLibTextHighlight;
       if (DocLibInlineCode) tools.inlineCode = DocLibInlineCode;
       if (DocLibUnderline) tools.underline = DocLibUnderline;
       if (DocLibLinkPreview) tools.linkTool = DocLibLinkPreview;

@@ -70,17 +70,13 @@ export default function UpgradePage() {
           </p>
           
           {user && (
-            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-zinc-200 shadow-sm mt-4">
-              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Số dư ví:</span>
-              <span className="text-sm font-bold text-black">{balance.toLocaleString()} dl</span>
-              <Link href="/wallet" className="text-xs text-blue-600 font-medium hover:underline ml-2">Nạp thêm</Link>
-            </div>
+            <div className="h-4"></div>
           )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 items-start">
           {/* BASIC TIER */}
-          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full">
+          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full transition-transform hover:-translate-y-2">
             <div className="mb-8">
               <h3 className="text-xl font-bold text-black mb-2">Cơ bản</h3>
               <p className="text-sm text-zinc-500 font-medium min-h-[40px]">Trải nghiệm AI giới hạn dành cho người dùng mới.</p>
@@ -92,7 +88,7 @@ export default function UpgradePage() {
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
                 <Check className="w-5 h-5 text-black shrink-0" />
-                Mô hình Qwen tiêu chuẩn
+                Mô hình ngôn ngữ tiêu chuẩn
               </li>
               <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
                 <Check className="w-5 h-5 text-black shrink-0" />
@@ -117,19 +113,18 @@ export default function UpgradePage() {
           </div>
 
           {/* PRO TIER */}
-          <div className="bg-white rounded-3xl p-8 border-2 border-black shadow-xl relative overflow-hidden flex flex-col h-full transform md:-translate-y-4">
+          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full transition-transform hover:-translate-y-2">
             <div className="absolute top-0 right-0 bg-black text-white px-4 py-1 text-[10px] font-bold uppercase tracking-widest rounded-bl-xl">
               Phổ biến nhất
             </div>
             <div className="mb-8 mt-4">
               <h3 className="text-xl font-bold text-black mb-2 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-black" />
                 Nâng cao
               </h3>
               <p className="text-sm text-zinc-500 font-medium min-h-[40px]">Phù hợp cho tác giả và nhà nghiên cứu bán chuyên.</p>
               <div className="mt-6 flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-black">750</span>
-                <span className="text-sm font-bold text-zinc-500">dl / chu kỳ</span>
+                <span className="text-sm font-bold text-zinc-500">dl / tháng</span>
               </div>
             </div>
             
@@ -140,15 +135,15 @@ export default function UpgradePage() {
               </li>
               <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
                 <Check className="w-5 h-5 text-black shrink-0" />
+                Mô hình ngôn ngữ thông minh
+              </li>
+              <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
+                <Check className="w-5 h-5 text-black shrink-0" />
                 25 lượt trò chuyện / ngày
               </li>
               <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
                 <Check className="w-5 h-5 text-black shrink-0" />
                 Tối đa 7.500 token / ngày
-              </li>
-              <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
-                <Check className="w-5 h-5 text-black shrink-0" />
-                Thời gian nạp lại quota: 5 tiếng
               </li>
               <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
                 <Check className="w-5 h-5 text-black shrink-0" />
@@ -174,45 +169,44 @@ export default function UpgradePage() {
           </div>
 
           {/* PREMIUM TIER */}
-          <div className="bg-black rounded-3xl p-8 border border-black shadow-2xl relative overflow-hidden flex flex-col h-full text-white">
-            <div className="absolute -right-12 -top-12 opacity-10">
-              <Brain className="w-48 h-48" />
+          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full transition-transform hover:-translate-y-2">
+            <div className="absolute -right-12 -top-12 opacity-5">
+              <Brain className="w-48 h-48 text-black" />
             </div>
             <div className="mb-8 relative z-10">
-              <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
+              <h3 className="text-xl font-bold text-black mb-2 flex items-center gap-2">
                 Cao cấp
               </h3>
-              <p className="text-sm text-zinc-400 font-medium min-h-[40px]">Dành cho chuyên gia cần sức mạnh xử lý tối đa.</p>
+              <p className="text-sm text-zinc-500 font-medium min-h-[40px]">Dành cho chuyên gia cần sức mạnh xử lý tối đa.</p>
               <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-4xl font-bold">2.500</span>
-                <span className="text-sm font-bold text-zinc-400">dl / chu kỳ</span>
+                <span className="text-4xl font-bold text-black">2.500</span>
+                <span className="text-sm font-bold text-zinc-500">dl / tháng</span>
               </div>
             </div>
             
             <ul className="space-y-4 mb-8 flex-1 relative z-10">
-              <li className="flex items-start gap-3 text-sm text-zinc-200 font-medium">
-                <Check className="w-5 h-5 text-white shrink-0" />
+              <li className="flex items-start gap-3 text-sm text-zinc-800 font-medium">
+                <Check className="w-5 h-5 text-black shrink-0" />
                 <span className="font-bold">Mọi tính năng của gói Nâng cao</span>
               </li>
-              <li className="flex items-start gap-3 text-sm text-zinc-200 font-medium">
-                <Check className="w-5 h-5 text-white shrink-0" />
-                <span className="text-white bg-white/20 px-1.5 py-0.5 rounded font-bold">Model Llama 4</span> thông minh nhất
+              <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
+                <Check className="w-5 h-5 text-black shrink-0" />
+                Kích hoạt chế độ suy nghĩ sâu
               </li>
-              <li className="flex items-start gap-3 text-sm text-zinc-200 font-medium">
-                <Check className="w-5 h-5 text-white shrink-0" />
-                Kích hoạt <span className="font-bold italic">Chế độ Suy nghĩ</span>
+              <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
+                <Check className="w-5 h-5 text-black shrink-0" />
+                Mở khóa mọi tính năng AI trên soạn thảo
               </li>
-              <li className="flex items-start gap-3 text-sm text-zinc-200 font-medium">
-                <Check className="w-5 h-5 text-white shrink-0" />
-                Mở khóa mọi tính năng AI trên Editor
+              <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
+                <Check className="w-5 h-5 text-black shrink-0" />
+                100 lượt trò chuyện / ngày
               </li>
-              <li className="flex items-start gap-3 text-sm text-zinc-200 font-medium">
-                <Check className="w-5 h-5 text-white shrink-0" />
-                100 lượt trò chuyện & 30.000 token / ngày
+              <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
+                <Check className="w-5 h-5 text-black shrink-0" />
+                Tối đa 30.000 token / ngày
               </li>
-              <li className="flex items-start gap-3 text-sm text-zinc-200 font-medium">
-                <Check className="w-5 h-5 text-white shrink-0" />
+              <li className="flex items-start gap-3 text-sm text-zinc-600 font-medium">
+                <Check className="w-5 h-5 text-black shrink-0" />
                 Không giới hạn số lượng tài liệu
               </li>
             </ul>
@@ -221,9 +215,9 @@ export default function UpgradePage() {
               onClick={() => handleUpgrade("PREMIUM", 2500)}
               disabled={!!loading || getTierState("PREMIUM") !== "AVAILABLE"}
               className={`w-full py-4 rounded-xl text-sm font-bold transition-all relative z-10 flex items-center justify-center gap-2 ${
-                getTierState("PREMIUM") === "CURRENT" ? "bg-white/10 text-zinc-500 cursor-not-allowed" :
-                getTierState("PREMIUM") === "ADMIN" ? "bg-white/10 text-zinc-500 cursor-not-allowed" :
-                "bg-white text-black hover:bg-zinc-100 shadow-[0_0_20px_rgba(255,255,255,0.3)] active:scale-[0.98]"
+                getTierState("PREMIUM") === "CURRENT" ? "bg-zinc-100 text-zinc-500 cursor-not-allowed" :
+                getTierState("PREMIUM") === "ADMIN" ? "bg-zinc-100 text-zinc-500 cursor-not-allowed" :
+                "bg-black text-white hover:bg-zinc-800 hover:shadow-lg active:scale-[0.98]"
               }`}
             >
               {loading === "PREMIUM" ? <Loader2 className="w-5 h-5 animate-spin" /> : 

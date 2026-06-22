@@ -48,7 +48,9 @@ export function NotificationProvider({
     if (!user) return;
     try {
       const data = await getNotificationsAPI();
-      setNotifications(data.data || data || []);
+      let arr = data.data || data || [];
+      if (!Array.isArray(arr)) arr = [];
+      setNotifications(arr);
     } catch (e) {
       console.error(e);
     }
@@ -102,7 +104,7 @@ export function NotificationProvider({
     };
   }, [user, fetchNotifications, showToast]);
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter((n) => !n.is_read).length : 0;
 
   return (
     <NotificationContext.Provider
