@@ -97,7 +97,7 @@ export default function PaymentResultPage() {
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 ">
         <div
-          className={`w-20 h-20 flex items-center justify-center border ${current.bgClass} rounded-xl`}
+          className={`w-20 h-20 flex items-center justify-center border ${current.bgClass} rounded-full shadow-sm`}
         >
           <IconComponent
             className={`w-8 h-8 ${status === "loading" ? "animate-spin" : ""}`}
@@ -118,7 +118,7 @@ export default function PaymentResultPage() {
 
         {paymentInfo && status === "success" && (
           <div
-            className="border border-zinc-200 bg-white p-6 w-full max-w-sm space-y-4 "
+            className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-8 w-full max-w-sm space-y-4 "
             
           >
             <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
@@ -155,14 +155,14 @@ export default function PaymentResultPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/wallet"
-            className="h-11 px-8 bg-black text-white text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-xl  active:scale-[0.98]"
+            className="h-11 px-8 bg-black text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 rounded-2xl  active:scale-[0.98] shadow-sm hover:bg-zinc-800 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Về ví tiền
           </Link>
           {(status === "failed" || status === "cancelled") && (
             <button
               onClick={verifyPayment}
-              className="h-11 px-8 border border-zinc-200 bg-white text-black text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-xl  active:scale-[0.98]"
+              className="h-11 px-8 border border-zinc-200 bg-white text-black text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 rounded-2xl  active:scale-[0.98] shadow-sm hover:bg-zinc-50 transition-colors"
             >
               Thử lại
             </button>

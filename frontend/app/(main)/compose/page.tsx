@@ -1686,7 +1686,7 @@ function StudioContent() {
         </ModalFooter>
       </Modal>
 
-      <div className="h-16 border border-zinc-200 px-6 flex items-center justify-between bg-white rounded-2xl shadow-sm shrink-0 z-30 ">
+      <div className="h-16 border border-zinc-100 px-6 flex items-center justify-between bg-white/90 backdrop-blur-md rounded-3xl shadow-sm shrink-0 z-30 ">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-black flex items-center justify-center rounded-xl">
@@ -1768,8 +1768,8 @@ function StudioContent() {
         className="flex flex-1 overflow-hidden w-full "
         
       >
-        <main className="flex-1 w-full flex flex-col bg-white overflow-hidden relative border border-zinc-200 rounded-2xl shadow-sm">
-          <div className="h-12 border-b border-zinc-200 bg-white px-4 lg:px-6 flex items-center justify-between shrink-0">
+        <main className="flex-1 w-full flex flex-col bg-white/90 backdrop-blur-md overflow-hidden relative border border-zinc-100 rounded-3xl shadow-sm">
+          <div className="h-12 border-b border-zinc-100 bg-transparent px-4 lg:px-6 flex items-center justify-between shrink-0">
             <div className="flex items-center h-full gap-4 lg:gap-6">
               {(["edit", "preview", "raw"] as const).map((m) => (
                 <button

@@ -45,7 +45,7 @@ function GoogleCallbackContent() {
 
   if (pendingPasskeyEmail) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
         <Passkey
           email={pendingPasskeyEmail}
           onClose={() => router.push("/")}
@@ -57,15 +57,15 @@ function GoogleCallbackContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white font-sans">
-        <div className="bg-white p-12 border border-zinc-200 max-w-md w-full text-center rounded-2xl ">
-          <h2 className="text-2xl font-bold text-black tracking-tight">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 font-sans">
+        <div className="bg-white/90 backdrop-blur-md p-8 border border-zinc-100 shadow-xl max-w-md w-full text-center rounded-3xl transition-all duration-300">
+          <h2 className="text-xl font-bold text-black tracking-tight">
             Lỗi xác thực
           </h2>
-          <p className="mt-3 text-base text-zinc-500">{error}</p>
+          <p className="mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{error}</p>
           <button
             onClick={() => router.push("/login")}
-            className="mt-8 w-full py-3 bg-black text-white font-bold text-sm active:scale-95 rounded-2xl hover:bg-zinc-800 transition-colors"
+            className="mt-6 w-full flex justify-center items-center h-11 text-xs font-bold text-white bg-black rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 shadow-md"
           >
             Quay lại đăng nhập
           </button>
@@ -75,10 +75,10 @@ function GoogleCallbackContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white font-sans">
-      <div className="text-center ">
-        <Loader2 className="h-10 w-10 animate-spin text-black mx-auto" />
-        <p className="mt-6 text-base font-bold text-black">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 font-sans">
+      <div className="text-center flex flex-col items-center justify-center gap-4 bg-white/90 backdrop-blur-md p-8 border border-zinc-100 shadow-xl rounded-3xl">
+        <Loader2 className="h-8 w-8 animate-spin text-black" />
+        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
           Đang xử lý đăng nhập bằng Google
         </p>
       </div>
@@ -90,7 +90,7 @@ export default function GoogleCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-white font-sans">
+        <div className="min-h-screen flex items-center justify-center bg-zinc-50 font-sans">
           <Loader2 className="h-10 w-10 animate-spin text-black" />
         </div>
       }

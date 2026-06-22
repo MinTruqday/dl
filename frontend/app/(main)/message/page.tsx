@@ -1203,7 +1203,7 @@ export default function MessagesPage() {
 
       <div className="flex flex-1 min-h-0 gap-4">
         <div
-          className={`w-full md:w-[320px] lg:w-[380px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-full  ${
+          className={`w-full md:w-[320px] lg:w-[380px] bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-full  ${
             selectedConv ? "hidden md:flex" : "flex"
           }`}
         >
@@ -1367,7 +1367,7 @@ export default function MessagesPage() {
           className={`flex-1 flex flex-col min-w-0 ${!selectedConv ? "hidden md:flex" : "flex"}`}
         >
           {selectedConv ? (
-            <div className="flex-1 flex flex-col bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 overflow-hidden gap-4 ">
+            <div className="flex-1 flex flex-col bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm p-5 overflow-hidden gap-4 ">
               <div className="flex items-center justify-between shrink-0 relative z-30">
                 <div className="flex items-center gap-4">
                   <button
@@ -2296,7 +2296,7 @@ export default function MessagesPage() {
                   )}
 
                   <div
-                    className={`flex-1 min-h-[48px] bg-white border border-zinc-200 flex ${isRecording ? "items-center" : "items-end"} px-4 gap-3 focus-within:border-zinc-300 rounded-2xl transition-colors py-1`}
+                    className={`flex-1 min-h-[48px] bg-white border border-zinc-100 flex ${isRecording ? "items-center" : "items-end"} px-4 gap-3 focus-within:border-black rounded-2xl transition-colors py-1 shadow-sm`}
                   >
                     {!isRecording ? (
                       <>
@@ -2372,7 +2372,7 @@ export default function MessagesPage() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-2xl shadow-sm ">
+            <div className="flex-1 flex flex-col items-center justify-center bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm ">
               <p className="text-sm font-semibold text-black">
                 DocLib Tin nhắn
               </p>

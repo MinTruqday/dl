@@ -67,14 +67,14 @@ function VerifyCodeContent() {
   return (
     <main className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 py-12">
       <div className="w-full max-w-[420px]">
-        <div className="bg-white/90 backdrop-blur-xl border border-zinc-200/50 rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] p-8 sm:p-10">
+        <div className="bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-xl p-8 sm:p-10 transition-all duration-300">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold tracking-[-0.02em] text-black">
+            <h1 className="text-2xl font-bold tracking-tight text-black">
               Xác thực mã
             </h1>
-            <p className="mt-2 text-xs font-medium text-zinc-500">
+            <p className="mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
               Mã xác nhận 6 số đã được gửi tới email<br />
-              <strong className="text-black">{email}</strong>
+              <strong className="text-zinc-600">{email}</strong>
             </p>
           </div>
 
@@ -82,7 +82,7 @@ function VerifyCodeContent() {
             <div>
               <label
                 htmlFor="token"
-                className="block text-xs font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1 text-center"
+                className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1 text-center"
               >
                 Nhập mã OTP
               </label>
@@ -95,7 +95,7 @@ function VerifyCodeContent() {
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setToken(e.target.value)
                 }
-                className="appearance-none block w-full px-4 py-4 bg-zinc-50/50 border border-zinc-200/80 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black text-center text-2xl tracking-[0.3em] font-bold text-black uppercase transition-all"
+                className="w-full bg-white border border-zinc-200 rounded-3xl px-4 py-4 focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all text-center text-2xl tracking-[0.3em] font-bold text-black uppercase"
                 placeholder="------"
                 maxLength={6}
               />
@@ -105,7 +105,7 @@ function VerifyCodeContent() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-2 h-12 text-sm font-bold text-white bg-black rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {loading ? "Đang kiểm tra" : "Xác nhận mã"}

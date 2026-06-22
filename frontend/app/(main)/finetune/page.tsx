@@ -199,7 +199,7 @@ export default function FineTuningPage() {
         className="grid grid-cols-1 lg:grid-cols-2 gap-6 "
         
       >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
             <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Database className="w-5 h-5 text-blue-500" />
@@ -250,7 +250,7 @@ export default function FineTuningPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700">
             <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Activity className="w-5 h-5 text-green-500" />
@@ -347,7 +347,7 @@ export default function FineTuningPage() {
 
       {showNewDataset && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md overflow-hidden shadow-xl animate-scale-in">
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl w-full max-w-md overflow-hidden shadow-xl animate-scale-in border border-zinc-100">
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
               <h3 className="font-semibold text-gray-900 dark:text-white">
                 Tạo Tập Dữ Liệu
@@ -404,7 +404,7 @@ export default function FineTuningPage() {
 
       {showNewJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md overflow-hidden shadow-xl animate-scale-in">
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl w-full max-w-md overflow-hidden shadow-xl animate-scale-in border border-zinc-100">
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
               <h3 className="font-semibold text-gray-900 dark:text-white">
                 Bắt đầu Huấn luyện

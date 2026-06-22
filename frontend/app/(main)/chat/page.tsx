@@ -551,7 +551,7 @@ export default function TroChuyenPage() {
       <div className="grid lg:grid-cols-12 gap-6 h-full w-full items-start">
         {/* SESSIONS SIDEBAR */}
         {true && (
-          <aside className="lg:col-span-3 bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-[calc(100vh-140px)] w-full ">
+          <aside className="lg:col-span-3 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-[calc(100vh-140px)] w-full ">
             <div className="p-5 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-semibold text-black">Lịch sử</h2>
               <div className="flex items-center gap-3">
@@ -768,7 +768,7 @@ export default function TroChuyenPage() {
 
         {/* MAIN CHAT AREA */}
         {true && (
-          <main className="lg:col-span-9 flex flex-col h-[calc(100vh-140px)] bg-white border border-zinc-200 rounded-2xl shadow-sm relative overflow-hidden ">
+          <main className="lg:col-span-9 flex flex-col h-[calc(100vh-140px)] bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm relative overflow-hidden ">
             <div
               ref={scrollRef}
               className="flex-1 overflow-y-auto flex flex-col min-h-0 no-scrollbar relative "
@@ -1094,7 +1094,7 @@ export default function TroChuyenPage() {
                   )}
 
                   <form onSubmit={handleSubmit} className="flex gap-3">
-                    <div className="flex-1 min-h-[56px] bg-white border border-zinc-200 flex items-center px-4 gap-3 focus-within:border-zinc-300 rounded-xl transition-colors">
+                    <div className="flex-1 min-h-[56px] bg-white border border-zinc-100 flex items-center px-4 gap-3 focus-within:border-black rounded-2xl transition-colors shadow-sm">
                       {useSmart && (
                         <button
                           type="button"
@@ -1131,11 +1131,11 @@ export default function TroChuyenPage() {
                     <button
                       type="submit"
                       disabled={
-                        isSending ||
+                      isSending ||
                         !input.trim() ||
                         (useSmart && (user?.wallet_balance || 0) < 20)
                       }
-                      className="w-14 h-[56px] shrink-0 bg-black text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors hover:bg-zinc-800"
+                      className="w-14 h-[56px] shrink-0 bg-black text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors hover:bg-zinc-800 shadow-md"
                     >
                       {isSending ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

@@ -56,7 +56,7 @@ export default function HelpPage() {
             <input
               type="text"
               placeholder=""
-              className="w-full h-14 pl-12 pr-4 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-black focus:bg-white text-sm font-bold"
+              className="w-full h-14 pl-12 pr-4 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm focus:outline-none focus:border-black focus:bg-white text-sm font-bold"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -86,7 +86,7 @@ export default function HelpPage() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="p-8 border border-zinc-200 rounded-xl group cursor-pointer active:scale-[0.98]"
+              className="p-8 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm group cursor-pointer active:scale-[0.98]"
             >
               <item.icon className="w-8 h-8 mb-6 text-zinc-200 " />
               <h3 className="font-bold text-black mb-3">{item.title}</h3>
@@ -108,7 +108,7 @@ export default function HelpPage() {
             {filteredFaqs.map((faq, i) => (
               <div
                 key={i}
-                className="p-8 bg-white border border-zinc-200 rounded-xl "
+                className="p-8 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm "
               >
                 <h4 className="font-bold text-black mb-3 flex items-center gap-3">
                   <HelpCircle className="w-4 h-4 text-zinc-400" />
@@ -127,7 +127,7 @@ export default function HelpPage() {
           </div>
         </div>
 
-        <div className="mt-24 p-12 bg-black text-white rounded-xl text-center animate-in slide-in-from-bottom-8 ">
+        <div className="mt-24 p-12 bg-black text-white rounded-3xl text-center animate-in slide-in-from-bottom-8 shadow-sm ">
           <MessageCircle className="w-10 h-10 mx-auto mb-6 text-zinc-400" />
           <h2 className="text-2xl font-bold mb-3 tracking-tight">
             Cần thêm thông tin?
@@ -135,7 +135,7 @@ export default function HelpPage() {
           <p className="text-zinc-400 mb-10 text-[11px] font-bold">
             Liên hệ với chúng tôi để được giải đáp thắc mắc
           </p>
-          <button className="px-10 py-4 bg-white text-black font-bold text-[11px] active:scale-95">
+          <button className="px-10 py-4 bg-white text-black font-bold text-[11px] rounded-2xl active:scale-95 shadow-sm hover:bg-zinc-200 transition-colors">
             Gửi yêu cầu hỗ trợ
           </button>
         </div>

@@ -503,7 +503,7 @@ export default function StudioCollabPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
         <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2 ">
-          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+          <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
             <h2 className="text-sm font-semibold text-black mb-1">
               Cài đặt tài liệu cộng tác
             </h2>
@@ -566,7 +566,7 @@ export default function StudioCollabPage() {
           </div>
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
               <div className="flex items-center justify-between mb-1">
                 <h2 className="text-sm font-semibold text-black">
                   Khóa biên tập độc quyền
@@ -602,7 +602,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
               <h2 className="text-sm font-semibold text-black mb-1">
                 Gửi lời mời cộng tác
               </h2>
@@ -664,7 +664,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && isOwnerOfSelected() && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
               <div className="flex items-center justify-between mb-1">
                 <h2 className="text-sm font-semibold text-black">
                   Mã mời nhanh
@@ -703,7 +703,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && sentPendingInvites.length > 0 && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
               <h2 className="text-sm font-semibold text-black mb-1">
                 Lời mời đã gửi (Đang chờ)
               </h2>
@@ -734,7 +734,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
               <div className="flex items-center justify-between mb-1">
                 <h2 className="text-sm font-semibold text-black">
                   Cộng tác viên hiện tại
@@ -875,7 +875,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-lg font-semibold text-black flex items-center gap-2">
                   <CheckSquare className="w-5 h-5" /> Nhiệm vụ cộng tác viên
@@ -961,7 +961,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-lg font-semibold text-black flex items-center gap-2">
                   <Camera className="w-5 h-5" /> Bản sao lưu nháp biên tập
@@ -1014,7 +1014,7 @@ export default function StudioCollabPage() {
             </div>
           )}
 
-          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+          <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
               <h2 className="text-lg font-semibold text-black">
                 Lời mời cộng tác nhận được
@@ -1131,7 +1131,7 @@ export default function StudioCollabPage() {
           </div>
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4">
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-lg font-semibold text-black flex items-center gap-2">
                   <MessageSquare className="w-5 h-5" /> Trao đổi cộng tác
@@ -1192,7 +1192,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-6">
+            <div className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-6">
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-lg font-semibold text-black flex items-center gap-2">
                   <Activity className="w-5 h-5" /> Nhật ký hoạt động cộng tác

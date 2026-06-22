@@ -24,6 +24,11 @@ import {
   MoreHorizontal,
   Pin,
   PinOff,
+  BarChart,
+  Brain,
+  HelpCircle,
+  Bell,
+  ArrowUpCircle,
 } from "lucide-react";
 
 export const MENU_ITEMS = [
@@ -45,6 +50,11 @@ export const MENU_ITEMS = [
   { id: "report", label: "Báo cáo vi phạm", href: "/report", icon: AlertTriangle, roles: ["admin", "moderator"] },
   { id: "operation", label: "Vận hành hệ thống", href: "/operation", icon: Shield, roles: ["admin"] },
   { id: "banner", label: "Quản lý biểu ngữ", href: "/banner", icon: Presentation, roles: ["admin"] },
+  { id: "analytics", label: "Thống kê", href: "/analytics", icon: BarChart, roles: ["admin", "author"] },
+  { id: "finetune", label: "Huấn luyện AI", href: "/finetune", icon: Brain, roles: ["admin"] },
+  { id: "help", label: "Trung tâm hỗ trợ", href: "/help", icon: HelpCircle, requireAuth: true },
+  { id: "notification", label: "Thông báo", href: "/notification", icon: Bell, requireAuth: true },
+  { id: "upgrade", label: "Nâng cấp", href: "/upgrade", icon: ArrowUpCircle, requireAuth: true },
 ];
 
 const DEFAULT_PINNED = ["explore", "message", "chat"];

@@ -9,13 +9,12 @@ import {
   ModalTitle,
   ModalContent,
   ModalFooter,
+  ModalDescription,
 } from "@/shared/components/ui/Modal";
 import {
   getPrivacySettingsAPI,
   updatePrivacySettingsAPI,
   updateGeneralSettingsAPI,
-  
-  updateProfileAPI,
 } from "@/features/provision/services/system_setting.service";
 import {
   getMaintenanceModeAPI,
@@ -24,8 +23,6 @@ import {
   updateAdminConfigAPI,
 } from "@/features/provision/services/system_operation.service";
 import {
-  Settings,
-  Type,
   Shield,
   Bell,
   Lock,
@@ -62,7 +59,6 @@ export default function SettingsPage() {
     type: "maintenance" | "registration";
     value: boolean;
   } | null>(null);
-
 
   const [hideActivity, setHideActivity] = useState(false);
   const [hideLibrary, setHideLibrary] = useState(false);
@@ -148,7 +144,7 @@ export default function SettingsPage() {
     }
     setLoading(true);
     try {
-      await // updateUserAPI({ motivation, portfolio });
+      // await updateUserAPI({ motivation, portfolio });
       showToast("Đã gửi đơn ứng tuyển thành công", "success");
       setMotivation("");
       setPortfolio("");
@@ -205,13 +201,13 @@ export default function SettingsPage() {
   }) => (
     <button
       onClick={onToggle}
-      className={`w-10 h-5 relative shrink-0 rounded-xl border border-zinc-200 ${
-        active ? "bg-black border-black" : "bg-zinc-100"
+      className={`w-12 h-6 relative shrink-0 rounded-full border shadow-sm transition-all duration-300 ${
+        active ? "bg-black border-black" : "bg-zinc-100 border-zinc-200"
       }`}
     >
       <div
-        className={`absolute top-0 w-4 h-4 bg-white border border-zinc-200 ${
-          active ? "left-5 border-black" : "left-0"
+        className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${
+          active ? "left-7" : "left-0.5"
         }`}
       />
     </button>
@@ -219,8 +215,8 @@ export default function SettingsPage() {
 
   if (authLoading) {
     return (
-      <div className="flex h-[80vh] items-center justify-center bg-white">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
+      <div className="flex h-[80vh] items-center justify-center bg-zinc-50">
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -272,55 +268,61 @@ export default function SettingsPage() {
   ].filter((s) => !user || s.roles.includes(user.role));
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-black">Cài đặt</h1>
-          <p className="text-zinc-500 text-sm font-medium">
+    <div className="w-full max-w-[1280px] mx-auto px-4 md:px-6 py-6 font-sans text-zinc-900 bg-zinc-50 min-h-[calc(100dvh-var(--navbar-height))] selection:bg-black selection:text-white">
+      <div className="mb-6 md:mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Cài đặt hệ thống</h1>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
             Tùy chọn và kiểm soát hệ thống
           </p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12 ">
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
-              Cài đặt
+      <div className="grid lg:grid-cols-12 gap-6 transition-opacity duration-500" style={{ opacity: visible ? 1 : 0 }}>
+        <aside className="lg:col-span-4 xl:col-span-3 space-y-6">
+          <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-4 md:p-6 rounded-3xl shadow-sm space-y-4">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border-b border-zinc-100 pb-3">
+              Danh mục
             </div>
-            <nav className="flex flex-col gap-1">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id as TabKey)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-xl ${
-                    activeSection === section.id
-                      ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent"
-                  }`}
-                >
-                  {section.label}
-                  {activeSection === section.id && (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                </button>
-              ))}
+            <nav className="flex flex-col gap-2">
+              {sections.map((section) => {
+                const Icon = section.icon;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id as TabKey)}
+                    className={`flex items-center justify-between px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-200 ${
+                      activeSection === section.id
+                        ? "bg-black text-white shadow-md scale-[1.02]"
+                        : "bg-transparent text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4" />
+                      {section.label}
+                    </div>
+                    {activeSection === section.id && (
+                      <ChevronRight className="w-4 h-4 opacity-50" />
+                    )}
+                  </button>
+                );
+              })}
             </nav>
           </div>
 
-          <div className="p-6 border border-zinc-200 bg-white space-y-4">
-            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+          <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-6 rounded-3xl shadow-sm space-y-4">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border-b border-zinc-100 pb-3">
               Định danh hiện tại
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-black flex items-center justify-center text-white text-xs font-bold uppercase rounded-xl shrink-0">
+              <div className="w-12 h-12 bg-black flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest rounded-2xl shrink-0 shadow-md">
                 {user?.role?.slice(0, 3)}
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-sm font-semibold text-black uppercase truncate">
-                  {user?.role}
+                <span className="text-sm font-bold text-zinc-900 uppercase truncate">
+                  {user?.role === "admin" ? "Quản trị viên" : user?.role === "author" ? "Tác giả" : user?.role === "moderator" ? "Kiểm duyệt viên" : user?.role === "potential_author" ? "Tác giả tiềm năng" : "Độc giả"}
                 </span>
-                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest truncate">
+                <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest truncate mt-0.5">
                   {user?.email || "Chưa định danh"}
                 </span>
               </div>
@@ -328,394 +330,388 @@ export default function SettingsPage() {
           </div>
         </aside>
 
-        <main
-          className="lg:col-span-9 space-y-6 "
-          
-        >
+        <main className="lg:col-span-8 xl:col-span-9 space-y-6">
           {activeSection === "privacy" && (
-            <div className="space-y-8">
-              <div className="border border-zinc-200 bg-white p-8">
-                <div className="border-b border-zinc-200 pb-4 mb-6">
-                  <h3 className="text-sm font-semibold text-black">
-                    Quyền riêng tư
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Thiết lập khả năng hiển thị cá nhân
-                  </p>
-                </div>
+            <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-6 md:p-8 rounded-3xl shadow-sm space-y-8">
+              <div className="border-b border-zinc-100 pb-4 mb-6">
+                <h3 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
+                  Quyền riêng tư
+                </h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  Thiết lập khả năng hiển thị cá nhân
+                </p>
+              </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-black">
-                        Chế độ đọc ẩn danh
-                      </h4>
-                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Không hiển thị lịch sử đọc và tương tác của bạn trên
-                        bảng xếp hạng và luồng chung.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={hideActivity}
-                      onToggle={() => setHideActivity(!hideActivity)}
-                    />
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-zinc-100 bg-zinc-50 rounded-3xl gap-4 transition-all duration-300 hover:border-zinc-200">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-zinc-900">
+                      Chế độ đọc ẩn danh
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 max-w-sm leading-relaxed">
+                      Không hiển thị lịch sử đọc và tương tác của bạn trên
+                      bảng xếp hạng và luồng chung.
+                    </p>
                   </div>
+                  <CustomSwitch
+                    active={hideActivity}
+                    onToggle={() => setHideActivity(!hideActivity)}
+                  />
+                </div>
 
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-black">
-                        Thư viện nội bộ
-                      </h4>
-                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Giới hạn quyền truy cập bộ sưu tập cá nhân đối với người
-                        dùng khác.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={hideLibrary}
-                      onToggle={() => setHideLibrary(!hideLibrary)}
-                    />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-zinc-100 bg-zinc-50 rounded-3xl gap-4 transition-all duration-300 hover:border-zinc-200">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-zinc-900">
+                      Thư viện nội bộ
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 max-w-sm leading-relaxed">
+                      Giới hạn quyền truy cập bộ sưu tập cá nhân đối với người
+                      dùng khác.
+                    </p>
                   </div>
+                  <CustomSwitch
+                    active={hideLibrary}
+                    onToggle={() => setHideLibrary(!hideLibrary)}
+                  />
                 </div>
+              </div>
 
-                <div className="pt-6 mt-6 border-t border-zinc-200 flex justify-end">
-                  <button
-                    onClick={handleSavePrivacy}
-                    disabled={loading}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-xl flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Shield className="w-4 h-4" />
-                    )}{" "}
-                    Cập nhật quyền
-                  </button>
-                </div>
+              <div className="pt-6 mt-6 border-t border-zinc-50 flex justify-end">
+                <button
+                  onClick={handleSavePrivacy}
+                  disabled={loading}
+                  className="h-11 px-8 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center gap-2 disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md"
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Shield className="w-4 h-4" />
+                  )}{" "}
+                  Cập nhật quyền
+                </button>
               </div>
             </div>
           )}
 
           {activeSection === "author" && (
-            <div className="space-y-8">
-              <div className="border border-zinc-200 bg-white p-8">
-                <div className="border-b border-zinc-200 pb-4 mb-6">
-                  <h3 className="text-sm font-semibold text-black">
-                    Cấu hình Tác giả
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Quản lý hiệu suất sáng tác
-                  </p>
-                </div>
+            <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-6 md:p-8 rounded-3xl shadow-sm space-y-8">
+              <div className="border-b border-zinc-100 pb-4 mb-6">
+                <h3 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
+                  Cấu hình Tác giả
+                </h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  Quản lý hiệu suất sáng tác
+                </p>
+              </div>
 
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-black">
-                        Tự động sao lưu bản thảo
-                      </h4>
-                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Hệ thống sẽ tự động lưu nội dung vào máy chủ mỗi 30
-                        giây.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={autoSave}
-                      onToggle={async () => {
-                        const success = await handleUpdateGeneral({
-                          auto_save: !autoSave,
-                        });
-                        if (success) setAutoSave(!autoSave);
-                      }}
-                    />
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-zinc-100 bg-zinc-50 rounded-3xl gap-4 transition-all duration-300 hover:border-zinc-200">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-zinc-900">
+                      Tự động sao lưu bản thảo
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 max-w-sm leading-relaxed">
+                      Hệ thống sẽ tự động lưu nội dung vào máy chủ mỗi 30
+                      giây.
+                    </p>
                   </div>
-
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
-                      Trạng thái xuất bản mặc định
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      {["public", "private"].map((mode) => (
-                        <button
-                          key={mode}
-                          onClick={async () => {
-                            const success = await handleUpdateGeneral({
-                              default_visibility: mode,
-                            });
-                            if (success) setDefaultVisibility(mode);
-                          }}
-                          className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-xl ${
-                            defaultVisibility === mode
-                              ? "bg-black text-white border-black"
-                              : "bg-zinc-50 text-zinc-500 border-zinc-200"
-                          }`}
-                        >
-                          {mode === "public" ? "Công khai" : "Riêng tư"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
-                      Thông tin thanh toán thụ hưởng
-                    </label>
-                    <textarea
-                      value={payoutInfo}
-                      onChange={(e) => setPayoutInfo(e.target.value)}
-                      className="w-full min-h-[120px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none rounded-xl"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-zinc-200 flex justify-end">
-                  <button
-                    onClick={async () => {
-                      setLoading(true);
-                      await handleUpdateGeneral({ payout_info: payoutInfo });
-                      setLoading(false);
-                      showToast("Đã lưu thông tin thụ hưởng", "success");
+                  <CustomSwitch
+                    active={autoSave}
+                    onToggle={async () => {
+                      const success = await handleUpdateGeneral({
+                        auto_save: !autoSave,
+                      });
+                      if (success) setAutoSave(!autoSave);
                     }}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-xl flex items-center gap-2"
-                  >
-                    <Save className="w-4 h-4" /> Lưu cấu hình
-                  </button>
+                  />
                 </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 block">
+                    Trạng thái xuất bản mặc định
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {["public", "private"].map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={async () => {
+                          const success = await handleUpdateGeneral({
+                            default_visibility: mode,
+                          });
+                          if (success) setDefaultVisibility(mode);
+                        }}
+                        className={`h-11 border text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-all duration-200 ${
+                          defaultVisibility === mode
+                            ? "bg-black text-white border-black shadow-md hover:scale-[1.02]"
+                            : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
+                        }`}
+                      >
+                        {mode === "public" ? "Công khai" : "Riêng tư"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 block">
+                    Thông tin thanh toán thụ hưởng
+                  </label>
+                  <textarea
+                    value={payoutInfo}
+                    onChange={(e) => setPayoutInfo(e.target.value)}
+                    className="w-full min-h-[120px] p-4 border border-zinc-200 focus:border-black bg-white text-sm font-medium outline-none resize-none rounded-2xl shadow-sm transition-all"
+                    placeholder="Nhập thông tin ngân hàng..."
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-zinc-50 flex justify-end">
+                <button
+                  onClick={async () => {
+                    setLoading(true);
+                    await handleUpdateGeneral({ payout_info: payoutInfo });
+                    setLoading(false);
+                    showToast("Đã lưu thông tin thụ hưởng", "success");
+                  }}
+                  className="h-11 px-8 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-2xl flex items-center gap-2 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md"
+                >
+                  <Save className="w-4 h-4" /> Lưu cấu hình
+                </button>
               </div>
             </div>
           )}
 
           {activeSection === "moderator" && (
-            <div className="space-y-8">
-              <div className="border border-zinc-200 bg-white p-8">
-                <div className="border-b border-zinc-200 pb-4 mb-6">
-                  <h3 className="text-sm font-semibold text-black">
-                    Kiểm duyệt viên
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Cấu hình hiệu suất giám sát
-                  </p>
+            <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-6 md:p-8 rounded-3xl shadow-sm space-y-8">
+              <div className="border-b border-zinc-100 pb-4 mb-6">
+                <h3 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
+                  Kiểm duyệt viên
+                </h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  Cấu hình hiệu suất giám sát
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-zinc-100 bg-zinc-50 rounded-3xl gap-4 transition-all duration-300 hover:border-zinc-200">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-zinc-900">
+                      Thông báo vi phạm thời gian thực
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 max-w-sm leading-relaxed">
+                      Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm quy
+                      chế mới.
+                    </p>
+                  </div>
+                  <CustomSwitch
+                    active={modNotifs}
+                    onToggle={async () => {
+                      const success = await handleUpdateGeneral({
+                        mod_notifs: !modNotifs,
+                      });
+                      if (success) {
+                        setModNotifs(!modNotifs);
+                        showToast(
+                          `Đã ${!modNotifs ? "bật" : "tắt"} thông báo`,
+                          "success",
+                        );
+                      }
+                    }}
+                  />
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-black">
-                        Thông báo vi phạm thời gian thực
-                      </h4>
-                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm quy
-                        chế mới.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={modNotifs}
-                      onToggle={async () => {
-                        const success = await handleUpdateGeneral({
-                          mod_notifs: !modNotifs,
-                        });
-                        if (success) {
-                          setModNotifs(!modNotifs);
-                          showToast(
-                            `Đã ${!modNotifs ? "bật" : "tắt"} thông báo`,
-                            "success",
-                          );
-                        }
-                      }}
-                    />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-zinc-100 bg-zinc-50 rounded-3xl gap-4 transition-all duration-300 hover:border-zinc-200">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-zinc-900">
+                      Tự động làm mới hàng chờ duyệt
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 max-w-sm leading-relaxed">
+                      Cập nhật danh sách bản thảo chờ phê duyệt mỗi 60 giây.
+                    </p>
                   </div>
-
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-black">
-                        Tự động làm mới hàng chờ duyệt
-                      </h4>
-                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Cập nhật danh sách bản thảo chờ phê duyệt mỗi 60 giây.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={autoRefresh}
-                      onToggle={async () => {
-                        const success = await handleUpdateGeneral({
-                          auto_refresh: !autoRefresh,
-                        });
-                        if (success) {
-                          setAutoRefresh(!autoRefresh);
-                          showToast(
-                            `Đã ${!autoRefresh ? "bật" : "tắt"} tự động làm mới`,
-                            "success",
-                          );
-                        }
-                      }}
-                    />
-                  </div>
+                  <CustomSwitch
+                    active={autoRefresh}
+                    onToggle={async () => {
+                      const success = await handleUpdateGeneral({
+                        auto_refresh: !autoRefresh,
+                      });
+                      if (success) {
+                        setAutoRefresh(!autoRefresh);
+                        showToast(
+                          `Đã ${!autoRefresh ? "bật" : "tắt"} tự động làm mới`,
+                          "success",
+                        );
+                      }
+                    }}
+                  />
                 </div>
               </div>
             </div>
           )}
 
           {activeSection === "admin" && (
-            <div className="space-y-8">
-              <div className="border border-zinc-200 bg-white p-8">
-                <div className="border-b border-zinc-200 pb-4 mb-6">
-                  <h3 className="text-sm font-semibold text-black">
-                    Quản trị viên
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Kiểm soát vận hành toàn cầu DocLib
-                  </p>
+            <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-6 md:p-8 rounded-3xl shadow-sm space-y-8">
+              <div className="border-b border-zinc-100 pb-4 mb-6">
+                <h3 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
+                  Quản trị viên
+                </h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  Kiểm soát vận hành toàn cầu DocLib
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-red-100 bg-red-50/50 rounded-3xl gap-4 transition-all duration-300">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-red-600">
+                      Chế độ bảo trì hệ thống
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-red-400/80 max-w-sm leading-relaxed">
+                      Khóa toàn bộ tác vụ ghi dữ liệu trên toàn hệ thống để
+                      nâng cấp kỹ thuật.
+                    </p>
+                  </div>
+                  <CustomSwitch
+                    active={maintenanceMode}
+                    onToggle={() =>
+                      setConfirmModal({
+                        type: "maintenance",
+                        value: !maintenanceMode,
+                      })
+                    }
+                  />
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-red-600">
-                        Chế độ bảo trì hệ thống
-                      </h4>
-                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Khóa toàn bộ tác vụ ghi dữ liệu trên toàn hệ thống để
-                        nâng cấp kỹ thuật.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={maintenanceMode}
-                      onToggle={() =>
-                        setConfirmModal({
-                          type: "maintenance",
-                          value: !maintenanceMode,
-                        })
-                      }
-                    />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-zinc-100 bg-zinc-50 rounded-3xl gap-4 transition-all duration-300 hover:border-zinc-200">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-zinc-900">
+                      Đăng ký tài khoản mới
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 max-w-sm leading-relaxed">
+                      Cho phép hoặc chặn quyền đăng ký tài khoản cho người
+                      dùng mới.
+                    </p>
                   </div>
-
-                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-xl">
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-black">
-                        Đăng ký tài khoản mới
-                      </h4>
-                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Cho phép hoặc chặn quyền đăng ký tài khoản cho người
-                        dùng mới.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={registrationEnabled}
-                      onToggle={() =>
-                        setConfirmModal({
-                          type: "registration",
-                          value: !registrationEnabled,
-                        })
-                      }
-                    />
-                  </div>
+                  <CustomSwitch
+                    active={registrationEnabled}
+                    onToggle={() =>
+                      setConfirmModal({
+                        type: "registration",
+                        value: !registrationEnabled,
+                      })
+                    }
+                  />
                 </div>
               </div>
             </div>
           )}
 
           {activeSection === "apply_author" && (
-            <div className="space-y-8">
-              <div className="border border-zinc-200 bg-white p-8">
-                <div className="border-b border-zinc-200 pb-4 mb-6">
-                  <h3 className="text-sm font-semibold text-black">
-                    Tác giả tiềm năng
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Tham gia đội ngũ sáng tạo nội dung
-                  </p>
-                </div>
-
-                {user?.author_status === "pending" ? (
-                  <div className="py-16 text-center space-y-4 border border-dashed border-zinc-200 bg-zinc-50 rounded-xl">
-                    <Clock className="w-8 h-8 text-zinc-400 mx-auto" />
-                    <div>
-                      <h4 className="text-sm font-semibold text-black">
-                        Hồ sơ đang được xem xét
-                      </h4>
-                      <p className="text-xs font-medium text-zinc-500 mt-1 max-w-xs mx-auto">
-                        Hệ thống đã ghi nhận đơn ứng tuyển của bạn. Vui lòng chờ
-                        phản hồi từ đội ngũ Kiểm duyệt DocLib.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="p-6 border border-zinc-200 bg-zinc-50 space-y-4 rounded-xl">
-                      <div className="flex items-center gap-2 text-black border-b border-zinc-200 pb-3">
-                        <Award className="w-4 h-4" />
-                        <h4 className="text-[10px] font-semibold uppercase tracking-widest">
-                          Đặc quyền của Tác giả DocLib
-                        </h4>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {[
-                          "Xuất bản tài liệu không giới hạn",
-                          "Xây dựng lượng độc giả trung thành",
-                          "Nhận nhuận bút & đóng góp tài chính",
-                          "Huy hiệu Tác giả xác minh",
-                        ].map((item, i) => (
-                          <div key={i} className="flex items-start gap-2">
-                            <Sparkles className="w-3.5 h-3.5 text-black shrink-0 mt-0.5" />
-                            <span className="text-xs font-medium text-zinc-600">
-                              {item}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
-                          Động lực & Chuyên môn sáng tác
-                        </label>
-                        <textarea
-                          value={motivation}
-                          onChange={(e) => setMotivation(e.target.value)}
-                          className="w-full min-h-[140px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none  rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
-                          Portfolio / Sản phẩm tham chiếu (URL)
-                        </label>
-                        <input
-                          type="text"
-                          value={portfolio}
-                          onChange={(e) => setPortfolio(e.target.value)}
-                          className="w-full h-10 px-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none  rounded-xl"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-6 mt-6 border-t border-zinc-200">
-                      <button
-                        onClick={handleApplyAuthor}
-                        disabled={loading}
-                        className="w-full h-10 bg-black text-white text-xs font-medium uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
-                      >
-                        {loading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <UserPlus className="w-4 h-4" />
-                        )}
-                        Gửi đơn ứng tuyển xác thực
-                      </button>
-                    </div>
-                  </div>
-                )}
+            <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-6 md:p-8 rounded-3xl shadow-sm space-y-8">
+              <div className="border-b border-zinc-100 pb-4 mb-6">
+                <h3 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
+                  Tác giả tiềm năng
+                </h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  Tham gia đội ngũ sáng tạo nội dung
+                </p>
               </div>
+
+              {user?.author_status === "pending" ? (
+                <div className="py-16 text-center space-y-4 border border-dashed border-zinc-200 bg-zinc-50 rounded-3xl">
+                  <div className="w-16 h-16 bg-white border border-zinc-100 shadow-sm flex items-center justify-center rounded-2xl mx-auto mb-4">
+                    <Clock className="w-8 h-8 text-zinc-400 stroke-[1.5]" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-2">
+                      Hồ sơ đang được xem xét
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 max-w-xs mx-auto leading-relaxed">
+                      Hệ thống đã ghi nhận đơn ứng tuyển của bạn. Vui lòng chờ
+                      phản hồi từ đội ngũ Kiểm duyệt DocLib.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="p-6 border border-zinc-100 bg-zinc-50/50 space-y-4 rounded-3xl shadow-sm">
+                    <div className="flex items-center gap-2 text-zinc-900 border-b border-zinc-100 pb-4">
+                      <Award className="w-5 h-5 text-black" />
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest">
+                        Đặc quyền của Tác giả DocLib
+                      </h4>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {[
+                        "Xuất bản tài liệu không giới hạn",
+                        "Xây dựng lượng độc giả trung thành",
+                        "Nhận nhuận bút & đóng góp tài chính",
+                        "Huy hiệu Tác giả xác minh",
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-start gap-3 p-3 bg-white border border-zinc-100 rounded-2xl shadow-sm">
+                          <Sparkles className="w-4 h-4 text-black shrink-0 mt-0.5" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                            {item}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 block">
+                        Động lực & Chuyên môn sáng tác
+                      </label>
+                      <textarea
+                        value={motivation}
+                        onChange={(e) => setMotivation(e.target.value)}
+                        className="w-full min-h-[140px] p-4 border border-zinc-200 focus:border-black bg-white text-sm font-medium outline-none resize-none rounded-2xl shadow-sm transition-all"
+                        placeholder="Chia sẻ về bạn..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1 block">
+                        Portfolio / Sản phẩm tham chiếu (URL)
+                      </label>
+                      <input
+                        type="text"
+                        value={portfolio}
+                        onChange={(e) => setPortfolio(e.target.value)}
+                        className="w-full h-11 px-4 border border-zinc-200 focus:border-black bg-white text-sm font-medium outline-none rounded-2xl shadow-sm transition-all"
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 mt-6 border-t border-zinc-50">
+                    <button
+                      onClick={handleApplyAuthor}
+                      disabled={loading}
+                      className="w-full h-11 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <UserPlus className="w-4 h-4" />
+                      )}
+                      Gửi đơn ứng tuyển xác thực
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {activeSection === "notifications" && (
-            <div className="border border-zinc-200 bg-white flex flex-col items-center justify-center min-h-[400px] text-center p-8">
-              <Bell className="w-6 h-6 text-zinc-400 mb-4" />
-              <h3 className="text-sm font-semibold text-black mb-1">
+            <div className="bg-white/90 backdrop-blur-md border border-zinc-100 flex flex-col items-center justify-center min-h-[400px] text-center p-8 rounded-3xl shadow-sm">
+              <div className="w-16 h-16 bg-zinc-50 border border-zinc-100 shadow-sm flex items-center justify-center rounded-2xl mb-4">
+                <Bell className="w-8 h-8 text-zinc-300 stroke-[1.5]" />
+              </div>
+              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-2">
                 Trung tâm thông báo
               </h3>
-              <p className="text-xs font-medium text-zinc-500 max-w-xs leading-relaxed">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 max-w-xs leading-relaxed">
                 Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản của
                 bạn.
               </p>
@@ -723,75 +719,74 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "account" && (
-            <div className="space-y-8">
-              <div className="border border-zinc-200 bg-white p-8">
-                <div className="border-b border-zinc-200 pb-4 mb-6">
-                  <h3 className="text-sm font-semibold text-black">
+            <div className="space-y-6">
+              <div className="bg-white/90 backdrop-blur-md border border-zinc-100 p-6 md:p-8 rounded-3xl shadow-sm">
+                <div className="border-b border-zinc-100 pb-4 mb-6">
+                  <h3 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
                     Định danh & Bảo mật
                   </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                     Quản lý lớp phòng thủ tài khoản
                   </p>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="p-4 border border-zinc-200 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl bg-zinc-50">
+                  <div className="p-5 border border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-3xl bg-zinc-50/50 shadow-sm transition-all duration-300 hover:border-zinc-200">
                     <div>
-                      <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
                         Trạng thái xác thực
                       </span>
-                      <div className="text-xs font-semibold text-black flex items-center gap-2">
-                        <ShieldAlert className="w-4 h-4" /> Tài khoản đã định
+                      <div className="text-xs font-bold uppercase tracking-widest text-zinc-900 flex items-center gap-2">
+                        <ShieldAlert className="w-4 h-4 text-black" /> Tài khoản đã định
                         danh cấp cao
                       </div>
                     </div>
-                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-xl">
+                    <button className="px-6 h-11 border border-zinc-200 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-2xl shadow-sm transition-all duration-200 hover:scale-[1.02]">
                       Đổi mật khẩu
                     </button>
                   </div>
 
-                  <div className="p-4 border border-zinc-200 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl bg-zinc-50">
+                  <div className="p-5 border border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-3xl bg-zinc-50/50 shadow-sm transition-all duration-300 hover:border-zinc-200">
                     <div>
-                      <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
                         Địa chỉ Email liên kết
                       </span>
-                      <div className="text-xs font-semibold text-black">
+                      <div className="text-xs font-bold uppercase tracking-widest text-zinc-900">
                         {user?.email || "Chưa định danh"}
                       </div>
                     </div>
-                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-xl">
+                    <button className="px-6 h-11 border border-zinc-200 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-2xl shadow-sm transition-all duration-200 hover:scale-[1.02]">
                       Cập nhật Email
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-start gap-3 bg-zinc-50 p-4 border border-zinc-200">
-                  <AlertCircle className="w-4 h-4 text-black shrink-0 mt-0.5" />
-                  <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest leading-relaxed">
+                <div className="mt-6 flex items-start gap-3 bg-zinc-50/50 p-5 border border-zinc-100 rounded-3xl shadow-sm">
+                  <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0 mt-0.5" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
                     DocLib yêu cầu xác thực hai lớp cho mọi thay đổi quan trọng
                     liên quan đến bảo mật và tài chính.
                   </p>
                 </div>
               </div>
 
-              <div className="border border-red-200 bg-red-50/20 p-8">
-                <div className="border-b border-red-200 pb-4 mb-6">
-                  <h3 className="text-sm font-semibold text-red-600">
-                    Vùng nguy hiểm (Danger Zone)
+              <div className="border border-red-100 bg-red-50/30 p-6 md:p-8 rounded-3xl shadow-sm">
+                <div className="border-b border-red-100 pb-4 mb-6">
+                  <h3 className="text-xl font-bold tracking-tight text-red-600 mb-1">
+                    Vùng nguy hiểm
                   </h3>
-                  <p className="text-xs text-red-500/80 mt-1">
-                    Các hành động không thể hoàn tác liên quan đến dữ liệu và
-                    tài khoản
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-red-400/80">
+                    Các hành động không thể hoàn tác
                   </p>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50 p-5 rounded-3xl border border-red-50">
                     <div>
-                      <h4 className="text-xs font-semibold text-black">
+                      <h4 className="text-sm font-bold text-zinc-900">
                         Tải xuống dữ liệu (GDPR)
                       </h4>
-                      <p className="text-[10px] text-zinc-500 mt-1">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-1.5">
                         Yêu cầu trích xuất toàn bộ dữ liệu cá nhân của bạn.
                       </p>
                     </div>
@@ -802,18 +797,18 @@ export default function SettingsPage() {
                           "success",
                         )
                       }
-                      className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-xl"
+                      className="px-6 h-11 border border-zinc-200 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-2xl shadow-sm transition-all duration-200 hover:scale-[1.02]"
                     >
                       Yêu cầu trích xuất
                     </button>
                   </div>
-                  <div className="h-px bg-zinc-200 w-full" />
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50 p-5 rounded-3xl border border-red-50">
                     <div>
-                      <h4 className="text-xs font-semibold text-black">
+                      <h4 className="text-sm font-bold text-red-600">
                         Xóa tài khoản vĩnh viễn
                       </h4>
-                      <p className="text-[10px] text-zinc-500 mt-1">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-1.5">
                         Xóa hoàn toàn tài khoản và mọi dữ liệu liên kết. Không
                         thể khôi phục.
                       </p>
@@ -822,7 +817,7 @@ export default function SettingsPage() {
                       onClick={() =>
                         showToast("Chức năng đang bảo trì", "error")
                       }
-                      className="px-6 py-2 border border-red-600 bg-black text-white text-xs font-medium rounded-xl"
+                      className="px-6 h-11 border border-red-600 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-2xl shadow-sm transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5"
                     >
                       Xóa tài khoản
                     </button>
@@ -837,15 +832,18 @@ export default function SettingsPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => !loading && setConfirmModal(null)}
-        className="max-w-md rounded-xl border border-zinc-200 bg-white p-0"
+        className="max-w-md rounded-3xl border border-zinc-100 bg-white/95 backdrop-blur-md p-0 shadow-xl overflow-hidden"
       >
-        <ModalHeader className="border-b border-zinc-200 p-6">
-          <ModalTitle className="text-sm font-semibold text-black">
+        <ModalHeader className="border-b border-zinc-100 p-6">
+          <ModalTitle className="text-sm font-bold tracking-tight text-zinc-900">
             Xác nhận thay đổi
           </ModalTitle>
+          <ModalDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mt-1">
+            Hành động này có thể ảnh hưởng hệ thống
+          </ModalDescription>
         </ModalHeader>
         <ModalContent className="p-6">
-          <p className="text-xs font-medium text-zinc-500 leading-relaxed">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
             {confirmModal?.type === "maintenance"
               ? `Bạn có chắc chắn muốn ${
                   confirmModal?.value ? "kích hoạt" : "tắt"
@@ -855,11 +853,11 @@ export default function SettingsPage() {
                 } cổng đăng ký tài khoản mới?`}
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
+        <ModalFooter className="flex gap-3 border-t border-zinc-100 p-5 bg-zinc-50/50 rounded-b-3xl">
           <button
             onClick={() => setConfirmModal(null)}
             disabled={loading}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black rounded-xl disabled:opacity-50"
+            className="flex-1 h-11 border border-zinc-200 bg-white text-[10px] font-bold uppercase tracking-widest text-black rounded-2xl disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] shadow-sm"
           >
             Hủy bỏ
           </button>
@@ -871,7 +869,7 @@ export default function SettingsPage() {
                 handleToggleRegistration();
             }}
             disabled={loading}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium rounded-xl flex items-center justify-center disabled:opacity-50"
+            className="flex-1 h-11 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-2xl flex items-center justify-center disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md gap-2"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

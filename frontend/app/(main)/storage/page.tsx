@@ -534,7 +534,7 @@ export default function StoragePage() {
           style={{ animationFillMode: "both" }}
         >
           <div
-            className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4 "
+            className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 space-y-4 "
             
           >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -645,7 +645,7 @@ export default function StoragePage() {
           </div>
 
           <div
-            className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col flex-1 min-h-0 "
+            className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl shadow-sm p-6 flex flex-col flex-1 min-h-0 "
             
           >
             {viewMode === "files" && (
@@ -1020,7 +1020,7 @@ export default function StoragePage() {
                   {items.map((item) => (
                     <div
                       key={item._id}
-                      className="border border-zinc-200 bg-white rounded-xl p-4 flex flex-col items-center justify-between text-center relative group hover:bg-zinc-50 hover:border-zinc-300 transition-colors cursor-pointer shadow-sm"
+                      className="border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl p-4 flex flex-col items-center justify-between text-center relative group hover:bg-zinc-50 hover:border-zinc-300 transition-colors cursor-pointer shadow-sm"
                       onClick={() => setDetailsItem(item)}
                     >
                       <div className="absolute top-2 left-2 z-10">

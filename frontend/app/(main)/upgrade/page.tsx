@@ -76,7 +76,7 @@ export default function UpgradePage() {
 
         <div className="grid md:grid-cols-3 gap-8 items-start">
           {/* BASIC TIER */}
-          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full">
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 border border-zinc-100 shadow-sm relative overflow-hidden flex flex-col h-full">
             <div className="mb-8">
               <h3 className="text-xl font-bold text-black mb-2">Cơ bản</h3>
               <p className="text-sm text-zinc-500 font-medium min-h-[40px]">Trải nghiệm AI giới hạn dành cho người dùng mới.</p>
@@ -113,7 +113,7 @@ export default function UpgradePage() {
           </div>
 
           {/* PRO TIER */}
-          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full">
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 border border-zinc-100 shadow-sm relative overflow-hidden flex flex-col h-full">
             <div className="absolute top-0 right-0 bg-black text-white px-4 py-1 text-[10px] font-bold uppercase tracking-widest rounded-bl-xl">
               Phổ biến nhất
             </div>
@@ -169,7 +169,7 @@ export default function UpgradePage() {
           </div>
 
           {/* PREMIUM TIER */}
-          <div className="bg-white rounded-3xl p-8 border border-zinc-200 shadow-sm relative overflow-hidden flex flex-col h-full">
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 border border-zinc-100 shadow-sm relative overflow-hidden flex flex-col h-full">
             <div className="mb-8 relative z-10 mt-4">
               <h3 className="text-xl font-bold text-black mb-2 flex items-center gap-2">
                 Cao cấp

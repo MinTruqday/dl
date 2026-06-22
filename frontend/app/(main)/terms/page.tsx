@@ -46,21 +46,21 @@ export default function TermsPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-          <div className="flex flex-col items-center p-4 bg-white border border-zinc-200 rounded-sm">
+          <div className="flex flex-col items-center p-4 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm">
             <FileText className="w-5 h-5 mb-2 text-black" />
             <span className="text-[10px] font-bold text-zinc-500">
               Điều khoản
             </span>
           </div>
-          <div className="flex flex-col items-center p-4 bg-white border border-zinc-200 rounded-sm">
+          <div className="flex flex-col items-center p-4 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm">
             <Lock className="w-5 h-5 mb-2 text-black" />
             <span className="text-[10px] font-bold text-zinc-500">Bảo mật</span>
           </div>
-          <div className="flex flex-col items-center p-4 bg-white border border-zinc-200 rounded-sm">
+          <div className="flex flex-col items-center p-4 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm">
             <Scale className="w-5 h-5 mb-2 text-black" />
             <span className="text-[10px] font-bold text-zinc-500">Pháp lý</span>
           </div>
-          <div className="flex flex-col items-center p-4 bg-white border border-zinc-200 rounded-sm">
+          <div className="flex flex-col items-center p-4 bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm">
             <ShieldCheck className="w-5 h-5 mb-2 text-black" />
             <span className="text-[10px] font-bold text-zinc-500">
               Bản quyền

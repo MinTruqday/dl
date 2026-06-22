@@ -15,6 +15,9 @@ import {
   Users,
   UserPlus,
   Star,
+  ShieldCheck,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { useToast } from "@/shared/contexts/ToastContext";
 
@@ -22,6 +25,7 @@ export default function CouponApprovalPage() {
   const { showToast } = useToast();
   const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visible, setVisible] = useState(false);
 
   const fetchCoupons = useCallback(async () => {
     setLoading(true);
@@ -33,6 +37,7 @@ export default function CouponApprovalPage() {
       showToast("Lỗi tải danh sách chờ duyệt", "error");
     } finally {
       setLoading(false);
+      requestAnimationFrame(() => setVisible(true));
     }
   }, [showToast]);
 
@@ -54,115 +59,129 @@ export default function CouponApprovalPage() {
   };
 
   return (
-    <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 ">
-      <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold text-black">Duyệt mã ưu đãi</h2>
+    <div className="flex flex-col h-full space-y-6">
+      <div className="bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-sm p-6 shrink-0 transition-opacity duration-500" style={{ opacity: visible ? 1 : 0 }}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-zinc-900 mb-1 flex items-center gap-2">
+              Duyệt mã ưu đãi
+            </h1>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              Kiểm duyệt các mã giảm giá trước khi phát hành
+            </p>
+          </div>
+          {coupons.length > 0 && (
+            <div className="px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-xl flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-orange-700">{coupons.length} chờ duyệt</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {loading ? (
-        <div
-          className="grid gap-6 grid-cols-1 "
-          
-        >
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-zinc-50 border border-zinc-200 rounded-2xl h-36 w-full animate-pulse"
-            />
-          ))}
-        </div>
-      ) : coupons.length === 0 ? (
-        <div
-          className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl "
-          
-        >
-          <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
-        </div>
-      ) : (
-        <div
-          className="grid gap-6 grid-cols-1 "
-          
-        >
-          {coupons.map((c: any) => (
-            <div
-              key={c.id}
-              className="relative group flex flex-row gap-6 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-all duration-150 overflow-hidden"
-            >
-              <div className="w-24 h-36 shrink-0 rounded-xl bg-zinc-50 border-zinc-200 relative overflow-hidden flex flex-col items-center justify-center p-3 text-center">
-                <span className="text-base font-mono font-bold text-black block truncate max-w-full">
-                  {c.code}
-                </span>
-                <p className="text-[10px] font-bold text-white bg-black px-2 py-0.5 mt-2 inline-block rounded">
-                  -{c.discount_percent}%
-                </p>
-              </div>
-
-              <div className="flex-1 py-1 flex flex-col gap-2">
-                <h3 className="text-base font-semibold text-black line-clamp-2 leading-snug">
-                  Mã: {c.code}
-                </h3>
-
-                <div className="text-xs text-zinc-500 flex flex-col gap-1">
-                  <div className="flex items-center gap-1.5">
-                    <User className="w-4 h-4" />
-                    <span>
-                      Tác giả:{" "}
-                      <span className="text-black font-medium">
-                        {c.author_id}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {c.target_type === "all" ? (
-                      <Users className="w-4 h-4" />
-                    ) : c.target_type === "new_user" ? (
-                      <UserPlus className="w-4 h-4" />
-                    ) : (
-                      <Star className="w-4 h-4" />
-                    )}
-                    <span>
-                      Đối tượng:{" "}
-                      <span className="text-black font-medium uppercase">
-                        {c.target_type}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Ticket className="w-4 h-4" />
-                    <span>
-                      Lượt dùng tối đa:{" "}
-                      <span className="text-black font-medium">
-                        {c.max_uses}
-                      </span>
-                    </span>
+      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 transition-opacity duration-500" style={{ opacity: visible ? 1 : 0, transitionDelay: "100ms" }}>
+        {loading ? (
+          <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-zinc-50/50 border border-zinc-100 rounded-3xl">
+            <Loader2 className="w-8 h-8 animate-spin text-zinc-400 mb-4" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Đang đồng bộ dữ liệu...</p>
+          </div>
+        ) : coupons.length === 0 ? (
+          <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-zinc-50/50 border border-zinc-100 rounded-3xl p-12 text-center">
+            <div className="w-16 h-16 bg-white border border-zinc-100 shadow-sm flex items-center justify-center rounded-2xl mb-4">
+              <ShieldCheck className="w-8 h-8 text-green-500 stroke-[1.5]" />
+            </div>
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest mb-2">Hàng đợi trống</h3>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 max-w-sm">
+              Tất cả mã ưu đãi đã được xử lý. Không có mã nào đang chờ phê duyệt.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 grid-cols-1 pb-6">
+            {coupons.map((c: any) => (
+              <div
+                key={c.id}
+                className="relative group flex flex-col sm:flex-row gap-6 p-5 border border-zinc-100 bg-white/90 backdrop-blur-md rounded-3xl hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <div className="w-full sm:w-40 h-28 shrink-0 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-100 relative overflow-hidden flex flex-col items-center justify-center p-3 text-center">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-orange-200 rounded-full blur-2xl opacity-40 -mr-10 -mt-10"></div>
+                  <span className="text-xl font-black tracking-widest text-orange-900 block truncate max-w-full relative z-10 uppercase">
+                    {c.code}
+                  </span>
+                  <div className="text-[10px] font-bold text-white bg-orange-600 px-2.5 py-1 mt-2 inline-block rounded-lg shadow-sm relative z-10 uppercase tracking-widest">
+                    Giảm {c.discount_percent}%
                   </div>
                 </div>
 
-                <div className="mt-auto pt-3 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-amber-500 flex items-center gap-1">
-                    <Clock className="w-4 h-4" /> Chờ duyệt
-                  </span>
+                <div className="flex-1 py-1 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-bold text-zinc-900 line-clamp-1">
+                      Mã giảm giá: {c.code}
+                    </h3>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-600 border border-amber-100 text-[9px] font-bold uppercase tracking-widest rounded-lg">
+                      <Clock className="w-3.5 h-3.5" /> Chờ duyệt
+                    </span>
+                  </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 mt-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-center">
+                        <User className="w-3.5 h-3.5 text-zinc-400" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Người tạo</span>
+                        <span className="text-xs font-bold text-zinc-900">{c.author_id}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-center">
+                        {c.target_type === "all" ? (
+                          <Users className="w-3.5 h-3.5 text-zinc-400" />
+                        ) : c.target_type === "new_user" ? (
+                          <UserPlus className="w-3.5 h-3.5 text-zinc-400" />
+                        ) : (
+                          <Star className="w-3.5 h-3.5 text-amber-500" />
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Đối tượng</span>
+                        <span className="text-xs font-bold text-zinc-900 uppercase">
+                          {c.target_type === "all" ? "Tất cả" : c.target_type === "new_user" ? "Người mới" : "Premium"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-center">
+                        <Ticket className="w-3.5 h-3.5 text-zinc-400" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Lượt dùng</span>
+                        <span className="text-xs font-bold text-zinc-900">{c.max_uses}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-4 flex gap-3 border-t border-zinc-100">
                     <button
                       onClick={() => handleApprove(c.id, "reject")}
-                      className="text-[10px] font-semibold text-zinc-500 bg-zinc-100 hover:bg-zinc-200 transition-all duration-150 px-3 py-1.5 rounded-lg uppercase tracking-wider"
+                      className="flex-1 h-11 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
-                      Từ chối
+                      <XCircle className="w-4 h-4" /> Từ chối
                     </button>
                     <button
                       onClick={() => handleApprove(c.id, "approve")}
-                      className="text-[10px] font-semibold text-white bg-black hover:bg-zinc-800 transition-all duration-150 px-3 py-1.5 rounded-lg uppercase tracking-wider"
+                      className="flex-1 h-11 bg-black text-white hover:bg-zinc-800 text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-md"
                     >
-                      Duyệt
+                      <CheckCircle className="w-4 h-4" /> Phê duyệt
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

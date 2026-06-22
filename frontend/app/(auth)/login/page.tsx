@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Loader2, KeyRound, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import {
   login,
   passkeyLoginBeginAPI,
@@ -153,12 +153,12 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div className="bg-white/90 backdrop-blur-xl border border-zinc-200/50 rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] p-8 sm:p-10">
+          <div className="bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-xl p-8 sm:p-10 transition-all duration-300">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold tracking-[-0.02em] text-black">
+              <h1 className="text-2xl font-bold tracking-tight text-black">
                 Đăng nhập
               </h1>
-              <p className="mt-2 text-xs font-medium text-zinc-500">
+              <p className="mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                 Chào mừng trở lại! Vui lòng nhập thông tin.
               </p>
             </div>
@@ -167,33 +167,37 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-xs font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1"
+                  className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
                 >
                   Tài khoản
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
-                  }
-                  className="appearance-none block w-full px-4 py-3.5 bg-zinc-50/50 border border-zinc-200/80 rounded-2xl placeholder-zinc-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black text-sm text-black transition-all"
-                  placeholder="Email hoặc tên tài khoản"
-                />
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    id="email"
+                    name="email"
+                    type="text"
+                    autoComplete="username"
+                    required
+                    value={email}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setEmail(e.target.value)
+                    }
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                    placeholder="Email hoặc tên tài khoản"
+                  />
+                </div>
               </div>
 
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-xs font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1"
+                  className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
                 >
                   Mật khẩu
                 </label>
                 <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
                     id="password"
                     name="password"
@@ -203,7 +207,7 @@ export default function LoginPage() {
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       setPassword(e.target.value)
                     }
-                    className="appearance-none block w-full px-4 py-3.5 bg-zinc-50/50 border border-zinc-200/80 rounded-2xl placeholder-zinc-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black text-sm text-black transition-all pr-12"
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
                     placeholder="Nhập mật khẩu"
                   />
                   <button
@@ -226,7 +230,7 @@ export default function LoginPage() {
                   />
                   <label
                     htmlFor="remember-me"
-                    className="ml-2 block text-xs font-medium text-zinc-600"
+                    className="ml-2 block text-xs font-medium text-zinc-500"
                   >
                     Ghi nhớ phiên
                   </label>
@@ -243,7 +247,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full flex justify-center items-center gap-2 h-12 rounded-2xl text-sm font-bold text-white bg-black transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="w-full flex justify-center items-center gap-2 h-12 rounded-3xl text-xs font-bold text-white bg-black transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   {isSubmitting && (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -255,7 +259,7 @@ export default function LoginPage() {
 
             <div className="mt-7 flex items-center justify-center gap-3">
               <div className="h-px bg-zinc-100 flex-1" />
-              <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
                 Hoặc
               </span>
               <div className="h-px bg-zinc-100 flex-1" />
@@ -274,9 +278,9 @@ export default function LoginPage() {
                   }
                   await completePasskeyLogin(email);
                 }}
-                className="w-full inline-flex justify-center items-center h-11 border border-zinc-200 rounded-2xl bg-white text-xs font-bold text-black gap-2 transition-all duration-200 hover:bg-zinc-50 hover:border-zinc-300"
+                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-3xl bg-white text-xs font-bold text-zinc-700 gap-2 transition-all duration-200 hover:bg-zinc-50 hover:text-black hover:border-zinc-300 shadow-sm"
               >
-                <KeyRound className="w-4 h-4 text-zinc-600" />
+                <KeyRound className="w-4 h-4" />
                 Passkey
               </button>
               <button
@@ -289,7 +293,7 @@ export default function LoginPage() {
                     showToast("Không thể kết nối với Google", "error");
                   }
                 }}
-                className="w-full inline-flex justify-center items-center h-11 border border-zinc-200 rounded-2xl bg-white text-xs font-bold text-black gap-2 transition-all duration-200 hover:bg-zinc-50 hover:border-zinc-300"
+                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-3xl bg-white text-xs font-bold text-zinc-700 gap-2 transition-all duration-200 hover:bg-zinc-50 hover:text-black hover:border-zinc-300 shadow-sm"
               >
                 <GoogleIcon />
                 Google

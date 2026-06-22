@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/features/auth/services/user_authentication.service";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, User, AtSign, Mail, Lock } from "lucide-react";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
@@ -54,12 +54,12 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-zinc-50 font-sans selection:bg-zinc-900 selection:text-white flex flex-col">
       <main className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 py-12">
         <div className="w-full max-w-[460px]">
-          <div className="bg-white/90 backdrop-blur-xl border border-zinc-200/50 rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] p-8 sm:p-10">
+          <div className="bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-xl p-8 sm:p-10 transition-all duration-300">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold tracking-[-0.02em] text-black">
+              <h1 className="text-2xl font-bold tracking-tight text-black">
                 Đăng ký
               </h1>
-              <p className="mt-2 text-xs font-medium text-zinc-500">
+              <p className="mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                 Tham gia hệ thống thư viện thông minh DocLib
               </p>
             </div>
@@ -69,33 +69,34 @@ export default function RegisterPage() {
                 <div>
                   <label
                     htmlFor="full_name"
-                    className="block text-xs font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1"
+                    className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
                   >
                     Tên hiển thị
                   </label>
-                  <input
-                    id="full_name"
-                    name="full_name"
-                    type="text"
-                    required
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="appearance-none block w-full px-4 py-3 bg-zinc-50/50 border border-zinc-200/80 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black text-sm text-black transition-all"
-                    placeholder="Nguyễn Văn A"
-                  />
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                      id="full_name"
+                      name="full_name"
+                      type="text"
+                      required
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                      placeholder="Nguyễn Văn A"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label
                     htmlFor="slug"
-                    className="block text-xs font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1"
+                    className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
                   >
                     Tên tài khoản
                   </label>
-                  <div className="flex rounded-2xl transition-all focus-within:ring-2 focus-within:ring-black/5 focus-within:border-black border border-zinc-200/80 bg-zinc-50/50 focus-within:bg-white">
-                    <span className="inline-flex items-center pl-4 pr-1 text-zinc-400 font-bold text-sm">
-                      @
-                    </span>
+                  <div className="relative">
+                    <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
                       id="slug"
                       name="slug"
@@ -103,7 +104,7 @@ export default function RegisterPage() {
                       required
                       value={slug}
                       onChange={(e) => setSlug(e.target.value)}
-                      className="flex-1 min-w-0 block w-full py-3 pr-4 bg-transparent rounded-r-2xl focus:outline-none text-sm text-black font-medium"
+                      className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
                       placeholder="nguyenvana"
                     />
                   </div>
@@ -113,31 +114,35 @@ export default function RegisterPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-xs font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1"
+                  className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
                 >
                   Địa chỉ email
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3.5 bg-zinc-50/50 border border-zinc-200/80 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black text-sm text-black transition-all"
-                  placeholder="nguyenvana@example.com"
-                />
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                    placeholder="nguyenvana@example.com"
+                  />
+                </div>
               </div>
 
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-xs font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1"
+                  className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
                 >
                   Mật khẩu
                 </label>
                 <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
                     id="password"
                     name="password"
@@ -145,7 +150,7 @@ export default function RegisterPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="appearance-none block w-full px-4 py-3.5 bg-zinc-50/50 border border-zinc-200/80 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black text-sm text-black transition-all pr-12"
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
                     placeholder="Tối thiểu 6 ký tự"
                   />
                   <button
@@ -188,7 +193,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center items-center gap-2 h-12 text-sm font-bold text-white bg-black rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loading ? "Đang xử lý" : "Đăng ký tài khoản"}
@@ -214,14 +219,14 @@ export default function RegisterPage() {
       <Modal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
-        className="max-w-2xl bg-white/95 backdrop-blur-xl rounded-[2rem] border border-zinc-200/50 shadow-2xl"
+        className="max-w-2xl bg-white/95 backdrop-blur-md rounded-3xl border border-zinc-100 shadow-2xl"
       >
         <ModalHeader className="border-b border-zinc-100 px-8 py-6">
-          <ModalTitle className="text-lg font-bold text-black tracking-tight">Điều khoản và quy định</ModalTitle>
+          <ModalTitle className="text-sm font-bold text-black tracking-tight uppercase">Điều khoản và quy định</ModalTitle>
         </ModalHeader>
-        <ModalContent className="max-h-[60vh] overflow-y-auto px-8 py-6 text-sm text-zinc-600 font-medium leading-relaxed space-y-6">
+        <ModalContent className="max-h-[60vh] overflow-y-auto px-8 py-6 text-xs text-zinc-500 font-medium leading-relaxed space-y-6">
           <section>
-            <h4 className="font-bold text-black mb-2 uppercase tracking-widest text-[10px]">
+            <h4 className="font-bold text-zinc-900 mb-2 uppercase tracking-widest text-[10px]">
               1. Quyền và trách nhiệm
             </h4>
             <p>
@@ -231,7 +236,7 @@ export default function RegisterPage() {
             </p>
           </section>
           <section>
-            <h4 className="font-bold text-black mb-2 uppercase tracking-widest text-[10px]">
+            <h4 className="font-bold text-zinc-900 mb-2 uppercase tracking-widest text-[10px]">
               2. Bản quyền nội dung
             </h4>
             <p>
@@ -241,7 +246,7 @@ export default function RegisterPage() {
             </p>
           </section>
           <section>
-            <h4 className="font-bold text-black mb-2 uppercase tracking-widest text-[10px]">
+            <h4 className="font-bold text-zinc-900 mb-2 uppercase tracking-widest text-[10px]">
               3. Giao dịch tài chính
             </h4>
             <p>
@@ -250,7 +255,7 @@ export default function RegisterPage() {
             </p>
           </section>
           <section>
-            <h4 className="font-bold text-black mb-2 uppercase tracking-widest text-[10px]">
+            <h4 className="font-bold text-zinc-900 mb-2 uppercase tracking-widest text-[10px]">
               4. Bảo mật dữ liệu
             </h4>
             <p>
@@ -260,13 +265,13 @@ export default function RegisterPage() {
             </p>
           </section>
         </ModalContent>
-        <ModalFooter className="border-t border-zinc-100 px-8 py-6 flex justify-end bg-zinc-50/50 rounded-b-[2rem]">
+        <ModalFooter className="border-t border-zinc-100 px-8 py-6 flex justify-end bg-zinc-50/50 rounded-b-3xl">
           <button
             onClick={() => {
               setAgreedToTerms(true);
               setShowTermsModal(false);
             }}
-            className="w-full sm:w-auto px-8 h-11 bg-black text-white text-sm font-bold rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md"
+            className="w-full sm:w-auto px-8 h-11 bg-black text-white text-xs font-bold rounded-2xl transition-all duration-200 hover:scale-105 hover:-translate-y-1 shadow-md"
           >
             Đồng ý
           </button>
