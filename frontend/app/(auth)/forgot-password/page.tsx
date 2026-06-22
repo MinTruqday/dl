@@ -1,7 +1,6 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState } from "react";
-import Navigation from "@/shared/components/common/Navigation";
 import { forgotPasswordAPI } from "@/features/auth/services/user_authentication.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2 } from "lucide-react";
@@ -37,70 +36,70 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <Navigation />
+    <div className="min-h-screen bg-zinc-50 font-sans selection:bg-zinc-900 selection:text-white flex flex-col">
+      <main className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 py-12">
+        <div className="w-full max-w-[420px]">
+          <div className="bg-white/90 backdrop-blur-xl border border-zinc-200/50 rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.04)] p-8 sm:p-10">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold tracking-[-0.02em] text-black">
+                Quên mật khẩu
+              </h1>
+              <p className="mt-2 text-xs font-medium text-zinc-500">
+                Nhập email của bạn để nhận mã xác thực khôi phục mật khẩu.
+              </p>
+            </div>
 
-      <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-80px)] flex flex-col justify-center items-center mt-16">
-        <div className="w-full max-w-md w-full">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold tracking-tight text-black">
-              Quên mật khẩu
-            </h2>
-            <p className="mt-2 text-sm text-zinc-500">
-              Nhập email để gửi yêu cầu đặt lại mật khẩu
-            </p>
-          </div>
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-xs font-bold text-zinc-700 uppercase tracking-widest mb-2 ml-1"
+                >
+                  Địa chỉ email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setEmail(e.target.value)
+                  }
+                  className="appearance-none block w-full px-4 py-3.5 bg-zinc-50/50 border border-zinc-200/80 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black text-sm text-black transition-all"
+                  placeholder="name@example.com"
+                />
+              </div>
 
-          <div className="w-full">
-            <div className="bg-white py-10 px-6 sm:px-12 border border-zinc-200 rounded-3xl">
-              <form className="space-y-6" onSubmit={handleSubmit}>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-black"
-                  >
-                    Địa chỉ email
-                  </label>
-                  <div className="mt-2">
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setEmail(e.target.value)
-                      }
-                      className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
-                    />
-                  </div>
-                </div>
-
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black disabled:bg-zinc-200 disabled:text-zinc-500 rounded-xl"
+                  className="w-full flex justify-center items-center gap-2 h-12 text-sm font-bold text-white bg-black rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loading ? "Đang xử lý" : "Gửi yêu cầu khôi phục"}
                 </button>
-              </form>
-
-              <div className="mt-8 text-sm text-center flex flex-col gap-3">
-                <a href="/verify" className="text-black font-medium underline">
-                  Đã có mã xác thực? Xác thực ngay
-                </a>
-                <a
-                  href="/login"
-                  className="text-zinc-500 font-medium underline"
-                >
-                  Quay lại đăng nhập
-                </a>
               </div>
+            </form>
+
+            <div className="mt-8 text-center border-t border-zinc-100 pt-6 flex flex-col gap-3">
+              <span className="text-xs font-medium text-zinc-500">
+                Đã có mã xác thực?{" "}
+                <a href="/verify" className="font-bold text-black transition-colors hover:text-zinc-600 hover:underline">
+                  Nhập mã ngay
+                </a>
+              </span>
+              <a
+                href="/login"
+                className="text-xs font-medium text-zinc-500 transition-colors hover:text-black hover:underline"
+              >
+                Quay lại màn hình đăng nhập
+              </a>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
