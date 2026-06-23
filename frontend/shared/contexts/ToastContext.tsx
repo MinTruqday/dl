@@ -7,7 +7,7 @@ import React, {
   useCallback,
   useEffect,
 } from "react";
-import { X } from "lucide-react";
+import { X, AlertCircle, CheckCircle2, Info } from "lucide-react";
 
 export interface ToastItem {
   id: string;
@@ -48,52 +48,39 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <Toast.Provider value={{ showToast }}>
       {children}
       {isClient && (
-        <div
-          style={{
-            position: "fixed",
-            top: "80px",
-            right: "30px",
-            zIndex: 999999,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: "16px",
-            pointerEvents: "none",
-            fontFamily: "sans-serif",
-          }}
-        >
+        <div className="fixed top-24 right-4 sm:right-6 z-[500] flex flex-col items-end gap-3 pointer-events-none font-sans">
           {toasts.map((t) => {
-            let typeStyles = "text-black";
-            if (t.type === "error") typeStyles = "text-red-600 font-bold";
-            if (t.type === "success") typeStyles = "text-green-600";
+            let icon = null;
+            if (t.type === "error") {
+              icon = <AlertCircle className="w-4 h-4 text-white" />;
+            } else if (t.type === "success") {
+              icon = <CheckCircle2 className="w-4 h-4 text-black" />;
+            } else {
+              icon = <Info className="w-4 h-4 text-black" />;
+            }
 
             return (
               <div
                 key={t.id}
-                className={`relative border border-zinc-200 p-5 text-sm font-semibold bg-white animate-in slide-in-from-right-8 fade-in pointer-events-auto shadow-sm ${typeStyles}`}
+                className="relative bg-white border border-zinc-200 rounded-2xl p-4 shadow-xl pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-[420ms] ease-out min-w-[300px] max-w-[400px] flex items-center gap-3"
               >
-                <div
-                  className="absolute w-1 bg-black"
-                  style={{ top: "-1px", bottom: "-1px", left: "-1px" }}
-                />
-                <div className="flex justify-between items-center gap-6 whitespace-nowrap min-w-max">
-                  <div className="flex-1 pl-2">
-                    <p className="leading-relaxed font-bold tracking-tight">
-                      {t.message}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      removeToast(t.id);
-                    }}
-                    className="opacity-40 hover:opacity-100 transition-opacity p-2 cursor-pointer rounded-none flex items-center justify-center"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                <div className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${t.type === "error" ? "bg-red-50 text-red-600" : t.type === "success" ? "bg-green-50 text-green-600" : "bg-zinc-100 text-zinc-900"}`}>
+                  {icon}
                 </div>
+
+                <div className="flex-1 min-w-0 flex items-center">
+                  <p className="text-[0.875rem] font-medium text-zinc-900 tracking-[-0.02em] leading-snug break-words">
+                    {t.message}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeToast(t.id)}
+                  className="shrink-0 flex items-center justify-center w-8 h-8 cursor-pointer rounded-xl text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             );
           })}

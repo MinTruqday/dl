@@ -61,13 +61,13 @@ export default function Navigation() {
 
   return (
     <nav
-      className="fixed top-4 left-4 right-4 z-[100] bg-white/90 backdrop-blur-md border border-zinc-200/50 rounded-3xl shadow-lg font-sans transition-all duration-300"
+      className="fixed top-4 left-4 right-4 z-[100] common-panel font-sans transition-all duration-300"
       style={{ height: "var(--navbar-height)" }}
     >
       <div className="h-full flex items-center justify-between px-4 max-w-[1440px] mx-auto w-full gap-4">
         <Link
           href="/"
-          className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 shrink-0 transition-all duration-200 hover:scale-105 hover:-translate-y-1"
+          className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 shrink-0 transition-all duration-200 hover:scale-105"
         >
           <div className="w-10 h-10 bg-black flex items-center justify-center text-white text-sm font-bold rounded-2xl shadow-sm">
             dl
@@ -102,7 +102,7 @@ export default function Navigation() {
             <>
               <Link
                 href="/upgrade"
-                className="relative h-11 px-4 flex items-center gap-2 text-black bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:-translate-y-1 hover:bg-zinc-50"
+                className="relative h-11 px-4 flex items-center gap-2 text-black bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-50"
                 title="Nâng cấp AI"
               >
                 <Sparkles className="w-4 h-4 text-amber-500" />
@@ -110,7 +110,7 @@ export default function Navigation() {
               </Link>
               <Link
                 href="/chat"
-                className="w-11 h-11 flex items-center justify-center text-zinc-500 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-110 hover:-translate-y-1 hover:text-black hover:bg-zinc-50"
+                className="w-11 h-11 flex items-center justify-center text-zinc-500 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-110 hover:text-black hover:bg-zinc-50"
                 title="DocLib AI"
               >
                 <MessageCircle className="w-5 h-5" />
@@ -118,7 +118,7 @@ export default function Navigation() {
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className={`relative w-11 h-11 flex items-center justify-center text-zinc-500 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-110 hover:-translate-y-1 hover:text-black hover:bg-zinc-50 ${
+                  className={`relative w-11 h-11 flex items-center justify-center text-zinc-500 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-110 hover:text-black hover:bg-zinc-50 ${
                     showNotifications ? "bg-zinc-100 text-black shadow-inner" : ""
                   }`}
                   aria-label="Thông báo"
@@ -194,7 +194,7 @@ export default function Navigation() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className={`flex items-center gap-3 h-11 px-3 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:-translate-y-1 hover:bg-zinc-50 ${
+                  className={`flex items-center gap-3 h-11 px-3 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-50 ${
                     showUserMenu ? "bg-zinc-100 text-black shadow-inner" : ""
                   }`}
                 >
@@ -264,13 +264,13 @@ export default function Navigation() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="h-11 px-4 flex items-center justify-center text-xs font-semibold text-black bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:-translate-y-1 hover:bg-zinc-50"
+                className="h-11 px-4 flex items-center justify-center text-xs font-semibold text-black bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-50"
               >
                 Đăng nhập
               </Link>
               <Link
                 href="/register"
-                className="h-11 px-4 flex items-center justify-center text-xs font-semibold text-white bg-black rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:-translate-y-1 hover:bg-zinc-800"
+                className="h-11 px-4 flex items-center justify-center text-xs font-semibold text-white bg-black rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-800"
               >
                 Đăng ký
               </Link>

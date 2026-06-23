@@ -133,14 +133,14 @@ export default function Dock() {
   return (
     <>
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex items-end">
-        <nav className="bg-white/90 backdrop-blur-md border border-zinc-200/50 p-2 flex items-center gap-2 rounded-3xl shadow-lg transition-all duration-300">
+        <nav className="common-panel p-2 flex items-center gap-2 transition-all duration-300">
           {pinnedItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link
                 key={item.id}
                 href={item.href}
-                className={`relative group flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 hover:scale-110 hover:-translate-y-2 ${
+                className={`relative group flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 hover:scale-110 ${
                   active ? "bg-zinc-100 text-black shadow-inner" : "bg-white text-zinc-500 hover:bg-zinc-50 hover:text-black border border-zinc-100"
                 }`}
               >
@@ -165,13 +165,13 @@ export default function Dock() {
           <div className="relative">
             <button
               onClick={() => setShowLaunchpad((v) => !v)}
-              className={`relative group flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 hover:scale-110 hover:-translate-y-2 ${
+              className={`relative group flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 hover:scale-110 ${
                 showLaunchpad ? "bg-zinc-100 text-black shadow-inner" : "bg-white text-zinc-500 hover:bg-zinc-50 hover:text-black border border-zinc-100"
               }`}
             >
               <MoreHorizontal className="w-5 h-5" />
               {/* Tooltip */}
-              <div className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform origin-bottom bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl whitespace-nowrap shadow-md">
+              <div className={`absolute -top-10 transition-transform origin-bottom bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl whitespace-nowrap shadow-md ${showLaunchpad ? "scale-0" : "scale-0 group-hover:scale-100"}`}>
                 Tất cả tính năng
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black"></div>
               </div>
@@ -181,7 +181,7 @@ export default function Dock() {
             {showLaunchpad && (
               <div
                 ref={launchpadRef}
-                className="absolute bottom-16 right-0 w-[320px] sm:w-[400px] bg-white border border-zinc-200 shadow-xl rounded-3xl p-4 grid grid-cols-4 sm:grid-cols-5 gap-3 animate-in fade-in zoom-in-95 duration-200"
+                className="absolute bottom-16 right-0 w-[320px] sm:w-[400px] common-panel p-4 grid grid-cols-4 sm:grid-cols-5 gap-3 animate-in fade-in zoom-in-95 duration-200"
               >
                 <div className="col-span-full mb-2">
                   <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest pl-1">
