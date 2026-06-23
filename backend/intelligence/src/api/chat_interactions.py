@@ -22,7 +22,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
     if token:
         req.token = token.replace("Bearer ", "")
 
-    scan = security.scan_input(req.query, user_id=req.user_id or "")
+    scan = await security.ascan_input(req.query, user_id=req.user_id or "")
     if not scan.passed:
         return {
             "answer": "The submitted request contains prohibited content and cannot be processed",
@@ -93,7 +93,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 if event["type"] == "message":
                     final_answer += event.get("chunk", "")
 
-        final_answer = security.scan_output(final_answer)
+        final_answer = await security.ascan_output(final_answer)
         return {
             "answer": final_answer or "Đã xảy ra lỗi, vui lòng thử lại sau",
             "route": "agentic_ai",
@@ -118,7 +118,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
         session_id = req.session_id or ""
         user_id = req.user_id or ""
 
-        scan = security.scan_input(req.query, session_id=session_id, user_id=user_id)
+        scan = await security.ascan_input(req.query, session_id=session_id, user_id=user_id)
         if not scan.passed:
             agentops.record_security_event(
                 session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
@@ -264,7 +264,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     await asyncio.gather(hb_task, exec_task, return_exceptions=True)
 
             if final_answer:
-                final_answer = security.scan_output(final_answer, session_id=session_id)
+                final_answer = await security.ascan_output(final_answer, session_id=session_id)
 
             if session_id and final_answer:
                 await context.save_turn(session_id, "user", req.query)

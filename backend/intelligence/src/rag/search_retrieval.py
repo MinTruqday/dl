@@ -57,10 +57,7 @@ class SearchRetrieval:
             try:
                 from pydantic import BaseModel, Field
 
-                class MultiQueryOutput(BaseModel):
-                    queries: List[str] = Field(
-                        description="Danh sách 3 truy vấn đã viết lại"
-                    )
+                from src.schemas.agent_models import MultiQueryOutput
 
                 structured_llm = self.llm.with_structured_output(MultiQueryOutput)
                 response = structured_llm.invoke(prompt.format(question=question))

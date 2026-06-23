@@ -6,21 +6,17 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 from pydantic import BaseModel, Field
 from src.agents.tasks_sandboxes import actor
-from src.agents.code_sandboxes import code_interpreter
+from src.agents.code_interpreter import code_interpreter
 from src.agents.tasks_plans import planner
 from src.agents.logical_reasoning import reasoner
 from src.agents.research_analysis import researcher
-from src.agents.response_responses import response_generator
+from src.agents.response_generation import response_generator
 from src.agents.search_engines import search_engine
 from src.workflow.workflow_states import ActingState
 from uuid6 import uuid7
 
 
-class TaskEvaluation(BaseModel):
-    status: Literal["PASS", "FAIL"] = Field()
-    feedback: str = Field()
-    revised_task: str = Field(default="")
-
+from src.schemas.agent_models import TaskEvaluation
 
 async def supervisor_node(state: ActingState):
     start_time = state.get("start_time")

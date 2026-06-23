@@ -74,30 +74,13 @@ except Exception:
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
 
-class ContextQuery(BaseModel):
-    question: str = Field(description="Câu hỏi đã được viết lại")
-
-
-class GraphRoute(BaseModel):
-    route: Literal["rag", "direct"] = Field(
-        description="Tuyến đường: 'rag' hoặc 'trực tiếp'"
-    )
-
-
-class RetrievalStrategy(BaseModel):
-    is_simple: bool = Field(
-        description="Đúng nếu câu hỏi đơn giản, Sai nếu cần truy vấn phụ"
-    )
-    queries: List[str] = Field(description="Danh sách truy vấn tìm kiếm tối ưu")
-
-
-class QueryOptimization(BaseModel):
-    question: str = Field(description="Lệnh tìm kiếm tối ưu")
-
-
-class DocumentGrade(BaseModel):
-    is_relevant: bool = Field(description="Tài liệu có liên quan đến câu hỏi hay không")
-
+from src.schemas.agent_models import (
+    ContextQuery,
+    GraphRoute,
+    RetrievalStrategy,
+    QueryOptimization,
+    DocumentGrade,
+)
 
 async def contextualize_question(state: AgentState):
     question = state["question"]

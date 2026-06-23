@@ -5,16 +5,7 @@ from typing import List
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
 
-_INJECTION_PATTERN = re.compile(
-    r"(system[_\s]?prompt|api[_\s]?key|secret[_\s]?key|hf[_\s]?token"
-    r"|ignore (previous|above|all)|jailbreak|do anything now|dan mode"
-    r"|bypass (safety|filter|restriction))",
-    re.IGNORECASE,
-)
-
-
-def _contains_injection(text: str) -> bool:
-    return bool(_INJECTION_PATTERN.search(text))
+from src.harness.security_guardrails import security
 
 
 class ResponseGeneration:
@@ -24,7 +15,8 @@ class ResponseGeneration:
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
         logger.info("Đang tổng hợp kết quả tìm kiếm")
 
-        if _contains_injection(query):
+        scan = await security.ascan_input(query)
+        if scan.blocked:
             logger.warning("Phát hiện thao tác không hợp lệ")
             yield "The submitted request violates the security policies and cannot be processed further"
             return
@@ -46,7 +38,7 @@ class ResponseGeneration:
                     yield chunk.content
 
         except Exception:
-            logger.error("Response generation failed")
+            logger.error("Lỗi tạo nội dung phản hồi")
             yield "The system encountered an unexpected error during the response generation process and requires you to try again later"
 
 

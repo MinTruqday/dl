@@ -7,11 +7,7 @@ from src.core.prompt_registry import PromptType, prompt_registry
 from shared.infrastructure.config import settings
 
 
-class QualityEvaluation(BaseModel):
-    is_hallucination: bool = Field(
-        description="Phản hồi có chứa thông tin sai lệch hay không"
-    )
-    feedback: str = Field(description="Phản hồi giải thích lý do")
+from src.schemas.agent_models import QualityEvaluation
 
 
 class LogicalReasoning:

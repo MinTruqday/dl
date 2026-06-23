@@ -10,19 +10,14 @@ from src.utils.huggingface_client import HFInferenceChat
 from shared.infrastructure.config import settings
 
 
-class RouteDecision(BaseModel):
-    reasoning: str = Field(description="Quá trình suy luận từng bước")
-    route: Literal["action", "knowledge", "chat"] = Field(
-        description="Định tuyến được chọn: hành động, kiến thức, hoặc trò chuyện"
-    )
-    answer: str = Field(default="", description="Trả về chuỗi rỗng nếu không phải chat")
+from src.schemas.agent_models import RouteDecision
 
 
 class IntentRouting:
     def __init__(self):
         llama_model = settings.LLAMA_MODEL
         if not llama_model:
-            raise ValueError("Thiếu cấu hình mô hình ngôn ngữ")
+            raise ValueError("Missing language model configuration")
 
         self.llama_client = AsyncInferenceClient(
             model=settings.LLAMA_MODEL,
