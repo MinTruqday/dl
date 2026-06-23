@@ -95,7 +95,7 @@ function VerifyCodeContent() {
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setToken(e.target.value)
                 }
-                className="w-full bg-white border border-zinc-200 rounded-3xl px-4 py-4 focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all text-center text-2xl tracking-[0.3em] font-bold text-black uppercase"
+                className="w-full bg-white border border-zinc-200 rounded-3xl px-4 py-4 focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm text-center text-2xl tracking-[0.3em] font-bold text-black uppercase"
                 placeholder="------"
                 maxLength={6}
               />
@@ -105,7 +105,7 @@ function VerifyCodeContent() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl transition-all duration-200 hover:scale-[1.02] shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {loading ? "Đang kiểm tra" : "Xác nhận mã"}
@@ -123,7 +123,7 @@ function VerifyCodeContent() {
                 type="button"
                 onClick={handleResend}
                 disabled={resending}
-                className="text-xs font-bold text-black transition-colors hover:text-zinc-600"
+                className="text-xs font-bold text-black"
               >
                 {resending ? "Đang gửi..." : "Gửi lại mã xác thực"}
               </button>
@@ -131,7 +131,7 @@ function VerifyCodeContent() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="text-xs font-medium text-zinc-500 transition-colors hover:text-black"
+              className="text-xs font-medium text-zinc-500"
             >
               Quay lại bước trước
             </button>

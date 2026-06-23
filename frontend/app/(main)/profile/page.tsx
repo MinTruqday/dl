@@ -33,7 +33,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/login");
+      router.push("/dang-nhap");
     } else if (user) {
       setFullName(user.full_name || "");
       setBio(user.bio || "");

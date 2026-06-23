@@ -27,7 +27,7 @@ class AuthenticationFlow:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Chưa cấu hình xác thực bên ngoài",
             )
-        auth_url = f"{settings.GOOGLE_AUTH_URL}/?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile"
+        auth_url = f"{settings.GOOGLE_AUTH_URL}?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile"
         return auth_url
 
     @staticmethod

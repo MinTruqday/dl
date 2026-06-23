@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       setEmail(e.target.value)
                     }
-                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
                     placeholder="name@example.com"
                   />
                 </div>
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl transition-all duration-200 hover:scale-[1.02] shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loading ? "Đang xử lý" : "Gửi yêu cầu khôi phục"}
@@ -89,13 +89,13 @@ export default function ForgotPasswordPage() {
             <div className="mt-8 text-center border-t border-zinc-100 pt-6 flex flex-col gap-3">
               <span className="text-xs font-medium text-zinc-500">
                 Đã có mã xác thực?{" "}
-                <a href="/verify" className="font-bold text-black transition-colors hover:text-zinc-600 hover:underline">
+                <a href="/xac-thuc" className="font-bold text-black">
                   Nhập mã ngay
                 </a>
               </span>
               <a
-                href="/login"
-                className="text-xs font-medium text-zinc-500 transition-colors hover:text-black hover:underline"
+                href="/dang-nhap"
+                className="text-xs font-medium text-zinc-500"
               >
                 Quay lại màn hình đăng nhập
               </a>

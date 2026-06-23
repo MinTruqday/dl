@@ -17,7 +17,7 @@ function ResetPasswordContent() {
 
   useEffect(() => {
     if (!token) {
-      router.replace("/forgot-password");
+      router.replace("/quen-mat-khau");
     }
   }, [token, router]);
 
@@ -33,7 +33,7 @@ function ResetPasswordContent() {
       setLoading(true);
       const data = await resetPasswordAPI(token, newPassword);
       showToast(data.message || "Đã đặt lại mật khẩu thành công", "success");
-      setTimeout(() => router.push("/login"), 1500);
+      setTimeout(() => router.push("/dang-nhap"), 1500);
     } catch (err: any) {
       showToast(err.message || "Đặt lại mật khẩu thất bại", "error");
     } finally {
@@ -73,13 +73,13 @@ function ResetPasswordContent() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setNewPassword(e.target.value)
                   }
-                  className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                  className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
                   placeholder="Tối thiểu 6 ký tự"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -90,7 +90,7 @@ function ResetPasswordContent() {
               <button
                  type="submit"
                  disabled={loading}
-                 className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl transition-all duration-200 hover:scale-[1.02] shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                 className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {loading ? "Đang xử lý" : "Cập nhật mật khẩu"}

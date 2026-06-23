@@ -248,7 +248,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login");
+      router.push("/dang-nhap");
     }
     if (!authLoading && user) {
       loadConversations();

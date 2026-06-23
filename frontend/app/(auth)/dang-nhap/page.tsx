@@ -183,7 +183,7 @@ export default function LoginPage() {
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       setEmail(e.target.value)
                     }
-                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
                     placeholder="Email hoặc tên tài khoản"
                   />
                 </div>
@@ -207,13 +207,13 @@ export default function LoginPage() {
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       setPassword(e.target.value)
                     }
-                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
                     placeholder="Nhập mật khẩu"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -226,7 +226,7 @@ export default function LoginPage() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-black focus:ring-0 border border-zinc-300 rounded cursor-pointer transition-colors"
+                    className="h-4 w-4 text-black focus:ring-0 border border-zinc-300 rounded cursor-pointer"
                   />
                   <label
                     htmlFor="remember-me"
@@ -236,8 +236,8 @@ export default function LoginPage() {
                   </label>
                 </div>
                 <a
-                  href="/forgot-password"
-                  className="text-xs font-bold text-zinc-500 hover:text-black transition-colors"
+                  href="/quen-mat-khau"
+                  className="text-xs font-bold text-zinc-500"
                 >
                   Quên mật khẩu?
                 </a>
@@ -247,7 +247,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full flex justify-center items-center gap-2 h-12 rounded-3xl text-xs font-bold text-white bg-black transition-all duration-200 hover:scale-[1.02] shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="w-full flex justify-center items-center gap-2 h-12 rounded-3xl text-xs font-bold text-white bg-black shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   {isSubmitting && (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -278,7 +278,7 @@ export default function LoginPage() {
                   }
                   await completePasskeyLogin(email);
                 }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-3xl bg-white text-xs font-bold text-zinc-700 gap-2 transition-all duration-200 hover:bg-zinc-50 hover:text-black hover:border-zinc-300 shadow-sm"
+                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-3xl bg-white text-xs font-bold text-zinc-700 gap-2 shadow-sm"
               >
                 <KeyRound className="w-4 h-4" />
                 Passkey
@@ -293,7 +293,7 @@ export default function LoginPage() {
                     showToast("Không thể kết nối với Google", "error");
                   }
                 }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-3xl bg-white text-xs font-bold text-zinc-700 gap-2 transition-all duration-200 hover:bg-zinc-50 hover:text-black hover:border-zinc-300 shadow-sm"
+                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-3xl bg-white text-xs font-bold text-zinc-700 gap-2 shadow-sm"
               >
                 <GoogleIcon />
                 Google
@@ -304,8 +304,8 @@ export default function LoginPage() {
               <p className="text-xs font-medium text-zinc-500">
                 Chưa có tài khoản?{" "}
                 <a
-                  href="/register"
-                  className="font-bold text-black transition-colors hover:text-zinc-600"
+                  href="/dang-ky"
+                  className="font-bold text-black"
                 >
                   Đăng ký ngay
                 </a>

@@ -69,7 +69,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <div className="flex-1 min-w-0 flex items-center">
-                  <p className="text-[0.875rem] font-medium text-zinc-900 tracking-[-0.02em] leading-snug break-words">
+                  <p className="text-sm font-medium text-zinc-900 break-words">
                     {t.message}
                   </p>
                 </div>

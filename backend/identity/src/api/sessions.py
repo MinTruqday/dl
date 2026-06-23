@@ -119,7 +119,7 @@ async def verify_code(
     )
 
 
-@router.get("/google/login", response_model=APIResponse[Any])
+@router.get("/google/dang-nhap", response_model=APIResponse[Any])
 async def google_login(db=Depends(get_db)):
     auth_url = await AuthenticationFlow.get_google_auth_url(db=db)
     return APIResponse(

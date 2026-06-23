@@ -26,7 +26,7 @@ export default function UpgradePage() {
 
   const handleUpgrade = async (tier: "PRO" | "PREMIUM", price: number) => {
     if (!user) {
-      router.push("/login");
+      router.push("/dang-nhap");
       return;
     }
     if (balance < price) {

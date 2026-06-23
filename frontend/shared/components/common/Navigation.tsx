@@ -263,13 +263,13 @@ export default function Navigation() {
           ) : (
             <div className="flex items-center gap-2">
               <Link
-                href="/login"
+                href="/dang-nhap"
                 className="h-11 px-4 flex items-center justify-center text-xs font-semibold text-black bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-50"
               >
                 Đăng nhập
               </Link>
               <Link
-                href="/register"
+                href="/dang-ky"
                 className="h-11 px-4 flex items-center justify-center text-xs font-semibold text-white bg-black rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-800"
               >
                 Đăng ký

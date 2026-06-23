@@ -218,7 +218,7 @@ export default function WalletPage() {
           </p>
         </div>
         <button
-          onClick={() => (window.location.href = "/login")}
+          onClick={() => (window.location.href = "/dang-nhap")}
           className="bg-black text-white h-11 px-8 text-xs font-bold flex items-center justify-center rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 shadow-md"
         >
           Đăng nhập ngay

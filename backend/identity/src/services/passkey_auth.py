@@ -141,3 +141,98 @@ class PasskeyAuthentication:
         from src.services.passkey_auth import AuthenticationFlow
 
         return await AuthenticationFlow.issue_token_for_user(user_doc, "passkey_login")
+
+    @staticmethod
+    async def register_begin(email: str, db=None):
+        user = await AuthenticationData.get_auth_credential_by_email(email, db=db)
+        if not user:
+            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+
+        passkeys = user.get("passkeys", [])
+        
+        options = generate_registration_options(
+            rp_id=RP_ID,
+            rp_name=RP_NAME,
+            user_id=str(user["_id"]).encode("utf-8"),
+            user_name=email,
+            user_display_name=email,
+            exclude_credentials=[
+                PublicKeyCredentialDescriptor(
+                    id=base64.b64decode(p["credential_id"]),
+                    type=PublicKeyCredentialType.PUBLIC_KEY,
+                )
+                for p in passkeys
+            ],
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                authenticator_attachment=AuthenticatorAttachment.PLATFORM,
+                user_verification=UserVerificationRequirement.REQUIRED,
+            ),
+        )
+
+        try:
+            await AuthenticationData.set_redis_passkey_challenge(email, options.challenge)
+        except Exception:
+            logger.warning("Lỗi lưu trữ tạm thời mã xác thực")
+            
+        await AuthenticationData.upsert_passkey_challenge(email, options.challenge, db=db)
+
+        return json.loads(options_to_json(options))
+
+    @staticmethod
+    async def register_finish(email: str, credential_data: dict, db=None):
+        user = await AuthenticationData.get_auth_credential_by_email(email, db=db)
+        if not user:
+            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+
+        challenge = None
+        try:
+            challenge = await AuthenticationData.get_redis_passkey_challenge(email)
+        except Exception:
+            logger.warning("Lỗi tải thông tin xác thực")
+            
+        if not challenge:
+            chal_doc = await AuthenticationData.get_passkey_challenge(email, db=db)
+            if chal_doc:
+                age = (
+                    datetime.now(timezone.utc)
+                    - chal_doc["created_at"].replace(tzinfo=timezone.utc)
+                ).total_seconds()
+                if age < 300:
+                    challenge = chal_doc["challenge"]
+
+        if not challenge:
+            raise HTTPException(
+                status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn"
+            )
+
+        try:
+            verification = verify_registration_response(
+                credential=credential_data,
+                expected_challenge=challenge,
+                expected_origin=ORIGIN,
+                expected_rp_id=RP_ID,
+            )
+        except InvalidRegistrationResponse as e:
+            raise HTTPException(status_code=400, detail=f"Lỗi xác minh mã bảo mật: {str(e)}")
+
+        new_passkey = {
+            "credential_id": base64.b64encode(verification.credential_id).decode("utf-8"),
+            "public_key": base64.b64encode(verification.credential_public_key).decode("utf-8"),
+            "sign_count": verification.sign_count,
+            "created_at": datetime.now(timezone.utc)
+        }
+
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        await db["auth_credentials"].update_one(
+            {"_id": user["_id"]},
+            {"$push": {"passkeys": new_passkey}}
+        )
+
+        await AuthenticationData.delete_passkey_challenge(email, db=db)
+        try:
+            await AuthenticationData.delete_redis_passkey_challenge(email)
+        except Exception:
+            logger.error("Lỗi xóa mã xác thực khỏi bộ nhớ")
+
+        return {"message": "Đăng ký Passkey thành công"}

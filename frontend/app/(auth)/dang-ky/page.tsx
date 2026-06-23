@@ -39,7 +39,7 @@ export default function RegisterPage() {
         "Đăng ký thành công",
         "success",
       );
-      router.push("/login");
+      router.push("/dang-nhap");
     } catch (err: any) {
       showToast(
         err.message || "Tên đăng nhập hoặc email đã được sử dụng",
@@ -82,7 +82,7 @@ export default function RegisterPage() {
                       required
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                      className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
                       placeholder="Nguyễn Văn A"
                     />
                   </div>
@@ -104,7 +104,7 @@ export default function RegisterPage() {
                       required
                       value={slug}
                       onChange={(e) => setSlug(e.target.value)}
-                      className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                      className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
                       placeholder="nguyenvana"
                     />
                   </div>
@@ -128,7 +128,7 @@ export default function RegisterPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
                     placeholder="nguyenvana@example.com"
                   />
                 </div>
@@ -150,13 +150,13 @@ export default function RegisterPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
                     placeholder="Tối thiểu 6 ký tự"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -172,7 +172,7 @@ export default function RegisterPage() {
                     checked={agreedToTerms}
                     onChange={(e) => setAgreedToTerms(e.target.checked)}
                     required
-                    className="h-4 w-4 border border-zinc-300 rounded text-black focus:ring-0 cursor-pointer transition-colors"
+                    className="h-4 w-4 border border-zinc-300 rounded text-black focus:ring-0 cursor-pointer"
                   />
                 </div>
                 <div className="ml-3 text-xs">
@@ -181,7 +181,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowTermsModal(true)}
-                      className="text-black font-bold hover:text-zinc-600 transition-colors"
+                      className="text-black font-bold"
                     >
                       Điều khoản & Quy định
                     </button>
@@ -193,7 +193,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl transition-all duration-200 hover:scale-[1.02] shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loading ? "Đang xử lý" : "Đăng ký tài khoản"}
@@ -205,8 +205,8 @@ export default function RegisterPage() {
               <p className="text-xs font-medium text-zinc-500">
                 Đã có tài khoản?{" "}
                 <a
-                  href="/login"
-                  className="font-bold text-black transition-colors hover:text-zinc-600"
+                  href="/dang-nhap"
+                  className="font-bold text-black"
                 >
                   Đăng nhập
                 </a>
@@ -271,7 +271,7 @@ export default function RegisterPage() {
               setAgreedToTerms(true);
               setShowTermsModal(false);
             }}
-            className="w-full sm:w-auto px-8 h-11 bg-black text-white text-xs font-bold rounded-2xl transition-all duration-200 hover:scale-105 shadow-md"
+            className="w-full sm:w-auto px-8 h-11 bg-black text-white text-xs font-bold rounded-2xl shadow-md"
           >
             Đồng ý
           </button>

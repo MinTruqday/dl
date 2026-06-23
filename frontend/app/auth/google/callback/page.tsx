@@ -64,7 +64,7 @@ function GoogleCallbackContent() {
           </h2>
           <p className="mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{error}</p>
           <button
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/dang-nhap")}
             className="mt-6 w-full flex justify-center items-center h-11 text-xs font-bold text-white bg-black rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 shadow-md"
           >
             Quay lại đăng nhập

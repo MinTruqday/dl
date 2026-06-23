@@ -7,11 +7,11 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAuthRoute =
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/register") ||
-    pathname.startsWith("/forgot-password") ||
-    pathname.startsWith("/verify") ||
-    pathname.startsWith("/reset-password");
+    pathname.startsWith("/dang-nhap") ||
+    pathname.startsWith("/dang-ky") ||
+    pathname.startsWith("/quen-mat-khau") ||
+    pathname.startsWith("/xac-thuc") ||
+    pathname.startsWith("/dat-lai-mat-khau");
 
   const isPublicRoute =
     pathname === "/" ||
@@ -23,7 +23,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/auth/google/callback");
 
   if (!token && !isAuthRoute && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/dang-nhap", request.url));
   }
 
   if (role === "reader") {

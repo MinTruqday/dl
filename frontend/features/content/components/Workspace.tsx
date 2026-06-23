@@ -25,7 +25,7 @@ export default function Workspace({
 
   useEffect(() => {
     if (requireAuth && !isLoading && !user) {
-      router.push("/login");
+      router.push("/dang-nhap");
     }
   }, [requireAuth, isLoading, user, router]);
 

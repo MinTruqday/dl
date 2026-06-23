@@ -125,7 +125,7 @@ export default function DocumentViewer() {
       try {
         const token = getToken();
         if (!token) {
-          router.push("/login");
+          router.push("/dang-nhap");
           return;
         }
 
@@ -136,7 +136,7 @@ export default function DocumentViewer() {
         const res = await fetch(url, { headers });
 
         if (res.status === 401) {
-          router.push("/login");
+          router.push("/dang-nhap");
           return;
         }
 

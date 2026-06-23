@@ -28,3 +28,23 @@ async def passkey_login_finish(payload: PasskeyFinishRequest, db=Depends(get_db)
         message="Xác thực thành công",
         status=200,
     )
+
+
+@router.post("/dang-ky/bat-dau", response_model=APIResponse[Any])
+async def passkey_register_begin(payload: PasskeyRequest, db=Depends(get_db)):
+    return APIResponse(
+        data=await PasskeyAuthentication.register_begin(payload.email, db=db),
+        message="Bắt đầu đăng ký mã bảo mật thành công",
+        status=200,
+    )
+
+
+@router.post("/dang-ky/hoan-tat", response_model=APIResponse[Any])
+async def passkey_register_finish(payload: PasskeyFinishRequest, db=Depends(get_db)):
+    return APIResponse(
+        data=await PasskeyAuthentication.register_finish(
+            payload.email, payload.credential, db=db
+        ),
+        message="Đăng ký mã bảo mật thành công",
+        status=200,
+    )

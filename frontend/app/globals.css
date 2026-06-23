@@ -111,6 +111,6 @@ code {
     @apply bg-white border border-zinc-200 rounded-3xl shadow-xl;
   }
   .auth-panel {
-    @apply bg-white/90 backdrop-blur-md border border-zinc-100 rounded-3xl shadow-xl p-8 sm:p-10 transition-all duration-300;
+    @apply bg-white border border-zinc-200 rounded-3xl shadow-xl p-8 sm:p-10;
   }
 }
