@@ -11,17 +11,17 @@ resources:
   - infrastructure/flaresolverr.yaml
   - observability/prometheus.yaml
   - observability/grafana.yaml
-  - apps/agentic_ai.yaml
-  - apps/authentication.yaml
-  - apps/collector.yaml
-  - apps/editor.yaml
-  - apps/messaging.yaml
-  - apps/content.yaml
-  - apps/finance.yaml
-  - apps/management.yaml
-  - apps/notification.yaml
-  - apps/realtime.yaml
-  - apps/worker.yaml
+  - apps/intelligence.yaml
+  - apps/identity.yaml
+  - apps/ingestion.yaml
+  - apps/workspace.yaml
+  - apps/conversations.yaml
+  - apps/documents.yaml
+  - apps/billing.yaml
+  - apps/administration.yaml
+  - apps/alerts.yaml
+  - apps/live_events.yaml
+  - apps/task_queue.yaml
   - apps/frontend.yaml
   - ingress/ingress.yaml
 

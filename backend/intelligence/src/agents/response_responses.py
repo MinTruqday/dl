@@ -1,0 +1,53 @@
+import re
+import time
+from typing import List
+
+from loguru import logger
+from src.core.prompt_registry import PromptType, prompt_registry
+
+_INJECTION_PATTERN = re.compile(
+    r"(system[_\s]?prompt|api[_\s]?key|secret[_\s]?key|hf[_\s]?token"
+    r"|ignore (previous|above|all)|jailbreak|do anything now|dan mode"
+    r"|bypass (safety|filter|restriction))",
+    re.IGNORECASE,
+)
+
+
+def _contains_injection(text: str) -> bool:
+    return bool(_INJECTION_PATTERN.search(text))
+
+
+class ResponseGeneration:
+    def __init__(self):
+        pass
+
+    async def aggregate_stream(self, query: str, consolidated_results: List[str]):
+        logger.info("Đang tổng hợp kết quả tìm kiếm")
+
+        if _contains_injection(query):
+            logger.warning("Phát hiện thao tác không hợp lệ")
+            yield "The submitted request violates the security policies and cannot be processed further"
+            return
+
+        try:
+            from langchain_core.messages import HumanMessage
+            from src.agents.tasks_plans import llm
+
+            gathered_data = "\n\n".join(consolidated_results)
+            if len(gathered_data) > 12000:
+                gathered_data = gathered_data[:12000]
+
+            final_prompt = prompt_registry.get(PromptType.AGGREGATOR).format(
+                query=query, gathered_data=gathered_data
+            )
+
+            async for chunk in llm.astream([HumanMessage(content=final_prompt)]):
+                if chunk.content:
+                    yield chunk.content
+
+        except Exception:
+            logger.error("Response generation failed")
+            yield "The system encountered an unexpected error during the response generation process and requires you to try again later"
+
+
+response_generator = ResponseGeneration()

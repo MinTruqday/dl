@@ -14,35 +14,35 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: finance
+            name: billing
             port:
               number: 80
       - path: /ma-qua-tang(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: finance
+            name: billing
             port:
               number: 80
       - path: /nap-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: finance
+            name: billing
             port:
               number: 80
       - path: /rut-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: finance
+            name: billing
             port:
               number: 80
       - path: /vi-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: finance
+            name: billing
             port:
               number: 80
       - path: /lich-su(/|$)(.*)
@@ -91,189 +91,189 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management
+            name: administration
             port:
               number: 80
       - path: /han-muc(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management
+            name: administration
             port:
               number: 80
       - path: /ho-so(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management
+            name: administration
             port:
               number: 80
       - path: /kiem-toan(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management
+            name: administration
             port:
               number: 80
       - path: /nguoi-dung(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management
+            name: administration
             port:
               number: 80
       - path: /quang-cao(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management
+            name: administration
             port:
               number: 80
       - path: /van-hanh(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management
+            name: administration
             port:
               number: 80
       - path: /ban-nhap(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /cong-tac(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /danh-dau(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /danh-gia(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /doc-hieu(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /ghim(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /ket-xuat(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /kham-pha(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /luu-tru(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /phien-ban(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /tai-len(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /tai-lieu(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /thu-vien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /xuat-ban(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: documents
             port:
               number: 80
       - path: /tin-nhan(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: messaging
+            name: conversations
             port:
               number: 80
       - path: /xac-thuc(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: authentication
+            name: identity
             port:
               number: 80
       - path: /trinh-soan-thao(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: editor
+            name: workspace
             port:
               number: 80
       - path: /thong-bao(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: notification
+            name: alerts
             port:
               number: 80
       - path: /thu-thap(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: collector
+            name: ingestion
             port:
               number: 80
       - path: /ws(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: realtime
+            name: live_events
             port:
               number: 80
       # Frontend default route
