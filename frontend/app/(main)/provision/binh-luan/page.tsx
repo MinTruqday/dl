@@ -6,7 +6,7 @@ import {
   getCommentsByItemAPI,
   createCommentAPI,
   deleteCommentAPI,
-} from "@/features/communication/services/inline_comment.service";
+} from "@/features/messaging/services/inline_comment.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2, MessageSquare, Trash2, BookOpen, Send, Reply, CornerDownRight } from "lucide-react";
 

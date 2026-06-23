@@ -36,7 +36,7 @@ import {
   getCommentsByItemAPI,
   createCommentAPI,
   deleteCommentAPI,
-} from "@/features/communication/services/inline_comment.service";
+} from "@/features/messaging/services/inline_comment.service";
 import {
   inviteCollaboratorAPI,
   getCollaboratorsAPI,

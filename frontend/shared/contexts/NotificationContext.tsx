@@ -14,7 +14,7 @@ import {
 import {
   getNotificationsAPI,
   markNotificationReadAPI,
-} from "@/features/communication/services/push_notification.service";
+} from "@/features/messaging/services/push_notification.service";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useToast } from "./ToastContext";
 

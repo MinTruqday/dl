@@ -19,7 +19,7 @@ import {
 import {
   getNotificationSettingsAPI,
   updateNotificationSettingsAPI,
-} from "@/features/communication/services/push_notification.service";
+} from "@/features/messaging/services/push_notification.service";
 import {
   getMaintenanceModeAPI,
   getAdminConfigAPI,

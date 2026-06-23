@@ -21,7 +21,7 @@ import { getDocumentBySlugAPI } from "@/features/content/services/document_metad
 import { toggleBookmarkAPI } from "@/features/content/services/document_bookmark.service";
 import { purchaseDocumentAPI } from "@/features/finance/services/content_monetization.service";
 
-import Comment from "@/features/communication/components/Comment";
+import Comment from "@/features/messaging/components/Comment";
 import Report from "@/features/provision/components/Report";
 import { QRCodeSVG } from "qrcode.react";
 import { getToken } from "@/shared/utils/token";

@@ -26,7 +26,7 @@ import {
   toggleMuteAPI,
   getConversationSettingsAPI,
   deleteConversationAPI,
-} from "@/features/communication/services/chat_conversation.service";
+} from "@/features/messaging/services/chat_conversation.service";
 import { searchUsersAPI } from "@/features/provision/services/user_profile.service";
 import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
 import {
