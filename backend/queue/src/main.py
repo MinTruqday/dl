@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(queue_router, prefix="/queue")
+app.include_router(queue_router)
 
 @app.on_event("startup")
 async def startup_event():

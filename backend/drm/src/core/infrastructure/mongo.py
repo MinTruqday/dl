@@ -3,7 +3,7 @@ import httpx
 from typing import Any, Dict, List, Optional
 
 class MongoClient:
-    def __init__(self, base_url: str = "http://doclib_database:8800/mongo"):
+    def __init__(self, base_url: str = "http://doclib_database:8800/co-so-du-lieu"):
         self.base_url = base_url
 
     async def _post(self, path: str, payload: dict):
@@ -14,11 +14,11 @@ class MongoClient:
             return resp.json()
 
     async def find_one(self, collection: str, query: dict, projection: dict = None):
-        res = await self._post("/find_one", {"db": "doclib", "collection": collection, "query": query, "projection": projection})
+        res = await self._post("/tim-mot", {"db": "doclib", "collection": collection, "query": query, "projection": projection})
         return res.get("data")
 
     async def find(self, collection: str, query: dict, projection: dict = None, sort=None, skip: int = 0, limit: int = 0):
-        res = await self._post("/find", {
+        res = await self._post("/tim-kiem", {
             "db": "doclib",
             "collection": collection,
             "query": query,
@@ -33,7 +33,7 @@ class MongoClient:
         class InsertOneResult:
             def __init__(self, inserted_id):
                 self.inserted_id = inserted_id
-        res = await self._post("/insert_one", {"db": "doclib", "collection": collection, "document": document})
+        res = await self._post("/them-mot", {"db": "doclib", "collection": collection, "document": document})
         return InsertOneResult(res.get("inserted_id"))
 
     async def update_one(self, collection: str, filter: dict, update: dict, upsert: bool = False):
@@ -42,7 +42,7 @@ class MongoClient:
                 self.matched_count = matched_count
                 self.modified_count = modified_count
                 self.upserted_id = upserted_id
-        res = await self._post("/update_one", {"db": "doclib", "collection": collection, "filter": filter, "update": update, "upsert": upsert})
+        res = await self._post("/cap-nhat-mot", {"db": "doclib", "collection": collection, "filter": filter, "update": update, "upsert": upsert})
         return UpdateResult(res.get("matched_count"), res.get("modified_count"), res.get("upserted_id"))
 
     async def update_many(self, collection: str, filter: dict, update: dict, upsert: bool = False):
@@ -51,29 +51,29 @@ class MongoClient:
                 self.matched_count = matched_count
                 self.modified_count = modified_count
                 self.upserted_id = upserted_id
-        res = await self._post("/update_many", {"db": "doclib", "collection": collection, "filter": filter, "update": update, "upsert": upsert})
+        res = await self._post("/cap-nhat-nhieu", {"db": "doclib", "collection": collection, "filter": filter, "update": update, "upsert": upsert})
         return UpdateResult(res.get("matched_count"), res.get("modified_count"), res.get("upserted_id"))
 
     async def delete_one(self, collection: str, filter: dict):
         class DeleteResult:
             def __init__(self, deleted_count):
                 self.deleted_count = deleted_count
-        res = await self._post("/delete_one", {"db": "doclib", "collection": collection, "filter": filter})
+        res = await self._post("/xoa-mot", {"db": "doclib", "collection": collection, "filter": filter})
         return DeleteResult(res.get("deleted_count"))
 
     async def delete_many(self, collection: str, filter: dict):
         class DeleteResult:
             def __init__(self, deleted_count):
                 self.deleted_count = deleted_count
-        res = await self._post("/delete_many", {"db": "doclib", "collection": collection, "filter": filter})
+        res = await self._post("/xoa-nhieu", {"db": "doclib", "collection": collection, "filter": filter})
         return DeleteResult(res.get("deleted_count"))
 
     async def count_documents(self, collection: str, filter: dict = {}):
-        res = await self._post("/count_documents", {"db": "doclib", "collection": collection, "filter": filter})
+        res = await self._post("/dem-tai-lieu", {"db": "doclib", "collection": collection, "filter": filter})
         return res.get("count", 0)
 
     async def aggregate(self, collection: str, pipeline: list):
-        res = await self._post("/aggregate", {"db": "doclib", "collection": collection, "pipeline": pipeline})
+        res = await self._post("/tong-hop", {"db": "doclib", "collection": collection, "pipeline": pipeline})
         return res.get("data", [])
 
 

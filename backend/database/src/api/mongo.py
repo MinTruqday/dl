@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
-router = APIRouter(prefix="/mongo")
+router = APIRouter(prefix="/co-so-du-lieu")
 
 # Global client
 client: Optional[AsyncIOMotorClient] = None
@@ -83,7 +83,7 @@ def serialize_object_ids(data):
         return {"$oid": str(data)}
     return data
 
-@router.post("/find")
+@router.post("/tim-kiem")
 async def find_documents(req: QueryRequest):
     c = get_client()
     col = c[req.db][req.collection]
@@ -98,7 +98,7 @@ async def find_documents(req: QueryRequest):
     docs = await cursor.to_list(length=req.limit or None)
     return {"data": serialize_object_ids(docs)}
 
-@router.post("/find_one")
+@router.post("/tim-mot")
 async def find_one_document(req: QueryRequest):
     c = get_client()
     col = c[req.db][req.collection]
@@ -106,7 +106,7 @@ async def find_one_document(req: QueryRequest):
     doc = await col.find_one(query, req.projection)
     return {"data": serialize_object_ids(doc)}
 
-@router.post("/insert_one")
+@router.post("/them-mot")
 async def insert_one_document(req: InsertOneRequest):
     c = get_client()
     col = c[req.db][req.collection]
@@ -114,7 +114,7 @@ async def insert_one_document(req: InsertOneRequest):
     result = await col.insert_one(doc)
     return {"inserted_id": serialize_object_ids(result.inserted_id)}
 
-@router.post("/update_one")
+@router.post("/cap-nhat-mot")
 async def update_one_document(req: UpdateOneRequest):
     c = get_client()
     col = c[req.db][req.collection]
@@ -123,7 +123,7 @@ async def update_one_document(req: UpdateOneRequest):
     result = await col.update_one(filter_query, update, upsert=req.upsert)
     return {"matched_count": result.matched_count, "modified_count": result.modified_count, "upserted_id": serialize_object_ids(result.upserted_id)}
 
-@router.post("/update_many")
+@router.post("/cap-nhat-nhieu")
 async def update_many_documents(req: UpdateManyRequest):
     c = get_client()
     col = c[req.db][req.collection]
@@ -132,7 +132,7 @@ async def update_many_documents(req: UpdateManyRequest):
     result = await col.update_many(filter_query, update, upsert=req.upsert)
     return {"matched_count": result.matched_count, "modified_count": result.modified_count, "upserted_id": serialize_object_ids(result.upserted_id)}
 
-@router.post("/delete_one")
+@router.post("/xoa-mot")
 async def delete_one_document(req: DeleteOneRequest):
     c = get_client()
     col = c[req.db][req.collection]
@@ -140,7 +140,7 @@ async def delete_one_document(req: DeleteOneRequest):
     result = await col.delete_one(filter_query)
     return {"deleted_count": result.deleted_count}
 
-@router.post("/delete_many")
+@router.post("/xoa-nhieu")
 async def delete_many_document(req: DeleteManyRequest):
     c = get_client()
     col = c[req.db][req.collection]
@@ -148,7 +148,7 @@ async def delete_many_document(req: DeleteManyRequest):
     result = await col.delete_many(filter_query)
     return {"deleted_count": result.deleted_count}
 
-@router.post("/aggregate")
+@router.post("/tong-hop")
 async def aggregate_documents(req: AggregateRequest):
     c = get_client()
     col = c[req.db][req.collection]
@@ -157,7 +157,7 @@ async def aggregate_documents(req: AggregateRequest):
     docs = await cursor.to_list(length=None)
     return {"data": serialize_object_ids(docs)}
 
-@router.post("/count_documents")
+@router.post("/dem-tai-lieu")
 async def count_documents(req: CountRequest):
     c = get_client()
     col = c[req.db][req.collection]

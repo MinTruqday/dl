@@ -3,7 +3,7 @@ from loguru import logger
 from typing import Any, Dict, Optional
 
 class QueueAPIClient:
-    def __init__(self, base_url: str = "http://doclib_queue:8802/queue"):
+    def __init__(self, base_url: str = "http://doclib_queue:8802/hang-doi"):
         self.base_url = base_url
 
     async def _post(self, path: str, json_data: dict) -> dict:
@@ -29,11 +29,11 @@ class QueueAPIClient:
             return {}
 
     async def publish(self, queue_name: str, payload: Dict[str, Any]) -> bool:
-        res = await self._post("/publish", {"queue_name": queue_name, "payload": payload})
+        res = await self._post("/xuat-ban", {"queue_name": queue_name, "payload": payload})
         return res.get("status") == "success"
 
     async def consume(self, queue_name: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
-        res = await self._get(f"/consume/{queue_name}", params={"timeout": timeout}, timeout=timeout+5)
+        res = await self._get(f"/tieu-thu/{queue_name}", params={"timeout": timeout}, timeout=timeout+5)
         return res.get("data")
 
 mq = QueueAPIClient()
