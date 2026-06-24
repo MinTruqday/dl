@@ -4,6 +4,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import HTTPException
 from loguru import logger
 from src.repositories.authentication import AuthenticationRepository
@@ -121,11 +122,9 @@ class PasskeyService:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
         except Exception as e:
             logger.error(f"Lỗi xóa mã xác thực khỏi bộ nhớ: {e}")
-        import httpx
-
         user_doc = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,

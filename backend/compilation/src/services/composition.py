@@ -222,7 +222,7 @@ class CompositionService:
 
         reading_time_minutes = max(1, words // 200)
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 await client.put(
                     f"{settings.CONTENT_URL}/tai-lieu/{document_id}/noi-dung",
                     json={
@@ -231,7 +231,6 @@ class CompositionService:
                         "reading_time_minutes": reading_time_minutes,
                     },
                     headers={"X-User-Id": user_id},
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
         except Exception as e:
             logger.error(f"Lỗi lưu bản nháp sang content service: {e}")
@@ -244,12 +243,11 @@ class CompositionService:
     async def submit_for_review(document_id: str, current_user, db=None):
         user_id = str(current_user.id)
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 await client.post(
                     f"{settings.CONTENT_URL}/ban-nhap/{document_id}/kiem-duyet",
                     json={"action": "pending_review"},
                     headers={"X-User-Id": user_id},
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
         except Exception as e:
             logger.error(f"Lỗi gửi yêu cầu xét duyệt sang content service: {e}")

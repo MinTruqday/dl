@@ -2,6 +2,7 @@ from src.core.infrastructure.configuration import settings
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import httpx
 from bson import ObjectId
 from fastapi import HTTPException
 from loguru import logger
@@ -254,21 +255,18 @@ class PurchaseService:
                     await db["notifications"].insert_one(notification, session=session)
                     if hasattr(database, "redis") and database.redis:
                         try:
-                            import httpx
+                            from shared.infrastructure.configuration import settings as shared_settings
 
-                            from shared.infrastructure.configuration import settings
-
-                            if settings.NOTIFICATION_URL:
-                                async with httpx.AsyncClient() as client:
+                            if shared_settings.NOTIFICATION_URL:
+                                async with httpx.AsyncClient(timeout=shared_settings.DEFAULT_HTTP_TIMEOUT) as client:
                                     await client.post(
-                                        f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",
+                                        f"{shared_settings.NOTIFICATION_URL}/thong-bao/gui-di",
                                         json={
                                             "target_user_id": creator_id,
                                             "title": notification["title"],
                                             "body": notification["body"],
                                             "type": "purchase",
                                         },
-                                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                                     )
                         except Exception as e:
                             logger.error(f"Lỗi gửi thông báo giao dịch thành công: {e}")

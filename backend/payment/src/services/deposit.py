@@ -310,21 +310,18 @@ class DepositService:
                 await session.commit_transaction()
 
             try:
-                import httpx
+                from shared.infrastructure.configuration import settings as shared_settings
 
-                from shared.infrastructure.configuration import settings
-
-                if settings.NOTIFICATION_URL:
-                    async with httpx.AsyncClient() as client:
+                if shared_settings.NOTIFICATION_URL:
+                    async with httpx.AsyncClient(timeout=shared_settings.DEFAULT_HTTP_TIMEOUT) as client:
                         await client.post(
-                            f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",
+                            f"{shared_settings.NOTIFICATION_URL}/thong-bao/gui-di",
                             json={
                                 "target_user_id": user_id,
                                 "title": "Deposit processed successfully",
                                 "body": "The requested deposit funds have been successfully credited to the digital wallet",
                                 "type": "topup",
                             },
-                            timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
             except Exception as e:
                 logger.warning(f"Lỗi gửi thông báo nạp tiền thành công: {e}")

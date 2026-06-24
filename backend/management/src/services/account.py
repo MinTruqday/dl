@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
+import httpx
 from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
@@ -121,21 +122,18 @@ class AccountService:
             }
         )
         try:
-            import httpx
+            from shared.infrastructure.configuration import settings as shared_settings
 
-            from shared.infrastructure.configuration import settings
-
-            if settings.NOTIFICATION_URL:
-                async with httpx.AsyncClient() as client:
+            if shared_settings.NOTIFICATION_URL:
+                async with httpx.AsyncClient(timeout=shared_settings.DEFAULT_HTTP_TIMEOUT) as client:
                     await client.post(
-                        f"{settings.NOTIFICATION_URL}/thong-bao/kich-hoat",
+                        f"{shared_settings.NOTIFICATION_URL}/thong-bao/kich-hoat",
                         json={
                             "target_user_id": user_id,
                             "title": "You have a new system administrative warning notification",
                             "body": f"An official violation warning has been recorded for your account due to the following reason provided by the administration {reason}",
                             "type": "WARNING",
                         },
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
         except Exception as e:
             logger.warning(f"Không thể gửi thông báo cảnh báo qua hệ thống bên ngoài: {e}")

@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import Query
 from src.schemas.thread import Record
 
@@ -211,16 +212,13 @@ class ThreadService:
                 for p in conv.get("participants", []):
                     if p != str(current_user.id):
                         other_user_ids.append(p)
-        import httpx
-
         users_list = []
         if other_user_ids:
             try:
-                async with httpx.AsyncClient() as client:
+                async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                     resp = await client.post(
                         f"{settings.MANAGEMENT_URL}/nguoi-dung/hang-loat",
                         json=other_user_ids,
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if resp.status_code == 200:
                         users_list = resp.json().get("data", [])

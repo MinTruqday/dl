@@ -6,6 +6,7 @@ import zipfile
 from datetime import datetime, timezone
 from typing import Any, List
 
+import httpx
 from bson import ObjectId
 from fastapi import HTTPException, Query, status
 from loguru import logger
@@ -241,9 +242,7 @@ class DocumentService:
         )
         if settings.NOTIFICATION_URL:
             try:
-                import httpx
-
-                async with httpx.AsyncClient() as client:
+                async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                     await client.post(
                         f"{settings.NOTIFICATION_URL}/thong-bao/kich-hoat",
                         json={
@@ -252,7 +251,6 @@ class DocumentService:
                             "body": "The specified document content has been successfully synchronized and updated",
                             "type": "DOCUMENT_UPDATE",
                         },
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
             except Exception as e:
                 logger.error(f"Lỗi gửi chuỗi thông báo cập nhật tài liệu: {e}")
@@ -527,14 +525,11 @@ class DocumentService:
         if not document:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
-        import httpx
-
         target_user = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
@@ -615,14 +610,11 @@ class DocumentService:
             document["views"] = document.get("views", 0) + 1
         document = serialize_document(document)
 
-        import httpx
-
         author = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/{document['creator_id']}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     author = resp.json().get("data")
@@ -931,14 +923,11 @@ class DocumentService:
                 status_code=404,
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
-        import httpx
-
         target = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/{new_owner_id}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     target = resp.json().get("data")

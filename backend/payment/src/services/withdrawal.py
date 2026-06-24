@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import HTTPException
 from loguru import logger
 from src.schemas.wallet import Transaction, TransactionType
@@ -83,12 +84,9 @@ class WithdrawalService:
 
         user_info = {}
         try:
-            import httpx
-
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/{current_user.id}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     user_info = resp.json().get("data") or {}

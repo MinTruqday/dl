@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import HTTPException, Query, status
 from loguru import logger
 from src.schemas.wallet import Transaction, TransactionType
@@ -117,21 +118,18 @@ class WalletService:
                 await session.commit_transaction()
 
             try:
-                import httpx
+                from shared.infrastructure.configuration import settings as shared_settings
 
-                from shared.infrastructure.configuration import settings
-
-                if settings.NOTIFICATION_URL:
-                    async with httpx.AsyncClient() as client:
+                if shared_settings.NOTIFICATION_URL:
+                    async with httpx.AsyncClient(timeout=shared_settings.DEFAULT_HTTP_TIMEOUT) as client:
                         await client.post(
-                            f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",
+                            f"{shared_settings.NOTIFICATION_URL}/thong-bao/gui-di",
                             json={
                                 "target_user_id": str(current_user.id),
                                 "title": "Deposit transaction completed",
                                 "body": "Your digital wallet has been successfully credited with the requested bonus balance",
                                 "type": "topup",
                             },
-                            timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
             except Exception as e:
                 logger.warning(f"Lỗi gửi thông báo thành công: {e}")

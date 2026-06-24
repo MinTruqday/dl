@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -52,14 +53,11 @@ class CollaborationService:
                 status_code=404,
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
-        import httpx
-
         invitee = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{invitee_email}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     invitee = resp.json().get("data")
@@ -183,30 +181,30 @@ class CollaborationService:
             .to_list(length=100)
         )
         collaborators = []
-        for inv in invites:
-            import httpx
-
-            user_info = None
-            try:
-                async with httpx.AsyncClient() as client:
-                    resp = await client.get(
-                        f"{settings.MANAGEMENT_URL}/nguoi-dung/{inv['invitee_id']}",
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
-                    )
-                    if resp.status_code == 200:
-                        user_info = resp.json().get("data")
-            except Exception:
-                pass
-            if user_info:
-                collaborators.append(
-                    {
-                        "collaboration_id": inv["_id"],
-                        "user_id": inv["invitee_id"],
-                        "email": user_info.get("email", ""),
-                        "full_name": user_info.get("full_name", "User"),
-                        "role": inv.get("role", "editor"),
-                    }
-                )
+        try:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+                for inv in invites:
+                    user_info = None
+                    try:
+                        resp = await client.get(
+                            f"{settings.MANAGEMENT_URL}/nguoi-dung/{inv['invitee_id']}",
+                        )
+                        if resp.status_code == 200:
+                            user_info = resp.json().get("data")
+                    except Exception:
+                        pass
+                    if user_info:
+                        collaborators.append(
+                            {
+                                "collaboration_id": inv["_id"],
+                                "user_id": inv["invitee_id"],
+                                "email": user_info.get("email", ""),
+                                "full_name": user_info.get("full_name", "User"),
+                                "role": inv.get("role", "editor"),
+                            }
+                        )
+        except Exception:
+            pass
         return collaborators
 
     @staticmethod
@@ -298,14 +296,11 @@ class CollaborationService:
                 status_code=404,
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
-        import httpx
-
         target_user = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/{target_user_id}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")

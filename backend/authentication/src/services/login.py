@@ -3,6 +3,8 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import httpx
+
 from fastapi import HTTPException, status
 from loguru import logger
 from src.repositories.authentication import AuthenticationRepository
@@ -38,10 +40,8 @@ class SessionService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Tạo tài khoản tạm thời bị vô hiệu hóa",
             )
-        import httpx
-
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.post(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/",
                     json={
@@ -97,11 +97,9 @@ class SessionService:
     @staticmethod
     async def login_user(username: str, password: str, client_ip: str, db=None):
         is_email = "@" in username
-        import httpx
-
         user_doc = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 if is_email:
                     resp = await client.get(
                         f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{username}",
@@ -177,10 +175,8 @@ class SessionService:
 
     @staticmethod
     async def forgot_password(email: str, client_ip: str, db=None):
-        import httpx
-
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
@@ -288,9 +284,7 @@ class SessionService:
         google_client_id = settings.GOOGLE_CLIENT_ID
         google_client_secret = settings.GOOGLE_CLIENT_SECRET
         redirect_uri = settings.GOOGLE_REDIRECT_URI
-        import httpx
-
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
             token_resp = await client.post(
                 settings.GOOGLE_TOKEN_URL,
                 data={
@@ -312,10 +306,9 @@ class SessionService:
             google_user = user_resp.json()
         email = google_user.get("email")
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user_doc = resp.json().get("data") if resp.status_code == 200 else None
         except Exception:
@@ -327,10 +320,8 @@ class SessionService:
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Tạo tài khoản tạm thời bị vô hiệu hóa",
                 )
-            import httpx
-
             try:
-                async with httpx.AsyncClient() as client:
+                async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                     resp = await client.post(
                         f"{settings.MANAGEMENT_URL}/nguoi-dung/",
                         json={

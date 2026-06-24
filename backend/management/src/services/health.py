@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
@@ -122,9 +123,7 @@ class HealthService:
     async def get_system_health(db=None) -> dict:
         import os
 
-        import httpx
-
-        from shared.infrastructure.configuration import settings
+        from shared.infrastructure.configuration import settings as shared_settings
 
         if db is None:
             db = database.mongodb.get_default_database()
@@ -143,7 +142,7 @@ class HealthService:
         else:
             redis_status = "not_configured"
         rag_status = "unknown"
-        rag_url = settings.AGENTIC_AI_URL
+        rag_url = shared_settings.AGENTIC_AI_URL
         if rag_url:
             try:
                 async with httpx.AsyncClient(timeout=2.0) as client:
