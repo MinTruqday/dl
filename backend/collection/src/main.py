@@ -49,3 +49,17 @@ async def health_check():
         "status": "The automated data collection service is currently operating normally and functioning as expected",
         "service": "crawler",
     }
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    try:
+        from src.core.infrastructure.redis_client import redis_client
+        await redis_client.aclose()
+    except Exception:
+        pass
+    try:
+        from src.core.infrastructure.mq import mq
+        await mq.aclose()
+    except Exception:
+        pass

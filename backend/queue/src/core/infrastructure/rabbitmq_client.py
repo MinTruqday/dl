@@ -63,15 +63,19 @@ class RabbitMQCore:
             message = await queue.get(timeout=timeout)
             if message:
                 payload = json.loads(message.body.decode())
-                delivery_tag = str(message.delivery_tag)
-                # DO NOT AUTO-ACK HERE (Data Loss fix)
-                # Save message in memory so we can ACK it later
+                import uuid
+                ack_id = str(uuid.uuid4())
+                
                 if not hasattr(self, 'pending_acks'):
                     self.pending_acks = {}
-                self.pending_acks[delivery_tag] = message
+                self.pending_acks[ack_id] = message
+                
+                # Tạo background task để NACK nếu sau 5 phút không có ai ACK
+                asyncio.create_task(self._auto_nack_if_timeout(ack_id, delay=300))
+                
                 return {
                     "payload": payload,
-                    "delivery_tag": delivery_tag
+                    "delivery_tag": ack_id
                 }
             return None
         except aio_pika.exceptions.QueueEmpty:
@@ -80,10 +84,21 @@ class RabbitMQCore:
             logger.error(f"Lỗi lấy tin nhắn: {e}")
             return None
 
-    async def ack_message(self, delivery_tag: str):
+    async def _auto_nack_if_timeout(self, ack_id: str, delay: int):
+        await asyncio.sleep(delay)
+        if hasattr(self, 'pending_acks'):
+            message = self.pending_acks.pop(ack_id, None)
+            if message:
+                logger.warning(f"Timeout! Không thấy ai ACK, NACK tin nhắn {ack_id} để retry.")
+                try:
+                    await message.nack(requeue=True)
+                except Exception as e:
+                    logger.error(f"Lỗi NACK tin nhắn: {e}")
+
+    async def ack_message(self, ack_id: str):
         if not hasattr(self, 'pending_acks'):
             self.pending_acks = {}
-        message = self.pending_acks.pop(delivery_tag, None)
+        message = self.pending_acks.pop(ack_id, None)
         if message:
             try:
                 await message.ack()

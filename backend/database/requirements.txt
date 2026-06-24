@@ -14,3 +14,5 @@ loguru==0.7.2
 uuid6==2024.1.12
 Brotli==1.1.0
 aio-pika==9.4.0
+redis>=5.0.0
+tenacity>=8.0.0

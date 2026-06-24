@@ -6,3 +6,6 @@ loguru==0.7.0
 httpx==0.24.1
 aio-pika==9.4.1
 python-multipart==0.0.6
+redis>=5.0.0
+motor>=3.6.0
+tenacity>=8.0.0

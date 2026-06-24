@@ -6,11 +6,23 @@ from typing import Any, Dict, Optional
 class QueueAPIClient:
     def __init__(self, base_url: str = settings.QUEUE_URL):
         self.base_url = base_url
-        self._client = httpx.AsyncClient(base_url=self.base_url, timeout=10.0)
+        self._client = None
+
+    def get_client(self):
+        if self._client is None:
+            self._client = httpx.AsyncClient(base_url=self.base_url, timeout=10.0)
+        return self._client
+        self._client = None
+
+    def get_client(self):
+        if self._client is None:
+            self._client = httpx.AsyncClient(base_url=self.base_url, timeout=10.0)
+        return self._client
 
     async def _post(self, path: str, json_data: dict) -> dict:
         try:
-            response = await self._client.post(path, json=json_data)
+            client = self.get_client()
+            response = await client.post(path, json=json_data)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -19,7 +31,8 @@ class QueueAPIClient:
 
     async def _get(self, path: str, params: dict = None, timeout: int = 35) -> dict:
         try:
-            response = await self._client.get(path, params=params, timeout=timeout)
+            client = self.get_client()
+            response = await client.get(path, params=params, timeout=timeout)
             response.raise_for_status()
             return response.json()
         except httpx.ReadTimeout:

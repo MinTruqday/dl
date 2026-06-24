@@ -108,3 +108,17 @@ async def startup_event():
             logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
     except Exception as e:
         logger.exception(f"Lỗi khởi tạo chỉ mục cơ sở dữ liệu: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    try:
+        from src.core.infrastructure.redis_client import redis_client
+        await redis_client.aclose()
+    except Exception:
+        pass
+    try:
+        from src.core.infrastructure.mq import mq
+        await mq.aclose()
+    except Exception:
+        pass

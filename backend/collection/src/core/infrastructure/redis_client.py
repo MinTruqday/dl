@@ -19,7 +19,9 @@ class RedisAPIClient:
             response.raise_for_status()
             return response.json()
         except Exception as e:
-            return None
+            from loguru import logger
+            logger.error(f"Redis Cache Server Error at {path}: {e}")
+            raise Exception("Cache service unavailable")
 
     async def set(self, key: str, value: str):
         return await self._post("/set", {"key": key, "value": value})

@@ -38,3 +38,17 @@ def compile_document(payload: dict):
 
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
     return {"message": "Đã thêm tài liệu vào hàng đợi", "task_id": task.id}
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    try:
+        from src.core.infrastructure.redis_client import redis_client
+        await redis_client.aclose()
+    except Exception:
+        pass
+    try:
+        from src.core.infrastructure.mq import mq
+        await mq.aclose()
+    except Exception:
+        pass

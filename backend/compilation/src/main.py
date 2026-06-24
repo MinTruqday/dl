@@ -49,3 +49,17 @@ async def health_check():
         "status": "The document compilation service is currently operating normally and functioning as expected without any internal issues",
         "service": "document_compiler",
     }
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    try:
+        from src.core.infrastructure.redis_client import redis_client
+        await redis_client.aclose()
+    except Exception:
+        pass
+    try:
+        from src.core.infrastructure.mq import mq
+        await mq.aclose()
+    except Exception:
+        pass
