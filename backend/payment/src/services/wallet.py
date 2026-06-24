@@ -1,4 +1,5 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.mongo_client import mongo_client
 import json
 from datetime import datetime, timezone
 
@@ -15,7 +16,7 @@ class WalletService:
 
     @staticmethod
     async def get_balance(current_user):
-        wallet = await db_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
+        wallet = await mongo_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
         return {"balance": wallet.get("balance", 0) if wallet else 0}
 
     @staticmethod
@@ -24,39 +25,33 @@ class WalletService:
         lock_key = f"lock:coupon:{req.code}"
         is_locked = False
 
-        if database.redis:
-            user_rl_key = f"rl:coupon:{current_user.id}"
-            try:
-                attempts = await database.redis.incr(user_rl_key)
-                if attempts == 1:
-                    await database.redis.expire(user_rl_key, 300)
-                if attempts > 10:
-                    raise HTTPException(
-                        status_code=429,
-                        detail="Truy cập bị hạn chế, vui lòng thử lại sau 5 phút",
-                    )
-            except HTTPException:
-                raise
-            except Exception as e:
-                logger.error(f"Lỗi bộ đệm khi kiểm tra giới hạn: {e}")
-
-        if database.redis:
-            try:
-                is_locked = await database.redis.set(
-                    lock_key, "locked", nx=True, ex=10
-                )
-                if not is_locked:
-                    raise HTTPException(
-                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="Mã giảm giá đang được xử lý trong một giao dịch khác",
-                    )
-            except HTTPException:
-                raise
-            except Exception as e:
-                logger.error(f"Lỗi bảo mật phiên đăng nhập: {e}")
+        user_rl_key = f"rl:coupon:{current_user.id}"
+        try:
+            attempts = await redis_client.pipeline_incr_expire(user_rl_key, 300)
+            if attempts and attempts[0] > 10:
                 raise HTTPException(
-                    status_code=500, detail=f"Lỗi kết nối bộ đệm lưu trữ: {e}"
+                    status_code=429, detail='Too many requests')
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Lỗi bộ đệm khi kiểm tra giới hạn: {e}")
+
+        try:
+            is_locked = await redis_client.set(
+                lock_key, "locked"
+            )
+            if not is_locked:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Mã giảm giá đang được xử lý trong một giao dịch khác",
                 )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Lỗi bảo mật phiên đăng nhập: {e}")
+            raise HTTPException(
+                status_code=500, detail=f"Lỗi kết nối bộ đệm lưu trữ: {e}"
+            )
 
         if session is None:
             session = await database.mongodb.start_session()
@@ -148,9 +143,9 @@ class WalletService:
         finally:
             if should_close_session:
                 await session.end_session()
-            if database.redis and is_locked:
+            if redis_client and is_locked:
                 try:
-                    await database.redis.delete(lock_key)
+                    await redis_client.delete(lock_key)
                 except Exception as e:
                     logger.error(f"Lỗi mở khóa phiên bảo mật: {e}")
 
@@ -172,7 +167,7 @@ class WalletService:
                 }
             except Exception as e:
                 logger.warning(f"Lỗi định dạng phân trang: {e}")
-        txs = await db_client.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit)
+        txs = await mongo_client.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit)
         type_translations = {
             "topup": "Deposit",
             "purchase": "Document Purchase",

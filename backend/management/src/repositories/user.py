@@ -1,4 +1,4 @@
-from src.core.infrastructure.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,20 +11,20 @@ class UserRepository:
 
     @classmethod
     async def update_one(cls, *args, **kwargs):
-        return await db_client.update_one("users", *args, **kwargs)
+        return await mongo_client.update_one("users", *args, **kwargs)
 
     @classmethod
     async def find_one(cls, *args, **kwargs):
-        return await db_client.find_one("users", *args, **kwargs)
+        return await mongo_client.find_one("users", *args, **kwargs)
 
     @classmethod
     async def count_documents(cls, *args, **kwargs):
-        return await db_client.count_documents("users", *args, **kwargs)
+        return await mongo_client.count_documents("users", *args, **kwargs)
 
     @classmethod
     async def update_many(cls, *args, **kwargs):
-        return await db_client.update_many("users", *args, **kwargs)
+        return await mongo_client.update_many("users", *args, **kwargs)
 
     @classmethod
     async def insert_one(cls, *args, **kwargs):
-        return await db_client.insert_one("users", *args, **kwargs)
+        return await mongo_client.insert_one("users", *args, **kwargs)

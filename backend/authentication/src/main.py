@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.session import router as auth
 from src.api.passkey import router as passkey
+from src.api.google import router as google
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db

@@ -1,4 +1,5 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.mongo_client import mongo_client
 import json
 import math
 from datetime import datetime, timezone
@@ -14,7 +15,7 @@ from src.schemas.quota import QuotaLimit
 class QuotaService:
     @staticmethod
     async def get_global_config_from_db() -> dict:
-        config = await db_client.find_one(collection="quota_configs", query={"_id": "global"})
+        config = await mongo_client.find_one(collection="quota_configs", query={"_id": "global"})
         if config and "role_limits" in config:
             return config["role_limits"]
 
@@ -95,7 +96,7 @@ class QuotaService:
         limits = await QuotaService.get_user_limits(user_id, role, ai_tier)
 
         req_key = f"quota:{user_id}:{feature}:req"
-        current_reqs = await database.redis.get(req_key)
+        current_reqs = await redis_client.get(req_key)
         current_reqs = int(current_reqs) if current_reqs else 0
 
         if current_reqs >= limits.daily_requests:
@@ -104,7 +105,7 @@ class QuotaService:
             )
 
         token_key = f"quota:{user_id}:{feature}:token"
-        current_tokens = await database.redis.get(token_key)
+        current_tokens = await redis_client.get(token_key)
         current_tokens = int(current_tokens) if current_tokens else 0
 
         if current_tokens >= limits.daily_tokens:
@@ -118,9 +119,9 @@ class QuotaService:
         user_id: str, feature: str = "chat", req_reset_hours: int = 24
     ):
         req_key = f"quota:{user_id}:{feature}:req"
-        current = await database.redis.incr(req_key)
+        current = await redis_client.incr(req_key)
         if current == 1:
-            await database.redis.expire(req_key, req_reset_hours * 3600)
+            await redis_client.expire(req_key, req_reset_hours * 3600)
 
     @staticmethod
     async def consume_tokens(
@@ -132,9 +133,9 @@ class QuotaService:
         if tokens <= 0:
             return
         token_key = f"quota:{user_id}:{feature}:token"
-        current = await database.redis.incrby(token_key, tokens)
+        current = await redis_client.incrby(token_key, tokens)
         if current == tokens:
-            await database.redis.expire(token_key, req_reset_hours * 3600)
+            await redis_client.expire(token_key, req_reset_hours * 3600)
 
     @staticmethod
     async def get_current_usage(
@@ -143,8 +144,8 @@ class QuotaService:
         limits = await QuotaService.get_user_limits(user_id, role, ai_tier)
         req_key = f"quota:{user_id}:{feature}:req"
         token_key = f"quota:{user_id}:{feature}:token"
-        used_reqs = int(await database.redis.get(req_key) or 0)
-        used_tokens = int(await database.redis.get(token_key) or 0)
+        used_reqs = int(await redis_client.get(req_key) or 0)
+        used_tokens = int(await redis_client.get(token_key) or 0)
         return {
             "limit_requests": (
                 limits.daily_requests if limits.daily_requests != math.inf else -1

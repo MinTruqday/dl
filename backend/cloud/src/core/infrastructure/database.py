@@ -1,8 +1,7 @@
+from src.core.infrastructure.redis_client import redis_client
 import asyncio
 import os
 
-import aio_pika
-import redis.asyncio as aioredis
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
@@ -11,8 +10,6 @@ from src.core.infrastructure.configuration import settings
 class DatabaseInfrastructure:
     def __init__(self):
         self.mongodb = None
-        self.redis = None
-        self.rabbitmq = None
 
 
 database = DatabaseInfrastructure()
@@ -20,10 +17,8 @@ database = DatabaseInfrastructure()
 
 async def init_db():
     mongo_uri = settings.MONGODB_URI
-    redis_uri = settings.REDIS_URI
-    rabbitmq_uri = settings.RABBITMQ_URI
 
-    if not mongo_uri or not redis_uri or not rabbitmq_uri:
+    if not mongo_uri :
         logger.error("Lỗi khởi tạo do thiếu kết nối cơ sở dữ liệu")
         import sys
 
@@ -52,12 +47,9 @@ async def init_db():
         except Exception as e:
             logger.warning(f"Lỗi khởi tạo cụm cơ sở dữ liệu chính: {e}")
 
-    database.redis = aioredis.from_url(redis_uri, decode_responses=True)
-
     max_retries = 5
     for i in range(max_retries):
         try:
-            database.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
             logger.info("Kết nối hàng đợi tin nhắn nền ổn định")
             break
         except Exception as e:
@@ -161,7 +153,4 @@ async def setup_indexes():
 async def close_db():
     if database.mongodb:
         database.mongodb.close()
-    if database.redis:
-        await database.redis.close()
-    if database.rabbitmq:
-        await database.rabbitmq.close()
+

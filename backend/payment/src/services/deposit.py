@@ -1,4 +1,5 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.mongo_client import mongo_client
 import hashlib
 import hmac
 import json
@@ -35,7 +36,7 @@ class DepositService:
 
         while True:
             order_code = random.randint(100000000, 2147483647)
-            if not await db_client.find_one(collection="orders", query={"order_code": order_code}):
+            if not await mongo_client.find_one(collection="orders", query={"order_code": order_code}):
                 break
 
         description = f"DL{order_code}"
@@ -175,7 +176,7 @@ class DepositService:
 
     @staticmethod
     async def verify_deposit(order_code: int, current_user):
-        order = await db_client.find_one(collection="orders", query={"order_code": order_code})
+        order = await mongo_client.find_one(collection="orders", query={"order_code": order_code})
         if not order:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy giao dịch nạp tiền"
@@ -188,9 +189,9 @@ class DepositService:
         if getattr(database, "redis", None):
             rl_key = f"rl:verify_deposit:{current_user.id}"
             try:
-                attempts = await database.redis.incr(rl_key)
+                attempts = await redis_client.incr(rl_key)
                 if attempts == 1:
-                    await database.redis.expire(rl_key, 60)
+                    await redis_client.expire(rl_key, 60)
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,

@@ -1,4 +1,18 @@
 services:
+  doclib_cache:
+    build:
+      context: ./backend
+      dockerfile: cache/Dockerfile
+    container_name: doclib_cache
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8801:8000"
+    depends_on:
+      - redis
+    networks:
+      - doclib_network
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: doclib_flaresolverr
@@ -276,7 +290,7 @@ services:
     environment:
       - SERVICE_DB_NAME=doclib_collection
     depends_on:
-      - rabbitmq
+      - queue
       - mongodb
       - redis
       - minio
@@ -303,7 +317,7 @@ services:
     environment:
       - SERVICE_DB_NAME=doclib_compilation
     depends_on:
-      - rabbitmq
+      - queue
       - mongodb
       - redis
     volumes:
@@ -331,7 +345,7 @@ services:
     depends_on:
       - mongodb
       - redis
-      - rabbitmq
+      - queue
     volumes:
       - ./backend/authentication/src:/app/src
       - ./backend/logs/authentication:/app/logs
@@ -357,7 +371,7 @@ services:
     depends_on:
       - mongodb
       - redis
-      - rabbitmq
+      - queue
     volumes:
       - ./backend/management/src:/app/src
       - ./backend/logs/management:/app/logs
@@ -407,7 +421,7 @@ services:
     depends_on:
       - mongodb
       - redis
-      - rabbitmq
+      - queue
     volumes:
       - ./backend/messaging/src:/app/src
       - ./backend/logs/messaging:/app/logs
@@ -433,7 +447,7 @@ services:
     depends_on:
       - mongodb
       - redis
-      - rabbitmq
+      - queue
       - minio
     volumes:
       - ./backend/content/src:/app/src
@@ -460,7 +474,7 @@ services:
     depends_on:
       - mongodb
       - redis
-      - rabbitmq
+      - queue
       - minio
     volumes:
       - ./backend/cloud/src:/app/src
@@ -512,6 +526,21 @@ services:
     volumes:
       - ./backend/drm/src:/app/src
       - ./backend/logs/drm:/app/logs
+    networks:
+      - doclib_network
+
+  queue:
+    build:
+      context: ./backend
+      dockerfile: ./queue/Dockerfile
+    container_name: doclib_queue
+    restart: always
+    ports:
+      - "8802:8802"
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
     networks:
       - doclib_network
 

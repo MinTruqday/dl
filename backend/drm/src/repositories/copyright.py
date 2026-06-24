@@ -1,4 +1,4 @@
-from src.core.infrastructure.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,4 +11,4 @@ class CopyrightRepository:
 
     @classmethod
     async def update_dispute(cls, *args, **kwargs):
-        return await db_client.update_one("copyright_disputes", *args, **kwargs)
+        return await mongo_client.update_one("copyright_disputes", *args, **kwargs)

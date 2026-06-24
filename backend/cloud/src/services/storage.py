@@ -1,4 +1,4 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 from datetime import datetime, timezone
 from typing import List, Optional
 

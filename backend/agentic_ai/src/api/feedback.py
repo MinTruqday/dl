@@ -1,4 +1,4 @@
-from src.core.infrastructure.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 from datetime import datetime, timezone
 
 from fastapi import APIRouter
@@ -26,7 +26,7 @@ async def submit_feedback(req: FeedbackRequest):
             "created_at": datetime.now(timezone.utc),
         }
 
-        await db_client.insert_one(collection="rag_feedback", document=feedback_doc)
+        await mongo_client.insert_one(collection="rag_feedback", document=feedback_doc)
         client.close()
         logger.info("Lưu phản hồi thành công")
         return {

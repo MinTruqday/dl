@@ -1,4 +1,4 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 import os
 
 from loguru import logger
@@ -15,7 +15,7 @@ class Database:
 
     async def insert_document(self, document_data: dict):
         try:
-            res = await db_client.insert_one("db_client", collection="documents", document=document_data)
+            res = await mongo_client.insert_one("db_client", collection="documents", document=document_data)
             logger.info("Tạo bản ghi tài liệu thành công")
             return str(res.inserted_id)
         except Exception as e:

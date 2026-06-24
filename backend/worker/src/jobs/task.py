@@ -8,10 +8,10 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-CELERY_BROKER_URL = settings.RABBITMQ_URI
+CELERY_BROKER_URL = settings.REDIS_URI
 CELERY_RESULT_BACKEND = settings.REDIS_URI
 
-from kombu import Exchange, QueueCore
+from kombu import Exchange, Queue
 
 celery_app = Celery(
     "doclib_tasks", broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND
@@ -23,7 +23,7 @@ celery_app.conf.worker_task_log_format = "%(asctime)s | %(levelname)s | %(messag
 celery_app.conf.worker_log_color = False
 
 celery_app.conf.task_queues = (
-    QueueCore(
+    Queue(
         "celery",
         Exchange("celery"),
         routing_key="celery",
@@ -32,7 +32,7 @@ celery_app.conf.task_queues = (
             "x-dead-letter-routing-key": "dlq",
         },
     ),
-    QueueCore("dlq", Exchange("dlx"), routing_key="dlq"),
+    Queue("dlq", Exchange("dlx"), routing_key="dlq"),
 )
 
 

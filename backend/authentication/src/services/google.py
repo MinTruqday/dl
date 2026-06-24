@@ -3,7 +3,7 @@ import secrets
 from fastapi import HTTPException, status
 from loguru import logger
 from src.core.infrastructure.configuration import settings
-from src.repositories.authentication import AuthenticationRepository
+from src.repositories.identity import IdentityRepository as AuthenticationRepository
 
 class GoogleService:
     @staticmethod

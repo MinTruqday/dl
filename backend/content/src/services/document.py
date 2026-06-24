@@ -1,4 +1,5 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.mongo_client import mongo_client
 import io
 import json
 import os
@@ -258,10 +259,10 @@ class DocumentService:
 
         logger.info("Cập nhật nội dung tài liệu thành công")
 
-        if hasattr(database, "redis") and database.redis:
-            await database.redis.delete(f"document:{document_id}")
+        if redis_client:
+            await redis_client.delete(f"document:{document_id}")
             if document.get("slug"):
-                await database.redis.delete(f"document:slug:{document.get('slug')}")
+                await redis_client.delete(f"document:slug:{document.get('slug')}")
 
         return serialize_document(await docs_collection.find_one({"_id": document_id}))
 
@@ -318,10 +319,10 @@ class DocumentService:
             update_data["updated_at"] = datetime.now(timezone.utc)
             await docs_col.update_one({"_id": document_id}, {"$set": update_data})
 
-        if hasattr(database, "redis") and database.redis:
-            await database.redis.delete(f"document:{document_id}")
+        if redis_client:
+            await redis_client.delete(f"document:{document_id}")
             if doc.get("slug"):
-                await database.redis.delete(f"document:slug:{doc.get('slug')}")
+                await redis_client.delete(f"document:slug:{doc.get('slug')}")
 
         return serialize_document(await docs_col.find_one({"_id": document_id}))
 
@@ -392,9 +393,9 @@ class DocumentService:
                 }
 
             rl_key = None
-            if hasattr(database, "redis") and database.redis:
+            if redis_client:
                 rl_key = f"rl:unlock:{document_id}:{user_id or 'guest'}"
-                attempts = await database.redis.get(rl_key)
+                attempts = await redis_client.get(rl_key)
                 if attempts and int(attempts) >= 5:
                     raise HTTPException(
                         status_code=429,
@@ -403,16 +404,16 @@ class DocumentService:
 
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             if not pwd_context.verify(password, document.get("access_password_hash")):
-                if rl_key and hasattr(database, "redis") and database.redis:
-                    await database.redis.incr(rl_key)
-                    await database.redis.expire(rl_key, 900)
+                if rl_key and redis_client:
+                    await redis_client.incr(rl_key)
+                    await redis_client.expire(rl_key, 900)
                 raise HTTPException(
                     status_code=403,
                     detail="Thông tin xác thực không khớp với hồ sơ bảo mật tài liệu",
                 )
 
-            if rl_key and hasattr(database, "redis") and database.redis:
-                await database.redis.delete(rl_key)
+            if rl_key and redis_client:
+                await redis_client.delete(rl_key)
 
         document = serialize_document(document)
 
@@ -422,9 +423,9 @@ class DocumentService:
             aes_key = AESGCM.generate_key(bit_length=256)
             import base64
             b64_key = base64.b64encode(aes_key).decode('utf-8')
-            if hasattr(database, "redis") and database.redis:
+            if redis_client:
                 uid_str = user_id or "guest"
-                await database.redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
+                await redis_client.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
         except ImportError:
             pass
 
@@ -597,12 +598,12 @@ class DocumentService:
         should_increment = True
         if user_id == document.get("creator_id"):
             should_increment = False
-        elif hasattr(database, "redis") and database.redis:
+        elif redis_client:
             cache_key = f"viewed:{user_id or 'guest'}:{document['_id']}"
-            if await database.redis.get(cache_key):
+            if await redis_client.get(cache_key):
                 should_increment = False
             else:
-                await database.redis.setex(cache_key, 600, "1")
+                await redis_client.setex(cache_key, 600, "1")
 
         if should_increment:
             await docs_collection.update_one(
@@ -635,9 +636,9 @@ class DocumentService:
             aes_key = AESGCM.generate_key(bit_length=256)
             import base64
             b64_key = base64.b64encode(aes_key).decode('utf-8')
-            if hasattr(database, "redis") and database.redis:
+            if redis_client:
                 uid_str = user_id or "guest"
-                await database.redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
+                await redis_client.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
         except ImportError:
             pass
         
@@ -650,8 +651,8 @@ class DocumentService:
     @staticmethod
     async def get_document_decryption_key(document_id: str, current_user):
         user_id = str(current_user.id) if current_user else "guest"
-        if hasattr(database, "redis") and database.redis:
-            b64_key = await database.redis.get(f"aes_key:{document_id}:{user_id}")
+        if redis_client:
+            b64_key = await redis_client.get(f"aes_key:{document_id}:{user_id}")
             if b64_key:
                 return {"key": b64_key.decode('utf-8') if isinstance(b64_key, bytes) else b64_key}
         raise HTTPException(status_code=403, detail="Khóa giải mã không tồn tại hoặc đã hết hạn")
@@ -845,7 +846,7 @@ class DocumentService:
         query = {"creator_id": str(current_user.id)}
         if parent_id:
             query["parent_id"] = parent_id
-        cursor = db_client.query("workspace_folders").filter(query).sort("created_at", 1)
+        cursor = mongo_client.query("workspace_folders").filter(query).sort("created_at", 1)
         folders = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         for f in folders:
             f["_id"] = str(f["_id"])
@@ -861,7 +862,7 @@ class DocumentService:
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
         }
-        res = await db_client.insert_one(collection="workspace_folders", document=folder_doc)
+        res = await mongo_client.insert_one(collection="workspace_folders", document=folder_doc)
         folder_doc["_id"] = str(res.inserted_id)
         return folder_doc
 
@@ -873,7 +874,7 @@ class DocumentService:
         )
         if not folder:
             raise HTTPException(status_code=404, detail="Không tìm thấy thư mục làm việc")
-        await db_client.delete_one(collection="workspace_folders", filter={"_id": folder_id})
+        await mongo_client.delete_one(collection="workspace_folders", filter={"_id": folder_id})
         await db["documents"].update_many(
             {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
         )
@@ -934,7 +935,7 @@ class DocumentService:
     @staticmethod
     async def get_document_analytics(document_id: str, current_user):
         
-        doc = await db_client.find_one(collection="documents", query={"_id": document_id})
+        doc = await mongo_client.find_one(collection="documents", query={"_id": document_id})
         if not doc:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
@@ -943,7 +944,7 @@ class DocumentService:
         content = doc.get("content", "")
         total_words = len(content.split()) if content else 0
         avg_read_time_min = max(1, total_words // 200)
-        bookmark_count = await db_client.count_documents(collection="bookmarks", filter={"document_id": document_id})
+        bookmark_count = await mongo_client.count_documents(collection="bookmarks", filter={"document_id": document_id})
         purchase_count = await db["transactions"].count_documents(
             {"reference_id": document_id, "type": {"$in": ["purchase", "receive"]}}
         )
@@ -959,7 +960,7 @@ class DocumentService:
     @staticmethod
     async def get_document_academic(document_id: str, current_user):
         
-        doc = await db_client.find_one(collection="documents", query={"_id": document_id})
+        doc = await mongo_client.find_one(collection="documents", query={"_id": document_id})
         if not doc:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài liệu trong kho chính"

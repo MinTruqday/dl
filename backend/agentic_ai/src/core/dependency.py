@@ -1,3 +1,4 @@
+from src.core.infrastructure.redis_client import redis_client
 import time
 from typing import List, Optional
 
@@ -45,8 +46,6 @@ from src.core.security.access import ALGORITHM, SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-
-
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -69,13 +68,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         logger.warning("Thiếu UID trong token")
         raise credentials_exception
 
-    if database.redis:
-        is_valid_session = await database.redis.sismember(
-            f"user_sessions:{uid}", session_id
-        )
-        if not is_valid_session:
-            logger.warning("Ngăn chặn truy cập phiên đăng nhập đã hủy")
-            raise credentials_exception
+    is_valid_session = await redis_client.sismember(
+        f"user_sessions:{uid}", session_id
+    )
+    if not is_valid_session:
+        logger.warning("Ngăn chặn truy cập phiên đăng nhập đã hủy")
+        raise credentials_exception
 
     user_doc = {
         "_id": uid,
@@ -134,24 +132,17 @@ class RateLimiting:
     async def __call__(self, request: Request):
         if settings.SERVICE_DB_NAME == "doclib_test":
             return True
-        if not database.redis:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Tính năng đang bảo trì, vui lòng thử lại sau",
-            )
+
         client_ip = request.client.host if request.client else "unknown"
         path = request.url.path
         key = f"rate_limit:{client_ip}:{path}"
-        current = await database.redis.get(key)
+        current = await redis_client.get(key)
         if current is not None and int(current) >= self.calls:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="Vượt quá giới hạn yêu cầu, tạm thời bị hạn chế truy cập",
             )
-        pipe = database.redis.pipeline()
-        pipe.incr(key)
-        pipe.expire(key, self.period)
-        await pipe.execute()
+        await redis_client.pipeline_incr_expire(key, self.period)
         return True
 
 

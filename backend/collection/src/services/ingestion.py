@@ -1,11 +1,11 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 import os
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
-from src.core.queue import mq_client
+from src.core.infrastructure.queue_client import queue_client as mq_client
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
@@ -57,8 +57,6 @@ async def trigger_collection(req: Collection):
 
 async def stop_collection():
     try:
-        if mq_client.channel:
-            await mq_client.channel.close()
         logger.info("Tạm dừng quá trình thu thập dữ liệu thành công")
         return {
             "status": "success",

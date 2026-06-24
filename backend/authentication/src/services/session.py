@@ -7,13 +7,13 @@ import httpx
 
 from fastapi import HTTPException, status
 from loguru import logger
-from src.repositories.authentication import AuthenticationRepository
+from src.repositories.identity import IdentityRepository as AuthenticationRepository
 from src.services.email import EmailService
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.schemas.authentication import Role, UserCreate, UserInDB
+from src.schemas.identity import Role, UserCreate, UserInDB
 from src.core.security.access import create_access_token, get_password_hash, verify_password
 
 

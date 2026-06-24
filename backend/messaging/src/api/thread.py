@@ -1,3 +1,4 @@
+from src.core.infrastructure.redis_client import redis_client
 import json
 from typing import Any, List
 
@@ -29,8 +30,7 @@ async def publish_personal_message(message: dict, receiver_id: str):
         if group:
             targets = group.get("members", [])
     for target_id in targets:
-        if database.redis:
-            await database.redis.publish(f"message_delivery:{target_id}", payload)
+        await redis_client.publish(f"message_delivery:{target_id}", payload)
 
 
 @router.post("/", response_model=APIResponse[Any])

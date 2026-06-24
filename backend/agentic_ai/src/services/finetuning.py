@@ -1,4 +1,4 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 import asyncio
 import json
 import threading
@@ -462,7 +462,7 @@ async def list_jobs(user_id: str):
 
 
 async def get_job(job_id: str, user_id: str):
-    job = await db_client.find_one("finetune_jobs", {"_id": job_id, "user_id": user_id})
+    job = await mongo_client.find_one("finetune_jobs", {"_id": job_id, "user_id": user_id})
     if not job:
         raise HTTPException(status_code=404, detail="Không tìm thấy tác vụ huấn luyện")
     return job

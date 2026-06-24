@@ -1,15 +1,15 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 from src.core.dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
-from src.services.login import SessionService
+from src.services.session import SessionService
 
-from src.core.dependency import RateLimiting, get_current_user, get_db
+from src.core.dependency import RateLimiting, get_current_user
 from src.core.response import APIResponse
-from src.schemas.authentication import (
+from src.schemas.identity import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     UserCreate,
@@ -23,9 +23,9 @@ router = APIRouter(prefix="/xac-thuc")
 
 @router.get("/ca-nhan", response_model=APIResponse[UserResponse])
 async def read_users_me(
-    current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
+    current_user: CurrentUser = Depends(get_current_user)
 ):
-    user_doc = await db_client.find_one(collection="users", query={"_id": current_user.id})
+    user_doc = await mongo_client.find_one(collection="users", query={"_id": current_user.id})
     if not user_doc:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
@@ -52,7 +52,7 @@ async def read_users_me(
     dependencies=[Depends(RateLimiting(calls=3, period=60))],
 )
 async def register_user(
-    user_in: UserCreate, request: Request, db=Depends(get_db)
+    user_in: UserCreate, request: Request
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
@@ -70,7 +70,6 @@ async def register_user(
 async def login(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db=Depends(get_db),
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
@@ -84,7 +83,7 @@ async def login(
 
 @router.post("/quen-mat-khau", response_model=APIResponse[Any])
 async def forgot_password(
-    payload: ForgotPasswordRequest, request: Request, db=Depends(get_db)
+    payload: ForgotPasswordRequest, request: Request
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
@@ -96,7 +95,7 @@ async def forgot_password(
 
 @router.post("/dat-lai-mat-khau", response_model=APIResponse[Any])
 async def reset_password(
-    payload: ResetPasswordRequest, request: Request, db=Depends(get_db)
+    payload: ResetPasswordRequest, request: Request
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
@@ -110,7 +109,7 @@ async def reset_password(
 
 @router.post("/xac-nhan-ma", response_model=APIResponse[Any])
 async def verify_code(
-    payload: VerifyCodeRequest, request: Request, db=Depends(get_db)
+    payload: VerifyCodeRequest, request: Request
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(

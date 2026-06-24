@@ -1,4 +1,5 @@
-from src.core.infrastructure.api_client import db_client
+from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.mongo_client import mongo_client
 import uuid
 from datetime import datetime, timezone
 
@@ -123,14 +124,11 @@ class HealthService:
         except Exception:
             db_status = "disconnected"
         redis_status = "disconnected"
-        if database.redis:
-            try:
-                await database.redis.ping()
-                redis_status = "connected"
-            except Exception:
-                redis_status = "error"
-        else:
-            redis_status = "not_configured"
+        try:
+            await redis_client.get("ping_test")
+            redis_status = "connected"
+        except Exception:
+            redis_status = "error"
         rag_status = "unknown"
         rag_url = shared_settings.AGENTIC_AI_URL
         if rag_url:

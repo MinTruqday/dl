@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-from src.repositories.authentication import AuthenticationRepository
+from src.repositories.identity import IdentityRepository as AuthenticationRepository
 from webauthn import (
     generate_authentication_options,
     generate_registration_options,
@@ -31,7 +31,7 @@ from webauthn.helpers.structs import (
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.schemas.authentication import UserInDB
+from src.schemas.identity import UserInDB
 
 RP_ID = settings.PASSKEY_RP_ID
 RP_NAME = settings.PASSKEY_RP_NAME

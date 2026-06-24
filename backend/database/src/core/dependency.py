@@ -1,3 +1,4 @@
+from src.core.infrastructure.redis_client import redis_client
 import time
 from typing import List, Optional
 
@@ -72,8 +73,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         logger.warning("Thiếu UID trong token")
         raise credentials_exception
 
-    if database.redis:
-        is_valid_session = await database.redis.sismember(
+    if redis_client:
+        is_valid_session = await redis_client.sismember(
             f"user_sessions:{uid}", session_id
         )
         if not is_valid_session:
@@ -137,21 +138,17 @@ class RateLimiting:
     async def __call__(self, request: Request):
         if settings.SERVICE_DB_NAME == "doclib_test":
             return True
-        if not database.redis:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Tính năng đang bảo trì, vui lòng thử lại sau",
-            )
+
         client_ip = request.client.host if request.client else "unknown"
         path = request.url.path
         key = f"rate_limit:{client_ip}:{path}"
-        current = await database.redis.get(key)
+        current = await redis_client.get(key)
         if current is not None and int(current) >= self.calls:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="Vượt quá giới hạn yêu cầu, tạm thời bị hạn chế truy cập",
             )
-        pipe = database.redis.pipeline()
+        pipe = redis_client.pipeline()
         pipe.incr(key)
         pipe.expire(key, self.period)
         await pipe.execute()

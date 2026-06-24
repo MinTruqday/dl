@@ -17,7 +17,7 @@ from src.infrastructure.browser import (
     managed_browser,
 )
 from src.core.database import database
-from src.core.queue import mq_client
+from src.core.infrastructure.queue_client import queue_client as mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
 

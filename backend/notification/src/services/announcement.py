@@ -1,4 +1,5 @@
-from src.core.api_client import db_client
+from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.mongo_client import mongo_client
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
@@ -77,14 +78,12 @@ class AnnouncementService:
             "created_at": datetime.now(timezone.utc),
         }
         await NotificationRepository.insert_one(doc)
-        if database.redis:
-            try:
-                import json
-
-                await database.redis.publish(
-                    f"user_notifications:{data.target_user_id}",
-                    json.dumps({"title": data.title, "body": data.body}),
-                )
-            except Exception as e:
+        try:
+            import json
+            await redis_client.publish(
+                f"user_notifications:{data.target_user_id}",
+                json.dumps({"title": data.title, "body": data.body}),
+            )
+        except Exception as e:
                 logger.error(f"Lỗi gửi thông báo theo thời gian thực: {e}")
         return {"id": notif_id}

@@ -1,41 +1,13 @@
 import asyncio
-import json
-
 from loguru import logger
-from src.core.queue import mq_client
+from src.core.infrastructure.queue_client import queue_client
 from src.sources.anna import AnnaSource
 from src.sources.ctan import CtanSource
 from src.sources.nxbgd import NxbgdSource
 from src.sources.nxbst import NxbstSource
 
-
 async def run_worker():
-    await mq_client.connect()
-
-    async def process_msg(message, handler_func):
-        try:
-            async with message.process():
-                payload = json.loads(message.body.decode())
-                await handler_func(payload)
-        except Exception as e:
-            logger.error(f"Lỗi xử lý tin nhắn nền: {e}")
-            raise
-
-    await mq_client.channel.set_qos(prefetch_count=2)
-    semaphore = asyncio.Semaphore(2)
-
-    async def process_msg_with_sem(message, handler_func):
-        async with semaphore:
-            await process_msg(message, handler_func)
-
-    queue_list = await mq_client.channel.get_queue("collect_list_queue")
-    queue_detail = await mq_client.channel.get_queue("collect_detail_queue")
-    queue_download = await mq_client.channel.get_queue("download_processor_queue")
-    queue_format = await mq_client.channel.get_queue("format_converter_queue")
-    queue_nxbgd = await mq_client.channel.get_queue("nxbgd_queue")
-    queue_nxbst = await mq_client.channel.get_queue("nxbst_queue")
-    queue_anna = await mq_client.channel.get_queue("anna_archive_queue")
-    queue_ctan = await mq_client.channel.get_queue("ctan_queue")
+    logger.info("Khởi động nền tiêu thụ tin nhắn từ Queue Service")
 
     async def route_anna_collector(payload):
         pages = int(payload.get("pages", 0))
@@ -78,32 +50,29 @@ async def run_worker():
         else:
             await NxbstSource.run_list_collector(int(payload.get("pages", 0)))
 
-    await queue_anna.consume(lambda m: process_msg_with_sem(m, route_anna_collector))
-    await queue_ctan.consume(lambda m: process_msg_with_sem(m, route_ctan_collector))
-    await queue_list.consume(lambda m: process_msg_with_sem(m, route_list_collector))
-    await queue_detail.consume(
-        lambda m: process_msg_with_sem(m, route_detail_collector)
-    )
+    async def poll_queue(queue_name, handler_func):
+        while True:
+            try:
+                payload = await queue_client.consume(queue_name, timeout=30)
+                if payload:
+                    await handler_func(payload)
+            except Exception as e:
+                logger.error(f"Lỗi tiêu thụ tin nhắn từ {queue_name}: {e}")
+                await asyncio.sleep(5)
+            await asyncio.sleep(1)
 
-    await queue_download.consume(
-        lambda m: process_msg_with_sem(m, route_download_processor)
-    )
+    queues = {
+        "anna_archive_queue": route_anna_collector,
+        "ctan_queue": route_ctan_collector,
+        "collect_list_queue": route_list_collector,
+        "collect_detail_queue": route_detail_collector,
+        "download_processor_queue": route_download_processor,
+        "nxbgd_queue": lambda p: NxbgdSource(p.get("target_class", "-1")).execute(),
+        "nxbst_queue": route_nxbst_collector,
+    }
 
-    await queue_nxbgd.consume(
-        lambda m: process_msg_with_sem(
-            m, lambda p: NxbgdSource(p.get("target_class", "-1")).execute()
-        )
-    )
-    await queue_nxbst.consume(lambda m: process_msg_with_sem(m, route_nxbst_collector))
+    tasks = []
+    for q_name, handler in queues.items():
+        tasks.append(asyncio.create_task(poll_queue(q_name, handler)))
 
-    stop_event = asyncio.Event()
-
-    def signal_handler():
-        logger.info("Trình xử lý nền đang tắt")
-        stop_event.set()
-
-    await stop_event.wait()
-
-    logger.info("Đang đóng kết nối hàng đợi tin nhắn")
-    await mq_client.connection.close()
-    logger.info("Tắt thu thập dữ liệu thành công")
+    await asyncio.gather(*tasks)

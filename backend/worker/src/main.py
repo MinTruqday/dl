@@ -1,6 +1,6 @@
 import os
 
-import redis.asyncio as redis
+from src.core.infrastructure.redis_client import redis_client
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.response import JSONResponse
 from pydantic import BaseModel
@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from src.core.infrastructure.configuration import settings
 
 app = FastAPI(title="Background Task Service", version=settings.VERSION)
-cache = redis.from_url(settings.REDIS_URI, decode_responses=True)
+
 
 
 @app.exception_handler(Exception)
@@ -20,7 +20,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health")
 async def read_health():
-    await cache.ping()
+    await redis_client.get('health')
     return {
         "status": "The background processing service is currently operating normally and ready to accept incoming requests"
     }

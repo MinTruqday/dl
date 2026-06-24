@@ -1,4 +1,4 @@
-from src.core.infrastructure.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 from typing import Any, Dict, List, Optional
 
 from src.core.infrastructure.database import database
@@ -15,13 +15,13 @@ class DatabaseRepository:
         return db[self.collection_name]
 
     async def find_one(self, query: Dict[str, Any], **kwargs):
-        return await db_client.find_one("collection", query, **kwargs)
+        return await mongo_client.find_one("collection", query, **kwargs)
 
     def find(self, *args, **kwargs):
-        return db_client.query("collection").filter(*args, **kwargs)
+        return mongo_client.query("collection").filter(*args, **kwargs)
 
     async def insert_one(self, document: Dict[str, Any], **kwargs):
-        return await db_client.insert_one("collection", document, **kwargs)
+        return await mongo_client.insert_one("collection", document, **kwargs)
 
     async def insert_many(self, documents: List[Dict[str, Any]], **kwargs):
         return await self.collection.insert_many(documents, **kwargs)
@@ -29,24 +29,24 @@ class DatabaseRepository:
     async def update_one(
         self, filter: Dict[str, Any], update: Dict[str, Any], **kwargs
     ):
-        return await db_client.update_one("collection", filter, update, **kwargs)
+        return await mongo_client.update_one("collection", filter, update, **kwargs)
 
     async def update_many(
         self, filter: Dict[str, Any], update: Dict[str, Any], **kwargs
     ):
-        return await db_client.update_many("collection", filter, update, **kwargs)
+        return await mongo_client.update_many("collection", filter, update, **kwargs)
 
     async def delete_one(self, filter: Dict[str, Any], **kwargs):
-        return await db_client.delete_one("collection", filter, **kwargs)
+        return await mongo_client.delete_one("collection", filter, **kwargs)
 
     async def delete_many(self, filter: Dict[str, Any], **kwargs):
-        return await db_client.delete_many("collection", filter, **kwargs)
+        return await mongo_client.delete_many("collection", filter, **kwargs)
 
     async def count_documents(self, filter: Dict[str, Any], **kwargs) -> int:
-        return await db_client.count_documents("collection", filter, **kwargs)
+        return await mongo_client.count_documents("collection", filter, **kwargs)
 
     def aggregate(self, pipeline: List[Dict[str, Any]], **kwargs):
-        return db_client.aggregate("collection", pipeline, **kwargs)
+        return mongo_client.aggregate("collection", pipeline, **kwargs)
 
 
 class PaymentRepository:

@@ -1,4 +1,4 @@
-from src.core.infrastructure.api_client import db_client
+from src.core.infrastructure.mongo_client import mongo_client
 from typing import Optional, Dict, Any
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -13,16 +13,16 @@ class PricingRepository:
         query = {"_id": document_id}
         if creator_id:
             query["creator_id"] = creator_id
-        return await db_client.find_one("documents", query)
+        return await mongo_client.find_one("documents", query)
 
     @classmethod
     async def update_document(cls, document_id: str, update_query: Dict[str, Any]):
-        return await db_client.update_one("documents", {"_id": document_id}, update_query)
+        return await mongo_client.update_one("documents", {"_id": document_id}, update_query)
 
     @classmethod
     async def get_pricing_config(cls) -> Optional[Dict[str, Any]]:
-        return await db_client.find_one("system_config", {"_id": "pricing_tiers"})
+        return await mongo_client.find_one("system_config", {"_id": "pricing_tiers"})
 
     @classmethod
     async def update_pricing_config(cls, update_query: Dict[str, Any], upsert: bool = False):
-        return await db_client.update_one("system_config", {"_id": "pricing_tiers"}, update_query, upsert=upsert)
+        return await mongo_client.update_one("system_config", {"_id": "pricing_tiers"}, update_query, upsert=upsert)

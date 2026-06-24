@@ -14,7 +14,7 @@ from playwright.async_api import Response, async_playwright
 from playwright_stealth import stealth_async
 from src.infrastructure.browser import get_stealth_context, managed_browser
 from src.core.database import database
-from src.core.queue import mq_client
+from src.core.infrastructure.queue_client import queue_client as mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
 from uuid6 import uuid7
