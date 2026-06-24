@@ -22,7 +22,7 @@ async def create_coupon(
     db=Depends(get_db)
 ):
     return APIResponse(
-        data=await CouponService.create_coupon(req.model_dump(), current_user, db=db),
+        data=await CouponService.create_coupon(req.model_dump(), current_user),
         message="Tạo mã giảm giá thành công",
         status=201,
     )
@@ -37,7 +37,7 @@ async def get_all_coupons(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await CouponService.get_coupons(current_user, db=db),
+        data=await CouponService.get_coupons(current_user),
         message="Lấy danh sách mã giảm giá thành công",
         status=200,
     )
@@ -54,7 +54,7 @@ async def delete_coupon(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CouponService.delete_coupon(coupon_id, current_user, db=db),
+        data=await CouponService.delete_coupon(coupon_id, current_user),
         message="Xóa vĩnh viễn mã giảm giá thành công",
         status=200,
     )
@@ -72,7 +72,7 @@ async def validate_coupon(
 ):
     return APIResponse(
         data=await CouponService.validate_coupon(
-            code, current_user, document_id, db=db
+            code, current_user, document_id
         ),
         message="Kiểm tra mã ưu đãi thành công",
     )
@@ -90,7 +90,7 @@ async def approve_coupon(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CouponService.approve_coupon(coupon_id, action, current_user, db=db),
+        data=await CouponService.approve_coupon(coupon_id, action, current_user),
         message="Xử lý phê duyệt thành công",
     )
 
@@ -106,6 +106,6 @@ async def toggle_coupon_status(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await CouponService.toggle_coupon_status(coupon_id, current_user, db=db),
+        data=await CouponService.toggle_coupon_status(coupon_id, current_user),
         message="Cập nhật trạng thái thành công",
     )

@@ -19,7 +19,7 @@ router = APIRouter(prefix="/giam-sat")
 )
 async def get_stats(db=Depends(get_db)):
     return APIResponse(
-        data=await TelemetryService.get_system_stats(db=db),
+        data=await TelemetryService.get_system_stats(),
         message="Lấy thống kê hiệu suất thành công",
     )
 
@@ -31,7 +31,7 @@ async def get_stats(db=Depends(get_db)):
 )
 async def get_sys_health(db=Depends(get_db)):
     return APIResponse(
-        data=await TelemetryService.get_sys_health(db=db),
+        data=await TelemetryService.get_sys_health(),
         message="Hoàn tất kiểm tra",
     )
 
@@ -47,7 +47,7 @@ async def get_audit_logs(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await TelemetryService.get_activity_stats(days=30, db=db),
+        data=await TelemetryService.get_activity_stats(days=30),
         message="Lấy nhật ký thành công",
     )
 
@@ -61,6 +61,6 @@ async def get_activity(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await TelemetryService.get_activity_log(str(current_user.id), db=db),
+        data=await TelemetryService.get_activity_log(str(current_user.id)),
         message="Lấy nhật ký kiểm duyệt thành công",
     )

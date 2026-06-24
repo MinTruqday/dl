@@ -20,13 +20,10 @@ from src.repositories.chat import ChatRepository
 active_jobs = {}
 
 
-def get_db():
-    client = AsyncIOMotorClient(settings.MONGODB_URI)
-    return client.get_default_database()
 
 
 async def report_progress(job_id: str, data: dict):
-    db = get_db()
+    
     update_fields = {}
     for key in [
         "progress",
@@ -119,7 +116,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
 
 
 async def create_dataset(req: dict):
-    db = get_db()
+    
     doc = {
         "_id": str(uuid7()),
         "user_id": req.get("user_id"),
@@ -153,7 +150,7 @@ async def get_dataset(dataset_id: str, user_id: str):
 
 
 async def delete_dataset(dataset_id: str, user_id: str):
-    db = get_db()
+    
     result = await FinetuneRepository.delete_dataset(
         {"_id": dataset_id, "user_id": user_id}
     )
@@ -166,7 +163,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
 
 
 async def add_samples(dataset_id: str, req: dict):
-    db = get_db()
+    
     user_id = req.get("user_id")
     dataset = await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
@@ -202,7 +199,7 @@ async def get_samples(
     skip: int = 0,
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
 ):
-    db = get_db()
+    
     if not await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
@@ -218,7 +215,7 @@ async def get_samples(
 
 
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
-    db = get_db()
+    
     if not await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
@@ -240,7 +237,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
 
 
 async def import_feedback(req: dict):
-    db = get_db()
+    
     user_id = req.get("user_id")
     feedbacks = (
         await AgenticAIRepository.get("rag_feedback")
@@ -297,7 +294,7 @@ async def import_feedback(req: dict):
 
 
 async def import_documents(req: dict):
-    db = get_db()
+    
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
     ds_id = str(uuid7())
     await FinetuneRepository.insert_dataset(
@@ -376,7 +373,7 @@ async def import_documents(req: dict):
 
 
 async def create_job(req: dict):
-    db = get_db()
+    
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
     dataset = await FinetuneRepository.find_dataset(
         {"_id": ds_id, "user_id": user_id}
@@ -413,7 +410,7 @@ async def create_job(req: dict):
 
 
 async def start_job(job_id: str, req: dict):
-    db = get_db()
+    
     job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}
     )
@@ -472,7 +469,7 @@ async def get_job(job_id: str, user_id: str):
 
 
 async def cancel_job(job_id: str, req: dict):
-    db = get_db()
+    
     result = await FinetuneRepository.update_job(
         {
             "_id": job_id,
@@ -490,7 +487,7 @@ async def cancel_job(job_id: str, req: dict):
 
 
 async def deploy_model(job_id: str, req: dict):
-    db = get_db()
+    
     job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id"), "status": "completed"}
     )
@@ -560,7 +557,7 @@ async def deploy_model(job_id: str, req: dict):
 async def evaluate_model(job_id: str, req: dict):
     from src.harness.evaluation import evaluation
 
-    db = get_db()
+    
     job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}
     )

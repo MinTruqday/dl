@@ -41,8 +41,8 @@ ORIGIN = settings.PASSKEY_ALLOWED_ORIGINS
 class PasskeyService:
 
     @staticmethod
-    async def login_begin(email: str, db=None):
-        user = await AuthenticationRepository.get_auth_credential_by_email(email, db=db)
+    async def login_begin(email: str):
+        user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
         passkeys = user.get("passkeys", [])
@@ -66,12 +66,12 @@ class PasskeyService:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
         except Exception as e:
             logger.warning(f"Lỗi lưu trữ tạm thời mã xác thực: {e}")
-        await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge, db=db)
+        await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)
         return json.loads(options_to_json(options))
 
     @staticmethod
-    async def login_finish(email: str, credential_data: dict, db=None):
-        user = await AuthenticationRepository.get_auth_credential_by_email(email, db=db)
+    async def login_finish(email: str, credential_data: dict):
+        user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
         challenge = None
@@ -80,7 +80,7 @@ class PasskeyService:
         except Exception as e:
             logger.warning(f"Lỗi tải thông tin xác thực: {e}")
         if not challenge:
-            chal_doc = await AuthenticationRepository.get_passkey_challenge(email, db=db)
+            chal_doc = await AuthenticationRepository.get_passkey_challenge(email)
             if chal_doc:
                 age = (
                     datetime.now(timezone.utc)
@@ -115,9 +115,9 @@ class PasskeyService:
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Lỗi xác minh mã bảo mật: {e}")
         await AuthenticationRepository.update_passkey_sign_count(
-            user["_id"], credential_id_b64, verification.new_sign_count, db=db
+            user["_id"], credential_id_b64, verification.new_sign_count
         )
-        await AuthenticationRepository.delete_passkey_challenge(email, db=db)
+        await AuthenticationRepository.delete_passkey_challenge(email)
         try:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
         except Exception as e:
@@ -142,8 +142,8 @@ class PasskeyService:
         return await SessionService.issue_token_for_user(user_doc, "passkey_login")
 
     @staticmethod
-    async def register_begin(email: str, db=None):
-        user = await AuthenticationRepository.get_auth_credential_by_email(email, db=db)
+    async def register_begin(email: str):
+        user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
 
@@ -173,13 +173,13 @@ class PasskeyService:
         except Exception as e:
             logger.warning(f"Lỗi lưu trữ tạm thời mã xác thực: {e}")
             
-        await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge, db=db)
+        await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)
 
         return json.loads(options_to_json(options))
 
     @staticmethod
-    async def register_finish(email: str, credential_data: dict, db=None):
-        user = await AuthenticationRepository.get_auth_credential_by_email(email, db=db)
+    async def register_finish(email: str, credential_data: dict):
+        user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
 
@@ -190,7 +190,7 @@ class PasskeyService:
             logger.warning(f"Lỗi tải thông tin xác thực: {e}")
             
         if not challenge:
-            chal_doc = await AuthenticationRepository.get_passkey_challenge(email, db=db)
+            chal_doc = await AuthenticationRepository.get_passkey_challenge(email)
             if chal_doc:
                 age = (
                     datetime.now(timezone.utc)
@@ -221,14 +221,12 @@ class PasskeyService:
             "created_at": datetime.now(timezone.utc)
         }
 
-        if db is None:
-            db = database.mongodb.get_default_database()
         await db["auth_credentials"].update_one(
             {"_id": user["_id"]},
             {"$push": {"passkeys": new_passkey}}
         )
 
-        await AuthenticationRepository.delete_passkey_challenge(email, db=db)
+        await AuthenticationRepository.delete_passkey_challenge(email)
         try:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
         except Exception as e:

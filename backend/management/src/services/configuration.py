@@ -9,9 +9,7 @@ from src.core.infrastructure.database import database
 class ConfigurationService:
 
     @staticmethod
-    async def get_settings(current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_settings(current_user) -> dict:
         user = await db["users"].find_one(
             {"_id": str(current_user.id)}, {"settings": 1}
         )
@@ -32,9 +30,7 @@ class ConfigurationService:
         return defaults
 
     @staticmethod
-    async def update_settings(settings_data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def update_settings(settings_data: dict, current_user) -> dict:
         user_id = str(current_user.id)
         user = await db_client.find_one("users", {"_id": user_id}, {"settings": 1})
         current_settings = user.get("settings", {}) if user else {}

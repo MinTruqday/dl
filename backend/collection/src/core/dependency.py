@@ -46,9 +46,6 @@ from src.core.security.access import ALGORITHM, SECRET_KEY
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
-async def get_db():
-    return database.mongodb[settings.SERVICE_DB_NAME]
-
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(

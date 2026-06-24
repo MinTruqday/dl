@@ -64,10 +64,7 @@ class ThreadService:
         reply_to_id: str = None,
         audio_url: str = None,
         client_msg_id: str = None,
-        db=None,
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         sender_id = str(current_user.id)
         if client_msg_id:
             existing = await MessageRepository.find_one(
@@ -141,10 +138,7 @@ class ThreadService:
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         ),
         cursor: str = None,
-        db=None,
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         if other_user_id.startswith("group_"):
             query = {"receiver_id": other_user_id}
         else:
@@ -179,9 +173,7 @@ class ThreadService:
         return messages[::-1]
 
     @staticmethod
-    async def get_conversations(current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_conversations(current_user):
         conversations = (
             await ConversationRepository
             .find(
@@ -281,9 +273,7 @@ class ThreadService:
         return results
 
     @staticmethod
-    async def toggle_pin(message_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def toggle_pin(message_id: str, current_user):
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
             return None
@@ -317,9 +307,7 @@ class ThreadService:
         return await MessageRepository.find_one({"_id": message_id})
 
     @staticmethod
-    async def edit_message(message_id: str, new_content: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def edit_message(message_id: str, new_content: str, current_user):
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg or msg["sender_id"] != str(current_user.id):
             return None
@@ -359,9 +347,7 @@ class ThreadService:
         return updated_msg
 
     @staticmethod
-    async def recall_message(message_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def recall_message(message_id: str, current_user):
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg or msg["sender_id"] != str(current_user.id):
             return None
@@ -426,10 +412,8 @@ class ThreadService:
 
     @staticmethod
     async def search_messages(
-        other_user_id: str, query_str: str, current_user, db=None
+        other_user_id: str, query_str: str, current_user
     ) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
         query = {"$text": {"$search": query_str}, "is_recalled": False}
         if other_user_id.startswith("group_"):
             query["receiver_id"] = other_user_id
@@ -447,9 +431,7 @@ class ThreadService:
         return messages
 
     @staticmethod
-    async def delete_conversation(other_user_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def delete_conversation(other_user_id: str, current_user) -> dict:
         if other_user_id.startswith("group_"):
             group = await MessageRepository.find_group(
                 {"_id": other_user_id}
@@ -492,9 +474,7 @@ class ThreadService:
         return {"status": "success"}
 
     @staticmethod
-    async def add_reaction(message_id: str, reaction: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def add_reaction(message_id: str, reaction: str, current_user):
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
             return None
@@ -518,9 +498,7 @@ class ThreadService:
         return await MessageRepository.find_one({"_id": message_id})
 
     @staticmethod
-    async def mark_as_read(other_user_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def mark_as_read(other_user_id: str, current_user):
         user_id = str(current_user.id)
         participant_key = (
             other_user_id
@@ -578,9 +556,7 @@ class ThreadService:
         return {"status": "success"}
 
     @staticmethod
-    async def share_document(receiver_id: str, document_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def share_document(receiver_id: str, document_id: str, current_user):
         doc = await MessageRepository.find_shared_document({"_id": document_id})
         if not doc:
             return None
@@ -610,9 +586,7 @@ class ThreadService:
         return msg_dict
 
     @staticmethod
-    async def get_shared_attachments(other_user_id: str, current_user, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_shared_attachments(other_user_id: str, current_user) -> list:
         if other_user_id.startswith("group_"):
             query = {"receiver_id": other_user_id}
         else:
@@ -664,9 +638,7 @@ class ThreadService:
         return attachments
 
     @staticmethod
-    async def block_user(other_user_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def block_user(other_user_id: str, current_user) -> dict:
         await ContactProfileRepository.update_contact_profile(
             {"_id": str(current_user.id)},
             {"$addToSet": {"blocked_users": other_user_id}},
@@ -675,18 +647,14 @@ class ThreadService:
         return {"status": "blocked", "other_user_id": other_user_id}
 
     @staticmethod
-    async def unblock_user(other_user_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def unblock_user(other_user_id: str, current_user) -> dict:
         await ContactProfileRepository.update_contact_profile(
             {"_id": str(current_user.id)}, {"$pull": {"blocked_users": other_user_id}}
         )
         return {"status": "unblocked", "other_user_id": other_user_id}
 
     @staticmethod
-    async def check_blocked_status(user_id: str, other_user_id: str, db=None) -> bool:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def check_blocked_status(user_id: str, other_user_id: str) -> bool:
         user_doc = await ContactProfileRepository.find_contact_profile(
             {"_id": user_id}
         )
@@ -704,9 +672,7 @@ class ThreadService:
         return user_blocked_other or other_blocked_user
 
     @staticmethod
-    async def toggle_pin_conversation(other_user_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def toggle_pin_conversation(other_user_id: str, current_user):
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
@@ -731,10 +697,8 @@ class ThreadService:
 
     @staticmethod
     async def translate_message(
-        message_id: str, target_lang: str, current_user, db=None
+        message_id: str, target_lang: str, current_user
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
             return None
@@ -765,9 +729,7 @@ class ThreadService:
         }
 
     @staticmethod
-    async def create_group(group_name: str, member_ids: list, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def create_group(group_name: str, member_ids: list, current_user):
         from uuid6 import uuid7
 
         group_id = f"group_{uuid7()}"
@@ -783,9 +745,7 @@ class ThreadService:
         return group_doc
 
     @staticmethod
-    async def save_draft(other_user_id: str, content: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def save_draft(other_user_id: str, content: str, current_user):
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
@@ -799,9 +759,7 @@ class ThreadService:
         return {"status": "success"}
 
     @staticmethod
-    async def get_draft(other_user_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_draft(other_user_id: str, current_user):
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
@@ -815,10 +773,8 @@ class ThreadService:
 
     @staticmethod
     async def toggle_self_destruct(
-        other_user_id: str, seconds: int, current_user, db=None
+        other_user_id: str, seconds: int, current_user
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         settings_id = (
             other_user_id
             if other_user_id.startswith("group_")
@@ -832,9 +788,7 @@ class ThreadService:
         return {"self_destruct_seconds": seconds}
 
     @staticmethod
-    async def toggle_mute(other_user_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def toggle_mute(other_user_id: str, current_user):
         participant_key = (
             other_user_id
             if other_user_id.startswith("group_")
@@ -858,9 +812,7 @@ class ThreadService:
             return {"is_muted": True}
 
     @staticmethod
-    async def get_conversation_settings(other_user_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_conversation_settings(other_user_id: str, current_user):
         settings_id = (
             other_user_id
             if other_user_id.startswith("group_")

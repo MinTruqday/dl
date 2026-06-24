@@ -16,7 +16,7 @@ async def get_my_wallet(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await WalletService.get_balance(current_user, db=db),
+        data=await WalletService.get_balance(current_user),
         message="Lấy số dư tài khoản thành công",
         status=200,
     )
@@ -31,7 +31,7 @@ async def get_my_transactions(
 ):
     return APIResponse(
         data=await WalletService.get_history(
-            current_user, limit=limit, skip=offset, db=db
+            current_user, limit=limit, skip=offset
         ),
         message="Lấy lịch sử giao dịch thành công",
         status=200,
@@ -45,7 +45,7 @@ async def redeem_coupon(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await WalletService.redeem_coupon(req, current_user, db=db),
+        data=await WalletService.redeem_coupon(req, current_user),
         message="Đổi mã quà tặng thành công",
         status=200,
     )

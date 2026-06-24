@@ -22,8 +22,8 @@ class SessionService:
 
 
     @staticmethod
-    async def register_user(user_in: UserCreate, client_ip: str, db=None):
-        config = await AuthenticationRepository.get_system_config(db=db)
+    async def register_user(user_in: UserCreate, client_ip: str):
+        config = await AuthenticationRepository.get_system_config()
         if config and (not config.get("registration_enabled", True)):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -63,7 +63,7 @@ class SessionService:
             "password_hash": get_password_hash(user_in.password),
             "passkeys": [],
         }
-        await AuthenticationRepository.create_auth_credential(auth_cred, db=db)
+        await AuthenticationRepository.create_auth_credential(auth_cred)
 
         await AuthenticationRepository.insert_audit_log(
             {
@@ -72,7 +72,6 @@ class SessionService:
                 "ip": client_ip,
                 "timestamp": datetime.now(timezone.utc),
             },
-            db=db,
         )
         logger.info("Đăng ký tài khoản mới thành công")
         return {
@@ -84,7 +83,7 @@ class SessionService:
         }
 
     @staticmethod
-    async def login_user(username: str, password: str, client_ip: str, db=None):
+    async def login_user(username: str, password: str, client_ip: str):
         is_email = "@" in username
         user_doc = None
         try:
@@ -108,7 +107,7 @@ class SessionService:
             raise HTTPException(status_code=401, detail="Không tìm thấy tài khoản")
 
         auth_cred = await AuthenticationRepository.get_auth_credential_by_id(
-            str(user_doc["_id"]), db=db
+            str(user_doc["_id"])
         )
         password_hash = auth_cred.get("password_hash") if auth_cred else "invalid"
 
@@ -120,7 +119,6 @@ class SessionService:
                     "ip": client_ip,
                     "timestamp": datetime.now(timezone.utc),
                 },
-                db=db,
             )
             logger.warning("Đăng nhập thất bại do sai thông tin xác thực")
             raise HTTPException(
@@ -156,14 +154,14 @@ class SessionService:
         }
 
     @staticmethod
-    async def revoke_all_sessions(current_user: UserInDB, db=None):
+    async def revoke_all_sessions(current_user: UserInDB):
         user_id_str = str(current_user.id)
         await AuthenticationRepository.revoke_all_sessions(user_id_str)
         logger.info("Đã thu hồi tất cả phiên đăng nhập của tài khoản")
         return {"message": "Đã đăng xuất khỏi tất cả thiết bị"}
 
     @staticmethod
-    async def forgot_password(email: str, client_ip: str, db=None):
+    async def forgot_password(email: str, client_ip: str):
         try:
             async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 resp = await client.get(
@@ -184,7 +182,6 @@ class SessionService:
                     "used": False,
                     "created_at": datetime.now(timezone.utc),
                 },
-                db=db,
             )
             await AuthenticationRepository.insert_audit_log(
                 {
@@ -193,7 +190,6 @@ class SessionService:
                     "ip": client_ip,
                     "timestamp": datetime.now(timezone.utc),
                 },
-                db=db,
             )
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
@@ -202,20 +198,20 @@ class SessionService:
         return {"status": "ok", "message": "Đang xử lý yêu cầu khôi phục mật khẩu"}
 
     @staticmethod
-    async def reset_password(token: str, new_password: str, client_ip: str, db=None):
-        token_doc = await AuthenticationRepository.get_valid_password_reset_token(token, db=db)
+    async def reset_password(token: str, new_password: str, client_ip: str):
+        token_doc = await AuthenticationRepository.get_valid_password_reset_token(token)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=400, detail="Mã xác minh không hợp lệ hoặc đã hết hạn"
             )
         auth_cred = await AuthenticationRepository.get_auth_credential_by_email(
-            token_doc["email"], db=db
+            token_doc["email"]
         )
         if auth_cred:
             await AuthenticationRepository.update_password_hash(
-                token_doc["email"], get_password_hash(new_password), db=db
+                token_doc["email"], get_password_hash(new_password)
             )
-        await AuthenticationRepository.mark_password_reset_token_used(token_doc["_id"], db=db)
+        await AuthenticationRepository.mark_password_reset_token_used(token_doc["_id"])
         await AuthenticationRepository.insert_audit_log(
             {
                 "action": "RESET_PASSWORD_SUCCESS",
@@ -223,14 +219,13 @@ class SessionService:
                 "ip": client_ip,
                 "timestamp": datetime.now(timezone.utc),
             },
-            db=db,
         )
         logger.info("Đổi mật khẩu thành công")
         return {"status": "ok", "message": "Cập nhật mật khẩu thành công"}
 
     @staticmethod
-    async def verify_reset_code(token: str, client_ip: str, db=None):
-        token_doc = await AuthenticationRepository.get_valid_password_reset_token(token, db=db)
+    async def verify_reset_code(token: str, client_ip: str):
+        token_doc = await AuthenticationRepository.get_valid_password_reset_token(token)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=400, detail="Mã xác minh không hợp lệ hoặc đã hết hạn"
@@ -238,7 +233,7 @@ class SessionService:
         return {"status": "ok", "message": "Mã xác minh hợp lệ"}
 
     @staticmethod
-    async def issue_token_for_user(user_doc: dict, client_ip: str, db=None):
+    async def issue_token_for_user(user_doc: dict, client_ip: str):
         if not user_doc.get("is_active", True):
             raise HTTPException(
                 status_code=403, detail="Tài khoản đang bị khóa hoặc không hoạt động"
@@ -259,7 +254,7 @@ class SessionService:
             }
         )
         auth_cred = await AuthenticationRepository.get_auth_credential_by_id(
-            str(user_doc["_id"]), db=db
+            str(user_doc["_id"])
         )
         has_passkey = len(auth_cred.get("passkeys", [])) > 0 if auth_cred else False
         return {

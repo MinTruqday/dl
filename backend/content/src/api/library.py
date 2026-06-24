@@ -23,7 +23,7 @@ async def create_reading_list(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await LibraryService.create_reading_list(data, current_user, db=db),
+        data=await LibraryService.create_reading_list(data, current_user),
         message="Tạo danh sách đọc cá nhân thành công",
         status=201,
     )
@@ -34,7 +34,7 @@ async def get_my_lists(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await LibraryService.get_my_reading_lists(current_user, db=db),
+        data=await LibraryService.get_my_reading_lists(current_user),
         message="Lấy danh sách đọc thành công",
     )
 
@@ -44,7 +44,7 @@ async def get_list_by_id(
     list_id: str, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await LibraryService.get_reading_list_by_id(list_id, current_user, db=db),
+        data=await LibraryService.get_reading_list_by_id(list_id, current_user),
         message="Lấy nội dung danh sách đọc thành công",
     )
 
@@ -60,7 +60,7 @@ async def add_to_list(
 ):
     return APIResponse(
         data=await LibraryService.add_document_to_list(
-            list_id, document_id, current_user, db=db
+            list_id, document_id, current_user
         ),
         message="Đã thêm tài liệu vào danh sách đọc",
     )
@@ -77,7 +77,7 @@ async def remove_from_list(
 ):
     return APIResponse(
         data=await LibraryService.remove_document_from_list(
-            list_id, document_id, current_user, db=db
+            list_id, document_id, current_user
         ),
         message="Xóa tài liệu khỏi danh sách đọc thành công",
     )

@@ -14,9 +14,7 @@ from src.repositories.reading import ReadingRepository
 class LibraryService:
 
     @staticmethod
-    async def create_reading_list(data, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def create_reading_list(data, current_user):
         new_list = {
             "_id": str(uuid7()),
             "user_id": str(current_user.id),
@@ -31,9 +29,7 @@ class LibraryService:
         return new_list
 
     @staticmethod
-    async def get_my_reading_lists(current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_my_reading_lists(current_user):
         return (
             await ReadingListRepository
             .find({"user_id": str(current_user.id)})
@@ -41,9 +37,7 @@ class LibraryService:
         )
 
     @staticmethod
-    async def get_reading_list_by_id(list_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_reading_list_by_id(list_id: str, current_user):
         reading_list = await ReadingRepository.find_list(
             {"_id": list_id, "user_id": str(current_user.id)}
         )
@@ -63,10 +57,8 @@ class LibraryService:
 
     @staticmethod
     async def add_document_to_list(
-        list_id: str, document_id: str, current_user, db=None
+        list_id: str, document_id: str, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         result = await ReadingRepository.update_list(
             {"_id": list_id, "user_id": str(current_user.id)},
             {
@@ -80,10 +72,8 @@ class LibraryService:
 
     @staticmethod
     async def remove_document_from_list(
-        list_id: str, document_id: str, current_user, db=None
+        list_id: str, document_id: str, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         result = await ReadingRepository.update_list(
             {"_id": list_id, "user_id": str(current_user.id)},
             {

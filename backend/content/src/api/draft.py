@@ -23,7 +23,7 @@ async def get_approval_queue(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await DocumentService.get_approval_queue(cursor, limit, db=db),
+        data=await DocumentService.get_approval_queue(cursor, limit),
         message="Lấy danh sách tài liệu chờ duyệt thành công",
     )
 

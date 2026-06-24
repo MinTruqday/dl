@@ -77,7 +77,7 @@ class MessageSocket:
         targets = [receiver_id]
         if receiver_id.startswith("group_"):
             if database.mongodb:
-                db = database.mongodb.get_default_database()
+                
                 group = await ChatGroupRepository.find_one(
                     {"_id": receiver_id}
                 )
@@ -112,7 +112,7 @@ class MessageSocket:
         last_message_id = data.get("last_message_id")
         if not database.mongodb:
             return
-        db = database.mongodb.get_default_database()
+        
         ws_set = self.active_connections.get(user_id)
         if not ws_set:
             return
@@ -189,7 +189,7 @@ class MessageSocket:
             return
         if not database.mongodb:
             return
-        db = database.mongodb.get_default_database()
+        
         await MessageRepository.update_many(
             {"sender_id": other_user_id, "receiver_id": user_id, "is_read": False},
             {"$set": {"is_read": True}},

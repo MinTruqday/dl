@@ -19,10 +19,7 @@ class ReadingService:
         limit: int = Query(
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         ),
-        db=None,
     ) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
         match_stage = {"user_id": str(current_user.id)}
         if cursor:
             from datetime import datetime
@@ -80,9 +77,7 @@ class ReadingService:
         return result
 
     @staticmethod
-    async def update_progress(data, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def update_progress(data, current_user):
         user_id = str(current_user.id)
         now = datetime.now(timezone.utc)
         await ReadingRepository.update_history(
@@ -101,10 +96,8 @@ class ReadingService:
 
     @staticmethod
     async def search_in_document(
-        document_id: str, query: str, current_user, db=None
+        document_id: str, query: str, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         doc = await DocumentRepository.find_one(
             {"_id": document_id}, {"content": 1, "title": 1}
         )
@@ -127,18 +120,14 @@ class ReadingService:
         return {"total": len(results), "results": results, "query": query}
 
     @staticmethod
-    async def clear_reading_history(current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def clear_reading_history(current_user) -> dict:
         await ReadingRepository.delete_historys(
             {"user_id": str(current_user.id)}
         )
         return {"status": "success", "message": "Xóa toàn bộ lịch sử đọc thành công"}
 
     @staticmethod
-    async def delete_history_item(document_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def delete_history_item(document_id: str, current_user) -> dict:
         await ReadingRepository.delete_history(
             {"user_id": str(current_user.id), "document_id": document_id}
         )

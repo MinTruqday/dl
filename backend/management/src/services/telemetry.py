@@ -21,10 +21,7 @@ class TelemetryService:
         event_name: str,
         properties: Dict[str, Any],
         current_user: Optional[UserInDB] = None,
-        db=None,
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         telemetry_event = {
             "_id": str(uuid7()),
             "event_name": event_name,
@@ -37,9 +34,7 @@ class TelemetryService:
         return {"status": "success"}
 
     @staticmethod
-    async def get_activity_stats(days: int = 7, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_activity_stats(days: int = 7):
         since = datetime.now(timezone.utc) - timedelta(days=days)
         pipeline = [
             {"$match": {"timestamp": {"$gte": since}}},
@@ -51,16 +46,14 @@ class TelemetryService:
 
     @staticmethod
     async def log_performance_metric(
-        metric_name: str, value: float, current_user: Optional[UserInDB] = None, db=None
+        metric_name: str, value: float, current_user: Optional[UserInDB] = None
     ):
         return await TelemetryService.track_event(
             "performance_metric", {"metric": metric_name, "value": value}, current_user
         )
 
     @staticmethod
-    async def get_system_stats(db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_system_stats() -> dict:
         total_users = await UserRepository.count_documents({})
         total_documents = await SystemRepository.count_documents({})
         total_authors = await UserRepository.count_documents(
@@ -74,9 +67,7 @@ class TelemetryService:
         }
 
     @staticmethod
-    async def get_sys_health(db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_sys_health() -> dict:
         try:
             await db.command("ping")
             mongo_status = "healthy"
@@ -89,9 +80,7 @@ class TelemetryService:
         }
 
     @staticmethod
-    async def get_activity_log(user_id: str, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_activity_log(user_id: str) -> list:
         return (
             await ModerationRepository.find_moderator_activities({"actor_id": user_id})
             .sort("timestamp", -1)

@@ -11,10 +11,8 @@ class PublicationService:
 
     @staticmethod
     async def update_seo_metadata(
-        document_id: str, seo_data: dict, current_user, db=None
+        document_id: str, seo_data: dict, current_user
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
         doc = await DocumentRepository.find_one(
             {"_id": str(document_id), "creator_id": user_id}
@@ -40,9 +38,7 @@ class PublicationService:
         return {"message": "Cập nhật thông tin và thẻ phân loại thành công"}
 
     @staticmethod
-    async def get_readability_score(document_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_readability_score(document_id: str, current_user):
         doc = await DocumentRepository.find_one(
             {"_id": str(document_id)}
         )
@@ -78,10 +74,8 @@ class PublicationService:
 
     @staticmethod
     async def schedule_publish(
-        document_id: str, publish_at: str, current_user, db=None
+        document_id: str, publish_at: str, current_user
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
         await DocumentRepository.update_one(
             {"_id": document_id, "creator_id": user_id},
@@ -91,9 +85,7 @@ class PublicationService:
         return {"message": "Ghi nhận lịch xuất bản thành công"}
 
     @staticmethod
-    async def publish_document(document_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def publish_document(document_id: str, current_user):
         docs_collection = DocumentRepository
         user_id = str(current_user.id)
         document = await docs_collection.find_one(

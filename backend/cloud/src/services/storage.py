@@ -14,7 +14,7 @@ class StorageService:
 
     @staticmethod
     async def create_item(
-        item: StorageItemCreate, owner_id: str, db=None
+        item: StorageItemCreate, owner_id: str
     ) -> StorageItemInDB:
         db_item = StorageItemInDB(**item.dict(), owner_id=owner_id)
         await database.mongodb.get_default_database().storage_items.insert_one(
@@ -27,7 +27,7 @@ class StorageService:
         return db_item
 
     @staticmethod
-    async def get_storage_quota(owner_id: str, db=None) -> dict:
+    async def get_storage_quota(owner_id: str) -> dict:
         user = await database.mongodb.get_default_database().users.find_one(
             {"_id": owner_id}
         )
@@ -41,7 +41,7 @@ class StorageService:
 
     @staticmethod
     async def create_shortcut(
-        item_id: str, parent_id: Optional[str], owner_id: str, db=None
+        item_id: str, parent_id: Optional[str], owner_id: str
     ) -> Optional[StorageItemInDB]:
         target = await StorageService.get_item(item_id)
         if not target:
@@ -65,7 +65,6 @@ class StorageService:
         owner_id: str,
         is_trashed: bool = False,
         is_starred: Optional[bool] = None,
-        db=None,
     ) -> List[StorageItemInDB]:
         query = {
             "$or": [{"owner_id": owner_id}, {"shared_with.user_id": owner_id}],
@@ -84,7 +83,7 @@ class StorageService:
 
     @staticmethod
     async def search_items(
-        query_str: str, owner_id: str, type_filter: Optional[str] = None, db=None
+        query_str: str, owner_id: str, type_filter: Optional[str] = None
     ) -> List[StorageItemInDB]:
         query = {
             "$or": [{"owner_id": owner_id}, {"shared_with.user_id": owner_id}],
@@ -105,7 +104,7 @@ class StorageService:
 
     @staticmethod
     async def get_item(
-        item_id: str, owner_id: str = None, db=None
+        item_id: str, owner_id: str = None
     ) -> Optional[StorageItemInDB]:
         query = {"_id": item_id}
         if owner_id:
@@ -119,7 +118,7 @@ class StorageService:
 
     @staticmethod
     async def update_item(
-        item_id: str, owner_id: str, update_data: StorageItemUpdate, db=None
+        item_id: str, owner_id: str, update_data: StorageItemUpdate
     ) -> Optional[StorageItemInDB]:
         update_dict = {k: v for (k, v) in update_data.dict(exclude_unset=True).items()}
         if not update_dict:
@@ -135,7 +134,7 @@ class StorageService:
         return None
 
     @staticmethod
-    async def delete_item(item_id: str, owner_id: str, db=None) -> bool:
+    async def delete_item(item_id: str, owner_id: str) -> bool:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
             return False
@@ -214,7 +213,7 @@ class StorageService:
 
     @staticmethod
     async def copy_item(
-        item_id: str, owner_id: str, target_parent_id: Optional[str] = None, db=None
+        item_id: str, owner_id: str, target_parent_id: Optional[str] = None
     ) -> Optional[StorageItemInDB]:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
@@ -234,7 +233,7 @@ class StorageService:
 
     @staticmethod
     async def add_version(
-        item_id: str, owner_id: str, url: str, size: int, db=None
+        item_id: str, owner_id: str, url: str, size: int
     ) -> Optional[StorageItemInDB]:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
@@ -267,7 +266,7 @@ class StorageService:
         return await StorageService.get_item(item_id, owner_id)
 
     @staticmethod
-    async def get_public_item(share_token: str, db=None) -> Optional[StorageItemInDB]:
+    async def get_public_item(share_token: str) -> Optional[StorageItemInDB]:
         item = await database.mongodb.get_default_database().storage_items.find_one(
             {"share_token": share_token, "is_public": True}
         )
@@ -277,7 +276,7 @@ class StorageService:
 
     @staticmethod
     async def share_item(
-        item_id: str, email: str, role: str, owner_id: str, db=None
+        item_id: str, email: str, role: str, owner_id: str
     ) -> dict:
         target_user = await database.mongodb.get_default_database().users.find_one(
             {"email": email}
@@ -324,7 +323,6 @@ class StorageService:
         limit: int = Query(
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         ),
-        db=None,
     ) -> List[StorageItemInDB]:
         query = {
             "$or": [{"owner_id": owner_id}, {"shared_with.user_id": owner_id}],

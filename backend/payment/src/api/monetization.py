@@ -20,7 +20,7 @@ async def purchase_document(
 ):
     return APIResponse(
         data=await PurchaseService.purchase_document(
-            req.document_id, current_user, db=db
+            req.document_id, current_user
         ),
         message="Thanh toán mua tài liệu thành công",
         status=200,
@@ -34,7 +34,7 @@ async def buy_membership(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PurchaseService.buy_ai_tier(req.tier, current_user, db=db),
+        data=await PurchaseService.buy_ai_tier(req.tier, current_user),
         message="Nâng cấp gói thành viên thành công",
         status=200,
     )
@@ -43,7 +43,7 @@ async def buy_membership(
 @router.get("/bang-gia", response_model=APIResponse[Any])
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
-        data=await PricingService.get_pricing_config(db=db),
+        data=await PricingService.get_pricing_config(),
         message="Lấy giá gói thành viên thành công",
         status=200,
     )
@@ -51,7 +51,7 @@ async def get_pricing_config(db=Depends(get_db)):
 
 @router.get("/doanh-thu", response_model=APIResponse[Any])
 async def get_author_revenue(current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)):
-    revenue_data = await PurchaseService.get_author_revenue(current_user, db=db)
+    revenue_data = await PurchaseService.get_author_revenue(current_user)
     return APIResponse(
         data=revenue_data,
         message="Lấy số liệu doanh thu thành công",

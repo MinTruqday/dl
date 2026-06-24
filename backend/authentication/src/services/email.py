@@ -12,7 +12,7 @@ from src.core.infrastructure.configuration import settings
 class EmailService:
 
     @staticmethod
-    async def send_reset_password_email(email: str, token: str, db=None):
+    async def send_reset_password_email(email: str, token: str):
         smtp_host = settings.SMTP_HOST
         smtp_port_raw = settings.SMTP_PORT
         smtp_port = int(smtp_port_raw) if smtp_port_raw else None
@@ -29,7 +29,7 @@ class EmailService:
             logger.error("Chưa cấu hình tính năng gửi email")
             raise Exception("Chưa cấu hình tính năng gửi email")
 
-        def send_sync(db=None):
+        def send_sync():
             try:
                 msg = MIMEMultipart()
                 msg["From"] = f"{sender_name} <{sender_email}>"

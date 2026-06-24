@@ -16,9 +16,7 @@ from src.repositories.document import DocumentRepository
 class VersionService:
 
     @staticmethod
-    async def save_version(document_id, version_note, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def save_version(document_id, version_note, current_user):
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
@@ -44,9 +42,7 @@ class VersionService:
         return {"message": "Lưu bản nháp lịch sử thành công"}
 
     @staticmethod
-    async def get_versions(document_id, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_versions(document_id, current_user):
         cursor = (
             DocumentVersionRepository
             .find({"document_id": document_id, "creator_id": str(current_user.id)})
@@ -59,9 +55,7 @@ class VersionService:
         return versions
 
     @staticmethod
-    async def restore_version(version_id: str, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def restore_version(version_id: str, current_user):
         version = await db["document_versions"].find_one(
             {"_id": version_id, "creator_id": str(current_user.id)}
         )

@@ -11,16 +11,12 @@ from src.core.infrastructure.database import database
 class BannerService:
 
     @staticmethod
-    async def get_banners(active_only: bool = True, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_banners(active_only: bool = True) -> list:
         query = {"is_active": True} if active_only else {}
         return await db_client.find(collection="banners", query=query, sort=[("priority", -1)], limit=20)
 
     @staticmethod
-    async def create_banner(data: dict, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def create_banner(data: dict) -> dict:
         banner = {
             "_id": str(uuid7()),
             "title": data.get("title"),
@@ -35,9 +31,7 @@ class BannerService:
         return banner
 
     @staticmethod
-    async def delete_banner(banner_id: str, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def delete_banner(banner_id: str) -> dict:
         await db_client.delete_one(collection="banners", filter={"_id": banner_id})
         logger.info("Xóa vĩnh viễn banner quảng cáo thành công")
         return {"message": "Xóa vĩnh viễn banner quảng cáo thành công"}

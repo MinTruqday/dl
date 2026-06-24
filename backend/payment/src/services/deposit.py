@@ -17,7 +17,7 @@ from src.core.infrastructure.database import database
 class DepositService:
 
     @staticmethod
-    def _generate_payos_signature(data: dict, db=None) -> str:
+    def _generate_payos_signature(data: dict) -> str:
         sorted_keys = sorted(data.keys())
         raw = "&".join((f"{k}={data[k]}" for k in sorted_keys))
         return hmac.new(
@@ -27,14 +27,11 @@ class DepositService:
         ).hexdigest()
 
     @staticmethod
-    async def create_deposit_link(req, current_user, db=None):
+    async def create_deposit_link(req, current_user):
         if req.amount < 1000:
             raise HTTPException(
                 status_code=400, detail="Số tiền nạp dưới mức tối thiểu"
             )
-
-        if db is None:
-            db = database.mongodb.get_default_database()
 
         while True:
             order_code = random.randint(100000000, 2147483647)
@@ -130,7 +127,7 @@ class DepositService:
             raise HTTPException(status_code=500, detail=f"Lỗi kết nối cổng thanh toán: {e}")
 
     @staticmethod
-    async def deposit_webhook(request, db=None):
+    async def deposit_webhook(request):
         data = await request.json()
         logger.info("Cập nhật trạng thái thanh toán thành công")
         if data.get("code") == "00" and data.get("data"):
@@ -177,10 +174,7 @@ class DepositService:
         )
 
     @staticmethod
-    async def verify_deposit(order_code: int, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
-
+    async def verify_deposit(order_code: int, current_user):
         order = await db_client.find_one(collection="orders", query={"order_code": order_code})
         if not order:
             raise HTTPException(
@@ -240,12 +234,9 @@ class DepositService:
 
     @staticmethod
     async def process_success_order(
-        order_code: int, paid_amount: int = None, db=None, session=None
+        order_code: int, paid_amount: int = None, session=None
     ):
         should_close_session = False
-        if db is None:
-            db = database.mongodb.get_default_database()
-
         if session is None:
             session = await database.mongodb.start_session()
             session.start_transaction()

@@ -13,7 +13,7 @@ router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")
 @router.post("/dang-nhap/bat-dau", response_model=APIResponse[Any])
 async def passkey_login_begin(payload: PasskeyRequest, db=Depends(get_db)):
     return APIResponse(
-        data=await PasskeyService.login_begin(payload.email, db=db),
+        data=await PasskeyService.login_begin(payload.email),
         message="Bắt đầu xác thực bằng mã bảo mật thành công",
         status=200,
     )
@@ -23,7 +23,7 @@ async def passkey_login_begin(payload: PasskeyRequest, db=Depends(get_db)):
 async def passkey_login_finish(payload: PasskeyFinishRequest, db=Depends(get_db)):
     return APIResponse(
         data=await PasskeyService.login_finish(
-            payload.email, payload.credential, db=db
+            payload.email, payload.credential
         ),
         message="Xác thực thành công",
         status=200,
@@ -33,7 +33,7 @@ async def passkey_login_finish(payload: PasskeyFinishRequest, db=Depends(get_db)
 @router.post("/dang-ky/bat-dau", response_model=APIResponse[Any])
 async def passkey_register_begin(payload: PasskeyRequest, db=Depends(get_db)):
     return APIResponse(
-        data=await PasskeyService.register_begin(payload.email, db=db),
+        data=await PasskeyService.register_begin(payload.email),
         message="Bắt đầu đăng ký mã bảo mật thành công",
         status=200,
     )
@@ -43,7 +43,7 @@ async def passkey_register_begin(payload: PasskeyRequest, db=Depends(get_db)):
 async def passkey_register_finish(payload: PasskeyFinishRequest, db=Depends(get_db)):
     return APIResponse(
         data=await PasskeyService.register_finish(
-            payload.email, payload.credential, db=db
+            payload.email, payload.credential
         ),
         message="Đăng ký mã bảo mật thành công",
         status=200,

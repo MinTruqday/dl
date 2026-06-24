@@ -14,9 +14,7 @@ from src.core.storage import upload_file
 class VerificationService:
 
     @staticmethod
-    async def become_author(current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def become_author(current_user):
         user_id = str(current_user.id)
         if current_user.role != Role.READER:
             raise HTTPException(
@@ -36,9 +34,7 @@ class VerificationService:
         return {"status": "success", "message": "Đã nâng cấp tài khoản tác giả"}
 
     @staticmethod
-    async def apply_author(application, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def apply_author(application, current_user):
         user_id = str(current_user.id)
         if current_user.role == Role.AUTHOR:
             raise HTTPException(status_code=400, detail="Tài khoản đã có quyền tác giả")
@@ -87,9 +83,7 @@ class VerificationService:
         return {"status": "success", "message": "Đã gửi yêu cầu nâng cấp tác giả"}
 
     @staticmethod
-    async def upload_kyc(file, current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def upload_kyc(file, current_user):
         user_id = str(current_user.id)
         if current_user.kyc_status == KYC.PENDING:
             raise HTTPException(
@@ -120,9 +114,7 @@ class VerificationService:
         }
 
     @staticmethod
-    async def get_public_profile(slug: str, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_public_profile(slug: str) -> dict:
         author = await db["users"].find_one(
             {
                 "$or": [{"slug": slug}, {"username": slug}, {"_id": slug}],

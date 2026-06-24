@@ -16,10 +16,7 @@ from src.core.infrastructure.database import database
 class PurchaseService:
 
     @staticmethod
-    async def get_revenue(current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
-            
+    async def get_revenue(current_user) -> dict:
         docs_cursor = db_client.query("documents").filter({"creator_id": str(current_user.id)})
         documents = await docs_cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         doc_ids = [str(doc["_id"]) for doc in documents]
@@ -61,10 +58,7 @@ class PurchaseService:
         return revenue_data
 
     @staticmethod
-    async def buy_ai_tier(tier: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
-
+    async def buy_ai_tier(tier: str, current_user) -> dict:
         tier = tier.upper()
         if tier not in ["PRO", "PREMIUM"]:
             raise HTTPException(
@@ -138,12 +132,9 @@ class PurchaseService:
 
     @staticmethod
     async def purchase_document(
-        document_id: str, current_user, db=None, session=None
+        document_id: str, current_user, session=None
     ) -> dict:
         should_close_session = False
-        if db is None:
-            db = database.mongodb.get_default_database()
-
         if session is None:
             session = await database.mongodb.start_session()
             session.start_transaction()
@@ -302,12 +293,9 @@ class PurchaseService:
 
     @staticmethod
     async def cancel_purchase(
-        purchase_id: str, current_user, db=None, session=None
+        purchase_id: str, current_user, session=None
     ) -> dict:
         should_close_session = False
-        if db is None:
-            db = database.mongodb.get_default_database()
-
         if session is None:
             session = await database.mongodb.start_session()
             session.start_transaction()

@@ -9,9 +9,7 @@ from src.core.infrastructure.database import database
 class AuditService:
 
     @staticmethod
-    async def get_audit_logs(limit: int = 50, cursor: str = None, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_audit_logs(limit: int = 50, cursor: str = None) -> list:
         query = {}
         if cursor:
             query["timestamp"] = {
@@ -43,10 +41,8 @@ class AuditService:
 
     @staticmethod
     async def log_action(
-        action: str, actor_id: str, target_id: str = None, details: dict = None, db=None
+        action: str, actor_id: str, target_id: str = None, details: dict = None
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         await db["audit_logs"].insert_one(
             {
                 "action": action,

@@ -16,7 +16,7 @@ async def get_pinned_documents(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await PinService.get_pinned_documents(current_user, db=db),
+        data=await PinService.get_pinned_documents(current_user),
         message="Lấy danh sách tài liệu ghim thành công",
     )
 
@@ -28,7 +28,7 @@ async def pin_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PinService.pin_document(document_id, current_user, db=db),
+        data=await PinService.pin_document(document_id, current_user),
         message="Thêm tài liệu vào danh sách ghim thành công",
     )
 
@@ -40,7 +40,7 @@ async def unpin_document(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await PinService.unpin_document(document_id, current_user, db=db),
+        data=await PinService.unpin_document(document_id, current_user),
         message="Xóa tài liệu khỏi danh sách ghim thành công",
     )
 
@@ -53,7 +53,7 @@ async def set_pinned_documents(
 ):
     return APIResponse(
         data=await PinService.set_pinned_documents(
-            data.document_ids, current_user, db=db
+            data.document_ids, current_user
         ),
         message="Cập nhật sắp xếp tài liệu ghim thành công",
     )

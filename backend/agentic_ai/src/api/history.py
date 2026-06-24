@@ -13,18 +13,6 @@ from src.services.history import HistoryService
 router = APIRouter(prefix="/lich-su")
 
 
-def get_db():
-    client = AsyncIOMotorClient(settings.MONGODB_URI)
-    db = client.get_default_database()
-    try:
-        yield db
-    finally:
-        client.close()
-
-
-@router.post("", response_model=Dict[str, Any])
-async def create_session(data: dict):
-    return await HistoryService.create_session(data)
 
 
 @router.get("", response_model=List[dict])

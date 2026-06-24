@@ -19,7 +19,7 @@ async def save_version(
 ):
     return APIResponse(
         data=await VersionService.save_version(
-            document_id, version_note, current_user, db=db
+            document_id, version_note, current_user
         ),
         message="Lưu phiên bản lịch sử tài liệu thành công",
         status=201,
@@ -33,7 +33,7 @@ async def get_document_versions(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await VersionService.get_versions(document_id, current_user, db=db),
+        data=await VersionService.get_versions(document_id, current_user),
         message="Lấy lịch sử phiên bản thành công",
     )
 
@@ -45,6 +45,6 @@ async def restore_version(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await VersionService.restore_version(version_id, current_user, db=db),
+        data=await VersionService.restore_version(version_id, current_user),
         message="Khôi phục phiên bản lịch sử thành công",
     )

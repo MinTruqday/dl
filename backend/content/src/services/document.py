@@ -76,7 +76,7 @@ class DocumentService:
 
     @staticmethod
     async def get_tags_categories():
-        db = database.mongodb.get_default_database()
+        
         docs_col = DocumentRepository
         pipeline_tags = [
             {"$unwind": "$tags"},
@@ -101,7 +101,7 @@ class DocumentService:
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         )
     ) -> List[dict]:
-        db = database.mongodb.get_default_database()
+        
         docs_col = DocumentRepository
         cursor = (
             docs_col.find(
@@ -120,7 +120,7 @@ class DocumentService:
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         ),
     ) -> List[dict]:
-        db = database.mongodb.get_default_database()
+        
         docs_col = DocumentRepository
         cursor = docs_col.find(
             {
@@ -134,7 +134,7 @@ class DocumentService:
 
     @staticmethod
     async def create_document(doc_in: DocumentCreate, current_user):
-        db = database.mongodb.get_default_database()
+        
         docs_collection = DocumentRepository
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
@@ -160,7 +160,7 @@ class DocumentService:
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         ),
     ) -> list:
-        db = database.mongodb.get_default_database()
+        
         query = {"creator_id": str(current_user.id), "is_deleted": {"$ne": True}}
         if q:
             query["$or"] = [
@@ -199,7 +199,7 @@ class DocumentService:
     async def update_document_content(
         document_id: str, content_in: DocumentContentUpdate, current_user
     ):
-        db = database.mongodb.get_default_database()
+        
         docs_collection = DocumentRepository
         document = await docs_collection.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -267,7 +267,7 @@ class DocumentService:
 
     @staticmethod
     async def update_document(document_id: str, doc_update, current_user) -> dict:
-        db = database.mongodb.get_default_database()
+        
         docs_col = DocumentRepository
         doc = await docs_col.find_one({"_id": document_id})
         if not doc:
@@ -334,7 +334,7 @@ class DocumentService:
         category: str = None,
         tag: str = None,
     ):
-        db = database.mongodb.get_default_database()
+        
         docs_collection = DocumentRepository
         query = {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}
         if q:
@@ -363,7 +363,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_by_id(document_id: str, current_user, password: str = None):
-        db = database.mongodb.get_default_database()
+        
         docs_collection = DocumentRepository
         user_id = str(current_user.id) if current_user else None
 
@@ -436,7 +436,7 @@ class DocumentService:
 
     @staticmethod
     async def soft_delete_document(document_id: str, current_user) -> dict:
-        db = database.mongodb.get_default_database()
+        
         res = await DocumentRepository.update_one(
             {
                 "_id": document_id,
@@ -453,7 +453,7 @@ class DocumentService:
 
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
-        db = database.mongodb.get_default_database()
+        
         res = await DocumentRepository.update_one(
             {
                 "_id": document_id,
@@ -472,7 +472,7 @@ class DocumentService:
 
     @staticmethod
     async def get_trash(current_user) -> list:
-        db = database.mongodb.get_default_database()
+        
         docs = (
             await DocumentRepository
             .find({"creator_id": str(current_user.id), "is_deleted": True})
@@ -496,7 +496,7 @@ class DocumentService:
     async def set_document_password(
         document_id: str, password: str, current_user
     ) -> dict:
-        db = database.mongodb.get_default_database()
+        
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
@@ -519,7 +519,7 @@ class DocumentService:
 
     @staticmethod
     async def invite_coauthor(document_id: str, email: str, current_user):
-        db = database.mongodb.get_default_database()
+        
         document = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
@@ -553,7 +553,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
-        db = database.mongodb.get_default_database()
+        
         docs_collection = DocumentRepository
         document = await docs_collection.find_one(
             {
@@ -658,7 +658,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_preview(slug: str) -> dict:
-        db = database.mongodb.get_default_database()
+        
         doc = await DocumentRepository.find_one(
             {
                 "slug": slug,
@@ -695,7 +695,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_audit_logs(document_id: str, current_user) -> list:
-        db = database.mongodb.get_default_database()
+        
         document = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}, projection={"_id": 1}
         )
@@ -728,9 +728,8 @@ class DocumentService:
     async def get_approval_queue(
         cursor: str = None,
         limit: int = 50,
-        db=None,
     ) -> list:
-        db = database.mongodb.get_default_database()
+        
         query = {"status": "processing_publish"}
         if cursor:
             import datetime as dt_mod
@@ -786,7 +785,7 @@ class DocumentService:
     async def moderate_document(
         document_id: str, action: str, reason: str, current_user
     ) -> dict:
-        db = database.mongodb.get_default_database()
+        
         status_val = "PUBLISHED" if action == "approve" else "REJECTED"
 
         await DocumentRepository.update_one(
@@ -829,7 +828,7 @@ class DocumentService:
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         )
     ) -> List[str]:
-        db = database.mongodb.get_default_database()
+        
         docs_col = DocumentRepository
         pipeline = [
             {"$unwind": "$tags"},
@@ -842,7 +841,7 @@ class DocumentService:
 
     @staticmethod
     async def get_folders(parent_id: str, current_user):
-        db = database.mongodb.get_default_database()
+        
         query = {"creator_id": str(current_user.id)}
         if parent_id:
             query["parent_id"] = parent_id
@@ -854,7 +853,7 @@ class DocumentService:
 
     @staticmethod
     async def create_folder(name: str, parent_id: str, current_user):
-        db = database.mongodb.get_default_database()
+        
         folder_doc = {
             "name": name,
             "parent_id": parent_id,
@@ -868,7 +867,7 @@ class DocumentService:
 
     @staticmethod
     async def delete_folder(folder_id: str, current_user):
-        db = database.mongodb.get_default_database()
+        
         folder = await db["workspace_folders"].find_one(
             {"_id": folder_id, "creator_id": str(current_user.id)}
         )
@@ -882,7 +881,7 @@ class DocumentService:
 
     @staticmethod
     async def toggle_star_document(document_id: str, current_user):
-        db = database.mongodb.get_default_database()
+        
         doc = await db["documents"].find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
@@ -898,7 +897,7 @@ class DocumentService:
 
     @staticmethod
     async def transfer_document(document_id: str, new_owner_id: str, current_user):
-        db = database.mongodb.get_default_database()
+        
         doc = await db["documents"].find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
@@ -934,7 +933,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_analytics(document_id: str, current_user):
-        db = database.mongodb.get_default_database()
+        
         doc = await db_client.find_one(collection="documents", query={"_id": document_id})
         if not doc:
             raise HTTPException(
@@ -959,7 +958,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_academic(document_id: str, current_user):
-        db = database.mongodb.get_default_database()
+        
         doc = await db_client.find_one(collection="documents", query={"_id": document_id})
         if not doc:
             raise HTTPException(
@@ -986,7 +985,7 @@ class DocumentService:
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         )
     ) -> List[dict]:
-        db = database.mongodb.get_default_database()
+        
         docs_col = DocumentRepository
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
         documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.

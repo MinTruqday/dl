@@ -21,7 +21,7 @@ async def get_history(
 ):
     return APIResponse(
         data=await ReadingService.get_reading_history(
-            current_user, cursor, limit, db=db
+            current_user, cursor, limit
         ),
         message="Lấy lịch sử đọc thành công",
     )
@@ -34,7 +34,7 @@ async def update_progress(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ReadingService.update_progress(data, current_user, db=db),
+        data=await ReadingService.update_progress(data, current_user),
         message="Đồng bộ tiến độ đọc thành công",
     )
 
@@ -48,7 +48,7 @@ async def search_in_document(
 ):
     return APIResponse(
         data=await ReadingService.search_in_document(
-            document_id, q, current_user, db=db
+            document_id, q, current_user
         ),
         message="Tìm kiếm trong tài liệu thành công",
     )
@@ -59,7 +59,7 @@ async def clear_reading_history(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await ReadingService.clear_reading_history(current_user, db=db),
+        data=await ReadingService.clear_reading_history(current_user),
         message="Xóa toàn bộ lịch sử đọc thành công",
     )
 
@@ -71,7 +71,7 @@ async def delete_history_item(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ReadingService.delete_history_item(document_id, current_user, db=db),
+        data=await ReadingService.delete_history_item(document_id, current_user),
         message="Xóa lịch sử đọc thành công",
     )
 

@@ -12,9 +12,7 @@ from src.core.repositories.database import BaseRepository
 class PinService:
 
     @staticmethod
-    async def get_pinned_documents(current_user, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_pinned_documents(current_user) -> list:
         profile = await BaseRepository.get("user_content_profiles").find_one(
             {"_id": str(current_user.id)}, projection={"pinned_documents": 1}
         )
@@ -54,9 +52,7 @@ class PinService:
         return result
 
     @staticmethod
-    async def pin_document(document_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def pin_document(document_id: str, current_user) -> dict:
         await BaseRepository.get("user_content_profiles").update_one(
             {"_id": str(current_user.id)},
             {
@@ -73,9 +69,7 @@ class PinService:
         return {"status": "success", "message": "Ghim tài liệu ưu tiên thành công"}
 
     @staticmethod
-    async def unpin_document(document_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def unpin_document(document_id: str, current_user) -> dict:
         await BaseRepository.get("user_content_profiles").update_one(
             {"_id": str(current_user.id)},
             {"$pull": {"pinned_documents": document_id}},
@@ -87,9 +81,7 @@ class PinService:
         }
 
     @staticmethod
-    async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def set_pinned_documents(document_ids: list, current_user) -> dict:
         await BaseRepository.get("user_content_profiles").update_one(
             {"_id": str(current_user.id)},
             {"$set": {"pinned_documents": document_ids}},

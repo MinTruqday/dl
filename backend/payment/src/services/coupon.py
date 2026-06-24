@@ -15,9 +15,7 @@ from src.core.dependency import CurrentUser, Role
 class CouponService:
 
     @staticmethod
-    async def create_coupon(data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def create_coupon(data: dict, current_user) -> dict:
         status = (
             CouponStatus.APPROVED
             if current_user.role == Role.ADMIN
@@ -52,9 +50,7 @@ class CouponService:
         }
 
     @staticmethod
-    async def get_coupons(current_user, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_coupons(current_user) -> list:
         query = {}
         if current_user.role != Role.ADMIN:
             query["creator_id"] = str(current_user.id)
@@ -83,10 +79,8 @@ class CouponService:
 
     @staticmethod
     async def approve_coupon(
-        coupon_id: str, action: str, current_user, db=None
+        coupon_id: str, action: str, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         if current_user.role != Role.ADMIN:
             raise HTTPException(
                 status_code=403, detail="Không có quyền thực hiện thao tác này"
@@ -102,10 +96,8 @@ class CouponService:
 
     @staticmethod
     async def validate_coupon(
-        code: str, user: Any, document_id: Optional[str] = None, db=None
+        code: str, user: Any, document_id: Optional[str] = None
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         coupon = await db["coupons"].find_one(
             {"code": code.upper(), "is_active": True, "status": CouponStatus.APPROVED}
         )
@@ -142,9 +134,7 @@ class CouponService:
         }
 
     @staticmethod
-    async def toggle_coupon_status(coupon_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def toggle_coupon_status(coupon_id: str, current_user) -> dict:
         query = {"_id": coupon_id}
         if current_user.role != Role.ADMIN:
             query["creator_id"] = str(current_user.id)
@@ -162,9 +152,7 @@ class CouponService:
         }
 
     @staticmethod
-    async def delete_coupon(coupon_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def delete_coupon(coupon_id: str, current_user) -> dict:
         query = {"_id": coupon_id}
         if current_user.role != Role.ADMIN:
             query["creator_id"] = str(current_user.id)

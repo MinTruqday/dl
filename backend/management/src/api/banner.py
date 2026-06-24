@@ -15,7 +15,7 @@ router = APIRouter(prefix="/quang-cao")
 @router.get("", response_model=APIResponse[Any])
 async def get_active_banners(db=Depends(get_db)):
     return APIResponse(
-        data=await BannerService.get_banners(active_only=True, db=db),
+        data=await BannerService.get_banners(active_only=True),
         message="Tải banner quảng cáo thành công",
     )
 
@@ -27,7 +27,7 @@ async def get_active_banners(db=Depends(get_db)):
 )
 async def get_all_banners(db=Depends(get_db)):
     return APIResponse(
-        data=await BannerService.get_banners(active_only=False, db=db),
+        data=await BannerService.get_banners(active_only=False),
         message="Lấy danh sách banner quảng cáo thành công",
     )
 
@@ -39,7 +39,7 @@ async def get_all_banners(db=Depends(get_db)):
 )
 async def create_banner(data: BannerRequest, db=Depends(get_db)):
     return APIResponse(
-        data=await BannerService.create_banner(data.model_dump(), db=db),
+        data=await BannerService.create_banner(data.model_dump()),
         message="Tạo banner quảng cáo thành công",
         status=201,
     )
@@ -52,6 +52,6 @@ async def create_banner(data: BannerRequest, db=Depends(get_db)):
 )
 async def delete_banner(banner_id: str, db=Depends(get_db)):
     return APIResponse(
-        data=await BannerService.delete_banner(banner_id, db=db),
+        data=await BannerService.delete_banner(banner_id),
         message="Xóa vĩnh viễn banner quảng cáo thành công",
     )

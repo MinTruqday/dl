@@ -18,7 +18,7 @@ async def export_document_pdf(
     db=Depends(get_db),
 ):
     pdf_content = await WatermarkService.export_document_pdf_watermarked(
-        document_id, current_user, db=db
+        document_id, current_user
     )
     headers = {
         "Content-Disposition": 'attachment; filename="TaiLieuBaoMat.doclib"'

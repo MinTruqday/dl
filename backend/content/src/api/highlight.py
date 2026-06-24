@@ -24,7 +24,7 @@ async def create_highlight(
 ):
     return APIResponse(
         data=await HighlightService.create_highlight(
-            document_id, data.model_dump(), current_user, db=db
+            document_id, data.model_dump(), current_user
         ),
         message="Tạo đoạn văn bản nổi bật thành công",
         status=201,
@@ -38,7 +38,7 @@ async def get_highlights(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await HighlightService.get_highlights(document_id, current_user, db=db),
+        data=await HighlightService.get_highlights(document_id, current_user),
         message="Lấy đoạn văn bản nổi bật thành công",
         status=200,
     )
@@ -53,7 +53,7 @@ async def update_highlight_note(
 ):
     return APIResponse(
         data=await HighlightService.update_highlight_note(
-            highlight_id, data.note, current_user, db=db
+            highlight_id, data.note, current_user
         ),
         message="Cập nhật ghi chú thành công",
         status=200,
@@ -67,7 +67,7 @@ async def delete_highlight(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await HighlightService.delete_highlight(highlight_id, current_user, db=db),
+        data=await HighlightService.delete_highlight(highlight_id, current_user),
         message="Đã xóa phần đánh dấu khỏi tài liệu",
         status=200,
     )
@@ -83,7 +83,7 @@ async def get_all_notes(
 ):
     return APIResponse(
         data=await HighlightService.get_all_notes(
-            current_user, cursor, limit, skip, db=db
+            current_user, cursor, limit, skip
         ),
         message="Lấy danh sách ghi chú cá nhân thành công",
         status=200,
@@ -98,7 +98,7 @@ async def export_highlights_markdown(
 ):
     return APIResponse(
         data=await HighlightService.export_highlights_markdown(
-            document_id, current_user, db=db
+            document_id, current_user
         ),
         message="Lấy danh sách đoạn văn bản đánh dấu thành công",
         status=200,

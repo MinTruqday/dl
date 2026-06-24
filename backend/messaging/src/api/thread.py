@@ -20,7 +20,7 @@ async def publish_personal_message(message: dict, receiver_id: str):
     from fastapi.encoders import jsonable_encoder
 
     payload = json.dumps(jsonable_encoder(message))
-    db = database.mongodb.get_default_database()
+    
     targets = [receiver_id]
     if receiver_id.startswith("group_"):
         group = await MessageRepository.find_group(

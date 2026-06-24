@@ -17,9 +17,7 @@ ALLOWED_WITHDRAWAL_ACTIONS = {"approve", "reject"}
 class WithdrawalService:
 
     @staticmethod
-    async def get_revenue(current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_revenue(current_user):
         pipeline = [
             {
                 "$match": {
@@ -51,12 +49,9 @@ class WithdrawalService:
 
     @staticmethod
     async def request_withdrawal(
-        data: dict, current_user, db=None, session=None
+        data: dict, current_user, session=None
     ) -> dict:
         should_close_session = False
-        if db is None:
-            db = database.mongodb.get_default_database()
-
         if session is None:
             session = await database.mongodb.start_session()
             session.start_transaction()
@@ -223,9 +218,7 @@ class WithdrawalService:
                 await session.end_session()
 
     @staticmethod
-    async def get_withdrawal_queue(status: str = "pending", limit: int = 100, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_withdrawal_queue(status: str = "pending", limit: int = 100) -> list:
         normalized_status = status.upper()
         if normalized_status not in ALLOWED_WITHDRAWAL_QUEUE_STATUSES:
             raise HTTPException(
@@ -270,12 +263,9 @@ class WithdrawalService:
 
     @staticmethod
     async def verify_withdrawal(
-        withdrawal_id: str, action: str, current_user, db=None, session=None
+        withdrawal_id: str, action: str, current_user, session=None
     ) -> dict:
         should_close_session = False
-        if db is None:
-            db = database.mongodb.get_default_database()
-
         if session is None:
             session = await database.mongodb.start_session()
             session.start_transaction()
@@ -389,12 +379,9 @@ class WithdrawalService:
 
     @staticmethod
     async def cancel_withdrawal(
-        withdrawal_id: str, current_user, db=None, session=None
+        withdrawal_id: str, current_user, session=None
     ) -> dict:
         should_close_session = False
-        if db is None:
-            db = database.mongodb.get_default_database()
-
         if session is None:
             session = await database.mongodb.start_session()
             session.start_transaction()

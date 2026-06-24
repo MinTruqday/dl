@@ -18,7 +18,7 @@ async def request_withdrawal(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await WithdrawalService.request_withdrawal(req.model_dump(), current_user, db=db),
+        data=await WithdrawalService.request_withdrawal(req.model_dump(), current_user),
         message="Đã gửi yêu cầu rút tiền",
         status=201,
     )
@@ -33,7 +33,7 @@ async def get_withdrawal_queue(
     status: str = "PENDING", limit: int = 50, db=Depends(get_db)
 ):
     return APIResponse(
-        data=await WithdrawalService.get_withdrawal_queue(status, limit, db=db),
+        data=await WithdrawalService.get_withdrawal_queue(status, limit),
         message="Lấy danh sách giao dịch rút tiền thành công",
         status=200,
     )
@@ -53,7 +53,7 @@ async def verify_withdrawal(
 ):
     return APIResponse(
         data=await WithdrawalService.verify_withdrawal(
-            withdrawal_id, action, reason, current_user, db=db
+            withdrawal_id, action, reason, current_user
         ),
         message="Xác minh yêu cầu rút tiền thành công",
         status=200,

@@ -18,10 +18,8 @@ class HighlightService:
 
     @staticmethod
     async def create_highlight(
-        document_id: str, data: dict, current_user, db=None
+        document_id: str, data: dict, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         color = data.get("color", "#e4e4e7")
         if color not in ALLOWED_HIGHLIGHT_COLORS:
             color = "#e4e4e7"
@@ -41,9 +39,7 @@ class HighlightService:
         return highlight
 
     @staticmethod
-    async def get_highlights(document_id: str, current_user, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_highlights(document_id: str, current_user) -> list:
         highlights = (
             await HighlightRepository
             .find({"user_id": str(current_user.id), "document_id": document_id})
@@ -69,10 +65,8 @@ class HighlightService:
 
     @staticmethod
     async def update_highlight_note(
-        highlight_id: str, note: str, current_user, db=None
+        highlight_id: str, note: str, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         result = await HighlightRepository.update_one(
             {"_id": highlight_id, "user_id": str(current_user.id)},
             {"$set": {"note": note, "updated_at": datetime.now(timezone.utc)}},
@@ -84,9 +78,7 @@ class HighlightService:
         return {"message": "Cập nhật chú thích đoạn nổi bật thành công"}
 
     @staticmethod
-    async def delete_highlight(highlight_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def delete_highlight(highlight_id: str, current_user) -> dict:
         result = await HighlightRepository.delete_one(
             {"_id": highlight_id, "user_id": str(current_user.id)}
         )
@@ -103,10 +95,7 @@ class HighlightService:
         cursor: str = None,
         limit: int = 50,
         skip: int = 0,
-        db=None,
     ) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
         match_query = {"user_id": str(current_user.id), "note": {"$ne": ""}}
         if cursor:
             try:
@@ -160,10 +149,8 @@ class HighlightService:
 
     @staticmethod
     async def export_highlights_markdown(
-        document_id: str, current_user, db=None
+        document_id: str, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         document = await DocumentRepository.find_one(
             {"_id": document_id}, projection={"title": 1}
         )

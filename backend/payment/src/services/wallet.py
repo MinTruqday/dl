@@ -14,14 +14,12 @@ from src.core.infrastructure.database import database
 class WalletService:
 
     @staticmethod
-    async def get_balance(current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_balance(current_user):
         wallet = await db_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
         return {"balance": wallet.get("balance", 0) if wallet else 0}
 
     @staticmethod
-    async def redeem_coupon(req, current_user, db=None, session=None):
+    async def redeem_coupon(req, current_user, session=None):
         should_close_session = False
         lock_key = f"lock:coupon:{req.code}"
         is_locked = False
@@ -59,9 +57,6 @@ class WalletService:
                 raise HTTPException(
                     status_code=500, detail=f"Lỗi kết nối bộ đệm lưu trữ: {e}"
                 )
-
-        if db is None:
-            db = database.mongodb.get_default_database()
 
         if session is None:
             session = await database.mongodb.start_session()
@@ -166,10 +161,7 @@ class WalletService:
         limit: int = 50,
         tx_type: str = None,
         skip: int = 0,
-        db=None,
     ):
-        if db is None:
-            db = database.mongodb.get_default_database()
         query = {"user_id": str(current_user.id)}
         if tx_type:
             query["type"] = tx_type.lower()

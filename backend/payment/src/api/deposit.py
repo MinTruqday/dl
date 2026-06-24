@@ -20,7 +20,7 @@ async def create_deposit(
 ):
     return APIResponse(
         data=await DepositService.create_deposit_link(
-            req, current_user, db=db
+            req, current_user
         ),
         message="Đã khởi tạo giao dịch nạp tiền, đang chờ xác nhận",
         status=201,

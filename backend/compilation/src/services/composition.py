@@ -79,7 +79,7 @@ class CompositionService:
 
     @staticmethod
     async def sync_keystroke_buffer(
-        document_id: str, payload: dict, current_user, cache=None, db=None
+        document_id: str, payload: dict, current_user, cache=None
     ):
         try:
             if cache:
@@ -97,7 +97,7 @@ class CompositionService:
 
     @staticmethod
     async def add_inline_suggestion(
-        document_id: str, payload: dict, current_user, db=None
+        document_id: str, payload: dict, current_user
     ):
         user_id = str(current_user.id)
         await CompositionRepository.insert_suggestion(
@@ -116,7 +116,7 @@ class CompositionService:
 
     @staticmethod
     async def resolve_suggestion(
-        suggestion_id: str, payload: dict, current_user, db=None
+        suggestion_id: str, payload: dict, current_user
     ):
         user_id = str(current_user.id)
         sug = await CompositionRepository.find_suggestion(
@@ -160,7 +160,7 @@ class CompositionService:
         return {"message": "Cập nhật đề xuất chỉnh sửa thành công"}
 
     @staticmethod
-    async def sync_pomodoro_session(payload: dict, current_user, db=None):
+    async def sync_pomodoro_session(payload: dict, current_user):
         user_id = str(current_user.id)
         await PomodoroRepository.insert_session(
             {
@@ -175,7 +175,7 @@ class CompositionService:
         return {"status": "The session metrics have been successfully recorded"}
 
     @staticmethod
-    async def auto_save_draft(document_id: str, content: dict, current_user, db=None):
+    async def auto_save_draft(document_id: str, content: dict, current_user):
         import re
 
         if isinstance(content, str):
@@ -240,7 +240,7 @@ class CompositionService:
         }
 
     @staticmethod
-    async def submit_for_review(document_id: str, current_user, db=None):
+    async def submit_for_review(document_id: str, current_user):
         user_id = str(current_user.id)
         try:
             async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
@@ -261,7 +261,6 @@ class CompositionService:
         replace_term: str,
         match_case: bool,
         current_user,
-        db=None,
     ):
         import re
 
@@ -337,7 +336,7 @@ class CompositionService:
 
     @staticmethod
     async def add_inline_comment(
-        document_id: str, data: dict, current_user, db=None
+        document_id: str, data: dict, current_user
     ) -> dict:
         comment_id = str(uuid7())
         comment = {
@@ -356,7 +355,7 @@ class CompositionService:
 
     @staticmethod
     async def get_inline_comments(
-        document_id: str, current_user, db=None
+        document_id: str, current_user
     ) -> List[dict]:
         cursor = (
             CompositionRepository
@@ -373,7 +372,7 @@ class CompositionService:
         return comments
 
     @staticmethod
-    async def resolve_comment(comment_id: str, current_user, db=None) -> dict:
+    async def resolve_comment(comment_id: str, current_user) -> dict:
         comment = await CompositionRepository.find_comment(
             {"_id": comment_id}
         )
@@ -415,7 +414,7 @@ class CompositionService:
 
     @staticmethod
     async def get_version_diff(
-        document_id: str, version_id_a: str, version_id_b: str, current_user, db=None
+        document_id: str, version_id_a: str, version_id_b: str, current_user
     ) -> dict:
         v_a, v_b = None, None
         try:

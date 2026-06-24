@@ -19,7 +19,7 @@ async def create_bookmark_folder(
 ):
     return APIResponse(
         data=await BookmarkService.create_bookmark_folder(
-            data.name, current_user, db=db
+            data.name, current_user
         ),
         message="Tạo thư mục dấu trang thành công",
         status=201,
@@ -31,7 +31,7 @@ async def get_bookmark_folders(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await BookmarkService.get_bookmark_folders(current_user, db=db),
+        data=await BookmarkService.get_bookmark_folders(current_user),
         message="Lấy danh sách thư mục dấu trang thành công",
     )
 
@@ -45,7 +45,7 @@ async def assign_bookmarks(
 ):
     return APIResponse(
         data=await BookmarkService.assign_bookmarks_to_folder(
-            folder_id, data.bookmark_ids, current_user, db=db
+            folder_id, data.bookmark_ids, current_user
         ),
         message="Cập nhật thư mục dấu trang thành công",
     )
@@ -59,7 +59,7 @@ async def delete_bookmark_folder(
 ):
     return APIResponse(
         data=await BookmarkService.delete_bookmark_folder(
-            folder_id, current_user, db=db
+            folder_id, current_user
         ),
         message="Xóa vĩnh viễn thư mục dấu trang thành công",
     )
@@ -72,7 +72,7 @@ async def toggle_bookmark(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await BookmarkService.toggle_bookmark(document_id, current_user, db=db),
+        data=await BookmarkService.toggle_bookmark(document_id, current_user),
         message="Thao tác dấu trang thành công",
         status=200,
     )
@@ -85,7 +85,7 @@ async def get_bookmarks(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await BookmarkService.get_bookmarks(current_user, limit, db=db),
+        data=await BookmarkService.get_bookmarks(current_user, limit),
         message="Lấy danh sách dấu trang thành công",
     )
 

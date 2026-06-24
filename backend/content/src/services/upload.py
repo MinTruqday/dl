@@ -10,7 +10,7 @@ from src.core.storage import generate_presigned_url, upload_file
 class UploadService:
 
     @staticmethod
-    async def upload_image(file, db=None):
+    async def upload_image(file):
         if "svg" in file.content_type.lower() or file.filename.lower().endswith(".svg"):
             raise HTTPException(
                 status_code=400, detail="Không hỗ trợ định dạng hình ảnh vector này"
@@ -37,7 +37,7 @@ class UploadService:
         }
 
     @staticmethod
-    async def upload_document(file, db=None):
+    async def upload_document(file):
         allowed_extensions = [
             "pdf",
             "epub",
@@ -90,7 +90,7 @@ class UploadService:
         }
 
     @staticmethod
-    async def get_presigned_url(file_path: str, db=None):
+    async def get_presigned_url(file_path: str):
         if ".." in file_path or file_path.startswith("/"):
             raise HTTPException(
                 status_code=400, detail="Đường dẫn tệp tin không hợp lệ"

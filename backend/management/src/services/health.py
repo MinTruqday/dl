@@ -27,10 +27,7 @@ class HealthService:
         ),
         offset: int = 0,
         cursor: str = None,
-        db=None,
     ) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
         query = {}
         if cursor and isinstance(cursor, str):
             query["created_at"] = {
@@ -61,9 +58,7 @@ class HealthService:
         ]
 
     @staticmethod
-    async def update_user_role(user_id: str, role: str, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def update_user_role(user_id: str, role: str) -> dict:
         res = await UserRepository.update_one(
             {"_id": user_id},
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
@@ -76,9 +71,7 @@ class HealthService:
         return {"message": "Cập nhật quyền truy cập thành công"}
 
     @staticmethod
-    async def update_user_status(user_id: str, is_active: bool, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def update_user_status(user_id: str, is_active: bool) -> dict:
         res = await UserRepository.update_one(
             {"_id": user_id},
             {
@@ -97,10 +90,8 @@ class HealthService:
 
     @staticmethod
     async def toggle_maintenance_mode(
-        enabled: bool, message: str = "", db=None
+        enabled: bool, message: str = ""
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         await SystemRepository.update_config(
             {"key": "maintenance_mode"},
             {
@@ -116,18 +107,16 @@ class HealthService:
         return {"message": "Cập nhật cấu hình bảo trì thành công"}
 
     @staticmethod
-    async def trigger_backup(action: str = "FULL", db=None) -> dict:
+    async def trigger_backup(action: str = "FULL") -> dict:
         logger.info("Đã lên lịch sao lưu dữ liệu")
         return {"message": "Đang chạy tác vụ sao lưu dữ liệu"}
 
     @staticmethod
-    async def get_system_health(db=None) -> dict:
+    async def get_system_health() -> dict:
         import os
 
         from src.core.infrastructure.configuration import settings as shared_settings
 
-        if db is None:
-            db = database.mongodb.get_default_database()
         try:
             await db.command("ping")
             db_status = "connected"
@@ -175,9 +164,7 @@ class HealthService:
         }
 
     @staticmethod
-    async def get_maintenance_mode(db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_maintenance_mode() -> dict:
         config = await SystemRepository.find_config(
             {"key": "maintenance_mode"}
         )
@@ -189,7 +176,7 @@ class HealthService:
         }
 
     @staticmethod
-    async def get_minio_stats(db=None) -> dict:
+    async def get_minio_stats() -> dict:
         from src.core.storage import get_storage_client
 
         try:
@@ -286,9 +273,7 @@ class HealthService:
 
 
     @staticmethod
-    async def handle_bug_report(data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def handle_bug_report(data: dict, current_user) -> dict:
         report_id = str(uuid7())
         await ModerationRepository.insert_bug_report(
             {
@@ -304,9 +289,7 @@ class HealthService:
         return {"message": "Báo cáo sự cố thành công"}
 
     @staticmethod
-    async def submit_policy_proposal(data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def submit_policy_proposal(data: dict, current_user) -> dict:
         proposal_id = str(uuid7())
         await PolicyProposalRepository.insert_one(
             {
@@ -321,14 +304,14 @@ class HealthService:
         logger.info("Đã gửi đề xuất chính sách")
 
     @staticmethod
-    async def create_marketing_campaign(data: dict, db=None) -> dict:
+    async def create_marketing_campaign(data: dict) -> dict:
         return {}
         
     @staticmethod
-    async def bulk_update_shadowban(user_ids, status, current_user, db=None) -> dict:
+    async def bulk_update_shadowban(user_ids, status, current_user) -> dict:
         return {}
         
     @staticmethod
-    async def bulk_verify_kyc(user_ids, status, current_user, db=None) -> dict:
+    async def bulk_verify_kyc(user_ids, status, current_user) -> dict:
         return {}
 

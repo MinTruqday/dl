@@ -9,9 +9,7 @@ from src.core.infrastructure.database import database
 class ModerationService:
 
     @staticmethod
-    async def request_data_takeout(current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def request_data_takeout(current_user):
         user_id = str(current_user.id)
         documents = (
             await db_client.find(collection="documents", query={"creator_id": user_id}, limit=1000)
@@ -30,9 +28,7 @@ class ModerationService:
         return takeout_payload
 
     @staticmethod
-    async def right_to_be_forgotten(current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def right_to_be_forgotten(current_user):
         user_id = str(current_user.id)
         await db_client.delete_many(collection="documents", filter={"creator_id": user_id})
         await db_client.delete_many(collection="reactions", filter={"user_id": user_id})
@@ -46,16 +42,14 @@ class ModerationService:
         }
 
     @staticmethod
-    async def request_data_export(current_user, db=None):
+    async def request_data_export(current_user):
         logger.info("Yêu cầu xuất dữ liệu đã được ghi nhận")
         return {
             "message": "Yêu cầu xuất dữ liệu thành công, liên kết sẽ được gửi qua email"
         }
 
     @staticmethod
-    async def generate_gdpr_takeout(current_user, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def generate_gdpr_takeout(current_user):
         user_id = str(current_user.id)
         full_data = {
             "profile": await db["users"].find_one(

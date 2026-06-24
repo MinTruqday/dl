@@ -10,9 +10,7 @@ from src.core.infrastructure.database import database
 class UserService:
 
     @staticmethod
-    async def update_profile(data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def update_profile(data: dict, current_user) -> dict:
         update_fields = {}
         if "full_name" in data and data["full_name"].strip():
             update_fields["full_name"] = data["full_name"].strip()
@@ -34,9 +32,7 @@ class UserService:
         return {"message": "Cập nhật thông tin cá nhân thành công"}
 
     @staticmethod
-    async def get_user_profile(current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_user_profile(current_user) -> dict:
         user = await db["users"].find_one(
             {"_id": str(current_user.id)}, {"password_hash": 0}
         )
@@ -48,9 +44,7 @@ class UserService:
         return user
 
     @staticmethod
-    async def update_brand_page(data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def update_brand_page(data: dict, current_user) -> dict:
         update_fields = {}
         if "cover_image_url" in data:
             update_fields["author_profile.cover_image_url"] = data["cover_image_url"]
@@ -72,9 +66,7 @@ class UserService:
         return {"message": "Cập nhật trang hồ sơ tác giả thành công"}
 
     @staticmethod
-    async def block_user(target_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def block_user(target_id: str, current_user) -> dict:
         if str(current_user.id) == target_id:
             raise HTTPException(status_code=400, detail="Không thể tự chặn chính mình")
         target_user = await db_client.find_one(collection="users", query={"_id": target_id})

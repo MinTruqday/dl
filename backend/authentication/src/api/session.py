@@ -56,7 +56,7 @@ async def register_user(
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await SessionService.register_user(user_in, client_ip, db=db),
+        data=await SessionService.register_user(user_in, client_ip),
         message="Đăng ký thành công, vui lòng đăng nhập",
         status=status.HTTP_201_CREATED,
     )
@@ -75,7 +75,7 @@ async def login(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await SessionService.login_user(
-            form_data.username, form_data.password, client_ip, db=db
+            form_data.username, form_data.password, client_ip
         ),
         message="Xác thực và cấp quyền truy cập thành công",
         status=status.HTTP_200_OK,
@@ -88,7 +88,7 @@ async def forgot_password(
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await SessionService.forgot_password(payload.email, client_ip, db=db),
+        data=await SessionService.forgot_password(payload.email, client_ip),
         message="Yêu cầu đặt lại mật khẩu đã được gửi đi",
         status=status.HTTP_200_OK,
     )
@@ -101,7 +101,7 @@ async def reset_password(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await SessionService.reset_password(
-            payload.token, payload.new_password, client_ip, db=db
+            payload.token, payload.new_password, client_ip
         ),
         message="Đổi mật khẩu thành công",
         status=status.HTTP_200_OK,
@@ -114,7 +114,7 @@ async def verify_code(
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await SessionService.verify_reset_code(payload.token, client_ip, db=db),
+        data=await SessionService.verify_reset_code(payload.token, client_ip),
         message="Xác thực mã bảo mật thành công",
         status=status.HTTP_200_OK,
     )

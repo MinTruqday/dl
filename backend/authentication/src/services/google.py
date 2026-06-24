@@ -7,7 +7,7 @@ from src.repositories.authentication import AuthenticationRepository
 
 class GoogleService:
     @staticmethod
-    async def get_google_auth_url(db=None):
+    async def get_google_auth_url():
         google_client_id = settings.GOOGLE_CLIENT_ID
         redirect_uri = settings.GOOGLE_REDIRECT_URI
         if not google_client_id or not redirect_uri:
@@ -20,7 +20,7 @@ class GoogleService:
         return auth_url
 
     @staticmethod
-    async def handle_google_callback(code: str, client_ip: str, db=None):
+    async def handle_google_callback(code: str, client_ip: str):
         from src.services.session import SessionService
         google_client_id = settings.GOOGLE_CLIENT_ID
         google_client_secret = settings.GOOGLE_CLIENT_SECRET
@@ -55,7 +55,7 @@ class GoogleService:
         except Exception:
             user_doc = None
         if not user_doc:
-            config = await AuthenticationRepository.get_system_config(db=db)
+            config = await AuthenticationRepository.get_system_config()
             if config and (not config.get("registration_enabled", True)):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -87,7 +87,7 @@ class GoogleService:
                         "password_hash": "google_oauth_no_password",
                         "passkeys": [],
                     }
-                    await AuthenticationRepository.create_auth_credential(auth_cred, db=db)
+                    await AuthenticationRepository.create_auth_credential(auth_cred)
                     user_doc = {"_id": user_id, "email": email, "is_active": True}
             except httpx.RequestError as e:
                 raise HTTPException(

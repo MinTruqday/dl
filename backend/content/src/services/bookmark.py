@@ -16,9 +16,7 @@ from src.repositories.bookmark import BookmarkRepository
 class BookmarkService:
 
     @staticmethod
-    async def toggle_bookmark(document_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def toggle_bookmark(document_id: str, current_user) -> dict:
         user_id = str(current_user.id)
         profile = await ContentProfileRepository.find_content_profile(
             {"_id": user_id}, projection={"bookmarks": 1}
@@ -56,10 +54,7 @@ class BookmarkService:
         limit: int = Query(
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         ),
-        db=None,
     ) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
         profile = await ContentProfileRepository.find_content_profile(
             {"_id": str(current_user.id)}, projection={"bookmarks": 1}
         )
@@ -90,9 +85,7 @@ class BookmarkService:
         ]
 
     @staticmethod
-    async def create_bookmark_folder(name: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def create_bookmark_folder(name: str, current_user) -> dict:
         folder = {
             "_id": str(uuid7()),
             "user_id": str(current_user.id),
@@ -105,9 +98,7 @@ class BookmarkService:
         return folder
 
     @staticmethod
-    async def get_bookmark_folders(current_user, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_bookmark_folders(current_user) -> list:
         folders = (
             await BookmarkFolderRepository
             .find({"user_id": str(current_user.id)})
@@ -130,10 +121,8 @@ class BookmarkService:
 
     @staticmethod
     async def assign_bookmarks_to_folder(
-        folder_id: str, bookmark_ids: list, current_user, db=None
+        folder_id: str, bookmark_ids: list, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         result = await BookmarkRepository.update_folder(
             {"_id": folder_id, "user_id": str(current_user.id)},
             {
@@ -150,9 +139,7 @@ class BookmarkService:
         return {"message": "Cập nhật thư mục dấu trang thành công"}
 
     @staticmethod
-    async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def delete_bookmark_folder(folder_id: str, current_user) -> dict:
         result = await BookmarkRepository.delete_folder(
             {"_id": folder_id, "user_id": str(current_user.id)}
         )

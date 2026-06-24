@@ -25,7 +25,7 @@ async def publish_document(
 ):
     return APIResponse(
         data=await PublicationService.publish_document(
-            document_id, current_user, db=db
+            document_id, current_user
         ),
         message="Tài liệu đã được xuất bản",
         status=status.HTTP_200_OK,
@@ -45,7 +45,7 @@ async def schedule_publish(
 ):
     return APIResponse(
         data=await PublicationService.schedule_publish(
-            document_id, req.publish_at, current_user, db=db
+            document_id, req.publish_at, current_user
         ),
         message="Lên lịch xuất bản tài liệu tự động thành công",
         status=200,
@@ -65,7 +65,7 @@ async def update_seo_metadata(
 ):
     return APIResponse(
         data=await PublicationService.update_seo_metadata(
-            document_id, req.model_dump(), current_user, db=db
+            document_id, req.model_dump(), current_user
         ),
         message="Cập nhật dữ liệu chuẩn SEO thành công",
         status=200,
@@ -80,7 +80,7 @@ async def get_readability_score(
 ):
     return APIResponse(
         data=await PublicationService.get_readability_score(
-            document_id, current_user, db=db
+            document_id, current_user
         ),
         message="Phân tích khả năng đọc thành công",
         status=200,

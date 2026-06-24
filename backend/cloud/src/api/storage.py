@@ -26,7 +26,7 @@ async def create_folder(
     db=Depends(get_db),
 ):
     data.is_folder = True
-    item = await StorageService.create_item(data, current_user.id, db=db)
+    item = await StorageService.create_item(data, current_user.id)
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
         message="Tạo thư mục mới thành công",
@@ -46,7 +46,7 @@ async def create_file(
     
 
     data.is_folder = False
-    item = await StorageService.create_item(data, current_user.id, db=db)
+    item = await StorageService.create_item(data, current_user.id)
     background_tasks.add_task(
         
     )
@@ -68,7 +68,7 @@ async def list_items(
     db=Depends(get_db),
 ):
     items = await StorageService.get_items_by_parent(
-        parent_id, current_user.id, is_trashed, is_starred, db=db
+        parent_id, current_user.id, is_trashed, is_starred
     )
     response_items = [StorageItemResponse(**item.dict()) for item in items]
     return APIResponse(
@@ -85,7 +85,7 @@ async def search_items(
     ),
     db=Depends(get_db),
 ):
-    items = await StorageService.search_items(q, current_user.id, type, db=db)
+    items = await StorageService.search_items(q, current_user.id, type)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
         message="Tìm kiếm thành công",
@@ -101,7 +101,7 @@ async def get_recent_items(
     ),
     db=Depends(get_db),
 ):
-    items = await StorageService.get_recent_items(current_user.id, limit, db=db)
+    items = await StorageService.get_recent_items(current_user.id, limit)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
         message="Lấy danh sách tệp truy cập gần đây thành công",
@@ -116,7 +116,7 @@ async def get_storage_quota(
     ),
     db=Depends(get_db),
 ):
-    data = await StorageService.get_storage_quota(current_user.id, db=db)
+    data = await StorageService.get_storage_quota(current_user.id)
     return APIResponse(
         data=data, message="Cập nhật dung lượng lưu trữ thành công", status=200
     )
@@ -134,7 +134,7 @@ async def create_shortcut(
     db=Depends(get_db),
 ):
     item = await StorageService.create_shortcut(
-        item_id, target_parent_id, current_user.id, db=db
+        item_id, target_parent_id, current_user.id
     )
     if not item:
         raise HTTPException(
@@ -172,7 +172,7 @@ async def download_zip(
     async with await get_storage_client() as storage_client:
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
             for i_id in item_ids:
-                item = await StorageService.get_item(i_id, current_user.id, db=db)
+                item = await StorageService.get_item(i_id, current_user.id)
                 if item and (not item.is_folder) and item.url:
                     try:
                         resp = await storage_client.get_object(
@@ -202,19 +202,19 @@ async def update_item(
     from uuid6 import uuid7
 
     if data.is_public and data.is_public is True:
-        current_item = await StorageService.get_item(item_id, current_user.id, db=db)
+        current_item = await StorageService.get_item(item_id, current_user.id)
         if current_item and (not current_item.share_token):
             update_data_dict = data.dict(exclude_unset=True)
             update_data_dict["share_token"] = str(uuid7())
             item = await StorageService.update_item(
-                item_id, current_user.id, StorageItemUpdate(**update_data_dict), db=db
+                item_id, current_user.id, StorageItemUpdate(**update_data_dict)
             )
         else:
             item = await StorageService.update_item(
-                item_id, current_user.id, data, db=db
+                item_id, current_user.id, data
             )
     else:
-        item = await StorageService.update_item(item_id, current_user.id, data, db=db)
+        item = await StorageService.update_item(item_id, current_user.id, data)
     if not item:
         raise HTTPException(status_code=404, detail="Không tìm thấy tệp hoặc thư mục")
     return APIResponse(
@@ -234,7 +234,7 @@ async def delete_item(
     db=Depends(get_db),
 ):
     if hard_delete:
-        success = await StorageService.delete_item(item_id, current_user.id, db=db)
+        success = await StorageService.delete_item(item_id, current_user.id)
         if not success:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tệp hoặc thư mục"
@@ -244,7 +244,7 @@ async def delete_item(
         )
     else:
         item = await StorageService.update_item(
-            item_id, current_user.id, StorageItemUpdate(is_trashed=True), db=db
+            item_id, current_user.id, StorageItemUpdate(is_trashed=True)
         )
         if not item:
             raise HTTPException(
@@ -265,7 +265,7 @@ async def copy_item(
     db=Depends(get_db),
 ):
     item = await StorageService.copy_item(
-        item_id, current_user.id, target_parent_id, db=db
+        item_id, current_user.id, target_parent_id
     )
     if not item:
         raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
@@ -288,7 +288,7 @@ async def add_version(
     ),
     db=Depends(get_db),
 ):
-    item = await StorageService.add_version(item_id, current_user.id, url, size, db=db)
+    item = await StorageService.add_version(item_id, current_user.id, url, size)
     if not item:
         raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
     return APIResponse(
@@ -308,13 +308,13 @@ async def share_archive(
     ),
     db=Depends(get_db),
 ):
-    res = await StorageService.share_item(item_id, email, role, current_user.id, db=db)
+    res = await StorageService.share_item(item_id, email, role, current_user.id)
     return APIResponse(data=None, message=res["message"], status=200)
 
 
 @router.get("/chia-se/{share_token}", response_model=APIResponse[StorageItemResponse])
 async def get_public_item(share_token: str, db=Depends(get_db)):
-    item = await StorageService.get_public_item(share_token, db=db)
+    item = await StorageService.get_public_item(share_token)
     if not item:
         raise HTTPException(
             status_code=404, detail="Liên kết chia sẻ không hợp lệ hoặc đã hết hạn"

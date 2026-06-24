@@ -26,10 +26,7 @@ class AccountService:
         limit: int = 50,
         offset: int = 0,
         cursor: str = None,
-        db=None,
     ) -> List[Dict[str, Any]]:
-        if db is None:
-            db = database.mongodb.get_default_database()
         query = {}
         if cursor and isinstance(cursor, str):
             query["created_at"] = {
@@ -60,9 +57,7 @@ class AccountService:
         ]
 
     @staticmethod
-    async def update_user_role(user_id: str, role: str, db=None) -> Dict[str, str]:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def update_user_role(user_id: str, role: str) -> Dict[str, str]:
         res = await UserRepository.update_one(
             {"_id": user_id},
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
@@ -76,10 +71,8 @@ class AccountService:
 
     @staticmethod
     async def update_user_status(
-        user_id: str, is_active: bool, db=None
+        user_id: str, is_active: bool
     ) -> Dict[str, str]:
-        if db is None:
-            db = database.mongodb.get_default_database()
         res = await UserRepository.update_one(
             {"_id": user_id},
             {
@@ -97,9 +90,7 @@ class AccountService:
         return {"message": "Cập nhật trạng thái hoạt động thành công"}
 
     @staticmethod
-    async def warn_user(user_id: str, reason: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def warn_user(user_id: str, reason: str, current_user) -> dict:
         user = await UserRepository.find_one({"_id": user_id})
         if not user:
             raise HTTPException(
@@ -143,10 +134,8 @@ class AccountService:
 
     @staticmethod
     async def lock_user(
-        user_id: str, reason: str, duration_hours: int, current_user, db=None
+        user_id: str, reason: str, duration_hours: int, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         lock_until = datetime.now(timezone.utc) + timedelta(hours=duration_hours)
         await UserRepository.update_one(
             {"_id": user_id},
@@ -174,10 +163,8 @@ class AccountService:
 
     @staticmethod
     async def shadowban_user(
-        user_id: str, is_banned: bool, current_user, db=None
+        user_id: str, is_banned: bool, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         await UserRepository.update_one(
             {"_id": user_id},
             {
@@ -200,9 +187,7 @@ class AccountService:
         return {"message": "Cập nhật trạng thái hiển thị thành công"}
 
     @staticmethod
-    async def verify_kyc(user_id: str, status: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def verify_kyc(user_id: str, status: str, current_user) -> dict:
         await UserRepository.update_one(
             {"_id": user_id},
             {
@@ -225,9 +210,7 @@ class AccountService:
         return {"message": "Đã cập nhật trạng thái xác minh"}
 
     @staticmethod
-    async def get_notes(user_id: str, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_notes(user_id: str) -> list:
         notes = (
             await ModeratorNoteRepository
             .find({"user_id": user_id})
@@ -249,9 +232,7 @@ class AccountService:
         ]
 
     @staticmethod
-    async def add_note(user_id: str, note: str, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def add_note(user_id: str, note: str, current_user) -> dict:
         await ModerationRepository.insert_moderator_note(
             {
                 "_id": str(uuid7()),
@@ -270,10 +251,7 @@ class AccountService:
         cursor: str = None,
         limit: int = 50,
         skip: int = 0,
-        db=None,
     ) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
         match_query = {"status": status_filter} if status_filter else {}
         if cursor:
             try:
@@ -331,10 +309,8 @@ class AccountService:
 
     @staticmethod
     async def resolve_report(
-        report_id: str, action: str, current_user, db=None
+        report_id: str, action: str, current_user
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
         await ModerationRepository.update_report(
             {"_id": report_id},
             {
@@ -350,9 +326,7 @@ class AccountService:
         return {"message": "Xử lý báo cáo vi phạm thành công"}
 
     @staticmethod
-    async def get_moderator_activity_log(actor_id: str, db=None) -> list:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_moderator_activity_log(actor_id: str) -> list:
         logs = (
             await AuditLogRepository
             .find({"actor_id": actor_id})
@@ -401,10 +375,7 @@ class AccountService:
     async def search_users(
         query: str,
         limit: int = 50,
-        db=None,
     ) -> List[Dict[str, Any]]:
-        if db is None:
-            db = database.mongodb.get_default_database()
         search_query = {
             "$or": [
                 {"full_name": {"$regex": query, "$options": "i"}},
@@ -437,9 +408,7 @@ class AccountService:
         ]
 
     @staticmethod
-    async def unlock_accounts_task(db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def unlock_accounts_task():
         now = datetime.now(timezone.utc)
         res = await UserRepository.update_many(
             {"locked_until": {"$lt": now}, "is_active": False},
@@ -454,10 +423,8 @@ class AccountService:
 
     @staticmethod
     async def internal_get_user_by_id(
-        user_id: str, db=None
+        user_id: str
     ) -> Optional[Dict[str, Any]]:
-        if db is None:
-            db = database.mongodb.get_default_database()
         user = await UserRepository.find_one(
             {"_id": user_id}, {"password_hash": 0, "passkeys": 0}
         )
@@ -472,10 +439,8 @@ class AccountService:
 
     @staticmethod
     async def internal_get_users_by_ids(
-        user_ids: List[str], db=None
+        user_ids: List[str]
     ) -> List[Dict[str, Any]]:
-        if db is None:
-            db = database.mongodb.get_default_database()
         users = (
             await UserRepository
             .find({"_id": {"$in": user_ids}}, {"password_hash": 0, "passkeys": 0})
@@ -491,10 +456,8 @@ class AccountService:
 
     @staticmethod
     async def internal_get_user_by_email(
-        email: str, db=None
+        email: str
     ) -> Optional[Dict[str, Any]]:
-        if db is None:
-            db = database.mongodb.get_default_database()
         user = await UserRepository.find_one({"email": email})
         if not user:
             return None
@@ -506,9 +469,7 @@ class AccountService:
         return user
 
     @staticmethod
-    async def internal_get_user_by_slug(slug: str, db=None) -> Optional[Dict[str, Any]]:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def internal_get_user_by_slug(slug: str) -> Optional[Dict[str, Any]]:
         user = await UserRepository.find_one({"slug": slug})
         if not user:
             return None
@@ -520,9 +481,7 @@ class AccountService:
         return user
 
     @staticmethod
-    async def internal_create_user(user_data: Dict[str, Any], db=None) -> str:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def internal_create_user(user_data: Dict[str, Any]) -> str:
         user_id = str(uuid7())
         user_data["_id"] = user_id
         user_data["created_at"] = datetime.now(timezone.utc)

@@ -25,7 +25,7 @@ else:
 class WatermarkService:
 
     @staticmethod
-    async def export_document_pdf_watermarked(document_id: str, current_user, db=None):
+    async def export_document_pdf_watermarked(document_id: str, current_user):
         if not REPORTLAB_AVAILABLE:
             raise HTTPException(
                 status_code=500,
@@ -75,7 +75,7 @@ class WatermarkService:
             zero_width = binary.replace("0", "\u200B").replace("1", "\u200C")
             return f"\u200D{zero_width}\u200D"
 
-        def generate_pdf_sync(db=None):
+        def generate_pdf_sync():
             try:
                 raw_pdf_buffer = io.BytesIO()
                 c = canvas.Canvas(raw_pdf_buffer, pagesize=A4)

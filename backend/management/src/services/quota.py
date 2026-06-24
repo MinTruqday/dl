@@ -13,9 +13,7 @@ from src.schemas.quota import QuotaLimit
 
 class QuotaService:
     @staticmethod
-    async def get_global_config_from_db(db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
+    async def get_global_config_from_db() -> dict:
         config = await db_client.find_one(collection="quota_configs", query={"_id": "global"})
         if config and "role_limits" in config:
             return config["role_limits"]
@@ -61,10 +59,8 @@ class QuotaService:
         return default_limits
 
     @staticmethod
-    async def update_role_quota(tier: str, limits_dict: dict, db=None):
-        if db is None:
-            db = database.mongodb.get_default_database()
-        global_cfg = await QuotaService.get_global_config_from_db(db=db)
+    async def update_role_quota(tier: str, limits_dict: dict):
+        global_cfg = await QuotaService.get_global_config_from_db()
         if tier in global_cfg:
             global_cfg[tier].update(limits_dict)
             await db.quota_configs.update_one(
@@ -73,9 +69,9 @@ class QuotaService:
 
     @staticmethod
     async def get_user_limits(
-        user_id: str, role: str, ai_tier: str = "BASIC", db=None
+        user_id: str, role: str, ai_tier: str = "BASIC"
     ) -> QuotaLimit:
-        global_cfg = await QuotaService.get_global_config_from_db(db=db)
+        global_cfg = await QuotaService.get_global_config_from_db()
 
         target_tier = "admin" if role == "admin" else ai_tier
         tier_cfg = global_cfg.get(target_tier, global_cfg.get("BASIC", {}))
@@ -94,9 +90,9 @@ class QuotaService:
 
     @staticmethod
     async def check_quota(
-        user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat", db=None
+        user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat"
     ):
-        limits = await QuotaService.get_user_limits(user_id, role, ai_tier, db=db)
+        limits = await QuotaService.get_user_limits(user_id, role, ai_tier)
 
         req_key = f"quota:{user_id}:{feature}:req"
         current_reqs = await database.redis.get(req_key)
@@ -119,7 +115,7 @@ class QuotaService:
 
     @staticmethod
     async def consume_request(
-        user_id: str, feature: str = "chat", req_reset_hours: int = 24, db=None
+        user_id: str, feature: str = "chat", req_reset_hours: int = 24
     ):
         req_key = f"quota:{user_id}:{feature}:req"
         current = await database.redis.incr(req_key)
@@ -132,7 +128,6 @@ class QuotaService:
         tokens: int,
         feature: str = "chat",
         req_reset_hours: int = 24,
-        db=None,
     ):
         if tokens <= 0:
             return
@@ -143,9 +138,9 @@ class QuotaService:
 
     @staticmethod
     async def get_current_usage(
-        user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat", db=None
+        user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat"
     ):
-        limits = await QuotaService.get_user_limits(user_id, role, ai_tier, db=db)
+        limits = await QuotaService.get_user_limits(user_id, role, ai_tier)
         req_key = f"quota:{user_id}:{feature}:req"
         token_key = f"quota:{user_id}:{feature}:token"
         used_reqs = int(await database.redis.get(req_key) or 0)

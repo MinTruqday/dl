@@ -21,7 +21,7 @@ router = APIRouter(prefix="/van-hanh")
 )
 async def get_system_metrics(db=Depends(get_db)):
     return APIResponse(
-        data=await TelemetryService.get_system_stats(db=db),
+        data=await TelemetryService.get_system_stats(),
         message="Lấy dữ liệu hoạt động thành công",
     )
 
@@ -33,7 +33,7 @@ async def get_system_metrics(db=Depends(get_db)):
 )
 async def get_maintenance_status(db=Depends(get_db)):
     return APIResponse(
-        data=await HealthService.get_maintenance_mode(db=db),
+        data=await HealthService.get_maintenance_mode(),
         message="Lấy trạng thái bảo trì thành công",
     )
 
@@ -45,7 +45,7 @@ async def get_maintenance_status(db=Depends(get_db)):
 )
 async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(
-        data=await HealthService.toggle_maintenance_mode(enabled, db=db),
+        data=await HealthService.toggle_maintenance_mode(enabled),
         message="Cập nhật cấu hình bảo trì thành công",
     )
 
@@ -57,7 +57,7 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
 )
 async def trigger_backup(db=Depends(get_db)):
     return APIResponse(
-        data=await HealthService.trigger_backup(db=db),
+        data=await HealthService.trigger_backup(),
         message="Bắt đầu sao lưu dữ liệu",
     )
 
@@ -70,7 +70,7 @@ async def trigger_backup(db=Depends(get_db)):
 async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)):
     return APIResponse(
         data=await HealthService.create_marketing_campaign(
-            payload.model_dump(), db=db
+            payload.model_dump()
         ),
         message="Thiết lập chiến dịch quảng cáo thành công",
         status=201,
@@ -93,7 +93,7 @@ async def get_system_config(db=Depends(get_db)):
 )
 async def get_system_health(db=Depends(get_db)):
     return APIResponse(
-        data=await HealthService.get_system_health(db=db),
+        data=await HealthService.get_system_health(),
         message="Tạo báo cáo tình trạng thành công",
     )
 
@@ -105,7 +105,7 @@ async def get_system_health(db=Depends(get_db)):
 )
 async def get_admin_reports(db=Depends(get_db)):
     return APIResponse(
-        data=await AccountService.get_report_queue(status_filter=None, db=db),
+        data=await AccountService.get_report_queue(status_filter=None),
         message="Lấy danh sách báo cáo vi phạm thành công",
     )
 
@@ -123,7 +123,7 @@ async def shadowban_user(
 ):
     return APIResponse(
         data=await HealthService.bulk_update_shadowban(
-            payload.user_ids, payload.status, current_user, db=db
+            payload.user_ids, payload.status, current_user
         ),
         message="Áp dụng quyền hiển thị thành công",
     )
@@ -139,7 +139,7 @@ async def verify_kyc(
 ):
     return APIResponse(
         data=await HealthService.bulk_verify_kyc(
-            payload.user_ids, payload.status, current_user, db=db
+            payload.user_ids, payload.status, current_user
         ),
         message="Cập nhật hồ sơ xác minh danh tính thành công",
     )
@@ -152,6 +152,6 @@ async def verify_kyc(
 )
 async def get_minio_stats(db=Depends(get_db)):
     return APIResponse(
-        data=await HealthService.get_minio_stats(db=db),
+        data=await HealthService.get_minio_stats(),
         message="Lấy thống kê sử dụng lưu trữ thành công",
     )

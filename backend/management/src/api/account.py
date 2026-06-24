@@ -31,7 +31,7 @@ async def get_all_users(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await AccountService.get_all_users(limit, offset, db=db),
+        data=await AccountService.get_all_users(limit, offset),
         message="Lấy danh sách người dùng thành công",
     )
 
@@ -43,7 +43,7 @@ async def get_all_users(
 )
 async def update_user_role(user_id: str, req: UpdateRoleRequest, db=Depends(get_db)):
     return APIResponse(
-        data=await AccountService.update_user_role(user_id, req.role, db=db),
+        data=await AccountService.update_user_role(user_id, req.role),
         message="Cập nhật quyền truy cập tài khoản thành công",
     )
 
@@ -57,7 +57,7 @@ async def update_user_status(
     user_id: str, req: UpdateStatusRequest, db=Depends(get_db)
 ):
     return APIResponse(
-        data=await AccountService.update_user_status(user_id, req.is_active, db=db),
+        data=await AccountService.update_user_status(user_id, req.is_active),
         message="Cập nhật trạng thái hoạt động thành công",
     )
 
@@ -74,7 +74,7 @@ async def warn_user(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await AccountService.warn_user(user_id, req.reason, current_user, db=db),
+        data=await AccountService.warn_user(user_id, req.reason, current_user),
         message="Gửi cảnh báo vi phạm thành công",
     )
 
@@ -92,7 +92,7 @@ async def lock_user(
 ):
     return APIResponse(
         data=await AccountService.lock_user(
-            user_id, req.reason, req.duration_hours, current_user, db=db
+            user_id, req.reason, req.duration_hours, current_user
         ),
         message="Khóa tài khoản tạm thời thành công",
     )
@@ -110,7 +110,7 @@ async def shadowban_user(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await AccountService.shadowban_user(user_id, is_banned, current_user, db=db),
+        data=await AccountService.shadowban_user(user_id, is_banned, current_user),
         message="Cập nhật quyền hiển thị tài khoản thành công",
     )
 
@@ -122,7 +122,7 @@ async def shadowban_user(
 )
 async def get_notes(user_id: str, db=Depends(get_db)):
     return APIResponse(
-        data=await AccountService.get_notes(user_id, db=db),
+        data=await AccountService.get_notes(user_id),
         message="Lấy ghi chú kiểm duyệt thành công",
     )
 
@@ -139,7 +139,7 @@ async def add_note(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await AccountService.add_note(user_id, req.note, current_user, db=db),
+        data=await AccountService.add_note(user_id, req.note, current_user),
         message="Lưu ghi chú kiểm duyệt vào hồ sơ thành công",
         status=201,
     )
@@ -152,7 +152,7 @@ async def search_users(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await AccountService.search_users(q, limit, db=db),
+        data=await AccountService.search_users(q, limit),
         message="Lấy kết quả tìm kiếm thành công",
     )
 

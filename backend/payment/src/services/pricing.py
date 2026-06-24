@@ -11,7 +11,7 @@ class PricingService:
 
     @staticmethod
     async def set_document_pricing(
-        document_id: str, data: dict, current_user, db=None
+        document_id: str, data: dict, current_user
     ) -> dict:
         doc = await PricingRepository.get_document(document_id, str(current_user.id))
         if not doc:
@@ -26,7 +26,7 @@ class PricingService:
         return {"message": "Cập nhật cấu hình giá tài liệu thành công"}
 
     @staticmethod
-    async def get_pricing_config(db=None) -> dict:
+    async def get_pricing_config() -> dict:
         config = await PricingRepository.get_pricing_config()
         if config:
             return config
