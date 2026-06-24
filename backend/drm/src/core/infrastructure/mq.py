@@ -1,9 +1,10 @@
+from src.core.infrastructure.configuration import settings
 import httpx
 from loguru import logger
 from typing import Any, Dict, Optional
 
 class QueueAPIClient:
-    def __init__(self, base_url: str = "http://doclib_queue:8802/hang-doi"):
+    def __init__(self, base_url: str = settings.QUEUE_URL):
         self.base_url = base_url
 
     async def _post(self, path: str, json_data: dict) -> dict:

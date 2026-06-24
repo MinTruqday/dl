@@ -91,4 +91,8 @@ class Settings(BaseModel):
     LONG_PROCESS_TIMEOUT: float = float(os.getenv("LONG_PROCESS_TIMEOUT"))
 
 
+    MONGO_URL: str = os.getenv("MONGO_URL", "http://doclib_database:8800/co-so-du-lieu")
+    QUEUE_URL: str = os.getenv("QUEUE_URL", "http://doclib_queue:8802/hang-doi")
+    CACHE_URL: str = os.getenv("CACHE_URL", "http://doclib_cache:8801")
+
 settings = Settings()

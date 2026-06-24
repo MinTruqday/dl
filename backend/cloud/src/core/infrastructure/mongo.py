@@ -1,9 +1,10 @@
+from src.core.infrastructure.configuration import settings
 
 import httpx
 from typing import Any, Dict, List, Optional
 
 class MongoClient:
-    def __init__(self, base_url: str = "http://doclib_database:8800/co-so-du-lieu"):
+    def __init__(self, base_url: str = settings.MONGO_URL):
         self.base_url = base_url
 
     async def _post(self, path: str, payload: dict):

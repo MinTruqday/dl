@@ -4,7 +4,7 @@ from src.core.infrastructure.configuration import settings
 
 class RedisAPIClient:
     def __init__(self):
-        self.base_url = "http://doclib_cache:8801"
+        self.base_url = settings.CACHE_URL
         self._client = None
 
     def get_client(self):

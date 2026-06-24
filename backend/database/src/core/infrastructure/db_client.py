@@ -1,3 +1,4 @@
+from src.core.infrastructure.configuration import settings
 
 import httpx
 
@@ -5,7 +6,7 @@ class CollectionProxy:
     def __init__(self, db_name: str, collection_name: str):
         self.db_name = db_name
         self.collection_name = collection_name
-        self.base_url = "http://doclib_database:8800/mongo"
+        self.base_url = settings.MONGO_URL
 
     async def _post(self, path: str, payload: dict):
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -15,7 +16,7 @@ class CollectionProxy:
             return resp.json()
 
     async def find_one(self, query: dict, projection: dict = None):
-        res = await self._post("/find_one", {"db": self.db_name, "collection": self.collection_name, "query": query, "projection": projection})
+        res = await self._post("/tim-mot", {"db": self.db_name, "collection": self.collection_name, "query": query, "projection": projection})
         return res.get("data")
 
     def find(self, query: dict, projection: dict = None):
@@ -25,7 +26,7 @@ class CollectionProxy:
         class InsertOneResult:
             def __init__(self, inserted_id):
                 self.inserted_id = inserted_id
-        res = await self._post("/insert_one", {"db": self.db_name, "collection": self.collection_name, "document": document})
+        res = await self._post("/them-mot", {"db": self.db_name, "collection": self.collection_name, "document": document})
         return InsertOneResult(res.get("inserted_id"))
 
     async def update_one(self, filter: dict, update: dict, upsert: bool = False):
@@ -34,7 +35,7 @@ class CollectionProxy:
                 self.matched_count = matched_count
                 self.modified_count = modified_count
                 self.upserted_id = upserted_id
-        res = await self._post("/update_one", {"db": self.db_name, "collection": self.collection_name, "filter": filter, "update": update, "upsert": upsert})
+        res = await self._post("/cap-nhat-mot", {"db": self.db_name, "collection": self.collection_name, "filter": filter, "update": update, "upsert": upsert})
         return UpdateResult(res.get("matched_count"), res.get("modified_count"), res.get("upserted_id"))
 
     async def update_many(self, filter: dict, update: dict, upsert: bool = False):
@@ -43,25 +44,25 @@ class CollectionProxy:
                 self.matched_count = matched_count
                 self.modified_count = modified_count
                 self.upserted_id = upserted_id
-        res = await self._post("/update_many", {"db": self.db_name, "collection": self.collection_name, "filter": filter, "update": update, "upsert": upsert})
+        res = await self._post("/cap-nhat-nhieu", {"db": self.db_name, "collection": self.collection_name, "filter": filter, "update": update, "upsert": upsert})
         return UpdateResult(res.get("matched_count"), res.get("modified_count"), res.get("upserted_id"))
 
     async def delete_one(self, filter: dict):
         class DeleteResult:
             def __init__(self, deleted_count):
                 self.deleted_count = deleted_count
-        res = await self._post("/delete_one", {"db": self.db_name, "collection": self.collection_name, "filter": filter})
+        res = await self._post("/xoa-mot", {"db": self.db_name, "collection": self.collection_name, "filter": filter})
         return DeleteResult(res.get("deleted_count"))
 
     async def delete_many(self, filter: dict):
         class DeleteResult:
             def __init__(self, deleted_count):
                 self.deleted_count = deleted_count
-        res = await self._post("/delete_many", {"db": self.db_name, "collection": self.collection_name, "filter": filter})
+        res = await self._post("/xoa-nhieu", {"db": self.db_name, "collection": self.collection_name, "filter": filter})
         return DeleteResult(res.get("deleted_count"))
 
     async def count_documents(self, filter: dict = {}):
-        res = await self._post("/count_documents", {"db": self.db_name, "collection": self.collection_name, "filter": filter})
+        res = await self._post("/dem-tai-lieu", {"db": self.db_name, "collection": self.collection_name, "filter": filter})
         return res.get("count", 0)
 
     def aggregate(self, pipeline: list):
@@ -97,13 +98,13 @@ class CursorProxy:
     async def to_list(self, length=None):
         if self._results is None:
             if self.is_aggregate:
-                res = await self.collection._post("/aggregate", {
+                res = await self.collection._post("/tong-hop", {
                     "db": self.collection.db_name,
                     "collection": self.collection.collection_name,
                     "pipeline": self.pipeline
                 })
             else:
-                res = await self.collection._post("/find", {
+                res = await self.collection._post("/tim-kiem", {
                     "db": self.collection.db_name,
                     "collection": self.collection.collection_name,
                     "query": self.query,

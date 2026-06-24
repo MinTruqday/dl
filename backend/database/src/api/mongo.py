@@ -1,3 +1,4 @@
+from src.core.infrastructure.configuration import settings
 from typing import Any, Dict, List, Optional, Union
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
