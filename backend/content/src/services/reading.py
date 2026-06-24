@@ -3,9 +3,10 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, Query
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
+from src.repositories.document import DocumentRepository
+from src.repositories.reading import ReadingRepository
 
 
 class ReadingService:
@@ -52,7 +53,7 @@ class ReadingService:
             {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}},
         ]
         history = (
-            await BaseRepository.get("reading_history")
+            await ReadingHistoryRepository
             .aggregate(pipeline)
             .to_list(length=limit)
         )
@@ -83,7 +84,7 @@ class ReadingService:
             db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
         now = datetime.now(timezone.utc)
-        await BaseRepository.get("reading_history").update_one(
+        await ReadingRepository.update_history(
             {"user_id": user_id, "document_id": data.document_id},
             {
                 "$set": {
@@ -103,7 +104,7 @@ class ReadingService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await BaseRepository.get("documents").find_one(
+        doc = await DocumentRepository.find_one(
             {"_id": document_id}, {"content": 1, "title": 1}
         )
         if not doc:
@@ -128,7 +129,7 @@ class ReadingService:
     async def clear_reading_history(current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await BaseRepository.get("reading_history").delete_many(
+        await ReadingRepository.delete_historys(
             {"user_id": str(current_user.id)}
         )
         return {"status": "success", "message": "Xóa toàn bộ lịch sử đọc thành công"}
@@ -137,7 +138,7 @@ class ReadingService:
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await BaseRepository.get("reading_history").delete_one(
+        await ReadingRepository.delete_history(
             {"user_id": str(current_user.id), "document_id": document_id}
         )
         return {"status": "success", "message": "Xóa lịch sử đọc cá nhân thành công"}

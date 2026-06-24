@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.response import JSONResponse
 from pydantic import BaseModel
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 app = FastAPI(title="Background Task Service", version=settings.VERSION)
 cache = redis.from_url(settings.REDIS_URI, decode_responses=True)

@@ -3,7 +3,7 @@ from typing import Dict, List
 
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 try:
     from mem0 import Memory

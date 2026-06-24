@@ -8,7 +8,7 @@ import tempfile
 from loguru import logger
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class EditorjsEngine:

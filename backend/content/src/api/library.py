@@ -10,8 +10,8 @@ from src.schemas.library import (
 )
 from src.services.library import LibraryService
 
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/thu-vien")
 

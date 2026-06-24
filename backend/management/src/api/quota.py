@@ -1,11 +1,11 @@
-from shared.dependency import CurrentUser
+from src.core.dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from src.api.dependency import get_current_user, get_db, require_role
 from src.services.quota import QuotaService
 
-from shared.response import APIResponse
+from src.core.response import APIResponse
 from src.schemas.quota import QuotaLimit, ConsumeQuotaRequest
 from src.schemas.account import Role, UserInDB
 

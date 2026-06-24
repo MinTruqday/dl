@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from loguru import logger
 from uuid6 import uuid7
 
-from shared.infrastructure.database import database
+from src.core.infrastructure.database import database
 
 
 class BannerService:

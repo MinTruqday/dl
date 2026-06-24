@@ -1,4 +1,4 @@
-from shared.dependency import CurrentUser
+from src.core.dependency import CurrentUser
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, status
@@ -8,7 +8,7 @@ from src.services.health import HealthService
 from src.services.telemetry import TelemetryService
 from src.services.account import AccountService
 
-from shared.response import APIResponse
+from src.core.response import APIResponse
 from src.schemas.account import Role, UserInDB
 
 router = APIRouter(prefix="/van-hanh")

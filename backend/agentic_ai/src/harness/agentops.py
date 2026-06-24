@@ -6,7 +6,7 @@ from typing import Literal, Optional
 
 from loguru import logger
 
-from shared.repositories.database import BaseRepository
+from src.repositories.agent import AgentRepository
 
 
 @dataclass
@@ -164,7 +164,7 @@ class AgentopsHarness:
                     else 0
                 ),
             }
-            await BaseRepository.get("agent_traces").insert_one(doc)
+            await AgentRepository.insert_trace(doc)
             logger.info("Lưu lịch sử phiên làm việc thành công")
         except Exception as e:
             logger.error(f"Lỗi lưu lịch sử phiên làm việc: {e}")

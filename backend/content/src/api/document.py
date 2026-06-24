@@ -23,10 +23,10 @@ from src.schemas.document import (
 )
 from src.services.document import DocumentService
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/tai-lieu")
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.services.ingestion import collector as collector_service
 from src.schemas.ingestion import Collection
-from shared.dependency import get_current_user, require_role, Role
+from src.core.dependency import get_current_user, require_role, Role
 
 router = APIRouter(prefix="/thu-thap")
 

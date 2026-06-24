@@ -9,10 +9,10 @@ from src.repositories.authentication import AuthenticationRepository
 from src.services.email import EmailService
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 from src.schemas.authentication import Role, UserCreate, UserInDB
-from shared.security.access import create_access_token, get_password_hash, verify_password
+from src.core.security.access import create_access_token, get_password_hash, verify_password
 
 
 class SessionService:

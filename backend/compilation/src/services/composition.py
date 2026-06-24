@@ -10,8 +10,12 @@ from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.repositories.composition import CompositionRepository
+from src.core.infrastructure.content_client import ContentServiceClient
+from src.repositories.pomodoro import PomodoroRepository
+from src.core.infrastructure.content_client import ContentServiceClient
+from src.repositories.composition import CompositionRepository
 
 
 class CompositionService:
@@ -98,7 +102,7 @@ class CompositionService:
         document_id: str, payload: dict, current_user, db=None
     ):
         user_id = str(current_user.id)
-        await BaseRepository.get("editor_suggestions").insert_one(
+        await CompositionRepository.insert_suggestion(
             {
                 "document_id": str(document_id),
                 "reviewer_id": user_id,
@@ -106,7 +110,7 @@ class CompositionService:
                 "suggested_text": payload.get("suggested_text"),
                 "comment": payload.get("comment"),
                 "status": "pending",
-                "created_at": datetime.now(timezone.utc),
+                "created_at": datetime.now(timezone.utc).isoformat(),
             }
         )
         logger.info("Đã ghi nhận đề xuất chỉnh sửa mới")
@@ -117,16 +121,14 @@ class CompositionService:
         suggestion_id: str, payload: dict, current_user, db=None
     ):
         user_id = str(current_user.id)
-        sug = await BaseRepository.get("editor_suggestions").find_one(
+        sug = await CompositionRepository.find_suggestion(
             {"_id": ObjectId(suggestion_id)}
         )
         if not sug:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy đề xuất chỉnh sửa"
             )
-        doc = await BaseRepository.get("documents").find_one(
-            {"_id": sug["document_id"]}
-        )
+        doc = await ContentServiceClient.get_document(sug["document_id"])
         if (
             doc
             and str(doc.get("creator_id")) != user_id
@@ -138,12 +140,12 @@ class CompositionService:
             )
 
         action = payload.get("action", "rejected")
-        await BaseRepository.get("editor_suggestions").update_one(
+        await CompositionRepository.update_suggestion(
             {"_id": ObjectId(suggestion_id)},
             {
                 "$set": {
                     "status": action,
-                    "resolved_at": datetime.now(timezone.utc),
+                    "resolved_at": datetime.now(timezone.utc).isoformat(),
                 }
             },
         )
@@ -153,13 +155,13 @@ class CompositionService:
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
         user_id = str(current_user.id)
-        await BaseRepository.get("pomodoro_sessions").insert_one(
+        await PomodoroRepository.insert_session(
             {
                 "user_id": user_id,
                 "document_id": str(payload.get("document_id")),
                 "duration_minutes": payload.get("duration"),
                 "words_written": payload.get("words_written"),
-                "created_at": datetime.now(timezone.utc),
+                "created_at": datetime.now(timezone.utc).isoformat(),
             }
         )
         logger.info("Ghi nhận phiên tập trung thành công")
@@ -212,31 +214,34 @@ class CompositionService:
             logger.error(f"Lỗi cấu trúc khi phân tích bản nháp: {e}")
 
         reading_time_minutes = max(1, words // 200)
-        await BaseRepository.get("documents").update_one(
+        await ContentServiceClient.update_document(
+            document_id,
             {
-                "_id": document_id,
-                "$or": [{"creator_id": user_id}, {"co_authors": user_id}],
-            },
-            {
-                "$set": {
-                    "draft_content": content,
-                    "toc": toc,
-                    "reading_time_minutes": reading_time_minutes,
-                    "updated_at": datetime.now(timezone.utc),
+                "query": {"$or": [{"creator_id": user_id}, {"co_authors": user_id}]},
+                "update": {
+                    "$set": {
+                        "draft_content": content,
+                        "toc": toc,
+                        "reading_time_minutes": reading_time_minutes,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
                 }
-            },
+            }
         )
         return {
             "message": "Lưu bản nháp thành công",
-            "timestamp": str(datetime.now(timezone.utc)),
+            "timestamp": str(datetime.now(timezone.utc).isoformat()),
         }
 
     @staticmethod
     async def submit_for_review(document_id: str, current_user, db=None):
         user_id = str(current_user.id)
-        await BaseRepository.get("documents").update_one(
-            {"_id": document_id, "creator_id": user_id},
-            {"$set": {"editor_review_status": "pending_review"}},
+        await ContentServiceClient.update_document(
+            document_id,
+            {
+                "query": {"creator_id": user_id},
+                "update": {"$set": {"editor_review_status": "pending_review"}}
+            }
         )
         logger.info("Đã chuyển tài liệu vào hàng đợi xét duyệt")
         return {"message": "Đã đưa tài liệu vào hàng đợi xét duyệt"}
@@ -253,9 +258,7 @@ class CompositionService:
         import re
 
         user_id = str(current_user.id)
-        document = await BaseRepository.get("documents").find_one(
-            {"_id": str(document_id), "creator_id": user_id}
-        )
+        document = await ContentServiceClient.get_document(str(document_id))
         if not document:
             raise HTTPException(
                 status_code=403,
@@ -289,20 +292,23 @@ class CompositionService:
         update_data = {
             "title": new_title,
             "description": new_desc,
-            "updated_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
         if new_content:
             update_data["content"] = new_content
-        await BaseRepository.get("documents").update_one(
-            {"_id": str(document_id)}, {"$set": update_data}
+        await ContentServiceClient.update_document(
+            str(document_id),
+            {
+                "update": {"$set": update_data}
+            }
         )
-        await BaseRepository.get("document_versions").insert_one(
+        await ContentServiceClient.create_document_version(
             {
                 "document_id": str(document_id),
                 "creator_id": user_id,
                 "action": "GLOBAL_REPLACE",
                 "details": f"Replaced '{search_term}' with '{replace_term}'",
-                "created_at": datetime.now(timezone.utc),
+                "created_at": datetime.now(timezone.utc).isoformat(),
             }
         )
         logger.info("Tìm kiếm và thay thế thành công")
@@ -327,9 +333,9 @@ class CompositionService:
             "text": data["text"],
             "selected_text": data.get("selected_text", ""),
             "status": "open",
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
-        await BaseRepository.get("editor_comments").insert_one(comment)
+        await CompositionRepository.insert_comment(comment)
         return {"_id": comment_id, "message": "Ghi nhận bình luận thành công"}
 
     @staticmethod
@@ -337,8 +343,8 @@ class CompositionService:
         document_id: str, current_user, db=None
     ) -> List[dict]:
         cursor = (
-            BaseRepository.get("editor_comments")
-            .find({"document_id": document_id, "status": "open"})
+            CompositionRepository
+            .find_comments({"document_id": document_id, "status": "open"})
             .sort("created_at", -1)
         )
         comments = await cursor.to_list(length=100)
@@ -347,12 +353,12 @@ class CompositionService:
             if isinstance(c.get("created_at"), datetime):
                 c["created_at"] = c["created_at"].isoformat()
             elif not c.get("created_at"):
-                c["created_at"] = datetime.now(timezone.utc).isoformat()
+                c["created_at"] = datetime.now(timezone.utc).isoformat().isoformat()
         return comments
 
     @staticmethod
     async def resolve_comment(comment_id: str, current_user, db=None) -> dict:
-        comment = await BaseRepository.get("editor_comments").find_one(
+        comment = await CompositionRepository.find_comment(
             {"_id": comment_id}
         )
         if not comment:
@@ -360,9 +366,7 @@ class CompositionService:
                 status_code=404, detail="Không tìm thấy bình luận trực tiếp"
             )
 
-        doc = await BaseRepository.get("documents").find_one(
-            {"_id": comment["document_id"]}
-        )
+        doc = await ContentServiceClient.get_document(comment["document_id"])
         if (
             doc
             and str(doc.get("creator_id")) != str(current_user.id)
@@ -372,13 +376,13 @@ class CompositionService:
                 status_code=403, detail="Không có quyền giải quyết bình luận này"
             )
 
-        await BaseRepository.get("editor_comments").update_one(
+        await CompositionRepository.update_comment(
             {"_id": comment_id},
             {
                 "$set": {
                     "status": "resolved",
                     "resolved_by": str(current_user.id),
-                    "resolved_at": datetime.now(timezone.utc),
+                    "resolved_at": datetime.now(timezone.utc).isoformat(),
                 }
             },
         )
@@ -388,12 +392,8 @@ class CompositionService:
     async def get_version_diff(
         document_id: str, version_id_a: str, version_id_b: str, current_user, db=None
     ) -> dict:
-        v_a = await BaseRepository.get("document_versions").find_one(
-            {"_id": version_id_a}
-        )
-        v_b = await BaseRepository.get("document_versions").find_one(
-            {"_id": version_id_b}
-        )
+        v_a = await ContentServiceClient.get_document_version(version_id_a)
+        v_b = await ContentServiceClient.get_document_version(version_id_b)
         if not v_a or not v_b:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy phiên bản tài liệu để so sánh"

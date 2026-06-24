@@ -8,9 +8,8 @@ from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from src.core.registry import PromptType, registry
 
-from shared.infrastructure.configuration import settings
-from shared.dependency import get_current_user
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.core.dependency import get_current_user
 from src.schemas.inference import (
     ActionRequest,
     CitationRequest,
@@ -23,7 +22,7 @@ from src.schemas.inference import (
     ToneRequest,
     TranslationRequest,
 )
-from shared.dependency import CurrentUser, Role
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/suy-luan")
 

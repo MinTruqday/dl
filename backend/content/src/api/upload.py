@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from src.api.dependency import get_db, require_role
 from src.services.upload import UploadService
 
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/tai-len")
 

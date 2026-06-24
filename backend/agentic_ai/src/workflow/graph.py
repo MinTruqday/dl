@@ -19,7 +19,7 @@ from src.store.database import vector_store
 from src.utils.processing import extract_text_from_base64
 from src.workflow.state import AgentState
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 try:
     from sentence_transformers import CrossEncoder

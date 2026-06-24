@@ -5,9 +5,9 @@ from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
 
-from shared.infrastructure.database import database
+from src.core.infrastructure.database import database
 from src.schemas.account import Creator, KYC, Role
-from shared.storage import upload_file
+from src.core.storage import upload_file
 
 
 class VerificationService:

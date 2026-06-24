@@ -7,8 +7,8 @@ from src.schemas.document import SchedulePublishRequest, SeoMetadataRequest
 from src.services.document import DocumentService
 from src.services.publication import PublicationService
 
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/xuat-ban")
 

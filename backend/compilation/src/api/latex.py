@@ -4,8 +4,8 @@ from fastapi.response import Response
 from loguru import logger
 from src.schemas.composition import CompileRequest
 from src.engines.latex import LatexEngine
-from shared.dependency import get_current_user, get_current_user_optional, CurrentUser
-from shared.infrastructure.database import database
+from src.core.dependency import get_current_user, get_current_user_optional, CurrentUser
+from src.core.infrastructure.database import database
 
 router = APIRouter()
 

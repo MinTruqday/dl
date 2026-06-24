@@ -6,9 +6,10 @@ import httpx
 from fastapi import WebSocket, WebSocketDisconnect
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
+from src.repositories.chat_group import ChatGroupRepository
+from src.repositories.message import MessageRepository
 
 
 class MessageSocket:
@@ -76,7 +77,7 @@ class MessageSocket:
         if receiver_id.startswith("group_"):
             if database.mongodb:
                 db = database.mongodb.get_default_database()
-                group = await BaseRepository.get("chat_groups").find_one(
+                group = await ChatGroupRepository.find_one(
                     {"_id": receiver_id}
                 )
                 if group:
@@ -117,7 +118,7 @@ class MessageSocket:
         disconnected = []
         if last_message_id:
             groups = (
-                await BaseRepository.get("chat_groups")
+                await ChatGroupRepository
                 .find({"members": user_id})
                 .to_list(100)
             )
@@ -131,7 +132,7 @@ class MessageSocket:
                 ],
             }
             new_messages = (
-                await BaseRepository.get("messages")
+                await MessageRepository
                 .find(query)
                 .sort("created_at", 1)
                 .to_list(length=200)
@@ -145,7 +146,7 @@ class MessageSocket:
                     except Exception:
                         disconnected.append(ws)
         active_finetunes = (
-            await BaseRepository.get("finetune_jobs")
+            await WebsocketRepository.get("finetune_jobs")
             .find({"status": {"$in": ["running", "pending"]}})
             .to_list(50)
         )
@@ -189,7 +190,7 @@ class MessageSocket:
         if not database.mongodb:
             return
         db = database.mongodb.get_default_database()
-        await BaseRepository.get("messages").update_many(
+        await MessageRepository.update_many(
             {"sender_id": other_user_id, "receiver_id": user_id, "is_read": False},
             {"$set": {"is_read": True}},
         )

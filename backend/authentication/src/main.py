@@ -5,8 +5,8 @@ from loguru import logger
 from src.api.login import router as auth
 from src.api.passkey import router as passkey
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import close_db, init_db
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import close_db, init_db
 
 app = FastAPI(title="DocLib Security", version=settings.VERSION)
 

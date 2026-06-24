@@ -5,10 +5,15 @@ from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 from src.schemas.account import Role
+from src.repositories.user import UserRepository
+from src.repositories.system import SystemRepository
+from src.repositories.marketing_campaign import MarketingCampaignRepository
+from src.repositories.moderation import BugModerationRepository
+from src.repositories.task import TaskRepository
+from src.repositories.policy_proposal import PolicyProposalRepository
 
 
 class HealthService:
@@ -30,7 +35,7 @@ class HealthService:
                 "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
             }
         users = (
-            await BaseRepository.get("users")
+            await UserRepository
             .find(query)
             .sort("created_at", -1)
             .skip(offset)
@@ -57,7 +62,7 @@ class HealthService:
     async def update_user_role(user_id: str, role: str, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        res = await BaseRepository.get("users").update_one(
+        res = await UserRepository.update_one(
             {"_id": user_id},
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -72,7 +77,7 @@ class HealthService:
     async def update_user_status(user_id: str, is_active: bool, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        res = await BaseRepository.get("users").update_one(
+        res = await UserRepository.update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -94,7 +99,7 @@ class HealthService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await BaseRepository.get("system_config").update_one(
+        await SystemRepository.update_config(
             {"key": "maintenance_mode"},
             {
                 "$set": {
@@ -112,22 +117,6 @@ class HealthService:
     async def trigger_backup(action: str = "FULL", db=None) -> dict:
         logger.info("Đã lên lịch sao lưu dữ liệu")
         return {"message": "Đang chạy tác vụ sao lưu dữ liệu"}
-
-    @staticmethod
-    async def create_marketing_campaign(data: dict, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
-        campaign = {
-            "_id": str(uuid7()),
-            "title": data.get("title", "New Promotional Campaign"),
-            "target_audience": data.get("target", "ALL"),
-            "discount_percent": data.get("discount", 0),
-            "status": "active",
-            "created_at": datetime.now(timezone.utc),
-        }
-        await BaseRepository.get("marketing_campaigns").insert_one(campaign)
-        logger.info("Khởi tạo chiến dịch quảng cáo thành công")
-        return {"message": "Chiến dịch quảng cáo đã được kích hoạt"}
 
     @staticmethod
     async def get_system_health(db=None) -> dict:
@@ -189,7 +178,7 @@ class HealthService:
     async def get_maintenance_mode(db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        config = await BaseRepository.get("system_config").find_one(
+        config = await SystemRepository.find_config(
             {"key": "maintenance_mode"}
         )
         if not config:
@@ -301,7 +290,7 @@ class HealthService:
         if db is None:
             db = database.mongodb.get_default_database()
         report_id = str(uuid7())
-        await BaseRepository.get("bug_reports").insert_one(
+        await ModerationRepository.insert_bug_report(
             {
                 "_id": report_id,
                 "title": data["title"],
@@ -315,26 +304,11 @@ class HealthService:
         return {"message": "Báo cáo sự cố thành công"}
 
     @staticmethod
-    async def assign_task(data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
-        task = {
-            "_id": str(uuid7()),
-            "assigned_to": data["user_id"],
-            "title": data["title"],
-            "status": "pending",
-            "created_at": datetime.now(timezone.utc),
-        }
-        await BaseRepository.get("tasks").insert_one(task)
-        logger.info("Phân công nhiệm vụ quản trị thành công")
-        return {"message": "Phân công nhiệm vụ thành công"}
-
-    @staticmethod
     async def submit_policy_proposal(data: dict, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
         proposal_id = str(uuid7())
-        await BaseRepository.get("policy_proposals").insert_one(
+        await PolicyProposalRepository.insert_one(
             {
                 "_id": proposal_id,
                 "creator_id": str(current_user.id),

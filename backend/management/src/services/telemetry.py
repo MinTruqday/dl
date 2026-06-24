@@ -6,9 +6,11 @@ from bson import ObjectId
 from loguru import logger
 from uuid6 import uuid7
 
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.database import database
 from src.schemas.account import UserInDB
+from src.repositories.user import UserRepository
+from src.repositories.system import SystemRepository
+from src.repositories.moderation import ModerationRepository
 
 
 class TelemetryService:
@@ -29,7 +31,7 @@ class TelemetryService:
             "user_id": str(current_user.id) if current_user else "anonymous",
             "timestamp": datetime.now(timezone.utc),
         }
-        await BaseRepository.get("telemetry").insert_one(telemetry_event)
+        await SystemRepository.insert_telemetry(telemetry_event)
         logger.debug("Ghi nhận sự kiện thành công")
         return {"status": "success"}
 
@@ -43,7 +45,7 @@ class TelemetryService:
             {"$group": {"_id": "$event_name", "count": {"$sum": 1}}},
             {"$sort": {"count": -1}},
         ]
-        cursor = BaseRepository.get("telemetry").aggregate(pipeline)
+        cursor = SystemRepository.aggregate_telemetry(pipeline)
         return await cursor.to_list(length=100)
 
     @staticmethod
@@ -58,9 +60,9 @@ class TelemetryService:
     async def get_system_stats(db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        total_users = await BaseRepository.get("users").count_documents({})
-        total_documents = await BaseRepository.get("documents").count_documents({})
-        total_authors = await BaseRepository.get("users").count_documents(
+        total_users = await UserRepository.count_documents({})
+        total_documents = await SystemRepository.count_documents({})
+        total_authors = await UserRepository.count_documents(
             {"role": "AUTHOR"}
         )
         return {
@@ -90,8 +92,7 @@ class TelemetryService:
         if db is None:
             db = database.mongodb.get_default_database()
         return (
-            await BaseRepository.get("moderator_activity")
-            .find({"actor_id": user_id})
+            await ModerationRepository.find_moderator_activities({"actor_id": user_id})
             .sort("timestamp", -1)
             .to_list(length=100)
         )

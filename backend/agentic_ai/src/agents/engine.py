@@ -3,7 +3,7 @@ import re
 
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 _SSRF_PATTERN = re.compile(
     r"(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0"

@@ -3,8 +3,8 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from src.services.passkey import PasskeyService
 
-from shared.dependency import get_current_user, get_db
-from shared.response import APIResponse
+from src.core.dependency import get_current_user, get_db
+from src.core.response import APIResponse
 from src.schemas.authentication import PasskeyFinishRequest, PasskeyRequest
 
 router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")

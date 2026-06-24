@@ -6,7 +6,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from src.core.registry import PromptType, registry
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class InterpreterAgent:

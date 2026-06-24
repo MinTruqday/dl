@@ -4,10 +4,9 @@ import uuid
 
 from fastapi import FastAPI, Request
 from loguru import logger
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
-from shared.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
-from shared.repositories.database import BaseRepository
+from src.core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 
 logger.remove()
 logger.add(

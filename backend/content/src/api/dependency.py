@@ -2,8 +2,8 @@ import httpx
 from fastapi import Depends, HTTPException
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
-from shared.dependency import (
+from src.core.infrastructure.configuration import settings
+from src.core.dependency import (
     RateLimiting,
     get_current_user,
     get_current_user_optional,
@@ -13,7 +13,7 @@ from shared.dependency import (
     require_permissions,
     require_role,
 )
-from shared.dependency import CurrentUser, Role
+from src.core.dependency import CurrentUser, Role
 
 
 async def check_quota(current_user: CurrentUser = Depends(get_current_user)):

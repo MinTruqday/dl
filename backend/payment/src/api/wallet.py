@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Query
 from src.services.wallet import WalletService
 from src.schemas.wallet import RedeemCouponRequest
 
-from shared.dependency import get_current_user, get_db
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.dependency import get_current_user, get_db
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/vi-dien-tu")
 

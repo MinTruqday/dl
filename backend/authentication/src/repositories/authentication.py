@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 
 
 class AuthenticationRepository:

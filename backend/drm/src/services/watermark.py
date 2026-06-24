@@ -4,8 +4,8 @@ import io
 from fastapi import HTTPException
 from loguru import logger
 
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.database import database
+from src.repositories.license import LicenseRepository
 
 try:
     import PyPDF2
@@ -31,11 +31,7 @@ class WatermarkService:
                 status_code=500,
                 detail="Tính năng xuất PDF đang bảo trì",
             )
-        if db is None:
-            db = database.mongodb.get_default_database()
-        document = await BaseRepository.get("documents").find_one(
-            {"_id": str(document_id)}
-        )
+        document = await LicenseRepository.get_document(str(document_id))
         if not document:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         user_email = (
@@ -49,10 +45,7 @@ class WatermarkService:
             and document.get("creator_id") != user_id
             and (not hasattr(current_user, "role") or current_user.role != "ADMIN")
         ):
-            purchases_col = BaseRepository.get("purchases")
-            purchase = await purchases_col.find_one(
-                {"user_id": user_id, "item_id": str(document["_id"])}
-            )
+            purchase = await LicenseRepository.get_purchase(user_id, str(document["_id"]))
             if not purchase:
                 raise HTTPException(
                     status_code=403,
@@ -66,7 +59,7 @@ class WatermarkService:
             and hasattr(current_user, "role") and current_user.role == "ADMIN"
         ):
             import datetime
-            await BaseRepository.get("audit_logs").insert_one({
+            await LicenseRepository.record_audit_log({
                 "action": "ADMIN_FORCE_EXPORT_PREMIUM",
                 "actor_id": user_id,
                 "document_id": str(document["_id"]),
@@ -90,7 +83,7 @@ class WatermarkService:
                 import os
                 font_path = os.path.join(os.path.dirname(__file__), "Roboto-Regular.ttf")
                 if not os.path.exists(font_path):
-                    raise RuntimeError("Thiếu file Roboto-Regular.ttf trên Docker. Không thể ghi Watermark.")
+                    raise RuntimeError("Thiếu file Roboto-Regular.ttf trên Docker. Không thể ghi Watermark")
                 
                 pdfmetrics.registerFont(TTFont('Roboto-Regular', font_path))
                 font_name = "Roboto-Regular"

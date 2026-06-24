@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class KYC(str, Enum):

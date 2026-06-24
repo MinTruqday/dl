@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends, Query
 from src.schemas.announcement import AnnouncementCreate
 from src.services.announcement import AnnouncementService
 
-from shared.dependency import get_current_user, get_db
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.dependency import get_current_user, get_db
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
+from src.repositories.notification import NotificationRepository
 
 router = APIRouter(prefix="/thong-bao")
 
@@ -77,8 +78,8 @@ async def update_settings(
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    from shared.repositories.database import BaseRepository
-    await BaseRepository.get("users").update_one(
+    from shared.repositories.database import NotificationRepository
+    await NotificationRepository.update_user_announcement_status(
         {"_id": current_user.id}, 
         {"$set": {"notification_settings": settings}}
     )

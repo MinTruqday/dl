@@ -5,8 +5,8 @@ from fastapi import HTTPException, Query, status
 from loguru import logger
 from src.schemas.wallet import Transaction, TransactionType
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 
 
 class WalletService:

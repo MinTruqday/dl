@@ -16,7 +16,7 @@ from qdrant_client.http.models import (
     VectorParams,
 )
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class DatabaseStore:

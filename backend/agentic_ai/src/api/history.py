@@ -7,7 +7,7 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 from src.services.history import HistoryService
 
 router = APIRouter(prefix="/lich-su")

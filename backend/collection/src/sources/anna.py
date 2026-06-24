@@ -20,7 +20,7 @@ from src.core.queue import mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class AnnaSource:

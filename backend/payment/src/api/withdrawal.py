@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Query
 from src.schemas.withdrawal import WithdrawalRequest
 from src.services.withdrawal import WithdrawalService
 
-from shared.dependency import get_current_user, get_db, require_role
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.dependency import get_current_user, get_db, require_role
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/rut-tien")
 

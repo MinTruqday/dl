@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from src.schemas.model import ExecutionPlan, PlanStep
 from src.utils.resilience import with_retry
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 _hf_endpoint = HuggingFaceEndpoint(
     task="conversational",

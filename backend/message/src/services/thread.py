@@ -4,9 +4,13 @@ from datetime import datetime, timezone
 from fastapi import Query
 from src.schemas.thread import Record
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
+from src.repositories.message import MessageRepository
+from src.repositories.conversation import ConversationRepository
+from src.repositories.message import MessageRepository
+from src.repositories.profile import ContactProfileRepository
+from src.repositories.message import MessageRepository
 
 
 class ThreadService:
@@ -24,7 +28,7 @@ class ThreadService:
             [sender_id, receiver_id] if not receiver_id.startswith("group_") else []
         )
         if receiver_id.startswith("group_"):
-            group_doc = await BaseRepository.get("message_groups").find_one(
+            group_doc = await MessageRepository.find_group(
                 {"_id": receiver_id}
             )
             members = group_doc.get("members", []) if group_doc else []
@@ -45,7 +49,7 @@ class ThreadService:
         }
         if not receiver_id.startswith("group_"):
             update_doc["$set"]["participants"] = sorted(participants)
-        await BaseRepository.get("conversations").update_one(
+        await ConversationRepository.update_one(
             {"_id": participant_key}, update_doc, upsert=True
         )
 
@@ -64,13 +68,13 @@ class ThreadService:
             db = database.mongodb.get_default_database()
         sender_id = str(current_user.id)
         if client_msg_id:
-            existing = await BaseRepository.get("messages").find_one(
+            existing = await MessageRepository.find_one(
                 {"client_msg_id": client_msg_id, "sender_id": sender_id}
             )
             if existing:
                 existing["_id"] = str(existing["_id"])
                 return existing
-        user_doc = await BaseRepository.get("user_contact_profiles").find_one(
+        user_doc = await ContactProfileRepository.find_contact_profile(
             {"_id": receiver_id}
         )
         if user_doc and sender_id in user_doc.get("blocked_users", []):
@@ -80,11 +84,11 @@ class ThreadService:
             f"settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
         )
         tasks = [
-            BaseRepository.get("message_settings").find_one({"_id": settings_id})
+            MessageRepository.find_setting({"_id": settings_id})
         ]
         if reply_to_id:
             tasks.append(
-                BaseRepository.get("messages").find_one({"_id": reply_to_id})
+                MessageRepository.find_one({"_id": reply_to_id})
             )
         results = await asyncio.gather(*tasks)
         settings = results[0]
@@ -109,7 +113,7 @@ class ThreadService:
                 "content": reply_msg.get("content"),
                 "sender_id": reply_msg.get("sender_id"),
             }
-        await BaseRepository.get("messages").insert_one(msg_dict)
+        await MessageRepository.insert_one(msg_dict)
         await ThreadService._upsert_conversation(
             db,
             sender_id,
@@ -152,7 +156,7 @@ class ThreadService:
             query["_id"] = {"$lt": cursor}
         query["deleted_by"] = {"$ne": str(current_user.id)}
         messages = (
-            await BaseRepository.get("messages")
+            await MessageRepository
             .find(query)
             .sort("_id", -1)
             .limit(limit)
@@ -167,7 +171,7 @@ class ThreadService:
         update_data = {f"unread_count.{current_user.id}": 0}
         if last_msg_id:
             update_data[f"last_read_message_id.{current_user.id}"] = last_msg_id
-        await BaseRepository.get("conversations").update_one(
+        await ConversationRepository.update_one(
             {"_id": participant_key}, {"$set": update_data}
         )
         return messages[::-1]
@@ -177,7 +181,7 @@ class ThreadService:
         if db is None:
             db = database.mongodb.get_default_database()
         conversations = (
-            await BaseRepository.get("conversations")
+            await ConversationRepository
             .find(
                 {
                     "$or": [
@@ -186,7 +190,7 @@ class ThreadService:
                             "_id": {
                                 "$in": [
                                     g["_id"]
-                                    for g in await BaseRepository.get(
+                                    for g in await MessageRepository.get(
                                         "message_groups"
                                     )
                                     .find({"members": str(current_user.id)})
@@ -224,7 +228,7 @@ class ThreadService:
                 pass
         user_map = {str(u["_id"]): u for u in users_list}
         groups_list = (
-            await BaseRepository.get("message_groups")
+            await MessageGroupRepository
             .find({"members": str(current_user.id)})
             .to_list(length=100)
         )
@@ -281,7 +285,7 @@ class ThreadService:
     async def toggle_pin(message_id: str, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        msg = await BaseRepository.get("messages").find_one({"_id": message_id})
+        msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
             return None
         participant_key = (
@@ -289,7 +293,7 @@ class ThreadService:
             if msg["receiver_id"].startswith("group_")
             else f"{min(msg['sender_id'], msg['receiver_id'])}_{max(msg['sender_id'], msg['receiver_id'])}"
         )
-        conv = await BaseRepository.get("conversations").find_one(
+        conv = await ConversationRepository.find_one(
             {"_id": participant_key}
         )
         pinned_messages = conv.get("pinned_messages", []) if conv else []
@@ -297,30 +301,30 @@ class ThreadService:
         if not is_pinned and len(pinned_messages) >= 5:
             return "limit_reached"
         if is_pinned:
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key},
                 {"$pull": {"pinned_messages": {"_id": message_id}}},
             )
-            await BaseRepository.get("messages").update_one(
+            await MessageRepository.update_one(
                 {"_id": message_id}, {"$set": {"is_pinned": False}}
             )
         else:
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key}, {"$push": {"pinned_messages": msg}}
             )
-            await BaseRepository.get("messages").update_one(
+            await MessageRepository.update_one(
                 {"_id": message_id}, {"$set": {"is_pinned": True}}
             )
-        return await BaseRepository.get("messages").find_one({"_id": message_id})
+        return await MessageRepository.find_one({"_id": message_id})
 
     @staticmethod
     async def edit_message(message_id: str, new_content: str, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        msg = await BaseRepository.get("messages").find_one({"_id": message_id})
+        msg = await MessageRepository.find_one({"_id": message_id})
         if not msg or msg["sender_id"] != str(current_user.id):
             return None
-        await BaseRepository.get("messages").update_one(
+        await MessageRepository.update_one(
             {"_id": message_id},
             {
                 "$set": {
@@ -330,7 +334,7 @@ class ThreadService:
                 }
             },
         )
-        updated_msg = await BaseRepository.get("messages").find_one(
+        updated_msg = await MessageRepository.find_one(
             {"_id": message_id}
         )
         participant_key = (
@@ -338,18 +342,18 @@ class ThreadService:
             if msg["receiver_id"].startswith("group_")
             else f"{min(msg['sender_id'], msg['receiver_id'])}_{max(msg['sender_id'], msg['receiver_id'])}"
         )
-        conv = await BaseRepository.get("conversations").find_one(
+        conv = await ConversationRepository.find_one(
             {"_id": participant_key}
         )
         if conv and conv.get("last_message", {}).get("_id") == message_id:
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key},
                 {"$set": {"last_message.content": new_content}},
             )
         if conv and any(
             (pm["_id"] == message_id for pm in conv.get("pinned_messages", []))
         ):
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key, "pinned_messages._id": message_id},
                 {"$set": {"pinned_messages.$.content": new_content}},
             )
@@ -359,11 +363,11 @@ class ThreadService:
     async def recall_message(message_id: str, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        msg = await BaseRepository.get("messages").find_one({"_id": message_id})
+        msg = await MessageRepository.find_one({"_id": message_id})
         if not msg or msg["sender_id"] != str(current_user.id):
             return None
         recalled_content = "This message has been recalled by the sender"
-        await BaseRepository.get("messages").update_one(
+        await MessageRepository.update_one(
             {"_id": message_id},
             {
                 "$set": {
@@ -384,11 +388,11 @@ class ThreadService:
             if msg["receiver_id"].startswith("group_")
             else f"{min(msg['sender_id'], msg['receiver_id'])}_{max(msg['sender_id'], msg['receiver_id'])}"
         )
-        conv = await BaseRepository.get("conversations").find_one(
+        conv = await ConversationRepository.find_one(
             {"_id": participant_key}
         )
         if conv and conv.get("last_message", {}).get("_id") == message_id:
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key},
                 {
                     "$set": {
@@ -405,7 +409,7 @@ class ThreadService:
         if conv and any(
             (pm["_id"] == message_id for pm in conv.get("pinned_messages", []))
         ):
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key, "pinned_messages._id": message_id},
                 {
                     "$set": {
@@ -419,7 +423,7 @@ class ThreadService:
                     },
                 },
             )
-        return await BaseRepository.get("messages").find_one({"_id": message_id})
+        return await MessageRepository.find_one({"_id": message_id})
 
     @staticmethod
     async def search_messages(
@@ -436,7 +440,7 @@ class ThreadService:
                 {"sender_id": other_user_id, "receiver_id": str(current_user.id)},
             ]
         messages = (
-            await BaseRepository.get("messages")
+            await MessageRepository
             .find(query)
             .sort("created_at", -1)
             .to_list(length=100)
@@ -448,31 +452,31 @@ class ThreadService:
         if db is None:
             db = database.mongodb.get_default_database()
         if other_user_id.startswith("group_"):
-            group = await BaseRepository.get("message_groups").find_one(
+            group = await MessageRepository.find_group(
                 {"_id": other_user_id}
             )
             if group:
                 if group.get("created_by") == str(current_user.id):
-                    await BaseRepository.get("message_groups").delete_one(
+                    await MessageRepository.delete_group(
                         {"_id": other_user_id}
                     )
-                    await BaseRepository.get("messages").delete_many(
+                    await MessageRepository.delete_many(
                         {"receiver_id": other_user_id}
                     )
-                    await BaseRepository.get("conversations").delete_one(
+                    await ConversationRepository.delete_one(
                         {"_id": other_user_id}
                     )
                 else:
-                    await BaseRepository.get("message_groups").update_one(
+                    await MessageRepository.update_group(
                         {"_id": other_user_id},
                         {"$pull": {"members": str(current_user.id)}},
                     )
-                    await BaseRepository.get("conversations").update_one(
+                    await ConversationRepository.update_one(
                         {"_id": other_user_id},
                         {"$addToSet": {"cleared_by": str(current_user.id)}},
                     )
             return {"status": "success"}
-        await BaseRepository.get("messages").update_many(
+        await MessageRepository.update_many(
             {
                 "$or": [
                     {"sender_id": str(current_user.id), "receiver_id": other_user_id},
@@ -482,7 +486,7 @@ class ThreadService:
             {"$addToSet": {"deleted_by": str(current_user.id)}},
         )
         participant_key = f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
-        await BaseRepository.get("conversations").update_one(
+        await ConversationRepository.update_one(
             {"_id": participant_key},
             {"$addToSet": {"cleared_by": str(current_user.id)}},
         )
@@ -492,15 +496,15 @@ class ThreadService:
     async def add_reaction(message_id: str, reaction: str, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        msg = await BaseRepository.get("messages").find_one({"_id": message_id})
+        msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
             return None
-        await BaseRepository.get("messages").update_one(
+        await MessageRepository.update_one(
             {"_id": message_id},
             {"$pull": {"reactions": {"user_id": str(current_user.id)}}},
         )
         if reaction:
-            await BaseRepository.get("messages").update_one(
+            await MessageRepository.update_one(
                 {"_id": message_id},
                 {
                     "$push": {
@@ -512,7 +516,7 @@ class ThreadService:
                     }
                 },
             )
-        return await BaseRepository.get("messages").find_one({"_id": message_id})
+        return await MessageRepository.find_one({"_id": message_id})
 
     @staticmethod
     async def mark_as_read(other_user_id: str, current_user, db=None):
@@ -524,7 +528,7 @@ class ThreadService:
             if other_user_id.startswith("group_")
             else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
         )
-        last_msg = await BaseRepository.get("messages").find_one(
+        last_msg = await MessageRepository.find_one(
             {
                 "receiver_id": (
                     participant_key if other_user_id.startswith("group_") else user_id
@@ -534,7 +538,7 @@ class ThreadService:
         )
         from datetime import timedelta
 
-        await BaseRepository.get("messages").update_many(
+        await MessageRepository.update_many(
             {
                 "receiver_id": (
                     participant_key if other_user_id.startswith("group_") else user_id
@@ -557,7 +561,7 @@ class ThreadService:
                 }
             ],
         )
-        await BaseRepository.get("messages").update_many(
+        await MessageRepository.update_many(
             {
                 "receiver_id": (
                     participant_key if other_user_id.startswith("group_") else user_id
@@ -569,7 +573,7 @@ class ThreadService:
         update_data = {f"unread_count.{user_id}": 0}
         if last_msg:
             update_data[f"last_read_message_id.{user_id}"] = last_msg["_id"]
-        await BaseRepository.get("conversations").update_one(
+        await ConversationRepository.update_one(
             {"_id": participant_key}, {"$set": update_data}
         )
         return {"status": "success"}
@@ -578,7 +582,7 @@ class ThreadService:
     async def share_document(receiver_id: str, document_id: str, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await BaseRepository.get("documents").find_one({"_id": document_id})
+        doc = await MessageRepository.find_shared_document({"_id": document_id})
         if not doc:
             return None
         content = f"Shared document preview and link to access {doc.get('title')} at internal reference {document_id}"
@@ -590,7 +594,7 @@ class ThreadService:
             reply_to_id=None,
         )
         msg_dict = message.model_dump(by_alias=True)
-        await BaseRepository.get("messages").insert_one(msg_dict)
+        await MessageRepository.insert_one(msg_dict)
         await ThreadService._upsert_conversation(
             db,
             str(current_user.id),
@@ -625,7 +629,7 @@ class ThreadService:
             {"content": {"$regex": "Shared document preview"}},
         ]
         messages = (
-            await BaseRepository.get("messages")
+            await MessageRepository
             .find(query)
             .sort("created_at", -1)
             .to_list(length=100)
@@ -664,7 +668,7 @@ class ThreadService:
     async def block_user(other_user_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await BaseRepository.get("user_contact_profiles").update_one(
+        await ContactProfileRepository.update_contact_profile(
             {"_id": str(current_user.id)},
             {"$addToSet": {"blocked_users": other_user_id}},
             upsert=True,
@@ -675,7 +679,7 @@ class ThreadService:
     async def unblock_user(other_user_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await BaseRepository.get("user_contact_profiles").update_one(
+        await ContactProfileRepository.update_contact_profile(
             {"_id": str(current_user.id)}, {"$pull": {"blocked_users": other_user_id}}
         )
         return {"status": "unblocked", "other_user_id": other_user_id}
@@ -684,10 +688,10 @@ class ThreadService:
     async def check_blocked_status(user_id: str, other_user_id: str, db=None) -> bool:
         if db is None:
             db = database.mongodb.get_default_database()
-        user_doc = await BaseRepository.get("user_contact_profiles").find_one(
+        user_doc = await ContactProfileRepository.find_contact_profile(
             {"_id": user_id}
         )
-        other_user_doc = await BaseRepository.get("user_contact_profiles").find_one(
+        other_user_doc = await ContactProfileRepository.find_contact_profile(
             {"_id": other_user_id}
         )
         user_blocked_other = (
@@ -709,18 +713,18 @@ class ThreadService:
             if other_user_id.startswith("group_")
             else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
         )
-        conv = await BaseRepository.get("conversations").find_one(
+        conv = await ConversationRepository.find_one(
             {"_id": participant_key}
         )
         pinned_by = conv.get("pinned_by", []) if conv else []
         is_pinned = str(current_user.id) in pinned_by
         if is_pinned:
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key}, {"$pull": {"pinned_by": str(current_user.id)}}
             )
             return {"is_pinned": False}
         else:
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key},
                 {"$addToSet": {"pinned_by": str(current_user.id)}},
             )
@@ -732,7 +736,7 @@ class ThreadService:
     ):
         if db is None:
             db = database.mongodb.get_default_database()
-        msg = await BaseRepository.get("messages").find_one({"_id": message_id})
+        msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
             return None
         from src.core.http import http
@@ -751,7 +755,7 @@ class ThreadService:
             translated_content = f"Translation fallback string for {msg['content']}"
         translations = msg.get("translations", {})
         translations[target_lang] = translated_content
-        await BaseRepository.get("messages").update_one(
+        await MessageRepository.update_one(
             {"_id": message_id}, {"$set": {"translations": translations}}
         )
         return {
@@ -776,7 +780,7 @@ class ThreadService:
             "members": members,
             "created_at": datetime.now(timezone.utc),
         }
-        await BaseRepository.get("message_groups").insert_one(group_doc)
+        await MessageRepository.insert_group(group_doc)
         return group_doc
 
     @staticmethod
@@ -788,7 +792,7 @@ class ThreadService:
             if other_user_id.startswith("group_")
             else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
         )
-        await BaseRepository.get("conversations").update_one(
+        await ConversationRepository.update_one(
             {"_id": participant_key},
             {"$set": {f"draft.{current_user.id}": content}},
             upsert=True,
@@ -804,7 +808,7 @@ class ThreadService:
             if other_user_id.startswith("group_")
             else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
         )
-        conv = await BaseRepository.get("conversations").find_one(
+        conv = await ConversationRepository.find_one(
             {"_id": participant_key}
         )
         draft = conv.get("draft", {}).get(str(current_user.id), "") if conv else ""
@@ -821,7 +825,7 @@ class ThreadService:
             if other_user_id.startswith("group_")
             else f"settings_{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
         )
-        await BaseRepository.get("message_settings").update_one(
+        await MessageRepository.update_setting(
             {"_id": settings_id},
             {"$set": {"self_destruct_seconds": seconds}},
             upsert=True,
@@ -837,18 +841,18 @@ class ThreadService:
             if other_user_id.startswith("group_")
             else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
         )
-        conv = await BaseRepository.get("conversations").find_one(
+        conv = await ConversationRepository.find_one(
             {"_id": participant_key}
         )
         muted_by = conv.get("muted_by", []) if conv else []
         is_muted = str(current_user.id) in muted_by
         if is_muted:
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key}, {"$pull": {"muted_by": str(current_user.id)}}
             )
             return {"is_muted": False}
         else:
-            await BaseRepository.get("conversations").update_one(
+            await ConversationRepository.update_one(
                 {"_id": participant_key},
                 {"$addToSet": {"muted_by": str(current_user.id)}},
             )
@@ -863,7 +867,7 @@ class ThreadService:
             if other_user_id.startswith("group_")
             else f"settings_{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
         )
-        settings = await BaseRepository.get("message_settings").find_one(
+        settings = await MessageRepository.find_setting(
             {"_id": settings_id}
         )
 
@@ -872,7 +876,7 @@ class ThreadService:
             if other_user_id.startswith("group_")
             else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
         )
-        conv = await BaseRepository.get("conversations").find_one(
+        conv = await ConversationRepository.find_one(
             {"_id": participant_key}
         )
         is_muted = str(current_user.id) in conv.get("muted_by", []) if conv else False

@@ -16,8 +16,8 @@ from src.schemas.document import (
 )
 from src.services.collaboration import CollaborationService
 
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/cong-tac")
 

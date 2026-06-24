@@ -5,8 +5,8 @@ from src.schemas.library import BookmarkFolderCreate, BookmarkFolderAssign
 from src.api.dependency import get_current_user, get_db
 from src.services.bookmark import BookmarkService
 
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/danh-dau")
 

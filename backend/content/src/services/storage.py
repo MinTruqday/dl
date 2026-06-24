@@ -5,9 +5,8 @@ from fastapi import Query
 from loguru import logger
 from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 
 
 class StorageService:

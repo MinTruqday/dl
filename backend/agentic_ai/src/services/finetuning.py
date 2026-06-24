@@ -10,8 +10,11 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.repositories.finetune import FinetuneRepository
+from src.repositories.finetune import FinetuneRepository
+from src.repositories.finetune import FinetuneRepository
+from src.repositories.chat import ChatRepository
 
 active_jobs = {}
 
@@ -45,16 +48,16 @@ async def report_progress(job_id: str, data: dict):
             "loss": data["loss"],
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        await BaseRepository.get("finetune_jobs").update_one(
+        await FinetuneRepository.update_job(
             {"_id": job_id}, {"$push": {"training_log": log_entry}}
         )
-        job = await BaseRepository.get("finetune_jobs").find_one({"_id": job_id})
+        job = await FinetuneRepository.find_job({"_id": job_id})
         if job:
             best = job.get("best_loss")
             if best is None or data["loss"] < best:
                 update_fields["best_loss"] = data["loss"]
     if update_fields:
-        await BaseRepository.get("finetune_jobs").update_one(
+        await FinetuneRepository.update_job(
             {"_id": job_id}, {"$set": update_fields}
         )
 
@@ -126,7 +129,7 @@ async def create_dataset(req: dict):
         "status": "draft",
         "created_at": datetime.now(timezone.utc),
     }
-    await BaseRepository.get("finetune_datasets").insert_one(doc)
+    await FinetuneRepository.insert_dataset(doc)
     return doc
 
 
@@ -150,11 +153,11 @@ async def get_dataset(dataset_id: str, user_id: str):
 
 async def delete_dataset(dataset_id: str, user_id: str):
     db = get_db()
-    result = await BaseRepository.get("finetune_datasets").delete_one(
+    result = await FinetuneRepository.delete_dataset(
         {"_id": dataset_id, "user_id": user_id}
     )
     if result.deleted_count > 0:
-        await BaseRepository.get("finetune_samples").delete_many(
+        await FinetuneRepository.delete_samples(
             {"dataset_id": dataset_id}
         )
         return {"success": True}
@@ -164,7 +167,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
 async def add_samples(dataset_id: str, req: dict):
     db = get_db()
     user_id = req.get("user_id")
-    dataset = await BaseRepository.get("finetune_datasets").find_one(
+    dataset = await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     )
     if not dataset:
@@ -181,11 +184,11 @@ async def add_samples(dataset_id: str, req: dict):
         for s in req.get("samples", [])
     ]
     if documents:
-        await BaseRepository.get("finetune_samples").insert_many(documents)
-    total = await BaseRepository.get("finetune_samples").count_documents(
+        await FinetuneRepository.insert_samples(documents)
+    total = await FinetuneRepository.count_samples(
         {"dataset_id": dataset_id}
     )
-    await BaseRepository.get("finetune_datasets").update_one(
+    await FinetuneRepository.update_dataset(
         {"_id": dataset_id},
         {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}},
     )
@@ -199,12 +202,12 @@ async def get_samples(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
 ):
     db = get_db()
-    if not await BaseRepository.get("finetune_datasets").find_one(
+    if not await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
         raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
     return (
-        await BaseRepository.get("finetune_samples")
+        await FinetuneSampleRepository
         .find({"dataset_id": dataset_id})
         .sort("created_at", 1)
         .skip(int(skip))
@@ -215,19 +218,19 @@ async def get_samples(
 
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     db = get_db()
-    if not await BaseRepository.get("finetune_datasets").find_one(
+    if not await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
         raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
     if (
-        await BaseRepository.get("finetune_samples").delete_one(
+        await FinetuneRepository.delete_sample(
             {"_id": sample_id, "dataset_id": dataset_id}
         )
     ).deleted_count > 0:
-        total = await BaseRepository.get("finetune_samples").count_documents(
+        total = await FinetuneRepository.count_samples(
             {"dataset_id": dataset_id}
         )
-        await BaseRepository.get("finetune_datasets").update_one(
+        await FinetuneRepository.update_dataset(
             {"_id": dataset_id},
             {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -239,14 +242,14 @@ async def import_feedback(req: dict):
     db = get_db()
     user_id = req.get("user_id")
     feedbacks = (
-        await BaseRepository.get("rag_feedback")
+        await AgenticAIRepository.get("rag_feedback")
         .find({"user_id": user_id, "vote_type": "up"})
         .to_list(length=500)
     )
     if not feedbacks:
         return {"imported": 0}
     ds_id = str(uuid7())
-    await BaseRepository.get("finetune_datasets").insert_one(
+    await FinetuneRepository.insert_dataset(
         {
             "_id": ds_id,
             "user_id": user_id,
@@ -260,12 +263,12 @@ async def import_feedback(req: dict):
     )
     samples = []
     for fb in feedbacks:
-        msg = await BaseRepository.get("ai_messages").find_one(
+        msg = await ChatRepository.find_ai_message(
             {"_id": fb.get("message_id")}
         )
         if not msg:
             continue
-        prev = await BaseRepository.get("ai_messages").find_one(
+        prev = await ChatRepository.find_ai_message(
             {
                 "session_id": msg.get("session_id"),
                 "role": "user",
@@ -285,8 +288,8 @@ async def import_feedback(req: dict):
                 }
             )
     if samples:
-        await BaseRepository.get("finetune_samples").insert_many(samples)
-        await BaseRepository.get("finetune_datasets").update_one(
+        await FinetuneRepository.insert_samples(samples)
+        await FinetuneRepository.update_dataset(
             {"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}}
         )
     return {"dataset_id": ds_id, "imported": len(samples)}
@@ -296,7 +299,7 @@ async def import_documents(req: dict):
     db = get_db()
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
     ds_id = str(uuid7())
-    await BaseRepository.get("finetune_datasets").insert_one(
+    await FinetuneRepository.insert_dataset(
         {
             "_id": ds_id,
             "user_id": user_id,
@@ -311,7 +314,7 @@ async def import_documents(req: dict):
     ollama_url = settings.OLLAMA_BASE_URL
     samples = []
     for did in doc_ids:
-        doc = await BaseRepository.get("documents").find_one({"_id": did})
+        doc = await FinetuneRepository.find_document_context({"_id": did})
         if not doc:
             continue
         content = ""
@@ -364,8 +367,8 @@ async def import_documents(req: dict):
             except Exception as e:
                 logger.warning(f"Lỗi trích xuất dữ liệu huấn luyện: {e}")
     if samples:
-        await BaseRepository.get("finetune_samples").insert_many(samples)
-        await BaseRepository.get("finetune_datasets").update_one(
+        await FinetuneRepository.insert_samples(samples)
+        await FinetuneRepository.update_dataset(
             {"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}}
         )
     return {"dataset_id": ds_id, "imported": len(samples)}
@@ -374,7 +377,7 @@ async def import_documents(req: dict):
 async def create_job(req: dict):
     db = get_db()
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
-    dataset = await BaseRepository.get("finetune_datasets").find_one(
+    dataset = await FinetuneRepository.find_dataset(
         {"_id": ds_id, "user_id": user_id}
     )
     if not dataset:
@@ -401,8 +404,8 @@ async def create_job(req: dict):
         "training_log": [],
         "created_at": datetime.now(timezone.utc),
     }
-    await BaseRepository.get("finetune_jobs").insert_one(job)
-    await BaseRepository.get("finetune_datasets").update_one(
+    await FinetuneRepository.insert_job(job)
+    await FinetuneRepository.update_dataset(
         {"_id": ds_id}, {"$set": {"status": "training"}}
     )
     return job
@@ -410,7 +413,7 @@ async def create_job(req: dict):
 
 async def start_job(job_id: str, req: dict):
     db = get_db()
-    job = await BaseRepository.get("finetune_jobs").find_one(
+    job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
@@ -418,7 +421,7 @@ async def start_job(job_id: str, req: dict):
     if job_id in active_jobs:
         return {"error": "Tác vụ huấn luyện đang chạy"}
     samples = (
-        await BaseRepository.get("finetune_samples")
+        await FinetuneSampleRepository
         .find({"dataset_id": job["dataset_id"]})
         .to_list(length=10000)
     )
@@ -444,7 +447,7 @@ async def start_job(job_id: str, req: dict):
     )
     active_jobs[job_id] = thread
     thread.start()
-    await BaseRepository.get("finetune_jobs").update_one(
+    await FinetuneRepository.update_job(
         {"_id": job_id},
         {"$set": {"status": "running", "started_at": datetime.now(timezone.utc)}},
     )
@@ -469,7 +472,7 @@ async def get_job(job_id: str, user_id: str):
 
 async def cancel_job(job_id: str, req: dict):
     db = get_db()
-    result = await BaseRepository.get("finetune_jobs").update_one(
+    result = await FinetuneRepository.update_job(
         {
             "_id": job_id,
             "user_id": req.get("user_id"),
@@ -487,7 +490,7 @@ async def cancel_job(job_id: str, req: dict):
 
 async def deploy_model(job_id: str, req: dict):
     db = get_db()
-    job = await BaseRepository.get("finetune_jobs").find_one(
+    job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id"), "status": "completed"}
     )
     if not job:
@@ -537,7 +540,7 @@ async def deploy_model(job_id: str, req: dict):
                 raise Exception("Không tìm thấy thư mục mô hình")
 
         model_name = repo_id
-        await BaseRepository.get("finetune_jobs").update_one(
+        await FinetuneRepository.update_job(
             {"_id": job_id}, {"$set": {"merged_model_name": repo_id}}
         )
 
@@ -547,7 +550,7 @@ async def deploy_model(job_id: str, req: dict):
             status_code=500, detail=f"Lỗi triển khai mô hình lên kho lưu trữ từ xa: {e}"
         )
 
-    await BaseRepository.get("finetune_jobs").update_one(
+    await FinetuneRepository.update_job(
         {"_id": job_id}, {"$set": {"status": "deployed"}}
     )
     return {"status": "deployed", "model_name": model_name}
@@ -557,7 +560,7 @@ async def evaluate_model(job_id: str, req: dict):
     from src.harness.evaluation import evaluation
 
     db = get_db()
-    job = await BaseRepository.get("finetune_jobs").find_one(
+    job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:

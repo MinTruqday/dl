@@ -8,7 +8,7 @@ import redis
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class EmbeddingRag:

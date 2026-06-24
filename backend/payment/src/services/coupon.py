@@ -7,8 +7,8 @@ from loguru import logger
 from src.schemas.wallet import CouponStatus, CouponTargetType
 from uuid6 import uuid7
 
-from shared.infrastructure.database import database
-from shared.dependency import CurrentUser, Role
+from src.core.infrastructure.database import database
+from src.core.dependency import CurrentUser, Role
 
 
 class CouponService:

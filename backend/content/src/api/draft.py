@@ -5,9 +5,9 @@ from src.api.dependency import get_current_user, get_db, require_role
 from src.schemas.document import ModerateDocumentRequest
 from src.services.document import DocumentService
 
-from shared.infrastructure.configuration import settings
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.infrastructure.configuration import settings
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/ban-nhap")
 

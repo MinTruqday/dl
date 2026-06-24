@@ -1,12 +1,12 @@
-from shared.dependency import CurrentUser
+from src.core.dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_current_user, get_db, require_role
 from src.services.telemetry import TelemetryService
 
-from shared.infrastructure.configuration import settings
-from shared.response import APIResponse
+from src.core.infrastructure.configuration import settings
+from src.core.response import APIResponse
 from src.schemas.account import Role, UserInDB
 
 router = APIRouter(prefix="/giam-sat")

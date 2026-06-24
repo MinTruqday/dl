@@ -5,9 +5,10 @@ from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
+from src.repositories.document import DocumentRepository
+from src.repositories.highlight import HighlightRepository
 
 ALLOWED_HIGHLIGHT_COLORS = ["#18181b", "#71717a", "#e4e4e7"]
 
@@ -34,7 +35,7 @@ class HighlightService:
             "note": data.get("note", ""),
             "created_at": datetime.now(timezone.utc),
         }
-        await BaseRepository.get("highlights").insert_one(highlight)
+        await HighlightRepository.insert_one(highlight)
         logger.info("Tạo phần văn bản nổi bật thành công")
         return highlight
 
@@ -43,7 +44,7 @@ class HighlightService:
         if db is None:
             db = database.mongodb.get_default_database()
         highlights = (
-            await BaseRepository.get("highlights")
+            await HighlightRepository
             .find({"user_id": str(current_user.id), "document_id": document_id})
             .sort("created_at", -1)
             .to_list(length=200)
@@ -71,7 +72,7 @@ class HighlightService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        result = await BaseRepository.get("highlights").update_one(
+        result = await HighlightRepository.update_one(
             {"_id": highlight_id, "user_id": str(current_user.id)},
             {"$set": {"note": note, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -85,7 +86,7 @@ class HighlightService:
     async def delete_highlight(highlight_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        result = await BaseRepository.get("highlights").delete_one(
+        result = await HighlightRepository.delete_one(
             {"_id": highlight_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
@@ -131,7 +132,7 @@ class HighlightService:
             ]
         )
         highlights = (
-            await BaseRepository.get("highlights")
+            await HighlightRepository
             .aggregate(pipeline)
             .to_list(length=limit)
         )
@@ -162,12 +163,12 @@ class HighlightService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        document = await BaseRepository.get("documents").find_one(
+        document = await DocumentRepository.find_one(
             {"_id": document_id}, projection={"title": 1}
         )
         document_title = document.get("title", "Untitled") if document else "Untitled"
         highlights = (
-            await BaseRepository.get("highlights")
+            await HighlightRepository
             .find({"user_id": str(current_user.id), "document_id": document_id})
             .sort("created_at", 1)
             .to_list(length=500)

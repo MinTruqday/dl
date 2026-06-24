@@ -5,8 +5,8 @@ from loguru import logger
 from src.api.composition import router as composition_socket
 from src.api.message import router as message_socket
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 
 app = FastAPI(title="DocLib WebSocket", version=settings.VERSION)
 

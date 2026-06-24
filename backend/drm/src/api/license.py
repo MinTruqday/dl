@@ -5,19 +5,17 @@ import datetime
 from fastapi import APIRouter, HTTPException, Depends
 from loguru import logger
 
-from shared.repositories.database import BaseRepository
+from src.repositories.license import LicenseRepository
 
 router = APIRouter(prefix="/drm")
 
-from shared.dependency import CurrentUser, get_current_user
+from src.core.dependency import CurrentUser, get_current_user
 from src.schemas.license import Acquisition, Token
 
 @router.post("/kiem-tra", response_model=Token)
 async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(get_current_user)):
     try:
-        licenses_col = BaseRepository.get("drm_licenses")
-        
-        license_doc = await licenses_col.find_one({"file_id": req.file_id})
+        license_doc = await LicenseRepository.find_license_by_file_id(req.file_id)
         if not license_doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy giấy phép bản quyền của tài liệu")
             
@@ -30,21 +28,16 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
         user_id = str(current_user.id)
         
         # Kiểm tra lại quyền hạn Real-time
-        documents_col = BaseRepository.get("documents")
-        document = await documents_col.find_one({"_id": license_doc["document_id"]})
+        document = await LicenseRepository.get_document(license_doc["document_id"])
         if document and document.get("is_premium") and document.get("creator_id") != user_id:
-            purchases_col = BaseRepository.get("purchases")
-            purchase = await purchases_col.find_one({
-                "user_id": user_id, 
-                "item_id": license_doc["document_id"]
-            })
+            purchase = await LicenseRepository.get_purchase(user_id, license_doc["document_id"])
             if not purchase:
                 # Thu hồi giấy phép ngay lập tức
-                await licenses_col.update_one({"_id": license_doc["_id"]}, {"$set": {"status": "REVOKED"}})
+                await LicenseRepository.update_license(license_doc["_id"], {"$set": {"status": "REVOKED"}})
                 raise HTTPException(status_code=403, detail="Bạn đã hết hạn hoặc bị thu hồi quyền truy cập tài liệu này")
 
-        await licenses_col.update_one(
-            {"_id": license_doc["_id"]},
+        await LicenseRepository.update_license(
+            license_doc["_id"],
             {"$inc": {"open_count": 1}, "$set": {"last_opened_at": datetime.datetime.now(datetime.timezone.utc)}}
         )
         

@@ -5,7 +5,7 @@ import tempfile
 from celery import Celery
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 CELERY_BROKER_URL = settings.RABBITMQ_URI
 CELERY_RESULT_BACKEND = settings.REDIS_URI

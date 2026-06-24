@@ -4,7 +4,7 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from src.core.registry import PromptType, registry
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 from src.schemas.model import QualityEvaluation

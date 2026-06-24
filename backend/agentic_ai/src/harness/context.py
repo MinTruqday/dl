@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 CHARS_PER_TOKEN_APPROX = settings.CHARS_PER_TOKEN_APPROX
 DEFAULT_MAX_CONTEXT_TOKENS = settings.MAX_CONTEXT_TOKENS

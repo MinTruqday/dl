@@ -3,7 +3,8 @@ from typing import Any, Dict, List, Optional
 from uuid6 import uuid7
 
 from fastapi import HTTPException
-from shared.repositories.database import BaseRepository
+from src.repositories.chat import ChatRepository
+from src.repositories.chat import ChatRepository
 
 class HistoryService:
     @staticmethod
@@ -26,7 +27,7 @@ class HistoryService:
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
         }
-        await BaseRepository.get("ai_sessions").insert_one(session)
+        await ChatRepository.insert_ai_session(session)
         return session
 
     @staticmethod
@@ -35,7 +36,7 @@ class HistoryService:
         if document_id:
             query["document_id"] = document_id
         cursor = (
-            BaseRepository.get("ai_sessions")
+            AiSessionRepository
             .find(query, {"messages": 0})
             .sort("updated_at", -1)
         )
@@ -43,13 +44,13 @@ class HistoryService:
 
     @staticmethod
     async def get_session_detail(session_id: str, user_id: str) -> Dict[str, Any]:
-        session = await BaseRepository.get("ai_sessions").find_one(
+        session = await ChatRepository.find_ai_session(
             {"_id": session_id, "user_id": user_id}
         )
         if not session:
             raise HTTPException(status_code=404, detail="Không tìm thấy cuộc trò chuyện")
         messages = (
-            await BaseRepository.get("ai_messages")
+            await AiMessageRepository
             .find({"session_id": session_id})
             .sort("created_at", 1)
             .to_list(length=100)
@@ -59,7 +60,7 @@ class HistoryService:
 
     @staticmethod
     async def update_title(session_id: str, data: dict, user_id: str) -> Dict[str, Any]:
-        result = await BaseRepository.get("ai_sessions").update_one(
+        result = await ChatRepository.update_ai_session(
             {"_id": session_id, "user_id": user_id},
             {
                 "$set": {
@@ -74,7 +75,7 @@ class HistoryService:
 
     @staticmethod
     async def delete_session(session_id: str, user_id: str) -> Dict[str, Any]:
-        result = await BaseRepository.get("ai_sessions").delete_one(
+        result = await ChatRepository.delete_ai_session(
             {"_id": session_id, "user_id": user_id}
         )
         if result.deleted_count == 0:
@@ -97,8 +98,8 @@ class HistoryService:
             "content": content,
             "created_at": datetime.now(timezone.utc),
         }
-        await BaseRepository.get("ai_messages").insert_one(message)
-        await BaseRepository.get("ai_sessions").update_one(
+        await ChatRepository.insert_ai_message(message)
+        await ChatRepository.update_ai_session(
             {"_id": session_id, "user_id": user_id},
             {"$set": {"updated_at": datetime.now(timezone.utc)}},
         )

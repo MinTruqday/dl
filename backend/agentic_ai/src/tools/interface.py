@@ -62,7 +62,7 @@ from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langgraph.prebuilt import create_react_agent
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL
 

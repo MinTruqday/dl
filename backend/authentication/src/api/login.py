@@ -1,4 +1,4 @@
-from shared.dependency import CurrentUser
+from src.core.dependency import CurrentUser
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request, status
@@ -6,8 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from src.services.login import SessionService
 
-from shared.dependency import RateLimiting, get_current_user, get_db
-from shared.response import APIResponse
+from src.core.dependency import RateLimiting, get_current_user, get_db
+from src.core.response import APIResponse
 from src.schemas.authentication import (
     ForgotPasswordRequest,
     ResetPasswordRequest,

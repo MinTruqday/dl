@@ -9,7 +9,7 @@ from loguru import logger
 from src.core.registry import PromptType, registry
 from src.store.database import vector_store
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 _hf = HuggingFaceEndpoint(
     repo_id=settings.LLAMA_MODEL,

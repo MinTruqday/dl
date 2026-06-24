@@ -1,7 +1,7 @@
-from shared.dependency import CurrentUser
+from src.core.dependency import CurrentUser
 from fastapi import Depends
 
-from shared.dependency import (
+from src.core.dependency import (
     RateLimiting,
     get_current_user,
     get_current_user_optional,

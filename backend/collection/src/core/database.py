@@ -3,7 +3,7 @@ import os
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class Database:

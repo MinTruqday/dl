@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from shared.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
+from src.core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 
 logger.remove()
 logger.add(
@@ -20,7 +20,7 @@ from src.api.composition import router as editor
 from src.api.composition import router as editorjs
 from src.api.latex import router as latex
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 app = FastAPI(title="DocLib Compiler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)

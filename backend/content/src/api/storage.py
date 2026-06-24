@@ -10,9 +10,9 @@ from src.schemas.storage import (
 )
 from src.services.storage import StorageService
 
-from shared.infrastructure.configuration import settings
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.infrastructure.configuration import settings
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/luu-tru")
 

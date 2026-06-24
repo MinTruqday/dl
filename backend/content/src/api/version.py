@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends
 from src.api.dependency import get_current_user, get_db
 from src.services.version import VersionService
 
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/phien-ban")
 

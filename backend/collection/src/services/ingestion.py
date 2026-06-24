@@ -7,9 +7,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from src.core.queue import mq_client
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.configuration import settings
 from src.schemas.ingestion import Collection
+from src.repositories.archive import ArchiveRepository
 
 
 
@@ -75,7 +75,7 @@ async def get_active_jobs():
     client = AsyncIOMotorClient(mongo_uri)
     db = client.get_default_database()
     active_collectors = (
-        await BaseRepository.get("collection_jobs")
+        await CollectionRepository.get("collection_jobs")
         .find({"status": {"$in": ["running", "pending"]}})
         .to_list(50)
     )
@@ -90,10 +90,10 @@ async def get_collector_stats():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
     db = client.get_default_database()
-    total_docs = await BaseRepository.get("documents").count_documents({})
-    total_assets = await BaseRepository.get("archives").count_documents({})
+    total_docs = await ArchiveRepository.count_documents({})
+    total_assets = await ArchiveRepository.count_documents({})
     recent_crawls = (
-        await BaseRepository.get("documents")
+        await DocumentRepository
         .find({}, {"created_at": 1})
         .sort("created_at", -1)
         .limit(1)
@@ -104,7 +104,7 @@ async def get_collector_stats():
         if recent_crawls and isinstance(recent_crawls[0].get("created_at"), datetime)
         else None
     )
-    total_collected = await BaseRepository.get("documents").count_documents(
+    total_collected = await ArchiveRepository.count_documents(
         {"creator_id": {"$regex": ".*collector.*"}}
     )
     return {

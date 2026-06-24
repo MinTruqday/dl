@@ -9,7 +9,7 @@ from src.rag.embedding import embedder
 from src.store.database import vector_store
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class PipelineRag:

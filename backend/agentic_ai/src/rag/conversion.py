@@ -6,7 +6,7 @@ from typing import Dict, List
 import boto3
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class ConversionRag:

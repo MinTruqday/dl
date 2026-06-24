@@ -7,8 +7,9 @@ from bson import ObjectId
 from fastapi import HTTPException
 from loguru import logger
 
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.database import database
+from src.repositories.document import DocumentRepository
+from src.repositories.document import DocumentRepository
 
 
 class VersionService:
@@ -17,12 +18,12 @@ class VersionService:
     async def save_version(document_id, version_note, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await BaseRepository.get("documents").find_one(
+        doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
-        await BaseRepository.get("document_versions").insert_one(
+        await DocumentRepository.insert_version(
             {
                 "document_id": document_id,
                 "creator_id": str(current_user.id),
@@ -46,7 +47,7 @@ class VersionService:
         if db is None:
             db = database.mongodb.get_default_database()
         cursor = (
-            BaseRepository.get("document_versions")
+            DocumentVersionRepository
             .find({"document_id": document_id, "creator_id": str(current_user.id)})
             .sort("created_at", -1)
         )
@@ -75,7 +76,7 @@ class VersionService:
             }
         else:
             update_data = {**snapshot, "updated_at": datetime.now(timezone.utc)}
-        await BaseRepository.get("documents").update_one(
+        await DocumentRepository.update_one(
             {"_id": version["document_id"]}, {"$set": update_data}
         )
         logger.info("Khôi phục phiên bản lịch sử tài liệu thành công")

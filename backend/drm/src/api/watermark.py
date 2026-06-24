@@ -1,12 +1,12 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Response, HTTPException
-from shared.dependency import get_current_user, get_db
+from src.core.dependency import get_current_user, get_db
 
 from src.services.watermark import WatermarkService
 
-from shared.response import APIResponse
-from shared.dependency import CurrentUser, Role
+from src.core.response import APIResponse
+from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/ket-xuat")
 

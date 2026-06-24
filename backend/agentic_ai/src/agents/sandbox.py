@@ -5,7 +5,7 @@ from loguru import logger
 from src.core.registry import PromptType, registry
 from src.tools.interface import llm, tools
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class SandboxAgent:

@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends
 from src.schemas.banner import BannerRequest
 from src.services.banner import BannerService
 
-from shared.dependency import get_db, require_role
-from shared.response import APIResponse
+from src.core.dependency import get_db, require_role
+from src.core.response import APIResponse
 from src.schemas.account import Role
 
 

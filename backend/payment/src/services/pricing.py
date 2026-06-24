@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.repositories.pricing import PricingRepository
 
 
 class PricingService:
@@ -13,11 +13,7 @@ class PricingService:
     async def set_document_pricing(
         document_id: str, data: dict, current_user, db=None
     ) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
-        doc = await db["documents"].find_one(
-            {"_id": document_id, "creator_id": str(current_user.id)}
-        )
+        doc = await PricingRepository.get_document(document_id, str(current_user.id))
         if not doc:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         update = {
@@ -25,18 +21,13 @@ class PricingService:
             "is_drm_protected": data.get("is_drm_protected", True),
             "updated_at": datetime.now(timezone.utc),
         }
-        await db["documents"].update_one({"_id": document_id}, {"$set": update})
+        await PricingRepository.update_document(document_id, {"$set": update})
         logger.info("Cập nhật giá tài liệu thành công")
         return {"message": "Cập nhật cấu hình giá tài liệu thành công"}
 
     @staticmethod
     async def get_pricing_config(db=None) -> dict:
-        if db is None:
-            db = database.mongodb.get_default_database()
-
-        config = await BaseRepository.get("system_config").find_one(
-            {"_id": "pricing_tiers"}
-        )
+        config = await PricingRepository.get_pricing_config()
         if config:
             return config
 
@@ -63,7 +54,5 @@ class PricingService:
             }
         }
 
-        await BaseRepository.get("system_config").update_one(
-            {"_id": "pricing_tiers"}, {"$set": default_config}, upsert=True
-        )
+        await PricingRepository.update_pricing_config({"$set": default_config}, upsert=True)
         return default_config

@@ -19,7 +19,7 @@ from src.core.cache import dedup
 from src.core.storage import storage
 from uuid6 import uuid7
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 MIN_FILE_SIZE_BYTES = settings.MIN_FILE_SIZE_BYTES
 

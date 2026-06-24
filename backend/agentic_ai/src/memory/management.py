@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 import redis.asyncio as redis
 from loguru import logger
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class ManagementMemory:

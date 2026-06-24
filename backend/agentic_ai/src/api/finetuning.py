@@ -1,7 +1,7 @@
 import asyncio
 from fastapi import APIRouter, Query, HTTPException
 from src.services.finetuning import model_finetuning as finetune_service
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 router = APIRouter(prefix="/tinh-chinh")
 

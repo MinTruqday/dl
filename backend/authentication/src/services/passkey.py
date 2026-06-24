@@ -28,8 +28,8 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 from src.schemas.authentication import UserInDB
 
 RP_ID = settings.PASSKEY_RP_ID

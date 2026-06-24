@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from shared.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
+from src.core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 
 logger.remove()
 logger.add(
@@ -19,7 +19,7 @@ logger.add(
 
 from src.api.ingestion import router as collector
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 app = FastAPI(title="DocLib Crawler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)

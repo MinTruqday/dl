@@ -7,8 +7,8 @@ from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from loguru import logger
 from src.sockets.message import message_manager
 
-from shared.infrastructure.configuration import settings
-from shared.infrastructure.database import database
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 
 router = APIRouter()
 

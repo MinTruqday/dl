@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from src.core.registry import PromptType, registry
 from src.utils.huggingface import HFInferenceChat
 
-from shared.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 from src.schemas.model import RouteDecision
