@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: workspace-deployment
+  name: compilation-deployment
   namespace: doclib-production
   labels:
-    app: workspace
+    app: compilation
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: workspace
+      app: compilation
   template:
     metadata:
       labels:
-        app: workspace
+        app: compilation
     spec:
       containers:
-        - name: workspace
-          image: doclib-registry/workspace:latest
+        - name: compilation
+          image: doclib-registry/compilation:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: workspace
+  name: compilation
   namespace: doclib-production
 spec:
   selector:
-    app: workspace
+    app: compilation
   ports:
     - protocol: TCP
       port: 80

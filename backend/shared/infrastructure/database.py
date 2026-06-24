@@ -6,17 +6,17 @@ import redis.asyncio as aioredis
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from shared.infrastructure.config import settings
+from shared.infrastructure.configuration import settings
 
 
-class DBClient:
+class DatabaseInfrastructure:
     def __init__(self):
         self.mongodb = None
         self.redis = None
         self.rabbitmq = None
 
 
-db_client = DBClient()
+database = DatabaseInfrastructure()
 
 
 async def init_db():
@@ -30,10 +30,10 @@ async def init_db():
 
         sys.exit(1)
 
-    db_client.mongodb = AsyncIOMotorClient(mongo_uri, maxPoolSize=1000)
+    database.mongodb = AsyncIOMotorClient(mongo_uri, maxPoolSize=1000)
 
     try:
-        await db_client.mongodb.admin.command("replSetGetStatus")
+        await database.mongodb.admin.command("replSetGetStatus")
     except Exception:
         try:
             from urllib.parse import urlparse
@@ -45,7 +45,7 @@ async def init_db():
                 else parsed_uri.netloc
             )
             logger.info("Bắt đầu khởi tạo cụm cơ sở dữ liệu chính")
-            await db_client.mongodb.admin.command(
+            await database.mongodb.admin.command(
                 "replSetInitiate",
                 {"_id": "rs0", "members": [{"_id": 0, "host": host_with_port}]},
             )
@@ -54,12 +54,12 @@ async def init_db():
         except Exception:
             logger.warning("Lỗi khởi tạo cụm cơ sở dữ liệu chính")
 
-    db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
+    database.redis = aioredis.from_url(redis_uri, decode_responses=True)
 
     max_retries = 5
     for i in range(max_retries):
         try:
-            db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
+            database.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
             logger.info("Kết nối hàng đợi tin nhắn nền ổn định")
             break
         except Exception as e:
@@ -74,7 +74,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = db_client.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.SERVICE_DB_NAME]
 
         await db["documents"].create_index(
             [("title", "text"), ("description", "text"), ("author", "text")],
@@ -161,9 +161,9 @@ async def setup_indexes():
 
 
 async def close_db():
-    if db_client.mongodb:
-        db_client.mongodb.close()
-    if db_client.redis:
-        await db_client.redis.close()
-    if db_client.rabbitmq:
-        await db_client.rabbitmq.close()
+    if database.mongodb:
+        database.mongodb.close()
+    if database.redis:
+        await database.redis.close()
+    if database.rabbitmq:
+        await database.rabbitmq.close()

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: alerts-deployment
+  name: notification-deployment
   namespace: doclib-production
   labels:
-    app: alerts
+    app: notification
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: alerts
+      app: notification
   template:
     metadata:
       labels:
-        app: alerts
+        app: notification
     spec:
       containers:
-        - name: alerts
-          image: doclib-registry/alerts:latest
+        - name: notification
+          image: doclib-registry/notification:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: alerts
+  name: notification
   namespace: doclib-production
 spec:
   selector:
-    app: alerts
+    app: notification
   ports:
     - protocol: TCP
       port: 80

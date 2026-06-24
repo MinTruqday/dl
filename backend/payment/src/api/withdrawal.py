@@ -1,0 +1,60 @@
+from typing import Any
+
+from fastapi import APIRouter, Depends, Query
+from src.schemas.withdrawal import WithdrawalRequest
+from src.services.withdrawal import WithdrawalService
+
+from shared.dependency import get_current_user, get_db, require_role
+from shared.response import APIResponse
+from shared.dependency import CurrentUser, Role
+
+router = APIRouter(prefix="/rut-tien")
+
+
+@router.post("", response_model=APIResponse[Any])
+async def request_withdrawal(
+    req: WithdrawalRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await WithdrawalService.request_withdrawal(req.model_dump(), current_user, db=db),
+        message="Đã gửi yêu cầu rút tiền",
+        status=201,
+    )
+
+
+@router.get(
+    "/hang-doi",
+    response_model=APIResponse[Any],
+    dependency=[Depends(require_role([Role.ADMIN]))],
+)
+async def get_withdrawal_queue(
+    status: str = "PENDING", limit: int = 50, db=Depends(get_db)
+):
+    return APIResponse(
+        data=await WithdrawalService.get_withdrawal_queue(status, limit, db=db),
+        message="Lấy danh sách giao dịch rút tiền thành công",
+        status=200,
+    )
+
+
+@router.post(
+    "/{withdrawal_id}/xac-minh",
+    response_model=APIResponse[Any],
+    dependency=[Depends(require_role([Role.ADMIN]))],
+)
+async def verify_withdrawal(
+    withdrawal_id: str,
+    action: str,
+    reason: str = "",
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await WithdrawalService.verify_withdrawal(
+            withdrawal_id, action, reason, current_user, db=db
+        ),
+        message="Xác minh yêu cầu rút tiền thành công",
+        status=200,
+    )

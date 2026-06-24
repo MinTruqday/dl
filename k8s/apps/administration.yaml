@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: administration-deployment
+  name: management-deployment
   namespace: doclib-production
   labels:
-    app: administration
+    app: management
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: administration
+      app: management
   template:
     metadata:
       labels:
-        app: administration
+        app: management
     spec:
       containers:
-        - name: administration
-          image: doclib-registry/administration:latest
+        - name: management
+          image: doclib-registry/management:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: administration
+  name: management
   namespace: doclib-production
 spec:
   selector:
-    app: administration
+    app: management
   ports:
     - protocol: TCP
       port: 80

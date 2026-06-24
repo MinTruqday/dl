@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: conversations-deployment
+  name: message-deployment
   namespace: doclib-production
   labels:
-    app: conversations
+    app: message
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: conversations
+      app: message
   template:
     metadata:
       labels:
-        app: conversations
+        app: message
     spec:
       containers:
-        - name: conversations
-          image: doclib-registry/conversations:latest
+        - name: message
+          image: doclib-registry/message:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: conversations
+  name: message
   namespace: doclib-production
 spec:
   selector:
-    app: conversations
+    app: message
   ports:
     - protocol: TCP
       port: 80

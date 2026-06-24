@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: agentic-ai
-          image: doclib-registry/intelligence:latest
+          image: doclib-registry/agentic_ai:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000

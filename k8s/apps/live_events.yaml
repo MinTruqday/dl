@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: live_events-deployment
+  name: websocket-deployment
   namespace: doclib-production
   labels:
-    app: live_events
+    app: websocket
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: live_events
+      app: websocket
   template:
     metadata:
       labels:
-        app: live_events
+        app: websocket
     spec:
       containers:
-        - name: live_events
-          image: doclib-registry/live_events:latest
+        - name: websocket
+          image: doclib-registry/websocket:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: live_events
+  name: websocket
   namespace: doclib-production
 spec:
   selector:
-    app: live_events
+    app: websocket
   ports:
     - protocol: TCP
       port: 80

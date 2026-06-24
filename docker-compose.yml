@@ -133,11 +133,11 @@ services:
     networks:
       - doclib_network
 
-  billing:
+  payment:
     build:
       context: ./backend
-      dockerfile: ./billing/Dockerfile
-    container_name: doclib_billing
+      dockerfile: ./payment/Dockerfile
+    container_name: doclib_payment
     restart: always
     ports:
       - "8350:8350"
@@ -153,16 +153,16 @@ services:
       - mongodb
       - redis
     volumes:
-      - ./backend/billing/src:/app/src
+      - ./backend/payment/src:/app/src
       - ./backend/logs/finance:/app/logs
     networks:
       - doclib_network
 
-  alerts:
+  notification:
     build:
       context: ./backend
-      dockerfile: ./alerts/Dockerfile
-    container_name: doclib_alerts
+      dockerfile: ./notification/Dockerfile
+    container_name: doclib_notification
     restart: always
     ports:
       - "8150:8150"
@@ -178,16 +178,16 @@ services:
       - mongodb
       - redis
     volumes:
-      - ./backend/alerts/src:/app/src
+      - ./backend/notification/src:/app/src
       - ./backend/logs/notification:/app/logs
     networks:
       - doclib_network
 
-  intelligence:
+  agentic_ai:
     build:
       context: ./backend
-      dockerfile: ./intelligence/Dockerfile
-    container_name: doclib_intelligence
+      dockerfile: ./agentic_ai/Dockerfile
+    container_name: doclib_agentic_ai
     restart: always
     ports:
       - "8400:8400"
@@ -204,7 +204,7 @@ services:
       - qdrant
       - ollama
     volumes:
-      - ./backend/intelligence/src:/app/src
+      - ./backend/agentic_ai/src:/app/src
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
       - doclib_network
@@ -259,11 +259,11 @@ services:
     networks:
       - doclib_network
 
-  ingestion:
+  collection:
     build:
       context: ./backend
-      dockerfile: ./ingestion/Dockerfile
-    container_name: doclib_ingestion
+      dockerfile: ./collection/Dockerfile
+    container_name: doclib_collection
     restart: always
     ports:
       - "8250:8250"
@@ -281,16 +281,16 @@ services:
       - redis
       - minio
     volumes:
-      - ./backend/ingestion/src:/app/src
+      - ./backend/collection/src:/app/src
       - ./backend/logs/collector:/app/logs
     networks:
       - doclib_network
 
-  workspace:
+  compilation:
     build:
       context: ./backend
-      dockerfile: ./workspace/Dockerfile
-    container_name: doclib_workspace
+      dockerfile: ./compilation/Dockerfile
+    container_name: doclib_compilation
     restart: always
     ports:
       - "8300:8300"
@@ -307,16 +307,16 @@ services:
       - mongodb
       - redis
     volumes:
-      - ./backend/workspace/src:/app/src
+      - ./backend/compilation/src:/app/src
       - tectonic_cache:/home/doclibuser/.cache/Tectonic
     networks:
       - doclib_network
 
-  identity:
+  authentication:
     build:
       context: ./backend
-      dockerfile: ./identity/Dockerfile
-    container_name: doclib_identity
+      dockerfile: ./authentication/Dockerfile
+    container_name: doclib_authentication
     restart: always
     ports:
       - "8500:8500"
@@ -333,16 +333,16 @@ services:
       - redis
       - rabbitmq
     volumes:
-      - ./backend/identity/src:/app/src
+      - ./backend/authentication/src:/app/src
       - ./backend/logs/authentication:/app/logs
     networks:
       - doclib_network
 
-  administration:
+  management:
     build:
       context: ./backend
-      dockerfile: ./administration/Dockerfile
-    container_name: doclib_administration
+      dockerfile: ./management/Dockerfile
+    container_name: doclib_management
     restart: always
     ports:
       - "8050:8050"
@@ -359,16 +359,16 @@ services:
       - redis
       - rabbitmq
     volumes:
-      - ./backend/administration/src:/app/src
+      - ./backend/management/src:/app/src
       - ./backend/logs/management:/app/logs
     networks:
       - doclib_network
 
-  live_events:
+  websocket:
     build:
       context: ./backend
-      dockerfile: ./live_events/Dockerfile
-    container_name: doclib_live_events
+      dockerfile: ./websocket/Dockerfile
+    container_name: doclib_websocket
     restart: always
     ports:
       - "8200:8200"
@@ -383,16 +383,16 @@ services:
     depends_on:
       - redis
     volumes:
-      - ./backend/live_events/src:/app/src
+      - ./backend/websocket/src:/app/src
       - ./backend/logs/realtime:/app/logs
     networks:
       - doclib_network
 
-  conversations:
+  message:
     build:
       context: ./backend
-      dockerfile: ./conversations/Dockerfile
-    container_name: doclib_conversations
+      dockerfile: ./message/Dockerfile
+    container_name: doclib_message
     restart: always
     ports:
       - "8100:8100"
@@ -409,16 +409,16 @@ services:
       - redis
       - rabbitmq
     volumes:
-      - ./backend/conversations/src:/app/src
+      - ./backend/message/src:/app/src
       - ./backend/logs/messaging:/app/logs
     networks:
       - doclib_network
 
-  documents:
+  content:
     build:
       context: ./backend
-      dockerfile: ./documents/Dockerfile
-    container_name: doclib_documents
+      dockerfile: ./content/Dockerfile
+    container_name: doclib_content
     restart: always
     ports:
       - "8450:8450"
@@ -436,8 +436,33 @@ services:
       - rabbitmq
       - minio
     volumes:
-      - ./backend/documents/src:/app/src
+      - ./backend/content/src:/app/src
       - ./backend/logs/content:/app/logs
+    networks:
+      - doclib_network
+
+  drm:
+    build:
+      context: ./backend
+      dockerfile: ./drm/Dockerfile
+    container_name: doclib_drm
+    restart: always
+    ports:
+      - "8600:8600"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.drm.rule=PathPrefix(`/drm`)"
+      - "traefik.http.services.drm.loadbalancer.server.port=8600"
+    env_file:
+      - .env
+    environment:
+      - SERVICE_DB_NAME=doclib_drm
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/drm/src:/app/src
+      - ./backend/logs/drm:/app/logs
     networks:
       - doclib_network
 
