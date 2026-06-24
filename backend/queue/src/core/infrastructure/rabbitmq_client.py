@@ -63,18 +63,35 @@ class RabbitMQCore:
             message = await queue.get(timeout=timeout)
             if message:
                 payload = json.loads(message.body.decode())
-                # Return the payload. The caller must ACK later, but for simplicity of HTTP we can auto-ack or require manual ack.
-                # Actually, HTTP Long-Polling with manual ACK is hard because the consumer might die.
-                # So we will just auto_ack on HTTP return to keep it simple, or push to Webhook.
-                # Since we are wrapping RabbitMQ, we will just auto_ack upon successful GET.
-                await message.ack()
-                return payload
+                delivery_tag = str(message.delivery_tag)
+                # DO NOT AUTO-ACK HERE (Data Loss fix)
+                # Save message in memory so we can ACK it later
+                if not hasattr(self, 'pending_acks'):
+                    self.pending_acks = {}
+                self.pending_acks[delivery_tag] = message
+                return {
+                    "payload": payload,
+                    "delivery_tag": delivery_tag
+                }
             return None
         except aio_pika.exceptions.QueueEmpty:
             return None
         except Exception as e:
             logger.error(f"Lỗi lấy tin nhắn: {e}")
             return None
+
+    async def ack_message(self, delivery_tag: str):
+        if not hasattr(self, 'pending_acks'):
+            self.pending_acks = {}
+        message = self.pending_acks.pop(delivery_tag, None)
+        if message:
+            try:
+                await message.ack()
+                return True
+            except Exception as e:
+                logger.error(f"Lỗi ACK tin nhắn: {e}")
+                return False
+        return False
 
     async def close(self):
         if self.connection:

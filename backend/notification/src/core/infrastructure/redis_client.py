@@ -52,4 +52,9 @@ class RedisAPIClient:
         res = await self._post("/pipeline_incr", {"key": key, "expire": expire})
         return res.get("values") if res else []
 
+
+    async def aclose(self):
+        if hasattr(self, '_client'):
+            await self._client.aclose()
+
 redis_client = RedisAPIClient()

@@ -52,11 +52,15 @@ async def init_db():
 
     database.redis = aioredis.from_url(redis_uri, decode_responses=True)
 
+    from src.core.infrastructure.mq import mq
     max_retries = 5
     for i in range(max_retries):
         try:
-            logger.info("Kết nối hàng đợi tin nhắn nền ổn định")
-            break
+            if await mq.health_check():
+                logger.info("Kết nối hàng đợi tin nhắn nền ổn định")
+                break
+            else:
+                raise Exception("MQ health check failed")
         except Exception as e:
             if i == max_retries - 1:
                 logger.error(f"Lỗi kết nối hàng đợi tin nhắn: {e}")
@@ -71,89 +75,9 @@ async def setup_indexes():
     try:
         db = database.mongodb[settings.SERVICE_DB_NAME]
 
-        await db["documents"].create_index(
-            [("title", "text"), ("description", "text"), ("author", "text")],
-            background=True,
-        )
-        await db["documents"].create_index([("creator_id", 1)], background=True)
-        await db["documents"].create_index(
-            [("status", 1), ("is_deleted", 1), ("created_at", -1)], background=True
-        )
-        await db["documents"].create_index(
-            [("status", 1), ("is_deleted", 1), ("views", -1)], background=True
-        )
-        await db["documents"].create_index(
-        )
-        await db["documents"].create_index(
-            [("status", 1), ("is_deleted", 1), ("categories", 1), ("created_at", -1)],
-            background=True,
-        )
-        await db["documents"].create_index(
-            [("status", 1), ("is_deleted", 1), ("tags", 1), ("created_at", -1)],
-            background=True,
-        )
-        await db["documents"].create_index([("slug", 1)], unique=True, background=True)
-
-        await db["status_updates"].create_index([("created_at", -1)], background=True)
-        await db["status_updates"].create_index([("user_id", 1)], background=True)
-        await db["status_updates"].create_index(
-            [("is_shadowbanned", 1)], background=True
-        )
-
-        await db["comments"].create_index(
-            [("item_id", 1), ("item_type", 1)], background=True
-        )
-        await db["comments"].create_index([("path", 1)], background=True)
-
-        await db["users"].create_index([("followers_count", -1)], background=True)
-        await db["users"].create_index([("email", 1)], unique=True, background=True)
-
-        await db["transactions"].create_index([("user_id", 1)], background=True)
-        await db["reports"].create_index([("status", 1)], background=True)
-        await db["reports"].create_index([("created_at", -1)], background=True)
-
-        await db["editor_comments"].create_index(
-            [("document_id", 1), ("block_id", 1)], background=True
-        )
-        await db["document_versions"].create_index(
-            [("document_id", 1), ("created_at", -1)], background=True
-        )
-
-        await db["conversations"].create_index(
-            [("participants", 1), ("updated_at", -1)], background=True
-        )
-
-        await db["messages"].create_index(
-            [("sender_id", 1), ("receiver_id", 1), ("created_at", -1)], background=True
-        )
-        await db["messages"].create_index(
-            [("sender_id", 1), ("receiver_id", 1), ("is_read", 1)], background=True
-        )
-        await db["messages"].create_index(
-            [("sender_id", 1), ("receiver_id", 1), ("is_pinned", 1)], background=True
-        )
-        await db["messages"].create_index([("content", "text")], background=True)
-        await db["messages"].create_index(
-            [("self_destruct_at", 1)], expireAfterSeconds=0, background=True
-        )
-
-        await db["storage_items"].create_index(
-            [("owner_id", 1), ("parent_id", 1), ("is_trashed", 1)], background=True
-        )
-        await db["storage_items"].create_index(
-            [("shared_with.user_id", 1), ("parent_id", 1), ("is_trashed", 1)],
-            background=True,
-        )
-        await db["storage_items"].create_index([("url", 1)], background=True)
-        await db["storage_items"].create_index([("target_id", 1)], background=True)
-        await db["storage_items"].create_index(
-            [("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True
-        )
-
         logger.info("Hoàn tất tạo chỉ mục cơ sở dữ liệu")
     except Exception as e:
         logger.error(f"Lỗi tạo chỉ mục cơ sở dữ liệu: {e}")
-
 
 async def close_db():
     if database.mongodb:

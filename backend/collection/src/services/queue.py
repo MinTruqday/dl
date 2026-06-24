@@ -53,9 +53,15 @@ async def run_worker():
     async def poll_queue(queue_name, handler_func):
         while True:
             try:
-                payload = await mq.consume(queue_name, timeout=30)
-                if payload:
+                res = await mq.consume(queue_name, timeout=30)
+                if res and "payload" in res and "delivery_tag" in res:
+                    payload = res["payload"]
+                    delivery_tag = res["delivery_tag"]
                     await handler_func(payload)
+                    # Xác nhận tin nhắn đã xử lý thành công (Manual ACK)
+                    await mq.ack(delivery_tag)
+                elif res: # in case it's the old format without delivery_tag (fallback)
+                    await handler_func(res)
             except Exception as e:
                 logger.error(f"Lỗi tiêu thụ tin nhắn từ {queue_name}: {e}")
                 await asyncio.sleep(5)
