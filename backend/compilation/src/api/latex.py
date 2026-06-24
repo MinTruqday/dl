@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 import httpx
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
 from fastapi.responses import Response
@@ -56,22 +56,22 @@ async def export_project_zip(req: CompileRequest):
 
 @router.delete("/don-dep")
 async def clean_temp_files(current_user: CurrentUser = Depends(get_current_user_optional)):
-    if current_user and redis_client:
-        await redis_client.delete(f"latex_draft:{current_user.id}")
+    if current_user and redis:
+        await redis.delete(f"latex_draft:{current_user.id}")
     return {"message": "Dọn dẹp tập tin tạm thời thành công", "data": {}}
 
 @router.post("/tu-dong-luu")
 async def auto_save_latex(payload: dict, current_user: CurrentUser = Depends(get_current_user)):
-    if redis_client:
+    if redis:
         content = payload.get("content", "")
         if content:
-            await redis_client.setex(f"latex_draft:{current_user.id}", 604800, content)
+            await redis.setex(f"latex_draft:{current_user.id}", 604800, content)
     return {"message": "Tự động lưu mã nguồn LaTeX thành công", "data": {}}
 
 @router.get("/ban-nhap")
 async def get_latex_draft(current_user: CurrentUser = Depends(get_current_user)):
-    if redis_client:
-        draft = await redis_client.get(f"latex_draft:{current_user.id}")
+    if redis:
+        draft = await redis.get(f"latex_draft:{current_user.id}")
         if draft:
             return {"message": "Lấy bản nháp thành công", "data": {"content": draft.decode('utf-8') if isinstance(draft, bytes) else draft}}
     return {"message": "Không có bản nháp", "data": {"content": None}}

@@ -65,8 +65,8 @@ async def health_check():
 @app.on_event("shutdown")
 async def shutdown_event():
     try:
-        from src.core.infrastructure.redis_client import redis_client
-        await redis_client.aclose()
+        from src.core.infrastructure.redis import redis
+        await redis.aclose()
     except Exception:
         pass
     try:

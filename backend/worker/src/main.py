@@ -1,6 +1,6 @@
 import os
 
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.response import JSONResponse
 from pydantic import BaseModel
@@ -31,7 +31,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health")
 async def read_health():
-    await redis_client.get('health')
+    await redis.get('health')
     return {
         "status": "The background processing service is currently operating normally and ready to accept incoming requests"
     }
@@ -54,8 +54,8 @@ def compile_document(payload: dict):
 @app.on_event("shutdown")
 async def shutdown_event():
     try:
-        from src.core.infrastructure.redis_client import redis_client
-        await redis_client.aclose()
+        from src.core.infrastructure.redis import redis
+        await redis.aclose()
     except Exception:
         pass
     try:

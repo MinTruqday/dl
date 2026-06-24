@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import hashlib
 import hmac
@@ -189,9 +189,9 @@ class DepositService:
         if getattr(database, "redis", None):
             rl_key = f"rl:verify_deposit:{current_user.id}"
             try:
-                attempts = await redis_client.incr(rl_key)
+                attempts = await redis.incr(rl_key)
                 if attempts == 1:
-                    await redis_client.expire(rl_key, 60)
+                    await redis.expire(rl_key, 60)
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,

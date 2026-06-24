@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 import asyncio
 import os
 

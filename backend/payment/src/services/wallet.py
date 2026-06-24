@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import json
 from datetime import datetime, timezone
@@ -27,7 +27,7 @@ class WalletService:
 
         user_rl_key = f"rl:coupon:{current_user.id}"
         try:
-            attempts = await redis_client.pipeline_incr_expire(user_rl_key, 300)
+            attempts = await redis.pipeline_incr_expire(user_rl_key, 300)
             if attempts and attempts[0] > 10:
                 raise HTTPException(
                     status_code=429, detail='Too many requests')
@@ -37,7 +37,7 @@ class WalletService:
             logger.error(f"Lỗi bộ đệm khi kiểm tra giới hạn: {e}")
 
         try:
-            is_locked = await redis_client.set(
+            is_locked = await redis.set(
                 lock_key, "locked"
             )
             if not is_locked:
@@ -143,9 +143,9 @@ class WalletService:
         finally:
             if should_close_session:
                 await session.end_session()
-            if redis_client and is_locked:
+            if redis and is_locked:
                 try:
-                    await redis_client.delete(lock_key)
+                    await redis.delete(lock_key)
                 except Exception as e:
                     logger.error(f"Lỗi mở khóa phiên bảo mật: {e}")
 

@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import io
 import json
@@ -259,10 +259,10 @@ class DocumentService:
 
         logger.info("Cập nhật nội dung tài liệu thành công")
 
-        if redis_client:
-            await redis_client.delete(f"document:{document_id}")
+        if redis:
+            await redis.delete(f"document:{document_id}")
             if document.get("slug"):
-                await redis_client.delete(f"document:slug:{document.get('slug')}")
+                await redis.delete(f"document:slug:{document.get('slug')}")
 
         return serialize_document(await docs_collection.find_one({"_id": document_id}))
 
@@ -319,10 +319,10 @@ class DocumentService:
             update_data["updated_at"] = datetime.now(timezone.utc)
             await docs_col.update_one({"_id": document_id}, {"$set": update_data})
 
-        if redis_client:
-            await redis_client.delete(f"document:{document_id}")
+        if redis:
+            await redis.delete(f"document:{document_id}")
             if doc.get("slug"):
-                await redis_client.delete(f"document:slug:{doc.get('slug')}")
+                await redis.delete(f"document:slug:{doc.get('slug')}")
 
         return serialize_document(await docs_col.find_one({"_id": document_id}))
 
@@ -393,9 +393,9 @@ class DocumentService:
                 }
 
             rl_key = None
-            if redis_client:
+            if redis:
                 rl_key = f"rl:unlock:{document_id}:{user_id or 'guest'}"
-                attempts = await redis_client.get(rl_key)
+                attempts = await redis.get(rl_key)
                 if attempts and int(attempts) >= 5:
                     raise HTTPException(
                         status_code=429,
@@ -404,16 +404,16 @@ class DocumentService:
 
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             if not pwd_context.verify(password, document.get("access_password_hash")):
-                if rl_key and redis_client:
-                    await redis_client.incr(rl_key)
-                    await redis_client.expire(rl_key, 900)
+                if rl_key and redis:
+                    await redis.incr(rl_key)
+                    await redis.expire(rl_key, 900)
                 raise HTTPException(
                     status_code=403,
                     detail="Thông tin xác thực không khớp với hồ sơ bảo mật tài liệu",
                 )
 
-            if rl_key and redis_client:
-                await redis_client.delete(rl_key)
+            if rl_key and redis:
+                await redis.delete(rl_key)
 
         document = serialize_document(document)
 
@@ -423,9 +423,9 @@ class DocumentService:
             aes_key = AESGCM.generate_key(bit_length=256)
             import base64
             b64_key = base64.b64encode(aes_key).decode('utf-8')
-            if redis_client:
+            if redis:
                 uid_str = user_id or "guest"
-                await redis_client.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
+                await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
         except ImportError:
             pass
 
@@ -598,12 +598,12 @@ class DocumentService:
         should_increment = True
         if user_id == document.get("creator_id"):
             should_increment = False
-        elif redis_client:
+        elif redis:
             cache_key = f"viewed:{user_id or 'guest'}:{document['_id']}"
-            if await redis_client.get(cache_key):
+            if await redis.get(cache_key):
                 should_increment = False
             else:
-                await redis_client.setex(cache_key, 600, "1")
+                await redis.setex(cache_key, 600, "1")
 
         if should_increment:
             await docs_collection.update_one(
@@ -636,9 +636,9 @@ class DocumentService:
             aes_key = AESGCM.generate_key(bit_length=256)
             import base64
             b64_key = base64.b64encode(aes_key).decode('utf-8')
-            if redis_client:
+            if redis:
                 uid_str = user_id or "guest"
-                await redis_client.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
+                await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
         except ImportError:
             pass
         
@@ -651,8 +651,8 @@ class DocumentService:
     @staticmethod
     async def get_document_decryption_key(document_id: str, current_user):
         user_id = str(current_user.id) if current_user else "guest"
-        if redis_client:
-            b64_key = await redis_client.get(f"aes_key:{document_id}:{user_id}")
+        if redis:
+            b64_key = await redis.get(f"aes_key:{document_id}:{user_id}")
             if b64_key:
                 return {"key": b64_key.decode('utf-8') if isinstance(b64_key, bytes) else b64_key}
         raise HTTPException(status_code=403, detail="Khóa giải mã không tồn tại hoặc đã hết hạn")

@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
@@ -80,7 +80,7 @@ class AnnouncementService:
         await NotificationRepository.insert_one(doc)
         try:
             import json
-            await redis_client.publish(
+            await redis.publish(
                 f"user_notifications:{data.target_user_id}",
                 json.dumps({"title": data.title, "body": data.body}),
             )

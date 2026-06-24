@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
@@ -96,25 +96,25 @@ class IdentityRepository:
 
     @staticmethod
     async def register_session(user_id: str, session_id: str, client_ip: str):
-        await redis_client.sadd(f"user_sessions:{user_id}", session_id)
-        await redis_client.setex(f"session_meta:{session_id}", 604800, client_ip)
+        await redis.sadd(f"user_sessions:{user_id}", session_id)
+        await redis.setex(f"session_meta:{session_id}", 604800, client_ip)
 
     @staticmethod
     async def revoke_all_sessions(user_id: str):
-        session = await redis_client.smembers(f"user_sessions:{user_id}")
+        session = await redis.smembers(f"user_sessions:{user_id}")
         for sid in session:
-            await redis_client.delete(f"session_meta:{sid}")
-        await redis_client.delete(f"user_sessions:{user_id}")
+            await redis.delete(f"session_meta:{sid}")
+        await redis.delete(f"user_sessions:{user_id}")
 
     @staticmethod
     async def set_redis_passkey_challenge(email: str, challenge: str):
-        await redis_client.setex(
+        await redis.setex(
             f"passkey_auth_challenge:{email}", 300, challenge
         )
 
     @staticmethod
     async def get_redis_passkey_challenge(email: str) -> Optional[str]:
-        val = await redis_client.get(f"passkey_auth_challenge:{email}")
+        val = await redis.get(f"passkey_auth_challenge:{email}")
         if val:
             if isinstance(val, bytes):
                 return val.decode("utf-8")
@@ -123,4 +123,4 @@ class IdentityRepository:
 
     @staticmethod
     async def delete_redis_passkey_challenge(email: str):
-        await redis_client.delete(f"passkey_auth_challenge:{email}")
+        await redis.delete(f"passkey_auth_challenge:{email}")

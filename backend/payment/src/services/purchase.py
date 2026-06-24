@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.configuration import settings
 import uuid
@@ -162,8 +162,8 @@ class PurchaseService:
                 status_code=400, detail="Tài khoản không đủ tiền để giao dịch"
             )
         lock = None
-        if redis_client:
-            lock = redis_client.lock(
+        if redis:
+            lock = redis.lock(
                 f"purchase:{current_user.id}:{document_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
@@ -246,7 +246,7 @@ class PurchaseService:
                         "created_at": datetime.now(timezone.utc),
                     }
                     await mongo.insert_one(collection="notifications", document=notification, session=session)
-                    if redis_client:
+                    if redis:
                         try:
                             from src.core.infrastructure.configuration import settings as shared_settings
 
@@ -283,7 +283,7 @@ class PurchaseService:
         finally:
             if (
                 hasattr(database, "redis")
-                and redis_client
+                and redis
                 and lock
                 and lock.locked()
             ):

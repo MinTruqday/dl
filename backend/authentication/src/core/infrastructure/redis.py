@@ -1,5 +1,5 @@
 import json
-import redis.asyncio as redis
+import redis.asyncio as aioredis
 from loguru import logger
 from src.core.infrastructure.configuration import settings
 
@@ -10,7 +10,7 @@ class RedisAPIClient:
 
     def get_client(self):
         if self._client is None:
-            self._client = redis.from_url(self.url, decode_responses=True)
+            self._client = aioredis.from_url(self.url, decode_responses=True)
         return self._client
 
     async def set(self, key: str, value: str):
@@ -80,4 +80,4 @@ class RedisAPIClient:
         if self._client:
             await self._client.aclose()
 
-redis_client = RedisAPIClient()
+redis = RedisAPIClient()

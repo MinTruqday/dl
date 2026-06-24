@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import asyncio
 import json
@@ -85,7 +85,7 @@ class MessageSocket:
                 if group:
                     targets = group.get("members", [])
         for target_id in targets:
-            await redis_client.publish(f"chat_delivery:{target_id}", payload)
+            await redis.publish(f"chat_delivery:{target_id}", payload)
             ws_set = self.active_connections.get(target_id)
             if ws_set:
                     disconnected = []

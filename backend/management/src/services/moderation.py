@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
@@ -33,7 +33,7 @@ class ModerationService:
         user_id = str(current_user.id)
         await mongo.delete_many(collection="documents", filter={"creator_id": user_id})
         await mongo.delete_many(collection="reactions", filter={"user_id": user_id})
-        await redis_client.delete(f"active_session:{user_id}")
+        await redis.delete(f"active_session:{user_id}")
         await mongo.delete_one(collection="users", filter={"_id": str(current_user.id)})
         logger.info("Đã xóa dữ liệu vĩnh viễn theo yêu cầu")
         return {

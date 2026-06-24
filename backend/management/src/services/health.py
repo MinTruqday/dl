@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis_client import redis_client
+from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import uuid
 from datetime import datetime, timezone
@@ -125,7 +125,7 @@ class HealthService:
             db_status = "disconnected"
         redis_status = "disconnected"
         try:
-            await redis_client.get("ping_test")
+            await redis.get("ping_test")
             redis_status = "connected"
         except Exception:
             redis_status = "error"
