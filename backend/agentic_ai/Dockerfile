@@ -18,10 +18,7 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    poppler-utils \
-    tesseract-ocr \
-    tesseract-ocr-vie \
-    tesseract-ocr-eng \
+    libgomp1 \
     git \
     && rm -rf /var/lib/apt/lists/*
 

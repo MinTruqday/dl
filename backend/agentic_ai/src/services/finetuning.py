@@ -309,7 +309,6 @@ async def import_documents(req: dict):
             "created_at": datetime.now(timezone.utc),
         }
     )
-    ollama_url = settings.OLLAMA_BASE_URL
     samples = []
     for did in doc_ids:
         doc = await FinetuneRepository.find_document_context({"_id": did})

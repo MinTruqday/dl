@@ -56,8 +56,7 @@ class Settings(BaseModel):
     NLLB_MODEL: str = os.getenv("NLLB_MODEL")
     NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME")
     IMAGE_GEN_MODEL: str = os.getenv("IMAGE_GEN_MODEL")
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL")
+
     HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA"))
     EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS"))
     EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE"))

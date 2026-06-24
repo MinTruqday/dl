@@ -1,12 +1,121 @@
 import asyncio
 import tempfile
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import boto3
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
+
+
+MODEL_ID = "datalab-to/chandra-ocr-2"
+MAX_OUTPUT_TOKENS = 12384
+
+
+class _ChandraModel:
+    def __init__(self):
+        from transformers import AutoProcessor, AutoModelForImageTextToText, BitsAndBytesConfig
+        import torch
+
+        quant_config = BitsAndBytesConfig(load_in_8bit=True)
+
+        self.processor = AutoProcessor.from_pretrained(MODEL_ID)
+        self.model = AutoModelForImageTextToText.from_pretrained(
+            MODEL_ID,
+            device_map="auto",
+            quantization_config=quant_config,
+            torch_dtype=torch.float16,
+        )
+        self.model.eval()
+
+        import torch
+        self.device = next(self.model.parameters()).device
+
+    def generate(self, conversations: List[List[dict]]) -> List[str]:
+        import torch
+
+        inputs = self.processor.apply_chat_template(
+            conversations,
+            tokenize=True,
+            add_generation_prompt=True,
+            return_dict=True,
+            return_tensors="pt",
+            padding=True,
+        )
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+        eos_token_id = self.model.generation_config.eos_token_id
+        im_end_id = self.processor.tokenizer.convert_tokens_to_ids("<|im_end|>")
+        if isinstance(eos_token_id, int):
+            eos_token_id = [eos_token_id]
+        if im_end_id is not None and im_end_id not in eos_token_id:
+            eos_token_id = eos_token_id + [im_end_id]
+
+        with torch.no_grad():
+            output_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=MAX_OUTPUT_TOKENS,
+                eos_token_id=eos_token_id,
+                do_sample=False,
+            )
+
+        input_len = inputs["input_ids"].shape[1]
+        results = []
+        for ids in output_ids:
+            decoded = self.processor.tokenizer.decode(
+                ids[input_len:], skip_special_tokens=True
+            )
+            results.append(decoded)
+        return results
+
+
+def _build_conversation(image) -> List[dict]:
+    return [
+        {
+            "role": "user",
+            "content": [
+                {"type": "image", "image": image},
+                {
+                    "type": "text",
+                    "text": "Convert this document page to markdown. Preserve all structure including tables, headings, lists, and equations. Output only the markdown content.",
+                },
+            ],
+        }
+    ]
+
+
+def _pdf_to_images(file_path: Path) -> List:
+    import pypdfium2 as pdfium
+    from PIL import Image as PILImage
+
+    doc = pdfium.PdfDocument(str(file_path))
+    images = []
+    for i in range(len(doc)):
+        page = doc[i]
+        bitmap = page.render(scale=2.0)
+        pil_img = bitmap.to_pil()
+        images.append(pil_img)
+    doc.close()
+    return images
+
+
+def _image_file_to_pil(file_path: Path):
+    from PIL import Image as PILImage
+
+    img = PILImage.open(str(file_path)).convert("RGB")
+    return img
+
+
+def _extract_tables_from_html(html: str) -> List[Dict]:
+    from bs4 import BeautifulSoup
+
+    tables = []
+    soup = BeautifulSoup(html, "html.parser")
+    for i, table in enumerate(soup.find_all("table")):
+        html_str = str(table)
+        tables.append({"text": html_str, "chunk_type": "table", "index": i})
+    return tables
 
 
 class ConversionRag:
@@ -16,47 +125,20 @@ class ConversionRag:
         self._minio_access = settings.MINIO_ACCESS_KEY
         self._minio_secret = settings.MINIO_SECRET_KEY
         self._minio_region = settings.MINIO_REGION
-        self._marker_models = None
-        self._ocr_engine = None
-        self._pp_structure = None
+        self._chandra: Optional[_ChandraModel] = None
         logger.info("Khởi tạo công cụ phân tích tài liệu thành công")
 
-    def _get_marker_models(self):
-        if self._marker_models is None:
-            from marker.models import create_model_dict
+    def _get_chandra(self) -> _ChandraModel:
+        if self._chandra is None:
+            logger.info("Tải mô hình Chandra OCR 2 (8-bit)")
+            self._chandra = _ChandraModel()
+            logger.info("Tải mô hình Chandra OCR 2 thành công")
+        return self._chandra
 
-            self._marker_models = create_model_dict()
-            logger.info("Tải cấu hình phân tích tài liệu thành công")
-        return self._marker_models
-
-    def _get_ocr_engine(self, lang: str = "en"):
-        if self._ocr_engine is None or getattr(self, "_ocr_lang", None) != lang:
-            from paddleocr import PaddleOCR
-
-            self._ocr_engine = PaddleOCR(
-                use_angle_cls=True,
-                lang=lang,
-                show_log=False,
-            )
-            self._ocr_lang = lang
-            logger.info("Khởi tạo công cụ trích xuất văn bản thành công")
-        return self._ocr_engine
-
-    def _get_pp_structure(self, lang: str = "en"):
-        if self._pp_structure is None or getattr(self, "_pp_lang", None) != lang:
-            from paddleocr import PPStructure
-
-            self._pp_structure = PPStructure(
-                show_log=False,
-                image_orientation=True,
-                layout=True,
-                table=True,
-                ocr=True,
-                lang=lang,
-            )
-            self._pp_lang = lang
-            logger.info("Khởi tạo công cụ trích xuất bố cục thành công")
-        return self._pp_structure
+    def _run_chandra_on_images(self, images: List) -> List[str]:
+        chandra = self._get_chandra()
+        conversations = [_build_conversation(img) for img in images]
+        return chandra.generate(conversations)
 
     async def parse_document(self, file_url: str) -> Dict:
         file_bytes, file_ext = await self._download_from_minio(file_url)
@@ -70,57 +152,28 @@ class ConversionRag:
         try:
             image_exts = [".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"]
             if file_ext in image_exts:
-                return await self._parse_image_with_structure(tmp_path)
-            return await self._parse_with_marker(tmp_path)
+                return await self._parse_image_with_chandra(tmp_path)
+            return await self._parse_pdf_with_chandra(tmp_path)
         except Exception as e:
             logger.error(f"Lỗi phân tích nội dung tài liệu: {e}")
             return {"error": f"Lỗi phân tích cú pháp tài liệu: {e}"}
         finally:
             tmp_path.unlink(missing_ok=True)
 
-    async def _parse_with_marker(self, file_path: Path) -> Dict:
+    async def _parse_pdf_with_chandra(self, file_path: Path) -> Dict:
         loop = asyncio.get_event_loop()
-        artifact_dict = self._get_marker_models()
 
         def _convert():
-            from marker.config.parser import ConfigParser
-            from marker.converters.pdf import PdfConverter
-            from marker.output import text_from_rendered
+            images = _pdf_to_images(file_path)
+            if not images:
+                return [], 0
+            page_markdowns = self._run_chandra_on_images(images)
+            return page_markdowns, len(images)
 
-            config = {
-                "output_format": "markdown",
-                "force_ocr": False,
-                "paginate_output": True,
-                "use_llm": True,
-                "llm_service": "marker.services.ollama.OllamaManager",
-                "ollama_base_url": settings.OLLAMA_BASE_URL,
-                "ollama_model": settings.OLLAMA_MODEL,
-            }
-            config_parser = ConfigParser(config)
+        page_markdowns, page_count = await loop.run_in_executor(None, _convert)
 
-            converter = PdfConverter(
-                artifact_dict=artifact_dict,
-                config=config_parser.generate_config_dict(),
-                processor_list=config_parser.get_processors(),
-                renderer=config_parser.get_renderer(),
-                llm_service=config_parser.get_llm_service(),
-            )
-            rendered = converter(str(file_path))
-            text, _, images = text_from_rendered(rendered)
-            return text, rendered
-
-        text, rendered = await loop.run_in_executor(None, _convert)
-        markdown = text if text else ""
-
+        markdown = "\n\n---\n\n".join(page_markdowns)
         chunks = self._split_markdown_to_chunks(markdown)
-
-        page_count = 0
-        if hasattr(rendered, "metadata") and rendered.metadata:
-            page_count = (
-                rendered.metadata.get("page_count", 0)
-                if isinstance(rendered.metadata, dict)
-                else 0
-            )
 
         logger.info("Trích xuất văn bản từ tài liệu thành công")
         return {
@@ -128,6 +181,24 @@ class ConversionRag:
             "chunks": chunks,
             "chunk_count": len(chunks),
             "page_count": page_count,
+        }
+
+    async def _parse_image_with_chandra(self, file_path: Path) -> Dict:
+        loop = asyncio.get_event_loop()
+
+        def _convert():
+            img = _image_file_to_pil(file_path)
+            results = self._run_chandra_on_images([img])
+            return results[0] if results else ""
+
+        markdown = await loop.run_in_executor(None, _convert)
+        chunks = self._split_markdown_to_chunks(markdown)
+
+        logger.info("Trích xuất văn bản từ hình ảnh thành công")
+        return {
+            "markdown": markdown,
+            "chunks": chunks,
+            "chunk_count": len(chunks),
         }
 
     async def extract_tables(self, file_url: str) -> List[Dict]:
@@ -141,47 +212,35 @@ class ConversionRag:
 
         try:
             loop = asyncio.get_event_loop()
-            artifact_dict = self._get_marker_models()
 
             def _extract():
-                from marker.config.parser import ConfigParser
-                from marker.converters.table import TableConverter
-                from marker.output import text_from_rendered
-
-                config = {
-                    "output_format": "json",
-                    "use_llm": True,
-                    "llm_service": "marker.services.ollama.OllamaManager",
-                    "ollama_base_url": settings.OLLAMA_BASE_URL,
-                    "ollama_model": settings.OLLAMA_MODEL,
-                }
-                config_parser = ConfigParser(config)
-
-                converter = TableConverter(
-                    artifact_dict=artifact_dict,
-                    config=config_parser.generate_config_dict(),
-                    processor_list=config_parser.get_processors(),
-                    renderer=config_parser.get_renderer(),
-                    llm_service=config_parser.get_llm_service(),
-                )
-                rendered = converter(str(tmp_path))
-                text, _, _ = text_from_rendered(rendered)
-                return text
-
-            table_text = await loop.run_in_executor(None, _extract)
-            tables = []
-            if table_text:
-                for i, block in enumerate(table_text.split("\n\n")):
-                    cleaned = block.strip()
-                    if cleaned and ("|" in cleaned or "<table" in cleaned.lower()):
-                        tables.append(
+                image_exts = [".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"]
+                if file_ext in image_exts:
+                    images = [_image_file_to_pil(tmp_path)]
+                else:
+                    images = _pdf_to_images(tmp_path)
+                if not images:
+                    return []
+                chandra = self._get_chandra()
+                all_tables = []
+                for img in images:
+                    conversations = [[{
+                        "role": "user",
+                        "content": [
+                            {"type": "image", "image": img},
                             {
-                                "text": cleaned,
-                                "chunk_type": "table",
-                                "index": i,
-                            }
-                        )
+                                "type": "text",
+                                "text": "Extract all tables from this document page and output them as HTML <table> elements only. If there are no tables, output an empty string.",
+                            },
+                        ],
+                    }]]
+                    results = chandra.generate(conversations)
+                    if results and results[0].strip():
+                        tables = _extract_tables_from_html(results[0])
+                        all_tables.extend(tables)
+                return all_tables
 
+            tables = await loop.run_in_executor(None, _extract)
             logger.info("Trích xuất bảng dữ liệu thành công")
             return tables
         except Exception as e:
@@ -189,92 +248,6 @@ class ConversionRag:
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
-
-    async def _parse_image_with_structure(self, file_path: Path) -> Dict:
-        loop = asyncio.get_event_loop()
-
-        def _run_structure():
-            import cv2
-
-            img = cv2.imread(str(file_path))
-            if img is None:
-                return None
-            engine = self._get_pp_structure()
-            return engine(img)
-
-        result = await loop.run_in_executor(None, _run_structure)
-        if result is None:
-            return await self._parse_with_raw_ocr(file_path)
-
-        chunks = []
-        markdown_parts = []
-
-        for block in result:
-            block_type = block.get("type", "text")
-            text_results = block.get("res", [])
-
-            if block_type == "table":
-                html = block.get("res", {}).get("html", "")
-                if html:
-                    chunks.append({"text": html, "chunk_type": "table"})
-                    markdown_parts.append(html)
-            elif isinstance(text_results, list):
-                block_text = ""
-                for line in text_results:
-                    if isinstance(line, dict) and "text" in line:
-                        block_text += line["text"] + "\n"
-                    elif isinstance(line, (list, tuple)) and len(line) >= 2:
-                        line_text = (
-                            line[1][0]
-                            if isinstance(line[1], (list, tuple))
-                            else str(line[1])
-                        )
-                        block_text += line_text + "\n"
-                block_text = block_text.strip()
-                if len(block_text) > 10:
-                    chunks.append({"text": block_text, "chunk_type": block_type})
-                    if block_type == "title":
-                        markdown_parts.append(f"## {block_text}")
-                    else:
-                        markdown_parts.append(block_text)
-
-        if not chunks:
-            return await self._parse_with_raw_ocr(file_path)
-
-        full_markdown = "\n\n".join(markdown_parts)
-        logger.info("Trích xuất cấu trúc hình ảnh thành công")
-        return {
-            "markdown": full_markdown,
-            "chunks": chunks,
-            "chunk_count": len(chunks),
-        }
-
-    async def _parse_with_raw_ocr(self, file_path: Path) -> Dict:
-        loop = asyncio.get_event_loop()
-        ocr = self._get_ocr_engine()
-
-        def _run_ocr():
-            return ocr.ocr(str(file_path), cls=True)
-
-        result = await loop.run_in_executor(None, _run_ocr)
-
-        lines = []
-        if result and result[0]:
-            for line_info in result[0]:
-                text = line_info[1][0]
-                confidence = line_info[1][1]
-                if confidence > 0.5 and len(text.strip()) > 2:
-                    lines.append(text.strip())
-
-        full_text = "\n".join(lines)
-        chunks = self._group_lines_to_chunks(lines)
-
-        logger.info("Trích xuất văn bản từ hình ảnh thành công")
-        return {
-            "markdown": full_text,
-            "chunks": chunks,
-            "chunk_count": len(chunks),
-        }
 
     def _split_markdown_to_chunks(self, markdown: str) -> List[Dict]:
         if not markdown:
@@ -351,18 +324,6 @@ class ConversionRag:
 
         return chunks
 
-    def _group_lines_to_chunks(self, lines: List[str]) -> List[Dict]:
-        chunks = []
-        buffer = ""
-        for line in lines:
-            buffer += line + "\n"
-            if len(buffer) > 300:
-                chunks.append({"text": buffer.strip(), "chunk_type": "ocr"})
-                buffer = ""
-        if len(buffer.strip()) > 30:
-            chunks.append({"text": buffer.strip(), "chunk_type": "ocr"})
-        return chunks
-
     async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
@@ -372,8 +333,8 @@ class ConversionRag:
         chunks = parse_result.get("chunks", [])
 
         file_ext = ""
-        if "" in file_url:
-            file_ext = "" + file_url.rsplit("", 1)[-1].lower()
+        if "." in file_url:
+            file_ext = "." + file_url.rsplit(".", 1)[-1].lower()
 
         doc_exts = [".pdf", ".docx", ".epub", ".pptx", ".xlsx"]
         if file_ext in doc_exts:
@@ -416,7 +377,7 @@ class ConversionRag:
                 bucket = self._bucket
                 object_key = file_url
 
-            if "" in object_key:
+            if ".." in object_key:
                 logger.error("Ngăn chặn rủi ro bảo mật")
                 return None, ""
 
@@ -457,4 +418,4 @@ class ConversionRag:
             return None, ""
 
 
-document_parser = DocumentParser()
+document_parser = ConversionRag()
