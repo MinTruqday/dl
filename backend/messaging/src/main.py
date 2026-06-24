@@ -3,9 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.thread import router as message
-
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
+app = FastAPI(title="DocLib Massaging", version=settings.VERSION)
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -16,8 +16,6 @@ async def internal_token_middleware(request: Request, call_next):
         if token != settings.SECRET_KEY:
             return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
     return await call_next(request)
-
-app = FastAPI(title="DocLib Massaging", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,18 +28,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(message)
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo tin nhắn thành công")
     await init_db()
-
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_db()
-
 @app.get("/health")
 async def health_check():
     return {

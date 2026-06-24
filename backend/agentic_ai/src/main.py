@@ -1,13 +1,10 @@
 import contextvars
 import sys
 import uuid
-
 from fastapi import FastAPI, Request
 from loguru import logger
 from src.core.infrastructure.configuration import settings
-
 from src.core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
-
 logger.remove()
 logger.add(
     sys.stdout,
@@ -26,6 +23,8 @@ from src.api.history import router as history
 from src.api.inference import router as inference
 from src.api.ingestion import router as ingest
 
+app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")
@@ -36,9 +35,7 @@ async def internal_token_middleware(request: Request, call_next):
             return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
     return await call_next(request)
 
-app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=(
@@ -50,27 +47,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(inference)
 app.include_router(chat)
 app.include_router(ingest)
 app.include_router(feedback)
 app.include_router(finetune)
 app.include_router(history)
-
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
 @app.get("/evaluate/metrics")
 async def harness_metrics():
     from fastapi.response import PlainTextResponse
-
     return PlainTextResponse(
         content=agentops.get_prometheus_metrics(),
         media_type="text/plain; version=0.0.4",
     )
-
 @app.get("/evaluate/status")
 async def harness_status():
     return {
@@ -80,21 +72,16 @@ async def harness_status():
         },
         "evaluation": evaluation.get_dashboard_metrics(),
     }
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo AI thành công")
-    
     from src.store.database import vector_store
-
     from src.core.infrastructure.configuration import settings
-
     try:
         await vector_store.ensure_collection()
         logger.info("Khởi tạo cơ sở dữ liệu vector thành công")
     except Exception as e:
         logger.error(f"Lỗi khởi tạo cơ sở dữ liệu vector: {e}")
-
     try:
         if settings.MONGODB_URI:
             client = AsyncIOMotorClient(settings.MONGODB_URI)
@@ -114,7 +101,6 @@ async def startup_event():
             logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
     except Exception as e:
         logger.exception(f"Lỗi khởi tạo chỉ mục cơ sở dữ liệu: {e}")
-
 @app.on_event("shutdown")
 async def shutdown_event():
     try:

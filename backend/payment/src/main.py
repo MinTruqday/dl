@@ -7,9 +7,9 @@ from src.api.deposit import router as deposit
 from src.api.monetization import router as monetization
 from src.api.wallet import router as wallet
 from src.api.withdrawal import router as withdrawal
-
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
+app = FastAPI(title="DocLib Payment", version=settings.VERSION)
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -21,8 +21,6 @@ async def internal_token_middleware(request: Request, call_next):
             return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
     return await call_next(request)
 
-app = FastAPI(title="DocLib Finance", version=settings.VERSION)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,22 +28,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(wallet)
 app.include_router(deposit)
 app.include_router(withdrawal)
 app.include_router(monetization)
 app.include_router(coupon)
-
 @app.on_event("startup")
 async def startup_event():
+    import asyncio
+    from src.outbox_worker import process_outbox
+    from src.core.infrastructure.database import init_db
     logger.info("Tính năng thanh toán đã sẵn sàng")
     await init_db()
-
+    asyncio.create_task(process_outbox())
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_db()
-
 @app.get("/health")
 async def health_check():
     return {

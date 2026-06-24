@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [authentication, content, payment, management, agentic_ai, realtime, notification, collector, editor, messaging, worker]
+        service: [authentication, content, payment, management, agentic_ai, notification, messaging, worker]
     
     steps:
       - name: Checkout repository

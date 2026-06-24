@@ -1,13 +1,10 @@
 import contextvars
 import sys
 import uuid
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-
 from src.core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
-
 logger.remove()
 logger.add(
     sys.stdout,
@@ -15,12 +12,11 @@ logger.add(
     filter=trace_id_filter,
     level="INFO",
 )
-
 from src.api.composition import router as editor
 from src.api.composition import router as editorjs
 from src.api.latex import router as latex
-
 from src.core.infrastructure.configuration import settings
+app = FastAPI(title="DocLib Compiler", version=settings.VERSION)
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -32,9 +28,7 @@ async def internal_token_middleware(request: Request, call_next):
             return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
     return await call_next(request)
 
-app = FastAPI(title="DocLib Compiler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,22 +36,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(latex)
 app.include_router(editorjs)
 app.include_router(editor)
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo biên dịch thành công")
-
 @app.get("/health")
 async def health_check():
     return {
         "status": "The document compilation service is currently operating normally and functioning as expected without any internal issues",
         "service": "document_compiler",
     }
-
 @app.on_event("shutdown")
 async def shutdown_event():
     try:

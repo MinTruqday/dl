@@ -5,9 +5,9 @@ from loguru import logger
 from src.api.session import router as auth
 from src.api.passkey import router as passkey
 from src.api.google import router as google
-
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
+app = FastAPI(title="DocLib Authentication", version=settings.VERSION)
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -18,8 +18,6 @@ async def internal_token_middleware(request: Request, call_next):
         if token != settings.SECRET_KEY:
             return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
     return await call_next(request)
-
-app = FastAPI(title="DocLib Authentication", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,20 +30,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(auth)
 app.include_router(passkey)
 app.include_router(google)
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng xác thực đã sẵn sàng")
     await init_db()
-
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_db()
-
 @app.get("/health")
 async def health_check():
     return {
