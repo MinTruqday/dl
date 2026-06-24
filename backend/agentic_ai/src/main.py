@@ -78,7 +78,7 @@ async def harness_status():
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo AI thành công")
-    from motor.motor_asyncio import AsyncIOMotorClient
+    
     from src.store.database import vector_store
 
     from src.core.infrastructure.configuration import settings

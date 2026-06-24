@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
+
 from src.core.queue import mq_client
 from uuid6 import uuid7
 

@@ -3,7 +3,7 @@ import uuid
 from typing import Dict, List, Optional
 
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
+
 from src.rag.chunk import chunker
 from src.rag.embedding import embedder
 from src.store.database import vector_store

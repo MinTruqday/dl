@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 from datetime import datetime, timezone
 
 import httpx
@@ -28,8 +29,8 @@ class WithdrawalService:
             },
             {"$group": {"_id": None, "total_revenue": {"$sum": "$amount"}}},
         ]
-        cursor = db["transactions"].aggregate(pipeline)
-        res = await cursor.to_list(length=1)
+        cursor = db_client.aggregate(collection="transactions", pipeline=pipeline)
+        res = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
         total_revenue = res[0]["total_revenue"] if res else 0
         withdrawal_res = (
             await db["withdrawal_requests"]
@@ -71,7 +72,7 @@ class WithdrawalService:
                 status_code=400, detail="Số tiền rút dưới mức tối thiểu"
             )
 
-        wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
+        wallet = await db_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < amount:
             if should_close_session:
                 await session.abort_transaction()
@@ -245,7 +246,7 @@ class WithdrawalService:
             {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
         ]
         withdrawal = (
-            await db["withdrawal_requests"].aggregate(pipeline).to_list(length=100)
+            await db_client.aggregate(collection="withdrawal_requests", pipeline=pipeline).to_list(length=100)
         )
         result = []
         for p in withdrawal:
@@ -287,7 +288,7 @@ class WithdrawalService:
                 await session.end_session()
             raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ")
 
-        withdrawal = await db["withdrawal_requests"].find_one({"_id": withdrawal_id})
+        withdrawal = await db_client.find_one(collection="withdrawal_requests", query={"_id": withdrawal_id})
         if not withdrawal:
             if should_close_session:
                 await session.abort_transaction()

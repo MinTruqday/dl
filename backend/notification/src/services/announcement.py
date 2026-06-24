@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
@@ -21,7 +22,7 @@ class AnnouncementService:
             .skip(skip)
             .limit(limit)
         )
-        docs = await cursor.to_list(length=limit)
+        docs = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
         total = await NotificationRepository.count_documents(
             {"target_user_id": user_id}
         )

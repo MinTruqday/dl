@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import io
 import json
 import os
@@ -109,7 +110,7 @@ class DocumentService:
             .sort("views", -1)
             .limit(limit)
         )
-        documents = await cursor.to_list(length=limit)
+        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -128,7 +129,7 @@ class DocumentService:
                 "$text": {"$search": query},
             }
         ).limit(limit)
-        documents = await cursor.to_list(length=limit)
+        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -846,7 +847,7 @@ class DocumentService:
         if parent_id:
             query["parent_id"] = parent_id
         cursor = db["workspace_folders"].find(query).sort("created_at", 1)
-        folders = await cursor.to_list(length=100)
+        folders = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
         for f in folders:
             f["_id"] = str(f["_id"])
         return folders
@@ -861,7 +862,7 @@ class DocumentService:
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
         }
-        res = await db["workspace_folders"].insert_one(folder_doc)
+        res = await db_client.insert_one(collection="workspace_folders", document=folder_doc)
         folder_doc["_id"] = str(res.inserted_id)
         return folder_doc
 
@@ -873,7 +874,7 @@ class DocumentService:
         )
         if not folder:
             raise HTTPException(status_code=404, detail="Không tìm thấy thư mục làm việc")
-        await db["workspace_folders"].delete_one({"_id": folder_id})
+        await db_client.delete_one(collection="workspace_folders", filter={"_id": folder_id})
         await db["documents"].update_many(
             {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
         )
@@ -934,7 +935,7 @@ class DocumentService:
     @staticmethod
     async def get_document_analytics(document_id: str, current_user):
         db = database.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id})
+        doc = await db_client.find_one(collection="documents", query={"_id": document_id})
         if not doc:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
@@ -943,7 +944,7 @@ class DocumentService:
         content = doc.get("content", "")
         total_words = len(content.split()) if content else 0
         avg_read_time_min = max(1, total_words // 200)
-        bookmark_count = await db["bookmarks"].count_documents({"document_id": document_id})
+        bookmark_count = await db_client.count_documents(collection="bookmarks", filter={"document_id": document_id})
         purchase_count = await db["transactions"].count_documents(
             {"reference_id": document_id, "type": {"$in": ["purchase", "receive"]}}
         )
@@ -959,7 +960,7 @@ class DocumentService:
     @staticmethod
     async def get_document_academic(document_id: str, current_user):
         db = database.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id})
+        doc = await db_client.find_one(collection="documents", query={"_id": document_id})
         if not doc:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
@@ -988,7 +989,7 @@ class DocumentService:
         db = database.mongodb.get_default_database()
         docs_col = DocumentRepository
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
-        documents = await cursor.to_list(length=limit)
+        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
         return [
             {
                 "_id": str(b["_id"]),

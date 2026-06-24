@@ -1,8 +1,9 @@
+from src.core.infrastructure.api_client import db_client
 from datetime import datetime, timezone
 
 from fastapi import APIRouter
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
+
 from src.schemas.model import FeedbackRequest
 
 from src.core.infrastructure.configuration import settings
@@ -25,7 +26,7 @@ async def submit_feedback(req: FeedbackRequest):
             "created_at": datetime.now(timezone.utc),
         }
 
-        await db.rag_feedback.insert_one(feedback_doc)
+        await db_client.insert_one(collection="rag_feedback", document=feedback_doc)
         client.close()
         logger.info("Lưu phản hồi thành công")
         return {

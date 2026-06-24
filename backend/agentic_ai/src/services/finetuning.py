@@ -7,7 +7,7 @@ import httpx
 from datasets import Dataset
 from fastapi import APIRouter, HTTPException, Query
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
+
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings

@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -76,7 +77,7 @@ class UserService:
             db = database.mongodb.get_default_database()
         if str(current_user.id) == target_id:
             raise HTTPException(status_code=400, detail="Không thể tự chặn chính mình")
-        target_user = await db["users"].find_one({"_id": target_id})
+        target_user = await db_client.find_one(collection="users", query={"_id": target_id})
         if not target_user:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản đích")
         await db["users"].update_one(

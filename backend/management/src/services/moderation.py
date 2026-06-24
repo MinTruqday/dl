@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 from datetime import datetime, timezone
 
 from loguru import logger
@@ -13,10 +14,10 @@ class ModerationService:
             db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
         documents = (
-            await db["documents"].find({"creator_id": user_id}).to_list(length=1000)
+            await db_client.find(collection="documents", query={"creator_id": user_id}, limit=1000)
         )
         reactions = (
-            await db["reactions"].find({"user_id": user_id}).to_list(length=1000)
+            await db_client.find(collection="reactions", query={"user_id": user_id}, limit=1000)
         )
         takeout_payload = {
             "profile": current_user.model_dump(exclude={"password_hash"}),
@@ -33,11 +34,11 @@ class ModerationService:
         if db is None:
             db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
-        await db["documents"].delete_many({"creator_id": user_id})
-        await db["reactions"].delete_many({"user_id": user_id})
+        await db_client.delete_many(collection="documents", filter={"creator_id": user_id})
+        await db_client.delete_many(collection="reactions", filter={"user_id": user_id})
         if database.redis:
             await database.redis.delete(f"active_session:{user_id}")
-        await db["users"].delete_one({"_id": str(current_user.id)})
+        await db_client.delete_one(collection="users", filter={"_id": str(current_user.id)})
         logger.info("Đã xóa dữ liệu vĩnh viễn theo yêu cầu")
         return {
             "status": "success",

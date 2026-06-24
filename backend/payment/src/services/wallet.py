@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import json
 from datetime import datetime, timezone
 
@@ -16,7 +17,7 @@ class WalletService:
     async def get_balance(current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
+        wallet = await db_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
         return {"balance": wallet.get("balance", 0) if wallet else 0}
 
     @staticmethod
@@ -179,7 +180,7 @@ class WalletService:
                 }
             except Exception as e:
                 logger.warning(f"Lỗi định dạng phân trang: {e}")
-        txs = await db["transactions"].find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        txs = await db_client.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit)
         type_translations = {
             "topup": "Deposit",
             "purchase": "Document Purchase",

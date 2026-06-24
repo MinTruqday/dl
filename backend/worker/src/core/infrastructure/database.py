@@ -4,7 +4,6 @@ import os
 import aio_pika
 import redis.asyncio as aioredis
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.core.infrastructure.configuration import settings
 
@@ -30,7 +29,6 @@ async def init_db():
 
         sys.exit(1)
 
-    database.mongodb = AsyncIOMotorClient(mongo_uri, maxPoolSize=1000)
 
     try:
         await database.mongodb.admin.command("replSetGetStatus")

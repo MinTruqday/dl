@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import json
 import math
 from datetime import datetime, timezone
@@ -15,7 +16,7 @@ class QuotaService:
     async def get_global_config_from_db(db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        config = await db.quota_configs.find_one({"_id": "global"})
+        config = await db_client.find_one(collection="quota_configs", query={"_id": "global"})
         if config and "role_limits" in config:
             return config["role_limits"]
 

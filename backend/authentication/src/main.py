@@ -2,13 +2,13 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.api.login import router as auth
+from src.api.session import router as auth
 from src.api.passkey import router as passkey
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
 
-app = FastAPI(title="DocLib Security", version=settings.VERSION)
+app = FastAPI(title="DocLib Authentication", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,6 +24,7 @@ app.add_middleware(
 
 app.include_router(auth)
 app.include_router(passkey)
+app.include_router(google)
 
 
 @app.on_event("startup")

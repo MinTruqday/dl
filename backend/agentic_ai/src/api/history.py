@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
+
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings

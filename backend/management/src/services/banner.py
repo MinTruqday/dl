@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import uuid
 from datetime import datetime, timezone
 
@@ -14,7 +15,7 @@ class BannerService:
         if db is None:
             db = database.mongodb.get_default_database()
         query = {"is_active": True} if active_only else {}
-        return await db["banners"].find(query).sort("priority", -1).to_list(length=20)
+        return await db_client.find(collection="banners", query=query, sort=[("priority", -1)], limit=20)
 
     @staticmethod
     async def create_banner(data: dict, db=None) -> dict:
@@ -29,7 +30,7 @@ class BannerService:
             "is_active": True,
             "created_at": datetime.now(timezone.utc),
         }
-        await db["banners"].insert_one(banner)
+        await db_client.insert_one(collection="banners", document=banner)
         logger.info("Tạo banner quảng cáo thành công")
         return banner
 
@@ -37,6 +38,6 @@ class BannerService:
     async def delete_banner(banner_id: str, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await db["banners"].delete_one({"_id": banner_id})
+        await db_client.delete_one(collection="banners", filter={"_id": banner_id})
         logger.info("Xóa vĩnh viễn banner quảng cáo thành công")
         return {"message": "Xóa vĩnh viễn banner quảng cáo thành công"}

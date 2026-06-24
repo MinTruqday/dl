@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import hashlib
 import hmac
 import json
@@ -37,7 +38,7 @@ class DepositService:
 
         while True:
             order_code = random.randint(100000000, 2147483647)
-            if not await db["orders"].find_one({"order_code": order_code}):
+            if not await db_client.find_one(collection="orders", query={"order_code": order_code}):
                 break
 
         description = f"DL{order_code}"
@@ -180,7 +181,7 @@ class DepositService:
         if db is None:
             db = database.mongodb.get_default_database()
 
-        order = await db["orders"].find_one({"order_code": order_code})
+        order = await db_client.find_one(collection="orders", query={"order_code": order_code})
         if not order:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy giao dịch nạp tiền"

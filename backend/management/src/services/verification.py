@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import uuid
 from datetime import datetime, timezone
 
@@ -72,7 +73,7 @@ class VerificationService:
             "status": Creator.PENDING,
             "created_at": datetime.now(timezone.utc),
         }
-        await db["author_applications"].insert_one(application_data)
+        await db_client.insert_one(collection="author_applications", document=application_data)
         await db["users"].update_one(
             {"_id": user_id},
             {
@@ -108,7 +109,7 @@ class VerificationService:
             "status": KYC.PENDING,
             "created_at": datetime.now(timezone.utc),
         }
-        await db["kyc_applications"].insert_one(kyc_data)
+        await db_client.insert_one(collection="kyc_applications", document=kyc_data)
         await db["users"].update_one(
             {"_id": user_id}, {"$set": {"kyc_status": KYC.PENDING}}
         )

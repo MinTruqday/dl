@@ -49,7 +49,7 @@ class AgentopsHarness:
     def _get_db(self):
         if self._db_client is None:
             try:
-                from motor.motor_asyncio import AsyncIOMotorClient
+                
 
                 from src.core.infrastructure.configuration import settings
 

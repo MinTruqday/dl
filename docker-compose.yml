@@ -468,6 +468,28 @@ services:
     networks:
       - doclib_network
 
+  database:
+    build:
+      context: ./backend
+      dockerfile: ./database/Dockerfile
+    container_name: doclib_database
+    restart: always
+    ports:
+      - "8800:8800"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.database.rule=PathPrefix(`/mongo`)"
+      - "traefik.http.services.database.loadbalancer.server.port=8800"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend/database/src:/app/src
+      - ./backend/logs/database:/app/logs
+    networks:
+      - doclib_network
+
   drm:
     build:
       context: ./backend

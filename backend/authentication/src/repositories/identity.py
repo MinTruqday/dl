@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
@@ -16,19 +17,19 @@ class IdentityRepository:
                     else "doclib"
                 )
             ]
-        return await db["settings"].find_one({"_id": "system_config"})
+        return await db_client.find_one(collection="settings", query={"_id": "system_config"})
 
     @staticmethod
     async def create_auth_credential(auth_cred: dict, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        return await db["auth_credentials"].insert_one(auth_cred)
+        return await db_client.insert_one(collection="auth_credentials", document=auth_cred)
 
     @staticmethod
     async def insert_audit_log(log_data: dict, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        return await db["audit_logs"].insert_one(log_data)
+        return await db_client.insert_one(collection="audit_logs", document=log_data)
 
     @staticmethod
     async def get_auth_credential_by_id(
@@ -36,7 +37,7 @@ class IdentityRepository:
     ) -> Optional[Dict[str, Any]]:
         if db is None:
             db = database.mongodb.get_default_database()
-        return await db["auth_credentials"].find_one({"_id": user_id})
+        return await db_client.find_one(collection="auth_credentials", query={"_id": user_id})
 
     @staticmethod
     async def get_auth_credential_by_email(
@@ -44,7 +45,7 @@ class IdentityRepository:
     ) -> Optional[Dict[str, Any]]:
         if db is None:
             db = database.mongodb.get_default_database()
-        return await db["auth_credentials"].find_one({"email": email})
+        return await db_client.find_one(collection="auth_credentials", query={"email": email})
 
     @staticmethod
     async def update_password_hash(email: str, password_hash: str, db=None):
@@ -59,7 +60,7 @@ class IdentityRepository:
     async def create_password_reset_token(token_data: dict, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        return await db["password_reset_tokens"].insert_one(token_data)
+        return await db_client.insert_one(collection="password_reset_tokens", document=token_data)
 
     @staticmethod
     async def get_valid_password_reset_token(
@@ -98,13 +99,13 @@ class IdentityRepository:
     async def get_passkey_challenge(email: str, db=None) -> Optional[Dict[str, Any]]:
         if db is None:
             db = database.mongodb.get_default_database()
-        return await db["passkey_challenges"].find_one({"_id": f"auth:{email}"})
+        return await db_client.find_one(collection="passkey_challenges", query={"_id": f"auth:{email}"})
 
     @staticmethod
     async def delete_passkey_challenge(email: str, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        return await db["passkey_challenges"].delete_one({"_id": f"auth:{email}"})
+        return await db_client.delete_one(collection="passkey_challenges", filter={"_id": f"auth:{email}"})
 
     @staticmethod
     async def update_passkey_sign_count(

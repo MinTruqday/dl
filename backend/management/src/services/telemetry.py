@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
@@ -46,7 +47,7 @@ class TelemetryService:
             {"$sort": {"count": -1}},
         ]
         cursor = SystemRepository.aggregate_telemetry(pipeline)
-        return await cursor.to_list(length=100)
+        return await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
 
     @staticmethod
     async def log_performance_metric(

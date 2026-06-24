@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 from datetime import datetime, timezone
 
 from loguru import logger
@@ -35,7 +36,7 @@ class ConfigurationService:
         if db is None:
             db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
-        user = await db["users"].find_one({"_id": user_id}, {"settings": 1})
+        user = await db_client.find_one(collection="users", query={"_id": user_id}, {"settings": 1})
         current_settings = user.get("settings", {}) if user else {}
         merged_settings = {**current_settings, **settings_data}
         await db["users"].update_one(

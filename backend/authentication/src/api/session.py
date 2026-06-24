@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 from src.core.dependency import CurrentUser
 from typing import Any
 
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/xac-thuc")
 async def read_users_me(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
-    user_doc = await db.users.find_one({"_id": current_user.id})
+    user_doc = await db_client.find_one(collection="users", query={"_id": current_user.id})
     if not user_doc:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
@@ -119,21 +120,4 @@ async def verify_code(
     )
 
 
-@router.get("/google/dang-nhap", response_model=APIResponse[Any])
-async def google_login(db=Depends(get_db)):
-    auth_url = await SessionService.get_google_auth_url(db=db)
-    return APIResponse(
-        data={"url": auth_url},
-        message="Tạo liên kết cổng xác thực thành công",
-        status=200,
-    )
 
-
-@router.get("/google/callback", response_model=APIResponse[Any])
-async def google_callback(code: str, request: Request, db=Depends(get_db)):
-    client_ip = request.client.host if request.client else "unknown"
-    return APIResponse(
-        data=await SessionService.handle_google_callback(code, client_ip, db=db),
-        message="Xác thực liên kết thành công",
-        status=200,
-    )
