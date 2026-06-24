@@ -9,7 +9,7 @@ from uuid6 import uuid7
 
 from shared.infrastructure.configuration import settings
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 from src.schemas.account import Role
 
 
@@ -30,7 +30,7 @@ class AccountService:
                 "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
             }
         users = (
-            await RepositoryFactory.get("users")
+            await BaseRepository.get("users")
             .find(query)
             .sort("created_at", -1)
             .skip(offset)
@@ -57,7 +57,7 @@ class AccountService:
     async def update_user_role(user_id: str, role: str, db=None) -> Dict[str, str]:
         if db is None:
             db = database.mongodb.get_default_database()
-        res = await RepositoryFactory.get("users").update_one(
+        res = await BaseRepository.get("users").update_one(
             {"_id": user_id},
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -74,7 +74,7 @@ class AccountService:
     ) -> Dict[str, str]:
         if db is None:
             db = database.mongodb.get_default_database()
-        res = await RepositoryFactory.get("users").update_one(
+        res = await BaseRepository.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -94,7 +94,7 @@ class AccountService:
     async def warn_user(user_id: str, reason: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        user = await RepositoryFactory.get("users").find_one({"_id": user_id})
+        user = await BaseRepository.get("users").find_one({"_id": user_id})
         if not user:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy hồ sơ người dùng"
@@ -106,8 +106,8 @@ class AccountService:
             "reason": reason,
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("warnings").insert_one(warning)
-        await RepositoryFactory.get("audit_logs").insert_one(
+        await BaseRepository.get("warnings").insert_one(warning)
+        await BaseRepository.get("audit_logs").insert_one(
             {
                 "action": "WARN_USER",
                 "actor_id": str(current_user.id),
@@ -145,7 +145,7 @@ class AccountService:
         if db is None:
             db = database.mongodb.get_default_database()
         lock_until = datetime.now(timezone.utc) + timedelta(hours=duration_hours)
-        await RepositoryFactory.get("users").update_one(
+        await BaseRepository.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -156,7 +156,7 @@ class AccountService:
                 }
             },
         )
-        await RepositoryFactory.get("audit_logs").insert_one(
+        await BaseRepository.get("audit_logs").insert_one(
             {
                 "action": "LOCK_USER",
                 "actor_id": str(current_user.id),
@@ -175,7 +175,7 @@ class AccountService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("users").update_one(
+        await BaseRepository.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -185,7 +185,7 @@ class AccountService:
             },
         )
         action = "SHADOWBAN" if is_banned else "UNSHADOWBAN"
-        await RepositoryFactory.get("audit_logs").insert_one(
+        await BaseRepository.get("audit_logs").insert_one(
             {
                 "action": action,
                 "actor_id": str(current_user.id),
@@ -200,7 +200,7 @@ class AccountService:
     async def verify_kyc(user_id: str, status: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("users").update_one(
+        await BaseRepository.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -210,7 +210,7 @@ class AccountService:
                 }
             },
         )
-        await RepositoryFactory.get("audit_logs").insert_one(
+        await BaseRepository.get("audit_logs").insert_one(
             {
                 "action": f"KYC_{status}",
                 "actor_id": str(current_user.id),
@@ -226,7 +226,7 @@ class AccountService:
         if db is None:
             db = database.mongodb.get_default_database()
         notes = (
-            await RepositoryFactory.get("moderator_notes")
+            await BaseRepository.get("moderator_notes")
             .find({"user_id": user_id})
             .sort("created_at", -1)
             .to_list(length=100)
@@ -249,7 +249,7 @@ class AccountService:
     async def add_note(user_id: str, note: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("moderator_notes").insert_one(
+        await BaseRepository.get("moderator_notes").insert_one(
             {
                 "_id": str(uuid7()),
                 "user_id": user_id,
@@ -297,7 +297,7 @@ class AccountService:
             ]
         )
         reports = (
-            await RepositoryFactory.get("reports")
+            await BaseRepository.get("reports")
             .aggregate(pipeline)
             .to_list(length=limit)
         )
@@ -332,7 +332,7 @@ class AccountService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("reports").update_one(
+        await BaseRepository.get("reports").update_one(
             {"_id": report_id},
             {
                 "$set": {
@@ -351,7 +351,7 @@ class AccountService:
         if db is None:
             db = database.mongodb.get_default_database()
         logs = (
-            await RepositoryFactory.get("audit_logs")
+            await BaseRepository.get("audit_logs")
             .find({"actor_id": actor_id})
             .sort("timestamp", -1)
             .limit(50)
@@ -411,7 +411,7 @@ class AccountService:
             "is_active": True,
         }
         users = (
-            await RepositoryFactory.get("users")
+            await BaseRepository.get("users")
             .find(
                 search_query,
                 {"full_name": 1, "username": 1, "slug": 1, "avatar_url": 1, "role": 1},
@@ -438,7 +438,7 @@ class AccountService:
         if db is None:
             db = database.mongodb.get_default_database()
         now = datetime.now(timezone.utc)
-        res = await RepositoryFactory.get("users").update_many(
+        res = await BaseRepository.get("users").update_many(
             {"locked_until": {"$lt": now}, "is_active": False},
             {
                 "$set": {"is_active": True},
@@ -455,7 +455,7 @@ class AccountService:
     ) -> Optional[Dict[str, Any]]:
         if db is None:
             db = database.mongodb.get_default_database()
-        user = await RepositoryFactory.get("users").find_one(
+        user = await BaseRepository.get("users").find_one(
             {"_id": user_id}, {"password_hash": 0, "passkeys": 0}
         )
         if not user:
@@ -474,7 +474,7 @@ class AccountService:
         if db is None:
             db = database.mongodb.get_default_database()
         users = (
-            await RepositoryFactory.get("users")
+            await BaseRepository.get("users")
             .find({"_id": {"$in": user_ids}}, {"password_hash": 0, "passkeys": 0})
             .to_list(length=len(user_ids))
         )
@@ -492,7 +492,7 @@ class AccountService:
     ) -> Optional[Dict[str, Any]]:
         if db is None:
             db = database.mongodb.get_default_database()
-        user = await RepositoryFactory.get("users").find_one({"email": email})
+        user = await BaseRepository.get("users").find_one({"email": email})
         if not user:
             return None
         user["_id"] = str(user["_id"])
@@ -506,7 +506,7 @@ class AccountService:
     async def internal_get_user_by_slug(slug: str, db=None) -> Optional[Dict[str, Any]]:
         if db is None:
             db = database.mongodb.get_default_database()
-        user = await RepositoryFactory.get("users").find_one({"slug": slug})
+        user = await BaseRepository.get("users").find_one({"slug": slug})
         if not user:
             return None
         user["_id"] = str(user["_id"])
@@ -525,5 +525,5 @@ class AccountService:
         user_data["created_at"] = datetime.now(timezone.utc)
         user_data["is_active"] = True
         user_data["wallet_balance"] = 0
-        await RepositoryFactory.get("users").insert_one(user_data)
+        await BaseRepository.get("users").insert_one(user_data)
         return user_id

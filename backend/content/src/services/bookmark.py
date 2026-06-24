@@ -7,7 +7,7 @@ from uuid6 import uuid7
 
 from shared.infrastructure.configuration import settings
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class BookmarkService:
@@ -17,7 +17,7 @@ class BookmarkService:
         if db is None:
             db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
-        profile = await RepositoryFactory.get("user_content_profiles").find_one(
+        profile = await BaseRepository.get("user_content_profiles").find_one(
             {"_id": user_id}, projection={"bookmarks": 1}
         )
         bookmarks = profile.get("bookmarks", []) if profile else []
@@ -25,7 +25,7 @@ class BookmarkService:
             bookmarks.remove(document_id)
             message = "The specified document has been successfully removed from your personal archive collection"
             is_bookmarked = False
-            await RepositoryFactory.get("user_content_profiles").update_one(
+            await BaseRepository.get("user_content_profiles").update_one(
                 {"_id": user_id},
                 {
                     "$pull": {"bookmarks": document_id},
@@ -37,7 +37,7 @@ class BookmarkService:
             bookmarks.append(document_id)
             message = "The specified document has been successfully added to your personal archive collection"
             is_bookmarked = True
-            await RepositoryFactory.get("user_content_profiles").update_one(
+            await BaseRepository.get("user_content_profiles").update_one(
                 {"_id": user_id},
                 {
                     "$addToSet": {"bookmarks": document_id},
@@ -57,14 +57,14 @@ class BookmarkService:
     ) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        profile = await RepositoryFactory.get("user_content_profiles").find_one(
+        profile = await BaseRepository.get("user_content_profiles").find_one(
             {"_id": str(current_user.id)}, projection={"bookmarks": 1}
         )
         bookmark_ids = profile.get("bookmarks", []) if profile else []
         if not bookmark_ids:
             return []
         docs = (
-            await RepositoryFactory.get("documents")
+            await BaseRepository.get("documents")
             .find({"_id": {"$in": bookmark_ids}})
             .limit(limit)
             .to_list(length=limit)
@@ -97,7 +97,7 @@ class BookmarkService:
             "bookmark_ids": [],
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("bookmark_folders").insert_one(folder)
+        await BaseRepository.get("bookmark_folders").insert_one(folder)
         logger.info("Tạo thư mục dấu trang thành công")
         return folder
 
@@ -106,7 +106,7 @@ class BookmarkService:
         if db is None:
             db = database.mongodb.get_default_database()
         folders = (
-            await RepositoryFactory.get("bookmark_folders")
+            await BaseRepository.get("bookmark_folders")
             .find({"user_id": str(current_user.id)})
             .sort("created_at", -1)
             .to_list(length=50)
@@ -131,7 +131,7 @@ class BookmarkService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        result = await RepositoryFactory.get("bookmark_folders").update_one(
+        result = await BaseRepository.get("bookmark_folders").update_one(
             {"_id": folder_id, "user_id": str(current_user.id)},
             {
                 "$set": {
@@ -150,7 +150,7 @@ class BookmarkService:
     async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        result = await RepositoryFactory.get("bookmark_folders").delete_one(
+        result = await BaseRepository.get("bookmark_folders").delete_one(
             {"_id": folder_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:

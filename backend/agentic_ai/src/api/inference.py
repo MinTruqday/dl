@@ -10,7 +10,7 @@ from src.core.registry import PromptType, registry
 
 from shared.infrastructure.configuration import settings
 from shared.dependency import get_current_user
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 from src.schemas.inference import (
     ActionRequest,
     CitationRequest,

@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class PricingService:
@@ -34,7 +34,7 @@ class PricingService:
         if db is None:
             db = database.mongodb.get_default_database()
 
-        config = await RepositoryFactory.get("system_config").find_one(
+        config = await BaseRepository.get("system_config").find_one(
             {"_id": "pricing_tiers"}
         )
         if config:
@@ -63,7 +63,7 @@ class PricingService:
             }
         }
 
-        await RepositoryFactory.get("system_config").update_one(
+        await BaseRepository.get("system_config").update_one(
             {"_id": "pricing_tiers"}, {"$set": default_config}, upsert=True
         )
         return default_config

@@ -7,7 +7,7 @@ from loguru import logger
 from shared.infrastructure.configuration import settings
 
 from shared.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 logger.remove()
 logger.add(

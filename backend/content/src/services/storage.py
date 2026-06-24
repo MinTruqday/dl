@@ -7,7 +7,7 @@ from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemU
 
 from shared.infrastructure.configuration import settings
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class StorageService:

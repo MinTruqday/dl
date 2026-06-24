@@ -7,7 +7,7 @@ from uuid6 import uuid7
 
 from shared.infrastructure.configuration import settings
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class CollaborationService:
@@ -18,7 +18,7 @@ class CollaborationService:
     ):
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("collaboration_activities").insert_one(
+        await BaseRepository.get("collaboration_activities").insert_one(
             {
                 "_id": str(uuid7()),
                 "document_id": document_id,
@@ -35,7 +35,7 @@ class CollaborationService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
@@ -63,7 +63,7 @@ class CollaborationService:
             raise HTTPException(
                 status_code=400, detail="Không thể gửi lời mời cộng tác cho chính mình"
             )
-        existing_invite = await RepositoryFactory.get("collaboration_invites").find_one(
+        existing_invite = await BaseRepository.get("collaboration_invites").find_one(
             {"document_id": document_id, "invitee_id": invitee_id, "status": "PENDING"}
         )
         if existing_invite:
@@ -86,7 +86,7 @@ class CollaborationService:
             "status": "PENDING",
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("collaboration_invites").insert_one(invite)
+        await BaseRepository.get("collaboration_invites").insert_one(invite)
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
@@ -104,7 +104,7 @@ class CollaborationService:
         if db is None:
             db = database.mongodb.get_default_database()
         invites = (
-            await RepositoryFactory.get("collaboration_invites")
+            await BaseRepository.get("collaboration_invites")
             .find({"invitee_id": str(current_user.id), "status": "PENDING"})
             .sort("created_at", -1)
             .to_list(length=100)
@@ -117,7 +117,7 @@ class CollaborationService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        invite = await RepositoryFactory.get("collaboration_invites").find_one(
+        invite = await BaseRepository.get("collaboration_invites").find_one(
             {"_id": invite_id, "invitee_id": str(current_user.id), "status": "PENDING"}
         )
         if not invite:
@@ -129,12 +129,12 @@ class CollaborationService:
             raise HTTPException(
                 status_code=400, detail="Trạng thái phản hồi lời mời không hợp lệ"
             )
-        await RepositoryFactory.get("collaboration_invites").update_one(
+        await BaseRepository.get("collaboration_invites").update_one(
             {"_id": invite_id},
             {"$set": {"status": status, "responded_at": datetime.now(timezone.utc)}},
         )
         if status == "ACCEPTED":
-            await RepositoryFactory.get("documents").update_one(
+            await BaseRepository.get("documents").update_one(
                 {"_id": invite["document_id"]},
                 {
                     "$push": {"coauthors": str(current_user.id)},
@@ -154,7 +154,7 @@ class CollaborationService:
     async def get_collaborators(document_id: str, current_user, db=None) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -169,7 +169,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         invites = (
-            await RepositoryFactory.get("collaboration_invites")
+            await BaseRepository.get("collaboration_invites")
             .find({"document_id": document_id, "status": "ACCEPTED"})
             .to_list(length=100)
         )
@@ -204,14 +204,14 @@ class CollaborationService:
     async def remove_collaborator(collaboration_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        invite = await RepositoryFactory.get("collaboration_invites").find_one(
+        invite = await BaseRepository.get("collaboration_invites").find_one(
             {"_id": collaboration_id}
         )
         if not invite:
             raise HTTPException(
                 status_code=404, detail="Lỗi tải cấu hình môi trường cộng tác"
             )
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
         )
         if not doc:
@@ -219,11 +219,11 @@ class CollaborationService:
                 status_code=403,
                 detail="Không có quyền quản lý người tham gia",
             )
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": invite["document_id"]},
             {"$pull": {"coauthors": invite["invitee_id"]}},
         )
-        await RepositoryFactory.get("collaboration_invites").delete_one(
+        await BaseRepository.get("collaboration_invites").delete_one(
             {"_id": collaboration_id}
         )
         await CollaborationService.log_activity(
@@ -239,7 +239,7 @@ class CollaborationService:
     async def get_activities(document_id: str, current_user, db=None) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -254,7 +254,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         activities = (
-            await RepositoryFactory.get("collaboration_activities")
+            await BaseRepository.get("collaboration_activities")
             .find({"document_id": document_id})
             .sort("timestamp", -1)
             .limit(50)
@@ -281,7 +281,7 @@ class CollaborationService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
@@ -312,7 +312,7 @@ class CollaborationService:
                 status_code=400,
                 detail="Chỉ có thể chuyển quyền sở hữu cho cộng tác viên",
             )
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id},
             {
                 "$set": {
@@ -322,7 +322,7 @@ class CollaborationService:
                 "$pull": {"coauthors": target_user_id},
             },
         )
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id}, {"$push": {"coauthors": str(current_user.id)}}
         )
         await CollaborationService.log_activity(
@@ -338,7 +338,7 @@ class CollaborationService:
     async def update_status(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("collaboration_status").update_one(
+        await BaseRepository.get("collaboration_status").update_one(
             {"document_id": document_id, "user_id": str(current_user.id)},
             {
                 "$set": {
@@ -356,7 +356,7 @@ class CollaborationService:
             db = database.mongodb.get_default_database()
         cutoff = datetime.now(timezone.utc).timestamp() - 60
         online_users = (
-            await RepositoryFactory.get("collaboration_status")
+            await BaseRepository.get("collaboration_status")
             .find({"document_id": document_id})
             .to_list(length=100)
         )
@@ -382,14 +382,14 @@ class CollaborationService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        invite = await RepositoryFactory.get("collaboration_invites").find_one(
+        invite = await BaseRepository.get("collaboration_invites").find_one(
             {"_id": collaboration_id}
         )
         if not invite:
             raise HTTPException(
                 status_code=404, detail="Lỗi tải cấu hình môi trường cộng tác"
             )
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
         )
         if not doc:
@@ -399,7 +399,7 @@ class CollaborationService:
             )
         if role not in ["editor", "viewer"]:
             raise HTTPException(status_code=400, detail="Quyền truy cập không hợp lệ")
-        await RepositoryFactory.get("collaboration_invites").update_one(
+        await BaseRepository.get("collaboration_invites").update_one(
             {"_id": collaboration_id}, {"$set": {"role": role}}
         )
         await CollaborationService.log_activity(
@@ -414,7 +414,7 @@ class CollaborationService:
     async def send_memo(document_id: str, message: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -436,14 +436,14 @@ class CollaborationService:
             "message": message,
             "timestamp": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("collaboration_memos").insert_one(memo)
+        await BaseRepository.get("collaboration_memos").insert_one(memo)
         return {"message": "Gửi tin nhắn cộng tác nội bộ thành công", "memo": memo}
 
     @staticmethod
     async def get_memos(document_id: str, current_user, db=None) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -458,7 +458,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         memos = (
-            await RepositoryFactory.get("collaboration_memos")
+            await BaseRepository.get("collaboration_memos")
             .find({"document_id": document_id})
             .sort("timestamp", 1)
             .limit(100)
@@ -485,7 +485,7 @@ class CollaborationService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
@@ -497,7 +497,7 @@ class CollaborationService:
             raise HTTPException(
                 status_code=400, detail="Cấu hình quyền truy cập không hợp lệ"
             )
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id}, {"$set": {"collab_access_level": access_level}}
         )
         await CollaborationService.log_activity(
@@ -515,7 +515,7 @@ class CollaborationService:
     async def get_sent_pending_invites(document_id: str, current_user, db=None) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
@@ -524,7 +524,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         invites = (
-            await RepositoryFactory.get("collaboration_invites")
+            await BaseRepository.get("collaboration_invites")
             .find({"document_id": document_id, "status": "PENDING"})
             .sort("created_at", -1)
             .to_list(length=100)
@@ -535,7 +535,7 @@ class CollaborationService:
     async def revoke_invite(invite_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        invite = await RepositoryFactory.get("collaboration_invites").find_one(
+        invite = await BaseRepository.get("collaboration_invites").find_one(
             {"_id": invite_id, "status": "PENDING"}
         )
         if not invite:
@@ -543,14 +543,14 @@ class CollaborationService:
                 status_code=404,
                 detail="Không tìm thấy lời mời cộng tác hoặc đã được xử lý",
             )
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
                 status_code=403, detail="Không có quyền thu hồi lời mời này"
             )
-        await RepositoryFactory.get("collaboration_invites").delete_one(
+        await BaseRepository.get("collaboration_invites").delete_one(
             {"_id": invite_id}
         )
         await CollaborationService.log_activity(
@@ -565,7 +565,7 @@ class CollaborationService:
     async def get_contribution_stats(document_id: str, current_user, db=None) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -585,7 +585,7 @@ class CollaborationService:
             {"$sort": {"count": -1}},
         ]
         stats = (
-            await RepositoryFactory.get("collaboration_activities")
+            await BaseRepository.get("collaboration_activities")
             .aggregate(pipeline)
             .to_list(length=100)
         )
@@ -597,7 +597,7 @@ class CollaborationService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -619,7 +619,7 @@ class CollaborationService:
             "created_by": current_user.full_name,
             "timestamp": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("collaboration_drafts").insert_one(snapshot)
+        await BaseRepository.get("collaboration_drafts").insert_one(snapshot)
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
@@ -632,7 +632,7 @@ class CollaborationService:
     async def get_snapshots(document_id: str, current_user, db=None) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -647,7 +647,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         draft = (
-            await RepositoryFactory.get("collaboration_drafts")
+            await BaseRepository.get("collaboration_drafts")
             .find({"document_id": document_id})
             .sort("timestamp", -1)
             .to_list(length=100)
@@ -670,7 +670,7 @@ class CollaborationService:
     async def acquire_lock(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -685,7 +685,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         cutoff = datetime.now(timezone.utc).timestamp() - 60
-        existing = await RepositoryFactory.get("collaboration_locks").find_one(
+        existing = await BaseRepository.get("collaboration_locks").find_one(
             {"document_id": document_id}
         )
         if existing:
@@ -700,7 +700,7 @@ class CollaborationService:
                     status_code=400,
                     detail="Tài liệu đang bị khóa chỉnh sửa bởi người khác",
                 )
-        await RepositoryFactory.get("collaboration_locks").update_one(
+        await BaseRepository.get("collaboration_locks").update_one(
             {"document_id": document_id},
             {
                 "$set": {
@@ -723,11 +723,11 @@ class CollaborationService:
     async def release_lock(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        existing = await RepositoryFactory.get("collaboration_locks").find_one(
+        existing = await BaseRepository.get("collaboration_locks").find_one(
             {"document_id": document_id}
         )
         if existing and existing.get("user_id") == str(current_user.id):
-            await RepositoryFactory.get("collaboration_locks").delete_one(
+            await BaseRepository.get("collaboration_locks").delete_one(
                 {"document_id": document_id}
             )
             await CollaborationService.log_activity(
@@ -742,7 +742,7 @@ class CollaborationService:
     async def get_lock_status(document_id: str, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        existing = await RepositoryFactory.get("collaboration_locks").find_one(
+        existing = await BaseRepository.get("collaboration_locks").find_one(
             {"document_id": document_id}
         )
         if not existing:
@@ -768,7 +768,7 @@ class CollaborationService:
     async def generate_invite_code(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
@@ -777,7 +777,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         invite_code = str(uuid7())[:8].upper()
-        await RepositoryFactory.get("collaboration_invite_codes").update_one(
+        await BaseRepository.get("collaboration_invite_codes").update_one(
             {"document_id": document_id},
             {
                 "$set": {
@@ -799,7 +799,7 @@ class CollaborationService:
     async def join_via_invite_code(invite_code: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        code_entry = await RepositoryFactory.get("collaboration_invite_codes").find_one(
+        code_entry = await BaseRepository.get("collaboration_invite_codes").find_one(
             {"invite_code": invite_code.upper()}
         )
         if not code_entry:
@@ -807,7 +807,7 @@ class CollaborationService:
                 status_code=404, detail="Mã cộng tác không hợp lệ hoặc đã hết hạn"
             )
         document_id = code_entry["document_id"]
-        doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
+        doc = await BaseRepository.get("documents").find_one({"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         if doc.get("creator_id") == str(current_user.id):
@@ -816,14 +816,14 @@ class CollaborationService:
             )
         if str(current_user.id) in doc.get("coauthors", []):
             raise HTTPException(status_code=400, detail="Bạn đã tham gia cộng tác này")
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id},
             {
                 "$push": {"coauthors": str(current_user.id)},
                 "$set": {"updated_at": datetime.now(timezone.utc)},
             },
         )
-        await RepositoryFactory.get("collaboration_invites").insert_one(
+        await BaseRepository.get("collaboration_invites").insert_one(
             {
                 "_id": str(uuid7()),
                 "document_id": document_id,
@@ -854,7 +854,7 @@ class CollaborationService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -877,7 +877,7 @@ class CollaborationService:
             "created_by": current_user.full_name,
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("collaboration_tasks").insert_one(task)
+        await BaseRepository.get("collaboration_tasks").insert_one(task)
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
@@ -890,7 +890,7 @@ class CollaborationService:
     async def get_tasks(document_id: str, current_user, db=None) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": document_id,
                 "$or": [
@@ -905,7 +905,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         tasks = (
-            await RepositoryFactory.get("collaboration_tasks")
+            await BaseRepository.get("collaboration_tasks")
             .find({"document_id": document_id})
             .sort("created_at", -1)
             .to_list(length=100)
@@ -930,14 +930,14 @@ class CollaborationService:
     async def update_task(task_id: str, is_done: bool, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        task = await RepositoryFactory.get("collaboration_tasks").find_one(
+        task = await BaseRepository.get("collaboration_tasks").find_one(
             {"_id": task_id}
         )
         if not task:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác"
             )
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": task["document_id"],
                 "$or": [
@@ -950,7 +950,7 @@ class CollaborationService:
             raise HTTPException(
                 status_code=403, detail="Không có quyền chỉnh sửa nhiệm vụ cộng tác"
             )
-        await RepositoryFactory.get("collaboration_tasks").update_one(
+        await BaseRepository.get("collaboration_tasks").update_one(
             {"_id": task_id}, {"$set": {"is_done": is_done}}
         )
         await CollaborationService.log_activity(
@@ -967,14 +967,14 @@ class CollaborationService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        task = await RepositoryFactory.get("collaboration_tasks").find_one(
+        task = await BaseRepository.get("collaboration_tasks").find_one(
             {"_id": task_id}
         )
         if not task:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác"
             )
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": task["document_id"],
                 "$or": [
@@ -994,21 +994,21 @@ class CollaborationService:
             "comment_text": comment_text,
             "timestamp": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("collaboration_task_comments").insert_one(comment)
+        await BaseRepository.get("collaboration_task_comments").insert_one(comment)
         return {"comment": comment}
 
     @staticmethod
     async def get_task_comments(task_id: str, current_user, db=None) -> list:
         if db is None:
             db = database.mongodb.get_default_database()
-        task = await RepositoryFactory.get("collaboration_tasks").find_one(
+        task = await BaseRepository.get("collaboration_tasks").find_one(
             {"_id": task_id}
         )
         if not task:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác"
             )
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "_id": task["document_id"],
                 "$or": [
@@ -1022,7 +1022,7 @@ class CollaborationService:
                 status_code=403, detail="Không có quyền thảo luận trong nhiệm vụ này"
             )
         comments = (
-            await RepositoryFactory.get("collaboration_task_comments")
+            await BaseRepository.get("collaboration_task_comments")
             .find({"task_id": task_id})
             .sort("timestamp", 1)
             .to_list(length=100)

@@ -8,7 +8,7 @@ from src.services.thread import ThreadService
 from shared.infrastructure.database import database
 from shared.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from shared.dependency import get_current_user_from_header as get_current_user
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 from shared.response import APIResponse
 
 router = APIRouter(prefix="/tin-nhan")
@@ -23,7 +23,7 @@ async def publish_personal_message(message: dict, receiver_id: str):
     db = database.mongodb.get_default_database()
     targets = [receiver_id]
     if receiver_id.startswith("group_"):
-        group = await RepositoryFactory.get("message_groups").find_one(
+        group = await BaseRepository.get("message_groups").find_one(
             {"_id": receiver_id}
         )
         if group:

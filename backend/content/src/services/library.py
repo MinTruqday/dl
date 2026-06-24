@@ -6,7 +6,7 @@ from loguru import logger
 from uuid6 import uuid7
 
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class LibraryService:
@@ -24,7 +24,7 @@ class LibraryService:
             "documents": [],
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("reading_lists").insert_one(new_list)
+        await BaseRepository.get("reading_lists").insert_one(new_list)
         logger.info("Tạo bộ sưu tập đọc cá nhân thành công")
         return new_list
 
@@ -33,7 +33,7 @@ class LibraryService:
         if db is None:
             db = database.mongodb.get_default_database()
         return (
-            await RepositoryFactory.get("reading_lists")
+            await BaseRepository.get("reading_lists")
             .find({"user_id": str(current_user.id)})
             .to_list(100)
         )
@@ -42,7 +42,7 @@ class LibraryService:
     async def get_reading_list_by_id(list_id: str, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        reading_list = await RepositoryFactory.get("reading_lists").find_one(
+        reading_list = await BaseRepository.get("reading_lists").find_one(
             {"_id": list_id, "user_id": str(current_user.id)}
         )
         if not reading_list:
@@ -50,7 +50,7 @@ class LibraryService:
         doc_ids = reading_list.get("documents", [])
         if doc_ids:
             docs = (
-                await RepositoryFactory.get("documents")
+                await BaseRepository.get("documents")
                 .find({"_id": {"$in": doc_ids}})
                 .to_list(length=100)
             )
@@ -65,7 +65,7 @@ class LibraryService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        result = await RepositoryFactory.get("reading_lists").update_one(
+        result = await BaseRepository.get("reading_lists").update_one(
             {"_id": list_id, "user_id": str(current_user.id)},
             {
                 "$addToSet": {"documents": document_id},
@@ -82,7 +82,7 @@ class LibraryService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        result = await RepositoryFactory.get("reading_lists").update_one(
+        result = await BaseRepository.get("reading_lists").update_one(
             {"_id": list_id, "user_id": str(current_user.id)},
             {
                 "$pull": {"documents": document_id},

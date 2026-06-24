@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class PublicationService:
@@ -16,7 +16,7 @@ class PublicationService:
         if db is None:
             db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": str(document_id), "creator_id": user_id}
         )
         if not doc:
@@ -24,7 +24,7 @@ class PublicationService:
                 status_code=403,
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": str(document_id)},
             {
                 "$set": {
@@ -43,7 +43,7 @@ class PublicationService:
     async def get_readability_score(document_id: str, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": str(document_id)}
         )
         if not doc:
@@ -83,7 +83,7 @@ class PublicationService:
         if db is None:
             db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id, "creator_id": user_id},
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at) if isinstance(publish_at, str) else publish_at}},
         )
@@ -94,7 +94,7 @@ class PublicationService:
     async def publish_document(document_id: str, current_user, db=None):
         if db is None:
             db = database.mongodb.get_default_database()
-        docs_collection = RepositoryFactory.get("documents")
+        docs_collection = BaseRepository.get("documents")
         user_id = str(current_user.id)
         document = await docs_collection.find_one(
             {"_id": document_id, "creator_id": user_id}

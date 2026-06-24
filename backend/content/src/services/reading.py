@@ -5,7 +5,7 @@ from loguru import logger
 
 from shared.infrastructure.configuration import settings
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class ReadingService:
@@ -52,7 +52,7 @@ class ReadingService:
             {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}},
         ]
         history = (
-            await RepositoryFactory.get("reading_history")
+            await BaseRepository.get("reading_history")
             .aggregate(pipeline)
             .to_list(length=limit)
         )
@@ -83,7 +83,7 @@ class ReadingService:
             db = database.mongodb.get_default_database()
         user_id = str(current_user.id)
         now = datetime.now(timezone.utc)
-        await RepositoryFactory.get("reading_history").update_one(
+        await BaseRepository.get("reading_history").update_one(
             {"user_id": user_id, "document_id": data.document_id},
             {
                 "$set": {
@@ -103,7 +103,7 @@ class ReadingService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": document_id}, {"content": 1, "title": 1}
         )
         if not doc:
@@ -128,7 +128,7 @@ class ReadingService:
     async def clear_reading_history(current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("reading_history").delete_many(
+        await BaseRepository.get("reading_history").delete_many(
             {"user_id": str(current_user.id)}
         )
         return {"status": "success", "message": "Xóa toàn bộ lịch sử đọc thành công"}
@@ -137,7 +137,7 @@ class ReadingService:
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("reading_history").delete_one(
+        await BaseRepository.get("reading_history").delete_one(
             {"user_id": str(current_user.id), "document_id": document_id}
         )
         return {"status": "success", "message": "Xóa lịch sử đọc cá nhân thành công"}

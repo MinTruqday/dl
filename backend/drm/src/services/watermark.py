@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 try:
     import PyPDF2
@@ -33,7 +33,7 @@ class WatermarkService:
             )
         if db is None:
             db = database.mongodb.get_default_database()
-        document = await RepositoryFactory.get("documents").find_one(
+        document = await BaseRepository.get("documents").find_one(
             {"_id": str(document_id)}
         )
         if not document:
@@ -49,7 +49,7 @@ class WatermarkService:
             and document.get("creator_id") != user_id
             and (not hasattr(current_user, "role") or current_user.role != "ADMIN")
         ):
-            purchases_col = RepositoryFactory.get("purchases")
+            purchases_col = BaseRepository.get("purchases")
             purchase = await purchases_col.find_one(
                 {"user_id": user_id, "item_id": str(document["_id"])}
             )
@@ -66,7 +66,7 @@ class WatermarkService:
             and hasattr(current_user, "role") and current_user.role == "ADMIN"
         ):
             import datetime
-            await RepositoryFactory.get("audit_logs").insert_one({
+            await BaseRepository.get("audit_logs").insert_one({
                 "action": "ADMIN_FORCE_EXPORT_PREMIUM",
                 "actor_id": user_id,
                 "document_id": str(document["_id"]),
@@ -78,7 +78,7 @@ class WatermarkService:
         )
 
         def encode_watermark(payload: str) -> str:
-            binary = "".join(format(ord(c), "08b") for c in payload)
+            binary = "".join(format(b, "08b") for b in payload.encode("utf-8"))
             zero_width = binary.replace("0", "\u200B").replace("1", "\u200C")
             return f"\u200D{zero_width}\u200D"
 
@@ -89,12 +89,12 @@ class WatermarkService:
                 
                 import os
                 font_path = os.path.join(os.path.dirname(__file__), "Roboto-Regular.ttf")
-                font_name = "Helvetica-Bold"
-                font_name_regular = "Helvetica"
-                if os.path.exists(font_path):
-                    pdfmetrics.registerFont(TTFont('Roboto-Regular', font_path))
-                    font_name = "Roboto-Regular"
-                    font_name_regular = "Roboto-Regular"
+                if not os.path.exists(font_path):
+                    raise RuntimeError("Thiếu file Roboto-Regular.ttf trên Docker. Không thể ghi Watermark.")
+                
+                pdfmetrics.registerFont(TTFont('Roboto-Regular', font_path))
+                font_name = "Roboto-Regular"
+                font_name_regular = "Roboto-Regular"
                 
                 c.setFont(font_name, 16)
                 c.drawString(50, 800, document.get("title", "Anonymous work"))
@@ -180,8 +180,8 @@ class WatermarkService:
         for match in matches:
             binary = match.replace('\u200B', '0').replace('\u200C', '1')
             try:
-                chars = [chr(int(binary[i:i+8], 2)) for i in range(0, len(binary), 8)]
-                decoded = "".join(chars)
+                bytes_list = [int(binary[i:i+8], 2) for i in range(0, len(binary), 8)]
+                decoded = bytes(bytes_list).decode("utf-8")
                 if decoded:
                     return decoded
             except Exception:

@@ -10,6 +10,7 @@ class Confirmation(BaseModel):
 
 class Acquisition(BaseModel):
     file_id: str
+    client_public_key: str
 
 class Token(BaseModel):
-    aes_key: str
+    encrypted_aes_key: str

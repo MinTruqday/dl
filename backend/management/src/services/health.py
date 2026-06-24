@@ -7,7 +7,7 @@ from uuid6 import uuid7
 
 from shared.infrastructure.configuration import settings
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 from src.schemas.account import Role
 
 
@@ -30,7 +30,7 @@ class HealthService:
                 "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
             }
         users = (
-            await RepositoryFactory.get("users")
+            await BaseRepository.get("users")
             .find(query)
             .sort("created_at", -1)
             .skip(offset)
@@ -57,7 +57,7 @@ class HealthService:
     async def update_user_role(user_id: str, role: str, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        res = await RepositoryFactory.get("users").update_one(
+        res = await BaseRepository.get("users").update_one(
             {"_id": user_id},
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -72,7 +72,7 @@ class HealthService:
     async def update_user_status(user_id: str, is_active: bool, db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        res = await RepositoryFactory.get("users").update_one(
+        res = await BaseRepository.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -94,7 +94,7 @@ class HealthService:
     ) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("system_config").update_one(
+        await BaseRepository.get("system_config").update_one(
             {"key": "maintenance_mode"},
             {
                 "$set": {
@@ -125,7 +125,7 @@ class HealthService:
             "status": "active",
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("marketing_campaigns").insert_one(campaign)
+        await BaseRepository.get("marketing_campaigns").insert_one(campaign)
         logger.info("Khởi tạo chiến dịch quảng cáo thành công")
         return {"message": "Chiến dịch quảng cáo đã được kích hoạt"}
 
@@ -189,7 +189,7 @@ class HealthService:
     async def get_maintenance_mode(db=None) -> dict:
         if db is None:
             db = database.mongodb.get_default_database()
-        config = await RepositoryFactory.get("system_config").find_one(
+        config = await BaseRepository.get("system_config").find_one(
             {"key": "maintenance_mode"}
         )
         if not config:
@@ -301,7 +301,7 @@ class HealthService:
         if db is None:
             db = database.mongodb.get_default_database()
         report_id = str(uuid7())
-        await RepositoryFactory.get("bug_reports").insert_one(
+        await BaseRepository.get("bug_reports").insert_one(
             {
                 "_id": report_id,
                 "title": data["title"],
@@ -325,7 +325,7 @@ class HealthService:
             "status": "pending",
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("tasks").insert_one(task)
+        await BaseRepository.get("tasks").insert_one(task)
         logger.info("Phân công nhiệm vụ quản trị thành công")
         return {"message": "Phân công nhiệm vụ thành công"}
 
@@ -334,7 +334,7 @@ class HealthService:
         if db is None:
             db = database.mongodb.get_default_database()
         proposal_id = str(uuid7())
-        await RepositoryFactory.get("policy_proposals").insert_one(
+        await BaseRepository.get("policy_proposals").insert_one(
             {
                 "_id": proposal_id,
                 "creator_id": str(current_user.id),

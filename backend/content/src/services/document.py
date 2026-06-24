@@ -21,7 +21,7 @@ from uuid6 import uuid7
 
 from shared.infrastructure.configuration import settings
 from shared.infrastructure.database import database
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 from shared.storage import upload_file
 
 
@@ -73,7 +73,7 @@ class DocumentService:
     @staticmethod
     async def get_tags_categories():
         db = database.mongodb.get_default_database()
-        docs_col = RepositoryFactory.get("documents")
+        docs_col = BaseRepository.get("documents")
         pipeline_tags = [
             {"$unwind": "$tags"},
             {"$group": {"_id": "$tags"}},
@@ -98,7 +98,7 @@ class DocumentService:
         )
     ) -> List[dict]:
         db = database.mongodb.get_default_database()
-        docs_col = RepositoryFactory.get("documents")
+        docs_col = BaseRepository.get("documents")
         cursor = (
             docs_col.find(
                 {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}
@@ -117,7 +117,7 @@ class DocumentService:
         ),
     ) -> List[dict]:
         db = database.mongodb.get_default_database()
-        docs_col = RepositoryFactory.get("documents")
+        docs_col = BaseRepository.get("documents")
         cursor = docs_col.find(
             {
                 "status": DocumentStatus.PUBLISHED,
@@ -131,7 +131,7 @@ class DocumentService:
     @staticmethod
     async def create_document(doc_in: DocumentCreate, current_user):
         db = database.mongodb.get_default_database()
-        docs_collection = RepositoryFactory.get("documents")
+        docs_collection = BaseRepository.get("documents")
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
             raise HTTPException(
@@ -167,7 +167,7 @@ class DocumentService:
             query["_id"] = {"$lt": cursor}
 
         docs = (
-            await RepositoryFactory.get("documents")
+            await BaseRepository.get("documents")
             .find(query)
             .sort("_id", -1)
             .limit(limit)
@@ -196,7 +196,7 @@ class DocumentService:
         document_id: str, content_in: DocumentContentUpdate, current_user
     ):
         db = database.mongodb.get_default_database()
-        docs_collection = RepositoryFactory.get("documents")
+        docs_collection = BaseRepository.get("documents")
         document = await docs_collection.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
@@ -216,7 +216,7 @@ class DocumentService:
                 )
 
         if document.get("content"):
-            await RepositoryFactory.get("document_revisions").insert_one(
+            await BaseRepository.get("document_revisions").insert_one(
                 {
                     "document_id": document_id,
                     "creator_id": str(current_user.id),
@@ -267,7 +267,7 @@ class DocumentService:
     @staticmethod
     async def update_document(document_id: str, doc_update, current_user) -> dict:
         db = database.mongodb.get_default_database()
-        docs_col = RepositoryFactory.get("documents")
+        docs_col = BaseRepository.get("documents")
         doc = await docs_col.find_one({"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
@@ -303,7 +303,7 @@ class DocumentService:
 
         if update_data:
             if doc.get("content") and "content" in update_data:
-                await RepositoryFactory.get("document_revisions").insert_one(
+                await BaseRepository.get("document_revisions").insert_one(
                     {
                         "document_id": document_id,
                         "creator_id": str(current_user.id),
@@ -334,7 +334,7 @@ class DocumentService:
         tag: str = None,
     ):
         db = database.mongodb.get_default_database()
-        docs_collection = RepositoryFactory.get("documents")
+        docs_collection = BaseRepository.get("documents")
         query = {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}
         if q:
             query["$or"] = [
@@ -363,7 +363,7 @@ class DocumentService:
     @staticmethod
     async def get_document_by_id(document_id: str, current_user, password: str = None):
         db = database.mongodb.get_default_database()
-        docs_collection = RepositoryFactory.get("documents")
+        docs_collection = BaseRepository.get("documents")
         user_id = str(current_user.id) if current_user else None
 
         document = await docs_collection.find_one({"_id": document_id})
@@ -436,7 +436,7 @@ class DocumentService:
     @staticmethod
     async def soft_delete_document(document_id: str, current_user) -> dict:
         db = database.mongodb.get_default_database()
-        res = await RepositoryFactory.get("documents").update_one(
+        res = await BaseRepository.get("documents").update_one(
             {
                 "_id": document_id,
                 "creator_id": str(current_user.id),
@@ -453,7 +453,7 @@ class DocumentService:
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
         db = database.mongodb.get_default_database()
-        res = await RepositoryFactory.get("documents").update_one(
+        res = await BaseRepository.get("documents").update_one(
             {
                 "_id": document_id,
                 "creator_id": str(current_user.id),
@@ -473,7 +473,7 @@ class DocumentService:
     async def get_trash(current_user) -> list:
         db = database.mongodb.get_default_database()
         docs = (
-            await RepositoryFactory.get("documents")
+            await BaseRepository.get("documents")
             .find({"creator_id": str(current_user.id), "is_deleted": True})
             .sort("deleted_at", -1)
             .to_list(length=100)
@@ -496,14 +496,14 @@ class DocumentService:
         document_id: str, password: str, current_user
     ) -> dict:
         db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed = pwd_context.hash(password)
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id},
             {
                 "$set": {
@@ -519,7 +519,7 @@ class DocumentService:
     @staticmethod
     async def invite_coauthor(document_id: str, email: str, current_user):
         db = database.mongodb.get_default_database()
-        document = await RepositoryFactory.get("documents").find_one(
+        document = await BaseRepository.get("documents").find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
@@ -547,7 +547,7 @@ class DocumentService:
         if str(target_user["_id"]) in document.get("coauthors", []):
             return {"message": "Tài khoản đã là cộng tác viên"}
 
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}}
         )
         logger.info("Gửi lời mời cộng tác thành công")
@@ -556,7 +556,7 @@ class DocumentService:
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
         db = database.mongodb.get_default_database()
-        docs_collection = RepositoryFactory.get("documents")
+        docs_collection = BaseRepository.get("documents")
         document = await docs_collection.find_one(
             {
                 "slug": slug,
@@ -573,7 +573,7 @@ class DocumentService:
             if document.get("creator_id") == user_id:
                 has_purchased = True
             else:
-                purchases_col = RepositoryFactory.get("purchases")
+                purchases_col = BaseRepository.get("purchases")
                 purchase = await purchases_col.find_one(
                     {"user_id": user_id, "item_id": str(document["_id"])}
                 )
@@ -664,7 +664,7 @@ class DocumentService:
     @staticmethod
     async def get_document_preview(slug: str) -> dict:
         db = database.mongodb.get_default_database()
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {
                 "slug": slug,
                 "status": DocumentStatus.PUBLISHED,
@@ -701,14 +701,14 @@ class DocumentService:
     @staticmethod
     async def get_document_audit_logs(document_id: str, current_user) -> list:
         db = database.mongodb.get_default_database()
-        document = await RepositoryFactory.get("documents").find_one(
+        document = await BaseRepository.get("documents").find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}, projection={"_id": 1}
         )
         if not document:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         logs = (
-            await RepositoryFactory.get("audit_logs")
+            await BaseRepository.get("audit_logs")
             .find({"document_id": document_id})
             .sort("timestamp", -1)
             .limit(100)
@@ -760,7 +760,7 @@ class DocumentService:
         ]
 
         documents = (
-            await RepositoryFactory.get("documents")
+            await BaseRepository.get("documents")
             .aggregate(pipeline)
             .to_list(length=limit)
         )
@@ -794,7 +794,7 @@ class DocumentService:
         db = database.mongodb.get_default_database()
         status_val = "PUBLISHED" if action == "approve" else "REJECTED"
 
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id},
             {
                 "$set": {
@@ -807,14 +807,14 @@ class DocumentService:
         )
 
         if action == "approve":
-            doc = await RepositoryFactory.get("documents").find_one(
+            doc = await BaseRepository.get("documents").find_one(
                 {"_id": document_id}
             )
             if doc:
                 await trigger_document_publish_job(document_id, doc.get("creator_id"))
                 logger.info("Đã bắt đầu quy trình xuất bản")
 
-        await RepositoryFactory.get("audit_logs").insert_one(
+        await BaseRepository.get("audit_logs").insert_one(
             {
                 "action": f"DOCUMENT_{status_val}",
                 "actor_id": str(current_user.id),
@@ -831,7 +831,7 @@ class DocumentService:
         dispute_id: str, resolution: str, current_user
     ) -> dict:
         db = database.mongodb.get_default_database()
-        await RepositoryFactory.get("copyright_disputes").update_one(
+        await BaseRepository.get("copyright_disputes").update_one(
             {"_id": dispute_id},
             {
                 "$set": {
@@ -852,7 +852,7 @@ class DocumentService:
         )
     ) -> List[str]:
         db = database.mongodb.get_default_database()
-        docs_col = RepositoryFactory.get("documents")
+        docs_col = BaseRepository.get("documents")
         pipeline = [
             {"$unwind": "$tags"},
             {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
@@ -1012,7 +1012,7 @@ class DocumentService:
         )
     ) -> List[dict]:
         db = database.mongodb.get_default_database()
-        docs_col = RepositoryFactory.get("documents")
+        docs_col = BaseRepository.get("documents")
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
         documents = await cursor.to_list(length=limit)
         return [

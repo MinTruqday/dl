@@ -11,7 +11,7 @@ from loguru import logger
 from uuid6 import uuid7
 
 from shared.infrastructure.configuration import settings
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class CompositionService:
@@ -98,7 +98,7 @@ class CompositionService:
         document_id: str, payload: dict, current_user, db=None
     ):
         user_id = str(current_user.id)
-        await RepositoryFactory.get("editor_suggestions").insert_one(
+        await BaseRepository.get("editor_suggestions").insert_one(
             {
                 "document_id": str(document_id),
                 "reviewer_id": user_id,
@@ -117,14 +117,14 @@ class CompositionService:
         suggestion_id: str, payload: dict, current_user, db=None
     ):
         user_id = str(current_user.id)
-        sug = await RepositoryFactory.get("editor_suggestions").find_one(
+        sug = await BaseRepository.get("editor_suggestions").find_one(
             {"_id": ObjectId(suggestion_id)}
         )
         if not sug:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy đề xuất chỉnh sửa"
             )
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": sug["document_id"]}
         )
         if (
@@ -138,7 +138,7 @@ class CompositionService:
             )
 
         action = payload.get("action", "rejected")
-        await RepositoryFactory.get("editor_suggestions").update_one(
+        await BaseRepository.get("editor_suggestions").update_one(
             {"_id": ObjectId(suggestion_id)},
             {
                 "$set": {
@@ -153,7 +153,7 @@ class CompositionService:
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
         user_id = str(current_user.id)
-        await RepositoryFactory.get("pomodoro_sessions").insert_one(
+        await BaseRepository.get("pomodoro_sessions").insert_one(
             {
                 "user_id": user_id,
                 "document_id": str(payload.get("document_id")),
@@ -212,7 +212,7 @@ class CompositionService:
             logger.error(f"Lỗi cấu trúc khi phân tích bản nháp: {e}")
 
         reading_time_minutes = max(1, words // 200)
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {
                 "_id": document_id,
                 "$or": [{"creator_id": user_id}, {"co_authors": user_id}],
@@ -234,7 +234,7 @@ class CompositionService:
     @staticmethod
     async def submit_for_review(document_id: str, current_user, db=None):
         user_id = str(current_user.id)
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": document_id, "creator_id": user_id},
             {"$set": {"editor_review_status": "pending_review"}},
         )
@@ -253,7 +253,7 @@ class CompositionService:
         import re
 
         user_id = str(current_user.id)
-        document = await RepositoryFactory.get("documents").find_one(
+        document = await BaseRepository.get("documents").find_one(
             {"_id": str(document_id), "creator_id": user_id}
         )
         if not document:
@@ -293,10 +293,10 @@ class CompositionService:
         }
         if new_content:
             update_data["content"] = new_content
-        await RepositoryFactory.get("documents").update_one(
+        await BaseRepository.get("documents").update_one(
             {"_id": str(document_id)}, {"$set": update_data}
         )
-        await RepositoryFactory.get("document_versions").insert_one(
+        await BaseRepository.get("document_versions").insert_one(
             {
                 "document_id": str(document_id),
                 "creator_id": user_id,
@@ -329,7 +329,7 @@ class CompositionService:
             "status": "open",
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("editor_comments").insert_one(comment)
+        await BaseRepository.get("editor_comments").insert_one(comment)
         return {"_id": comment_id, "message": "Ghi nhận bình luận thành công"}
 
     @staticmethod
@@ -337,7 +337,7 @@ class CompositionService:
         document_id: str, current_user, db=None
     ) -> List[dict]:
         cursor = (
-            RepositoryFactory.get("editor_comments")
+            BaseRepository.get("editor_comments")
             .find({"document_id": document_id, "status": "open"})
             .sort("created_at", -1)
         )
@@ -352,7 +352,7 @@ class CompositionService:
 
     @staticmethod
     async def resolve_comment(comment_id: str, current_user, db=None) -> dict:
-        comment = await RepositoryFactory.get("editor_comments").find_one(
+        comment = await BaseRepository.get("editor_comments").find_one(
             {"_id": comment_id}
         )
         if not comment:
@@ -360,7 +360,7 @@ class CompositionService:
                 status_code=404, detail="Không tìm thấy bình luận trực tiếp"
             )
 
-        doc = await RepositoryFactory.get("documents").find_one(
+        doc = await BaseRepository.get("documents").find_one(
             {"_id": comment["document_id"]}
         )
         if (
@@ -372,7 +372,7 @@ class CompositionService:
                 status_code=403, detail="Không có quyền giải quyết bình luận này"
             )
 
-        await RepositoryFactory.get("editor_comments").update_one(
+        await BaseRepository.get("editor_comments").update_one(
             {"_id": comment_id},
             {
                 "$set": {
@@ -388,10 +388,10 @@ class CompositionService:
     async def get_version_diff(
         document_id: str, version_id_a: str, version_id_b: str, current_user, db=None
     ) -> dict:
-        v_a = await RepositoryFactory.get("document_versions").find_one(
+        v_a = await BaseRepository.get("document_versions").find_one(
             {"_id": version_id_a}
         )
-        v_b = await RepositoryFactory.get("document_versions").find_one(
+        v_b = await BaseRepository.get("document_versions").find_one(
             {"_id": version_id_b}
         )
         if not v_a or not v_b:

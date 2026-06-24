@@ -48,7 +48,7 @@ class DatabaseRepository:
         return self.collection.aggregate(pipeline, **kwargs)
 
 
-class RepositoryFactory:
+class BaseRepository:
     _repos = {}
 
     @classmethod

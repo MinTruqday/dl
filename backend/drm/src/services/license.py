@@ -3,7 +3,7 @@ import datetime
 import os
 import uuid
 
-from shared.repositories.base_repository import RepositoryFactory
+from shared.repositories.database import BaseRepository
 
 
 class LicenseService:
@@ -13,7 +13,7 @@ class LicenseService:
         raw_key = os.urandom(32)  # Keep as bytes for AES
         encoded_key = base64.b64encode(raw_key).decode("utf-8")
 
-        licenses_col = RepositoryFactory.get("drm_licenses")
+        licenses_col = BaseRepository.get("drm_licenses")
         
         await licenses_col.insert_one(
             {

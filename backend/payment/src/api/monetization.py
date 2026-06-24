@@ -73,15 +73,15 @@ async def set_document_pricing(
     db=Depends(get_db)
 ):
     from fastapi import HTTPException
-    from shared.repositories.base_repository import RepositoryFactory
+    from shared.repositories.database import BaseRepository
     
-    doc = await RepositoryFactory.get("documents").find_one({"_id": req.document_id})
+    doc = await BaseRepository.get("documents").find_one({"_id": req.document_id})
     if not doc:
         raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
     if doc.get("creator_id") != str(current_user.id) and current_user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Chỉ tác giả mới được thay đổi giá bán")
         
-    await RepositoryFactory.get("documents").update_one(
+    await BaseRepository.get("documents").update_one(
         {"_id": req.document_id},
         {"$set": {
             "price_dl": req.price_dl, 
