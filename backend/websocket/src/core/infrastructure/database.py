@@ -29,26 +29,10 @@ async def init_db():
 
 
     try:
-        await database.mongodb.admin.command("replSetGetStatus")
+        from motor.motor_asyncio import AsyncIOMotorClient
+        database.mongodb = AsyncIOMotorClient(mongo_uri)
     except Exception as e:
-        try:
-            from urllib.parse import urlparse
-
-            parsed_uri = urlparse(mongo_uri)
-            host_with_port = (
-                parsed_uri.netloc.split("@")[-1]
-                if "@" in parsed_uri.netloc
-                else parsed_uri.netloc
-            )
-            logger.info(f"Bắt đầu khởi tạo cụm cơ sở dữ liệu chính: {e}")
-            await database.mongodb.admin.command(
-                "replSetInitiate",
-                {"_id": "rs0", "members": [{"_id": 0, "host": host_with_port}]},
-            )
-            logger.info(f"Khởi tạo cụm cơ sở dữ liệu thành công: {e}")
-            await asyncio.sleep(3)
-        except Exception as e:
-            logger.warning(f"Lỗi khởi tạo cụm cơ sở dữ liệu chính: {e}")
+        logger.error(f"Lỗi khởi tạo MongoDB: {e}")
 
     database.redis = aioredis.from_url(redis_uri, decode_responses=True)
 

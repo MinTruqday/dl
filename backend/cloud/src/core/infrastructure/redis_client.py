@@ -1,62 +1,83 @@
-import httpx
 import json
+import redis.asyncio as redis
+from loguru import logger
 from src.core.infrastructure.configuration import settings
 
 class RedisAPIClient:
     def __init__(self):
-        self.base_url = settings.CACHE_URL
+        self.url = settings.REDIS_URI
         self._client = None
 
     def get_client(self):
         if self._client is None:
-            self._client = httpx.AsyncClient(base_url=self.base_url, timeout=10.0)
+            self._client = redis.from_url(self.url, decode_responses=True)
         return self._client
 
-    async def _post(self, path: str, json_data: dict):
+    async def set(self, key: str, value: str):
         try:
-            client = self.get_client()
-            response = await client.post(path, json=json_data)
-            response.raise_for_status()
-            return response.json()
+            return await self.get_client().set(key, value)
         except Exception as e:
-            from loguru import logger
-            logger.error(f"Redis Cache Server Error at {path}: {e}")
+            logger.error(f"Redis Cache Server Error SET {key}: {e}")
             raise Exception("Cache service unavailable")
 
-    async def set(self, key: str, value: str):
-        return await self._post("/set", {"key": key, "value": value})
-
     async def setex(self, key: str, expire: int, value: str):
-        return await self._post("/set", {"key": key, "value": value, "expire": expire})
+        try:
+            return await self.get_client().setex(key, expire, value)
+        except Exception as e:
+            logger.error(f"Redis Cache Server Error SETEX {key}: {e}")
+            raise Exception("Cache service unavailable")
 
     async def get(self, key: str):
-        res = await self._post("/get", {"key": key})
-        return res.get("value") if res else None
+        try:
+            return await self.get_client().get(key)
+        except Exception as e:
+            logger.error(f"Redis Cache Server Error GET {key}: {e}")
+            raise Exception("Cache service unavailable")
 
     async def delete(self, key: str):
-        return await self._post("/delete", {"key": key})
+        try:
+            return await self.get_client().delete(key)
+        except Exception as e:
+            logger.error(f"Redis Cache Server Error DELETE {key}: {e}")
+            raise Exception("Cache service unavailable")
 
     async def sadd(self, key: str, member: str):
-        return await self._post("/sadd", {"key": key, "member": member})
+        try:
+            return await self.get_client().sadd(key, member)
+        except Exception as e:
+            raise Exception("Cache service unavailable")
 
     async def sismember(self, key: str, member: str):
-        res = await self._post("/sismember", {"key": key, "member": member})
-        return res.get("is_member") if res else False
+        try:
+            return await self.get_client().sismember(key, member)
+        except Exception as e:
+            raise Exception("Cache service unavailable")
 
     async def smembers(self, key: str):
-        res = await self._post("/smembers", {"key": key})
-        return res.get("members") if res else []
+        try:
+            return await self.get_client().smembers(key)
+        except Exception as e:
+            raise Exception("Cache service unavailable")
 
     async def publish(self, channel: str, message: str):
-        return await self._post("/publish", {"channel": channel, "message": message})
+        try:
+            return await self.get_client().publish(channel, message)
+        except Exception as e:
+            raise Exception("Cache service unavailable")
 
     async def pipeline_incr_expire(self, key: str, expire: int):
-        res = await self._post("/pipeline_incr", {"key": key, "expire": expire})
-        return res.get("values") if res else []
-
+        try:
+            client = self.get_client()
+            async with client.pipeline() as pipe:
+                await pipe.incr(key)
+                await pipe.expire(key, expire)
+                res = await pipe.execute()
+                return res
+        except Exception as e:
+            raise Exception("Cache service unavailable")
 
     async def aclose(self):
-        if hasattr(self, '_client'):
+        if self._client:
             await self._client.aclose()
 
 redis_client = RedisAPIClient()

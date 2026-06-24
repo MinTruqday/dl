@@ -1,69 +1,118 @@
-from src.core.infrastructure.configuration import settings
-import httpx
+import asyncio
+import json
+import uuid
+import aio_pika
 from loguru import logger
 from typing import Any, Dict, Optional
+from src.core.infrastructure.configuration import settings
 
-class QueueAPIClient:
-    def __init__(self, base_url: str = settings.QUEUE_URL):
-        self.base_url = base_url
-        self._client = None
+class RabbitMQClient:
+    def __init__(self):
+        self.url = settings.RABBITMQ_URI
+        self.connection = None
+        self.channel = None
+        self.pending_acks = {}
 
-    def get_client(self):
-        if self._client is None:
-            self._client = httpx.AsyncClient(base_url=self.base_url, timeout=10.0)
-        return self._client
-        self._client = None
+    async def connect(self):
+        if self.connection and not self.connection.is_closed:
+            return
 
-    def get_client(self):
-        if self._client is None:
-            self._client = httpx.AsyncClient(base_url=self.base_url, timeout=10.0)
-        return self._client
+        max_retries = 10
+        for attempt in range(max_retries):
+            try:
+                self.connection = await aio_pika.connect_robust(self.url)
+                self.channel = await self.connection.channel()
+                logger.info("Kết nối RabbitMQ thành công")
+                return
+            except Exception as e:
+                logger.error(f"Lỗi kết nối RabbitMQ, đang thử lại: {e}")
+                if attempt == max_retries - 1:
+                    raise e
+                await asyncio.sleep(3)
 
-    async def _post(self, path: str, json_data: dict) -> dict:
+    async def get_queue(self, queue_name: str):
+        if not self.channel:
+            await self.connect()
+        # Declare dead-letter exchange
+        dlx = await self.channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
+        dlq = await self.channel.declare_queue("dlq", durable=True)
+        await dlq.bind(dlx, "dlq")
+        queue_args = {
+            "x-dead-letter-exchange": "dlx",
+            "x-dead-letter-routing-key": "dlq",
+        }
+        return await self.channel.declare_queue(queue_name, durable=True, arguments=queue_args)
+
+    async def publish(self, queue_name: str, payload: dict) -> bool:
+        if not self.channel:
+            await self.connect()
         try:
-            client = self.get_client()
-            response = await client.post(path, json=json_data)
-            response.raise_for_status()
-            return response.json()
+            message = aio_pika.Message(
+                body=json.dumps(payload).encode(),
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+            )
+            await self.channel.default_exchange.publish(message, routing_key=queue_name)
+            return True
         except Exception as e:
-            logger.error(f"Lỗi gọi Queue API POST {path}: {e}")
-            raise e
-
-    async def _get(self, path: str, params: dict = None, timeout: int = 35) -> dict:
-        try:
-            client = self.get_client()
-            response = await client.get(path, params=params, timeout=timeout)
-            response.raise_for_status()
-            return response.json()
-        except httpx.ReadTimeout:
-            logger.warning(f"Timeout gọi Queue API GET {path}")
-            raise Exception("Timeout")
-        except Exception as e:
-            logger.error(f"Lỗi gọi Queue API GET {path}: {e}")
-            raise e
-
-    async def publish(self, queue_name: str, payload: Dict[str, Any]) -> bool:
-        res = await self._post("/xuat-ban", {"queue_name": queue_name, "payload": payload})
-        return res.get("status") == "success"
+            logger.error(f"Lỗi phân phối tin nhắn: {e}")
+            return False
 
     async def consume(self, queue_name: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
-        res = await self._get(f"/tieu-thu/{queue_name}", params={"timeout": timeout}, timeout=timeout+5)
-        return res.get("data")
+        if not self.channel:
+            await self.connect()
+        queue = await self.get_queue(queue_name)
+        try:
+            message = await queue.get(timeout=timeout)
+            if message:
+                payload = json.loads(message.body.decode())
+                ack_id = str(uuid.uuid4())
+                
+                self.pending_acks[ack_id] = message
+                
+                # Auto NACK task
+                asyncio.create_task(self._auto_nack_if_timeout(ack_id, delay=300))
+                
+                return {
+                    "payload": payload,
+                    "delivery_tag": ack_id
+                }
+            return None
+        except aio_pika.exceptions.QueueEmpty:
+            return None
+        except Exception as e:
+            logger.error(f"Lỗi lấy tin nhắn: {e}")
+            return None
 
+    async def _auto_nack_if_timeout(self, ack_id: str, delay: int):
+        await asyncio.sleep(delay)
+        message = self.pending_acks.pop(ack_id, None)
+        if message:
+            logger.warning(f"Timeout! Không thấy ai ACK, NACK tin nhắn {ack_id} để retry.")
+            try:
+                await message.nack(requeue=True)
+            except Exception as e:
+                pass
 
-    
     async def ack(self, delivery_tag: str) -> bool:
-        res = await self._post("/xac-nhan", {"delivery_tag": delivery_tag})
-        return res.get("status") == "success"
+        message = self.pending_acks.pop(delivery_tag, None)
+        if message:
+            try:
+                await message.ack()
+                return True
+            except Exception as e:
+                logger.error(f"Lỗi ACK tin nhắn: {e}")
+                return False
+        return False
 
     async def health_check(self) -> bool:
         try:
-            res = await self._get("/health", timeout=5)
-            return res.get("status") == "ok"
+            await self.connect()
+            return True
         except Exception:
             return False
 
     async def aclose(self):
-        await self._client.aclose()
+        if self.connection:
+            await self.connection.close()
 
-mq = QueueAPIClient()
+mq = RabbitMQClient()

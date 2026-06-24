@@ -301,21 +301,19 @@ class DepositService:
                 await session.commit_transaction()
 
             try:
-                from src.core.infrastructure.configuration import settings as shared_settings
+                from src.core.infrastructure.mq import mq
 
-                if shared_settings.NOTIFICATION_URL:
-                    async with httpx.AsyncClient(timeout=shared_settings.DEFAULT_HTTP_TIMEOUT) as client:
-                        await client.post(
-                            f"{shared_settings.NOTIFICATION_URL}/thong-bao/gui-di",
-                            json={
-                                "target_user_id": user_id,
-                                "title": "Deposit processed successfully",
-                                "body": "The requested deposit funds have been successfully credited to the digital wallet",
-                                "type": "topup",
-                            },
-                        )
+                await mq.publish(
+                    "notification_queue",
+                    {
+                        "target_user_id": user_id,
+                        "title": "Deposit processed successfully",
+                        "body": "The requested deposit funds have been successfully credited to the digital wallet",
+                        "type": "topup",
+                    }
+                )
             except Exception as e:
-                logger.warning(f"Lỗi gửi thông báo nạp tiền thành công: {e}")
+                logger.warning(f"Lỗi đẩy thông báo nạp tiền qua MQ: {e}")
             logger.info("Đã xác minh và nạp tiền vào tài khoản")
         except Exception as e:
             if should_close_session:

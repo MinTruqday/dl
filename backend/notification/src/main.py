@@ -21,6 +21,17 @@ from src.api.announcement import router as notification
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
 
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
+@app.middleware("http")
+async def internal_token_middleware(request: Request, call_next):
+    if "/internal/" in request.url.path:
+        token = request.headers.get("X-Internal-Token")
+        if token != settings.SECRET_KEY:
+            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+    return await call_next(request)
+
 app = FastAPI(title="DocLib Signal", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
 

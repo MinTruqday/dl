@@ -1,82 +1,49 @@
 from src.core.infrastructure.configuration import settings
-
-import httpx
-from typing import Any, Dict, List, Optional
+from src.core.infrastructure.database import database
 
 class MongoClient:
-    def __init__(self, base_url: str = settings.MONGO_URL):
-        self.base_url = base_url
+    def __init__(self):
+        self.db_name = settings.SERVICE_DB_NAME
 
-    async def _post(self, path: str, payload: dict):
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(f"{self.base_url}{path}", json=payload)
-            if resp.status_code >= 400:
-                raise Exception(f"Database API error: {resp.text}")
-            return resp.json()
+    def get_db(self):
+        if not database.mongodb:
+            raise Exception("MongoDB is not initialized")
+        return database.mongodb[self.db_name]
 
     async def find_one(self, collection: str, query: dict, projection: dict = None):
-        res = await self._post("/tim-mot", {"db": "doclib", "collection": collection, "query": query, "projection": projection})
-        return res.get("data")
+        return await self.get_db()[collection].find_one(query, projection)
 
     async def find(self, collection: str, query: dict, projection: dict = None, sort=None, skip: int = 0, limit: int = 0):
-        res = await self._post("/tim-kiem", {
-            "db": "doclib",
-            "collection": collection,
-            "query": query,
-            "projection": projection,
-            "sort": sort,
-            "skip": skip,
-            "limit": limit
-        })
-        return res.get("data", [])
+        cursor = self.get_db()[collection].find(query, projection)
+        if sort:
+            cursor = cursor.sort(sort)
+        if skip:
+            cursor = cursor.skip(skip)
+        if limit:
+            cursor = cursor.limit(limit)
+        return await cursor.to_list(length=None)
 
     async def insert_one(self, collection: str, document: dict):
-        class InsertOneResult:
-            def __init__(self, inserted_id):
-                self.inserted_id = inserted_id
-        res = await self._post("/them-mot", {"db": "doclib", "collection": collection, "document": document})
-        return InsertOneResult(res.get("inserted_id"))
+        return await self.get_db()[collection].insert_one(document)
 
     async def update_one(self, collection: str, filter: dict, update: dict, upsert: bool = False):
-        class UpdateResult:
-            def __init__(self, matched_count, modified_count, upserted_id):
-                self.matched_count = matched_count
-                self.modified_count = modified_count
-                self.upserted_id = upserted_id
-        res = await self._post("/cap-nhat-mot", {"db": "doclib", "collection": collection, "filter": filter, "update": update, "upsert": upsert})
-        return UpdateResult(res.get("matched_count"), res.get("modified_count"), res.get("upserted_id"))
+        return await self.get_db()[collection].update_one(filter, update, upsert=upsert)
 
     async def update_many(self, collection: str, filter: dict, update: dict, upsert: bool = False):
-        class UpdateResult:
-            def __init__(self, matched_count, modified_count, upserted_id):
-                self.matched_count = matched_count
-                self.modified_count = modified_count
-                self.upserted_id = upserted_id
-        res = await self._post("/cap-nhat-nhieu", {"db": "doclib", "collection": collection, "filter": filter, "update": update, "upsert": upsert})
-        return UpdateResult(res.get("matched_count"), res.get("modified_count"), res.get("upserted_id"))
+        return await self.get_db()[collection].update_many(filter, update, upsert=upsert)
 
     async def delete_one(self, collection: str, filter: dict):
-        class DeleteResult:
-            def __init__(self, deleted_count):
-                self.deleted_count = deleted_count
-        res = await self._post("/xoa-mot", {"db": "doclib", "collection": collection, "filter": filter})
-        return DeleteResult(res.get("deleted_count"))
+        return await self.get_db()[collection].delete_one(filter)
 
     async def delete_many(self, collection: str, filter: dict):
-        class DeleteResult:
-            def __init__(self, deleted_count):
-                self.deleted_count = deleted_count
-        res = await self._post("/xoa-nhieu", {"db": "doclib", "collection": collection, "filter": filter})
-        return DeleteResult(res.get("deleted_count"))
+        return await self.get_db()[collection].delete_many(filter)
 
     async def count_documents(self, collection: str, filter: dict = {}):
-        res = await self._post("/dem-tai-lieu", {"db": "doclib", "collection": collection, "filter": filter})
-        return res.get("count", 0)
+        return await self.get_db()[collection].count_documents(filter)
 
     async def aggregate(self, collection: str, pipeline: list):
-        res = await self._post("/tong-hop", {"db": "doclib", "collection": collection, "pipeline": pipeline})
-        return res.get("data", [])
-
+        cursor = self.get_db()[collection].aggregate(pipeline)
+        return await cursor.to_list(length=None)
 
 class QueryBuilder:
     def __init__(self, client, collection: str):

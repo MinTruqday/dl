@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 import httpx
+from src.core.infrastructure.http_client import http_client
 from bson import ObjectId
 from fastapi import HTTPException
 from loguru import logger
@@ -28,10 +29,8 @@ class CompositionService:
             )
         try:
             url = f"{compiler_url}/export/{format_type}"
-            async with httpx.AsyncClient(
-                timeout=settings.LONG_PROCESS_TIMEOUT
-            ) as client:
-                response = await client.post(
+            if True:
+                response = await http_client.post(
                     url, json={"content": content, "format": format_type}
                 )
                 if response.status_code != 200:
@@ -57,10 +56,8 @@ class CompositionService:
             )
         try:
             url = f"{compiler_url}/compile"
-            async with httpx.AsyncClient(
-                timeout=settings.LONG_PROCESS_TIMEOUT
-            ) as client:
-                response = await client.post(url, json={"content": content})
+            if True:
+                response = await http_client.post(url, json={"content": content})
                 if response.status_code != 200:
                     raise HTTPException(
                         status_code=422, detail="Lỗi biên dịch tài liệu"
@@ -128,8 +125,8 @@ class CompositionService:
             )
         doc = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                r = await client.get(
+            if True:
+                r = await http_client.get(
                     f"{settings.CONTENT_URL}/tai-lieu/{sug['document_id']}",
                 )
                 if r.status_code == 200:
@@ -222,8 +219,8 @@ class CompositionService:
 
         reading_time_minutes = max(1, words // 200)
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                await client.put(
+            if True:
+                await http_client.put(
                     f"{settings.CONTENT_URL}/tai-lieu/{document_id}/noi-dung",
                     json={
                         "draft_content": content,
@@ -243,8 +240,8 @@ class CompositionService:
     async def submit_for_review(document_id: str, current_user):
         user_id = str(current_user.id)
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                await client.post(
+            if True:
+                await http_client.post(
                     f"{settings.CONTENT_URL}/ban-nhap/{document_id}/kiem-duyet",
                     json={"action": "pending_review"},
                     headers={"X-User-Id": user_id},
@@ -267,8 +264,8 @@ class CompositionService:
         user_id = str(current_user.id)
         document = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                r = await client.get(
+            if True:
+                r = await http_client.get(
                     f"{settings.CONTENT_URL}/tai-lieu/{document_id}",
                 )
                 if r.status_code == 200:
@@ -312,13 +309,13 @@ class CompositionService:
         if new_content:
             update_payload["content"] = new_content
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                await client.put(
+            if True:
+                await http_client.put(
                     f"{settings.CONTENT_URL}/tai-lieu/{document_id}",
                     json=update_payload,
                     headers={"X-User-Id": user_id},
                 )
-                await client.post(
+                await http_client.post(
                     f"{settings.CONTENT_URL}/phien-ban/luu/{document_id}",
                     params={"version_note": f"Tìm và thay thế: '{search_term}' → '{replace_term}'"},
                     headers={"X-User-Id": user_id},
@@ -383,8 +380,8 @@ class CompositionService:
 
         doc = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                r = await client.get(
+            if True:
+                r = await http_client.get(
                     f"{settings.CONTENT_URL}/tai-lieu/{comment['document_id']}",
                 )
                 if r.status_code == 200:
@@ -418,8 +415,8 @@ class CompositionService:
     ) -> dict:
         v_a, v_b = None, None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                ra = await client.get(
+            if True:
+                ra = await http_client.get(
                     f"{settings.CONTENT_URL}/phien-ban/tai-lieu/{document_id}",
                 )
                 if ra.status_code == 200:
