@@ -40,8 +40,8 @@ class SecurityHarness:
                 violations.append("pii_detected")
             
             sanitized = result.sanitized_text or text
-        except Exception:
-            logger.error("Truy vết bảo mật AI thất bại")
+        except Exception as e:
+            logger.error(f"Truy vết bảo mật AI thất bại: {e}")
             
         return sanitized, violations
 
@@ -80,7 +80,7 @@ class SecurityHarness:
             )
 
         if pii_violations:
-            logger.info("Sensitive info masked")
+            logger.info("Hệ thống đã tự động làm mờ và bảo vệ các thông tin cá nhân nhạy cảm")
 
         return ScanResult(
             passed=True,
@@ -95,8 +95,8 @@ class SecurityHarness:
             return text
         sanitized, violations = await self._adetect_security_issues(text)
         if any("credential_leak" in v for v in violations):
-            logger.error("Successfully blocked sensitive data leak")
-            return "Response blocked: sensitive info detected"
+            logger.error("Hệ thống đã chủ động ngăn chặn và vô hiệu hóa thành công nguy cơ rò rỉ dữ liệu nhạy cảm")
+            return "Nội dung phản hồi đã bị hệ thống an ninh chặn lại do phát hiện có chứa dữ liệu nhạy cảm"
         return sanitized
 
 

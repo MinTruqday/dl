@@ -8,6 +8,7 @@ from shared.infrastructure.configuration import settings
 from shared.infrastructure.database import close_db, init_db
 
 from src.api.license import router as license_router
+from src.api.watermark import router as watermark_router
 
 logger.remove()
 logger.add(
@@ -29,10 +30,11 @@ app.add_middleware(
 )
 
 app.include_router(license_router)
+app.include_router(watermark_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Khởi tạo DRM (License Server) thành công")
+    logger.info("Khởi tạo DRM thành công")
     await init_db()
 
 @app.on_event("shutdown")

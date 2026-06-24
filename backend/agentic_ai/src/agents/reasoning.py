@@ -26,9 +26,9 @@ class ReasoningAgent:
             llm = HFInferenceChat(client=client, model=self._model)
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             return result.content.strip()
-        except Exception:
-            logger.exception("Lỗi thực thi tác vụ suy luận")
-            return "Inference process error"
+        except Exception as e:
+            logger.exception(f"Lỗi thực thi tác vụ suy luận: {e}")
+            return f"Mô hình AI đang gặp trục trặc trong quá trình tư duy và suy luận: {e}"
 
     async def evaluate_quality(
         self, query: str, answer: str, context_documents: List[Dict]
@@ -55,8 +55,8 @@ class ReasoningAgent:
                 "should_retry": eval_res.is_hallucination,
                 "feedback": eval_res.feedback,
             }
-        except Exception:
-            logger.exception("Lỗi đánh giá chất lượng tài liệu")
+        except Exception as e:
+            logger.exception(f"Lỗi đánh giá chất lượng tài liệu: {e}")
             return {
                 "should_retry": False,
                 "feedback": "The system encountered an error during the quality evaluation phase",
@@ -64,7 +64,7 @@ class ReasoningAgent:
 
     def _build_context(self, documents: List[Dict]) -> str:
         if not documents:
-            return "No matching documents found in knowledge base"
+            return "Kho tri thức hiện tại không chứa bất kỳ tài liệu nào khớp với thông tin bạn cần"
         parts = []
         for i, doc in enumerate(documents[:5], 1):
             title = doc.get("metadata", {}).get("title", "Unknown")

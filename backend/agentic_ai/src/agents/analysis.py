@@ -52,9 +52,9 @@ class AnalysisAgent:
                 "generation",
                 "The system could not extract any relevant information from the available documents",
             )
-        except Exception:
-            logger.exception("Lỗi truy cập cơ sở kiến thức")
-            return "Data retrieval error, please retry"
+        except Exception as e:
+            logger.exception(f"Lỗi truy cập cơ sở kiến thức: {e}")
+            return f"Không thể lấy dữ liệu từ máy chủ, vui lòng làm mới và thử lại: {e}"
 
 
 researcher = AnalysisAgent()

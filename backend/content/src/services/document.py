@@ -201,7 +201,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         if content_in.expected_version:
             db_updated = document.get("updated_at")
@@ -253,7 +253,7 @@ class DocumentService:
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
             except Exception as e:
-                logger.error("Lỗi gửi chuỗi thông báo cập nhật tài liệu")
+                logger.error(f"Lỗi gửi chuỗi thông báo cập nhật tài liệu: {e}")
 
         logger.info("Cập nhật nội dung tài liệu thành công")
 
@@ -270,7 +270,7 @@ class DocumentService:
         docs_col = RepositoryFactory.get("documents")
         doc = await docs_col.find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         if (
             doc.get("creator_id") != str(current_user.id)
             and current_user.role != "ADMIN"
@@ -368,7 +368,7 @@ class DocumentService:
 
         document = await docs_collection.find_one({"_id": document_id})
         if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         if (
             document.get("creator_id") != user_id
@@ -445,7 +445,7 @@ class DocumentService:
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}},
         )
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         logger.info("Đã chuyển tài liệu vào thùng rác")
         return {"message": "Đã chuyển tài liệu vào thùng rác"}
@@ -466,7 +466,7 @@ class DocumentService:
                 status_code=404, detail="Không tìm thấy tài liệu trong thùng rác"
             )
 
-        logger.info("Khôi phục tài liệu thành công")
+        logger.info("Tài liệu của bạn đã được khôi phục thành công về trạng thái ban đầu")
         return {"message": "Khôi phục tài liệu từ thùng rác thành công"}
 
     @staticmethod
@@ -500,7 +500,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed = pwd_context.hash(password)
         await RepositoryFactory.get("documents").update_one(
@@ -523,7 +523,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         import httpx
 
@@ -537,7 +537,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
         except Exception as e:
-            logger.warning("Lỗi đồng bộ thông tin tác giả")
+            logger.warning(f"Lỗi đồng bộ thông tin tác giả: {e}")
 
         if not target_user:
             raise HTTPException(
@@ -565,7 +565,7 @@ class DocumentService:
             }
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         user_id = str(current_user.id) if current_user else None
         has_purchased = False
@@ -625,7 +625,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     author = resp.json().get("data")
         except Exception as e:
-            logger.warning("Lỗi đồng bộ hồ sơ tác giả")
+            logger.warning(f"Lỗi đồng bộ hồ sơ tác giả: {e}")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),
@@ -672,7 +672,7 @@ class DocumentService:
             }
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         limit = doc.get("preview_pages", 5)
         raw_content = doc.get("content", "")
@@ -705,7 +705,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}, projection={"_id": 1}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         logs = (
             await RepositoryFactory.get("audit_logs")

@@ -189,7 +189,7 @@ class StorageService:
                     except Exception:
                         pass
             except Exception as e:
-                logger.error("Lỗi dọn dẹp bộ nhớ")
+                logger.error(f"Lỗi dọn dẹp bộ nhớ: {e}")
 
         return True
 

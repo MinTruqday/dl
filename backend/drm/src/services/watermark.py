@@ -16,13 +16,13 @@ try:
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
 except ImportError as e:
-    logger.error("Công cụ hiển thị tài liệu bị lỗi")
+    logger.error(f"Công cụ hiển thị tài liệu bị lỗi: {e}")
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
 
 
-class ExportService:
+class WatermarkService:
 
     @staticmethod
     async def export_document_pdf_watermarked(document_id: str, current_user, db=None):
@@ -37,7 +37,7 @@ class ExportService:
             {"_id": str(document_id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         user_email = (
             current_user.email
             if hasattr(current_user, "email") and current_user.email
@@ -74,7 +74,7 @@ class ExportService:
                 "timestamp": datetime.datetime.now(datetime.timezone.utc)
             })
         watermark_text = (
-            "Copyright Protected Material - Licensed exclusively for personal usage"
+            "Tài liệu được bảo vệ bản quyền - Chỉ cấp phép cho mục đích sử dụng cá nhân"
         )
 
         def encode_watermark(payload: str) -> str:
@@ -127,21 +127,15 @@ class ExportService:
                     page = raw_pdf.pages[page_num]
                     output_pdf.add_page(page)
                 
-                import base64
-                encoded_id = base64.b64encode(user_id.encode("utf-8")).decode("utf-8")
-                
                 metadata = raw_pdf.metadata if raw_pdf.metadata else {}
-                output_pdf.add_metadata({
-                    **metadata,
-                    "/Producer": encoded_id
-                })
+                output_pdf.add_metadata(metadata)
                 
                 final_buffer = io.BytesIO()
                 output_pdf.write(final_buffer)
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.error("Lỗi quá trình xuất PDF")
+                logger.error(f"Lỗi quá trình xuất PDF: {e}")
                 return None
 
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
@@ -150,39 +144,29 @@ class ExportService:
                 status_code=500, detail="Lỗi xuất tài liệu bảo vệ bản quyền"
             )
             
-        import httpx
-        import base64
         import os
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        from src.services.license import LicenseService
+        import uuid
         
-        drm_url = os.getenv("DRM_INTERNAL_URL", "http://doclib_drm:8600")
         try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(
-                    f"{drm_url}/drm/dang-ky",
-                    json={
-                        "document_id": str(document["_id"]),
-                        "user_id": user_id
-                    },
-                    timeout=5.0
-                )
-                resp.raise_for_status()
-                drm_data = resp.json()
-                file_id = drm_data["file_id"]
-                aes_key_b64 = drm_data["aes_key"]
-                aes_key = base64.b64decode(aes_key_b64)
+            file_id, aes_key = await LicenseService.create_license(str(document["_id"]), user_id)
         except Exception as e:
-            logger.error(f"Lỗi kết nối DRM Server: {str(e)}")
-            raise HTTPException(status_code=500, detail="Lỗi mã hóa tài liệu E-DRM")
+            logger.error(f"Lỗi tạo giấy phép E-DRM: {e}")
+            raise HTTPException(status_code=500, detail=f"Lỗi tạo khóa bảo mật tài liệu: {e}")
             
         try:
             aesgcm = AESGCM(aes_key)
             nonce = os.urandom(12)
             ciphertext = aesgcm.encrypt(nonce, pdf_data, None)
-            final_doclib_data = file_id.encode('utf-8') + nonce + ciphertext
+            
+            # Cấu trúc chuẩn xác nên là: 
+            # [16 bytes UUID] + [12 bytes Nonce] + [Ciphertext + 16 bytes Auth Tag của GCM]
+            file_id_bytes = uuid.UUID(file_id).bytes 
+            final_doclib_data = file_id_bytes + nonce + ciphertext
         except Exception as e:
-            logger.error(f"Lỗi mã hóa AES: {str(e)}")
-            raise HTTPException(status_code=500, detail="Lỗi mã hóa tài liệu")
+            logger.error(f"Lỗi mã hóa AES: {e}")
+            raise HTTPException(status_code=500, detail=f"Lỗi mã hóa tài liệu: {e}")
 
         logger.info(f"Xuất tài liệu E-DRM thành công, file_id={file_id}")
         return final_doclib_data

@@ -809,7 +809,7 @@ class CollaborationService:
         document_id = code_entry["document_id"]
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         if doc.get("creator_id") == str(current_user.id):
             raise HTTPException(
                 status_code=400, detail="Bạn đã là chủ sở hữu của tài liệu này"

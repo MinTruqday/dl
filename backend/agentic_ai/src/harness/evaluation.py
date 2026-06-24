@@ -97,8 +97,8 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "relevance": min(max(int(scores.get("relevance", 0)), 0), 10),
             "explanation": scores.get("explanation", ""),
         }
-    except Exception:
-        logger.warning("Lỗi đánh giá đầu ra mô hình ngôn ngữ")
+    except Exception as e:
+        logger.warning(f"Lỗi đánh giá đầu ra mô hình ngôn ngữ: {e}")
         return {
             "accuracy": 0,
             "completeness": 0,
@@ -117,8 +117,8 @@ class EvaluationHarness:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
             logger.info("Tải bộ dữ liệu kiểm tra thành công")
-        except Exception:
-            logger.error("Lỗi tải bộ dữ liệu kiểm tra")
+        except Exception as e:
+            logger.error(f"Lỗi tải bộ dữ liệu kiểm tra: {e}")
             self._dataset = []
 
     async def evaluate_rag_response(
@@ -190,8 +190,8 @@ class EvaluationHarness:
 
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
-        except Exception:
-            return {"error": "Lỗi khởi tạo máy khách đánh giá"}
+        except Exception as e:
+            return {"error": f"Lỗi khởi tạo máy khách đánh giá: {e}"}
 
         results = []
         for sample in self._dataset:

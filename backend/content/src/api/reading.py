@@ -98,8 +98,8 @@ def validate_url_ssrf(url: str):
                 status_code=403,
                 detail="Không thể truy cập tên miền nội bộ",
             )
-    except socket.gaierror:
-        raise HTTPException(status_code=400, detail="Lỗi phân giải tên miền")
+    except socket.gaierror as e:
+        raise HTTPException(status_code=400, detail=f"Lỗi phân giải tên miền: {e}")
 
 
 def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
@@ -145,8 +145,8 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
                     )
     except HTTPException as he:
         raise he
-    except Exception:
-        return APIResponse(data=None, message="Lỗi tải cấu trúc thư mục", status=500)
+    except Exception as e:
+        return APIResponse(data=None, message=f"Lỗi tải cấu trúc thư mục: {e}", status=500)
 
 
 @router.get("/luu-tru/noi-dung", response_model=APIResponse[Any])
@@ -190,5 +190,5 @@ async def get_zip_content(
                         )
     except HTTPException as he:
         raise he
-    except Exception:
-        return APIResponse(data=None, message="Lỗi xử lý tệp nén", status=500)
+    except Exception as e:
+        return APIResponse(data=None, message=f"Lỗi xử lý tệp nén: {e}", status=500)

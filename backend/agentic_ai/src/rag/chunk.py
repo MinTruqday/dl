@@ -37,7 +37,7 @@ except ImportError:
 
 class ChunkRag:
     def __init__(self):
-        logger.info("Initializing text chunker")
+        logger.info("Hệ thống đang nạp và khởi tạo bộ vi xử lý phân tích ngữ nghĩa văn bản")
         self.chunker = None
         self.type = "fallback"
 
@@ -51,17 +51,17 @@ class ChunkRag:
                 )
                 self.type = "chonkie_semantic"
                 logger.info("Khởi tạo công cụ phân mảnh ngữ nghĩa thành công")
-            except Exception:
-                logger.warning("Text chunker init failed, using standard mode")
+            except Exception as e:
+                logger.warning(f"Khởi tạo công cụ chia nhỏ văn bản thất bại, đang chuyển sang chế độ tiêu chuẩn: {e}")
                 try:
                     self.chunker = TokenChunker(
                         chunk_size=settings.DEFAULT_CHUNK_SIZE,
                         chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
                     )
                     self.type = "chonkie_token"
-                    logger.info("Tải công cụ phân đoạn văn bản thành công")
-                except Exception:
-                    logger.error("Text chunker init failed")
+                    logger.info(f"Tải công cụ phân đoạn văn bản thành công: {e}")
+                except Exception as e:
+                    logger.error(f"Sự cố xảy ra khi khởi tạo bộ xử lý phân mảnh văn bản: {e}")
 
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
         logger.info("Đang xử lý phân đoạn văn bản")
@@ -100,8 +100,8 @@ class ChunkRag:
             logger.info("Xử lý phân mảnh văn bản thành công")
             return chunks
 
-        except Exception:
-            logger.error("Lỗi phân mảnh văn bản, đang chuyển sang phương pháp thay thế")
+        except Exception as e:
+            logger.error(f"Lỗi phân mảnh văn bản, đang chuyển sang phương pháp thay thế: {e}")
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:

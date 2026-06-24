@@ -29,7 +29,7 @@ class SandboxAgent:
         self, action: str, params: dict, user_id: str, token: str = None
     ) -> str:
         if not token and action != "public_query":
-            return "AuthenticationRepository required"
+            return "Bạn cần phải xác thực danh tính để tiếp tục"
 
         system_prompt = registry.get(PromptType.TOOL_DISPATCHER)
 
@@ -45,14 +45,14 @@ class SandboxAgent:
                 res = await llm_with_tools.ainvoke(messages)
 
                 if not res.tool_calls:
-                    return "No suitable utility found"
+                    return "Hệ thống AI không tìm ra được công cụ thích hợp để xử lý yêu cầu này"
 
                 tool_call = res.tool_calls[0]
                 tool_name = tool_call["name"]
                 tool_params = tool_call["args"]
 
                 if tool_name not in self.tool_map:
-                    return "Requested utility not found"
+                    return "Tiện ích mà bạn yêu cầu hiện không khả dụng hoặc không tồn tại"
 
                 selected_tool = self.tool_map[tool_name]
 
@@ -64,7 +64,7 @@ class SandboxAgent:
                     "redeem_coupon",
                 ]
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
-                    return "Explicit user authorization required"
+                    return "Thao tác này bắt buộc phải có sự xác nhận ủy quyền trực tiếp từ người dùng"
 
                 logger.info("Đang khởi chạy tiện ích")
 
@@ -73,7 +73,7 @@ class SandboxAgent:
                         tool_params, config={"configurable": {"token": token}}
                     )
                     return str(tool_result)
-                except Exception:
+                except Exception as e:
                     from langchain_core.messages import ToolMessage
 
                     messages.append(res)
@@ -83,13 +83,13 @@ class SandboxAgent:
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    logger.warning("Processing error, retrying")
+                    logger.warning(f"Gặp sự cố khi xử lý dữ liệu, hệ thống đang tự động thử lại: {e}")
                     if attempt == 2:
-                        return "Operation failed after retries"
+                        return "Thao tác vẫn không thành công mặc dù hệ thống đã nỗ lực thử lại nhiều lần"
 
-        except Exception:
-            logger.error("Quá trình thực thi bị gián đoạn")
-            return "Execution error, please retry"
+        except Exception as e:
+            logger.error(f"Quá trình thực thi bị gián đoạn: {e}")
+            return f"Đã xảy ra lỗi trong quá trình thực thi lệnh, vui lòng thử lại sau giây lát: {e}"
 
 
 actor = SandboxAgent()

@@ -21,7 +21,7 @@ resources:
   - apps/management.yaml
   - apps/notification.yaml
   - apps/websocket.yaml
-  - apps/task_queue.yaml
+  - apps/worker.yaml
   - apps/frontend.yaml
   - ingress/ingress.yaml
 

@@ -32,7 +32,7 @@ class PipelineRag:
             {"_id": __import__("bson").ObjectId(document_id)}
         )
         if not document:
-            raise ValueError("Document not found")
+            raise ValueError("Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         file_url = document.get("file_url", "")
         title = document.get("title", "Untitled")
@@ -92,8 +92,8 @@ class PipelineRag:
                         "extraction_method": extract_method,
                     },
                 }
-            except Exception:
-                logger.error("Lỗi tạo tóm tắt tài liệu")
+            except Exception as e:
+                logger.error(f"Lỗi tạo tóm tắt tài liệu: {e}")
                 return None
 
         if doc_chunks:
@@ -231,8 +231,8 @@ class PipelineRag:
                                 )
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
-                        except Exception:
-                            logger.error("Lỗi tải dữ liệu từ tệp nén")
+                        except Exception as e:
+                            logger.error(f"Lỗi tải dữ liệu từ tệp nén: {e}")
 
         return "\n\n".join(all_text)
 
@@ -271,8 +271,8 @@ class PipelineRag:
             data = obj["Body"].read()
             logger.info("Tải xuống dữ liệu tệp thành công")
             return data
-        except Exception:
-            logger.error("Lỗi tải xuống tệp tin")
+        except Exception as e:
+            logger.error(f"Lỗi tải xuống tệp tin: {e}")
             return None
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
@@ -297,11 +297,11 @@ class PipelineRag:
 
             logger.info("Phân tích nội dung tài liệu thành công")
             return full_text
-        except ImportError:
-            logger.error("Thiếu thư viện phân tích nội dung")
+        except ImportError as e:
+            logger.error(f"Thiếu thư viện phân tích nội dung: {e}")
             return ""
-        except Exception:
-            logger.error("Lỗi phân tích dữ liệu")
+        except Exception as e:
+            logger.error(f"Lỗi phân tích dữ liệu: {e}")
             return ""
 
 

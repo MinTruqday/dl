@@ -32,6 +32,6 @@ async def submit_feedback(req: FeedbackRequest):
             "status": "success",
             "message": "Cảm ơn phản hồi của bạn",
         }
-    except Exception:
-        logger.error("Lỗi lưu phản hồi người dùng")
-        return {"status": "error", "message": "Lỗi lưu phản hồi, vui lòng thử lại sau"}
+    except Exception as e:
+        logger.error(f"Lỗi lưu phản hồi người dùng: {e}")
+        return {"status": "error", "message": f"Lỗi lưu phản hồi, vui lòng thử lại sau: {e}"}

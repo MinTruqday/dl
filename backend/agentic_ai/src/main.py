@@ -87,8 +87,8 @@ async def startup_event():
     try:
         await vector_store.ensure_collection()
         logger.info("Khởi tạo cơ sở dữ liệu vector thành công")
-    except Exception:
-        logger.error("Lỗi khởi tạo cơ sở dữ liệu vector")
+    except Exception as e:
+        logger.error(f"Lỗi khởi tạo cơ sở dữ liệu vector: {e}")
 
     try:
         if settings.MONGODB_URI:
@@ -108,4 +108,4 @@ async def startup_event():
             )
             logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
     except Exception as e:
-        logger.exception(f"Lỗi khởi tạo chỉ mục cơ sở dữ liệu: {str(e)}")
+        logger.exception(f"Lỗi khởi tạo chỉ mục cơ sở dữ liệu: {e}")

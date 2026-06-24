@@ -47,10 +47,10 @@ async def trigger_collection(req: Collection):
             "job_id": payload["job_id"],
             "message": "Bắt đầu quá trình thu thập dữ liệu ngầm",
         }
-    except Exception:
-        logger.error("Lỗi bắt đầu thu thập dữ liệu ngầm")
+    except Exception as e:
+        logger.error(f"Lỗi bắt đầu thu thập dữ liệu ngầm: {e}")
         raise HTTPException(
-            status_code=500, detail="Lỗi đưa quá trình thu thập dữ liệu vào hàng đợi"
+            status_code=500, detail=f"Lỗi đưa quá trình thu thập dữ liệu vào hàng đợi: {e}"
         )
 
 
@@ -63,10 +63,10 @@ async def stop_collection():
             "status": "success",
             "message": "Đã tạm dừng quá trình thu thập",
         }
-    except Exception:
-        logger.error("Lỗi truyền tín hiệu tạm dừng quá trình thu thập")
+    except Exception as e:
+        logger.error(f"Lỗi truyền tín hiệu tạm dừng quá trình thu thập: {e}")
         raise HTTPException(
-            status_code=500, detail="Lỗi gửi lệnh tạm dừng cho tiến trình nền"
+            status_code=500, detail=f"Lỗi gửi lệnh tạm dừng cho tiến trình nền: {e}"
         )
 
 

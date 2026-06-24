@@ -122,12 +122,12 @@ class DepositService:
                 )
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             await db["orders"].update_one(
                 {"order_code": order_code}, {"$set": {"status": "FAILED"}}
             )
-            logger.error("Lỗi mạng kết nối cổng thanh toán")
-            raise HTTPException(status_code=500, detail="Lỗi kết nối cổng thanh toán")
+            logger.error(f"Lỗi mạng kết nối cổng thanh toán: {e}")
+            raise HTTPException(status_code=500, detail=f"Lỗi kết nối cổng thanh toán: {e}")
 
     @staticmethod
     async def deposit_webhook(request, db=None):
@@ -168,8 +168,8 @@ class DepositService:
                 await DepositService.process_success_order(order_code, paid_amount)
             except HTTPException:
                 raise
-            except Exception:
-                logger.error("Lỗi xử lý phản hồi thanh toán")
+            except Exception as e:
+                logger.error(f"Lỗi xử lý phản hồi thanh toán: {e}")
         return Response(
             content=json.dumps({"code": "00", "desc": "success"}),
             media_type="application/json",
@@ -204,8 +204,8 @@ class DepositService:
                     )
             except HTTPException:
                 raise
-            except Exception:
-                logger.warning("Quá tải yêu cầu xác minh giao dịch")
+            except Exception as e:
+                logger.warning(f"Quá tải yêu cầu xác minh giao dịch: {e}")
 
         try:
             async with httpx.AsyncClient() as client:
@@ -235,9 +235,9 @@ class DepositService:
                 raise HTTPException(status_code=400, detail="Lỗi xác minh giao dịch")
         except HTTPException:
             raise
-        except Exception:
-            logger.error("Lỗi xác minh trạng thái giao dịch")
-            raise HTTPException(status_code=500, detail="Lỗi xác minh giao dịch")
+        except Exception as e:
+            logger.error(f"Lỗi xác minh trạng thái giao dịch: {e}")
+            raise HTTPException(status_code=500, detail=f"Lỗi xác minh giao dịch: {e}")
 
     @staticmethod
     async def process_success_order(
@@ -326,15 +326,15 @@ class DepositService:
                             },
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
-            except Exception:
-                logger.warning("Lỗi gửi thông báo nạp tiền thành công")
+            except Exception as e:
+                logger.warning(f"Lỗi gửi thông báo nạp tiền thành công: {e}")
             logger.info("Đã xác minh và nạp tiền vào tài khoản")
-        except Exception:
+        except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Lỗi hoàn tất giao dịch nạp tiền")
+            logger.error(f"Lỗi hoàn tất giao dịch nạp tiền: {e}")
             raise HTTPException(
-                status_code=500, detail="Tính năng thanh toán đang bảo trì"
+                status_code=500, detail=f"Tính năng thanh toán đang bảo trì: {e}"
             )
         finally:
             if should_close_session:

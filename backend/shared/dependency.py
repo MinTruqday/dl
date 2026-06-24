@@ -53,7 +53,7 @@ async def get_db():
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại",
+        detail="Phiên đăng nhập của bạn đã quá hạn an toàn, vui lòng tiến hành đăng nhập lại",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -63,8 +63,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         if email is None or session_id is None:
             logger.warning("Lỗi xác minh mã thông báo do thiếu thông tin")
             raise credentials_exception
-    except jwt.PyJWTError:
-        logger.warning("Lỗi giải mã xác thực do dữ liệu không hợp lệ")
+    except jwt.PyJWTError as e:
+        logger.warning(f"Lỗi giải mã xác thực do dữ liệu không hợp lệ: {e}")
         raise credentials_exception
 
     uid = payload.get("uid")

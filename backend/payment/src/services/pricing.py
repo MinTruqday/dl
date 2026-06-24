@@ -19,7 +19,7 @@ class PricingService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         update = {
             "price_dl": max(0, data.get("price_dl", 0)),
             "is_drm_protected": data.get("is_drm_protected", True),

@@ -63,7 +63,7 @@ class QueueCore:
                 logger.info("Kết nối hàng đợi nền thành công")
                 return
             except Exception as e:
-                logger.error("Lỗi kết nối mạng, đang thử lại")
+                logger.error(f"Lỗi kết nối mạng, đang thử lại: {e}")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)
@@ -78,8 +78,8 @@ class QueueCore:
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             logger.debug("Gửi tin nhắn bất đồng bộ thành công")
-        except Exception:
-            logger.error("Lỗi phân phối tin nhắn bất đồng bộ")
+        except Exception as e:
+            logger.error(f"Lỗi phân phối tin nhắn bất đồng bộ: {e}")
 
 
 mq_client = QueueCore()

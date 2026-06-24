@@ -228,7 +228,7 @@ async def restore_document(
 ):
     return APIResponse(
         data=await DocumentService.restore_document(document_id, current_user),
-        message="Khôi phục tài liệu thành công",
+        message="Tài liệu của bạn đã được khôi phục thành công về trạng thái ban đầu",
     )
 
 

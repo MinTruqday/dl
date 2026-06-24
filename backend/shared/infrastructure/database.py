@@ -34,7 +34,7 @@ async def init_db():
 
     try:
         await database.mongodb.admin.command("replSetGetStatus")
-    except Exception:
+    except Exception as e:
         try:
             from urllib.parse import urlparse
 
@@ -44,15 +44,15 @@ async def init_db():
                 if "@" in parsed_uri.netloc
                 else parsed_uri.netloc
             )
-            logger.info("Bắt đầu khởi tạo cụm cơ sở dữ liệu chính")
+            logger.info(f"Bắt đầu khởi tạo cụm cơ sở dữ liệu chính: {e}")
             await database.mongodb.admin.command(
                 "replSetInitiate",
                 {"_id": "rs0", "members": [{"_id": 0, "host": host_with_port}]},
             )
-            logger.info("Khởi tạo cụm cơ sở dữ liệu thành công")
+            logger.info(f"Khởi tạo cụm cơ sở dữ liệu thành công: {e}")
             await asyncio.sleep(3)
-        except Exception:
-            logger.warning("Lỗi khởi tạo cụm cơ sở dữ liệu chính")
+        except Exception as e:
+            logger.warning(f"Lỗi khởi tạo cụm cơ sở dữ liệu chính: {e}")
 
     database.redis = aioredis.from_url(redis_uri, decode_responses=True)
 
@@ -64,9 +64,9 @@ async def init_db():
             break
         except Exception as e:
             if i == max_retries - 1:
-                logger.error("Lỗi kết nối hàng đợi tin nhắn")
+                logger.error(f"Lỗi kết nối hàng đợi tin nhắn: {e}")
                 raise e
-            logger.warning("Đang thử kết nối lại hàng đợi")
+            logger.warning(f"Đang thử kết nối lại hàng đợi: {e}")
             await asyncio.sleep(5)
 
     await setup_indexes()
@@ -156,8 +156,8 @@ async def setup_indexes():
         )
 
         logger.info("Hoàn tất tạo chỉ mục cơ sở dữ liệu")
-    except Exception:
-        logger.error("Lỗi tạo chỉ mục cơ sở dữ liệu")
+    except Exception as e:
+        logger.error(f"Lỗi tạo chỉ mục cơ sở dữ liệu: {e}")
 
 
 async def close_db():

@@ -58,7 +58,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info("Loading language model")
+    logger.info("Đang khởi tạo và tải mô hình ngôn ngữ")
     update_callback({"progress": 10, "status": "running"})
 
     model, tokenizer = load(base_model_name)
@@ -170,7 +170,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info("Loading language model")
+    logger.info("Đang khởi tạo và tải mô hình ngôn ngữ")
     update_callback({"progress": 10, "status": "running"})
 
     bnb_config = None
@@ -311,14 +311,14 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         or "t5" in base_model_name
         or "bart" in base_model_name
     ):
-        logger.info("Processing task")
+        logger.info("Hệ thống đang tích cực xử lý yêu cầu của bạn, vui lòng đợi")
         result = run_seq2seq_training(job_id, config, update_callback)
     else:
         if sys.platform == "darwin":
-            logger.info("Using optimal training config")
+            logger.info("Hệ thống đang áp dụng cấu hình huấn luyện AI tối ưu nhất")
             result = run_mlx_training(job_id, config, update_callback)
         else:
-            logger.info("Using standard training config")
+            logger.info("Hệ thống đang áp dụng cấu hình huấn luyện AI theo chuẩn mặc định")
             result = run_hf_training(job_id, config, update_callback)
 
     merged_path = result.get("merged_path")
@@ -350,8 +350,8 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
             result["gguf_path"] = gguf_path
         else:
             logger.warning("Không hỗ trợ chuyển đổi định dạng")
-    except Exception:
-        logger.error("Lỗi chuyển đổi định dạng mô hình")
+    except Exception as e:
+        logger.error(f"Lỗi chuyển đổi định dạng mô hình: {e}")
 
     return result
 
@@ -375,7 +375,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info("Loading language model")
+    logger.info("Đang khởi tạo và tải mô hình ngôn ngữ")
     update_callback({"progress": 10, "status": "running"})
 
     model = AutoModelForSeq2SeqLM.from_pretrained(
@@ -516,7 +516,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info("Loading language model")
+    logger.info("Đang khởi tạo và tải mô hình ngôn ngữ")
     update_callback({"progress": 10, "status": "running"})
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -559,8 +559,8 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 img = (
                     Image.open(io.BytesIO(image_data)).convert("RGB").resize((512, 512))
                 )
-            except Exception:
-                logger.error("Lỗi xử lý dữ liệu hình ảnh")
+            except Exception as e:
+                logger.error(f"Lỗi xử lý dữ liệu hình ảnh: {e}")
                 continue
 
             optimizer.zero_grad()
@@ -605,8 +605,8 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 loss.backward()
                 optimizer.step()
                 final_loss = float(loss)
-            except Exception:
-                logger.error("Lỗi huấn luyện mô hình khuếch tán")
+            except Exception as e:
+                logger.error(f"Lỗi huấn luyện mô hình khuếch tán: {e}")
                 final_loss = 0.0
 
             current_step += 1

@@ -37,8 +37,8 @@ class WalletService:
                     )
             except HTTPException:
                 raise
-            except Exception:
-                logger.error("Lỗi bộ đệm khi kiểm tra giới hạn")
+            except Exception as e:
+                logger.error(f"Lỗi bộ đệm khi kiểm tra giới hạn: {e}")
 
         if database.redis:
             try:
@@ -52,10 +52,10 @@ class WalletService:
                     )
             except HTTPException:
                 raise
-            except Exception:
-                logger.error("Lỗi bảo mật phiên đăng nhập")
+            except Exception as e:
+                logger.error(f"Lỗi bảo mật phiên đăng nhập: {e}")
                 raise HTTPException(
-                    status_code=500, detail="Lỗi kết nối bộ đệm lưu trữ"
+                    status_code=500, detail=f"Lỗi kết nối bộ đệm lưu trữ: {e}"
                 )
 
         if db is None:
@@ -133,8 +133,8 @@ class WalletService:
                             },
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
-            except Exception:
-                logger.warning("Lỗi gửi thông báo thành công")
+            except Exception as e:
+                logger.warning(f"Lỗi gửi thông báo thành công: {e}")
             logger.info("Đổi mã giảm giá thành công")
             return {
                 "message": "Đổi mã giảm giá thành công",
@@ -143,13 +143,13 @@ class WalletService:
             }
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Lỗi đổi mã giảm giá")
+            logger.error(f"Lỗi đổi mã giảm giá: {e}")
             raise HTTPException(
                 status_code=500,
-                detail="Tính năng thanh toán đang bảo trì, vui lòng thử lại sau",
+                detail=f"Tính năng thanh toán đang bảo trì, vui lòng thử lại sau: {e}",
             )
         finally:
             if should_close_session:
@@ -157,8 +157,8 @@ class WalletService:
             if database.redis and is_locked:
                 try:
                     await database.redis.delete(lock_key)
-                except Exception:
-                    logger.error("Lỗi mở khóa phiên bảo mật")
+                except Exception as e:
+                    logger.error(f"Lỗi mở khóa phiên bảo mật: {e}")
 
     @staticmethod
     async def get_history(
@@ -179,8 +179,8 @@ class WalletService:
                 query["created_at"] = {
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
-            except Exception:
-                logger.warning("Lỗi định dạng phân trang")
+            except Exception as e:
+                logger.warning(f"Lỗi định dạng phân trang: {e}")
         txs = await db["transactions"].find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
         type_translations = {
             "topup": "Deposit",

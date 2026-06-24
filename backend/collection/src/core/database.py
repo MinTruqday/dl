@@ -17,8 +17,8 @@ class Database:
             res = await self.db.documents.insert_one(document_data)
             logger.info("Tạo bản ghi tài liệu thành công")
             return str(res.inserted_id)
-        except Exception:
-            logger.error("Lỗi lưu tài liệu vào cơ sở dữ liệu")
+        except Exception as e:
+            logger.error(f"Lỗi lưu tài liệu vào cơ sở dữ liệu: {e}")
             return None
 
     async def update_document(self, document_id: str, update_data: dict):
@@ -29,8 +29,8 @@ class Database:
                 {"_id": ObjectId(document_id)}, {"$set": update_data}
             )
             logger.info("Cập nhật bản ghi tài liệu thành công")
-        except Exception:
-            logger.error("Lỗi cập nhật dữ liệu tài liệu")
+        except Exception as e:
+            logger.error(f"Lỗi cập nhật dữ liệu tài liệu: {e}")
 
 
 database = Database()

@@ -26,9 +26,9 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error("Lỗi lưu hình ảnh")
+            logger.error(f"Lỗi lưu hình ảnh: {e}")
             raise HTTPException(
-                status_code=500, detail="Lỗi truyền tệp hình ảnh vào bộ nhớ vĩnh viễn"
+                status_code=500, detail=f"Lỗi truyền tệp hình ảnh vào bộ nhớ vĩnh viễn: {e}"
             )
         return {
             "url": filename,
@@ -78,9 +78,9 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error("Lỗi mạng khi lưu trữ tài liệu")
+            logger.error(f"Lỗi mạng khi lưu trữ tài liệu: {e}")
             raise HTTPException(
-                status_code=500, detail="Lỗi lưu trữ, không thể tải lên tài liệu"
+                status_code=500, detail=f"Lỗi lưu trữ, không thể tải lên tài liệu: {e}"
             )
         return {
             "url": filename,
@@ -99,7 +99,7 @@ class UploadService:
             url = await generate_presigned_url(file_path, 3600)
             return {"download_url": url}
         except Exception as e:
-            logger.error("Lỗi tạo liên kết tải xuống bảo mật")
+            logger.error(f"Lỗi tạo liên kết tải xuống bảo mật: {e}")
             raise HTTPException(
-                status_code=500, detail="Lỗi tạo liên kết truy cập bảo mật"
+                status_code=500, detail=f"Lỗi tạo liên kết truy cập bảo mật: {e}"
             )

@@ -283,8 +283,8 @@ class HealthService:
                     "buckets": buckets_data,
                     "categories": formatted_categories,
                 }
-        except Exception:
-            logger.error("Lỗi truy xuất thống kê lưu trữ do sự cố mạng")
+        except Exception as e:
+            logger.error(f"Lỗi truy xuất thống kê lưu trữ do sự cố mạng: {e}")
             return {
                 "status": "unreachable",
                 "total_buckets": 0,

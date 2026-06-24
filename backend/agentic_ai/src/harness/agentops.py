@@ -55,8 +55,8 @@ class AgentopsHarness:
 
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
-            except Exception:
-                logger.error("Lỗi kết nối cơ sở dữ liệu")
+            except Exception as e:
+                logger.error(f"Lỗi kết nối cơ sở dữ liệu: {e}")
         return self._db_client
 
     def record_session_start(
@@ -166,8 +166,8 @@ class AgentopsHarness:
             }
             await RepositoryFactory.get("agent_traces").insert_one(doc)
             logger.info("Lưu lịch sử phiên làm việc thành công")
-        except Exception:
-            logger.error("Lỗi lưu lịch sử phiên làm việc")
+        except Exception as e:
+            logger.error(f"Lỗi lưu lịch sử phiên làm việc: {e}")
 
     def get_prometheus_metrics(self) -> str:
         active_count = len(self._sessions)

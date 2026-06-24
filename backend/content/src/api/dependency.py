@@ -34,5 +34,5 @@ async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
             elif resp.status_code != 200:
                 logger.warning("Lỗi xác minh dung lượng lưu trữ")
     except Exception as e:
-        logger.error("Lỗi kết nối nền")
+        logger.error(f"Lỗi kết nối nền: {e}")
     return current_user

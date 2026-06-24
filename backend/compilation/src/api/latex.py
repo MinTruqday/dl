@@ -2,7 +2,7 @@ import httpx
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
 from fastapi.response import Response
 from loguru import logger
-from src.schemas.session import CompileRequest
+from src.schemas.composition import CompileRequest
 from src.engines.latex import LatexEngine
 from shared.dependency import get_current_user, get_current_user_optional, CurrentUser
 from shared.infrastructure.database import database
@@ -15,10 +15,10 @@ async def compile_latex(req: CompileRequest):
     try:
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
-    except Exception:
-        logger.error("Lỗi biên dịch tài liệu định dạng")
+    except Exception as e:
+        logger.error(f"Lỗi biên dịch tài liệu định dạng: {e}")
         raise HTTPException(
-            status_code=400, detail="Lỗi biên dịch do cú pháp không hợp lệ"
+            status_code=400, detail=f"Lỗi biên dịch do cú pháp không hợp lệ: {e}"
         )
 
 
@@ -37,9 +37,9 @@ async def export_document(format: str, req: CompileRequest):
             media_type = "text/html"
 
         return Response(content=file_bytes, media_type=media_type)
-    except Exception:
-        logger.error("Lỗi chuyển đổi định dạng tài liệu")
-        raise HTTPException(status_code=500, detail="Lỗi xuất tài liệu")
+    except Exception as e:
+        logger.error(f"Lỗi chuyển đổi định dạng tài liệu: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi xuất tài liệu: {e}")
 
 
 @router.post("/dinh-dang")

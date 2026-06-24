@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: task_queue-deployment
+  name: worker-deployment
   namespace: doclib-production
   labels:
-    app: task_queue-service
+    app: worker-service
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: task_queue-service
+      app: worker-service
   template:
     metadata:
       labels:
-        app: task_queue-service
+        app: worker-service
     spec:
       containers:
-        - name: task_queue-service
-          image: doclib-registry/task_queue:latest
+        - name: worker-service
+          image: doclib-registry/worker:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: task_queue-service
+  name: worker-service
   namespace: doclib-production
 spec:
   selector:
-    app: task_queue-service
+    app: worker-service
   ports:
     - protocol: TCP
       port: 80

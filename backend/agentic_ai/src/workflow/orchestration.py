@@ -118,8 +118,8 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 else:
                     final_res = res
                     break
-            except Exception:
-                logger.debug("Lỗi phân tích kết quả đánh giá")
+            except Exception as e:
+                logger.debug(f"Lỗi phân tích kết quả đánh giá: {e}")
                 final_res = res
                 break
 
@@ -131,8 +131,8 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "consolidated_results": [f"[{agent_name} - Step {idx+1}]:\n{final_res}"],
             "last_agent_result": final_res,
         }
-    except Exception:
-        logger.exception("Lỗi máy chủ thực thi")
+    except Exception as e:
+        logger.exception(f"Lỗi máy chủ thực thi: {e}")
         return {
             "consolidated_results": ["The execution step failed"],
             "error": "Internal processing error",
@@ -176,8 +176,8 @@ async def trimmer_node(state: ActingState):
             )
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
-        except Exception:
-            logger.exception("Lỗi rút gọn tóm tắt")
+        except Exception as e:
+            logger.exception(f"Lỗi rút gọn tóm tắt: {e}")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
 
@@ -281,7 +281,7 @@ class OrchestrationWorkflow:
                     "reasoning",
                 ]:
                     if state_update.get("error"):
-                        yield {"type": "error", "message": "Processing error"}
+                        yield {"type": "error", "message": "Đã xảy ra một lỗi bất thường trong quá trình xử lý luồng dữ liệu"}
                     else:
                         yield {
                             "type": "tool_result",

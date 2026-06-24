@@ -32,8 +32,8 @@ class RetrievalRag:
                 from sentence_transformers import CrossEncoder
 
                 self._reranker = CrossEncoder(settings.RERANKER_MODEL)
-            except Exception:
-                logger.exception("Lỗi tải mô hình xếp hạng AI")
+            except Exception as e:
+                logger.exception(f"Lỗi tải mô hình xếp hạng AI: {e}")
                 self._reranker = False
         return self._reranker
 
@@ -68,8 +68,8 @@ class RetrievalRag:
 
             queries = [q for q in queries if q]
             queries.append(question)
-        except Exception:
-            logger.exception("Lỗi tạo truy vấn đa chiều")
+        except Exception as e:
+            logger.exception(f"Lỗi tạo truy vấn đa chiều: {e}")
             queries = [question]
 
         all_documents = []
@@ -110,8 +110,8 @@ class RetrievalRag:
             scored_documents.sort(key=lambda x: x[1], reverse=True)
             reranked_documents = [doc for doc, score in scored_documents]
             return reranked_documents[:k]
-        except Exception:
-            logger.exception("Lỗi sắp xếp kết quả tìm kiếm")
+        except Exception as e:
+            logger.exception(f"Lỗi sắp xếp kết quả tìm kiếm: {e}")
             return documents[:k]
 
     async def cross_document_retrieve(
@@ -133,8 +133,8 @@ class RetrievalRag:
             parsed = self._extract_json_array(res.content)
             if isinstance(parsed, list) and len(parsed) == len(document_ids):
                 sub_queries = parsed
-        except Exception:
-            logger.exception("Lỗi phân tích truy vấn chéo tài liệu")
+        except Exception as e:
+            logger.exception(f"Lỗi phân tích truy vấn chéo tài liệu: {e}")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)

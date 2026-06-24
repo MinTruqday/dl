@@ -124,12 +124,12 @@ class PurchaseService:
             }
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             await session.abort_transaction()
-            logger.error("Lỗi nâng cấp gói thành viên")
+            logger.error(f"Lỗi nâng cấp gói thành viên: {e}")
             raise HTTPException(
                 status_code=500,
-                detail="Lỗi nâng cấp gói thành viên, vui lòng thử lại sau",
+                detail=f"Lỗi nâng cấp gói thành viên, vui lòng thử lại sau: {e}",
             )
         finally:
             await session.end_session()
@@ -152,7 +152,7 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         price = doc.get("price_dl", doc.get("price_dls", 0))
         if price <= 0:
             if should_close_session:
@@ -270,8 +270,8 @@ class PurchaseService:
                                         },
                                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                                     )
-                        except Exception:
-                            logger.error("Lỗi gửi thông báo giao dịch thành công")
+                        except Exception as e:
+                            logger.error(f"Lỗi gửi thông báo giao dịch thành công: {e}")
                 logger.info("Giao dịch mua tài liệu thành công")
                 return {
                     "message": "Thanh toán mua tài liệu thành công",
@@ -279,12 +279,12 @@ class PurchaseService:
                 }
             except HTTPException:
                 raise
-            except Exception:
+            except Exception as e:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.error("Lỗi xử lý thanh toán tài liệu")
+                logger.error(f"Lỗi xử lý thanh toán tài liệu: {e}")
                 raise HTTPException(
-                    status_code=500, detail="Lỗi xử lý giao dịch tài chính"
+                    status_code=500, detail=f"Lỗi xử lý giao dịch tài chính: {e}"
                 )
             finally:
                 if should_close_session:
@@ -392,11 +392,11 @@ class PurchaseService:
             return {"message": "Hoàn tiền thành công", "refunded_amount": price}
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Lỗi xử lý hoàn tiền")
-            raise HTTPException(status_code=500, detail="Lỗi xử lý hoàn tiền")
+            logger.error(f"Lỗi xử lý hoàn tiền: {e}")
+            raise HTTPException(status_code=500, detail=f"Lỗi xử lý hoàn tiền: {e}")
         finally:
             if should_close_session:
                 await session.end_session()

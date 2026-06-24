@@ -29,7 +29,7 @@ async def publish_compile_task(document_id: str, creator_id: str, content_raw: s
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error("Lỗi khởi tạo quá trình biên dịch")
+        logger.error(f"Lỗi khởi tạo quá trình biên dịch: {e}")
         return False
 
 
@@ -52,7 +52,7 @@ async def trigger_document_publish_job(document_id: str, creator_id: str):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error("Lỗi khởi tạo quá trình xuất bản")
+        logger.error(f"Lỗi khởi tạo quá trình xuất bản: {e}")
         return False
 
 
@@ -71,5 +71,5 @@ async def publish_event(queue_name: str, payload: dict):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error("Lỗi xuất bản sự kiện")
+        logger.error(f"Lỗi xuất bản sự kiện: {e}")
         return False

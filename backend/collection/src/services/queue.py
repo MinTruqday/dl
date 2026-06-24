@@ -17,8 +17,8 @@ async def run_worker():
             async with message.process():
                 payload = json.loads(message.body.decode())
                 await handler_func(payload)
-        except Exception:
-            logger.error("Lỗi xử lý tin nhắn nền")
+        except Exception as e:
+            logger.error(f"Lỗi xử lý tin nhắn nền: {e}")
             raise
 
     await mq_client.channel.set_qos(prefetch_count=2)

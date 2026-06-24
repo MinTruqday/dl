@@ -47,7 +47,7 @@ class PublicationService:
             {"_id": str(document_id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         content = doc.get("content")
         if not content:
             return {"score": 0, "level": "No content available", "words": 0}
@@ -69,12 +69,12 @@ class PublicationService:
                 "total_words": words,
                 "analysis": "Readable structure" if score > 60 else "Complex structure",
             }
-        except ImportError:
-            logger.error("Lỗi phân tích ngôn ngữ")
-            return {"error": "Đánh giá khả năng đọc đang bảo trì"}
+        except ImportError as e:
+            logger.error(f"Lỗi phân tích ngôn ngữ: {e}")
+            return {"error": f"Đánh giá khả năng đọc đang bảo trì: {e}"}
         except Exception as e:
-            logger.error("Lỗi phân tích cấu trúc tài liệu")
-            return {"error": "Lỗi phân tích ngôn ngữ do định dạng không xác định"}
+            logger.error(f"Lỗi phân tích cấu trúc tài liệu: {e}")
+            return {"error": f"Lỗi phân tích ngôn ngữ do định dạng không xác định: {e}"}
 
     @staticmethod
     async def schedule_publish(
@@ -100,7 +100,7 @@ class PublicationService:
             {"_id": document_id, "creator_id": user_id}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         from src.core.publication import trigger_document_publish_job
 
         await trigger_document_publish_job(document_id, user_id)

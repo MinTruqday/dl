@@ -14,7 +14,7 @@ class InterpreterAgent:
         pass
 
     async def execute(self, task_desc: str) -> str:
-        logger.info("Processing task")
+        logger.info("Hệ thống đang tích cực xử lý yêu cầu của bạn, vui lòng đợi")
 
         try:
             from src.agents.plan import llm
@@ -100,7 +100,7 @@ class InterpreterAgent:
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.communicate()
-                    return "Execution exceeded time limit and terminated"
+                    return "Quá trình xử lý mất quá nhiều thời gian và đã bị buộc chấm dứt để bảo vệ tài nguyên hệ thống"
 
                 MAX_OUTPUT = 512 * 1024
                 if proc.returncode == 0:
@@ -127,9 +127,9 @@ class InterpreterAgent:
                 final_res = "The execution process completed successfully without producing any output"
 
             return final_res
-        except Exception:
-            logger.error("Internal execution error")
-            return "Execution error, please retry"
+        except Exception as e:
+            logger.error(f"Lỗi thực thi hệ thống nội bộ: {e}")
+            return f"Đã xảy ra lỗi trong quá trình thực thi lệnh, vui lòng thử lại sau giây lát: {e}"
 
 
 interpreter = InterpreterAgent()

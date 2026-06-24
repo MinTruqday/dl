@@ -17,7 +17,7 @@ class RouteAgent:
     def __init__(self):
         llama_model = settings.LLAMA_MODEL
         if not llama_model:
-            raise ValueError("Missing language model configuration")
+            raise ValueError("Hệ thống chưa được thiết lập cấu hình đầy đủ cho mô hình ngôn ngữ AI")
 
         self.llama_client = AsyncInferenceClient(
             model=settings.LLAMA_MODEL,
@@ -44,8 +44,8 @@ class RouteAgent:
 
             return {"route": route, "answer": res.answer}
 
-        except Exception:
-            logger.exception("Lỗi điều hướng ngữ nghĩa")
+        except Exception as e:
+            logger.exception(f"Lỗi điều hướng ngữ nghĩa: {e}")
             return {"route": "knowledge", "answer": ""}
 
 

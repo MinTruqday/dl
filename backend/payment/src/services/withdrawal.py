@@ -92,8 +92,8 @@ class WithdrawalService:
                 )
                 if resp.status_code == 200:
                     user_info = resp.json().get("data") or {}
-        except Exception:
-            logger.warning("Lỗi đồng bộ hồ sơ tài khoản bên ngoài")
+        except Exception as e:
+            logger.warning(f"Lỗi đồng bộ hồ sơ tài khoản bên ngoài: {e}")
 
         if user_info.get("last_password_change"):
             last_pw_str = user_info["last_password_change"]
@@ -212,12 +212,12 @@ class WithdrawalService:
             }
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Lỗi khởi tạo giao dịch rút tiền")
+            logger.error(f"Lỗi khởi tạo giao dịch rút tiền: {e}")
             raise HTTPException(
-                status_code=500, detail="Không thể xử lý yêu cầu rút tiền lúc này"
+                status_code=500, detail=f"Không thể xử lý yêu cầu rút tiền lúc này: {e}"
             )
         finally:
             if should_close_session:
@@ -377,12 +377,12 @@ class WithdrawalService:
             return {"message": "Xác minh yêu cầu rút tiền thành công"}
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Lỗi xác minh yêu cầu rút tiền")
+            logger.error(f"Lỗi xác minh yêu cầu rút tiền: {e}")
             raise HTTPException(
-                status_code=500, detail="Giao dịch thanh toán đang gặp lỗi"
+                status_code=500, detail=f"Giao dịch thanh toán đang gặp lỗi: {e}"
             )
         finally:
             if should_close_session:
@@ -466,12 +466,12 @@ class WithdrawalService:
             return {"message": "Đã hủy yêu cầu rút tiền và hoàn tiền"}
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Lỗi hủy yêu cầu rút tiền")
+            logger.error(f"Lỗi hủy yêu cầu rút tiền: {e}")
             raise HTTPException(
-                status_code=500, detail="Giao dịch thanh toán đang gặp lỗi"
+                status_code=500, detail=f"Giao dịch thanh toán đang gặp lỗi: {e}"
             )
         finally:
             if should_close_session:

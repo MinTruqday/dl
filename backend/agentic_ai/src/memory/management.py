@@ -13,8 +13,8 @@ class ManagementMemory:
         redis_url = settings.REDIS_URI
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
-        except Exception:
-            logger.exception("Lỗi kết nối bộ đệm")
+        except Exception as e:
+            logger.exception(f"Lỗi kết nối bộ đệm: {e}")
             self._redis = None
 
         self._short_term_ttl = 3600 * 2
@@ -29,8 +29,8 @@ class ManagementMemory:
             data = await self._redis.get(key)
             if data:
                 return json.loads(data)
-        except Exception:
-            logger.exception("Lỗi đọc dữ liệu bộ nhớ")
+        except Exception as e:
+            logger.exception(f"Lỗi đọc dữ liệu bộ nhớ: {e}")
         return []
 
     async def save_short_term(self, conversation_id: str, entry: Dict):
@@ -49,8 +49,8 @@ class ManagementMemory:
             await self._redis.setex(
                 key, self._short_term_ttl, json.dumps(history, ensure_ascii=False)
             )
-        except Exception:
-            logger.exception("Lỗi lưu dữ liệu bộ nhớ")
+        except Exception as e:
+            logger.exception(f"Lỗi lưu dữ liệu bộ nhớ: {e}")
 
     async def save_long_term(self, user_id: str, entry: Dict):
         if not self._redis:
@@ -68,8 +68,8 @@ class ManagementMemory:
             await self._redis.setex(
                 key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
             )
-        except Exception:
-            logger.exception("Lỗi lưu trữ dữ liệu")
+        except Exception as e:
+            logger.exception(f"Lỗi lưu trữ dữ liệu: {e}")
 
     async def get_long_term(self, user_id: str) -> List[Dict]:
         if not self._redis:
@@ -80,8 +80,8 @@ class ManagementMemory:
             data = await self._redis.get(key)
             if data:
                 return json.loads(data)
-        except Exception:
-            logger.exception("Lỗi truy xuất dữ liệu lưu trữ dài hạn")
+        except Exception as e:
+            logger.exception(f"Lỗi truy xuất dữ liệu lưu trữ dài hạn: {e}")
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:

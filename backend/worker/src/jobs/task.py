@@ -57,7 +57,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
             )
         logger.info("Xóa vĩnh viễn tài liệu thành công")
     except Exception as e:
-        logger.error("Lỗi xóa vĩnh viễn tài liệu")
+        logger.error(f"Lỗi xóa vĩnh viễn tài liệu: {e}")
         raise hard_delete_document_task.retry(exc=e)
 
 
@@ -117,15 +117,15 @@ def compile_document_tectonic(document_id, tex_content):
                 "document_id": document_id,
                 "logs": process.stdout,
             }
-        except subprocess.TimeoutExpired:
-            logger.error("Quá thời gian biên dịch tài liệu")
+        except subprocess.TimeoutExpired as e:
+            logger.error(f"Quá thời gian biên dịch tài liệu: {e}")
             return {
                 "status": "error",
                 "error": "Quá thời gian biên dịch, vui lòng kiểm tra cấu trúc tài liệu",
                 "document_id": document_id,
             }
         except Exception as e:
-            logger.exception("Lỗi khi biên dịch tài liệu")
+            logger.exception(f"Lỗi khi biên dịch tài liệu: {e}")
             return {
                 "status": "error",
                 "error": "Lỗi xử lý tài liệu, vui lòng thử lại sau",

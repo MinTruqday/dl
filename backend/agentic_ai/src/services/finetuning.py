@@ -107,8 +107,8 @@ def _run_training_sync(job_id: str, config: dict, loop):
             }
         )
 
-    except Exception:
-        logger.error("Lỗi tinh chỉnh mô hình")
+    except Exception as e:
+        logger.error(f"Lỗi tinh chỉnh mô hình: {e}")
         sync_update({"status": "failed", "error_message": "Lỗi tinh chỉnh mô hình"})
     finally:
         active_jobs.pop(job_id, None)
@@ -361,8 +361,8 @@ async def import_documents(req: dict):
                                 "created_at": datetime.now(timezone.utc),
                             }
                         )
-            except Exception:
-                logger.warning("Lỗi trích xuất dữ liệu huấn luyện")
+            except Exception as e:
+                logger.warning(f"Lỗi trích xuất dữ liệu huấn luyện: {e}")
     if samples:
         await RepositoryFactory.get("finetune_samples").insert_many(samples)
         await RepositoryFactory.get("finetune_datasets").update_one(
@@ -541,10 +541,10 @@ async def deploy_model(job_id: str, req: dict):
             {"_id": job_id}, {"$set": {"merged_model_name": repo_id}}
         )
 
-    except Exception:
-        logger.error("Lỗi triển khai mô hình lên kho lưu trữ từ xa")
+    except Exception as e:
+        logger.error(f"Lỗi triển khai mô hình lên kho lưu trữ từ xa: {e}")
         raise HTTPException(
-            status_code=500, detail="Lỗi triển khai mô hình lên kho lưu trữ từ xa"
+            status_code=500, detail=f"Lỗi triển khai mô hình lên kho lưu trữ từ xa: {e}"
         )
 
     await RepositoryFactory.get("finetune_jobs").update_one(

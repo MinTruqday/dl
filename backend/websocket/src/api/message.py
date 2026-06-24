@@ -27,9 +27,9 @@ async def websocket_endpoint(
             logger.warning("Thông tin xác thực không chính xác")
             await websocket.close(code=1008)
             return
-    except Exception:
+    except Exception as e:
         logger.error(
-            "Lỗi xác thực kết nối do mã thông báo không hợp lệ hoặc đã hết hạn"
+            f"Lỗi xác thực kết nối do mã thông báo không hợp lệ hoặc đã hết hạn: {e}"
         )
         await websocket.close(code=1008)
         return
@@ -72,6 +72,6 @@ async def websocket_endpoint(
             pass
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
-    except Exception:
-        logger.error("Lỗi xử lý tin nhắn trực tiếp")
+    except Exception as e:
+        logger.error(f"Lỗi xử lý tin nhắn trực tiếp: {e}")
         message_manager.disconnect(user_id, websocket)

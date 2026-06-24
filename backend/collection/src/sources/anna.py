@@ -72,8 +72,8 @@ class AnnaSource:
                     list_selector = 'a[href*="/md5/"]'
                     try:
                         await page.wait_for_selector(list_selector, timeout=15000)
-                    except Exception:
-                        logger.error("Lỗi trích xuất liên kết do thay đổi giao diện")
+                    except Exception as e:
+                        logger.error(f"Lỗi trích xuất liên kết do thay đổi giao diện: {e}")
 
                     document_nodes = await page.query_selector_all(list_selector)
                     if not document_nodes:
@@ -109,8 +109,8 @@ class AnnaSource:
                         logger.info("Đã đạt giới hạn số trang, đang dừng quét")
                         break
                     page_num += 1
-            except Exception:
-                logger.error("Lỗi tải danh sách tài liệu từ nguồn ngoài")
+            except Exception as e:
+                logger.error(f"Lỗi tải danh sách tài liệu từ nguồn ngoài: {e}")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
@@ -146,8 +146,8 @@ class AnnaSource:
                         if formatted_cookies:
                             await context.add_cookies(formatted_cookies)
                         return context
-        except Exception:
-            logger.error("Lỗi vượt tường lửa")
+        except Exception as e:
+            logger.error(f"Lỗi vượt tường lửa: {e}")
         return await get_stealth_context(browser)
 
     @staticmethod
@@ -255,8 +255,8 @@ class AnnaSource:
                                         break
                                 if download_link:
                                     break
-                            except Exception:
-                                logger.warning("Lỗi trích xuất liên kết tải xuống")
+                            except Exception as e:
+                                logger.warning(f"Lỗi trích xuất liên kết tải xuống: {e}")
 
                             await page.wait_for_timeout(5000)
 
@@ -280,8 +280,8 @@ class AnnaSource:
                             await mq_client.publish("download_processor_queue", payload)
                         else:
                             logger.warning("Quá thời gian chờ bảo mật")
-                    except Exception:
-                        logger.error("Lỗi giám sát tạo liên kết tải xuống")
+                    except Exception as e:
+                        logger.error(f"Lỗi giám sát tạo liên kết tải xuống: {e}")
                 if not slow_link_el:
                     logger.warning("Không tìm thấy nút tải xuống")
                     await page.screenshot(
@@ -293,8 +293,8 @@ class AnnaSource:
                     logger.warning("Đang ghi nhận các thành phần trang để gỡ lỗi")
                     await page.close()
                     raise Exception("Không tìm thấy liên kết tải xuống")
-            except Exception:
-                logger.error("Lỗi trích xuất tài liệu")
+            except Exception as e:
+                logger.error(f"Lỗi trích xuất tài liệu: {e}")
                 raise
 
     @staticmethod
@@ -327,8 +327,8 @@ class AnnaSource:
 
             if os.path.exists(target_local):
                 os.unlink(target_local)
-        except Exception:
-            logger.error("Lỗi tải xuống và lưu trữ tài liệu")
+        except Exception as e:
+            logger.error(f"Lỗi tải xuống và lưu trữ tài liệu: {e}")
             raise
 
         if minio_url:

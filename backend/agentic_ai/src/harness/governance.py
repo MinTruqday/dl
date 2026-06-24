@@ -98,7 +98,7 @@ class GovernanceHarness:
         policy = self._get_policy(state.role)
 
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
-            logger.warning("Operation denied: insufficient permissions")
+            logger.warning("Hành động đã bị chặn do tài khoản của bạn chưa được cấp quyền tương ứng")
             return PolicyDecision(
                 allowed=False,
                 reason="The requested operation is strictly restricted and not allowed for the current authorization level",
@@ -109,7 +109,7 @@ class GovernanceHarness:
             policy["allowed_tools"] is not None
             and tool_name not in policy["allowed_tools"]
         ):
-            logger.warning("Operation denied: insufficient permissions")
+            logger.warning("Hành động đã bị chặn do tài khoản của bạn chưa được cấp quyền tương ứng")
             return PolicyDecision(
                 allowed=False,
                 reason="The requested operation is not present in the allowed operations list for the current session",
@@ -118,7 +118,7 @@ class GovernanceHarness:
 
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
-            logger.warning("Operation denied: quota exceeded")
+            logger.warning("Yêu cầu bị từ chối: Tài khoản của bạn đã sử dụng vượt mức dung lượng hoặc hạn mức cho phép")
             return PolicyDecision(
                 allowed=False,
                 reason="The current session has exceeded the maximum allowed number of utility invocations",

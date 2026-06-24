@@ -77,7 +77,7 @@ async def set_document_pricing(
     
     doc = await RepositoryFactory.get("documents").find_one({"_id": req.document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
     if doc.get("creator_id") != str(current_user.id) and current_user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Chỉ tác giả mới được thay đổi giá bán")
         

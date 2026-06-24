@@ -107,7 +107,7 @@ class ReadingService:
             {"_id": document_id}, {"content": 1, "title": 1}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         content = doc.get("content", "")
         query_lower = query.lower()
         content_lower = content.lower()

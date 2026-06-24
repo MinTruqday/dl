@@ -96,13 +96,13 @@ class ToolHarness:
                     attempt=attempt,
                 )
 
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as e:
                 last_error = "The execution of the utility exceeded the maximum allowed processing time and was forcefully terminated"
-                logger.warning("Trí tuệ nhân tạo không phản hồi")
+                logger.warning(f"Trí tuệ nhân tạo không phản hồi: {e}")
 
-            except Exception:
+            except Exception as e:
                 last_error = "The utility encountered an unexpected internal exception during its execution phase"
-                logger.warning("Lỗi thực thi tác vụ AI")
+                logger.warning(f"Lỗi thực thi tác vụ AI: {e}")
 
             if attempt <= definition.max_retries:
                 delay = RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1))

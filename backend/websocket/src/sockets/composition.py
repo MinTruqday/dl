@@ -32,8 +32,8 @@ class CompositionSocket:
                 if connection != sender:
                     try:
                         await connection.send_bytes(message)
-                    except Exception:
-                        logger.error("Lỗi đồng bộ dữ liệu trong không gian cộng tác")
+                    except Exception as e:
+                        logger.error(f"Lỗi đồng bộ dữ liệu trong không gian cộng tác: {e}")
                         dead_connections.append(connection)
             for dead in dead_connections:
                 self.disconnect(dead, room_id)

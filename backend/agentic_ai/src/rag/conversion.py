@@ -72,9 +72,9 @@ class ConversionRag:
             if file_ext in image_exts:
                 return await self._parse_image_with_structure(tmp_path)
             return await self._parse_with_marker(tmp_path)
-        except Exception:
-            logger.error("Lỗi phân tích nội dung tài liệu")
-            return {"error": "Lỗi phân tích cú pháp tài liệu"}
+        except Exception as e:
+            logger.error(f"Lỗi phân tích nội dung tài liệu: {e}")
+            return {"error": f"Lỗi phân tích cú pháp tài liệu: {e}"}
         finally:
             tmp_path.unlink(missing_ok=True)
 
@@ -184,8 +184,8 @@ class ConversionRag:
 
             logger.info("Trích xuất bảng dữ liệu thành công")
             return tables
-        except Exception:
-            logger.error("Lỗi trích xuất bảng dữ liệu")
+        except Exception as e:
+            logger.error(f"Lỗi trích xuất bảng dữ liệu: {e}")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -452,8 +452,8 @@ class ConversionRag:
             logger.info("Lấy nội dung tệp từ kho lưu trữ thành công")
             return data, ext
 
-        except Exception:
-            logger.error("Lỗi kết nối tải tệp")
+        except Exception as e:
+            logger.error(f"Lỗi kết nối tải tệp: {e}")
             return None, ""
 
 

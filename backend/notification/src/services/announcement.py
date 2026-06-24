@@ -84,6 +84,6 @@ class AnnouncementService:
                     f"user_notifications:{data.target_user_id}",
                     json.dumps({"title": data.title, "body": data.body}),
                 )
-            except Exception:
-                logger.error("Lỗi gửi thông báo theo thời gian thực")
+            except Exception as e:
+                logger.error(f"Lỗi gửi thông báo theo thời gian thực: {e}")
         return {"id": notif_id}

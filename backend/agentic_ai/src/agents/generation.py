@@ -18,7 +18,7 @@ class GenerationAgent:
         scan = await security.ascan_input(query)
         if scan.blocked:
             logger.warning("Phát hiện thao tác không hợp lệ")
-            yield "The submitted request violates the security policies and cannot be processed further"
+            yield "Yêu cầu vi phạm chính sách bảo mật và không thể tiếp tục xử lý"
             return
 
         try:
@@ -37,9 +37,9 @@ class GenerationAgent:
                 if chunk.content:
                     yield chunk.content
 
-        except Exception:
-            logger.error("Lỗi tạo nội dung phản hồi")
-            yield "The system encountered an unexpected error during the response generation process and requires you to try again later"
+        except Exception as e:
+            logger.error(f"Lỗi tạo nội dung phản hồi: {e}")
+            yield f"Hệ thống gặp lỗi không mong đợi trong quá trình tạo phản hồi, vui lòng thử lại sau: {e}"
 
 
 response_generator = GenerationAgent()

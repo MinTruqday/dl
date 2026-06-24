@@ -44,8 +44,8 @@ class CtanSource:
 
                     try:
                         await page.wait_for_selector("main", timeout=15000)
-                    except Exception:
-                        logger.warning("Không tìm thấy tài liệu trong danh mục chữ cái")
+                    except Exception as e:
+                        logger.warning(f"Không tìm thấy tài liệu trong danh mục chữ cái: {e}")
                         continue
 
                     book_nodes = await page.query_selector_all(list_css)
@@ -69,8 +69,8 @@ class CtanSource:
                             )
                             await dedup.mark_collected("ctan_url", url)
 
-            except Exception:
-                logger.error("Lỗi lấy danh sách dữ liệu chữ cái")
+            except Exception as e:
+                logger.error(f"Lỗi lấy danh sách dữ liệu chữ cái: {e}")
                 raise
 
     @staticmethod
@@ -144,8 +144,8 @@ class CtanSource:
                 else:
                     logger.warning("Không tìm thấy nút tải xuống trên trang")
 
-            except Exception:
-                logger.error("Lỗi xử lý dữ liệu tệp nén")
+            except Exception as e:
+                logger.error(f"Lỗi xử lý dữ liệu tệp nén: {e}")
                 raise
 
     @staticmethod
@@ -237,8 +237,8 @@ class CtanSource:
                                     md_content += f"## File: {rel_path}\n```latex\n{content}\n```\n\n"
                             except UnicodeDecodeError:
                                 pass
-                            except Exception:
-                                logger.warning("Lỗi đọc tệp tin lồng nhau")
+                            except Exception as e:
+                                logger.warning(f"Lỗi đọc tệp tin lồng nhau: {e}")
 
                 md_filename = f"{slug}_source.md"
                 md_path = os.path.join(temp_base, md_filename)
@@ -255,8 +255,8 @@ class CtanSource:
             else:
                 logger.error("Lỗi tải tệp nén từ máy chủ từ xa")
                 return
-        except Exception:
-            logger.error("Lỗi xử lý tệp nén")
+        except Exception as e:
+            logger.error(f"Lỗi xử lý tệp nén: {e}")
             raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)

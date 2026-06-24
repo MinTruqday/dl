@@ -30,7 +30,7 @@ class HttpCore:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("Paused due to continuous errors")
+            logger.error("Hệ thống tạm dừng hoạt động do phát hiện chuỗi lỗi liên tiếp")
 
     def record_success(self):
         self._failures = 0
@@ -41,7 +41,7 @@ class HttpCore:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info("Recovering operation")
+            logger.info("Hệ thống đang nỗ lực khôi phục lại các thao tác bị gián đoạn")
             self._tripped_at = None
             self._failures = 0
             return False
@@ -82,7 +82,7 @@ class OrchestrationHarness:
         session_id: str,
     ) -> AsyncGenerator[dict, None]:
         if self._circuit_breaker.is_open():
-            logger.error("Paused to prevent overload")
+            logger.error("Đã tạm dừng để tránh quá tải hệ thống")
             yield {
                 "type": "error",
                 "message": "System overloaded, please retry",
@@ -97,7 +97,7 @@ class OrchestrationHarness:
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
-                        logger.info("Session forcefully stopped")
+                        logger.info("Phiên làm việc hiện tại đã bị hệ thống chủ động buộc dừng")
                         yield {"type": "error", "message": "Phiên làm việc đã bị hủy"}
                         return
                     yield event
@@ -106,30 +106,30 @@ class OrchestrationHarness:
             self._circuit_breaker.record_success()
             logger.info("Phiên làm việc hoàn thành không có lỗi")
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.error("Quá thời gian thực thi, phiên làm việc bị hủy")
+            logger.error(f"Quá thời gian thực thi, phiên làm việc bị hủy: {e}")
             yield {
                 "type": "error",
                 "message": "Quá thời gian xử lý yêu cầu",
             }
 
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as e:
             self._close_session(session_id, "cancelled")
-            logger.warning("Đã hủy phiên làm việc")
+            logger.warning(f"Đã hủy phiên làm việc: {e}")
             yield {
                 "type": "error",
                 "message": "Mất kết nối",
             }
 
-        except Exception:
+        except Exception as e:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.error("Lỗi điều phối phiên làm việc")
+            logger.error(f"Lỗi điều phối phiên làm việc: {e}")
             yield {
                 "type": "error",
-                "message": "Orchestration error, please retry",
+                "message": f"Orchestration error, please retry: {e}",
             }
 
     def cancel_session(self, session_id: str):

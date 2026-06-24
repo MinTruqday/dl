@@ -63,8 +63,8 @@ class PasskeyService:
         )
         try:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
-        except Exception:
-            logger.warning("Lỗi lưu trữ tạm thời mã xác thực")
+        except Exception as e:
+            logger.warning(f"Lỗi lưu trữ tạm thời mã xác thực: {e}")
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge, db=db)
         return json.loads(options_to_json(options))
 
@@ -76,8 +76,8 @@ class PasskeyService:
         challenge = None
         try:
             challenge = await AuthenticationRepository.get_redis_passkey_challenge(email)
-        except Exception:
-            logger.warning("Lỗi tải thông tin xác thực")
+        except Exception as e:
+            logger.warning(f"Lỗi tải thông tin xác thực: {e}")
         if not challenge:
             chal_doc = await AuthenticationRepository.get_passkey_challenge(email, db=db)
             if chal_doc:
@@ -111,16 +111,16 @@ class PasskeyService:
                 credential_public_key=base64.b64decode(passkey["public_key"]),
                 credential_current_sign_count=passkey["sign_count"],
             )
-        except Exception:
-            raise HTTPException(status_code=400, detail="Lỗi xác minh mã bảo mật")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Lỗi xác minh mã bảo mật: {e}")
         await AuthenticationRepository.update_passkey_sign_count(
             user["_id"], credential_id_b64, verification.new_sign_count, db=db
         )
         await AuthenticationRepository.delete_passkey_challenge(email, db=db)
         try:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
-        except Exception:
-            logger.error("Lỗi xóa mã xác thực khỏi bộ nhớ")
+        except Exception as e:
+            logger.error(f"Lỗi xóa mã xác thực khỏi bộ nhớ: {e}")
         import httpx
 
         user_doc = None
@@ -171,8 +171,8 @@ class PasskeyService:
 
         try:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
-        except Exception:
-            logger.warning("Lỗi lưu trữ tạm thời mã xác thực")
+        except Exception as e:
+            logger.warning(f"Lỗi lưu trữ tạm thời mã xác thực: {e}")
             
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge, db=db)
 
@@ -187,8 +187,8 @@ class PasskeyService:
         challenge = None
         try:
             challenge = await AuthenticationRepository.get_redis_passkey_challenge(email)
-        except Exception:
-            logger.warning("Lỗi tải thông tin xác thực")
+        except Exception as e:
+            logger.warning(f"Lỗi tải thông tin xác thực: {e}")
             
         if not challenge:
             chal_doc = await AuthenticationRepository.get_passkey_challenge(email, db=db)
@@ -213,7 +213,7 @@ class PasskeyService:
                 expected_rp_id=RP_ID,
             )
         except InvalidRegistrationResponse as e:
-            raise HTTPException(status_code=400, detail=f"Lỗi xác minh mã bảo mật: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Lỗi xác minh mã bảo mật: {e}")
 
         new_passkey = {
             "credential_id": base64.b64encode(verification.credential_id).decode("utf-8"),
@@ -232,7 +232,7 @@ class PasskeyService:
         await AuthenticationRepository.delete_passkey_challenge(email, db=db)
         try:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
-        except Exception:
-            logger.error("Lỗi xóa mã xác thực khỏi bộ nhớ")
+        except Exception as e:
+            logger.error(f"Lỗi xóa mã xác thực khỏi bộ nhớ: {e}")
 
         return {"message": "Đăng ký Passkey thành công"}

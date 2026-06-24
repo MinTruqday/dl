@@ -14,6 +14,6 @@ async def editor_websocket(websocket: WebSocket, document_id: str):
             await composition_socket_manager.broadcast(data, document_id, websocket)
     except WebSocketDisconnect:
         composition_socket_manager.disconnect(websocket, document_id)
-    except Exception:
-        logger.error("Lỗi kết nối dữ liệu theo thời gian thực")
+    except Exception as e:
+        logger.error(f"Lỗi kết nối dữ liệu theo thời gian thực: {e}")
         composition_socket_manager.disconnect(websocket, document_id)

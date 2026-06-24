@@ -16,8 +16,8 @@ logger.add(
     level="INFO",
 )
 
-from src.api.session import router as editor
-from src.api.session import router as editorjs
+from src.api.composition import router as editor
+from src.api.composition import router as editorjs
 from src.api.latex import router as latex
 
 from shared.infrastructure.configuration import settings

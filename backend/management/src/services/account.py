@@ -133,9 +133,9 @@ class AccountService:
                         },
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
-        except Exception:
-            logger.warning("Lỗi gửi thông báo bên ngoài")
-        logger.info("Gửi cảnh báo vi phạm thành công")
+        except Exception as e:
+            logger.warning(f"Không thể gửi thông báo cảnh báo qua hệ thống bên ngoài: {e}")
+        logger.info("Cảnh báo vi phạm đã được ghi nhận vào hệ thống thành công")
         return {"message": "Gửi cảnh báo quản trị thành công"}
 
     @staticmethod
@@ -277,8 +277,8 @@ class AccountService:
                 match_query["created_at"] = {
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
-            except ValueError:
-                logger.warning("Lỗi định dạng phân trang")
+            except ValueError as e:
+                logger.warning(f"Lỗi định dạng phân trang: {e}")
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
             pipeline.append({"$skip": skip})

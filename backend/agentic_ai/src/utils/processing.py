@@ -27,6 +27,6 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
         os.remove(tmp_path)
         logger.info("Trích xuất văn bản thành công")
         return full_text
-    except Exception:
-        logger.error("Lỗi trích xuất văn bản từ tệp tin")
+    except Exception as e:
+        logger.error(f"Lỗi trích xuất văn bản từ tệp tin: {e}")
         return ""

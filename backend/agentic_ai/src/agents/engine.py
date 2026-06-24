@@ -55,8 +55,8 @@ class EngineAgent:
             for res in results:
                 formatted += f"- {res.get('title')} {res.get('body')}\n  Source link {res.get('href')}\n"
             return formatted
-        except Exception:
-            logger.error("Fallback search failed")
+        except Exception as e:
+            logger.error(f"Quá trình tìm kiếm bằng công cụ dự phòng đã thất bại: {e}")
             return ""
 
     async def execute(self, query: str) -> str:
@@ -64,7 +64,7 @@ class EngineAgent:
 
         if _is_ssrf_attempt(query):
             logger.warning("Ngăn chặn yêu cầu mạng trái phép")
-            return "Request blocked: violates security protocols"
+            return "Yêu cầu bị hệ thống từ chối do vi phạm nghiêm trọng các quy tắc bảo mật an toàn thông tin"
 
         if self.api_key_valid:
             try:
@@ -72,16 +72,16 @@ class EngineAgent:
                 if result:
                     return result
                 logger.warning("Đang chuyển sang công cụ tìm kiếm thay thế")
-            except Exception:
+            except Exception as e:
                 logger.warning(
-                    "Lỗi công cụ tìm kiếm chính, đang sử dụng máy chủ dự phòng"
+                    f"Hệ thống tra cứu chính gặp sự cố kết nối, tự động chuyển hướng sang cụm máy chủ dự phòng: {e}"
                 )
 
         result = await self._duckduckgo_search(query)
         if result:
             return result
 
-        return "No relevant info found from search sources"
+        return "Hệ thống không thể trích xuất được bất kỳ thông tin nào có giá trị từ các nguồn dữ liệu tra cứu"
 
 
 search_engine = EngineAgent()

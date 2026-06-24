@@ -180,8 +180,8 @@ async def download_zip(
                         )
                         file_data = await resp["Body"].read()
                         zip_file.writestr(item.name, file_data)
-                    except Exception:
-                        logger.warning("Lỗi tải tệp nén")
+                    except Exception as e:
+                        logger.warning(f"Lỗi tải tệp nén: {e}")
     zip_buffer.seek(0)
     return StreamingResponse(
         zip_buffer,

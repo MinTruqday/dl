@@ -48,8 +48,8 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                             "answer": "The requested document either does not exist or requires additional access permissions",
                             "route": "error",
                         }
-                except Exception:
-                    logger.error("Lỗi xác minh quyền truy cập tài liệu")
+                except Exception as e:
+                    logger.error(f"Lỗi xác minh quyền truy cập tài liệu: {e}")
                     return {
                         "answer": "The system is currently unable to verify the document access permissions",
                         "route": "error",
@@ -98,8 +98,8 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             "answer": final_answer or "Đã xảy ra lỗi, vui lòng thử lại sau",
             "route": "agentic_ai",
         }
-    except Exception:
-        logger.exception("Lỗi thực thi quy trình AI")
+    except Exception as e:
+        logger.exception(f"Lỗi thực thi quy trình AI: {e}")
         return {
             "answer": "Đã xảy ra lỗi, vui lòng thử lại sau",
             "route": "error",
@@ -152,9 +152,9 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             yield f"event: message\ndata: {json.dumps({'chunk': 'The requested document either does not exist or requires additional access permissions'})}\n\n"
                             agentops.record_session_end(session_id, "failed")
                             return
-                    except Exception:
-                        logger.error("Lỗi xác minh quyền truy cập tài liệu")
-                        yield f"event: message\ndata: {json.dumps({'chunk': 'The system is currently unable to verify the document access permissions'})}\n\n"
+                    except Exception as e:
+                        logger.error(f"Lỗi xác minh quyền truy cập tài liệu: {e}")
+                        yield f"event: message\ndata: {json.dumps({'chunk': 'The system is currently unable to verify the document access permissions'})}\n\n: {e}"
                         agentops.record_session_end(session_id, "failed")
                         return
 
@@ -272,10 +272,10 @@ async def stream_endpoint(req: ChatRequest, request: Request):
 
             agentops.record_session_end(session_id, "done")
 
-        except Exception:
-            logger.error("Lỗi thực thi luồng trí tuệ nhân tạo")
+        except Exception as e:
+            logger.error(f"Lỗi thực thi luồng trí tuệ nhân tạo: {e}")
             agentops.record_session_end(session_id, "failed")
-            yield f"event: message\ndata: {json.dumps({'chunk': 'The system encountered an unexpected issue and requires you to try again later'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'The system encountered an unexpected issue and requires you to try again later'})}\n\n: {e}"
 
         yield "event: done\ndata: [DONE]\n\n"
 

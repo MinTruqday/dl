@@ -51,8 +51,8 @@ async def _check_quota(current_user: CurrentUser):
             return resp.json().get("data", {})
     except HTTPException:
         raise
-    except Exception:
-        logger.error("Lỗi kiểm tra dung lượng sử dụng")
+    except Exception as e:
+        logger.error(f"Lỗi kiểm tra dung lượng sử dụng: {e}")
         return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
 
 
@@ -71,8 +71,8 @@ async def _consume_quota(
                 },
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
-    except Exception:
-        logger.error("Lỗi trừ dung lượng đã sử dụng")
+    except Exception as e:
+        logger.error(f"Lỗi trừ dung lượng đã sử dụng: {e}")
 
 
 async def _chat_direct(
@@ -89,9 +89,9 @@ async def _chat_direct(
             temperature=temperature,
         )
         return response.choices[0].message.content
-    except Exception:
-        logger.error("Lỗi tạo văn bản tự động")
-        raise Exception("Đã xảy ra lỗi, vui lòng thử lại sau")
+    except Exception as e:
+        logger.error(f"Quá trình AI tự động tổng hợp văn bản đã bị gián đoạn do lỗi: {e}")
+        raise Exception(f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}")
 
 
 async def _run_ai_with_quota(
@@ -124,9 +124,9 @@ async def generate_text(
             temperature=req.temperature,
         )
         return {"result": result}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -145,9 +145,9 @@ async def translate_text(
             temperature=0.1,
         )
         return {"translation": result.strip()}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -166,9 +166,9 @@ async def generate_code(
             temperature=0.2,
         )
         return {"code": result.strip()}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -203,9 +203,9 @@ async def grammar_check(
             "score": grammar_score,
             "message": "Hoàn tất kiểm tra ngữ pháp",
         }
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -224,9 +224,9 @@ async def summarize_text(
             temperature=0.3,
         )
         return {"summary": result.strip()}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -283,8 +283,8 @@ async def check_plagiarism(
             json_match = re.search(r"\{.*\}", result, re.DOTALL)
             if json_match:
                 return json_mod.loads(json_match.group())
-        except Exception:
-            logger.warning("Lỗi định dạng dữ liệu kiểm tra đạo văn")
+        except Exception as e:
+            logger.warning(f"Lỗi định dạng dữ liệu kiểm tra đạo văn: {e}")
 
         max_score = max([m["score"] for m in significant_matches]) * 100
         return {
@@ -295,10 +295,10 @@ async def check_plagiarism(
             "message": "Phát hiện nội dung trùng lặp",
             "matches": significant_matches[:3],
         }
-    except Exception:
-        logger.error("Lỗi kiểm tra đạo văn")
+    except Exception as e:
+        logger.error(f"Lỗi kiểm tra đạo văn: {e}")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -336,10 +336,10 @@ async def unified_action(
             temperature=0.3,
         )
         return {"result": result.strip()}
-    except Exception:
-        logger.error("Lỗi thực thi tác vụ AI")
+    except Exception as e:
+        logger.error(f"Lỗi thực thi tác vụ AI: {e}")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -365,9 +365,9 @@ async def get_synonyms(
             temperature=0.5,
         )
         return {"synonyms": [s.strip() for s in result.split(",")]}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -408,9 +408,9 @@ async def suggest_citations(
             temperature=0.3,
         )
         return {"citations": result.strip()}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -439,9 +439,9 @@ async def transform_tone(
             temperature=0.4,
         )
         return {"transformed_text": result.strip()}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -474,9 +474,9 @@ async def peer_review(
             temperature=0.2,
         )
         return {"review_report": result.strip()}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -508,9 +508,9 @@ async def multi_doc_synthesis(
             temperature=0.3,
         )
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau"
+            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
 
@@ -528,10 +528,10 @@ async def extract_text(req: dict, current_user: CurrentUser = Depends(get_curren
         extracted_text = await ingestion_pipeline._extract_text(file_url)
 
         return {"extracted_text": extracted_text}
-    except Exception:
-        logger.error("Lỗi trích xuất dữ liệu")
+    except Exception as e:
+        logger.error(f"Lỗi trích xuất dữ liệu: {e}")
         raise HTTPException(
-            status_code=500, detail="Không thể trích xuất văn bản từ nguồn cung cấp"
+            status_code=500, detail=f"Không thể trích xuất văn bản từ nguồn cung cấp: {e}"
         )
 
 
@@ -563,9 +563,9 @@ async def analyze_document(
             return json_mod.loads(json_match.group())
         else:
             raise ValueError("Mô hình ngôn ngữ trả về sai định dạng")
-    except Exception:
-        logger.error("Lỗi phân tích tài liệu")
-        raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
+    except Exception as e:
+        logger.error(f"Lỗi phân tích tài liệu: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi phân tích tài liệu: {e}")
 
 
 @router.delete("/vector/{document_id}")
@@ -575,6 +575,6 @@ async def delete_vector_document(document_id: str):
 
         await vector_store.delete_by_document(document_id)
         return {"status": "success", "message": "Xóa chỉ mục tài liệu thành công"}
-    except Exception:
-        logger.error("Lỗi xóa chỉ mục tài liệu")
-        raise HTTPException(status_code=500, detail="Lỗi xóa dữ liệu chỉ mục tài liệu")
+    except Exception as e:
+        logger.error(f"Lỗi xóa chỉ mục tài liệu: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi xóa dữ liệu chỉ mục tài liệu: {e}")

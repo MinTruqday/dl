@@ -34,20 +34,20 @@ async def managed_browser(headless=True):
             ],
         )
         yield browser
-    except Exception:
-        logger.error("Lỗi khởi tạo trình duyệt tự động")
+    except Exception as e:
+        logger.error(f"Lỗi khởi tạo trình duyệt tự động: {e}")
         raise
     finally:
         if browser:
             try:
                 await browser.close()
-            except Exception:
-                logger.warning("Lỗi dọn dẹp trình duyệt tự động")
+            except Exception as e:
+                logger.warning(f"Lỗi dọn dẹp trình duyệt tự động: {e}")
         if playwright:
             try:
                 await playwright.stop()
-            except Exception:
-                logger.warning("Lỗi dừng tác vụ xuất hình ảnh")
+            except Exception as e:
+                logger.warning(f"Lỗi dừng tác vụ xuất hình ảnh: {e}")
 
 
 async def get_stealth_context(browser):
@@ -76,10 +76,10 @@ async def download_file_with_retry(
                         return True
                     else:
                         logger.error("Lỗi kết nối mạng từ xa")
-        except Exception:
-            logger.warning("Mất kết nối mạng khi tải, đang thử lại")
+        except Exception as e:
+            logger.warning(f"Mất kết nối mạng khi tải, đang thử lại: {e}")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2**attempt)
             else:
-                logger.error("Lỗi tải xuống tệp sau nhiều lần thử lại")
+                logger.error(f"Lỗi tải xuống tệp sau nhiều lần thử lại: {e}")
     return False

@@ -67,20 +67,20 @@ class LatexEngine:
             with open(pdf_path, "rb") as f:
                 return f.read()
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             if process:
                 try:
                     process.kill()
-                except Exception:
-                    logger.warning("Lỗi dừng tác vụ biên dịch")
+                except Exception as e:
+                    logger.warning(f"Lỗi dừng tác vụ biên dịch: {e}")
             raise Exception("Hết thời gian chờ quá trình biên dịch tài liệu")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
-                except Exception:
-                    logger.warning("Lỗi dọn dẹp tệp tạm thời")
+                except Exception as e:
+                    logger.warning(f"Lỗi dọn dẹp tệp tạm thời: {e}")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -114,8 +114,8 @@ class LatexEngine:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
-                except Exception:
-                    logger.warning("Lỗi dọn dẹp tệp tạm thời")
+                except Exception as e:
+                    logger.warning(f"Lỗi dọn dẹp tệp tạm thời: {e}")
 
     @staticmethod
     def format_latex(content: str) -> dict:

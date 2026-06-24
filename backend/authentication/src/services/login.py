@@ -63,9 +63,9 @@ class SessionService:
                 elif resp.status_code not in (200, 201):
                     raise HTTPException(status_code=500, detail="Lỗi kết nối tài khoản")
                 user_id = resp.json().get("data", {}).get("user_id")
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise HTTPException(
-                status_code=500, detail="Lỗi kết nối quản lý người dùng"
+                status_code=500, detail=f"Lỗi kết nối quản lý người dùng: {e}"
             )
 
         auth_cred = {
@@ -212,8 +212,8 @@ class SessionService:
             )
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
-            except Exception:
-                logger.error("Lỗi gửi email khôi phục mật khẩu")
+            except Exception as e:
+                logger.error(f"Lỗi gửi email khôi phục mật khẩu: {e}")
         return {"status": "ok", "message": "Đang xử lý yêu cầu khôi phục mật khẩu"}
 
     @staticmethod
@@ -357,9 +357,9 @@ class SessionService:
                     }
                     await AuthenticationRepository.create_auth_credential(auth_cred, db=db)
                     user_doc = {"_id": user_id, "email": email, "is_active": True}
-            except httpx.RequestError:
+            except httpx.RequestError as e:
                 raise HTTPException(
-                    status_code=500, detail="Lỗi kết nối quản lý người dùng"
+                    status_code=500, detail=f"Lỗi kết nối quản lý người dùng: {e}"
                 )
             logger.info("Tự động tạo tài khoản liên kết thành công")
         return await SessionService.issue_token_for_user(user_doc, client_ip)

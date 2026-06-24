@@ -14,7 +14,7 @@ from shared.infrastructure.configuration import settings
 from shared.repositories.base_repository import RepositoryFactory
 
 
-class SessionService:
+class CompositionService:
 
     @staticmethod
     async def export_to_format(
@@ -37,13 +37,13 @@ class SessionService:
                         status_code=422, detail="Lỗi xuất định dạng tài liệu"
                     )
                 return response.content
-        except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail="Quá thời gian xuất tài liệu")
+        except httpx.TimeoutException as e:
+            raise HTTPException(status_code=408, detail=f"Quá thời gian xuất tài liệu: {e}")
         except HTTPException:
             raise
-        except Exception:
-            logger.error("Lỗi chuyển đổi khi xuất tài liệu")
-            raise HTTPException(status_code=500, detail="Lỗi xuất tài liệu")
+        except Exception as e:
+            logger.error(f"Lỗi chuyển đổi khi xuất tài liệu: {e}")
+            raise HTTPException(status_code=500, detail=f"Lỗi xuất tài liệu: {e}")
 
     @staticmethod
     async def compile_editorjs_to_pdf(
@@ -64,16 +64,16 @@ class SessionService:
                         status_code=422, detail="Lỗi biên dịch tài liệu"
                     )
                 return response.content
-        except httpx.TimeoutException:
+        except httpx.TimeoutException as e:
             raise HTTPException(
                 status_code=408,
-                detail="Quá thời gian chờ, quá trình biên dịch tài liệu bị hủy",
+                detail=f"Quá thời gian chờ, quá trình biên dịch tài liệu bị hủy: {e}",
             )
         except HTTPException:
             raise
-        except Exception:
-            logger.error("Lỗi quá trình biên dịch tài liệu")
-            raise HTTPException(status_code=500, detail="Lỗi biên dịch tài liệu")
+        except Exception as e:
+            logger.error(f"Lỗi quá trình biên dịch tài liệu: {e}")
+            raise HTTPException(status_code=500, detail=f"Lỗi biên dịch tài liệu: {e}")
 
     @staticmethod
     async def sync_keystroke_buffer(
@@ -89,9 +89,9 @@ class SessionService:
                     f"editor_snapshot:{document_id}", user_id, str(payload)
                 )
             return {"status": "synced_cache", "timestamp": payload.get("timestamp")}
-        except Exception:
-            logger.error("Lỗi đồng bộ hóa dữ liệu bộ nhớ đệm")
-            return {"status": "sync_failed", "error": "Lỗi đồng bộ hóa dữ liệu"}
+        except Exception as e:
+            logger.error(f"Lỗi đồng bộ hóa dữ liệu bộ nhớ đệm: {e}")
+            return {"status": "sync_failed", "error": f"Lỗi đồng bộ hóa dữ liệu: {e}"}
 
     @staticmethod
     async def add_inline_suggestion(
@@ -208,8 +208,8 @@ class SessionService:
                     )
                 if "data" in block and "text" in block["data"]:
                     words += len(str(block["data"]["text"]).split())
-        except Exception:
-            logger.error("Lỗi cấu trúc khi phân tích bản nháp")
+        except Exception as e:
+            logger.error(f"Lỗi cấu trúc khi phân tích bản nháp: {e}")
 
         reading_time_minutes = max(1, words // 200)
         await RepositoryFactory.get("documents").update_one(

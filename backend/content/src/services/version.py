@@ -21,7 +21,7 @@ class VersionService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         await RepositoryFactory.get("document_versions").insert_one(
             {
                 "document_id": document_id,

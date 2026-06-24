@@ -96,12 +96,12 @@ async def agent_summarize_long_document(document_id: str, config: dict) -> str:
 
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "AuthenticationRepository required"
+        return "Bạn cần phải xác thực danh tính để tiếp tục"
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Document content not found"
+        return "Phần nội dung thực tế của tài liệu hiện không khả dụng"
 
     res = await map_reduce_app.ainvoke(
         {"document_text": text, "chunks": [], "summaries": [], "final_summary": ""}
     )
-    return f"The complete document summary was successfully generated\n\n{res['final_summary']}"
+    return f"Đã tổng hợp tài liệu thành công\n\n{res['final_summary']}"

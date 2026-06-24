@@ -1,9 +1,9 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Response, HTTPException
-from src.api.dependency import get_current_user, get_db
-from src.services.document import DocumentService
-from src.services.export import ExportService
+from shared.dependency import get_current_user, get_db
+
+from src.services.watermark import WatermarkService
 
 from shared.response import APIResponse
 from shared.dependency import CurrentUser, Role
@@ -11,26 +11,24 @@ from shared.dependency import CurrentUser, Role
 router = APIRouter(prefix="/ket-xuat")
 
 
-@router.get("/{document_id}/pdf")
+@router.get("/{document_id}/drm")
 async def export_document_pdf(
     document_id: str,
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    pdf_content = await ExportService.export_document_pdf_watermarked(
+    pdf_content = await WatermarkService.export_document_pdf_watermarked(
         document_id, current_user, db=db
     )
     headers = {
-        "Content-Disposition": 'attachment; filename="Document_Export_Watermarked.pdf"'
+        "Content-Disposition": 'attachment; filename="TaiLieuBaoMat.doclib"'
     }
     return Response(
-        content=pdf_content, media_type="application/pdf", headers=headers
+        content=pdf_content, media_type="application/octet-stream", headers=headers
     )
 
 
-from pydantic import BaseModel
-class TextPayload(BaseModel):
-    text: str
+from src.schemas.watermark import TextPayload
 
 @router.post("/giai-ma-truy-vet")
 async def verify_document_watermark(
@@ -40,7 +38,7 @@ async def verify_document_watermark(
     if current_user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Chỉ quản trị viên mới có quyền giải mã truy vết")
     
-    user_id = await ExportService.verify_watermark(payload.text)
+    user_id = await WatermarkService.verify_watermark(payload.text)
     if user_id:
         return APIResponse(
             data={"user_id": user_id},

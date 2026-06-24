@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter
 from loguru import logger
-from src.schemas.session import (
+from src.schemas.composition import (
     AutoSaveRequest,
     FindReplaceRequest,
     InlineCommentRequest,
@@ -12,7 +12,7 @@ from src.schemas.session import (
     ResolveSuggestionRequest,
     VersionDiffRequest,
 )
-from src.services.session import SessionService
+from src.services.composition import CompositionService
 
 from shared.infrastructure.configuration import settings
 from shared.dependency import AuthenticatedUser, Depends, Header, HTTPException
@@ -40,7 +40,7 @@ async def sync_keystroke_buffer(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await SessionService.sync_keystroke_buffer(
+        "data": await CompositionService.sync_keystroke_buffer(
             document_id, payload.model_dump(), current_user
         ),
         "message": "Đồng bộ hóa dữ liệu chỉnh sửa thành công",
@@ -55,7 +55,7 @@ async def add_inline_suggestion(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await SessionService.add_inline_suggestion(
+        "data": await CompositionService.add_inline_suggestion(
             document_id, payload.model_dump(), current_user
         ),
         "message": "Ghi nhận đề xuất chỉnh sửa thành công",
@@ -70,7 +70,7 @@ async def resolve_suggestion(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await SessionService.resolve_suggestion(
+        "data": await CompositionService.resolve_suggestion(
             suggestion_id, payload.model_dump(), current_user
         ),
         "message": "Xử lý đề xuất chỉnh sửa thành công",
@@ -83,7 +83,7 @@ async def sync_pomodoro_session(
     payload: PomodoroSyncRequest, current_user=Depends(get_current_user)
 ):
     return {
-        "data": await SessionService.sync_pomodoro_session(
+        "data": await CompositionService.sync_pomodoro_session(
             payload.model_dump(), current_user
         ),
         "message": "Đồng bộ dữ liệu phiên tập trung thành công",
@@ -96,7 +96,7 @@ async def auto_save_draft(
     document_id: str, payload: AutoSaveRequest, current_user=Depends(get_current_user)
 ):
     return {
-        "data": await SessionService.auto_save_draft(
+        "data": await CompositionService.auto_save_draft(
             document_id, payload.content, current_user
         ),
         "message": "Lưu bản nháp thành công",
@@ -107,7 +107,7 @@ async def auto_save_draft(
 @router.post("/{document_id}/gui-danh-gia")
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
-        "data": await SessionService.submit_for_review(document_id, current_user),
+        "data": await CompositionService.submit_for_review(document_id, current_user),
         "message": "Đã đưa tài liệu vào hàng đợi xét duyệt",
         "status": 201,
     }
@@ -120,7 +120,7 @@ async def global_find_replace(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await SessionService.global_find_replace(
+        "data": await CompositionService.global_find_replace(
             document_id,
             payload.search,
             payload.replace,
@@ -142,7 +142,7 @@ async def add_inline_comment(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await SessionService.add_inline_comment(
+        "data": await CompositionService.add_inline_comment(
             document_id, payload.model_dump(), current_user
         ),
         "message": "Thêm bình luận ngữ cảnh thành công",
@@ -153,7 +153,7 @@ async def add_inline_comment(
 @router.get("/{document_id}/binh-luan")
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
-        "data": await SessionService.get_inline_comments(document_id, current_user),
+        "data": await CompositionService.get_inline_comments(document_id, current_user),
         "message": "Lấy bình luận trực tiếp thành công",
         "status": 200,
     }
@@ -162,7 +162,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
 @router.put("/binh-luan/{comment_id}/giai-quyet")
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
-        "data": await SessionService.resolve_comment(comment_id, current_user),
+        "data": await CompositionService.resolve_comment(comment_id, current_user),
         "message": "Người dùng đã giải quyết bình luận",
         "status": 200,
     }
@@ -175,7 +175,7 @@ async def get_version_diff(
     current_user=Depends(get_current_user),
 ):
     return {
-        "data": await SessionService.get_version_diff(
+        "data": await CompositionService.get_version_diff(
             document_id, payload.version_id_a, payload.version_id_b, current_user
         ),
         "message": "Phân tích so sánh các phiên bản tài liệu thành công",
