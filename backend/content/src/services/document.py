@@ -25,7 +25,7 @@ from src.core.infrastructure.database import database
 from src.core.storage import upload_file
 from src.repositories.document import DocumentRepository
 from src.repositories.document import DocumentRepository
-from src.repositories.copyright import CopyrightDisputeRepository
+
 
 
 def serialize_document(document):
@@ -820,24 +820,7 @@ class DocumentService:
         logger.info("Ghi nhận quyết định kiểm duyệt tài liệu thành công")
         return {"message": "Cập nhật trạng thái kiểm duyệt tài liệu thành công"}
 
-    @staticmethod
-    async def resolve_copyright_dispute(
-        dispute_id: str, resolution: str, current_user
-    ) -> dict:
-        db = database.mongodb.get_default_database()
-        await CopyrightDisputeRepository.update_one(
-            {"_id": dispute_id},
-            {
-                "$set": {
-                    "status": "resolved",
-                    "resolution": resolution,
-                    "resolved_by": str(current_user.id),
-                    "resolved_at": datetime.now(timezone.utc),
-                }
-            },
-        )
-        logger.info("Giải quyết tranh chấp bản quyền thành công")
-        return {"message": "Đã giải quyết tranh chấp bản quyền"}
+
 
     @staticmethod
     async def get_trending_tags(

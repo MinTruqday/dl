@@ -49,7 +49,7 @@ class ContextHarness:
             try:
                 import redis.asyncio as aioredis
 
-                from shared.infrastructure.configuration import settings
+                from src.core.infrastructure.configuration import settings
 
                 self._redis_client = aioredis.from_url(
                     settings.REDIS_URI, decode_responses=True

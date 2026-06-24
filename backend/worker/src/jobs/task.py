@@ -46,7 +46,7 @@ celery_app.conf.task_queues = (
 def hard_delete_document_task(document_id: str, user_id: str):
     logger.info("Đang bắt đầu quá trình xóa vĩnh viễn tài liệu")
     try:
-        from shared.infrastructure.database import database
+        from src.core.infrastructure.database import database
 
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:

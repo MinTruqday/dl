@@ -29,14 +29,14 @@ app.include_router(message_socket)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng tin nhắn đã sẵn sàng")
-    from shared.infrastructure.database import init_db
+    from src.core.infrastructure.database import init_db
 
     await init_db()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    from shared.infrastructure.database import close_db
+    from src.core.infrastructure.database import close_db
 
     await close_db()
 

@@ -5,7 +5,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
 
-class AuthenticationRepository:
+class IdentityRepository:
     @staticmethod
     async def get_system_config(db=None) -> Optional[Dict[str, Any]]:
         if db is None:

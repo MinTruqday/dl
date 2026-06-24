@@ -10,6 +10,14 @@ import json
 import os
 from typing import Tuple, List
 
+@dataclass
+class ScanResult:
+    passed: bool
+    risk_score: float
+    sanitized_text: str
+    blocked: bool = False
+    violations: List[str] = field(default_factory=list)
+
 class SecurityHarness:
     def __init__(self):
         pass
@@ -18,7 +26,7 @@ class SecurityHarness:
         from huggingface_hub import AsyncInferenceClient
         from langchain_core.messages import HumanMessage
         from src.utils.huggingface import HFInferenceChat
-        from shared.infrastructure.configuration import settings
+        from src.core.infrastructure.configuration import settings
         from src.schemas.model import SecurityEvaluation
         from src.core.registry import PromptType, registry
         
@@ -76,7 +84,7 @@ class SecurityHarness:
                 blocked=True,
                 risk_score=risk_score,
                 sanitized_text=sanitized,
-                violations=all_violations,
+                violations=violations,
             )
 
         if pii_violations:
@@ -87,7 +95,7 @@ class SecurityHarness:
             blocked=False,
             risk_score=risk_score,
             sanitized_text=sanitized,
-            violations=all_violations,
+            violations=violations,
         )
 
     async def ascan_output(self, text: str, session_id: str = "") -> str:

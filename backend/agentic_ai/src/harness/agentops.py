@@ -51,7 +51,7 @@ class AgentopsHarness:
             try:
                 from motor.motor_asyncio import AsyncIOMotorClient
 
-                from shared.infrastructure.configuration import settings
+                from src.core.infrastructure.configuration import settings
 
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()

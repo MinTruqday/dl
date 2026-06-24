@@ -23,7 +23,7 @@ router = APIRouter(prefix="/nguoi-dung")
 @router.get(
     "",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_all_users(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -39,7 +39,7 @@ async def get_all_users(
 @router.put(
     "/{user_id}/vai-tro",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def update_user_role(user_id: str, req: UpdateRoleRequest, db=Depends(get_db)):
     return APIResponse(
@@ -51,7 +51,7 @@ async def update_user_role(user_id: str, req: UpdateRoleRequest, db=Depends(get_
 @router.put(
     "/{user_id}/trang-thai",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def update_user_status(
     user_id: str, req: UpdateStatusRequest, db=Depends(get_db)
@@ -65,7 +65,7 @@ async def update_user_status(
 @router.post(
     "/{user_id}/canh-bao",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def warn_user(
     user_id: str,
@@ -82,7 +82,7 @@ async def warn_user(
 @router.post(
     "/{user_id}/khoa",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def lock_user(
     user_id: str,
@@ -101,7 +101,7 @@ async def lock_user(
 @router.post(
     "/{user_id}/cam-ngam",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def shadowban_user(
     user_id: str,
@@ -118,7 +118,7 @@ async def shadowban_user(
 @router.get(
     "/{user_id}/ghi-chu",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_notes(user_id: str, db=Depends(get_db)):
     return APIResponse(
@@ -130,7 +130,7 @@ async def get_notes(user_id: str, db=Depends(get_db)):
 @router.post(
     "/{user_id}/ghi-chu",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def add_note(
     user_id: str,

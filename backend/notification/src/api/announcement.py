@@ -78,7 +78,7 @@ async def update_settings(
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    from shared.repositories.database import NotificationRepository
+    from src.core.repositories.database import NotificationRepository
     await NotificationRepository.update_user_announcement_status(
         {"_id": current_user.id}, 
         {"$set": {"notification_settings": settings}}

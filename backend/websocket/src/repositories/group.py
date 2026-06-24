@@ -11,3 +11,7 @@ class GroupRepository:
     @classmethod
     async def find_one(cls, *args, **kwargs):
         return await cls._get_db()['chat_groups'].find_one(*args, **kwargs)
+
+    @classmethod
+    def find(cls, query: Dict[str, Any]):
+        return cls._get_db()['chat_groups'].find(query)

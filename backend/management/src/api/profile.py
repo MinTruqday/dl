@@ -108,7 +108,7 @@ async def update_settings(
 @router.get(
     "/xuat-du-lieu",
     response_model=Any,
-    dependency=[Depends(RateLimiting(calls=2, period=3600))],
+    dependencies=[Depends(RateLimiting(calls=2, period=3600))],
 )
 async def request_data_export(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)

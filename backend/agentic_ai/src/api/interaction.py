@@ -2,7 +2,7 @@ import json
 
 import httpx
 from fastapi import APIRouter, Request
-from fastapi.response import StreamingResponse
+from fastapi.responses import StreamingResponse
 from loguru import logger
 from src.agents.route import semantic_router
 from src.core.registry import PromptType, registry
@@ -66,7 +66,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 from langchain_core.messages import HumanMessage
                 from src.utils.huggingface import HFInferenceChat
 
-                from shared.infrastructure.configuration import settings
+                from src.core.infrastructure.configuration import settings
 
                 llama_client = AsyncInferenceClient(
                     model=settings.LLAMA_MODEL, token=settings.HF_TOKEN
@@ -182,7 +182,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     from langchain_core.messages import HumanMessage
                     from src.utils.huggingface import HFInferenceChat
 
-                    from shared.infrastructure.configuration import settings
+                    from src.core.infrastructure.configuration import settings
 
                     llama_client = AsyncInferenceClient(
                         model=settings.LLAMA_MODEL, token=settings.HF_TOKEN

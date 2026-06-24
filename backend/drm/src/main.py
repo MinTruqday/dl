@@ -9,6 +9,7 @@ from src.core.infrastructure.database import close_db, init_db
 
 from src.api.license import router as license_router
 from src.api.watermark import router as watermark_router
+from src.api.copyright import router as copyright_router
 
 logger.remove()
 logger.add(
@@ -31,6 +32,7 @@ app.add_middleware(
 
 app.include_router(license_router)
 app.include_router(watermark_router)
+app.include_router(copyright_router)
 
 @app.on_event("startup")
 async def startup_event():

@@ -160,8 +160,8 @@ async def download_zip(
 
     from fastapi.response import StreamingResponse
 
-    from shared.infrastructure.configuration import settings
-    from shared.storage import get_storage_client
+    from src.core.infrastructure.configuration import settings
+    from src.core.storage import get_storage_client
 
     item_ids = [i.strip() for i in ids.split(",") if i.strip()]
     if not item_ids:

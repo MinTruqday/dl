@@ -111,7 +111,7 @@ services:
       - AGENTIC_AI_URL=${AGENTIC_AI_URL}
       - NOTIFICATION_URL=${NOTIFICATION_URL}
       - AUTHENTICATION_URL=${AUTHENTICATION_URL}
-      - MESSAGE_URL=${MESSAGE_URL}
+      - MESSAGING_URL=${MESSAGING_URL}
       - COLLECTION_URL=${COLLECTION_URL}
       - COMPILATION_URL=${COMPILATION_URL}
       - WEBSOCKET_URL=${WEBSOCKET_URL}
@@ -388,11 +388,11 @@ services:
     networks:
       - doclib_network
 
-  message:
+  messaging:
     build:
       context: ./backend
-      dockerfile: ./message/Dockerfile
-    container_name: doclib_message
+      dockerfile: ./messaging/Dockerfile
+    container_name: doclib_messaging
     restart: always
     ports:
       - "8100:8100"
@@ -403,13 +403,13 @@ services:
     env_file:
       - .env
     environment:
-      - SERVICE_DB_NAME=doclib_message
+      - SERVICE_DB_NAME=doclib_messaging
     depends_on:
       - mongodb
       - redis
       - rabbitmq
     volumes:
-      - ./backend/message/src:/app/src
+      - ./backend/messaging/src:/app/src
       - ./backend/logs/messaging:/app/logs
     networks:
       - doclib_network
@@ -424,7 +424,7 @@ services:
       - "8450:8450"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.content.rule=PathPrefix(`/ban-nhap`) || PathPrefix(`/cong-tac`) || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`) || PathPrefix(`/ghim`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/kham-pha`) || PathPrefix(`/luu-tru`) || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-len`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`) || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`) || PathPrefix(`/danh-gia`) || PathPrefix(`/tai-len`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/cam-quyen-nhap-lieu`) || PathPrefix(`/luu-tru`) || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`) || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`) || PathPrefix(`/tai-lieu-hieu`)"
+      - "traefik.http.routers.content.rule=PathPrefix(`/ban-nhap`) || PathPrefix(`/cong-tac`) || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`) || PathPrefix(`/ghim`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/kham-pha`) || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`) || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`) || PathPrefix(`/danh-gia`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/cam-quyen-nhap-lieu`) || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`) || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`) || PathPrefix(`/tai-lieu-hieu`)"
       - "traefik.http.services.content.loadbalancer.server.port=8450"
     env_file:
       - .env
@@ -438,6 +438,33 @@ services:
     volumes:
       - ./backend/content/src:/app/src
       - ./backend/logs/content:/app/logs
+    networks:
+      - doclib_network
+
+  cloud:
+    build:
+      context: ./backend
+      dockerfile: ./cloud/Dockerfile
+    container_name: doclib_cloud
+    restart: always
+    ports:
+      - "8700:8700"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`)"
+      - "traefik.http.services.cloud.loadbalancer.server.port=8700"
+    env_file:
+      - .env
+    environment:
+      - SERVICE_DB_NAME=doclib_cloud
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+      - minio
+    volumes:
+      - ./backend/cloud/src:/app/src
+      - ./backend/logs/cloud:/app/logs
     networks:
       - doclib_network
 

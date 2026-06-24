@@ -175,9 +175,7 @@ class FolderCreate(BaseModel):
     parent_id: Optional[str] = None
 
 
-class DRMSettingsUpdate(BaseModel):
-    disable_copy: bool = False
-    hide_from_search: bool = False
+
 
 
 class TagsUpdate(BaseModel):

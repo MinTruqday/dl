@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from loguru import logger
 
-from shared.infrastructure.database import database
-from shared.repositories.database import BaseRepository
+from src.core.infrastructure.database import database
+from src.core.repositories.database import BaseRepository
 
 
 class PinService:

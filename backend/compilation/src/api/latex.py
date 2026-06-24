@@ -1,6 +1,6 @@
 import httpx
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
-from fastapi.response import Response
+from fastapi.responses import Response
 from loguru import logger
 from src.schemas.composition import CompileRequest
 from src.engines.latex import LatexEngine

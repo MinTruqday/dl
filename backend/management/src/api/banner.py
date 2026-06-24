@@ -23,7 +23,7 @@ async def get_active_banners(db=Depends(get_db)):
 @router.get(
     "/tat-ca",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_all_banners(db=Depends(get_db)):
     return APIResponse(
@@ -35,7 +35,7 @@ async def get_all_banners(db=Depends(get_db)):
 @router.post(
     "",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def create_banner(data: BannerRequest, db=Depends(get_db)):
     return APIResponse(
@@ -48,7 +48,7 @@ async def create_banner(data: BannerRequest, db=Depends(get_db)):
 @router.delete(
     "/{banner_id}",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def delete_banner(banner_id: str, db=Depends(get_db)):
     return APIResponse(

@@ -172,8 +172,8 @@ class StorageService:
         )
 
         if should_delete_physical:
-            from shared.infrastructure.configuration import settings
-            from shared.storage import get_storage_client
+            from src.core.infrastructure.configuration import settings
+            from src.core.storage import get_storage_client
 
             try:
                 storage_client = await get_storage_client()

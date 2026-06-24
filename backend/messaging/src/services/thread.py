@@ -739,7 +739,7 @@ class ThreadService:
             return None
         from src.core.http import http
 
-        from shared.infrastructure.configuration import settings
+        from src.core.infrastructure.configuration import settings
 
         translated_content = ""
         try:

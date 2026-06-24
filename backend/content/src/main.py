@@ -7,15 +7,14 @@ from src.api.collaboration import router as collaboration
 from src.api.discovery import router as discovery
 from src.api.document import router as document
 from src.api.draft import router as draft
-from src.api.export import router as export
+# from src.api.export import router as export
 from src.api.highlight import router as highlight
 from src.api.library import router as library
 from src.api.pin import router as pin
 from src.api.publication import router as publication
 from src.api.reading import router as reading
 from src.api.discovery import router as review
-from src.api.storage import router as storage
-from src.api.upload import router as upload
+
 from src.api.version import router as version
 
 from src.core.infrastructure.configuration import settings
@@ -41,12 +40,12 @@ app.include_router(version)
 app.include_router(reading)
 app.include_router(bookmark)
 app.include_router(library)
-app.include_router(upload)
+
 app.include_router(discovery)
-app.include_router(export)
+# app.include_router(export)
 app.include_router(collaboration)
 app.include_router(publication)
-app.include_router(storage)
+
 app.include_router(highlight)
 app.include_router(draft)
 app.include_router(pin)

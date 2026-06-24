@@ -15,7 +15,7 @@ resources:
   - apps/authentication.yaml
   - apps/collection.yaml
   - apps/compilation.yaml
-  - apps/message.yaml
+  - apps/messaging.yaml
   - apps/content.yaml
   - apps/payment.yaml
   - apps/management.yaml
@@ -29,3 +29,4 @@ secretGenerator:
   - name: doclib-env
     envs:
       - .env
+  - apps/cloud.yaml

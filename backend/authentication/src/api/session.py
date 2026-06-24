@@ -48,7 +48,7 @@ async def read_users_me(
     "/dang-ky",
     response_model=APIResponse[UserResponse],
     status_code=status.HTTP_201_CREATED,
-    dependency=[Depends(RateLimiting(calls=3, period=60))],
+    dependencies=[Depends(RateLimiting(calls=3, period=60))],
 )
 async def register_user(
     user_in: UserCreate, request: Request, db=Depends(get_db)
@@ -64,7 +64,7 @@ async def register_user(
 @router.post(
     "/dang-nhap",
     response_model=APIResponse[Any],
-    dependency=[Depends(RateLimiting(calls=5, period=60))],
+    dependencies=[Depends(RateLimiting(calls=5, period=60))],
 )
 async def login(
     request: Request,

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/ma-qua-tang")
 @router.post(
     "",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def create_coupon(
     req: CouponCreateRequest,
@@ -31,7 +31,7 @@ async def create_coupon(
 @router.get(
     "",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_all_coupons(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -46,7 +46,7 @@ async def get_all_coupons(
 @router.delete(
     "/{coupon_id}",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def delete_coupon(
     coupon_id: str,
@@ -81,7 +81,7 @@ async def validate_coupon(
 @router.post(
     "/{coupon_id}/phe-duyet",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def approve_coupon(
     coupon_id: str,
@@ -98,7 +98,7 @@ async def approve_coupon(
 @router.patch(
     "/{coupon_id}/trang-thai",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def toggle_coupon_status(
     coupon_id: str,

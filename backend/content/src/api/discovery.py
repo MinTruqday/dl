@@ -46,7 +46,7 @@ async def smart_search(
             message="Thực hiện tìm kiếm văn bản thành công",
         )
 
-    from shared.infrastructure.configuration import settings as smart_settings
+    from src.core.infrastructure.configuration import settings as smart_settings
 
     rag_url = smart_settings.AGENTIC_AI_URL
     if not rag_url:

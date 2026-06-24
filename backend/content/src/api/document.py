@@ -17,7 +17,6 @@ from src.schemas.document import (
     DocumentResponse,
     DocumentUpdate,
     FolderCreate,
-    DRMSettingsUpdate,
     TagsUpdate,
     ScheduleUpdate,
 )
@@ -95,7 +94,7 @@ async def list_documents(
 @router.get(
     "/thu-muc",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def get_folders(
     parent_id: Optional[str] = None, current_user: CurrentUser = Depends(get_current_user)
@@ -107,7 +106,7 @@ async def get_folders(
 @router.post(
     "/thu-muc",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def create_folder(
     req: FolderCreate, current_user: CurrentUser = Depends(get_current_user)
@@ -119,7 +118,7 @@ async def create_folder(
 @router.delete(
     "/thu-muc/{folder_id}",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def delete_folder(
     folder_id: str, current_user: CurrentUser = Depends(get_current_user)
@@ -133,7 +132,7 @@ async def delete_folder(
 @router.get(
     "/ca-nhan",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def get_my_documents(
     q: Optional[str] = None,
@@ -151,7 +150,7 @@ async def get_my_documents(
 @router.get(
     "/thung-rac",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def get_trash(current_user: CurrentUser = Depends(get_current_user)):
     return APIResponse(
@@ -207,7 +206,7 @@ async def get_document_preview(slug: str):
 @router.delete(
     "/{document_id}",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def soft_delete_document(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
@@ -221,7 +220,7 @@ async def soft_delete_document(
 @router.post(
     "/{document_id}/khoi-phuc",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def restore_document(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
@@ -235,7 +234,7 @@ async def restore_document(
 @router.post(
     "/{document_id}/bao-ve",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def set_document_password(
     document_id: str,
@@ -253,7 +252,7 @@ async def set_document_password(
 @router.get(
     "/{document_id}/nhat-ky-hoat-dong",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def get_document_audit_logs(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
@@ -267,7 +266,7 @@ async def get_document_audit_logs(
 @router.post(
     "/{document_id}/danh-dau",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def toggle_star_document(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
@@ -282,7 +281,7 @@ async def toggle_star_document(
 @router.post(
     "/{document_id}/chuyen-nhuong",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def transfer_document(
     document_id: str,
@@ -319,36 +318,14 @@ async def get_document_academic(
 
 
 
-@router.put(
-    "/{document_id}/ban-quyen",
-    response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
-)
-async def update_drm_settings(
-    document_id: str,
-    req: DRMSettingsUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    result = await DocumentService.update_document(
-        document_id,
-        DocumentUpdate(
-            drm_settings={
-                "disable_copy": req.disable_copy,
-                "hide_from_search": req.hide_from_search,
-            }
-        ),
-        current_user,
-    )
-    return APIResponse(
-        data=result, message="Cập nhật cấu hình bảo vệ bản quyền thành công"
-    )
+
 
 
 
 @router.put(
     "/{document_id}/the",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def update_tags(
     document_id: str,
@@ -365,7 +342,7 @@ async def update_tags(
 @router.put(
     "/{document_id}/len-lich",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def schedule_publish(
     document_id: str,

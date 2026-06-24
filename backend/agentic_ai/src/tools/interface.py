@@ -47,7 +47,7 @@ import jwt
 
 def _check_system_access(token: str) -> bool:
     try:
-        from shared.infrastructure.configuration import settings
+        from src.core.infrastructure.configuration import settings
 
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "guest")

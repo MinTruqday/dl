@@ -27,7 +27,7 @@ async def request_withdrawal(
 @router.get(
     "/hang-doi",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_withdrawal_queue(
     status: str = "PENDING", limit: int = 50, db=Depends(get_db)
@@ -42,7 +42,7 @@ async def get_withdrawal_queue(
 @router.post(
     "/{withdrawal_id}/xac-minh",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def verify_withdrawal(
     withdrawal_id: str,

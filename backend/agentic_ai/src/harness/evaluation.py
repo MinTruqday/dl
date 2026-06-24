@@ -69,7 +69,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     from huggingface_hub import AsyncInferenceClient
     from src.core.registry import PromptType, registry
 
-    from shared.infrastructure.configuration import settings
+    from src.core.infrastructure.configuration import settings
 
     prompt = registry.get(PromptType.EVAL_JUDGE).format(
         instruction=instruction,
@@ -183,7 +183,7 @@ class EvaluationHarness:
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
         from huggingface_hub import AsyncInferenceClient
 
-        from shared.infrastructure.configuration import settings
+        from src.core.infrastructure.configuration import settings
 
         if not self._dataset:
             return {"error": "Lỗi đánh giá do chưa tải bộ dữ liệu"}

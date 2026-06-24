@@ -14,7 +14,7 @@ router = APIRouter(prefix="/kiem-toan")
 @router.get(
     "/logs",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_activity(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)

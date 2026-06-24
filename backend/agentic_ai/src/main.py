@@ -81,7 +81,7 @@ async def startup_event():
     from motor.motor_asyncio import AsyncIOMotorClient
     from src.store.database import vector_store
 
-    from shared.infrastructure.configuration import settings
+    from src.core.infrastructure.configuration import settings
 
     try:
         await vector_store.ensure_collection()

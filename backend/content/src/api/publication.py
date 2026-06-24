@@ -16,7 +16,7 @@ router = APIRouter(prefix="/xuat-ban")
 @router.post(
     "/{document_id}",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
 )
 async def publish_document(
     document_id: str,
@@ -35,7 +35,7 @@ async def publish_document(
 @router.post(
     "/{document_id}/len-lich",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR]))],
+    dependencies=[Depends(require_role([Role.AUTHOR]))],
 )
 async def schedule_publish(
     document_id: str,
@@ -55,7 +55,7 @@ async def schedule_publish(
 @router.put(
     "/{document_id}/seo",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.AUTHOR]))],
+    dependencies=[Depends(require_role([Role.AUTHOR]))],
 )
 async def update_seo_metadata(
     document_id: str,

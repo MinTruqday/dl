@@ -122,7 +122,7 @@ class AccountService:
             }
         )
         try:
-            from shared.infrastructure.configuration import settings as shared_settings
+            from src.core.infrastructure.configuration import settings as shared_settings
 
             if shared_settings.NOTIFICATION_URL:
                 async with httpx.AsyncClient(timeout=shared_settings.DEFAULT_HTTP_TIMEOUT) as client:

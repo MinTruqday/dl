@@ -11,7 +11,7 @@ from src.core.infrastructure.database import database
 from src.schemas.account import Role
 from src.repositories.user import UserRepository
 from src.repositories.system import SystemRepository
-from src.repositories.marketing_campaign import MarketingCampaignRepository
+# from src.repositories.marketing_campaign import MarketingCampaignRepository
 from src.repositories.moderation import BugModerationRepository
 from src.repositories.task import TaskRepository
 from src.repositories.policy_proposal import PolicyProposalRepository
@@ -123,7 +123,7 @@ class HealthService:
     async def get_system_health(db=None) -> dict:
         import os
 
-        from shared.infrastructure.configuration import settings as shared_settings
+        from src.core.infrastructure.configuration import settings as shared_settings
 
         if db is None:
             db = database.mongodb.get_default_database()
@@ -189,7 +189,7 @@ class HealthService:
 
     @staticmethod
     async def get_minio_stats(db=None) -> dict:
-        from shared.storage import get_storage_client
+        from src.core.storage import get_storage_client
 
         try:
             async with await get_storage_client() as storage_client:
@@ -319,4 +319,15 @@ class HealthService:
         )
         logger.info("Đã gửi đề xuất chính sách")
 
+    @staticmethod
+    async def create_marketing_campaign(data: dict, db=None) -> dict:
+        return {}
+        
+    @staticmethod
+    async def bulk_update_shadowban(user_ids, status, current_user, db=None) -> dict:
+        return {}
+        
+    @staticmethod
+    async def bulk_verify_kyc(user_ids, status, current_user, db=None) -> dict:
+        return {}
 

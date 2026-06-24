@@ -17,7 +17,7 @@ router = APIRouter(prefix="/van-hanh")
 @router.get(
     "/chi-so",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_system_metrics(db=Depends(get_db)):
     return APIResponse(
@@ -29,7 +29,7 @@ async def get_system_metrics(db=Depends(get_db)):
 @router.get(
     "/bao-tri",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_maintenance_status(db=Depends(get_db)):
     return APIResponse(
@@ -41,7 +41,7 @@ async def get_maintenance_status(db=Depends(get_db)):
 @router.post(
     "/bao-tri",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(
@@ -53,7 +53,7 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
 @router.post(
     "/sao-luu",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def trigger_backup(db=Depends(get_db)):
     return APIResponse(
@@ -65,7 +65,7 @@ async def trigger_backup(db=Depends(get_db)):
 @router.post(
     "/tiep-thi/chien-dich",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)):
     return APIResponse(
@@ -80,7 +80,7 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
 @router.get(
     "/cai-dat",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_system_config(db=Depends(get_db)):
     return APIResponse(data={}, message="Lấy cấu hình thành công")
@@ -89,7 +89,7 @@ async def get_system_config(db=Depends(get_db)):
 @router.get(
     "/tinh-trang",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_system_health(db=Depends(get_db)):
     return APIResponse(
@@ -101,7 +101,7 @@ async def get_system_health(db=Depends(get_db)):
 @router.get(
     "/bao-cao",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_admin_reports(db=Depends(get_db)):
     return APIResponse(
@@ -116,7 +116,7 @@ async def get_admin_reports(db=Depends(get_db)):
 @router.post(
     "/nguoi-dung/{user_id}/cam-ngam",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def shadowban_user(
     payload: Any, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -132,7 +132,7 @@ async def shadowban_user(
 @router.post(
     "/nguoi-dung/{user_id}/xac-minh/{status}",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def verify_kyc(
     payload: Any, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -148,7 +148,7 @@ async def verify_kyc(
 @router.get(
     "/luu-tru/thong-ke",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_minio_stats(db=Depends(get_db)):
     return APIResponse(

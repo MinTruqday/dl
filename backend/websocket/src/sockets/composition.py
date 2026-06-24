@@ -39,4 +39,4 @@ class CompositionSocket:
                 self.disconnect(dead, room_id)
 
 
-composition_socket_manager = Sync()
+composition_socket_manager = CompositionSocket()

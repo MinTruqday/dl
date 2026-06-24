@@ -196,7 +196,7 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: cloud
             port:
               number: 80
       - path: /phien-ban(/|$)(.*)
@@ -210,7 +210,7 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: cloud
             port:
               number: 80
       - path: /tai-lieu(/|$)(.*)
@@ -238,7 +238,7 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: message
+            name: messaging
             port:
               number: 80
       - path: /xac-thuc(/|$)(.*)

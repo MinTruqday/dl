@@ -15,7 +15,7 @@ router = APIRouter(prefix="/giam-sat")
 @router.get(
     "/thong-ke",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_stats(db=Depends(get_db)):
     return APIResponse(
@@ -27,7 +27,7 @@ async def get_stats(db=Depends(get_db)):
 @router.get(
     "/tinh-trang",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_sys_health(db=Depends(get_db)):
     return APIResponse(
@@ -39,7 +39,7 @@ async def get_sys_health(db=Depends(get_db)):
 @router.get(
     "/kiem-toan",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_audit_logs(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -55,7 +55,7 @@ async def get_audit_logs(
 @router.get(
     "/hoat-dong",
     response_model=APIResponse[Any],
-    dependency=[Depends(require_role([Role.ADMIN]))],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_activity(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)

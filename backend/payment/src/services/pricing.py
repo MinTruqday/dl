@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from loguru import logger
 
-from shared.infrastructure.database import database
+from src.core.infrastructure.database import database
 from src.repositories.pricing import PricingRepository
 
 

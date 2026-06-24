@@ -77,7 +77,7 @@ class Settings(BaseModel):
     SHARED_URL: Optional[str] = os.getenv("SHARED_URL")
     COMPILATION_URL: str = os.getenv("COMPILATION_URL")
     COLLECTION_URL: str = os.getenv("COLLECTION_URL")
-    MESSAGE_URL: str = os.getenv("MESSAGE_URL")
+    MESSAGING_URL: str = os.getenv("MESSAGING_URL")
     PAYMENT_URL: str = os.getenv("PAYMENT_URL")
     NOTIFICATION_URL: str = os.getenv("NOTIFICATION_URL")
     MANAGEMENT_URL: str = os.getenv("MANAGEMENT_URL")
