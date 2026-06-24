@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY task_queue/requirements.txt .
+COPY worker/requirements.txt .
 
 RUN pip install --user --no-cache-dir -r requirements.txt gunicorn uvicorn[standard]
 
@@ -32,8 +32,7 @@ WORKDIR /app
 RUN useradd -m -s /bin/bash appuser
 
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
-COPY --chown=appuser:appuser task_queue/src/ ./src/
-COPY --chown=appuser:appuser shared/ ./shared/
+COPY --chown=appuser:appuser worker/src/ ./src/
 
 USER appuser
 

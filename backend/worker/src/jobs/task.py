@@ -2,6 +2,7 @@ import os
 import subprocess
 import tempfile
 
+import httpx
 from celery import Celery
 from loguru import logger
 
@@ -44,8 +45,6 @@ celery_app.conf.task_queues = (
 )
 def hard_delete_document_task(document_id: str, user_id: str):
     logger.info("Đang bắt đầu quá trình xóa vĩnh viễn tài liệu")
-    import httpx
-
     try:
         from shared.infrastructure.database import database
 

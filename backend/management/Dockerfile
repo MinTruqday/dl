@@ -6,12 +6,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-COPY administration/requirements.txt .
+COPY management/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY administration/src/ ./src/
-COPY shared/ ./shared/
+COPY management/src/ ./src/
 
 EXPOSE 8050
 

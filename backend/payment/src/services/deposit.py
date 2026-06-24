@@ -87,7 +87,7 @@ class DepositService:
         )
 
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 response = await client.post(
                     settings.PAYOS_API_URL,
                     json=payload,
@@ -96,7 +96,6 @@ class DepositService:
                         "x-api-key": settings.PAYOS_API_KEY,
                         "Content-Type": "application/json",
                     },
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
             res_data = response.json()
             if res_data.get("code") == "00":
@@ -208,14 +207,13 @@ class DepositService:
                 logger.warning(f"Quá tải yêu cầu xác minh giao dịch: {e}")
 
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 response = await client.get(
                     f"{settings.PAYOS_API_URL}/{order_code}",
                     headers={
                         "x-client-id": settings.PAYOS_CLIENT_ID,
                         "x-api-key": settings.PAYOS_API_KEY,
                     },
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
             res_data = response.json()
             if res_data.get("code") == "00":

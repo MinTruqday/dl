@@ -7,13 +7,12 @@ WORKDIR /app
 ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1
 
-COPY ingestion/requirements.txt .
+COPY collection/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN playwright install chromium
 
-COPY ingestion/src/ ./src/
-COPY shared/ ./shared/
+COPY collection/src/ ./src/
 
 EXPOSE 8250
 

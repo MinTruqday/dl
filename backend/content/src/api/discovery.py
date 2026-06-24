@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 
+import httpx
 from fastapi import APIRouter, Depends, Query, status
 from src.api.dependency import get_current_user_optional, get_db
 from src.services.document import DocumentService
@@ -45,12 +46,9 @@ async def smart_search(
             message="Thực hiện tìm kiếm văn bản thành công",
         )
 
-    import httpx
-    from loguru import logger
+    from shared.infrastructure.configuration import settings as smart_settings
 
-    from shared.infrastructure.configuration import settings
-
-    rag_url = settings.AGENTIC_AI_URL
+    rag_url = smart_settings.AGENTIC_AI_URL
     if not rag_url:
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
@@ -58,7 +56,7 @@ async def smart_search(
         )
 
     try:
-        async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=smart_settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
                 f"{rag_url}/chat",
                 json={

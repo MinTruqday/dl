@@ -18,11 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl -fsSL "$URL" | tar -xz -C /usr/local/bin/ tectonic \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY workspace/requirements.txt .
+COPY compilation/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY workspace/src/ ./src/
-COPY shared/ ./shared/
+COPY compilation/src/ ./src/
 
 RUN useradd -m doclibuser && chown -R doclibuser:doclibuser /app
 USER doclibuser

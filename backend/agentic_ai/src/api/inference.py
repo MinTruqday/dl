@@ -31,7 +31,7 @@ client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
 async def _check_quota(current_user: CurrentUser):
     try:
-        async with httpx.AsyncClient() as c:
+        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
             resp = await c.get(
                 f"{settings.MANAGEMENT_URL}/han-muc/xac-minh",
                 params={
@@ -40,7 +40,6 @@ async def _check_quota(current_user: CurrentUser):
                     "ai_tier": current_user.ai_tier.value,
                     "feature": "chat",
                 },
-                timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code != 200:
                 raise HTTPException(
@@ -59,7 +58,7 @@ async def _consume_quota(
     current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
 ):
     try:
-        async with httpx.AsyncClient() as c:
+        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
             await c.post(
                 f"{settings.MANAGEMENT_URL}/han-muc/su-dung",
                 json={
@@ -68,7 +67,6 @@ async def _consume_quota(
                     "req_reset_hours": req_reset_hours,
                     "tokens": tokens,
                 },
-                timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
     except Exception as e:
         logger.error(f"Lỗi trừ dung lượng đã sử dụng: {e}")

@@ -151,10 +151,9 @@ class MessageSocket:
             .to_list(50)
         )
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 res = await client.get(
                     f"{settings.COLLECTION_URL}/tien-trinh-dang-chay",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 active_collectors = res.json() if res.status_code == 200 else []
         except Exception:

@@ -10,11 +10,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY billing/requirements.txt .
+COPY payment/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY billing/src/ ./src/
-COPY shared/ ./shared/
+COPY payment/src/ ./src/
 
 EXPOSE 8350
 

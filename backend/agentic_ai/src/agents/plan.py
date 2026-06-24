@@ -1,6 +1,7 @@
 import json
 from typing import Any, Dict, List, Optional
 
+import httpx
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
@@ -27,8 +28,6 @@ class PlanAgent:
 
     @with_retry(max_retries=3, base_wait=2, max_wait=10)
     async def _invoke_llm(self, messages):
-        import httpx
-
         return await self.llm.ainvoke(messages)
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:

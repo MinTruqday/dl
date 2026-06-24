@@ -14,7 +14,6 @@ COPY drm/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY drm/src/ ./src/
-COPY shared/ ./shared/
 
 EXPOSE 8600
 

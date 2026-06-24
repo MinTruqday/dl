@@ -127,10 +127,9 @@ class CompositionService:
             )
         doc = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 r = await client.get(
                     f"{settings.CONTENT_URL}/tai-lieu/{sug['document_id']}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if r.status_code == 200:
                     doc = r.json().get("data")
@@ -268,10 +267,9 @@ class CompositionService:
         user_id = str(current_user.id)
         document = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 r = await client.get(
                     f"{settings.CONTENT_URL}/tai-lieu/{document_id}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if r.status_code == 200:
                     document = r.json().get("data")
@@ -314,18 +312,16 @@ class CompositionService:
         if new_content:
             update_payload["content"] = new_content
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 await client.put(
                     f"{settings.CONTENT_URL}/tai-lieu/{document_id}",
                     json=update_payload,
                     headers={"X-User-Id": user_id},
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 await client.post(
                     f"{settings.CONTENT_URL}/phien-ban/luu/{document_id}",
                     params={"version_note": f"Tìm và thay thế: '{search_term}' → '{replace_term}'"},
                     headers={"X-User-Id": user_id},
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
         except Exception as e:
             logger.error(f"Lỗi cập nhật tài liệu sang content service: {e}")
@@ -387,10 +383,9 @@ class CompositionService:
 
         doc = None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 r = await client.get(
                     f"{settings.CONTENT_URL}/tai-lieu/{comment['document_id']}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if r.status_code == 200:
                     doc = r.json().get("data")
@@ -423,10 +418,9 @@ class CompositionService:
     ) -> dict:
         v_a, v_b = None, None
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                 ra = await client.get(
                     f"{settings.CONTENT_URL}/phien-ban/tai-lieu/{document_id}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if ra.status_code == 200:
                     versions = ra.json().get("data", [])

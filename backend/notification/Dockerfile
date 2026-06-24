@@ -10,11 +10,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY alerts/requirements.txt .
+COPY notification/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY alerts/src/ ./src/
-COPY shared/ ./shared/
+COPY notification/src/ ./src/
 
 EXPOSE 8150
 
