@@ -111,4 +111,4 @@ class QueryBuilder:
     def query(self, collection: str):
         return QueryBuilder(self, collection)
 
-mongo_client = MongoClient()
+mongo = MongoClient()

@@ -1,5 +1,5 @@
 from src.core.infrastructure.redis_client import redis_client
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
@@ -17,27 +17,27 @@ class IdentityRepository:
                     else "doclib"
                 )
             ]
-        return await mongo_client.find_one(collection="settings", query={"_id": "system_config"})
+        return await mongo.find_one(collection="settings", query={"_id": "system_config"})
 
     @staticmethod
     async def create_auth_credential(auth_cred: dict):
-        return await mongo_client.insert_one(collection="auth_credentials", document=auth_cred)
+        return await mongo.insert_one(collection="auth_credentials", document=auth_cred)
 
     @staticmethod
     async def insert_audit_log(log_data: dict):
-        return await mongo_client.insert_one(collection="audit_logs", document=log_data)
+        return await mongo.insert_one(collection="audit_logs", document=log_data)
 
     @staticmethod
     async def get_auth_credential_by_id(
         user_id: str
     ) -> Optional[Dict[str, Any]]:
-        return await mongo_client.find_one(collection="auth_credentials", query={"_id": user_id})
+        return await mongo.find_one(collection="auth_credentials", query={"_id": user_id})
 
     @staticmethod
     async def get_auth_credential_by_email(
         email: str
     ) -> Optional[Dict[str, Any]]:
-        return await mongo_client.find_one(collection="auth_credentials", query={"email": email})
+        return await mongo.find_one(collection="auth_credentials", query={"email": email})
 
     @staticmethod
     async def update_password_hash(email: str, password_hash: str):
@@ -48,7 +48,7 @@ class IdentityRepository:
 
     @staticmethod
     async def create_password_reset_token(token_data: dict):
-        return await mongo_client.insert_one(collection="password_reset_tokens", document=token_data)
+        return await mongo.insert_one(collection="password_reset_tokens", document=token_data)
 
     @staticmethod
     async def get_valid_password_reset_token(
@@ -79,11 +79,11 @@ class IdentityRepository:
 
     @staticmethod
     async def get_passkey_challenge(email: str) -> Optional[Dict[str, Any]]:
-        return await mongo_client.find_one(collection="passkey_challenges", query={"_id": f"auth:{email}"})
+        return await mongo.find_one(collection="passkey_challenges", query={"_id": f"auth:{email}"})
 
     @staticmethod
     async def delete_passkey_challenge(email: str):
-        return await mongo_client.delete_one(collection="passkey_challenges", filter={"_id": f"auth:{email}"})
+        return await mongo.delete_one(collection="passkey_challenges", filter={"_id": f"auth:{email}"})
 
     @staticmethod
     async def update_passkey_sign_count(

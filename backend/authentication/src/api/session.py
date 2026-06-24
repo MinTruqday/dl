@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from src.core.dependency import CurrentUser
 from typing import Any
 
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/xac-thuc")
 async def read_users_me(
     current_user: CurrentUser = Depends(get_current_user)
 ):
-    user_doc = await mongo_client.find_one(collection="users", query={"_id": current_user.id})
+    user_doc = await mongo.find_one(collection="users", query={"_id": current_user.id})
     if not user_doc:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")

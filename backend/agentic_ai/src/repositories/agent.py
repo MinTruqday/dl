@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,4 +11,4 @@ class AgentRepository:
 
     @classmethod
     async def insert_trace(cls, *args, **kwargs):
-        return await mongo_client.insert_one("agent_traces", *args, **kwargs)
+        return await mongo.insert_one("agent_traces", *args, **kwargs)

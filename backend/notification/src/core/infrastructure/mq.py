@@ -36,4 +36,4 @@ class QueueAPIClient:
         res = await self._get(f"/consume/{queue_name}", params={"timeout": timeout}, timeout=timeout+5)
         return res.get("data")
 
-queue_client = QueueAPIClient()
+mq = QueueAPIClient()

@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
 from loguru import logger
@@ -32,7 +32,7 @@ class ConfigurationService:
     @staticmethod
     async def update_settings(settings_data: dict, current_user) -> dict:
         user_id = str(current_user.id)
-        user = await mongo_client.find_one("users", {"_id": user_id}, {"settings": 1})
+        user = await mongo.find_one("users", {"_id": user_id}, {"settings": 1})
         current_settings = user.get("settings", {}) if user else {}
         merged_settings = {**current_settings, **settings_data}
         await db["users"].update_one(

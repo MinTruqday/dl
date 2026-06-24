@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 import json
 import re
 import uuid

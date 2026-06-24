@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,48 +11,48 @@ class MessageRepository:
 
     @classmethod
     async def update_one(cls, *args, **kwargs):
-        return await mongo_client.update_one("messages", *args, **kwargs)
+        return await mongo.update_one("messages", *args, **kwargs)
 
     @classmethod
     async def delete_many(cls, *args, **kwargs):
-        return await mongo_client.delete_many("messages", *args, **kwargs)
+        return await mongo.delete_many("messages", *args, **kwargs)
 
     @classmethod
     async def find_one(cls, *args, **kwargs):
-        return await mongo_client.find_one("messages", *args, **kwargs)
+        return await mongo.find_one("messages", *args, **kwargs)
 
     @classmethod
     async def update_many(cls, *args, **kwargs):
-        return await mongo_client.update_many("messages", *args, **kwargs)
+        return await mongo.update_many("messages", *args, **kwargs)
 
     @classmethod
     async def insert_one(cls, *args, **kwargs):
-        return await mongo_client.insert_one("messages", *args, **kwargs)
+        return await mongo.insert_one("messages", *args, **kwargs)
 
     @classmethod
     async def update_group(cls, *args, **kwargs):
-        return await mongo_client.update_one("message_groups", *args, **kwargs)
+        return await mongo.update_one("message_groups", *args, **kwargs)
 
     @classmethod
     async def delete_group(cls, *args, **kwargs):
-        return await mongo_client.delete_one("message_groups", *args, **kwargs)
+        return await mongo.delete_one("message_groups", *args, **kwargs)
 
     @classmethod
     async def insert_group(cls, *args, **kwargs):
-        return await mongo_client.insert_one("message_groups", *args, **kwargs)
+        return await mongo.insert_one("message_groups", *args, **kwargs)
 
     @classmethod
     async def find_group(cls, *args, **kwargs):
-        return await mongo_client.find_one("message_groups", *args, **kwargs)
+        return await mongo.find_one("message_groups", *args, **kwargs)
 
     @classmethod
     async def update_setting(cls, *args, **kwargs):
-        return await mongo_client.update_one("message_settings", *args, **kwargs)
+        return await mongo.update_one("message_settings", *args, **kwargs)
 
     @classmethod
     async def find_setting(cls, *args, **kwargs):
-        return await mongo_client.find_one("message_settings", *args, **kwargs)
+        return await mongo.find_one("message_settings", *args, **kwargs)
 
     @classmethod
     async def find_shared_document(cls, *args, **kwargs):
-        return await mongo_client.find_one("documents", *args, **kwargs)
+        return await mongo.find_one("documents", *args, **kwargs)

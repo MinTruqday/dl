@@ -16,7 +16,7 @@ from src.infrastructure.browser import (
     managed_browser,
 )
 from src.core.database import database
-from src.core.infrastructure.queue_client import queue_client as mq_client
+from src.core.infrastructure.mq import mq as mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
 
@@ -98,7 +98,7 @@ class AnnaSource:
 
                     for url in document_urls:
                         if not await dedup.is_collected("anna_url", url):
-                            await mq_client.publish(
+                            await mq.publish(
                                 "collect_detail_queue", {"url": url}
                             )
                             await dedup.mark_collected("anna_url", url)
@@ -277,7 +277,7 @@ class AnnaSource:
                             payload["filename"] = f"{slug}.{ext}"
                             payload["content_format"] = ext
 
-                            await mq_client.publish("download_processor_queue", payload)
+                            await mq.publish("download_processor_queue", payload)
                         else:
                             logger.warning("Quá thời gian chờ bảo mật")
                     except Exception as e:

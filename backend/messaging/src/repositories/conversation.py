@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,12 +11,12 @@ class ConversationRepository:
 
     @classmethod
     async def update_one(cls, *args, **kwargs):
-        return await mongo_client.update_one("conversations", *args, **kwargs)
+        return await mongo.update_one("conversations", *args, **kwargs)
 
     @classmethod
     async def delete_one(cls, *args, **kwargs):
-        return await mongo_client.delete_one("conversations", *args, **kwargs)
+        return await mongo.delete_one("conversations", *args, **kwargs)
 
     @classmethod
     async def find_one(cls, *args, **kwargs):
-        return await mongo_client.find_one("conversations", *args, **kwargs)
+        return await mongo.find_one("conversations", *args, **kwargs)

@@ -17,7 +17,7 @@ from src.infrastructure.browser import (
     managed_browser,
 )
 from src.core.database import database
-from src.core.infrastructure.queue_client import queue_client as mq_client
+from src.core.infrastructure.mq import mq as mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
 
@@ -64,7 +64,7 @@ class CtanSource:
                     logger.info("Thu thập dữ liệu chuyên mục thành công")
                     for url in book_urls:
                         if not await dedup.is_collected("ctan_url", url):
-                            await mq_client.publish(
+                            await mq.publish(
                                 "collect_detail_queue", {"url": url, "source": "CTAN"}
                             )
                             await dedup.mark_collected("ctan_url", url)
@@ -136,7 +136,7 @@ class CtanSource:
                         payload["filename"] = f"{slug}.zip"
                         payload["content_format"] = "zip"
 
-                        await mq_client.publish(
+                        await mq.publish(
                             "download_processor_queue", {**payload, "source": "CTAN"}
                         )
                     else:

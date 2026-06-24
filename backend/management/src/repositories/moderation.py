@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,20 +11,20 @@ class ModerationRepository:
 
     @classmethod
     async def insert_moderator_note(cls, *args, **kwargs):
-        return await mongo_client.insert_one("moderator_notes", *args, **kwargs)
+        return await mongo.insert_one("moderator_notes", *args, **kwargs)
 
     @classmethod
     async def insert_warning(cls, *args, **kwargs):
-        return await mongo_client.insert_one("warnings", *args, **kwargs)
+        return await mongo.insert_one("warnings", *args, **kwargs)
 
     @classmethod
     async def update_report(cls, *args, **kwargs):
-        return await mongo_client.update_one("reports", *args, **kwargs)
+        return await mongo.update_one("reports", *args, **kwargs)
 
     @classmethod
     async def insert_bug_report(cls, *args, **kwargs):
-        return await mongo_client.insert_one("bug_reports", *args, **kwargs)
+        return await mongo.insert_one("bug_reports", *args, **kwargs)
 
     @classmethod
     def find_moderator_activities(cls, *args, **kwargs):
-        return mongo_client.query("moderator_activity").filter(*args, **kwargs)
+        return mongo.query("moderator_activity").filter(*args, **kwargs)

@@ -1,5 +1,5 @@
 from src.core.infrastructure.redis_client import redis_client
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 import asyncio
 import json
 from typing import Any, List

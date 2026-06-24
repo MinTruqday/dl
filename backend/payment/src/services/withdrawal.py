@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
 import httpx
@@ -27,7 +27,7 @@ class WithdrawalService:
             },
             {"$group": {"_id": None, "total_revenue": {"$sum": "$amount"}}},
         ]
-        cursor = mongo_client.aggregate(collection="transactions", pipeline=pipeline)
+        cursor = mongo.aggregate(collection="transactions", pipeline=pipeline)
         res = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         total_revenue = res[0]["total_revenue"] if res else 0
         withdrawal_res = (
@@ -67,7 +67,7 @@ class WithdrawalService:
                 status_code=400, detail="Số tiền rút dưới mức tối thiểu"
             )
 
-        wallet = await mongo_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
+        wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < amount:
             if should_close_session:
                 await session.abort_transaction()
@@ -239,7 +239,7 @@ class WithdrawalService:
             {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
         ]
         withdrawal = (
-            await mongo_client.aggregate(collection="withdrawal_requests", pipeline=pipeline).execute()
+            await mongo.aggregate(collection="withdrawal_requests", pipeline=pipeline).execute()
         )
         result = []
         for p in withdrawal:
@@ -278,7 +278,7 @@ class WithdrawalService:
                 await session.end_session()
             raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ")
 
-        withdrawal = await mongo_client.find_one(collection="withdrawal_requests", query={"_id": withdrawal_id})
+        withdrawal = await mongo.find_one(collection="withdrawal_requests", query={"_id": withdrawal_id})
         if not withdrawal:
             if should_close_session:
                 await session.abort_transaction()

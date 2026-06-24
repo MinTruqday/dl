@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -39,10 +39,10 @@ class CouponService:
             "is_active": True,
             "created_at": datetime.now(timezone.utc),
         }
-        existing = await mongo_client.find_one(collection="coupons", query={"code": coupon["code"]})
+        existing = await mongo.find_one(collection="coupons", query={"code": coupon["code"]})
         if existing:
             raise HTTPException(status_code=400, detail="Mã giảm giá đã được sử dụng")
-        await mongo_client.insert_one(collection="coupons", document=coupon)
+        await mongo.insert_one(collection="coupons", document=coupon)
         logger.info("Tạo mã giảm giá thành công")
         return {
             "message": "Tạo mã giảm giá thành công",
@@ -55,7 +55,7 @@ class CouponService:
         if current_user.role != Role.ADMIN:
             query["creator_id"] = str(current_user.id)
         coupons = (
-            await mongo_client.find(collection="coupons", query=query, sort=[("created_at", -1)], limit=100)
+            await mongo.find(collection="coupons", query=query, sort=[("created_at", -1)], limit=100)
         )
         return [
             {
@@ -138,7 +138,7 @@ class CouponService:
         query = {"_id": coupon_id}
         if current_user.role != Role.ADMIN:
             query["creator_id"] = str(current_user.id)
-        coupon = await mongo_client.find_one(collection="coupons", query=query)
+        coupon = await mongo.find_one(collection="coupons", query=query)
         if not coupon:
             raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá")
         new_status = not coupon.get("is_active", True)
@@ -156,7 +156,7 @@ class CouponService:
         query = {"_id": coupon_id}
         if current_user.role != Role.ADMIN:
             query["creator_id"] = str(current_user.id)
-        res = await mongo_client.delete_one(collection="coupons", filter=query)
+        res = await mongo.delete_one(collection="coupons", filter=query)
         if res.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá")
         logger.info("Xóa vĩnh viễn mã giảm giá thành công")

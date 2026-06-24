@@ -1,11 +1,11 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 import os
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
-from src.core.infrastructure.queue_client import queue_client as mq_client
+from src.core.infrastructure.mq import mq as mq_client
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
@@ -41,7 +41,7 @@ async def trigger_collection(req: Collection):
         )
 
     try:
-        await mq_client.publish(queue_name, payload)
+        await mq.publish(queue_name, payload)
         logger.info("Khởi tạo thu thập dữ liệu ngầm thành công")
         return {
             "status": "success",

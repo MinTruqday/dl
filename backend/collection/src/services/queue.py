@@ -1,6 +1,6 @@
 import asyncio
 from loguru import logger
-from src.core.infrastructure.queue_client import queue_client
+from src.core.infrastructure.mq import mq
 from src.sources.anna import AnnaSource
 from src.sources.ctan import CtanSource
 from src.sources.nxbgd import NxbgdSource
@@ -53,7 +53,7 @@ async def run_worker():
     async def poll_queue(queue_name, handler_func):
         while True:
             try:
-                payload = await queue_client.consume(queue_name, timeout=30)
+                payload = await mq.consume(queue_name, timeout=30)
                 if payload:
                     await handler_func(payload)
             except Exception as e:

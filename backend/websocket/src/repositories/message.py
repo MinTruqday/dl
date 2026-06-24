@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,4 +11,4 @@ class MessageRepository:
 
     @classmethod
     async def update_many(cls, *args, **kwargs):
-        return await mongo_client.update_many("messages", *args, **kwargs)
+        return await mongo.update_many("messages", *args, **kwargs)

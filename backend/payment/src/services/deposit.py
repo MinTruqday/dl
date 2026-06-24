@@ -1,5 +1,5 @@
 from src.core.infrastructure.redis_client import redis_client
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 import hashlib
 import hmac
 import json
@@ -36,7 +36,7 @@ class DepositService:
 
         while True:
             order_code = random.randint(100000000, 2147483647)
-            if not await mongo_client.find_one(collection="orders", query={"order_code": order_code}):
+            if not await mongo.find_one(collection="orders", query={"order_code": order_code}):
                 break
 
         description = f"DL{order_code}"
@@ -176,7 +176,7 @@ class DepositService:
 
     @staticmethod
     async def verify_deposit(order_code: int, current_user):
-        order = await mongo_client.find_one(collection="orders", query={"order_code": order_code})
+        order = await mongo.find_one(collection="orders", query={"order_code": order_code})
         if not order:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy giao dịch nạp tiền"

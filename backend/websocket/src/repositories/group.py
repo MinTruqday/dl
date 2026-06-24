@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,8 +11,8 @@ class GroupRepository:
 
     @classmethod
     async def find_one(cls, *args, **kwargs):
-        return await mongo_client.find_one("chat_groups", *args, **kwargs)
+        return await mongo.find_one("chat_groups", *args, **kwargs)
 
     @classmethod
     def find(cls, query: Dict[str, Any]):
-        return mongo_client.query("chat_groups").filter(query)
+        return mongo.query("chat_groups").filter(query)

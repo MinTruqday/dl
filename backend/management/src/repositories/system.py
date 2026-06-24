@@ -1,4 +1,4 @@
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -11,24 +11,24 @@ class SystemRepository:
 
     @classmethod
     async def update_config(cls, *args, **kwargs):
-        return await mongo_client.update_one("system_config", *args, **kwargs)
+        return await mongo.update_one("system_config", *args, **kwargs)
 
     @classmethod
     async def find_config(cls, *args, **kwargs):
-        return await mongo_client.find_one("system_config", *args, **kwargs)
+        return await mongo.find_one("system_config", *args, **kwargs)
 
     @classmethod
     async def insert_telemetry(cls, *args, **kwargs):
-        return await mongo_client.insert_one("telemetry", *args, **kwargs)
+        return await mongo.insert_one("telemetry", *args, **kwargs)
 
     @classmethod
     async def insert_audit_log(cls, *args, **kwargs):
-        return await mongo_client.insert_one("audit_logs", *args, **kwargs)
+        return await mongo.insert_one("audit_logs", *args, **kwargs)
 
     @classmethod
     async def count_documents(cls, *args, **kwargs):
-        return await mongo_client.count_documents("documents", *args, **kwargs)
+        return await mongo.count_documents("documents", *args, **kwargs)
 
     @classmethod
     def aggregate_telemetry(cls, *args, **kwargs):
-        return mongo_client.aggregate("telemetry", *args, **kwargs)
+        return mongo.aggregate("telemetry", *args, **kwargs)

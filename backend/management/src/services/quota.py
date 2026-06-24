@@ -1,5 +1,5 @@
 from src.core.infrastructure.redis_client import redis_client
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 import json
 import math
 from datetime import datetime, timezone
@@ -15,7 +15,7 @@ from src.schemas.quota import QuotaLimit
 class QuotaService:
     @staticmethod
     async def get_global_config_from_db() -> dict:
-        config = await mongo_client.find_one(collection="quota_configs", query={"_id": "global"})
+        config = await mongo.find_one(collection="quota_configs", query={"_id": "global"})
         if config and "role_limits" in config:
             return config["role_limits"]
 

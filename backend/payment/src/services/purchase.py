@@ -1,5 +1,5 @@
 from src.core.infrastructure.redis_client import redis_client
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.configuration import settings
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -18,7 +18,7 @@ class PurchaseService:
 
     @staticmethod
     async def get_revenue(current_user) -> dict:
-        docs_cursor = mongo_client.query("documents").filter({"creator_id": str(current_user.id)})
+        docs_cursor = mongo.query("documents").filter({"creator_id": str(current_user.id)})
         documents = await docs_cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         doc_ids = [str(doc["_id"]) for doc in documents]
         
@@ -28,13 +28,13 @@ class PurchaseService:
             {"$match": {"document_id": {"$in": doc_ids}, "status": {"$ne": "CANCELLED"}}},
             {"$group": {"_id": "$document_id", "revenue": {"$sum": "$price"}, "purchases": {"$sum": 1}}}
         ]
-        revenue_res = await mongo_client.aggregate(collection="purchases", pipeline=pipeline).execute()
+        revenue_res = await mongo.aggregate(collection="purchases", pipeline=pipeline).execute()
         
         revenue_map = {item["_id"]: {"revenue": item["revenue"], "purchases": item["purchases"]} for item in revenue_res}
         total_revenue = sum(item["revenue"] for item in revenue_res)
         
-        user_doc = await mongo_client.find_one(collection="users", query={"_id": str(current_user.id)})
-        wallet = await mongo_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
+        user_doc = await mongo.find_one(collection="users", query={"_id": str(current_user.id)})
+        wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
         
         available_balance = wallet.get("balance", total_revenue) if wallet else total_revenue
         total_points = user_doc.get("reward_points", 0) if user_doc else 0
@@ -75,7 +75,7 @@ class PurchaseService:
                 detail="Tài khoản đã có gói thành viên này",
             )
 
-        wallet = await mongo_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
+        wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < price:
             raise HTTPException(
                 status_code=400,
@@ -141,7 +141,7 @@ class PurchaseService:
             session.start_transaction()
             should_close_session = True
 
-        doc = await mongo_client.find_one(collection="documents", query={"_id": document_id})
+        doc = await mongo.find_one(collection="documents", query={"_id": document_id})
         if not doc:
             if should_close_session:
                 await session.abort_transaction()
@@ -153,7 +153,7 @@ class PurchaseService:
                 await session.abort_transaction()
                 await session.end_session()
             return {"message": "Tài liệu đang được truy cập miễn phí", "status": "free"}
-        wallet = await mongo_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
+        wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < price:
             if should_close_session:
                 await session.abort_transaction()
@@ -245,7 +245,7 @@ class PurchaseService:
                         "type": "purchase",
                         "created_at": datetime.now(timezone.utc),
                     }
-                    await mongo_client.insert_one(collection="notifications", document=notification, session=session)
+                    await mongo.insert_one(collection="notifications", document=notification, session=session)
                     if redis_client:
                         try:
                             from src.core.infrastructure.configuration import settings as shared_settings
@@ -322,7 +322,7 @@ class PurchaseService:
             raise HTTPException(status_code=400, detail="Từ chối hoàn tiền do quá hạn")
         price = purchase.get("price", 0)
         doc_id = purchase.get("document_id")
-        doc = await mongo_client.find_one(collection="documents", query={"_id": doc_id}) if doc_id else None
+        doc = await mongo.find_one(collection="documents", query={"_id": doc_id}) if doc_id else None
         creator_id = doc.get("creator_id") if doc else None
 
         try:

@@ -1,5 +1,5 @@
 from src.core.infrastructure.redis_client import redis_client
-from src.core.infrastructure.mongo_client import mongo_client
+from src.core.infrastructure.mongo import mongo
 import json
 from datetime import datetime, timezone
 
@@ -16,7 +16,7 @@ class WalletService:
 
     @staticmethod
     async def get_balance(current_user):
-        wallet = await mongo_client.find_one(collection="wallets", query={"_id": str(current_user.id)})
+        wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
         return {"balance": wallet.get("balance", 0) if wallet else 0}
 
     @staticmethod
@@ -167,7 +167,7 @@ class WalletService:
                 }
             except Exception as e:
                 logger.warning(f"Lỗi định dạng phân trang: {e}")
-        txs = await mongo_client.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit)
+        txs = await mongo.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit)
         type_translations = {
             "topup": "Deposit",
             "purchase": "Document Purchase",
