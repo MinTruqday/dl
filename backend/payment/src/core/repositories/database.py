@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from typing import Any, Dict, List, Optional
 
 from src.core.infrastructure.database import database
@@ -14,13 +15,13 @@ class DatabaseRepository:
         return db[self.collection_name]
 
     async def find_one(self, query: Dict[str, Any], **kwargs):
-        return await self.collection.find_one(query, **kwargs)
+        return await db_client.find_one("collection", query, **kwargs)
 
     def find(self, *args, **kwargs):
-        return self.collection.find(*args, **kwargs)
+        return db_client.query("collection").filter(*args, **kwargs)
 
     async def insert_one(self, document: Dict[str, Any], **kwargs):
-        return await self.collection.insert_one(document, **kwargs)
+        return await db_client.insert_one("collection", document, **kwargs)
 
     async def insert_many(self, documents: List[Dict[str, Any]], **kwargs):
         return await self.collection.insert_many(documents, **kwargs)
@@ -28,24 +29,24 @@ class DatabaseRepository:
     async def update_one(
         self, filter: Dict[str, Any], update: Dict[str, Any], **kwargs
     ):
-        return await self.collection.update_one(filter, update, **kwargs)
+        return await db_client.update_one("collection", filter, update, **kwargs)
 
     async def update_many(
         self, filter: Dict[str, Any], update: Dict[str, Any], **kwargs
     ):
-        return await self.collection.update_many(filter, update, **kwargs)
+        return await db_client.update_many("collection", filter, update, **kwargs)
 
     async def delete_one(self, filter: Dict[str, Any], **kwargs):
-        return await self.collection.delete_one(filter, **kwargs)
+        return await db_client.delete_one("collection", filter, **kwargs)
 
     async def delete_many(self, filter: Dict[str, Any], **kwargs):
-        return await self.collection.delete_many(filter, **kwargs)
+        return await db_client.delete_many("collection", filter, **kwargs)
 
     async def count_documents(self, filter: Dict[str, Any], **kwargs) -> int:
-        return await self.collection.count_documents(filter, **kwargs)
+        return await db_client.count_documents("collection", filter, **kwargs)
 
     def aggregate(self, pipeline: List[Dict[str, Any]], **kwargs):
-        return self.collection.aggregate(pipeline, **kwargs)
+        return db_client.aggregate("collection", pipeline, **kwargs)
 
 
 class PaymentRepository:

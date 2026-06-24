@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -40,7 +41,7 @@ class AccountService:
             .sort("created_at", -1)
             .skip(offset)
             .limit(limit)
-            .to_list(length=limit)
+            .execute()
         )
         return [
             {
@@ -231,7 +232,7 @@ class AccountService:
             await ModeratorNoteRepository
             .find({"user_id": user_id})
             .sort("created_at", -1)
-            .to_list(length=100)
+            .execute()
         )
         return [
             {
@@ -301,7 +302,7 @@ class AccountService:
         reports = (
             await ReportRepository
             .aggregate(pipeline)
-            .to_list(length=limit)
+            .execute()
         )
         result = []
         for r in reports:
@@ -357,7 +358,7 @@ class AccountService:
             .find({"actor_id": actor_id})
             .sort("timestamp", -1)
             .limit(50)
-            .to_list(length=50)
+            .execute()
         )
         result = []
         for l in logs:
@@ -419,7 +420,7 @@ class AccountService:
                 {"full_name": 1, "username": 1, "slug": 1, "avatar_url": 1, "role": 1},
             )
             .limit(limit)
-            .to_list(length=limit)
+            .execute()
         )
         return [
             {
@@ -478,7 +479,7 @@ class AccountService:
         users = (
             await UserRepository
             .find({"_id": {"$in": user_ids}}, {"password_hash": 0, "passkeys": 0})
-            .to_list(length=len(user_ids))
+            .execute()
         )
         for user in users:
             user["_id"] = str(user["_id"])

@@ -30,7 +30,7 @@ class WithdrawalService:
             {"$group": {"_id": None, "total_revenue": {"$sum": "$amount"}}},
         ]
         cursor = db_client.aggregate(collection="transactions", pipeline=pipeline)
-        res = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        res = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         total_revenue = res[0]["total_revenue"] if res else 0
         withdrawal_res = (
             await db["withdrawal_requests"]
@@ -40,7 +40,7 @@ class WithdrawalService:
                     {"$group": {"_id": None, "pending": {"$sum": "$amount"}}},
                 ]
             )
-            .to_list(length=1)
+            .execute()
         )
         pending_withdrawal = withdrawal_res[0]["pending"] if withdrawal_res else 0
         return {
@@ -144,7 +144,7 @@ class WithdrawalService:
                     },
                 ]
             )
-            .to_list(length=1)
+            .execute()
         )
 
         if daily_withdrawals:
@@ -246,7 +246,7 @@ class WithdrawalService:
             {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
         ]
         withdrawal = (
-            await db_client.aggregate(collection="withdrawal_requests", pipeline=pipeline).to_list(length=100)
+            await db_client.aggregate(collection="withdrawal_requests", pipeline=pipeline).execute()
         )
         result = []
         for p in withdrawal:

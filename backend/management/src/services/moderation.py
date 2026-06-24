@@ -63,7 +63,7 @@ class ModerationService:
             ),
             "documents": await db["documents"]
             .find({"creator_id": user_id})
-            .to_list(100),
+            .execute(),
         }
         logger.info("Xuất dữ liệu thành công")
         return {"status": "success", "data": full_data}

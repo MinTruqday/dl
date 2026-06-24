@@ -139,7 +139,7 @@ class VerificationService:
             .find({"creator_id": creator_id, "status": "PUBLISHED"})
             .sort("created_at", -1)
             .limit(10)
-            .to_list(length=10)
+            .execute()
         )
         return {
             "_id": creator_id,

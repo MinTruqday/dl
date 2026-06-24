@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import uuid
 from datetime import datetime, timezone
 
@@ -114,7 +115,7 @@ class CollaborationService:
             await CollaborationInviteRepository
             .find({"invitee_id": str(current_user.id), "status": "PENDING"})
             .sort("created_at", -1)
-            .to_list(length=100)
+            .execute()
         )
         return invites
 
@@ -178,7 +179,7 @@ class CollaborationService:
         invites = (
             await CollaborationInviteRepository
             .find({"document_id": document_id, "status": "ACCEPTED"})
-            .to_list(length=100)
+            .execute()
         )
         collaborators = []
         try:
@@ -265,7 +266,7 @@ class CollaborationService:
             .find({"document_id": document_id})
             .sort("timestamp", -1)
             .limit(50)
-            .to_list(length=50)
+            .execute()
         )
         return [
             {
@@ -362,7 +363,7 @@ class CollaborationService:
         online_users = (
             await CollaborationStatuRepository
             .find({"document_id": document_id})
-            .to_list(length=100)
+            .execute()
         )
         result = []
         for u in online_users:
@@ -466,7 +467,7 @@ class CollaborationService:
             .find({"document_id": document_id})
             .sort("timestamp", 1)
             .limit(100)
-            .to_list(length=100)
+            .execute()
         )
         return [
             {
@@ -531,7 +532,7 @@ class CollaborationService:
             await CollaborationInviteRepository
             .find({"document_id": document_id, "status": "PENDING"})
             .sort("created_at", -1)
-            .to_list(length=100)
+            .execute()
         )
         return invites
 
@@ -591,7 +592,7 @@ class CollaborationService:
         stats = (
             await CollaborationActivitieRepository
             .aggregate(pipeline)
-            .to_list(length=100)
+            .execute()
         )
         return [{"user_name": s["_id"], "count": s["count"]} for s in stats]
 
@@ -654,7 +655,7 @@ class CollaborationService:
             await CollaborationDraftRepository
             .find({"document_id": document_id})
             .sort("timestamp", -1)
-            .to_list(length=100)
+            .execute()
         )
         return [
             {
@@ -912,7 +913,7 @@ class CollaborationService:
             await CollaborationTaskRepository
             .find({"document_id": document_id})
             .sort("created_at", -1)
-            .to_list(length=100)
+            .execute()
         )
         return [
             {
@@ -1029,7 +1030,7 @@ class CollaborationService:
             await CollaborationTaskCommentRepository
             .find({"task_id": task_id})
             .sort("timestamp", 1)
-            .to_list(length=100)
+            .execute()
         )
         return [
             {

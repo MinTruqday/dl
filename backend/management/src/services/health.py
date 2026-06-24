@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import uuid
 from datetime import datetime, timezone
 
@@ -41,7 +42,7 @@ class HealthService:
             .sort("created_at", -1)
             .skip(offset)
             .limit(limit)
-            .to_list(length=limit)
+            .execute()
         )
         return [
             {

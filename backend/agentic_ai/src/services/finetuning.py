@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import asyncio
 import json
 import threading
@@ -138,7 +139,7 @@ async def list_datasets(user_id: str):
         await get_db()["finetune_datasets"]
         .find({"user_id": user_id})
         .sort("created_at", -1)
-        .to_list(length=100)
+        .execute()
     )
 
 
@@ -212,7 +213,7 @@ async def get_samples(
         .sort("created_at", 1)
         .skip(int(skip))
         .limit(int(limit))
-        .to_list(length=int(limit))
+        .execute()
     )
 
 
@@ -244,7 +245,7 @@ async def import_feedback(req: dict):
     feedbacks = (
         await AgenticAIRepository.get("rag_feedback")
         .find({"user_id": user_id, "vote_type": "up"})
-        .to_list(length=500)
+        .execute()
     )
     if not feedbacks:
         return {"imported": 0}
@@ -423,7 +424,7 @@ async def start_job(job_id: str, req: dict):
     samples = (
         await FinetuneSampleRepository
         .find({"dataset_id": job["dataset_id"]})
-        .to_list(length=10000)
+        .execute()
     )
     config = {
         "base_model": job.get("base_model"),
@@ -459,12 +460,12 @@ async def list_jobs(user_id: str):
         await get_db()["finetune_jobs"]
         .find({"user_id": user_id})
         .sort("created_at", -1)
-        .to_list(length=100)
+        .execute()
     )
 
 
 async def get_job(job_id: str, user_id: str):
-    job = await get_db()["finetune_jobs"].find_one({"_id": job_id, "user_id": user_id})
+    job = await db_client.find_one("finetune_jobs", {"_id": job_id, "user_id": user_id})
     if not job:
         raise HTTPException(status_code=404, detail="Không tìm thấy tác vụ huấn luyện")
     return job

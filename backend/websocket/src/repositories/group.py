@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -10,8 +11,8 @@ class GroupRepository:
 
     @classmethod
     async def find_one(cls, *args, **kwargs):
-        return await cls._get_db()['chat_groups'].find_one(*args, **kwargs)
+        return await db_client.find_one("chat_groups", *args, **kwargs)
 
     @classmethod
     def find(cls, query: Dict[str, Any]):
-        return cls._get_db()['chat_groups'].find(query)
+        return db_client.query("chat_groups").filter(query)

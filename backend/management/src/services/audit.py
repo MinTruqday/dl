@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from datetime import datetime, timezone
 
 from loguru import logger
@@ -21,7 +22,7 @@ class AuditService:
             .find(query)
             .sort("timestamp", -1)
             .limit(limit)
-            .to_list(length=limit)
+            .execute()
         )
         return [
             {

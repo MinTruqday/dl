@@ -22,7 +22,7 @@ class AnnouncementService:
             .skip(skip)
             .limit(limit)
         )
-        docs = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        docs = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         total = await NotificationRepository.count_documents(
             {"target_user_id": user_id}
         )

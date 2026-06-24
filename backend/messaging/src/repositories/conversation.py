@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -10,12 +11,12 @@ class ConversationRepository:
 
     @classmethod
     async def update_one(cls, *args, **kwargs):
-        return await cls._get_db()['conversations'].update_one(*args, **kwargs)
+        return await db_client.update_one("conversations", *args, **kwargs)
 
     @classmethod
     async def delete_one(cls, *args, **kwargs):
-        return await cls._get_db()['conversations'].delete_one(*args, **kwargs)
+        return await db_client.delete_one("conversations", *args, **kwargs)
 
     @classmethod
     async def find_one(cls, *args, **kwargs):
-        return await cls._get_db()['conversations'].find_one(*args, **kwargs)
+        return await db_client.find_one("conversations", *args, **kwargs)

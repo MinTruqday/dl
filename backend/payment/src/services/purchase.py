@@ -20,8 +20,8 @@ class PurchaseService:
         if db is None:
             db = database.mongodb.get_default_database()
             
-        docs_cursor = db["documents"].find({"creator_id": str(current_user.id)})
-        documents = await docs_cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        docs_cursor = db_client.query("documents").filter({"creator_id": str(current_user.id)})
+        documents = await docs_cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         doc_ids = [str(doc["_id"]) for doc in documents]
         
         total_views = sum(doc.get("view_count", 0) for doc in documents)
@@ -30,7 +30,7 @@ class PurchaseService:
             {"$match": {"document_id": {"$in": doc_ids}, "status": {"$ne": "CANCELLED"}}},
             {"$group": {"_id": "$document_id", "revenue": {"$sum": "$price"}, "purchases": {"$sum": 1}}}
         ]
-        revenue_res = await db_client.aggregate(collection="purchases", pipeline=pipeline).to_list(length=None)
+        revenue_res = await db_client.aggregate(collection="purchases", pipeline=pipeline).execute()
         
         revenue_map = {item["_id"]: {"revenue": item["revenue"], "purchases": item["purchases"]} for item in revenue_res}
         total_revenue = sum(item["revenue"] for item in revenue_res)

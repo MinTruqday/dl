@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import asyncio
 from datetime import datetime, timezone
 
@@ -161,7 +162,7 @@ class ThreadService:
             .find(query)
             .sort("_id", -1)
             .limit(limit)
-            .to_list(length=limit)
+            .execute()
         )
         participant_key = (
             other_user_id
@@ -195,7 +196,7 @@ class ThreadService:
                                         "message_groups"
                                     )
                                     .find({"members": str(current_user.id)})
-                                    .to_list(100)
+                                    .execute()
                                 ]
                             }
                         },
@@ -204,7 +205,7 @@ class ThreadService:
                 }
             )
             .sort("updated_at", -1)
-            .to_list(length=200)
+            .execute()
         )
         other_user_ids = []
         for conv in conversations:
@@ -228,7 +229,7 @@ class ThreadService:
         groups_list = (
             await MessageGroupRepository
             .find({"members": str(current_user.id)})
-            .to_list(length=100)
+            .execute()
         )
         group_map = {str(g["_id"]): g for g in groups_list}
         results = []
@@ -441,7 +442,7 @@ class ThreadService:
             await MessageRepository
             .find(query)
             .sort("created_at", -1)
-            .to_list(length=100)
+            .execute()
         )
         return messages
 
@@ -630,7 +631,7 @@ class ThreadService:
             await MessageRepository
             .find(query)
             .sort("created_at", -1)
-            .to_list(length=100)
+            .execute()
         )
         attachments = []
         for m in messages:

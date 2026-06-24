@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import asyncio
 import json
 from typing import Any, List
@@ -120,7 +121,7 @@ class MessageSocket:
             groups = (
                 await ChatGroupRepository
                 .find({"members": user_id})
-                .to_list(100)
+                .execute()
             )
             group_ids = [g["_id"] for g in groups]
             query = {
@@ -135,7 +136,7 @@ class MessageSocket:
                 await MessageRepository
                 .find(query)
                 .sort("created_at", 1)
-                .to_list(length=200)
+                .execute()
             )
             for msg in new_messages:
                 msg["_id"] = str(msg["_id"])
@@ -148,7 +149,7 @@ class MessageSocket:
         active_finetunes = (
             await WebsocketRepository.get("finetune_jobs")
             .find({"status": {"$in": ["running", "pending"]}})
-            .to_list(50)
+            .execute()
         )
         try:
             async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:

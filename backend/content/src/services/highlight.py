@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import uuid
 from datetime import datetime, timezone
 
@@ -47,7 +48,7 @@ class HighlightService:
             await HighlightRepository
             .find({"user_id": str(current_user.id), "document_id": document_id})
             .sort("created_at", -1)
-            .to_list(length=200)
+            .execute()
         )
         return [
             {
@@ -134,7 +135,7 @@ class HighlightService:
         highlights = (
             await HighlightRepository
             .aggregate(pipeline)
-            .to_list(length=limit)
+            .execute()
         )
         result = []
         for h in highlights:
@@ -171,7 +172,7 @@ class HighlightService:
             await HighlightRepository
             .find({"user_id": str(current_user.id), "document_id": document_id})
             .sort("created_at", 1)
-            .to_list(length=500)
+            .execute()
         )
         lines = [
             f"# {document_title}",

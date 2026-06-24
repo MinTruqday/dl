@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -10,4 +11,4 @@ class MessageRepository:
 
     @classmethod
     async def update_many(cls, *args, **kwargs):
-        return await cls._get_db()['messages'].update_many(*args, **kwargs)
+        return await db_client.update_many("messages", *args, **kwargs)

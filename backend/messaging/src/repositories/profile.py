@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -10,8 +11,8 @@ class ContactProfileRepository:
 
     @classmethod
     async def update_contact_profile(cls, *args, **kwargs):
-        return await cls._get_db()['user_contact_profiles'].update_one(*args, **kwargs)
+        return await db_client.update_one("user_contact_profiles", *args, **kwargs)
 
     @classmethod
     async def find_contact_profile(cls, *args, **kwargs):
-        return await cls._get_db()['user_contact_profiles'].find_one(*args, **kwargs)
+        return await db_client.find_one("user_contact_profiles", *args, **kwargs)

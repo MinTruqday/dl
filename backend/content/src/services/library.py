@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import uuid
 from datetime import datetime, timezone
 
@@ -36,7 +37,7 @@ class LibraryService:
         return (
             await ReadingListRepository
             .find({"user_id": str(current_user.id)})
-            .to_list(100)
+            .execute()
         )
 
     @staticmethod
@@ -53,7 +54,7 @@ class LibraryService:
             docs = (
                 await DocumentRepository
                 .find({"_id": {"$in": doc_ids}})
-                .to_list(length=100)
+                .execute()
             )
             reading_list["documents_detailed"] = docs
         else:

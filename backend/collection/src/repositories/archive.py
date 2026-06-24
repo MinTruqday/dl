@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -10,4 +11,4 @@ class ArchiveRepository:
 
     @classmethod
     async def count_documents(cls, *args, **kwargs):
-        return await cls._get_db()['archives'].count_documents(*args, **kwargs)
+        return await db_client.count_documents("archives", *args, **kwargs)

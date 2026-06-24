@@ -1,3 +1,4 @@
+from src.core.api_client import db_client
 import os
 from datetime import datetime, timezone
 
@@ -77,7 +78,7 @@ async def get_active_jobs():
     active_collectors = (
         await CollectionRepository.get("collection_jobs")
         .find({"status": {"$in": ["running", "pending"]}})
-        .to_list(50)
+        .execute()
     )
     jobs = [
         {"id": str(j["_id"]), "progress": j.get("progress", 0), "status": j["status"]}
@@ -97,7 +98,7 @@ async def get_collector_stats():
         .find({}, {"created_at": 1})
         .sort("created_at", -1)
         .limit(1)
-        .to_list(length=1)
+        .execute()
     )
     last_crawl = (
         recent_crawls[0]["created_at"].isoformat()

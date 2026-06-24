@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, Query
@@ -55,7 +56,7 @@ class ReadingService:
         history = (
             await ReadingHistoryRepository
             .aggregate(pipeline)
-            .to_list(length=limit)
+            .execute()
         )
         result = []
         for h in history:

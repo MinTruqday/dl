@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -10,28 +11,28 @@ class CompositionRepository:
 
     @classmethod
     async def update_suggestion(cls, *args, **kwargs):
-        return await cls._get_db()['editor_suggestions'].update_one(*args, **kwargs)
+        return await db_client.update_one("editor_suggestions", *args, **kwargs)
 
     @classmethod
     async def insert_suggestion(cls, *args, **kwargs):
-        return await cls._get_db()['editor_suggestions'].insert_one(*args, **kwargs)
+        return await db_client.insert_one("editor_suggestions", *args, **kwargs)
 
     @classmethod
     async def find_suggestion(cls, *args, **kwargs):
-        return await cls._get_db()['editor_suggestions'].find_one(*args, **kwargs)
+        return await db_client.find_one("editor_suggestions", *args, **kwargs)
 
     @classmethod
     async def update_comment(cls, *args, **kwargs):
-        return await cls._get_db()['editor_comments'].update_one(*args, **kwargs)
+        return await db_client.update_one("editor_comments", *args, **kwargs)
 
     @classmethod
     async def insert_comment(cls, *args, **kwargs):
-        return await cls._get_db()['editor_comments'].insert_one(*args, **kwargs)
+        return await db_client.insert_one("editor_comments", *args, **kwargs)
 
     @classmethod
     async def find_comment(cls, *args, **kwargs):
-        return await cls._get_db()['editor_comments'].find_one(*args, **kwargs)
+        return await db_client.find_one("editor_comments", *args, **kwargs)
 
     @classmethod
     def find_comments(cls, *args, **kwargs):
-        return cls._get_db()['editor_comments'].find(*args, **kwargs)
+        return db_client.query("editor_comments").filter(*args, **kwargs)

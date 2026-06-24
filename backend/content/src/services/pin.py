@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import uuid
 from datetime import datetime, timezone
 
@@ -33,7 +34,7 @@ class PinService:
         docs = (
             await BaseRepository.get("documents")
             .find({"_id": {"$in": doc_ids}})
-            .to_list(length=len(doc_ids))
+            .execute()
         )
         doc_map = {str(d["_id"]): d for d in docs}
         result = []

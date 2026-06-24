@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -10,4 +11,4 @@ class PolicyProposalRepository:
 
     @classmethod
     async def insert_one(cls, *args, **kwargs):
-        return await cls._get_db()['policy_proposals'].insert_one(*args, **kwargs)
+        return await db_client.insert_one("policy_proposals", *args, **kwargs)

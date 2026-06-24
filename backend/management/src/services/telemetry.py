@@ -47,7 +47,7 @@ class TelemetryService:
             {"$sort": {"count": -1}},
         ]
         cursor = SystemRepository.aggregate_telemetry(pipeline)
-        return await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        return await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
 
     @staticmethod
     async def log_performance_metric(
@@ -95,5 +95,5 @@ class TelemetryService:
         return (
             await ModerationRepository.find_moderator_activities({"actor_id": user_id})
             .sort("timestamp", -1)
-            .to_list(length=100)
+            .execute()
         )

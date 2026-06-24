@@ -15,7 +15,7 @@ class Database:
 
     async def insert_document(self, document_data: dict):
         try:
-            res = await self.db_client.insert_one(collection="documents", document=document_data)
+            res = await db_client.insert_one("db_client", collection="documents", document=document_data)
             logger.info("Tạo bản ghi tài liệu thành công")
             return str(res.inserted_id)
         except Exception as e:

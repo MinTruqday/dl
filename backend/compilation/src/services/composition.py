@@ -363,7 +363,7 @@ class CompositionService:
             .find_comments({"document_id": document_id, "status": "open"})
             .sort("created_at", -1)
         )
-        comments = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        comments = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         for c in comments:
             c["_id"] = str(c.get("_id", ""))
             if isinstance(c.get("created_at"), datetime):

@@ -1,3 +1,4 @@
+from src.core.infrastructure.api_client import db_client
 import uuid
 from datetime import datetime, timezone
 
@@ -69,7 +70,7 @@ class BookmarkService:
             await DocumentRepository
             .find({"_id": {"$in": bookmark_ids}})
             .limit(limit)
-            .to_list(length=limit)
+            .execute()
         )
         return [
             {
@@ -111,7 +112,7 @@ class BookmarkService:
             await BookmarkFolderRepository
             .find({"user_id": str(current_user.id)})
             .sort("created_at", -1)
-            .to_list(length=50)
+            .execute()
         )
         return [
             {

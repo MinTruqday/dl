@@ -41,7 +41,7 @@ class HistoryService:
             .find(query, {"messages": 0})
             .sort("updated_at", -1)
         )
-        return await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        return await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
 
     @staticmethod
     async def get_session_detail(session_id: str, user_id: str) -> Dict[str, Any]:
@@ -54,7 +54,7 @@ class HistoryService:
             await AiMessageRepository
             .find({"session_id": session_id})
             .sort("created_at", 1)
-            .to_list(length=100)
+            .execute()
         )
         session["messages"] = messages
         return session

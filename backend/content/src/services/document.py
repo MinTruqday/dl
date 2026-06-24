@@ -88,8 +88,8 @@ class DocumentService:
             {"$group": {"_id": "$categories"}},
             {"$sort": {"_id": 1}},
         ]
-        tags_list = await docs_col.aggregate(pipeline_tags).to_list(100)
-        categories_list = await docs_col.aggregate(pipeline_categories).to_list(100)
+        tags_list = await docs_col.aggregate(pipeline_tags).execute()
+        categories_list = await docs_col.aggregate(pipeline_categories).execute()
         return {
             "tags": [tag["_id"] for tag in tags_list],
             "categories": [category["_id"] for category in categories_list],
@@ -110,7 +110,7 @@ class DocumentService:
             .sort("views", -1)
             .limit(limit)
         )
-        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -129,7 +129,7 @@ class DocumentService:
                 "$text": {"$search": query},
             }
         ).limit(limit)
-        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -175,7 +175,7 @@ class DocumentService:
             .find(query)
             .sort("_id", -1)
             .limit(limit)
-            .to_list(length=limit)
+            .execute()
         )
         return [
             {
@@ -358,7 +358,7 @@ class DocumentService:
                 query["_id"] = {"$lt": cursor}
 
         cursor_db = docs_collection.find(query).sort(sort_field, sort_dir).limit(limit)
-        documents = await cursor_db.to_list(length=limit)
+        documents = await cursor_db.execute()
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -477,7 +477,7 @@ class DocumentService:
             await DocumentRepository
             .find({"creator_id": str(current_user.id), "is_deleted": True})
             .sort("deleted_at", -1)
-            .to_list(length=100)
+            .execute()
         )
         return [
             {
@@ -707,7 +707,7 @@ class DocumentService:
             .find({"document_id": document_id})
             .sort("timestamp", -1)
             .limit(100)
-            .to_list(length=100)
+            .execute()
         )
         return [
             {
@@ -757,7 +757,7 @@ class DocumentService:
         documents = (
             await DocumentRepository
             .aggregate(pipeline)
-            .to_list(length=limit)
+            .execute()
         )
 
         def format_date(val):
@@ -837,7 +837,7 @@ class DocumentService:
             {"$sort": {"count": -1}},
             {"$limit": limit},
         ]
-        results = await docs_col.aggregate(pipeline).to_list(length=limit)
+        results = await docs_col.aggregate(pipeline).execute()
         return [r["_id"] for r in results]
 
     @staticmethod
@@ -846,8 +846,8 @@ class DocumentService:
         query = {"creator_id": str(current_user.id)}
         if parent_id:
             query["parent_id"] = parent_id
-        cursor = db["workspace_folders"].find(query).sort("created_at", 1)
-        folders = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        cursor = db_client.query("workspace_folders").filter(query).sort("created_at", 1)
+        folders = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         for f in folders:
             f["_id"] = str(f["_id"])
         return folders
@@ -989,7 +989,7 @@ class DocumentService:
         db = database.mongodb.get_default_database()
         docs_col = DocumentRepository
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
-        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.to_list(...)` manually.
+        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
         return [
             {
                 "_id": str(b["_id"]),
