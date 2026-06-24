@@ -12,10 +12,7 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.repositories.composition import CompositionRepository
-from src.core.infrastructure.content_client import ContentServiceClient
 from src.repositories.pomodoro import PomodoroRepository
-from src.core.infrastructure.content_client import ContentServiceClient
-from src.repositories.composition import CompositionRepository
 
 
 class CompositionService:
@@ -128,7 +125,17 @@ class CompositionService:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy đề xuất chỉnh sửa"
             )
-        doc = await ContentServiceClient.get_document(sug["document_id"])
+        doc = None
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    f"{settings.CONTENT_URL}/tai-lieu/{sug['document_id']}",
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
+                if r.status_code == 200:
+                    doc = r.json().get("data")
+        except Exception as e:
+            logger.warning(f"Không thể lấy thông tin tài liệu để kiểm tra quyền: {e}")
         if (
             doc
             and str(doc.get("creator_id")) != user_id
@@ -145,7 +152,7 @@ class CompositionService:
             {
                 "$set": {
                     "status": action,
-                    "resolved_at": datetime.now(timezone.utc).isoformat(),
+                    "resolved_at": datetime.now(timezone.utc),
                 }
             },
         )
@@ -214,35 +221,38 @@ class CompositionService:
             logger.error(f"Lỗi cấu trúc khi phân tích bản nháp: {e}")
 
         reading_time_minutes = max(1, words // 200)
-        await ContentServiceClient.update_document(
-            document_id,
-            {
-                "query": {"$or": [{"creator_id": user_id}, {"co_authors": user_id}]},
-                "update": {
-                    "$set": {
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.put(
+                    f"{settings.CONTENT_URL}/tai-lieu/{document_id}/noi-dung",
+                    json={
                         "draft_content": content,
                         "toc": toc,
                         "reading_time_minutes": reading_time_minutes,
-                        "updated_at": datetime.now(timezone.utc).isoformat(),
-                    }
-                }
-            }
-        )
+                    },
+                    headers={"X-User-Id": user_id},
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
+        except Exception as e:
+            logger.error(f"Lỗi lưu bản nháp sang content service: {e}")
         return {
             "message": "Lưu bản nháp thành công",
-            "timestamp": str(datetime.now(timezone.utc).isoformat()),
+            "timestamp": str(datetime.now(timezone.utc)),
         }
 
     @staticmethod
     async def submit_for_review(document_id: str, current_user, db=None):
         user_id = str(current_user.id)
-        await ContentServiceClient.update_document(
-            document_id,
-            {
-                "query": {"creator_id": user_id},
-                "update": {"$set": {"editor_review_status": "pending_review"}}
-            }
-        )
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.post(
+                    f"{settings.CONTENT_URL}/ban-nhap/{document_id}/kiem-duyet",
+                    json={"action": "pending_review"},
+                    headers={"X-User-Id": user_id},
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
+        except Exception as e:
+            logger.error(f"Lỗi gửi yêu cầu xét duyệt sang content service: {e}")
         logger.info("Đã chuyển tài liệu vào hàng đợi xét duyệt")
         return {"message": "Đã đưa tài liệu vào hàng đợi xét duyệt"}
 
@@ -258,8 +268,18 @@ class CompositionService:
         import re
 
         user_id = str(current_user.id)
-        document = await ContentServiceClient.get_document(str(document_id))
-        if not document:
+        document = None
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    f"{settings.CONTENT_URL}/tai-lieu/{document_id}",
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
+                if r.status_code == 200:
+                    document = r.json().get("data")
+        except Exception as e:
+            logger.error(f"Lỗi lấy tài liệu từ content service: {e}")
+        if not document or str(document.get("creator_id")) != user_id:
             raise HTTPException(
                 status_code=403,
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
@@ -289,28 +309,29 @@ class CompositionService:
                 new_blocks.append(new_block)
             new_content["blocks"] = new_blocks
 
-        update_data = {
+        update_payload = {
             "title": new_title,
             "description": new_desc,
-            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
         if new_content:
-            update_data["content"] = new_content
-        await ContentServiceClient.update_document(
-            str(document_id),
-            {
-                "update": {"$set": update_data}
-            }
-        )
-        await ContentServiceClient.create_document_version(
-            {
-                "document_id": str(document_id),
-                "creator_id": user_id,
-                "action": "GLOBAL_REPLACE",
-                "details": f"Replaced '{search_term}' with '{replace_term}'",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-        )
+            update_payload["content"] = new_content
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.put(
+                    f"{settings.CONTENT_URL}/tai-lieu/{document_id}",
+                    json=update_payload,
+                    headers={"X-User-Id": user_id},
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
+                await client.post(
+                    f"{settings.CONTENT_URL}/phien-ban/luu/{document_id}",
+                    params={"version_note": f"Tìm và thay thế: '{search_term}' → '{replace_term}'"},
+                    headers={"X-User-Id": user_id},
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
+        except Exception as e:
+            logger.error(f"Lỗi cập nhật tài liệu sang content service: {e}")
+        
         logger.info("Tìm kiếm và thay thế thành công")
         return {
             "message": "Thao tác tìm kiếm và thay thế thành công",
@@ -366,7 +387,17 @@ class CompositionService:
                 status_code=404, detail="Không tìm thấy bình luận trực tiếp"
             )
 
-        doc = await ContentServiceClient.get_document(comment["document_id"])
+        doc = None
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    f"{settings.CONTENT_URL}/tai-lieu/{comment['document_id']}",
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
+                if r.status_code == 200:
+                    doc = r.json().get("data")
+        except Exception as e:
+            logger.warning(f"Không thể lấy thông tin tài liệu để kiểm tra quyền: {e}")
         if (
             doc
             and str(doc.get("creator_id")) != str(current_user.id)
@@ -392,8 +423,22 @@ class CompositionService:
     async def get_version_diff(
         document_id: str, version_id_a: str, version_id_b: str, current_user, db=None
     ) -> dict:
-        v_a = await ContentServiceClient.get_document_version(version_id_a)
-        v_b = await ContentServiceClient.get_document_version(version_id_b)
+        v_a, v_b = None, None
+        try:
+            async with httpx.AsyncClient() as client:
+                ra = await client.get(
+                    f"{settings.CONTENT_URL}/phien-ban/tai-lieu/{document_id}",
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
+                if ra.status_code == 200:
+                    versions = ra.json().get("data", [])
+                    for v in versions:
+                        if str(v.get("_id")) == version_id_a:
+                            v_a = v
+                        if str(v.get("_id")) == version_id_b:
+                            v_b = v
+        except Exception as e:
+            logger.error(f"Lỗi lấy lịch sử phiên bản từ content service: {e}")
         if not v_a or not v_b:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy phiên bản tài liệu để so sánh"
