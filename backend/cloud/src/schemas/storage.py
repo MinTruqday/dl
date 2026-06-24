@@ -5,11 +5,9 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from uuid6 import uuid7
 
-
 class ShareAccess(BaseModel):
     user_id: str
     role: str = "viewer"
-
 
 class StorageItemBase(BaseModel):
     name: str
@@ -27,13 +25,11 @@ class StorageItemBase(BaseModel):
     entities: Optional[dict] = {}
     broken_links: Optional[List[str]] = []
 
-
 class StorageItemCreate(StorageItemBase):
     is_folder: bool = False
     size: int = 0
     mime_type: Optional[str] = None
     url: Optional[str] = None
-
 
 class StorageItemUpdate(BaseModel):
     name: Optional[str] = None
@@ -52,13 +48,11 @@ class StorageItemUpdate(BaseModel):
     entities: Optional[dict] = None
     broken_links: Optional[List[str]] = None
 
-
 class FileVersion(BaseModel):
     version_id: str = Field(default_factory=lambda: str(uuid7()))
     url: str
     size: int
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class StorageItemInDB(StorageItemBase):
     id: str = Field(default_factory=lambda: str(uuid7()))
@@ -74,7 +68,6 @@ class StorageItemInDB(StorageItemBase):
     versions: List[FileVersion] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class StorageItemResponse(StorageItemBase):
     id: str = Field()

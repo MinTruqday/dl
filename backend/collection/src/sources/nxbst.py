@@ -23,7 +23,6 @@ from src.core.infrastructure.configuration import settings
 
 MIN_FILE_SIZE_BYTES = settings.MIN_FILE_SIZE_BYTES
 
-
 class State:
     def __init__(self):
         self.temp_dir = ""
@@ -231,7 +230,6 @@ class State:
                 shutil.rmtree(self.temp_dir)
             if os.path.exists(temp_pdf_dir):
                 shutil.rmtree(temp_pdf_dir, ignore_errors=True)
-
 
 class NxbstSource:
     @staticmethod

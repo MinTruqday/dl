@@ -10,7 +10,6 @@ from src.core.infrastructure.configuration import settings
 
 router = APIRouter(prefix="/phan-hoi")
 
-
 @router.post("/phan-hoi")
 async def submit_feedback(req: FeedbackRequest):
     try:

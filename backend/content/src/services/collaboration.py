@@ -20,7 +20,6 @@ from src.repositories.collaboration import CollaborationRepository
 from src.repositories.collaboration import CollaborationRepository
 from src.repositories.collaboration import CollaborationRepository
 
-
 class CollaborationService:
 
     @staticmethod

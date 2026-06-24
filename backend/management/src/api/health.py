@@ -13,7 +13,6 @@ from src.schemas.account import Role, UserInDB
 
 router = APIRouter(prefix="/van-hanh")
 
-
 @router.get(
     "/chi-so",
     response_model=APIResponse[Any],
@@ -24,7 +23,6 @@ async def get_system_metrics(db=Depends(get_db)):
         data=await TelemetryService.get_system_stats(),
         message="Lấy dữ liệu hoạt động thành công",
     )
-
 
 @router.get(
     "/bao-tri",
@@ -37,7 +35,6 @@ async def get_maintenance_status(db=Depends(get_db)):
         message="Lấy trạng thái bảo trì thành công",
     )
 
-
 @router.post(
     "/bao-tri",
     response_model=APIResponse[Any],
@@ -49,7 +46,6 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
         message="Cập nhật cấu hình bảo trì thành công",
     )
 
-
 @router.post(
     "/sao-luu",
     response_model=APIResponse[Any],
@@ -60,7 +56,6 @@ async def trigger_backup(db=Depends(get_db)):
         data=await HealthService.trigger_backup(),
         message="Bắt đầu sao lưu dữ liệu",
     )
-
 
 @router.post(
     "/tiep-thi/chien-dich",
@@ -76,7 +71,6 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
         status=201,
     )
 
-
 @router.get(
     "/cai-dat",
     response_model=APIResponse[Any],
@@ -84,7 +78,6 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
 )
 async def get_system_config(db=Depends(get_db)):
     return APIResponse(data={}, message="Lấy cấu hình thành công")
-
 
 @router.get(
     "/tinh-trang",
@@ -97,7 +90,6 @@ async def get_system_health(db=Depends(get_db)):
         message="Tạo báo cáo tình trạng thành công",
     )
 
-
 @router.get(
     "/bao-cao",
     response_model=APIResponse[Any],
@@ -108,10 +100,6 @@ async def get_admin_reports(db=Depends(get_db)):
         data=await AccountService.get_report_queue(status_filter=None),
         message="Lấy danh sách báo cáo vi phạm thành công",
     )
-
-
-
-
 
 @router.post(
     "/nguoi-dung/{user_id}/cam-ngam",
@@ -128,7 +116,6 @@ async def shadowban_user(
         message="Áp dụng quyền hiển thị thành công",
     )
 
-
 @router.post(
     "/nguoi-dung/{user_id}/xac-minh/{status}",
     response_model=APIResponse[Any],
@@ -143,7 +130,6 @@ async def verify_kyc(
         ),
         message="Cập nhật hồ sơ xác minh danh tính thành công",
     )
-
 
 @router.get(
     "/luu-tru/thong-ke",

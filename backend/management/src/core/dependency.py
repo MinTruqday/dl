@@ -46,8 +46,6 @@ from src.core.security.access import ALGORITHM, SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-
-
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -89,7 +87,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     }
     return CurrentUser(**user_doc)
 
-
 async def get_current_user_optional(
     token: Optional[str] = Depends(
         OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
@@ -102,10 +99,8 @@ async def get_current_user_optional(
     except HTTPException:
         return None
 
-
 async def get_current_user_token_param(token: str) -> CurrentUser:
     return await get_current_user(token)
-
 
 def require_role(required_roles: List[Role]):
 
@@ -123,7 +118,6 @@ def require_role(required_roles: List[Role]):
         return current_user
 
     return role_checker
-
 
 class RateLimiting:
 
@@ -147,7 +141,6 @@ class RateLimiting:
         await redis.pipeline_incr_expire(key, self.period)
         return True
 
-
 def require_permissions(required_permissions: List[str]):
 
     async def permission_checker(
@@ -166,15 +159,12 @@ def require_permissions(required_permissions: List[str]):
 
     return permission_checker
 
-
 from fastapi import Header
-
 
 class AuthenticatedUser:
     def __init__(self, user_id: str, user_name: str = "User"):
         self.id = user_id
         self.full_name = user_name
-
 
 def get_current_user_from_header(
     x_user_id: str = Header(None), x_user_name: str = Header("User")

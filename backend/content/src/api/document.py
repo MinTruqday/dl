@@ -29,7 +29,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/tai-lieu")
 
-
 @router.post("", response_model=APIResponse[DocumentResponse])
 async def create_document(
     doc_in: DocumentCreate,
@@ -40,7 +39,6 @@ async def create_document(
         message="Tạo tài liệu mới thành công",
         status=status.HTTP_201_CREATED,
     )
-
 
 @router.put("/{document_id}/noi-dung", response_model=APIResponse[DocumentResponse])
 async def update_document_content(
@@ -56,7 +54,6 @@ async def update_document_content(
         status=status.HTTP_200_OK,
     )
 
-
 @router.put("/{document_id}", response_model=APIResponse[DocumentResponse])
 async def update_document(
     document_id: str,
@@ -70,7 +67,6 @@ async def update_document(
         message="Cập nhật dữ liệu mô tả tài liệu thành công",
         status=status.HTTP_200_OK,
     )
-
 
 @router.get("", response_model=APIResponse[List[DocumentResponse]])
 async def list_documents(
@@ -89,8 +85,6 @@ async def list_documents(
         status=status.HTTP_200_OK,
     )
 
-
-
 @router.get(
     "/thu-muc",
     response_model=APIResponse[Any],
@@ -102,7 +96,6 @@ async def get_folders(
     folders = await DocumentService.get_folders(parent_id, current_user)
     return APIResponse(data=folders, message="Lấy cấu trúc thư mục thành công")
 
-
 @router.post(
     "/thu-muc",
     response_model=APIResponse[Any],
@@ -113,7 +106,6 @@ async def create_folder(
 ):
     folder_doc = await DocumentService.create_folder(req.name, req.parent_id, current_user)
     return APIResponse(data=folder_doc, message="Tạo thư mục làm việc thành công")
-
 
 @router.delete(
     "/thu-muc/{folder_id}",
@@ -127,7 +119,6 @@ async def delete_folder(
     return APIResponse(
         data=res, message="Xóa thư mục vĩnh viễn thành công"
     )
-
 
 @router.get(
     "/ca-nhan",
@@ -146,7 +137,6 @@ async def get_my_documents(
         message="Lấy danh sách tài liệu cá nhân thành công",
     )
 
-
 @router.get(
     "/thung-rac",
     response_model=APIResponse[Any],
@@ -157,7 +147,6 @@ async def get_trash(current_user: CurrentUser = Depends(get_current_user)):
         data=await DocumentService.get_trash(current_user),
         message="Lấy nội dung thùng rác thành công",
     )
-
 
 @router.get("/{document_id}", response_model=APIResponse[DocumentResponse])
 async def get_document_by_id(
@@ -172,7 +161,6 @@ async def get_document_by_id(
         message="Lấy thông tin chi tiết tài liệu thành công",
         status=status.HTTP_200_OK,
     )
-
 
 @router.get("/tai-lieu/{slug}", response_model=APIResponse[DocumentResponse])
 async def get_document_by_slug(
@@ -194,14 +182,12 @@ async def get_document_decryption_key(
         status=status.HTTP_200_OK,
     )
 
-
 @router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentService.get_document_preview(slug),
         message="Lấy bản xem trước tài liệu công khai thành công",
     )
-
 
 @router.delete(
     "/{document_id}",
@@ -216,7 +202,6 @@ async def soft_delete_document(
         message="Đã chuyển tài liệu vào thùng rác",
     )
 
-
 @router.post(
     "/{document_id}/khoi-phuc",
     response_model=APIResponse[Any],
@@ -229,7 +214,6 @@ async def restore_document(
         data=await DocumentService.restore_document(document_id, current_user),
         message="Tài liệu của bạn đã được khôi phục thành công về trạng thái ban đầu",
     )
-
 
 @router.post(
     "/{document_id}/bao-ve",
@@ -248,7 +232,6 @@ async def set_document_password(
         message="Thiết lập mật khẩu truy cập tài liệu thành công",
     )
 
-
 @router.get(
     "/{document_id}/nhat-ky-hoat-dong",
     response_model=APIResponse[Any],
@@ -261,7 +244,6 @@ async def get_document_audit_logs(
         data=await DocumentService.get_document_audit_logs(document_id, current_user),
         message="Lấy nhật ký hoạt động tài liệu thành công",
     )
-
 
 @router.post(
     "/{document_id}/danh-dau",
@@ -276,7 +258,6 @@ async def toggle_star_document(
         data=res,
         message="Cập nhật trạng thái ưu tiên tài liệu thành công",
     )
-
 
 @router.post(
     "/{document_id}/chuyen-nhuong",
@@ -294,7 +275,6 @@ async def transfer_document(
         message="Đã chuyển quyền sở hữu tài liệu",
     )
 
-
 @router.get("/{document_id}/thong-ke", response_model=APIResponse[Any])
 async def get_document_analytics(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
@@ -305,7 +285,6 @@ async def get_document_analytics(
         message="Lấy dữ liệu tương tác người đọc thành công",
     )
 
-
 @router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
 async def get_document_academic(
     document_id: str, current_user: CurrentUser = Depends(get_current_user)
@@ -315,12 +294,6 @@ async def get_document_academic(
         data=res,
         message="Lấy dữ liệu phân tích tài liệu thành công",
     )
-
-
-
-
-
-
 
 @router.put(
     "/{document_id}/the",
@@ -336,8 +309,6 @@ async def update_tags(
         document_id, DocumentUpdate(tags=req.tags), current_user
     )
     return APIResponse(data=result, message="Cập nhật thẻ danh mục tài liệu thành công")
-
-
 
 @router.put(
     "/{document_id}/len-lich",
@@ -355,7 +326,6 @@ async def schedule_publish(
         current_user,
     )
     return APIResponse(data=result, message="Lên lịch xuất bản tài liệu thành công")
-
 
 @router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
 async def unlock_document(

@@ -8,7 +8,6 @@ from src.core.registry import PromptType, registry
 
 from src.core.infrastructure.configuration import settings
 
-
 class InterpreterAgent:
     def __init__(self):
         pass
@@ -130,6 +129,5 @@ class InterpreterAgent:
         except Exception as e:
             logger.error(f"Lỗi thực thi hệ thống nội bộ: {e}")
             return f"Đã xảy ra lỗi trong quá trình thực thi lệnh, vui lòng thử lại sau giây lát: {e}"
-
 
 interpreter = InterpreterAgent()

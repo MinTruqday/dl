@@ -11,7 +11,6 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 
-
 class PipelineRag:
     _mongo_client = None
 
@@ -303,6 +302,5 @@ class PipelineRag:
         except Exception as e:
             logger.error(f"Lỗi phân tích dữ liệu: {e}")
             return ""
-
 
 ingestion_pipeline = PipelineRag()

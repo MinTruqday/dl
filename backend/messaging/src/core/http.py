@@ -4,7 +4,6 @@ import httpx
 from fastapi import HTTPException
 from loguru import logger
 
-
 class HttpCore:
     def __init__(self, max_failures=5, reset_timeout=60):
         self.max_failures = max_failures
@@ -33,14 +32,12 @@ class HttpCore:
             self.state = "OPEN"
             logger.warning("Mất kết nối do lỗi liên tục")
 
-
 ai_circuit_breaker = HttpCore()
 
 ai_http_client = httpx.AsyncClient(
     limits=httpx.Limits(max_keepalive_connections=100, max_connections=200),
     timeout=httpx.Timeout(30.0),
 )
-
 
 async def make_ai_request(url: str, json_data: dict, timeout: float = 30.0):
     ai_circuit_breaker.check()

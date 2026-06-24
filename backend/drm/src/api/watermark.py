@@ -10,7 +10,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/ket-xuat")
 
-
 @router.get("/{document_id}/drm")
 async def export_document_pdf(
     document_id: str,
@@ -26,7 +25,6 @@ async def export_document_pdf(
     return Response(
         content=pdf_content, media_type="application/octet-stream", headers=headers
     )
-
 
 from src.schemas.watermark import TextPayload
 

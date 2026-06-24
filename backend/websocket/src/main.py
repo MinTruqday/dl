@@ -8,7 +8,6 @@ from src.api.message import router as message_socket
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")
@@ -36,7 +35,6 @@ app.add_middleware(
 app.include_router(composition_socket)
 app.include_router(message_socket)
 
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng tin nhắn đã sẵn sàng")
@@ -44,13 +42,11 @@ async def startup_event():
 
     await init_db()
 
-
 @app.on_event("shutdown")
 async def shutdown_event():
     from src.core.infrastructure.database import close_db
 
     await close_db()
-
 
 @app.get("/health")
 async def health_check():

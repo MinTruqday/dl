@@ -15,7 +15,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/thu-vien")
 
-
 @router.post("/danh-sach", response_model=APIResponse[Any])
 async def create_reading_list(
     data: ReadingListCreate,
@@ -28,7 +27,6 @@ async def create_reading_list(
         status=201,
     )
 
-
 @router.get("/danh-sach", response_model=APIResponse[Any])
 async def get_my_lists(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -38,7 +36,6 @@ async def get_my_lists(
         message="Lấy danh sách đọc thành công",
     )
 
-
 @router.get("/danh-sach/{list_id}", response_model=APIResponse[Any])
 async def get_list_by_id(
     list_id: str, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -47,7 +44,6 @@ async def get_list_by_id(
         data=await LibraryService.get_reading_list_by_id(list_id, current_user),
         message="Lấy nội dung danh sách đọc thành công",
     )
-
 
 @router.post(
     "/lists/{list_id}/documents/{document_id}", response_model=APIResponse[Any]
@@ -64,7 +60,6 @@ async def add_to_list(
         ),
         message="Đã thêm tài liệu vào danh sách đọc",
     )
-
 
 @router.delete(
     "/lists/{list_id}/documents/{document_id}", response_model=APIResponse[Any]

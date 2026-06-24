@@ -10,7 +10,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/ma-qua-tang")
 
-
 @router.post(
     "",
     response_model=APIResponse[Any],
@@ -27,7 +26,6 @@ async def create_coupon(
         status=201,
     )
 
-
 @router.get(
     "",
     response_model=APIResponse[Any],
@@ -41,7 +39,6 @@ async def get_all_coupons(
         message="Lấy danh sách mã giảm giá thành công",
         status=200,
     )
-
 
 @router.delete(
     "/{coupon_id}",
@@ -58,7 +55,6 @@ async def delete_coupon(
         message="Xóa vĩnh viễn mã giảm giá thành công",
         status=200,
     )
-
 
 @router.get(
     "/kiem-tra",
@@ -77,7 +73,6 @@ async def validate_coupon(
         message="Kiểm tra mã ưu đãi thành công",
     )
 
-
 @router.post(
     "/{coupon_id}/phe-duyet",
     response_model=APIResponse[Any],
@@ -93,7 +88,6 @@ async def approve_coupon(
         data=await CouponService.approve_coupon(coupon_id, action, current_user),
         message="Xử lý phê duyệt thành công",
     )
-
 
 @router.patch(
     "/{coupon_id}/trang-thai",

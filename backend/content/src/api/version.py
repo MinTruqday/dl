@@ -9,7 +9,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/phien-ban")
 
-
 @router.post("/luu/{document_id}", response_model=APIResponse[Any])
 async def save_version(
     document_id: str,
@@ -25,7 +24,6 @@ async def save_version(
         status=201,
     )
 
-
 @router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_document_versions(
     document_id: str,
@@ -36,7 +34,6 @@ async def get_document_versions(
         data=await VersionService.get_versions(document_id, current_user),
         message="Lấy lịch sử phiên bản thành công",
     )
-
 
 @router.post("/{version_id}/khoi-phuc", response_model=APIResponse[Any])
 async def restore_version(

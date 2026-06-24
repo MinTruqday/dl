@@ -8,9 +8,7 @@ from src.core.dependency import get_db, require_role
 from src.core.response import APIResponse
 from src.schemas.account import Role
 
-
 router = APIRouter(prefix="/quang-cao")
-
 
 @router.get("", response_model=APIResponse[Any])
 async def get_active_banners(db=Depends(get_db)):
@@ -18,7 +16,6 @@ async def get_active_banners(db=Depends(get_db)):
         data=await BannerService.get_banners(active_only=True),
         message="Tải banner quảng cáo thành công",
     )
-
 
 @router.get(
     "/tat-ca",
@@ -31,7 +28,6 @@ async def get_all_banners(db=Depends(get_db)):
         message="Lấy danh sách banner quảng cáo thành công",
     )
 
-
 @router.post(
     "",
     response_model=APIResponse[Any],
@@ -43,7 +39,6 @@ async def create_banner(data: BannerRequest, db=Depends(get_db)):
         message="Tạo banner quảng cáo thành công",
         status=201,
     )
-
 
 @router.delete(
     "/{banner_id}",

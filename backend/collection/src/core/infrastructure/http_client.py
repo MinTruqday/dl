@@ -23,7 +23,7 @@ class InternalHttpClient:
         kwargs["headers"] = headers
         try:
             response = await self._client.request(method, url, **kwargs)
-            # Fail-fast on 5xx errors for internal services
+            
             if response.status_code >= 500:
                 raise httpx.RequestError(f"Internal service error: {response.status_code}")
             return response

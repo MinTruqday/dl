@@ -41,7 +41,7 @@ class HistoryService:
             .find(query, {"messages": 0})
             .sort("updated_at", -1)
         )
-        return await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        return await cursor 
 
     @staticmethod
     async def get_session_detail(session_id: str, user_id: str) -> Dict[str, Any]:

@@ -9,7 +9,6 @@ from tenacity import (
     wait_exponential,
 )
 
-
 def with_retry(max_retries=3, base_wait=2, max_wait=10):
     def decorator(func):
         @wraps(func)

@@ -15,7 +15,6 @@ from src.agents.engine import search_engine
 from src.workflow.state import ActingState
 from uuid6 import uuid7
 
-
 from src.schemas.model import TaskEvaluation
 
 async def supervisor_node(state: ActingState):
@@ -71,7 +70,6 @@ async def supervisor_node(state: ActingState):
 
     next_node = route_map.get(agent_name, "action")
     return {"steps": steps, "current_step_index": idx, "next_node": next_node}
-
 
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     idx = state.get("current_step_index", 0)
@@ -138,26 +136,20 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "error": "Internal processing error",
         }
 
-
 async def code_interpreter_node(state: ActingState):
     return await execute_tool_node(state, interpreter, "InterpreterAgent")
-
 
 async def search_engine_node(state: ActingState):
     return await execute_tool_node(state, search_engine, "EngineAgent")
 
-
 async def actor_agent_node(state: ActingState):
     return await execute_tool_node(state, action, "Action")
-
 
 async def researcher_agent_node(state: ActingState):
     return await execute_tool_node(state, knowledge, "Knowledge")
 
-
 async def reasoner_agent_node(state: ActingState):
     return await execute_tool_node(state, reasoning, "Reasoning")
-
 
 async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])
@@ -183,22 +175,17 @@ async def trimmer_node(state: ActingState):
 
     return {"next_node": "trimmer"}
 
-
 def trimmer_router(state: ActingState):
     return state.get("next_node", "aggregator")
-
 
 async def sanitizer_node(state: ActingState):
     return {"next_node": "trimmer"}
 
-
 async def aggregator_node(state: ActingState):
     return {"final_answer": ""}
 
-
 def router(state: ActingState):
     return state.get("next_node", "aggregator")
-
 
 workflow = StateGraph(ActingState)
 workflow.add_node("supervisor", supervisor_node)
@@ -236,7 +223,6 @@ workflow.add_edge("aggregator", END)
 
 memory = MemorySaver()
 supervisor_app = workflow.compile(checkpointer=memory, interrupt_before=["action"])
-
 
 class OrchestrationWorkflow:
     def __init__(self):
@@ -300,6 +286,5 @@ class OrchestrationWorkflow:
         query = req_data.get("query", "")
         async for chunk in response_generator.aggregate_stream(query, final_results):
             yield {"type": "message", "chunk": chunk}
-
 
 supervisor = OrchestrationWorkflow()

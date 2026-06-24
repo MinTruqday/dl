@@ -7,7 +7,6 @@ from src.tools.interface import llm, tools
 
 from src.core.infrastructure.configuration import settings
 
-
 class SandboxAgent:
     def __init__(self):
         self.base_url = settings.INTERNAL_API_URL
@@ -90,6 +89,5 @@ class SandboxAgent:
         except Exception as e:
             logger.error(f"Quá trình thực thi bị gián đoạn: {e}")
             return f"Đã xảy ra lỗi trong quá trình thực thi lệnh, vui lòng thử lại sau giây lát: {e}"
-
 
 actor = SandboxAgent()

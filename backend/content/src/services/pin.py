@@ -8,7 +8,6 @@ from loguru import logger
 from src.core.infrastructure.database import database
 from src.core.repositories.database import BaseRepository
 
-
 class PinService:
 
     @staticmethod

@@ -21,14 +21,12 @@ class FeedbackRequest(BaseModel):
     )
     comment: Optional[str] = ""
 
-
 from typing import Literal
 
 class TaskEvaluation(BaseModel):
     status: Literal["PASS", "FAIL"] = Field()
     feedback: str = Field()
     revised_task: str = Field(default="")
-
 
 class ContextQuery(BaseModel):
     question: str = Field(description="The rewritten question")
@@ -50,7 +48,6 @@ class QueryOptimization(BaseModel):
 class DocumentGrade(BaseModel):
     is_relevant: bool = Field(description="Whether the document is relevant to the question")
 
-
 class RouteDecision(BaseModel):
     reasoning: str = Field(description="Step-by-step reasoning process")
     route: Literal["action", "knowledge", "chat"] = Field(
@@ -58,13 +55,11 @@ class RouteDecision(BaseModel):
     )
     answer: str = Field(default="", description="Return empty string if not chat")
 
-
 class QualityEvaluation(BaseModel):
     is_hallucination: bool = Field(
         description="Whether the response contains hallucinated or incorrect information"
     )
     feedback: str = Field(description="Feedback explaining the reasoning")
-
 
 class MultiQueryOutput(BaseModel):
     queries: List[str] = Field(

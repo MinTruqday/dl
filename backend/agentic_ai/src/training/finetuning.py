@@ -13,7 +13,6 @@ MODELS_DIR.mkdir(parents=True, exist_ok=True)
 ADAPTERS_DIR.mkdir(parents=True, exist_ok=True)
 GGUF_DIR.mkdir(parents=True, exist_ok=True)
 
-
 def format_samples_to_chat(samples: list, tokenizer=None, for_mlx=False) -> list:
     formatted = []
     for s in samples:
@@ -43,7 +42,6 @@ def format_samples_to_chat(samples: list, tokenizer=None, for_mlx=False) -> list
                 text = f"<|user|>\n{user_content}\n<|assistant|>\n{output}"
             formatted.append({"text": text})
     return formatted
-
 
 def run_mlx_training(job_id: str, config: dict, update_callback):
     import mlx.core as mx
@@ -154,7 +152,6 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
         "final_loss": 0,
         "merged_path": merged_path,
     }
-
 
 def run_hf_training(job_id: str, config: dict, update_callback):
     import torch
@@ -299,7 +296,6 @@ def run_hf_training(job_id: str, config: dict, update_callback):
         "merged_path": merged_path,
     }
 
-
 def run_finetune_job(job_id: str, config: dict, update_callback):
     base_model_name = config.get("base_model", "").lower()
 
@@ -354,7 +350,6 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         logger.error(f"Lỗi chuyển đổi định dạng mô hình: {e}")
 
     return result
-
 
 def run_seq2seq_training(job_id: str, config: dict, update_callback):
     import torch
@@ -495,7 +490,6 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
         "final_loss": final_loss,
         "merged_path": merged_path,
     }
-
 
 def run_diffusion_training(job_id: str, config: dict, update_callback):
     import base64

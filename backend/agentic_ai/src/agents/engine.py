@@ -13,10 +13,8 @@ _SSRF_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-
 def _is_ssrf_attempt(query: str) -> bool:
     return bool(_SSRF_PATTERN.search(query))
-
 
 class EngineAgent:
     def __init__(self):
@@ -82,6 +80,5 @@ class EngineAgent:
             return result
 
         return "Hệ thống không thể trích xuất được bất kỳ thông tin nào có giá trị từ các nguồn dữ liệu tra cứu"
-
 
 search_engine = EngineAgent()

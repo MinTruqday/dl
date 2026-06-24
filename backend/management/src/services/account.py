@@ -18,7 +18,6 @@ from src.repositories.system import SystemRepository
 from src.repositories.moderation import ModerationRepository
 from src.repositories.moderation import ModerationRepository
 
-
 class AccountService:
 
     @staticmethod

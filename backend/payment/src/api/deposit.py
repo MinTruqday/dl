@@ -10,8 +10,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/nap-tien")
 
-
-
 @router.post("", response_model=APIResponse[Any])
 async def create_deposit(
     req: DepositRequest,

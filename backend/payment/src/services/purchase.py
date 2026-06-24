@@ -13,13 +13,12 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.database import database
 
-
 class PurchaseService:
 
     @staticmethod
     async def get_revenue(current_user) -> dict:
         docs_cursor = mongo.query("documents").filter({"creator_id": str(current_user.id)})
-        documents = await docs_cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        documents = await docs_cursor 
         doc_ids = [str(doc["_id"]) for doc in documents]
         
         total_views = sum(doc.get("view_count", 0) for doc in documents)

@@ -19,7 +19,6 @@ _hf = HuggingFaceEndpoint(
 )
 _llm = ChatHuggingFace(llm=_hf)
 
-
 class RetrievalRag:
     def __init__(self):
         self.llm = _llm
@@ -170,6 +169,5 @@ class RetrievalRag:
                 result[right] = doc
                 right -= 1
         return [d for d in result if d is not None]
-
 
 retriever = RetrievalRag()

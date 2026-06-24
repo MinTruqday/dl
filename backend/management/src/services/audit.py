@@ -5,7 +5,6 @@ from loguru import logger
 
 from src.core.infrastructure.database import database
 
-
 class AuditService:
 
     @staticmethod

@@ -30,7 +30,6 @@ except Exception as e:
     nli_model = None
     logger.error(f"Lỗi tải mô hình ngôn ngữ: {e}")
 
-
 try:
     from sentence_transformers import CrossEncoder
 
@@ -73,7 +72,6 @@ except Exception as e:
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
-
 from src.schemas.model import (
     ContextQuery,
     GraphRoute,
@@ -105,7 +103,6 @@ async def contextualize_question(state: AgentState):
         logger.error(f"Lỗi xử lý ngữ cảnh: {e}")
         return {"question": question}
 
-
 async def route_question(state: AgentState):
     question = state["question"]
     from src.core.registry import PromptType, registry
@@ -121,10 +118,8 @@ async def route_question(state: AgentState):
         logger.error(f"Lỗi điều hướng: {e}")
         return {"current_source": "db", "route": "rag"}
 
-
 def decide_initial_route(state: AgentState):
     return "generate_direct" if state.get("route") == "direct" else "preprocess_file"
-
 
 def preprocess_file(state: AgentState):
     file_data = state.get("file_data")
@@ -133,7 +128,6 @@ def preprocess_file(state: AgentState):
         if text:
             return {"file_data": text}
     return {}
-
 
 def _mask_pii(text: str) -> str:
     import re
@@ -144,7 +138,6 @@ def _mask_pii(text: str) -> str:
     )
     text = re.sub(r"\b(?:\d[ -]*?){13,16}\b", "[REDACTED CC]", text)
     return text
-
 
 async def retrieve_db(state: AgentState):
     question = state["question"]
@@ -225,7 +218,6 @@ async def retrieve_db(state: AgentState):
 
     return {"documents": list(set(extracted_documents)), "current_source": "db"}
 
-
 async def retrieve_internet(state: AgentState):
     from src.agents.engine import search_engine
 
@@ -239,7 +231,6 @@ async def retrieve_internet(state: AgentState):
     except Exception as e:
         logger.error(f"Lỗi tìm kiếm trên web: {e}")
         return {"documents": [], "current_source": "internet"}
-
 
 async def grade_documents(state: AgentState):
     question = state["question"]
@@ -266,14 +257,12 @@ async def grade_documents(state: AgentState):
             filtered_documents.append(d)
     return {"documents": filtered_documents}
 
-
 def decide_after_grade(state: AgentState):
     if len(state.get("documents", [])) > 0:
         return "generate"
     if state.get("current_source") == "db" and state.get("use_web"):
         return "retrieve_internet"
     return "generate"
-
 
 async def transform_query(state: AgentState):
     question = state["question"]
@@ -295,7 +284,6 @@ async def transform_query(state: AgentState):
         logger.error(f"Lỗi tối ưu lệnh tìm kiếm: {e}")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
-
 async def generate_direct(state: AgentState):
     from src.core.registry import PromptType, registry
 
@@ -310,7 +298,6 @@ async def generate_direct(state: AgentState):
         return {
             "generation": "The system encountered an unexpected error during generation and requires you to try again later"
         }
-
 
 async def generate(state: AgentState):
     question = state["question"]
@@ -364,7 +351,6 @@ async def generate(state: AgentState):
             "generation": "The system encountered an unexpected error during generation and requires you to try again later"
         }
 
-
 async def grade_generation(state: AgentState):
     documents = state.get("documents", [])
     generation = state["generation"]
@@ -399,12 +385,10 @@ async def grade_generation(state: AgentState):
         logger.exception(f"Lỗi đánh giá nội dung tạo ra: {e}")
         return {"hallucination_pass": "yes"}
 
-
 def check_hallucination(state: AgentState):
     if state.get("hallucination_pass") == "no" and state.get("retry_count", 0) < 2:
         return "transform_query"
     return END
-
 
 def decide_after_retrieve(state: AgentState):
     if state.get("use_smart"):
@@ -416,7 +400,6 @@ def decide_after_retrieve(state: AgentState):
     ):
         return "retrieve_internet"
     return "generate"
-
 
 workflow = StateGraph(AgentState)
 workflow.add_node("preprocess_file", preprocess_file)

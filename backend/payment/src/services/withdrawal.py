@@ -13,7 +13,6 @@ from src.core.infrastructure.database import database
 ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELLED"}
 ALLOWED_WITHDRAWAL_ACTIONS = {"approve", "reject"}
 
-
 class WithdrawalService:
 
     @staticmethod
@@ -28,7 +27,7 @@ class WithdrawalService:
             {"$group": {"_id": None, "total_revenue": {"$sum": "$amount"}}},
         ]
         cursor = mongo.aggregate(collection="transactions", pipeline=pipeline)
-        res = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        res = await cursor 
         total_revenue = res[0]["total_revenue"] if res else 0
         withdrawal_res = (
             await db["withdrawal_requests"]

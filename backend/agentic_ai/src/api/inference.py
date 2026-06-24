@@ -28,7 +28,6 @@ router = APIRouter(prefix="/suy-luan")
 
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
-
 async def _check_quota(current_user: CurrentUser):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
@@ -53,7 +52,6 @@ async def _check_quota(current_user: CurrentUser):
         logger.error(f"Lỗi kiểm tra dung lượng sử dụng: {e}")
         return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
 
-
 async def _consume_quota(
     current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
 ):
@@ -70,7 +68,6 @@ async def _consume_quota(
             )
     except Exception as e:
         logger.error(f"Lỗi trừ dung lượng đã sử dụng: {e}")
-
 
 async def _chat_direct(
     messages: List[dict],
@@ -90,7 +87,6 @@ async def _chat_direct(
         logger.error(f"Quá trình AI tự động tổng hợp văn bản đã bị gián đoạn do lỗi: {e}")
         raise Exception(f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}")
 
-
 async def _run_ai_with_quota(
     current_user: CurrentUser,
     messages: List[dict],
@@ -108,7 +104,6 @@ async def _run_ai_with_quota(
 
     return result
 
-
 @router.post("/tao-noi-dung")
 async def generate_text(
     req: GenerationRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -125,7 +120,6 @@ async def generate_text(
         raise HTTPException(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
-
 
 @router.post("/dich-thuat")
 async def translate_text(
@@ -147,7 +141,6 @@ async def translate_text(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
-
 @router.post("/tao-ma")
 async def generate_code(
     req: CodeRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -167,7 +160,6 @@ async def generate_code(
         raise HTTPException(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
-
 
 @router.post("/kiem-tra-ngu-phap")
 async def grammar_check(
@@ -205,7 +197,6 @@ async def grammar_check(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
-
 @router.post("/tom-tat")
 async def summarize_text(
     req: SummarizeRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -225,7 +216,6 @@ async def summarize_text(
         raise HTTPException(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
-
 
 @router.post("/kiem-tra-dao-van")
 async def check_plagiarism(
@@ -298,7 +288,6 @@ async def check_plagiarism(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
-
 @router.post("/hanh-dong")
 async def unified_action(
     req: ActionRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -339,7 +328,6 @@ async def unified_action(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
-
 @router.post("/tu-dong-nghia")
 async def get_synonyms(
     req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -366,7 +354,6 @@ async def get_synonyms(
         raise HTTPException(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
-
 
 @router.post("/trich-dan-thong-minh")
 async def suggest_citations(
@@ -410,7 +397,6 @@ async def suggest_citations(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
-
 @router.post("/bien-doi-van-ban")
 async def transform_tone(
     req: ToneRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -440,7 +426,6 @@ async def transform_tone(
         raise HTTPException(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
-
 
 @router.post("/kiem-duyet-noi-dung")
 async def peer_review(
@@ -476,7 +461,6 @@ async def peer_review(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
-
 @router.post("/tong-hop-tai-lieu")
 async def multi_doc_synthesis(
     req: SynthesisRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -510,7 +494,6 @@ async def multi_doc_synthesis(
             status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
         )
 
-
 @router.post("/trich-xuat-van-ban")
 async def extract_text(req: dict, current_user: CurrentUser = Depends(get_current_user)):
     try:
@@ -530,7 +513,6 @@ async def extract_text(req: dict, current_user: CurrentUser = Depends(get_curren
         raise HTTPException(
             status_code=500, detail=f"Không thể trích xuất văn bản từ nguồn cung cấp: {e}"
         )
-
 
 @router.post("/phan-tich-tai-lieu")
 async def analyze_document(
@@ -563,7 +545,6 @@ async def analyze_document(
     except Exception as e:
         logger.error(f"Lỗi phân tích tài liệu: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi phân tích tài liệu: {e}")
-
 
 @router.delete("/vector/{document_id}")
 async def delete_vector_document(document_id: str):

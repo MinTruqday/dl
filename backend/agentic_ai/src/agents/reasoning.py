@@ -6,9 +6,7 @@ from src.core.registry import PromptType, registry
 
 from src.core.infrastructure.configuration import settings
 
-
 from src.schemas.model import QualityEvaluation
-
 
 class ReasoningAgent:
     def __init__(self):
@@ -72,6 +70,5 @@ class ReasoningAgent:
             text = doc.get("text", "")[:800]
             parts.append(f"Source Document {i} {title} authored by {author}\n{text}")
         return "\n\n".join(parts)
-
 
 reasoner = ReasoningAgent()

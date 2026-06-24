@@ -13,11 +13,10 @@ from src.core.infrastructure.database import database
 from src.schemas.account import Role
 from src.repositories.user import UserRepository
 from src.repositories.system import SystemRepository
-# from src.repositories.marketing_campaign import MarketingCampaignRepository
+
 from src.repositories.moderation import BugModerationRepository
 from src.repositories.task import TaskRepository
 from src.repositories.policy_proposal import PolicyProposalRepository
-
 
 class HealthService:
 
@@ -267,8 +266,6 @@ class HealthService:
                 "buckets": [],
                 "categories": [],
             }
-
-
 
     @staticmethod
     async def handle_bug_report(data: dict, current_user) -> dict:

@@ -18,7 +18,6 @@ from src.core.infrastructure.configuration import settings
 
 MIN_FILE_SIZE_BYTES = settings.MIN_FILE_SIZE_BYTES
 
-
 class NxbgdSource:
     def __init__(self, target_class: str):
         self.target_class = target_class
@@ -284,7 +283,6 @@ class NxbgdSource:
             raise
         finally:
             await self.close()
-
 
 async def run_nxbgd_collector(target_class: str):
     logger.info("Đang khởi tạo chuỗi thu thập dữ liệu")

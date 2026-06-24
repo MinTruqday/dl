@@ -9,9 +9,7 @@ from src.utils.huggingface import HFInferenceChat
 
 from src.core.infrastructure.configuration import settings
 
-
 from src.schemas.model import RouteDecision
-
 
 class RouteAgent:
     def __init__(self):
@@ -47,6 +45,5 @@ class RouteAgent:
         except Exception as e:
             logger.exception(f"Lỗi điều hướng ngữ nghĩa: {e}")
             return {"route": "knowledge", "answer": ""}
-
 
 semantic_router = RouteAgent()

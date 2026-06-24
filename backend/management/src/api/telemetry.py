@@ -11,7 +11,6 @@ from src.schemas.account import Role, UserInDB
 
 router = APIRouter(prefix="/giam-sat")
 
-
 @router.get(
     "/thong-ke",
     response_model=APIResponse[Any],
@@ -23,7 +22,6 @@ async def get_stats(db=Depends(get_db)):
         message="Lấy thống kê hiệu suất thành công",
     )
 
-
 @router.get(
     "/tinh-trang",
     response_model=APIResponse[Any],
@@ -34,7 +32,6 @@ async def get_sys_health(db=Depends(get_db)):
         data=await TelemetryService.get_sys_health(),
         message="Hoàn tất kiểm tra",
     )
-
 
 @router.get(
     "/kiem-toan",
@@ -50,7 +47,6 @@ async def get_audit_logs(
         data=await TelemetryService.get_activity_stats(days=30),
         message="Lấy nhật ký thành công",
     )
-
 
 @router.get(
     "/hoat-dong",

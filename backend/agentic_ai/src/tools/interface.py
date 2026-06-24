@@ -6,7 +6,6 @@ from loguru import logger
 
 _http_client: Optional[httpx.AsyncClient] = None
 
-
 def _get_client() -> httpx.AsyncClient:
     global _http_client
     if _http_client is None or _http_client.is_closed:
@@ -15,7 +14,6 @@ def _get_client() -> httpx.AsyncClient:
             timeout=httpx.Timeout(30.0),
         )
     return _http_client
-
 
 async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
     from uuid6 import uuid7
@@ -41,9 +39,7 @@ async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
         await asyncio.sleep(2**attempt)
     return response
 
-
 import jwt
-
 
 def _check_system_access(token: str) -> bool:
     try:
@@ -55,7 +51,6 @@ def _check_system_access(token: str) -> bool:
     except:
         return False
 
-
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
@@ -65,7 +60,6 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL
-
 
 @tool
 async def get_user_balance(config: RunnableConfig) -> str:
@@ -91,7 +85,6 @@ async def get_user_balance(config: RunnableConfig) -> str:
     except Exception as e:
         logger.exception(f"Lỗi truy cập dữ liệu số dư: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
-
 
 @tool
 async def get_transaction_history(config: RunnableConfig) -> str:
@@ -123,7 +116,6 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         logger.exception(f"Hệ thống đang gặp gián đoạn khi truy xuất lịch sử giao dịch thanh toán của bạn: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
-
 @tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     """Redeem a gift voucher code to add funds to the account"""
@@ -150,7 +142,6 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         logger.exception(f"Lỗi xử lý yêu cầu đổi thưởng: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
-
 @tool
 async def get_revenue_report(config: RunnableConfig) -> str:
     """View revenue report from document sales, intended for authors"""
@@ -174,7 +165,6 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     except Exception as e:
         logger.exception(f"Lỗi tải báo cáo doanh thu: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
-
 
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
@@ -202,7 +192,6 @@ async def get_my_documents(config: RunnableConfig) -> str:
     except Exception as e:
         logger.exception(f"Gặp khó khăn trong việc tải danh sách tài liệu từ cơ sở dữ liệu: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
-
 
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
@@ -234,7 +223,6 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         logger.exception(f"Lỗi tải danh sách mục đã xóa: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
-
 @tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
     """Delete a document by ID, moving it to the trash bin"""
@@ -264,7 +252,6 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
         logger.exception(f"Thao tác xóa bỏ tài liệu đã thất bại do lỗi hệ thống: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
-
 @tool
 async def restore_document(document_id: str, config: RunnableConfig) -> str:
     """Restore a document from the trash bin by its ID"""
@@ -286,7 +273,6 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
     except Exception as e:
         logger.exception(f"Quá trình khôi phục tài liệu từ thùng rác đã thất bại: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
-
 
 @tool
 async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
@@ -315,7 +301,6 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
         logger.exception(f"Lỗi truy xuất dữ liệu phân tích: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
-
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
         res = await _make_api_request(
@@ -330,11 +315,9 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         logger.error(f"Lỗi tải nội dung tài liệu: {e}")
     return ""
 
-
 from src.api.inference import peer_review, suggest_citations, transform_tone
 
 from src.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
-
 
 @tool
 async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> str:
@@ -357,7 +340,6 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         logger.exception(f"Lỗi tạo gợi ý trích dẫn: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
-
 @tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     """Perform a peer review of a document, evaluating strengths and weaknesses"""
@@ -378,7 +360,6 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     except Exception as e:
         logger.exception(f"Lỗi quá trình đánh giá chéo: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
-
 
 @tool
 async def agent_transform_tone(
@@ -402,7 +383,6 @@ async def agent_transform_tone(
     except Exception as e:
         logger.exception(f"Lỗi thay đổi giọng văn: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
-
 
 @tool
 async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
@@ -430,9 +410,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         logger.exception(f"Lỗi xử lý yêu cầu nạp tiền: {e}")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
-
 from src.workflow.reduction import agent_summarize_long_document
-
 
 @tool
 async def create_document(
@@ -534,7 +512,6 @@ async def create_document(
     except Exception as e:
         raise Exception(f"Đã xảy ra một lỗi bất thường trong quá trình xử lý luồng dữ liệu: {e}")
 
-
 @tool
 async def read_document(document_id: str, config: RunnableConfig) -> str:
     """Read the content of a document by its ID. Use this before updating a document so you know its current content"""
@@ -562,7 +539,6 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
         return f"Tài liệu sử dụng định dạng toán học với nội dung sau\n{content}"
     else:
         return f"Tài liệu sử dụng định dạng thay thế với nội dung sau\n{content}"
-
 
 @tool
 async def update_document(
@@ -647,7 +623,6 @@ async def update_document(
         raise Exception("Lỗi cập nhật tài liệu")
     except Exception as e:
         raise Exception(f"Đã xảy ra một lỗi bất thường trong quá trình xử lý luồng dữ liệu: {e}")
-
 
 @tool
 async def translate_document(
@@ -786,7 +761,6 @@ async def translate_document(
         return "Quá trình dịch thuật đã hoàn tất nhưng gặp sự cố khi lưu trữ kết quả vào máy chủ"
     except Exception as e:
         return f"Không thể khởi tạo và xuất tệp tài liệu dịch thuật mới: {e}"
-
 
 tools = [
     agent_summarize_long_document,

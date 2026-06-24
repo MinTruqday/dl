@@ -7,7 +7,6 @@ from src.services.composition import EditorjsEngine
 
 router = APIRouter()
 
-
 @router.post("/bien-dich")
 async def compile_editorjs(req: CompileRequest):
     try:

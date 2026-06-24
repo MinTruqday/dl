@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Optional
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 
-
 class DatabaseRepository:
     def __init__(self, collection_name: str):
         self.collection_name = collection_name
@@ -47,7 +46,6 @@ class DatabaseRepository:
 
     def aggregate(self, pipeline: List[Dict[str, Any]], **kwargs):
         return mongo.aggregate("collection", pipeline, **kwargs)
-
 
 class PaymentRepository:
     _repos = {}

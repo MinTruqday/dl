@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 
 from src.schemas.account import Tier
 
-
 class QuotaLimit(BaseModel):
     daily_requests: Union[int, float] = 0
     daily_tokens: Union[int, float] = 0
@@ -15,13 +14,11 @@ class QuotaLimit(BaseModel):
     model: str = ""
     thinking: bool = False
 
-
 class UserQuota(BaseModel):
     user_id: str
     role: str
     limits: QuotaLimit
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class GlobalQuotaConfig(BaseModel):
     role_limits: Dict[str, QuotaLimit] = {
@@ -30,7 +27,6 @@ class GlobalQuotaConfig(BaseModel):
         "admin": QuotaLimit(daily_requests=math.inf, daily_tokens=math.inf),
     }
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class ConsumeQuotaRequest(BaseModel):
     user_id: str

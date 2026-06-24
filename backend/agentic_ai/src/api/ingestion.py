@@ -6,12 +6,10 @@ from src.store.database import vector_store
 
 router = APIRouter(prefix="/tiep-nap")
 
-
 @router.post("")
 async def ingest_endpoint(req: IngestRequest):
     logger.info("Bắt đầu xử lý nạp tài liệu")
     return await ingestion_pipeline.ingest_document(req.document_id)
-
 
 @router.delete("/tai-lieu/{document_id}")
 async def delete_document_endpoint(document_id: str):

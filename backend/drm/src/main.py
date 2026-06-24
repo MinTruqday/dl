@@ -19,7 +19,6 @@ logger.add(
     level="INFO",
 )
 
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")

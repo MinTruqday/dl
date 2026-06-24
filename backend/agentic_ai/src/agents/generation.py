@@ -7,7 +7,6 @@ from src.core.registry import PromptType, registry
 
 from src.harness.security import security
 
-
 class GenerationAgent:
     def __init__(self):
         pass
@@ -40,6 +39,5 @@ class GenerationAgent:
         except Exception as e:
             logger.error(f"Lỗi tạo nội dung phản hồi: {e}")
             yield f"Hệ thống gặp lỗi không mong đợi trong quá trình tạo phản hồi, vui lòng thử lại sau: {e}"
-
 
 response_generator = GenerationAgent()

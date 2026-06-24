@@ -13,7 +13,6 @@ from src.repositories.user import UserRepository
 from src.repositories.system import SystemRepository
 from src.repositories.moderation import ModerationRepository
 
-
 class TelemetryService:
 
     @staticmethod
@@ -42,7 +41,7 @@ class TelemetryService:
             {"$sort": {"count": -1}},
         ]
         cursor = SystemRepository.aggregate_telemetry(pipeline)
-        return await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        return await cursor 
 
     @staticmethod
     async def log_performance_metric(

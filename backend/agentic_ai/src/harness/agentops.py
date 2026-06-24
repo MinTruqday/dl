@@ -8,7 +8,6 @@ from loguru import logger
 
 from src.repositories.agent import AgentRepository
 
-
 @dataclass
 class TraceEvent:
     event_type: str
@@ -16,7 +15,6 @@ class TraceEvent:
     user_id: str
     timestamp: datetime
     data: dict = field(default_factory=dict)
-
 
 @dataclass
 class SessionMetrics:
@@ -34,9 +32,7 @@ class SessionMetrics:
     tool_call_breakdown: dict = field(default_factory=dict)
     llm_latencies_ms: list = field(default_factory=list)
 
-
 PROMETHEUS_PREFIX = "system_agent"
-
 
 class AgentopsHarness:
     def __init__(self):
@@ -50,7 +46,6 @@ class AgentopsHarness:
         if self._db_client is None:
             try:
                 
-
                 from src.core.infrastructure.configuration import settings
 
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
@@ -207,6 +202,5 @@ class AgentopsHarness:
                 )
 
         return "\n".join(lines) + "\n"
-
 
 agentops = AgentopsHarness()

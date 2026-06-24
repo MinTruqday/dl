@@ -3,7 +3,6 @@ from typing import Dict, List
 from fastapi import WebSocket
 from loguru import logger
 
-
 class CompositionSocket:
     def __init__(self):
         self.active_connections: Dict[str, List[WebSocket]] = {}
@@ -37,6 +36,5 @@ class CompositionSocket:
                         dead_connections.append(connection)
             for dead in dead_connections:
                 self.disconnect(dead, room_id)
-
 
 composition_socket_manager = CompositionSocket()

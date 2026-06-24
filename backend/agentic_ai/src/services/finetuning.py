@@ -19,9 +19,6 @@ from src.repositories.chat import ChatRepository
 
 active_jobs = {}
 
-
-
-
 async def report_progress(job_id: str, data: dict):
     
     update_fields = {}
@@ -58,7 +55,6 @@ async def report_progress(job_id: str, data: dict):
         await FinetuneRepository.update_job(
             {"_id": job_id}, {"$set": update_fields}
         )
-
 
 def _run_training_sync(job_id: str, config: dict, loop):
     from src.training.finetuning import run_finetune_job
@@ -114,7 +110,6 @@ def _run_training_sync(job_id: str, config: dict, loop):
     finally:
         active_jobs.pop(job_id, None)
 
-
 async def create_dataset(req: dict):
     
     doc = {
@@ -130,7 +125,6 @@ async def create_dataset(req: dict):
     await FinetuneRepository.insert_dataset(doc)
     return doc
 
-
 async def list_datasets(user_id: str):
     return (
         await get_db()["finetune_datasets"]
@@ -139,7 +133,6 @@ async def list_datasets(user_id: str):
         .execute()
     )
 
-
 async def get_dataset(dataset_id: str, user_id: str):
     doc = await get_db()["finetune_datasets"].find_one(
         {"_id": dataset_id, "user_id": user_id}
@@ -147,7 +140,6 @@ async def get_dataset(dataset_id: str, user_id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
     return doc
-
 
 async def delete_dataset(dataset_id: str, user_id: str):
     
@@ -160,7 +152,6 @@ async def delete_dataset(dataset_id: str, user_id: str):
         )
         return {"success": True}
     raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
-
 
 async def add_samples(dataset_id: str, req: dict):
     
@@ -192,7 +183,6 @@ async def add_samples(dataset_id: str, req: dict):
     )
     return {"added": len(documents), "total": total}
 
-
 async def get_samples(
     dataset_id: str,
     user_id: str,
@@ -212,7 +202,6 @@ async def get_samples(
         .limit(int(limit))
         .execute()
     )
-
 
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     
@@ -234,7 +223,6 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
         )
         return {"success": True}
     raise HTTPException(status_code=404, detail="Không tìm thấy mẫu yêu cầu")
-
 
 async def import_feedback(req: dict):
     
@@ -291,7 +279,6 @@ async def import_feedback(req: dict):
             {"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}}
         )
     return {"dataset_id": ds_id, "imported": len(samples)}
-
 
 async def import_documents(req: dict):
     
@@ -370,7 +357,6 @@ async def import_documents(req: dict):
         )
     return {"dataset_id": ds_id, "imported": len(samples)}
 
-
 async def create_job(req: dict):
     
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
@@ -406,7 +392,6 @@ async def create_job(req: dict):
         {"_id": ds_id}, {"$set": {"status": "training"}}
     )
     return job
-
 
 async def start_job(job_id: str, req: dict):
     
@@ -450,7 +435,6 @@ async def start_job(job_id: str, req: dict):
     )
     return {"status": "started", "job_id": job_id}
 
-
 async def list_jobs(user_id: str):
     return (
         await get_db()["finetune_jobs"]
@@ -459,13 +443,11 @@ async def list_jobs(user_id: str):
         .execute()
     )
 
-
 async def get_job(job_id: str, user_id: str):
     job = await mongo.find_one("finetune_jobs", {"_id": job_id, "user_id": user_id})
     if not job:
         raise HTTPException(status_code=404, detail="Không tìm thấy tác vụ huấn luyện")
     return job
-
 
 async def cancel_job(job_id: str, req: dict):
     
@@ -483,7 +465,6 @@ async def cancel_job(job_id: str, req: dict):
     raise HTTPException(
         status_code=400, detail="Không thể hủy tác vụ huấn luyện lúc này"
     )
-
 
 async def deploy_model(job_id: str, req: dict):
     
@@ -552,11 +533,9 @@ async def deploy_model(job_id: str, req: dict):
     )
     return {"status": "deployed", "model_name": model_name}
 
-
 async def evaluate_model(job_id: str, req: dict):
     from src.harness.evaluation import evaluation
 
-    
     job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}
     )

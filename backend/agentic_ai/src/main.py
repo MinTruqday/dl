@@ -26,7 +26,6 @@ from src.api.history import router as history
 from src.api.inference import router as inference
 from src.api.ingestion import router as ingest
 
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")
@@ -59,11 +58,9 @@ app.include_router(feedback)
 app.include_router(finetune)
 app.include_router(history)
 
-
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
 
 @app.get("/evaluate/metrics")
 async def harness_metrics():
@@ -74,7 +71,6 @@ async def harness_metrics():
         media_type="text/plain; version=0.0.4",
     )
 
-
 @app.get("/evaluate/status")
 async def harness_status():
     return {
@@ -84,7 +80,6 @@ async def harness_status():
         },
         "evaluation": evaluation.get_dashboard_metrics(),
     }
-
 
 @app.on_event("startup")
 async def startup_event():
@@ -119,7 +114,6 @@ async def startup_event():
             logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
     except Exception as e:
         logger.exception(f"Lỗi khởi tạo chỉ mục cơ sở dữ liệu: {e}")
-
 
 @app.on_event("shutdown")
 async def shutdown_event():

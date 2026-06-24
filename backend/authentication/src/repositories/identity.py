@@ -6,7 +6,6 @@ from typing import Any, Dict, Optional
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-
 class IdentityRepository:
     @staticmethod
     async def get_system_config() -> Optional[Dict[str, Any]]:

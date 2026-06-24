@@ -10,7 +10,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/tai-len")
 
-
 async def validate_svg(file: UploadFile):
     if file.filename and file.filename.lower().endswith(".svg"):
         content = await file.read()
@@ -22,7 +21,6 @@ async def validate_svg(file: UploadFile):
                 status_code=400, detail="Từ chối tệp đồ họa vector do có rủi ro"
             )
         await file.seek(0)
-
 
 @router.post("/hinh-anh", response_model=APIResponse[Any])
 async def upload_image(
@@ -37,7 +35,6 @@ async def upload_image(
         status=201,
     )
 
-
 @router.post("/tai-lieu", response_model=APIResponse[Any])
 async def upload_document(
     file: UploadFile = File(...),
@@ -49,7 +46,6 @@ async def upload_document(
         message="Tải lên và lưu trữ tài liệu thành công",
         status=201,
     )
-
 
 @router.post("/tap-tin", response_model=APIResponse[Any])
 async def upload_asset(
@@ -73,7 +69,6 @@ async def upload_asset(
         status=201,
     )
 
-
 @router.get("/storage/{file_path:path}", response_model=APIResponse[Any])
 async def get_presigned_download_url(
     file_path: str,
@@ -87,7 +82,6 @@ async def get_presigned_download_url(
         message="Tạo liên kết tải xuống bảo mật thành công",
         status=200,
     )
-
 
 @router.post("/phan-doan", response_model=APIResponse[Any])
 async def upload_chunk(
@@ -122,14 +116,13 @@ async def upload_chunk(
                 ) as infile:
                     await outfile.write(await infile.read())
 
-        class MockFile:
-
+        class LocalFileWrapper:
             def __init__(self, p, n):
                 self.file = open(p, "rb")
                 self.filename = n
 
-        mock_file = MockFile(final_path, filename)
-        result = await UploadService.upload_document(mock_file)
+        local_file = LocalFileWrapper(final_path, filename)
+        result = await UploadService.upload_document(local_file)
         import shutil
 
         shutil.rmtree(chunk_dir)

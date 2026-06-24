@@ -9,7 +9,6 @@ from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemU
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-
 class StorageService:
 
     @staticmethod
@@ -78,7 +77,7 @@ class StorageService:
             .storage_items.find(query)
             .sort([("is_folder", -1), ("name", 1)])
         )
-        items = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        items = await cursor 
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
@@ -99,7 +98,7 @@ class StorageService:
             .storage_items.find(query)
             .sort([("created_at", -1)])
         )
-        items = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        items = await cursor 
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
@@ -197,7 +196,7 @@ class StorageService:
         cursor = database.mongodb.get_default_database().storage_items.find(
             {"owner_id": owner_id, "parent_id": source_parent_id, "is_trashed": False}
         )
-        children = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        children = await cursor 
         for child in children:
             child_dict = StorageItemInDB(**child).dict()
             child_id_old = child_dict.pop("id", None)
@@ -335,5 +334,5 @@ class StorageService:
             .sort([("updated_at", -1)])
             .limit(limit)
         )
-        items = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        items = await cursor 
         return [StorageItemInDB(**item) for item in items]

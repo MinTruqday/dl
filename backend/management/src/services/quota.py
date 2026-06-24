@@ -11,7 +11,6 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.schemas.quota import QuotaLimit
 
-
 class QuotaService:
     @staticmethod
     async def get_global_config_from_db() -> dict:

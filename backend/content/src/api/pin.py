@@ -10,7 +10,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/ghim")
 
-
 @router.get("", response_model=APIResponse[Any])
 async def get_pinned_documents(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -19,7 +18,6 @@ async def get_pinned_documents(
         data=await PinService.get_pinned_documents(current_user),
         message="Lấy danh sách tài liệu ghim thành công",
     )
-
 
 @router.post("/{document_id}", response_model=APIResponse[Any])
 async def pin_document(
@@ -32,7 +30,6 @@ async def pin_document(
         message="Thêm tài liệu vào danh sách ghim thành công",
     )
 
-
 @router.delete("/{document_id}", response_model=APIResponse[Any])
 async def unpin_document(
     document_id: str,
@@ -43,7 +40,6 @@ async def unpin_document(
         data=await PinService.unpin_document(document_id, current_user),
         message="Xóa tài liệu khỏi danh sách ghim thành công",
     )
-
 
 @router.put("", response_model=APIResponse[Any])
 async def set_pinned_documents(

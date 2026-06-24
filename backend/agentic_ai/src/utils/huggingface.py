@@ -11,7 +11,6 @@ from langchain_core.messages import (
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from pydantic import Field
 
-
 class HFInferenceChat(BaseChatModel):
     client: Any = Field(default=None)
     model: str = Field(default="")

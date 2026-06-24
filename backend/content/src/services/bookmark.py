@@ -12,7 +12,6 @@ from src.repositories.profile import ContentProfileRepository
 from src.repositories.document import DocumentRepository
 from src.repositories.bookmark import BookmarkRepository
 
-
 class BookmarkService:
 
     @staticmethod

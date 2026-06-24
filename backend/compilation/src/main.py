@@ -22,7 +22,6 @@ from src.api.latex import router as latex
 
 from src.core.infrastructure.configuration import settings
 
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")
@@ -48,11 +47,9 @@ app.include_router(latex)
 app.include_router(editorjs)
 app.include_router(editor)
 
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo biên dịch thành công")
-
 
 @app.get("/health")
 async def health_check():
@@ -60,7 +57,6 @@ async def health_check():
         "status": "The document compilation service is currently operating normally and functioning as expected without any internal issues",
         "service": "document_compiler",
     }
-
 
 @app.on_event("shutdown")
 async def shutdown_event():

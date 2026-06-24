@@ -4,7 +4,6 @@ from src.sockets.composition import composition_socket_manager
 
 router = APIRouter()
 
-
 @router.websocket("/crdt/{document_id}")
 async def editor_websocket(websocket: WebSocket, document_id: str):
     try:

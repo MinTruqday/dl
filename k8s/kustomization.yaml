@@ -22,6 +22,7 @@ resources:
   - apps/notification.yaml
   - apps/websocket.yaml
   - apps/worker.yaml
+  - apps/cloud.yaml
   - apps/frontend.yaml
   - ingress/ingress.yaml
 
@@ -29,4 +30,3 @@ secretGenerator:
   - name: doclib-env
     envs:
       - .env
-  - apps/cloud.yaml

@@ -12,7 +12,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/xuat-ban")
 
-
 @router.post(
     "/{document_id}",
     response_model=APIResponse[Any],
@@ -30,7 +29,6 @@ async def publish_document(
         message="Tài liệu đã được xuất bản",
         status=status.HTTP_200_OK,
     )
-
 
 @router.post(
     "/{document_id}/len-lich",
@@ -51,7 +49,6 @@ async def schedule_publish(
         status=200,
     )
 
-
 @router.put(
     "/{document_id}/seo",
     response_model=APIResponse[Any],
@@ -70,7 +67,6 @@ async def update_seo_metadata(
         message="Cập nhật dữ liệu chuẩn SEO thành công",
         status=200,
     )
-
 
 @router.get("/{document_id}/do-de-doc", response_model=APIResponse[Any])
 async def get_readability_score(

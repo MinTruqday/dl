@@ -21,7 +21,6 @@ from src.api.ingestion import router as collector
 
 from src.core.infrastructure.configuration import settings
 
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")
@@ -45,7 +44,6 @@ app.add_middleware(
 
 app.include_router(collector)
 
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng thu thập dữ liệu đã sẵn sàng")
@@ -53,14 +51,12 @@ async def startup_event():
 
     asyncio.create_task(run_worker())
 
-
 @app.get("/health")
 async def health_check():
     return {
         "status": "The automated data collection service is currently operating normally and functioning as expected",
         "service": "crawler",
     }
-
 
 @app.on_event("shutdown")
 async def shutdown_event():

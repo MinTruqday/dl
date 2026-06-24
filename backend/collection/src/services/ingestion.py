@@ -12,8 +12,6 @@ from src.core.infrastructure.configuration import settings
 from src.schemas.ingestion import Collection
 from src.repositories.archive import ArchiveRepository
 
-
-
 async def trigger_collection(req: Collection):
     source = req.source
     pages = req.pages
@@ -54,7 +52,6 @@ async def trigger_collection(req: Collection):
             status_code=500, detail=f"Lỗi đưa quá trình thu thập dữ liệu vào hàng đợi: {e}"
         )
 
-
 async def stop_collection():
     try:
         logger.info("Tạm dừng quá trình thu thập dữ liệu thành công")
@@ -67,7 +64,6 @@ async def stop_collection():
         raise HTTPException(
             status_code=500, detail=f"Lỗi gửi lệnh tạm dừng cho tiến trình nền: {e}"
         )
-
 
 async def get_active_jobs():
     mongo_uri = settings.MONGODB_URI
@@ -83,7 +79,6 @@ async def get_active_jobs():
         for j in active_collectors
     ]
     return jobs
-
 
 async def get_collector_stats():
     mongo_uri = settings.MONGODB_URI
@@ -116,7 +111,6 @@ async def get_collector_stats():
         "active_sources": ["AnnaArchive", "NXBST", "NXBGD", "CTAN"],
         "status": "operational",
     }
-
 
 async def get_collector_logs():
     log_file = "logs/backend.log"

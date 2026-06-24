@@ -14,7 +14,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/danh-dau")
 
-
 @router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def create_highlight(
     document_id: str,
@@ -30,7 +29,6 @@ async def create_highlight(
         status=201,
     )
 
-
 @router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_highlights(
     document_id: str,
@@ -42,7 +40,6 @@ async def get_highlights(
         message="Lấy đoạn văn bản nổi bật thành công",
         status=200,
     )
-
 
 @router.put("/{highlight_id}/ghi-chu", response_model=APIResponse[Any])
 async def update_highlight_note(
@@ -59,7 +56,6 @@ async def update_highlight_note(
         status=200,
     )
 
-
 @router.delete("/{highlight_id}", response_model=APIResponse[Any])
 async def delete_highlight(
     highlight_id: str,
@@ -71,7 +67,6 @@ async def delete_highlight(
         message="Đã xóa phần đánh dấu khỏi tài liệu",
         status=200,
     )
-
 
 @router.get("/ghi-chu", response_model=APIResponse[Any])
 async def get_all_notes(
@@ -88,7 +83,6 @@ async def get_all_notes(
         message="Lấy danh sách ghi chú cá nhân thành công",
         status=200,
     )
-
 
 @router.get("/tai-lieu/{document_id}/ket-xuat", response_model=APIResponse[Any])
 async def export_highlights_markdown(

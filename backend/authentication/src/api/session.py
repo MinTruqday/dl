@@ -20,7 +20,6 @@ from src.schemas.identity import (
 
 router = APIRouter(prefix="/xac-thuc")
 
-
 @router.get("/ca-nhan", response_model=APIResponse[UserResponse])
 async def read_users_me(
     current_user: CurrentUser = Depends(get_current_user)
@@ -44,7 +43,6 @@ async def read_users_me(
         status=status.HTTP_200_OK,
     )
 
-
 @router.post(
     "/dang-ky",
     response_model=APIResponse[UserResponse],
@@ -60,7 +58,6 @@ async def register_user(
         message="Đăng ký thành công, vui lòng đăng nhập",
         status=status.HTTP_201_CREATED,
     )
-
 
 @router.post(
     "/dang-nhap",
@@ -80,7 +77,6 @@ async def login(
         status=status.HTTP_200_OK,
     )
 
-
 @router.post("/quen-mat-khau", response_model=APIResponse[Any])
 async def forgot_password(
     payload: ForgotPasswordRequest, request: Request
@@ -91,7 +87,6 @@ async def forgot_password(
         message="Yêu cầu đặt lại mật khẩu đã được gửi đi",
         status=status.HTTP_200_OK,
     )
-
 
 @router.post("/dat-lai-mat-khau", response_model=APIResponse[Any])
 async def reset_password(
@@ -106,7 +101,6 @@ async def reset_password(
         status=status.HTTP_200_OK,
     )
 
-
 @router.post("/xac-nhan-ma", response_model=APIResponse[Any])
 async def verify_code(
     payload: VerifyCodeRequest, request: Request
@@ -117,6 +111,4 @@ async def verify_code(
         message="Xác thực mã bảo mật thành công",
         status=status.HTTP_200_OK,
     )
-
-
 

@@ -11,7 +11,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/doc-hieu")
 
-
 @router.get("/lich-su", response_model=APIResponse[Any])
 async def get_history(
     cursor: str = None,
@@ -26,7 +25,6 @@ async def get_history(
         message="Lấy lịch sử đọc thành công",
     )
 
-
 @router.post("/tien-do", response_model=APIResponse[Any])
 async def update_progress(
     data: ProgressUpdate,
@@ -37,7 +35,6 @@ async def update_progress(
         data=await ReadingService.update_progress(data, current_user),
         message="Đồng bộ tiến độ đọc thành công",
     )
-
 
 @router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_in_document(
@@ -53,7 +50,6 @@ async def search_in_document(
         message="Tìm kiếm trong tài liệu thành công",
     )
 
-
 @router.delete("/lich-su", response_model=APIResponse[Any])
 async def clear_reading_history(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -62,7 +58,6 @@ async def clear_reading_history(
         data=await ReadingService.clear_reading_history(current_user),
         message="Xóa toàn bộ lịch sử đọc thành công",
     )
-
 
 @router.delete("/lich-su/{document_id}", response_model=APIResponse[Any])
 async def delete_history_item(
@@ -75,7 +70,6 @@ async def delete_history_item(
         message="Xóa lịch sử đọc thành công",
     )
 
-
 import io
 import ipaddress
 import socket
@@ -84,7 +78,6 @@ from urllib.parse import urlparse
 
 import aiohttp
 from fastapi import HTTPException
-
 
 def validate_url_ssrf(url: str):
     parsed = urlparse(url)
@@ -101,14 +94,12 @@ def validate_url_ssrf(url: str):
     except socket.gaierror as e:
         raise HTTPException(status_code=400, detail=f"Lỗi phân giải tên miền: {e}")
 
-
 def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
     if "" in info.filename or info.filename.startswith("/"):
         return False
     if info.external_attr >> 16 & 40960 == 40960:
         return False
     return True
-
 
 @router.get("/luu-tru/cay-thu-muc", response_model=APIResponse[Any])
 async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
@@ -147,7 +138,6 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
         raise he
     except Exception as e:
         return APIResponse(data=None, message=f"Lỗi tải cấu trúc thư mục: {e}", status=500)
-
 
 @router.get("/luu-tru/noi-dung", response_model=APIResponse[Any])
 async def get_zip_content(

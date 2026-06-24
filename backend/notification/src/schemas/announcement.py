@@ -4,13 +4,11 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from uuid6 import uuid7
 
-
 class AnnouncementCreate(BaseModel):
     target_user_id: str
     title: str
     body: str
     type: str = "system"
-
 
 class Announcement(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")

@@ -3,9 +3,7 @@ import os
 
 from loguru import logger
 
-
 from src.core.infrastructure.configuration import settings
-
 
 class Database:
     def __init__(self):
@@ -32,6 +30,5 @@ class Database:
             logger.info("Cập nhật bản ghi tài liệu thành công")
         except Exception as e:
             logger.error(f"Lỗi cập nhật dữ liệu tài liệu: {e}")
-
 
 database = Database()

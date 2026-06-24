@@ -11,7 +11,6 @@ from src.schemas.account import Role, UserInDB
 
 router = APIRouter(prefix="/han-muc")
 
-
 @router.get("/kiem-tra", response_model=APIResponse[Any], include_in_schema=False)
 async def check_quota_internal(
     user_id: str,
@@ -26,7 +25,6 @@ async def check_quota_internal(
         message="Thao tác nằm trong giới hạn sử dụng cho phép",
         status=200,
     )
-
 
 @router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_quota(
@@ -43,7 +41,6 @@ async def get_my_quota(
     )
     return APIResponse(data=usage, message="Lấy thông tin hạn mức sử dụng thành công")
 
-
 @router.put("/{role}/cau-hinh", response_model=APIResponse[Any])
 async def update_role_quota(
     role: str,
@@ -57,7 +54,6 @@ async def update_role_quota(
         message="Cập nhật giới hạn tài nguyên thành công",
     )
 
-
 @router.get("/cau-hinh", response_model=APIResponse[Any])
 async def get_global_config(
     current_user: CurrentUser = Depends(require_role([Role.ADMIN])), db=Depends(get_db)
@@ -67,10 +63,6 @@ async def get_global_config(
         data=global_cfg,
         message="Lấy cấu hình tài nguyên thành công",
     )
-
-
-
-
 
 @router.post("/tieu-thu", response_model=APIResponse[Any], include_in_schema=False)
 async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):

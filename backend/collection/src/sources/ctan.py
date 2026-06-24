@@ -21,7 +21,6 @@ from src.core.infrastructure.mq import mq as mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
 
-
 class CtanSource:
     @staticmethod
     async def run_list_collector(pages: int = 0):

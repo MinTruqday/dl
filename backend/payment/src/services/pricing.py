@@ -6,7 +6,6 @@ from loguru import logger
 from src.core.infrastructure.database import database
 from src.repositories.pricing import PricingRepository
 
-
 class PricingService:
 
     @staticmethod

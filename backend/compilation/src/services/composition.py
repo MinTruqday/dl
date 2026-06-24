@@ -16,7 +16,6 @@ from src.core.infrastructure.configuration import settings
 from src.repositories.composition import CompositionRepository
 from src.repositories.pomodoro import PomodoroRepository
 
-
 class CompositionService:
 
     @staticmethod
@@ -329,8 +328,6 @@ class CompositionService:
             "affected_fields": ["title", "description", "content"],
         }
 
-
-
     @staticmethod
     async def add_inline_comment(
         document_id: str, data: dict, current_user
@@ -359,7 +356,7 @@ class CompositionService:
             .find_comments({"document_id": document_id, "status": "open"})
             .sort("created_at", -1)
         )
-        comments = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        comments = await cursor 
         for c in comments:
             c["_id"] = str(c.get("_id", ""))
             if isinstance(c.get("created_at"), datetime):
@@ -438,5 +435,4 @@ class CompositionService:
             "timestamp_a": v_a.get("created_at"),
             "timestamp_b": v_b.get("created_at"),
         }
-
 

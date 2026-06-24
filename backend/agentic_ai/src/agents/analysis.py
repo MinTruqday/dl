@@ -1,7 +1,6 @@
 from loguru import logger
 from src.workflow.graph import knowledge_app
 
-
 class AnalysisAgent:
     def __init__(self):
         pass
@@ -55,6 +54,5 @@ class AnalysisAgent:
         except Exception as e:
             logger.exception(f"Lỗi truy cập cơ sở kiến thức: {e}")
             return f"Không thể lấy dữ liệu từ máy chủ, vui lòng làm mới và thử lại: {e}"
-
 
 researcher = AnalysisAgent()

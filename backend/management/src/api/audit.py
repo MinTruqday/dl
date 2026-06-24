@@ -10,7 +10,6 @@ from src.schemas.account import Role, UserInDB
 
 router = APIRouter(prefix="/kiem-toan")
 
-
 @router.get(
     "/logs",
     response_model=APIResponse[Any],

@@ -27,12 +27,11 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
             
         user_id = str(current_user.id)
         
-        # Kiểm tra lại quyền hạn Real-time
         document = await LicenseRepository.get_document(license_doc["document_id"])
         if document and document.get("is_premium") and document.get("creator_id") != user_id:
             purchase = await LicenseRepository.get_purchase(user_id, license_doc["document_id"])
             if not purchase:
-                # Thu hồi giấy phép ngay lập tức
+                
                 await LicenseRepository.update_license(license_doc["_id"], {"$set": {"status": "REVOKED"}})
                 raise HTTPException(status_code=403, detail="Bạn đã hết hạn hoặc bị thu hồi quyền truy cập tài liệu này")
 

@@ -16,7 +16,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/luu-tru")
 
-
 @router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
 async def create_folder(
     data: StorageItemCreate = Body(...),
@@ -33,7 +32,6 @@ async def create_folder(
         status=201,
     )
 
-
 @router.post("/tap-tin", response_model=APIResponse[StorageItemResponse])
 async def create_file(
     background_tasks: BackgroundTasks,
@@ -44,7 +42,6 @@ async def create_file(
     db=Depends(get_db),
 ):
     
-
     data.is_folder = False
     item = await StorageService.create_item(data, current_user.id)
     background_tasks.add_task(
@@ -55,7 +52,6 @@ async def create_file(
         message="Tải lên tệp tin cá nhân thành công",
         status=201,
     )
-
 
 @router.get("/danh-sach", response_model=APIResponse[List[StorageItemResponse]])
 async def list_items(
@@ -75,7 +71,6 @@ async def list_items(
         data=response_items, message="Lấy nội dung thư mục thành công", status=200
     )
 
-
 @router.get("/tim-kiem", response_model=APIResponse[List[StorageItemResponse]])
 async def search_items(
     q: str,
@@ -92,7 +87,6 @@ async def search_items(
         status=200,
     )
 
-
 @router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -108,7 +102,6 @@ async def get_recent_items(
         status=200,
     )
 
-
 @router.get("/han-muc", response_model=APIResponse[Any])
 async def get_storage_quota(
     current_user: CurrentUser = Depends(
@@ -120,7 +113,6 @@ async def get_storage_quota(
     return APIResponse(
         data=data, message="Cập nhật dung lượng lưu trữ thành công", status=200
     )
-
 
 @router.post(
     "/tap-tin/{item_id}/loi-tat", response_model=APIResponse[StorageItemResponse]
@@ -145,7 +137,6 @@ async def create_shortcut(
         message="Tạo lối tắt tệp thành công",
         status=201,
     )
-
 
 @router.get("/tai-ve-luu-tru")
 async def download_zip(
@@ -189,7 +180,6 @@ async def download_zip(
         headers={"Content-Disposition": "attachment; filename=storage_download.zip"},
     )
 
-
 @router.put("/tap-tin/{item_id}", response_model=APIResponse[StorageItemResponse])
 async def update_item(
     item_id: str,
@@ -223,7 +213,6 @@ async def update_item(
         status=200,
     )
 
-
 @router.delete("/tap-tin/{item_id}", response_model=APIResponse[Any])
 async def delete_item(
     item_id: str,
@@ -252,7 +241,6 @@ async def delete_item(
             )
         return APIResponse(data=None, message="Đã chuyển mục vào thùng rác", status=200)
 
-
 @router.post(
     "/tap-tin/{item_id}/sao-chep", response_model=APIResponse[StorageItemResponse]
 )
@@ -275,7 +263,6 @@ async def copy_item(
         status=201,
     )
 
-
 @router.post(
     "/tap-tin/{item_id}/phien-ban", response_model=APIResponse[StorageItemResponse]
 )
@@ -297,7 +284,6 @@ async def add_version(
         status=200,
     )
 
-
 @router.post("/tap-tin/{item_id}/chia-se", response_model=APIResponse[Any])
 async def share_archive(
     item_id: str,
@@ -310,7 +296,6 @@ async def share_archive(
 ):
     res = await StorageService.share_item(item_id, email, role, current_user.id)
     return APIResponse(data=None, message=res["message"], status=200)
-
 
 @router.get("/chia-se/{share_token}", response_model=APIResponse[StorageItemResponse])
 async def get_public_item(share_token: str, db=Depends(get_db)):

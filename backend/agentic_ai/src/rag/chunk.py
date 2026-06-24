@@ -1,25 +1,21 @@
 import re
 
-
 def _sanitize_text(text: str) -> bool:
     pattern = r"(?i)(ignore all previous instructions|bypass|jailbreak|you have been hacked|print out|forget the previous)"
     if re.search(pattern, text):
         return False
     return True
-
 
 import re
 import uuid
 
 from uuid6 import uuid7
 
-
 def _sanitize_text(text: str) -> bool:
     pattern = r"(?i)(ignore all previous instructions|bypass|jailbreak|you have been hacked|print out|forget the previous)"
     if re.search(pattern, text):
         return False
     return True
-
 
 from typing import Dict, List
 
@@ -33,7 +29,6 @@ try:
     HAS_CHONKIE = True
 except ImportError:
     HAS_CHONKIE = False
-
 
 class ChunkRag:
     def __init__(self):
@@ -149,6 +144,5 @@ class ChunkRag:
             )
 
         return chunks
-
 
 chunker = ChunkRag()

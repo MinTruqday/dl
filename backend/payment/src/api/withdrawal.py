@@ -10,7 +10,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/rut-tien")
 
-
 @router.post("", response_model=APIResponse[Any])
 async def request_withdrawal(
     req: WithdrawalRequest,
@@ -22,7 +21,6 @@ async def request_withdrawal(
         message="Đã gửi yêu cầu rút tiền",
         status=201,
     )
-
 
 @router.get(
     "/hang-doi",
@@ -37,7 +35,6 @@ async def get_withdrawal_queue(
         message="Lấy danh sách giao dịch rút tiền thành công",
         status=200,
     )
-
 
 @router.post(
     "/{withdrawal_id}/xac-minh",

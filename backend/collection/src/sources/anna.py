@@ -22,7 +22,6 @@ from src.core.storage import storage
 
 from src.core.infrastructure.configuration import settings
 
-
 class AnnaSource:
     @staticmethod
     async def run_list_collector(search_query: str = "", pages: int = 0):

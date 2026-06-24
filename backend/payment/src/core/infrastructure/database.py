@@ -6,14 +6,11 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-
 class DatabaseInfrastructure:
     def __init__(self):
         self.mongodb = None
 
-
 database = DatabaseInfrastructure()
-
 
 async def init_db():
     mongo_uri = settings.MONGODB_URI
@@ -24,11 +21,8 @@ async def init_db():
 
         sys.exit(1)
 
-
-
     from motor.motor_asyncio import AsyncIOMotorClient
     database.mongodb = AsyncIOMotorClient(mongo_uri)
-
 
     from src.core.infrastructure.mq import mq
     max_retries = 5
@@ -47,7 +41,6 @@ async def init_db():
             await asyncio.sleep(5)
 
     await setup_indexes()
-
 
 async def setup_indexes():
     try:

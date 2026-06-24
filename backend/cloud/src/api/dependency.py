@@ -15,7 +15,6 @@ from src.core.dependency import (
 )
 from src.core.dependency import CurrentUser, Role
 
-
 async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:

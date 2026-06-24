@@ -11,7 +11,6 @@ from src.api.withdrawal import router as withdrawal
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
 
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")
@@ -38,17 +37,14 @@ app.include_router(withdrawal)
 app.include_router(monetization)
 app.include_router(coupon)
 
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng thanh toán đã sẵn sàng")
     await init_db()
 
-
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_db()
-
 
 @app.get("/health")
 async def health_check():

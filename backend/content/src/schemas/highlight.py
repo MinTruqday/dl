@@ -4,7 +4,6 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-
 class HighlightCreateRequest(BaseModel):
     text: str
     color: str = "#e4e4e7"
@@ -12,10 +11,8 @@ class HighlightCreateRequest(BaseModel):
     end_offset: int = 0
     note: str = ""
 
-
 class HighlightNoteUpdateRequest(BaseModel):
     note: str
-
 
 class ReadingPreferenceUpdate(BaseModel):
     theme: Optional[str] = None

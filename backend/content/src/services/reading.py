@@ -9,7 +9,6 @@ from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
 from src.repositories.reading import ReadingRepository
 
-
 class ReadingService:
 
     @staticmethod

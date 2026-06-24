@@ -10,7 +10,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/danh-dau")
 
-
 @router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(
     data: BookmarkFolderCreate,
@@ -25,7 +24,6 @@ async def create_bookmark_folder(
         status=201,
     )
 
-
 @router.get("/thu-muc", response_model=APIResponse[Any])
 async def get_bookmark_folders(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -34,7 +32,6 @@ async def get_bookmark_folders(
         data=await BookmarkService.get_bookmark_folders(current_user),
         message="Lấy danh sách thư mục dấu trang thành công",
     )
-
 
 @router.put("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def assign_bookmarks(
@@ -50,7 +47,6 @@ async def assign_bookmarks(
         message="Cập nhật thư mục dấu trang thành công",
     )
 
-
 @router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def delete_bookmark_folder(
     folder_id: str,
@@ -64,7 +60,6 @@ async def delete_bookmark_folder(
         message="Xóa vĩnh viễn thư mục dấu trang thành công",
     )
 
-
 @router.post("/{document_id}", response_model=APIResponse[Any])
 async def toggle_bookmark(
     document_id: str,
@@ -77,7 +72,6 @@ async def toggle_bookmark(
         status=200,
     )
 
-
 @router.get("", response_model=APIResponse[Any])
 async def get_bookmarks(
     limit: int = Query(100),
@@ -88,6 +82,4 @@ async def get_bookmarks(
         data=await BookmarkService.get_bookmarks(current_user, limit),
         message="Lấy danh sách dấu trang thành công",
     )
-
-
 

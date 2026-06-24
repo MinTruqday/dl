@@ -20,7 +20,6 @@ _hf_endpoint = HuggingFaceEndpoint(
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
 
-
 class PlanAgent:
     def __init__(self):
         self.llm = llm
@@ -82,6 +81,5 @@ class PlanAgent:
         except Exception as e:
             logger.exception(f"Lỗi tạo kế hoạch: {e}")
             return [{"agent": "Knowledge", "task": f"Thông báo cho người dùng về việc phân tích thất bại: {e}"}]
-
 
 planner = PlanAgent()

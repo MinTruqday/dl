@@ -11,7 +11,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/kiem-tien")
 
-
 @router.post("/mua/tai-lieu", response_model=APIResponse[Any])
 async def purchase_document(
     req: PurchaseRequest,
@@ -26,7 +25,6 @@ async def purchase_document(
         status=200,
     )
 
-
 @router.post("/thanh-vien", response_model=APIResponse[Any])
 async def buy_membership(
     req: MembershipRequest,
@@ -39,7 +37,6 @@ async def buy_membership(
         status=200,
     )
 
-
 @router.get("/bang-gia", response_model=APIResponse[Any])
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
@@ -47,7 +44,6 @@ async def get_pricing_config(db=Depends(get_db)):
         message="Lấy giá gói thành viên thành công",
         status=200,
     )
-
 
 @router.get("/doanh-thu", response_model=APIResponse[Any])
 async def get_author_revenue(current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)):
@@ -57,7 +53,6 @@ async def get_author_revenue(current_user: CurrentUser = Depends(get_current_use
         message="Lấy số liệu doanh thu thành công",
         status=200
     )
-
 
 from pydantic import BaseModel
 

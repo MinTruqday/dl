@@ -7,7 +7,6 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-
 class ManagementMemory:
     def __init__(self):
         redis_url = settings.REDIS_URI
@@ -103,6 +102,5 @@ class ManagementMemory:
             "avg_quality": sum(e.get("answer_quality", 0) for e in history)
             / max(len(history), 1),
         }
-
 
 memory_manager = ManagementMemory()

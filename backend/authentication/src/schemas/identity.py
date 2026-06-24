@@ -8,13 +8,11 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 
-
 class KYC(str, Enum):
     NONE = "NONE"
     PENDING = "PENDING"
     VERIFIED = "VERIFIED"
     REJECTED = "REJECTED"
-
 
 class Creator(str, Enum):
     NONE = "NONE"
@@ -23,19 +21,16 @@ class Creator(str, Enum):
     REJECTED = "REJECTED"
     SUSPENDED = "SUSPENDED"
 
-
 class Role(str, Enum):
     GUEST = "guest"
     READER = "reader"
     AUTHOR = "author"
     ADMIN = "admin"
 
-
 class Tier(str, Enum):
     BASIC = "BASIC"
     PRO = "PRO"
     PREMIUM = "PREMIUM"
-
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -79,11 +74,9 @@ class UserBase(BaseModel):
         "default_visibility": "public",
     }
 
-
 class UserCreate(UserBase):
     password: str
     agreed_to_terms: bool = False
-
 
 class UserInDB(UserBase):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
@@ -97,7 +90,6 @@ class UserInDB(UserBase):
     last_password_change: Optional[datetime] = None
     last_bank_update: Optional[datetime] = None
 
-
 class UserResponse(UserBase):
     id: str = Field(alias="_id")
     created_at: datetime
@@ -105,7 +97,6 @@ class UserResponse(UserBase):
 
     class Config:
         populate_by_name = True
-
 
 class ProfileUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -115,31 +106,25 @@ class ProfileUpdate(BaseModel):
     location: Optional[str] = None
     website: Optional[str] = None
 
-
 class SettingsUpdate(BaseModel):
     theme: Optional[str] = None
     notifications_enabled: Optional[bool] = None
     privacy_mode: Optional[bool] = None
-
 
 class BrandPageUpdate(BaseModel):
     banner_url: Optional[str] = None
     theme_color: Optional[str] = None
     layout_type: Optional[str] = None
 
-
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
-
 
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
 
-
 class VerifyCodeRequest(BaseModel):
     token: str
-
 
 class NotificationSettingsUpdate(BaseModel):
     enable_comment_notifications: bool = True
@@ -147,27 +132,21 @@ class NotificationSettingsUpdate(BaseModel):
     enable_system_notifications: bool = True
     enable_email_digest: bool = False
 
-
 class UpdateRoleRequest(BaseModel):
     role: Role
 
-
 class UpdateStatusRequest(BaseModel):
     is_active: bool
-
 
 class ModerationActionRequest(BaseModel):
     reason: str
     duration_hours: Optional[int] = None
 
-
 class NoteRequest(BaseModel):
     note: str
 
-
 class PasskeyRequest(BaseModel):
     email: str
-
 
 class PasskeyFinishRequest(BaseModel):
     email: str

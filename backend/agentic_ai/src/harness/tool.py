@@ -11,7 +11,6 @@ DEFAULT_TOOL_TIMEOUT_SECONDS = settings.TOOL_TIMEOUT_SECONDS
 DEFAULT_MAX_RETRIES = settings.TOOL_MAX_RETRIES
 RETRY_BASE_DELAY_SECONDS = 0.5
 
-
 @dataclass
 class ToolResult:
     success: bool
@@ -20,7 +19,6 @@ class ToolResult:
     duration_ms: int = 0
     attempt: int = 1
 
-
 @dataclass
 class ToolDefinition:
     name: str
@@ -28,7 +26,6 @@ class ToolDefinition:
     timeout_seconds: float = DEFAULT_TOOL_TIMEOUT_SECONDS
     max_retries: int = DEFAULT_MAX_RETRIES
     is_async: bool = True
-
 
 class ToolHarness:
     def __init__(self):
@@ -120,6 +117,5 @@ class ToolHarness:
 
     def list_tools(self) -> list[str]:
         return list(self._registry.keys())
-
 
 tool = ToolHarness()

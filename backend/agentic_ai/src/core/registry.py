@@ -2,7 +2,6 @@ from enum import Enum
 
 from pydantic import BaseModel
 
-
 class PromptType(Enum):
     BRAIN_SYSTEM = "brain_system"
     CONTEXTUALIZE = "contextualize"
@@ -41,7 +40,6 @@ class PromptType(Enum):
     EVAL_JUDGE = "eval_judge"
     STORAGE_FILE_ANALYSIS = "storage_file_analysis"
     SECURITY_SCAN = "security_scan"
-
 
 class RegistryCore:
     _prompts = {
@@ -428,6 +426,5 @@ TEXT {text}""",
     @classmethod
     def get(cls, prompt_type: PromptType) -> str:
         return cls._prompts.get(prompt_type, "")
-
 
 registry = RegistryCore()

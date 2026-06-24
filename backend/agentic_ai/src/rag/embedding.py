@@ -10,7 +10,6 @@ from sentence_transformers import SentenceTransformer
 
 from src.core.infrastructure.configuration import settings
 
-
 class EmbeddingRag:
     def __init__(self):
         self._model_name = settings.EMBEDDING_MODEL
@@ -76,6 +75,5 @@ class EmbeddingRag:
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
         return await asyncio.to_thread(self._embed_batch, texts)
-
 
 embedder = EmbeddingRag()

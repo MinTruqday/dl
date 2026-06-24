@@ -3,7 +3,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-
 class Settings(BaseModel):
     PROJECT_NAME: str = os.getenv("PROJECT_NAME")
     VERSION: str = os.getenv("VERSION")
@@ -88,7 +87,6 @@ class Settings(BaseModel):
     MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
     DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT"))
     LONG_PROCESS_TIMEOUT: float = float(os.getenv("LONG_PROCESS_TIMEOUT"))
-
 
     MONGO_URL: str = os.getenv("MONGO_URL", "http://doclib_database:8800/co-so-du-lieu")
     QUEUE_URL: str = os.getenv("QUEUE_URL", "http://doclib_queue:8802/hang-doi")

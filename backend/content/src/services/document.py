@@ -28,8 +28,6 @@ from src.core.storage import upload_file
 from src.repositories.document import DocumentRepository
 from src.repositories.document import DocumentRepository
 
-
-
 def serialize_document(document):
     if not document:
         return None
@@ -41,7 +39,6 @@ def serialize_document(document):
     document["view_count"] = views
     document["views_count"] = views
     return document
-
 
 class DocumentService:
     @staticmethod
@@ -111,7 +108,7 @@ class DocumentService:
             .sort("views", -1)
             .limit(limit)
         )
-        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        documents = await cursor 
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -130,7 +127,7 @@ class DocumentService:
                 "$text": {"$search": query},
             }
         ).limit(limit)
-        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        documents = await cursor 
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -821,8 +818,6 @@ class DocumentService:
         logger.info("Ghi nhận quyết định kiểm duyệt tài liệu thành công")
         return {"message": "Cập nhật trạng thái kiểm duyệt tài liệu thành công"}
 
-
-
     @staticmethod
     async def get_trending_tags(
         limit: int = Query(
@@ -847,7 +842,7 @@ class DocumentService:
         if parent_id:
             query["parent_id"] = parent_id
         cursor = mongo.query("workspace_folders").filter(query).sort("created_at", 1)
-        folders = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        folders = await cursor 
         for f in folders:
             f["_id"] = str(f["_id"])
         return folders
@@ -989,7 +984,7 @@ class DocumentService:
         
         docs_col = DocumentRepository
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
-        documents = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        documents = await cursor 
         return [
             {
                 "_id": str(b["_id"]),

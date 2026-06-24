@@ -3,7 +3,6 @@ from typing import Annotated, Any, Dict, List, TypedDict
 
 from langchain_core.messages import BaseMessage, RemoveMessage, SystemMessage
 
-
 def reduce_chat_history(left: list, right: list) -> list:
     if left is None:
         left = []
@@ -34,7 +33,6 @@ def reduce_chat_history(left: list, right: list) -> list:
 
     return res
 
-
 def reduce_consolidated_results(left: list, right: list) -> list:
     if left is None:
         left = []
@@ -49,7 +47,6 @@ def reduce_consolidated_results(left: list, right: list) -> list:
     if len(combined) > 15:
         combined = [combined[0]] + combined[-14:]
     return combined
-
 
 class AgentState(TypedDict):
     chat_history: Annotated[list, reduce_chat_history]
@@ -66,7 +63,6 @@ class AgentState(TypedDict):
     document_ids: list
     image_data: str
     file_data: str
-
 
 class ActingState(TypedDict):
     req_data: Dict[str, Any]

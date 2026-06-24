@@ -21,7 +21,6 @@ except ImportError as e:
 else:
     REPORTLAB_AVAILABLE = True
 
-
 class WatermarkService:
 
     @staticmethod
@@ -52,7 +51,6 @@ class WatermarkService:
                     detail="Yêu cầu có bản quyền hoặc xác nhận mua hàng",
                 )
         
-        # Ghi log Audit đối với Admin tải tài liệu premium của người khác
         if (
             document.get("is_premium")
             and document.get("creator_id") != user_id
@@ -153,8 +151,6 @@ class WatermarkService:
             nonce = os.urandom(12)
             ciphertext = aesgcm.encrypt(nonce, pdf_data, None)
             
-            # Cấu trúc chuẩn xác nên là: 
-            # [16 bytes UUID] + [12 bytes Nonce] + [Ciphertext + 16 bytes Auth Tag của GCM]
             file_id_bytes = uuid.UUID(file_id).bytes 
             final_doclib_data = file_id_bytes + nonce + ciphertext
         except Exception as e:

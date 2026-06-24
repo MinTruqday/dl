@@ -11,7 +11,6 @@ from uuid6 import uuid7
 from src.core.infrastructure.database import database
 from src.core.dependency import CurrentUser, Role
 
-
 class CouponService:
 
     @staticmethod

@@ -18,7 +18,6 @@ from qdrant_client.http.models import (
 
 from src.core.infrastructure.configuration import settings
 
-
 class DatabaseStore:
     def __init__(self):
         self.client = AsyncQdrantClient(
@@ -140,6 +139,5 @@ class DatabaseStore:
         except Exception as e:
             logger.error(f"Không thể tiến hành xóa bỏ chỉ mục tìm kiếm khỏi hệ thống: {e}")
             raise
-
 
 vector_store = DatabaseStore()

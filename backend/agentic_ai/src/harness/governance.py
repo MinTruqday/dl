@@ -48,13 +48,11 @@ ROLE_POLICIES: dict[str, dict] = {
     },
 }
 
-
 @dataclass
 class PolicyDecision:
     allowed: bool
     reason: str = ""
     blocked_tool: Optional[str] = None
-
 
 @dataclass
 class SessionGovernanceState:
@@ -64,10 +62,8 @@ class SessionGovernanceState:
     tool_calls_used: int = 0
     estimated_tokens_used: int = 0
 
-
 def _estimate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
-
 
 class GovernanceHarness:
     def __init__(self):
@@ -178,6 +174,5 @@ class GovernanceHarness:
             "estimated_tokens_used": state.estimated_tokens_used,
             "tokens_limit": policy["max_tokens_per_session"],
         }
-
 
 governance = GovernanceHarness()

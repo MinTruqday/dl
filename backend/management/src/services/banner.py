@@ -7,7 +7,6 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.database import database
 
-
 class BannerService:
 
     @staticmethod

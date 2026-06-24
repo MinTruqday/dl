@@ -11,7 +11,6 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.repositories.notification import NotificationRepository
 
-
 class AnnouncementService:
 
     @staticmethod
@@ -23,7 +22,7 @@ class AnnouncementService:
             .skip(skip)
             .limit(limit)
         )
-        docs = await cursor # NO LONGER NEED TO_LIST: result is already list. Remove `await cursor.execute()` manually.
+        docs = await cursor 
         total = await NotificationRepository.count_documents(
             {"target_user_id": user_id}
         )

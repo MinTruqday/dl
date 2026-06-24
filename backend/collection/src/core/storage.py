@@ -6,7 +6,6 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-
 class StorageService:
     def __init__(self):
         endpoint = settings.MINIO_ENDPOINT or "minio:9000"
@@ -65,6 +64,5 @@ class StorageService:
         except Exception as e:
             logger.error(f"Lỗi mạng khi lưu tệp vĩnh viễn: {e}")
             raise e
-
 
 storage = StorageService()

@@ -5,7 +5,6 @@ import tempfile
 from loguru import logger
 from markitdown import MarkItDown
 
-
 def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> str:
     try:
         if "," in base64_data:

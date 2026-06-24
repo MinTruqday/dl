@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 
-
 class CreateDocument(BaseModel):
     title: str = Field(description="The title of the document")
     description: str = Field(description="A brief summary of the document")
@@ -13,7 +12,6 @@ class CreateDocument(BaseModel):
             "Use advanced blocks and tags appropriate for the requested format"
         )
     )
-
 
 class UpdateDocument(BaseModel):
     document_id: str = Field(description="The unique identifier of the document to update")

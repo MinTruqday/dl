@@ -12,7 +12,6 @@ ua = UserAgent(
     os=["windows", "macos"], browsers=["chrome", "edge", "firefox", "safari"]
 )
 
-
 @asynccontextmanager
 async def managed_browser(headless=True):
     playwright = None
@@ -49,7 +48,6 @@ async def managed_browser(headless=True):
             except Exception as e:
                 logger.warning(f"Lỗi dừng tác vụ xuất hình ảnh: {e}")
 
-
 async def get_stealth_context(browser):
     context = await browser.new_context(
         user_agent=ua.random,
@@ -57,7 +55,6 @@ async def get_stealth_context(browser):
         ignore_https_errors=True,
     )
     return context
-
 
 async def download_file_with_retry(
     url: str, dest_path: str, timeout: int = 300, max_retries: int = 3

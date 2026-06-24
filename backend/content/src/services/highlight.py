@@ -13,7 +13,6 @@ from src.repositories.highlight import HighlightRepository
 
 ALLOWED_HIGHLIGHT_COLORS = ["#18181b", "#71717a", "#e4e4e7"]
 
-
 class HighlightService:
 
     @staticmethod

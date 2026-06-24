@@ -11,7 +11,6 @@ from src.schemas.wallet import Transaction, TransactionType
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-
 class WalletService:
 
     @staticmethod

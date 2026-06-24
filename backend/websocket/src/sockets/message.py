@@ -13,7 +13,6 @@ from src.core.infrastructure.database import database
 from src.repositories.chat_group import ChatGroupRepository
 from src.repositories.message import MessageRepository
 
-
 class MessageSocket:
     def __init__(self):
         self.active_connections: dict[str, set[WebSocket]] = {}
@@ -204,6 +203,5 @@ class MessageSocket:
         await self.send_personal_message(
             {"type": "typing_indicator", "data": {"user_id": user_id}}, other_user_id
         )
-
 
 message_manager = MessageSocket()

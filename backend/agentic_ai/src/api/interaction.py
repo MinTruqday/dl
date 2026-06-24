@@ -15,7 +15,6 @@ from src.workflow.orchestration import supervisor
 
 router = APIRouter(prefix="/tro-chuyen")
 
-
 @router.post("")
 async def chat_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
@@ -104,7 +103,6 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             "answer": "Đã xảy ra lỗi, vui lòng thử lại sau",
             "route": "error",
         }
-
 
 @router.post("/phat-truc-tiep")
 async def stream_endpoint(req: ChatRequest, request: Request):

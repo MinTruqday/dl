@@ -11,7 +11,6 @@ from src.repositories.notification import NotificationRepository
 
 router = APIRouter(prefix="/thong-bao")
 
-
 @router.get("", response_model=APIResponse[Any])
 async def get_notifications(
     skip: int = Query(0, ge=0),
@@ -26,7 +25,6 @@ async def get_notifications(
         message="Lấy thông báo thành công",
     )
 
-
 @router.patch("/{notif_id}/doc-hieu", response_model=APIResponse[Any])
 async def mark_as_read(
     notif_id: str,
@@ -38,7 +36,6 @@ async def mark_as_read(
         message="Đã đánh dấu thông báo là đã đọc",
     )
 
-
 @router.patch("/doc-tat-ca", response_model=APIResponse[Any])
 async def mark_all_as_read(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -47,7 +44,6 @@ async def mark_all_as_read(
         data=await AnnouncementService.mark_all_as_read(str(current_user.id), db),
         message="Đã đánh dấu tất cả thông báo là đã đọc",
     )
-
 
 @router.delete("/{notif_id}", response_model=APIResponse[Any])
 async def delete_notification(
@@ -62,7 +58,6 @@ async def delete_notification(
         message="Xóa thông báo vĩnh viễn thành công",
     )
 
-
 @router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False)
 async def create_notification(data: AnnouncementCreate, db=Depends(get_db)):
     return APIResponse(
@@ -70,7 +65,6 @@ async def create_notification(data: AnnouncementCreate, db=Depends(get_db)):
         message="Gửi thông báo thành công",
         status=201,
     )
-
 
 @router.post("/cai-dat", response_model=APIResponse[Any])
 async def update_settings(

@@ -17,7 +17,6 @@ from src.schemas.account import BrandPageUpdate, ProfileUpdate, SettingsUpdate, 
 
 router = APIRouter(prefix="/ho-so")
 
-
 @router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_profile(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -27,7 +26,6 @@ async def get_my_profile(
         message="Lấy thông tin người dùng thành công",
         status=200,
     )
-
 
 @router.put("/ca-nhan", response_model=APIResponse[Any])
 async def update_my_profile(
@@ -43,7 +41,6 @@ async def update_my_profile(
         status=200,
     )
 
-
 @router.post("/dang-ky-tac-gia", response_model=APIResponse[Any])
 async def apply_author(
     data: Any, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -54,7 +51,6 @@ async def apply_author(
         status=201,
     )
 
-
 @router.post("/nang-cap-tac-gia", response_model=APIResponse[Any])
 async def become_author(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -64,7 +60,6 @@ async def become_author(
         message="Nâng cấp tài khoản tác giả thành công",
         status=200,
     )
-
 
 @router.post("/xac-minh-danh-tinh", response_model=APIResponse[Any])
 async def upload_kyc(
@@ -78,7 +73,6 @@ async def upload_kyc(
         status=status.HTTP_200_OK,
     )
 
-
 @router.get("/cai-dat", response_model=APIResponse[Any])
 async def get_settings(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -88,7 +82,6 @@ async def get_settings(
         message="Lấy cấu hình thành công",
         status=200,
     )
-
 
 @router.put("/cai-dat", response_model=APIResponse[Any])
 async def update_settings(
@@ -103,7 +96,6 @@ async def update_settings(
         message="Cập nhật cấu hình thành công",
         status=200,
     )
-
 
 @router.get(
     "/xuat-du-lieu",
@@ -127,7 +119,6 @@ async def request_data_export(
         },
     )
 
-
 @router.post("/chan/{target_id}", response_model=APIResponse[Any])
 async def block_user(
     target_id: str,
@@ -139,7 +130,6 @@ async def block_user(
         message="Hạn chế người dùng thành công",
         status=200,
     )
-
 
 @router.put("/trang-tac-gia", response_model=APIResponse[Any])
 async def update_brand_page(
@@ -153,7 +143,6 @@ async def update_brand_page(
         ),
         message="Cập nhật trang hồ sơ tác giả thành công",
     )
-
 
 @router.get("/{slug}", response_model=APIResponse[Any])
 async def get_public_profile(slug: str, db=Depends(get_db)):

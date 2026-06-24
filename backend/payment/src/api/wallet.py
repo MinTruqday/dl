@@ -10,7 +10,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/vi-dien-tu")
 
-
 @router.get("/so-du", response_model=APIResponse[Any])
 async def get_my_wallet(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
@@ -20,7 +19,6 @@ async def get_my_wallet(
         message="Lấy số dư tài khoản thành công",
         status=200,
     )
-
 
 @router.get("/lich-su", response_model=APIResponse[Any])
 async def get_my_transactions(
@@ -36,7 +34,6 @@ async def get_my_transactions(
         message="Lấy lịch sử giao dịch thành công",
         status=200,
     )
-
 
 @router.post("/doi-ma-qua-tang", response_model=APIResponse[Any])
 async def redeem_coupon(

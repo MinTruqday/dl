@@ -10,7 +10,6 @@ from src.core.infrastructure.database import database
 
 router = APIRouter()
 
-
 @router.post("/bien-dich")
 async def compile_latex(req: CompileRequest):
     try:
@@ -21,7 +20,6 @@ async def compile_latex(req: CompileRequest):
         raise HTTPException(
             status_code=400, detail=f"Lỗi biên dịch do cú pháp không hợp lệ: {e}"
         )
-
 
 @router.post("/ket-xuat/{format}")
 async def export_document(format: str, req: CompileRequest):
@@ -42,17 +40,14 @@ async def export_document(format: str, req: CompileRequest):
         logger.error(f"Lỗi chuyển đổi định dạng tài liệu: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi xuất tài liệu: {e}")
 
-
 @router.post("/dinh-dang")
 async def format_latex(req: CompileRequest):
     return LatexEngine.format_latex(req.content)
-
 
 @router.post("/ket-xuat-zip")
 async def export_project_zip(req: CompileRequest):
     zip_bytes = LatexEngine.export_project_zip(req.content)
     return Response(content=zip_bytes, media_type="application/x-zip-compressed")
-
 
 @router.delete("/don-dep")
 async def clean_temp_files(current_user: CurrentUser = Depends(get_current_user_optional)):

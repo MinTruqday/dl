@@ -12,7 +12,6 @@ from src.core.infrastructure.database import database
 
 router = APIRouter()
 
-
 @router.websocket("/{user_id}")
 async def websocket_endpoint(
     websocket: WebSocket, user_id: str, token: str = Query(None)

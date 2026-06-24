@@ -35,7 +35,6 @@ celery_app.conf.task_queues = (
     Queue("dlq", Exchange("dlx"), routing_key="dlq"),
 )
 
-
 @celery_app.task(
     name="src.tasks.hard_delete_document_task",
     acks_late=True,
@@ -58,7 +57,6 @@ def hard_delete_document_task(document_id: str, user_id: str):
     except Exception as e:
         logger.error(f"Lỗi xóa vĩnh viễn tài liệu: {e}")
         raise hard_delete_document_task.retry(exc=e)
-
 
 @celery_app.task(
     name="src.tasks.compile_document_tectonic",

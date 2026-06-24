@@ -6,7 +6,6 @@ from uuid6 import uuid7
 
 from src.core.storage import generate_presigned_url, upload_file
 
-
 class UploadService:
 
     @staticmethod

@@ -8,7 +8,6 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-
 class EmailService:
 
     @staticmethod

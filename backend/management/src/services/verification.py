@@ -10,7 +10,6 @@ from src.core.infrastructure.database import database
 from src.schemas.account import Creator, KYC, Role
 from src.core.storage import upload_file
 
-
 class VerificationService:
 
     @staticmethod

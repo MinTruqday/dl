@@ -6,7 +6,6 @@ from typing import Optional
 
 from loguru import logger
 
-
 @dataclass
 class EvaluationReport:
     query: str
@@ -19,7 +18,6 @@ class EvaluationReport:
     rouge_l: float = 0.0
     judge_scores: Optional[dict] = None
     overall_score: float = 0.0
-
 
 def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
     ref_tokens = reference.lower().split()
@@ -43,7 +41,6 @@ def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
     log_avg = sum(math.log(p) for p in precisions) / len(precisions)
     return brevity_penalty * math.exp(log_avg)
 
-
 def _compute_rouge_l(reference: str, hypothesis: str) -> float:
     ref_tokens = reference.lower().split()
     hyp_tokens = hypothesis.lower().split()
@@ -63,7 +60,6 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
     if precision + recall == 0.0:
         return 0.0
     return 2 * precision * recall / (precision + recall)
-
 
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     from huggingface_hub import AsyncInferenceClient
@@ -105,7 +101,6 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "relevance": 0,
             "explanation": "The evaluation process failed to complete successfully due to an internal system exception",
         }
-
 
 class EvaluationHarness:
     def __init__(self):
@@ -295,6 +290,5 @@ class EvaluationHarness:
             },
             "status": "The evaluation metrics dashboard is ready and available for viewing",
         }
-
 
 evaluation = EvaluationHarness()

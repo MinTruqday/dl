@@ -8,10 +8,8 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-
 MODEL_ID = "datalab-to/chandra-ocr-2"
 MAX_OUTPUT_TOKENS = 12384
-
 
 class _ChandraModel:
     def __init__(self):
@@ -69,7 +67,6 @@ class _ChandraModel:
             results.append(decoded)
         return results
 
-
 def _build_conversation(image) -> List[dict]:
     return [
         {
@@ -83,7 +80,6 @@ def _build_conversation(image) -> List[dict]:
             ],
         }
     ]
-
 
 def _pdf_to_images(file_path: Path) -> List:
     import pypdfium2 as pdfium
@@ -99,13 +95,11 @@ def _pdf_to_images(file_path: Path) -> List:
     doc.close()
     return images
 
-
 def _image_file_to_pil(file_path: Path):
     from PIL import Image as PILImage
 
     img = PILImage.open(str(file_path)).convert("RGB")
     return img
-
 
 def _extract_tables_from_html(html: str) -> List[Dict]:
     from bs4 import BeautifulSoup
@@ -116,7 +110,6 @@ def _extract_tables_from_html(html: str) -> List[Dict]:
         html_str = str(table)
         tables.append({"text": html_str, "chunk_type": "table", "index": i})
     return tables
-
 
 class ConversionRag:
     def __init__(self):
@@ -416,6 +409,5 @@ class ConversionRag:
         except Exception as e:
             logger.error(f"Lỗi kết nối tải tệp: {e}")
             return None, ""
-
 
 document_parser = ConversionRag()

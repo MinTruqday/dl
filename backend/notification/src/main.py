@@ -21,7 +21,6 @@ from src.api.announcement import router as notification
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
 
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")
@@ -45,7 +44,6 @@ app.add_middleware(
 
 app.include_router(notification)
 
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo thông báo thành công")
@@ -54,7 +52,6 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_db()
-
 
 @app.get("/health")
 async def health_check():

@@ -37,7 +37,6 @@ RP_ID = settings.PASSKEY_RP_ID
 RP_NAME = settings.PASSKEY_RP_NAME
 ORIGIN = settings.PASSKEY_ALLOWED_ORIGINS
 
-
 class PasskeyService:
 
     @staticmethod

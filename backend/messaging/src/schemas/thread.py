@@ -5,7 +5,6 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from uuid6 import uuid7
 
-
 class Base(BaseModel):
     sender_id: str
     receiver_id: str
@@ -24,7 +23,6 @@ class Base(BaseModel):
     self_destruct_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-
 class Creation(BaseModel):
     receiver_id: str
     client_msg_id: Optional[str] = None
@@ -34,11 +32,9 @@ class Creation(BaseModel):
     attachments: Optional[List[dict]] = []
     reply_to_id: Optional[str] = None
 
-
 class Record(Base):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class Response(Record):
     id: str = Field(alias="_id")
@@ -46,7 +42,6 @@ class Response(Record):
 
     class Config:
         populate_by_name = True
-
 
 class Conversation(BaseModel):
     other_user_id: str

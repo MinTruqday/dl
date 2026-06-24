@@ -16,10 +16,7 @@ from src.core.infrastructure.database import database
 from src.schemas.identity import Role, UserCreate, UserInDB
 from src.core.security.access import create_access_token, get_password_hash, verify_password
 
-
 class SessionService:
-
-
 
     @staticmethod
     async def register_user(user_in: UserCreate, client_ip: str):
@@ -262,5 +259,4 @@ class SessionService:
             "token_type": "bearer",
             "user": {"email": user_doc["email"], "has_passkey": has_passkey},
         }
-
 

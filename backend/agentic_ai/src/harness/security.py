@@ -107,5 +107,4 @@ class SecurityHarness:
             return "Nội dung phản hồi đã bị hệ thống an ninh chặn lại do phát hiện có chứa dữ liệu nhạy cảm"
         return sanitized
 
-
 security = SecurityHarness()

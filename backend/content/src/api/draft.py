@@ -11,7 +11,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/ban-nhap")
 
-
 @router.get(
     "/hang-doi",
     response_model=APIResponse[Any],
@@ -26,7 +25,6 @@ async def get_approval_queue(
         data=await DocumentService.get_approval_queue(cursor, limit),
         message="Lấy danh sách tài liệu chờ duyệt thành công",
     )
-
 
 @router.post(
     "/{document_id}/kiem-duyet",

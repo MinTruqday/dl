@@ -12,7 +12,6 @@ try:
 except ImportError:
     HAS_MEM0 = False
 
-
 class Mem0Memory:
     def __init__(self):
         self.memory = None
@@ -116,6 +115,5 @@ class Mem0Memory:
         except Exception as e:
             logger.exception(f"Lỗi truy xuất dữ liệu bộ nhớ: {e}")
             return ""
-
 
 mem0_manager = Mem0Memory()

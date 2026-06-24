@@ -11,7 +11,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/kham-pha")
 
-
 @router.get("/thinh-hanh", response_model=APIResponse[Any])
 async def get_trending_documents(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -23,7 +22,6 @@ async def get_trending_documents(
         status=status.HTTP_200_OK,
     )
 
-
 @router.get("/the-loai", response_model=APIResponse[Any])
 async def get_tags_categories(db=Depends(get_db)):
     return APIResponse(
@@ -31,7 +29,6 @@ async def get_tags_categories(db=Depends(get_db)):
         message="Lấy danh sách thẻ và danh mục thành công",
         status=status.HTTP_200_OK,
     )
-
 
 @router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
 async def smart_search(
@@ -81,7 +78,6 @@ async def smart_search(
             message=f"Tìm kiếm tiêu chuẩn thành công: {e}",
         )
 
-
 @router.get("/goi-y-ai", response_model=APIResponse[Any])
 async def get_ai_recommendations(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -92,7 +88,6 @@ async def get_ai_recommendations(
         data=await DocumentService.get_trending_documents(limit),
         message="Lấy đề xuất tài liệu thành công",
     )
-
 
 @router.get("/tu-khoa-thinh-hanh", response_model=APIResponse[Any])
 async def get_trending_tags(

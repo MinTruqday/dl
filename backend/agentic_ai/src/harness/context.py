@@ -10,7 +10,6 @@ CHARS_PER_TOKEN_APPROX = settings.CHARS_PER_TOKEN_APPROX
 DEFAULT_MAX_CONTEXT_TOKENS = settings.MAX_CONTEXT_TOKENS
 HISTORY_MAX_TURNS = settings.MEMORY_MAX_TURNS
 
-
 @dataclass
 class AgentContext:
     session_id: str
@@ -21,10 +20,8 @@ class AgentContext:
     active_document_ids: list = field(default_factory=list)
     estimated_tokens: int = 0
 
-
 def _estimate_tokens(text: str) -> int:
     return max(0, len(text) // CHARS_PER_TOKEN_APPROX)
-
 
 def _truncate_history(history: list, budget_tokens: int) -> list:
     if not history:
@@ -38,7 +35,6 @@ def _truncate_history(history: list, budget_tokens: int) -> list:
         trimmed.insert(0, turn)
         total += turn_tokens
     return trimmed
-
 
 class ContextHarness:
     def __init__(self):
@@ -169,6 +165,5 @@ class ContextHarness:
         if hasattr(req, "conversation_history"):
             req.conversation_history = ctx.chat_history
         return req
-
 
 context = ContextHarness()

@@ -33,7 +33,7 @@ class RabbitMQClient:
     async def get_queue(self, queue_name: str):
         if not self.channel:
             await self.connect()
-        # Declare dead-letter exchange
+        
         dlx = await self.channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
         dlq = await self.channel.declare_queue("dlq", durable=True)
         await dlq.bind(dlx, "dlq")
@@ -69,7 +69,6 @@ class RabbitMQClient:
                 
                 self.pending_acks[ack_id] = message
                 
-                # Auto NACK task
                 asyncio.create_task(self._auto_nack_if_timeout(ack_id, delay=300))
                 
                 return {

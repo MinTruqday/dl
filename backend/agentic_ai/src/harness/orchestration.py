@@ -11,13 +11,11 @@ from src.core.infrastructure.configuration import settings
 CIRCUIT_BREAKER_FAILURE_THRESHOLD = settings.CIRCUIT_BREAKER_THRESHOLD
 CIRCUIT_BREAKER_RESET_SECONDS = settings.CIRCUIT_BREAKER_RESET_SECONDS
 
-
 @dataclass
 class SessionState:
     session_id: str
     status: Literal["running", "done", "failed", "cancelled", "timeout"] = "running"
     started_at: float = 0.0
-
 
 class HttpCore:
     def __init__(self, threshold: int, reset_seconds: float):
@@ -51,7 +49,6 @@ class HttpCore:
         if not self._tripped_at:
             return 0.0
         return max(0.0, self._reset_seconds - (time.monotonic() - self._tripped_at))
-
 
 class OrchestrationHarness:
     def __init__(self):
@@ -146,6 +143,5 @@ class OrchestrationHarness:
             "is_open": self._circuit_breaker.is_open(),
             "remaining_seconds": int(self._circuit_breaker.remaining_seconds()),
         }
-
 
 orchestration = OrchestrationHarness()

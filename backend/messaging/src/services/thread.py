@@ -14,7 +14,6 @@ from src.repositories.message import MessageRepository
 from src.repositories.profile import ContactProfileRepository
 from src.repositories.message import MessageRepository
 
-
 class ThreadService:
 
     @staticmethod

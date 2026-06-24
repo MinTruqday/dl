@@ -1,18 +1,4 @@
 services:
-  doclib_cache:
-    build:
-      context: ./backend
-      dockerfile: cache/Dockerfile
-    container_name: doclib_cache
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "8801:8000"
-    depends_on:
-      - redis
-    networks:
-      - doclib_network
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: doclib_flaresolverr
@@ -20,7 +6,7 @@ services:
       - LOG_LEVEL=info
       - TZ=Asia/Ho_Chi_Minh
     ports:
-      - "8191:8191"
+      - 8191:8191
     restart: unless-stopped
     networks:
       - doclib_network
@@ -29,9 +15,11 @@ services:
     image: mongo:7.0
     container_name: doclib_mongodb
     restart: always
-    command: [ "--replSet", "rs0" ]
+    command:
+      - --replSet
+      - rs0
     ports:
-      - "27017:27017"
+      - 27017:27017
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -42,7 +30,7 @@ services:
     container_name: doclib_redis
     restart: always
     ports:
-      - "6379:6379"
+      - 6379:6379
     volumes:
       - redis_data:/data
     networks:
@@ -53,8 +41,8 @@ services:
     container_name: doclib_rabbitmq
     restart: always
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - 5672:5672
+      - 15672:15672
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -65,8 +53,8 @@ services:
     container_name: doclib_minio
     restart: always
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - 9000:9000
+      - 9001:9001
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
@@ -81,13 +69,13 @@ services:
     container_name: doclib_traefik
     restart: always
     command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:8000"
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:8000
     ports:
-      - "8000:8000"
-      - "8081:8080" # Dashboard
+      - 8000:8000
+      - 8081:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -101,7 +89,7 @@ services:
     container_name: doclib_frontend
     restart: always
     ports:
-      - "3000:3000"
+      - 3000:3000
     working_dir: /app
     command: pnpm run dev
     volumes:
@@ -136,17 +124,6 @@ services:
     depends_on:
       - traefik
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: doclib_ollama
-    restart: always
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - doclib_network
-
   payment:
     build:
       context: ./backend
@@ -154,11 +131,12 @@ services:
     container_name: doclib_payment
     restart: always
     ports:
-      - "8350:8350"
+      - 8350:8350
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`) || PathPrefix(`/kiem-tien`) || PathPrefix(`/ma-qua-tang`) || PathPrefix(`/vi-tien`)"
-      - "traefik.http.services.finance.loadbalancer.server.port=8350"
+      - traefik.enable=true
+      - traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`)
+        || PathPrefix(`/kiem-tien`) || PathPrefix(`/ma-qua-tang`) || PathPrefix(`/vi-tien`)
+      - traefik.http.services.finance.loadbalancer.server.port=8350
     env_file:
       - .env
     environment:
@@ -179,11 +157,11 @@ services:
     container_name: doclib_notification
     restart: always
     ports:
-      - "8150:8150"
+      - 8150:8150
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.notification.rule=PathPrefix(`/thong-bao`)"
-      - "traefik.http.services.notification.loadbalancer.server.port=8150"
+      - traefik.enable=true
+      - traefik.http.routers.notification.rule=PathPrefix(`/thong-bao`)
+      - traefik.http.services.notification.loadbalancer.server.port=8150
     env_file:
       - .env
     environment:
@@ -204,11 +182,14 @@ services:
     container_name: doclib_agentic_ai
     restart: always
     ports:
-      - "8400:8400"
+      - 8400:8400
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nhap-lieu`)"
-      - "traefik.http.services.ai.loadbalancer.server.port=8400"
+      - traefik.enable=true
+      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`)
+        || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`)
+        || PathPrefix(`/tro-chuyen`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`)
+        || PathPrefix(`/lich-su`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nhap-lieu`)
+      - traefik.http.services.ai.loadbalancer.server.port=8400
     env_file:
       - .env
     environment:
@@ -236,8 +217,8 @@ services:
     container_name: doclib_qdrant
     restart: always
     ports:
-      - "6333:6333"
-      - "6334:6334"
+      - 6333:6333
+      - 6334:6334
     volumes:
       - qdrant_data:/qdrant/storage
     networks:
@@ -248,7 +229,7 @@ services:
     container_name: doclib_prometheus
     restart: always
     ports:
-      - "9090:9090"
+      - 9090:9090
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -261,7 +242,7 @@ services:
     user: root
     restart: always
     ports:
-      - "3001:3000"
+      - 3001:3000
     environment:
       - SERVICE_DB_NAME=doclib_agentic_ai
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
@@ -280,17 +261,16 @@ services:
     container_name: doclib_collection
     restart: always
     ports:
-      - "8250:8250"
+      - 8250:8250
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)"
-      - "traefik.http.services.collector.loadbalancer.server.port=8250"
+      - traefik.enable=true
+      - traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)
+      - traefik.http.services.collector.loadbalancer.server.port=8250
     env_file:
       - .env
     environment:
       - SERVICE_DB_NAME=doclib_collection
     depends_on:
-      - queue
       - mongodb
       - redis
       - minio
@@ -307,17 +287,16 @@ services:
     container_name: doclib_compilation
     restart: always
     ports:
-      - "8300:8300"
+      - 8300:8300
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.editor.rule=PathPrefix(`/trinh-soan-thao`)"
-      - "traefik.http.services.editor.loadbalancer.server.port=8300"
+      - traefik.enable=true
+      - traefik.http.routers.editor.rule=PathPrefix(`/trinh-soan-thao`)
+      - traefik.http.services.editor.loadbalancer.server.port=8300
     env_file:
       - .env
     environment:
       - SERVICE_DB_NAME=doclib_compilation
     depends_on:
-      - queue
       - mongodb
       - redis
     volumes:
@@ -333,11 +312,11 @@ services:
     container_name: doclib_authentication
     restart: always
     ports:
-      - "8500:8500"
+      - 8500:8500
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`)"
-      - "traefik.http.services.authentication.loadbalancer.server.port=8500"
+      - traefik.enable=true
+      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`)
+      - traefik.http.services.authentication.loadbalancer.server.port=8500
     env_file:
       - .env
     environment:
@@ -345,13 +324,11 @@ services:
     depends_on:
       - mongodb
       - redis
-      - queue
     volumes:
       - ./backend/authentication/src:/app/src
       - ./backend/logs/authentication:/app/logs
     networks:
       - doclib_network
-
   management:
     build:
       context: ./backend
@@ -359,11 +336,15 @@ services:
     container_name: doclib_management
     restart: always
     ports:
-      - "8050:8050"
+      - 8050:8050
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/han-muc`) || PathPrefix(`/ho-so`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/nguoi-dung`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`) || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)"
-      - "traefik.http.services.management.loadbalancer.server.port=8050"
+      - traefik.enable=true
+      - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/han-muc`)
+        || PathPrefix(`/ho-so`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/nguoi-dung`)
+        || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/kiem-toan`)
+        || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`)
+        || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)
+      - traefik.http.services.management.loadbalancer.server.port=8050
     env_file:
       - .env
     environment:
@@ -371,7 +352,6 @@ services:
     depends_on:
       - mongodb
       - redis
-      - queue
     volumes:
       - ./backend/management/src:/app/src
       - ./backend/logs/management:/app/logs
@@ -385,11 +365,11 @@ services:
     container_name: doclib_websocket
     restart: always
     ports:
-      - "8200:8200"
+      - 8200:8200
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.realtime.rule=PathPrefix(`/ws`)"
-      - "traefik.http.services.realtime.loadbalancer.server.port=8200"
+      - traefik.enable=true
+      - traefik.http.routers.realtime.rule=PathPrefix(`/ws`)
+      - traefik.http.services.realtime.loadbalancer.server.port=8200
     env_file:
       - .env
     environment:
@@ -409,11 +389,11 @@ services:
     container_name: doclib_messaging
     restart: always
     ports:
-      - "8100:8100"
+      - 8100:8100
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.messaging.rule=PathPrefix(`/tin-nhan`)"
-      - "traefik.http.services.messaging.loadbalancer.server.port=8100"
+      - traefik.enable=true
+      - traefik.http.routers.messaging.rule=PathPrefix(`/tin-nhan`)
+      - traefik.http.services.messaging.loadbalancer.server.port=8100
     env_file:
       - .env
     environment:
@@ -421,7 +401,6 @@ services:
     depends_on:
       - mongodb
       - redis
-      - queue
     volumes:
       - ./backend/messaging/src:/app/src
       - ./backend/logs/messaging:/app/logs
@@ -435,11 +414,19 @@ services:
     container_name: doclib_content
     restart: always
     ports:
-      - "8450:8450"
+      - 8450:8450
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.content.rule=PathPrefix(`/ban-nhap`) || PathPrefix(`/cong-tac`) || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`) || PathPrefix(`/ghim`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/kham-pha`) || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`) || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`) || PathPrefix(`/danh-gia`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/cam-quyen-nhap-lieu`) || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`) || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`) || PathPrefix(`/tai-lieu-hieu`)"
-      - "traefik.http.services.content.loadbalancer.server.port=8450"
+      - traefik.enable=true
+      - traefik.http.routers.content.rule=PathPrefix(`/ban-nhap`) || PathPrefix(`/cong-tac`)
+        || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`)
+        || PathPrefix(`/ghim`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/kham-pha`)
+        || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`)
+        || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`)
+        || PathPrefix(`/danh-gia`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/cam-quyen-nhap-lieu`)
+        || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`)
+        || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`)
+        || PathPrefix(`/tai-lieu-hieu`)
+      - traefik.http.services.content.loadbalancer.server.port=8450
     env_file:
       - .env
     environment:
@@ -447,7 +434,6 @@ services:
     depends_on:
       - mongodb
       - redis
-      - queue
       - minio
     volumes:
       - ./backend/content/src:/app/src
@@ -462,11 +448,11 @@ services:
     container_name: doclib_cloud
     restart: always
     ports:
-      - "8700:8700"
+      - 8700:8700
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`)"
-      - "traefik.http.services.cloud.loadbalancer.server.port=8700"
+      - traefik.enable=true
+      - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`)
+      - traefik.http.services.cloud.loadbalancer.server.port=8700
     env_file:
       - .env
     environment:
@@ -474,33 +460,10 @@ services:
     depends_on:
       - mongodb
       - redis
-      - queue
       - minio
     volumes:
       - ./backend/cloud/src:/app/src
       - ./backend/logs/cloud:/app/logs
-    networks:
-      - doclib_network
-
-  database:
-    build:
-      context: ./backend
-      dockerfile: ./database/Dockerfile
-    container_name: doclib_database
-    restart: always
-    ports:
-      - "8800:8800"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.database.rule=PathPrefix(`/mongo`)"
-      - "traefik.http.services.database.loadbalancer.server.port=8800"
-    env_file:
-      - .env
-    depends_on:
-      - mongodb
-    volumes:
-      - ./backend/database/src:/app/src
-      - ./backend/logs/database:/app/logs
     networks:
       - doclib_network
 
@@ -511,11 +474,11 @@ services:
     container_name: doclib_drm
     restart: always
     ports:
-      - "8600:8600"
+      - 8600:8600
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.drm.rule=PathPrefix(`/drm`)"
-      - "traefik.http.services.drm.loadbalancer.server.port=8600"
+      - traefik.enable=true
+      - traefik.http.routers.drm.rule=PathPrefix(`/drm`)
+      - traefik.http.services.drm.loadbalancer.server.port=8600
     env_file:
       - .env
     environment:
@@ -528,34 +491,19 @@ services:
       - ./backend/logs/drm:/app/logs
     networks:
       - doclib_network
-
-  queue:
-    build:
-      context: ./backend
-      dockerfile: ./queue/Dockerfile
-    container_name: doclib_queue
-    restart: always
-    ports:
-      - "8802:8802"
-    env_file:
-      - .env
-    depends_on:
-      - rabbitmq
-    networks:
-      - doclib_network
-
+      
 networks:
   doclib_network:
     driver: bridge
 
 volumes:
-  mongodb_data:
-  redis_data:
-  rabbitmq_data:
-  minio_data:
-  qdrant_data:
-  prometheus_data:
-  grafana_data:
-  hf_cache:
-  ollama_data:
-  tectonic_cache:
+  mongodb_data: null
+  redis_data: null
+  rabbitmq_data: null
+  minio_data: null
+  qdrant_data: null
+  prometheus_data: null
+  grafana_data: null
+  hf_cache: null
+  ollama_data: null
+  tectonic_cache: null

@@ -16,7 +16,6 @@ MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
 session = aioboto3.Session()
 _storage_client = None
 
-
 async def get_storage_client():
     global _storage_client
     if _storage_client is None:
@@ -28,7 +27,6 @@ async def get_storage_client():
         ).__aenter__()
     return _storage_client
 
-
 async def initialize_bucket():
     storage_client = await get_storage_client()
     try:
@@ -37,7 +35,6 @@ async def initialize_bucket():
         logger.info(f"Đang khởi tạo không gian lưu trữ: {e}")
         await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
         logger.info(f"Khởi tạo không gian lưu trữ thành công: {e}")
-
 
 async def upload_file(
     file_content: bytes,
@@ -70,7 +67,6 @@ async def upload_file(
     await storage_client.put_object(**kwargs)
     return object_name
 
-
 async def download_file(object_name: str) -> tuple[bytes, str]:
     storage_client = await get_storage_client()
     response = await storage_client.get_object(
@@ -82,7 +78,6 @@ async def download_file(object_name: str) -> tuple[bytes, str]:
         content = brotli.decompress(content)
 
     return content, response.get("ContentType", "application/octet-stream")
-
 
 async def generate_presigned_url(object_name: str, expiration: int = 3600) -> str:
     storage_client = await get_storage_client()

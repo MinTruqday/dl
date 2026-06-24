@@ -58,9 +58,9 @@ async def run_worker():
                     payload = res["payload"]
                     delivery_tag = res["delivery_tag"]
                     await handler_func(payload)
-                    # Xác nhận tin nhắn đã xử lý thành công (Manual ACK)
+                    
                     await mq.ack(delivery_tag)
-                elif res: # in case it's the old format without delivery_tag (fallback)
+                elif res: 
                     await handler_func(res)
             except Exception as e:
                 logger.error(f"Lỗi tiêu thụ tin nhắn từ {queue_name}: {e}")
