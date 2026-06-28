@@ -242,29 +242,6 @@ async def test_auto_get_public_profile_ho_so__slug__get(management_client):
     # We just want to ensure it doesn't return 404 or 500, but rather a structural response
     assert response.status_code < 500
 
-async def test_auto_get_active_banners_quang_cao_get(management_client):
-    """Test for GET /quang-cao"""
-    response = await management_client.get('/quang-cao')
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
-
-async def test_auto_create_banner_quang_cao_post(management_client):
-    """Test for POST /quang-cao"""
-    response = await management_client.post('/quang-cao', json={'title': 'string', 'image_url': 'string', 'target_url': {}, 'is_active': True})
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
-
-async def test_auto_get_all_banners_quang_cao_tat_ca_get(management_client):
-    """Test for GET /quang-cao/tat-ca"""
-    response = await management_client.get('/quang-cao/tat-ca')
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
-
-async def test_auto_delete_banner_quang_cao__banner_id__delete(management_client):
-    """Test for DELETE /quang-cao/{banner_id}"""
-    response = await management_client.delete('/quang-cao/test_id')
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
 
 async def test_auto_health_check_health_get(management_client):
     """Test for GET /health"""

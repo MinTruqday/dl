@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.audit import router as audit
-from src.api.banner import router as banner
 from src.api.health import router as operation
 from src.api.profile import router as profile
 from src.api.quota import router as quota
@@ -40,7 +39,6 @@ app.include_router(telemetry)
 app.include_router(operation)
 app.include_router(quota)
 app.include_router(profile)
-app.include_router(banner)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng cung cấp đã sẵn sàng")

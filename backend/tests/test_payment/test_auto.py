@@ -20,11 +20,6 @@ async def test_auto_get_my_transactions_vi_dien_tu_lich_su_get(payment_client):
     # We just want to ensure it doesn't return 404 or 500, but rather a structural response
     assert response.status_code < 500
 
-async def test_auto_redeem_coupon_vi_dien_tu_doi_ma_qua_tang_post(payment_client):
-    """Test for POST /vi-dien-tu/doi-ma-qua-tang"""
-    response = await payment_client.post('/vi-dien-tu/doi-ma-qua-tang', json={'code': 'string'})
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
 
 async def test_auto_create_deposit_nap_tien_post(payment_client):
     """Test for POST /nap-tien"""
@@ -80,41 +75,6 @@ async def test_auto_set_document_pricing_kiem_tien_thiet_lap_gia_put(payment_cli
     # We just want to ensure it doesn't return 404 or 500, but rather a structural response
     assert response.status_code < 500
 
-async def test_auto_get_all_coupons_ma_qua_tang_get(payment_client):
-    """Test for GET /ma-qua-tang"""
-    response = await payment_client.get('/ma-qua-tang')
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
-
-async def test_auto_create_coupon_ma_qua_tang_post(payment_client):
-    """Test for POST /ma-qua-tang"""
-    response = await payment_client.post('/ma-qua-tang', json={'code': 'string', 'discount_percent': 1.0, 'max_uses': 1, 'expires_at': 'string', 'amount_dl': 1})
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
-
-async def test_auto_delete_coupon_ma_qua_tang__coupon_id__delete(payment_client):
-    """Test for DELETE /ma-qua-tang/{coupon_id}"""
-    response = await payment_client.delete('/ma-qua-tang/test_id')
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
-
-async def test_auto_validate_coupon_ma_qua_tang_kiem_tra_get(payment_client):
-    """Test for GET /ma-qua-tang/kiem-tra"""
-    response = await payment_client.get('/ma-qua-tang/kiem-tra')
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
-
-async def test_auto_approve_coupon_ma_qua_tang__coupon_id__phe_duyet_post(payment_client):
-    """Test for POST /ma-qua-tang/{coupon_id}/phe-duyet"""
-    response = await payment_client.post('/ma-qua-tang/test_id/phe-duyet', json={})
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
-
-async def test_auto_toggle_coupon_status_ma_qua_tang__coupon_id__trang_thai_patch(payment_client):
-    """Test for PATCH /ma-qua-tang/{coupon_id}/trang-thai"""
-    response = await payment_client.patch('/ma-qua-tang/test_id/trang-thai', json={})
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
 
 async def test_auto_health_check_health_get(payment_client):
     """Test for GET /health"""

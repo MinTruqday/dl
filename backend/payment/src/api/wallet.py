@@ -2,7 +2,6 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from src.services.wallet import WalletService
-from src.schemas.wallet import RedeemCouponRequest
 
 from src.core.dependency import get_current_user, get_db
 from src.core.response import APIResponse
@@ -32,17 +31,5 @@ async def get_my_transactions(
             current_user, limit=limit, skip=offset
         ),
         message="Lấy lịch sử giao dịch thành công",
-        status=200,
-    )
-
-@router.post("/doi-ma-qua-tang", response_model=APIResponse[Any])
-async def redeem_coupon(
-    req: RedeemCouponRequest,
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    return APIResponse(
-        data=await WalletService.redeem_coupon(req, current_user),
-        message="Đổi mã quà tặng thành công",
         status=200,
     )

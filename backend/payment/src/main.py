@@ -2,7 +2,6 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.api.coupon import router as coupon
 from src.api.deposit import router as deposit
 from src.api.monetization import router as monetization
 from src.api.wallet import router as wallet
@@ -32,7 +31,6 @@ app.include_router(wallet)
 app.include_router(deposit)
 app.include_router(withdrawal)
 app.include_router(monetization)
-app.include_router(coupon)
 @app.on_event("startup")
 async def startup_event():
     import asyncio

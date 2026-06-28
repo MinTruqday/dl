@@ -40,7 +40,7 @@ export const MENU_ITEMS = [
   { id: "wallet", label: "Ví", href: "/wallet", icon: Wallet, requireAuth: true },
   { id: "settings", label: "Cài đặt", href: "/settings", icon: Settings, requireAuth: true },
   { id: "provision", label: "Sáng tác", href: "/provision", icon: PenTool, roles: ["author", "admin"] },
-  { id: "coupon", label: "Ưu đãi", href: "/coupon", icon: Ticket, roles: ["author", "admin"] },
+
   { id: "collaboration", label: "Hợp tác", href: "/collaboration", icon: Users, roles: ["author", "admin"] },
   { id: "storage", label: "Kho lưu trữ", href: "/storage", icon: FolderOpen, roles: ["author", "admin"] },
   { id: "document", label: "Kho tài liệu", href: "/document", icon: Files, roles: ["admin", "author"] },
@@ -49,7 +49,7 @@ export const MENU_ITEMS = [
   { id: "user_manage", label: "Quản lý người dùng", href: "/user", icon: Users, roles: ["admin"] },
   { id: "report", label: "Báo cáo vi phạm", href: "/report", icon: AlertTriangle, roles: ["admin", "moderator"] },
   { id: "operation", label: "Vận hành hệ thống", href: "/operation", icon: Shield, roles: ["admin"] },
-  { id: "banner", label: "Quản lý biểu ngữ", href: "/banner", icon: Presentation, roles: ["admin"] },
+
   { id: "analytics", label: "Thống kê", href: "/analytics", icon: BarChart, roles: ["admin", "author"] },
   { id: "finetune", label: "Huấn luyện AI", href: "/finetune", icon: Brain, roles: ["admin"] },
   { id: "help", label: "Trung tâm hỗ trợ", href: "/help", icon: HelpCircle, requireAuth: true },

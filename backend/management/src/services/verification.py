@@ -140,7 +140,6 @@ class VerificationService:
             "avatar_url": author.get("avatar_url"),
             "bio": author.get("bio", ""),
             "cover_image_url": author.get("author_profile", {}).get("cover_image_url")
-            or author.get("brand_page", {}).get("banner_url")
             or author.get("cover_url", ""),
             "welcome_video_url": author.get("author_profile", {}).get(
                 "welcome_video_url"
