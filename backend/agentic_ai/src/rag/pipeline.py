@@ -136,7 +136,7 @@ class PipelineRag:
             raise ValueError("Lỗi phân mảnh tài liệu")
 
         texts = [c["text"] for c in chunks]
-        embeddings = await embedding.embed_batch(texts)
+        embeddings = await embedder.embed_batch(texts)
         ids = [c["id"] for c in chunks]
         metadatas = [c["metadata"] for c in chunks]
 

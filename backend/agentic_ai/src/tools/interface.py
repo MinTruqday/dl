@@ -760,6 +760,29 @@ async def translate_document(
                 return f"Tạo và lưu bản dịch thành công, bạn có thể xem tại đây [Xem bản dịch](/editor?document_id={new_doc_id})"
             return "Bản dịch đã hoàn tất nhưng không thể liên kết với mã định danh tệp tin"
         return "Quá trình dịch thuật đã hoàn tất nhưng gặp sự cố khi lưu trữ kết quả vào máy chủ"
+
+@tool
+async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
+    """Dynamically search and read custom EditorJS blocks from the project's source code.
+    Use this to understand the required JSON schema for specific components (e.g., query='Chart', 'Kanban', 'Mermaid').
+    """
+    import os
+    import glob
+    try:
+        workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../"))
+        frontend_dir = os.path.join(workspace_root, "frontend/features/editor/components")
+        
+        results = []
+        for file_path in glob.glob(f"{frontend_dir}/*{query}*.ts*", recursive=True):
+            basename = os.path.basename(file_path)
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                # Truncate to save LLM context, focusing on the class interface and save() method
+                results.append(f"--- Component: {basename} ---\n{content[:2000]}")
+                
+        if not results:
+            return f"No custom UI components found matching '{query}'. Try a different keyword."
+        return "\n\n".join(results)
     except Exception as e:
         return f"Không thể khởi tạo và xuất tệp tài liệu dịch thuật mới: {e}"
 
@@ -782,6 +805,7 @@ tools = [
     update_document,
     create_deposit_link,
     translate_document,
+    inspect_ui_components,
 ]
 
 llama_model = settings.LLAMA_MODEL

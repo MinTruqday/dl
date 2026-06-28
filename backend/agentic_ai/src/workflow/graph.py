@@ -42,7 +42,7 @@ try:
     from langchain_community.cache import RedisSemanticCache
 
     langchain.llm_cache = RedisSemanticCache(
-        redis_url=redis_url, embedding=embedding_service
+        redis_url=redis_url, embedding=embedder
     )
     logger.info("Khởi tạo bộ nhớ đệm ngữ nghĩa thành công")
 except Exception as e:

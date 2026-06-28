@@ -31,7 +31,7 @@ class DatabaseStore:
 
     async def _init_worker(self):
         if self._upsert_queue is None:
-            self._upsert_queue = asyncio.QueueCore()
+            self._upsert_queue = asyncio.Queue()
             self._worker_task = asyncio.create_task(self._upsert_worker())
 
     async def _upsert_worker(self):
