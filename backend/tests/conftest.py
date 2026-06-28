@@ -38,10 +38,10 @@ def admin_email():
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_admin_user(admin_uid, admin_session_id, admin_email):
-    # Setup Mongo
+
     mongo_client = AsyncIOMotorClient("mongodb://localhost:27017/")
     db = mongo_client["doclib_authentication"]
-    
+
     admin_user = {
         "_id": admin_uid,
         "email": admin_email,
@@ -52,16 +52,16 @@ async def setup_admin_user(admin_uid, admin_session_id, admin_email):
         "permissions": ["all"],
         "created_at": datetime.now(timezone.utc)
     }
-    
+
     await db.users.update_one({"_id": admin_uid}, {"$set": admin_user}, upsert=True)
-    
-    # Setup Redis
+
+
     r = await aioredis.from_url("redis://localhost:6379/0", decode_responses=True)
     await r.sadd(f"user_sessions:{admin_uid}", admin_session_id)
-    
+
     yield
-    
-    # Teardown
+
+
     await db.users.delete_one({"_id": admin_uid})
     await r.srem(f"user_sessions:{admin_uid}", admin_session_id)
     mongo_client.close()
@@ -127,4 +127,3 @@ async def payment_client(auth_headers):
 async def websocket_client(auth_headers):
     async with httpx.AsyncClient(base_url=f"http://localhost:8200", headers=auth_headers, timeout=10.0) as client:
         yield client
-

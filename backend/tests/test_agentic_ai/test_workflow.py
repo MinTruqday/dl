@@ -23,9 +23,9 @@ from src.workflow.orchestration import (
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ActingState & AgentState structure tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestStateDefinitions:
 
@@ -76,9 +76,9 @@ class TestStateDefinitions:
         assert len(result) <= 15
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# supervisor_node behavioral tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestSupervisorNode:
 
@@ -100,7 +100,7 @@ class TestSupervisorNode:
     @pytest.mark.asyncio
     async def test_returns_trimmer_on_timeout(self):
         state = self._base_state(
-            start_time=time.time() - 60,  # 60 seconds ago → timed out
+            start_time=time.time() - 60,
             steps=[{"agent": "Action", "task": "test"}],
         )
         result = await supervisor_node(state)
@@ -111,7 +111,7 @@ class TestSupervisorNode:
     async def test_returns_trimmer_on_too_many_replans(self):
         state = self._base_state(
             steps=[{"agent": "Action", "task": "do something"}],
-            replan_count=7,  # > 6 threshold
+            replan_count=7,
         )
         result = await supervisor_node(state)
         assert result["next_node"] == "trimmer"
@@ -156,7 +156,7 @@ class TestSupervisorNode:
         steps = [{"agent": "Action", "task": "done"}]
         state = self._base_state(
             steps=steps,
-            current_step_index=1,  # past all steps
+            current_step_index=1,
         )
         result = await supervisor_node(state)
         assert result["next_node"] == "trimmer"
@@ -185,7 +185,7 @@ class TestSupervisorNode:
         steps = [{"agent": "SomeUnknownAgent", "task": "do something"}]
         state = self._base_state(steps=steps)
         result = await supervisor_node(state)
-        # Defaults to "action" per route_map.get(agent_name, "action")
+
         assert result["next_node"] == "action"
 
     @pytest.mark.asyncio
@@ -199,9 +199,9 @@ class TestSupervisorNode:
         assert result["next_node"] == "knowledge"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# trimmer_node tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestTrimmerNode:
 
@@ -219,12 +219,12 @@ class TestTrimmerNode:
         }
         result = await trimmer_node(state)
         assert result["next_node"] == "trimmer"
-        # consolidated_results should still exist (or not — trimmer doesn't modify short ones)
+
         assert "next_node" in result
 
     @pytest.mark.asyncio
     async def test_long_results_triggers_llm_summarization(self):
-        long_result = ["x" * 13000]  # Exceeds 12000 chars
+        long_result = ["x" * 13000]
         state = {
             "consolidated_results": long_result,
             "next_node": "aggregator",
@@ -239,7 +239,7 @@ class TestTrimmerNode:
                 result = await trimmer_node(state)
 
         assert "consolidated_results" in result
-        # The summary should be shorter than the original 13000 chars
+
         total_new = sum(len(str(r)) for r in result["consolidated_results"])
         assert total_new < 13000
 
@@ -257,13 +257,13 @@ class TestTrimmerNode:
             with patch("src.workflow.graph.llm", mock_llm):
                 result = await trimmer_node(state)
 
-        # Should still have consolidated_results — fell back to truncation
+
         assert "consolidated_results" in result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Router functions tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestRouterFunctions:
 
@@ -290,9 +290,9 @@ class TestRouterFunctions:
         assert "final_answer" in result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# execute_tool_node tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestExecuteToolNode:
 
@@ -331,7 +331,7 @@ class TestExecuteToolNode:
         mock_llm = MagicMock()
         mock_llm.with_structured_output = MagicMock(return_value=mock_eval_llm)
 
-        # registry is a local import inside execute_tool_node — patch at source module
+
         with patch("src.core.registry.registry") as mock_reg:
             mock_prompt = MagicMock()
             mock_prompt.format = MagicMock(return_value="reflect on: User has 500 credits")
@@ -380,7 +380,7 @@ class TestExecuteToolNode:
         with patch("src.workflow.graph.llm", mock_llm):
             result = await execute_tool_node(state, mock_tool, "Action")
 
-        # Exception case — should contain error or consolidated results
+
         assert "error" in result or "consolidated_results" in result
 
     @pytest.mark.asyncio
@@ -398,7 +398,7 @@ class TestExecuteToolNode:
         mock_eval_pass.status = "PASS"
         mock_eval_pass.revised_task = None
 
-        # First call: FAIL, Second call: PASS
+
         mock_eval_llm = MagicMock()
         mock_eval_llm.ainvoke = AsyncMock(side_effect=[mock_eval_fail, mock_eval_pass])
 
@@ -413,5 +413,5 @@ class TestExecuteToolNode:
                 result = await execute_tool_node(state, mock_tool, "Action")
 
         assert result["current_step_index"] == 1
-        # Tool was called twice due to replan
+
         assert mock_tool.execute.call_count == 2

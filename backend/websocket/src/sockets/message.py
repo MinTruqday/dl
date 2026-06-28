@@ -70,18 +70,11 @@ class MessageSocket:
                 del self.active_connections[user_id]
 
     async def send_personal_message(self, message: dict, receiver_id: str):
-        # We no longer look up members in DB. We push to MQ.
-        # But wait, send_personal_message is called FROM websocket to push a message?
-        # Actually, if websocket needs to deliver a message directly (like typing indicator), it can push to MQ
-        # and let Messaging service route it.
-        # For simple typing indicators that don't need persistence, maybe just push to MQ.
-        pass # Not used directly for sending messages to clients from this side, handled via action handlers
+        pass
 
     async def _handle_ws_action(self, user_id: str, payload: dict):
         action = payload.get("action")
         data = payload.get("data", {})
-        
-        # Publish all actions to MQ, so Messaging service can handle DB and routing
         await mq.publish(
             "messaging_queue",
             {

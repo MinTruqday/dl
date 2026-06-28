@@ -16,12 +16,12 @@ async def process_outbox():
                 )
                 if event:
                     await mq.publish(event["queue_name"], event["payload"])
-                    await mongo.update_one("outbox_events", 
+                    await mongo.update_one("outbox_events",
                         {"_id": event["_id"]},
                         {"$set": {"status": "done"}}
                     )
-                    continue # process next immediately
+                    continue
         except Exception as e:
             logger.exception("Lỗi quá trình đồng bộ hóa Outbox Worker")
-            
+
         await asyncio.sleep(5)

@@ -12,11 +12,11 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-# ── sys.path bootstrap ────────────────────────────────────────────────────────
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../agentic_ai"))
 
-# ── Patch all heavy-weight imports before src import ─────────────────────────
-# We mock out settings so the module can be imported without env vars
+
+
 _mock_settings = MagicMock()
 _mock_settings.INTERNAL_API_URL = "http://internal-api"
 _mock_settings.LONG_PROCESS_TIMEOUT = 30.0
@@ -29,12 +29,12 @@ _mock_settings.DEFAULT_CHUNK_SIZE = 1000
 PATCHER_SETTINGS = patch("src.core.infrastructure.configuration.settings", _mock_settings)
 PATCHER_SETTINGS.start()
 
-# Also mock LangChain/HuggingFace at module level
+
 patch("langchain_huggingface.ChatHuggingFace", MagicMock()).start()
 patch("langchain_huggingface.HuggingFaceEndpoint", MagicMock()).start()
 patch("langgraph.prebuilt.create_react_agent", MagicMock()).start()
 
-# ── Now we can import the tools ───────────────────────────────────────────────
+
 from src.tools.interface import (
     get_user_balance,
     get_transaction_history,
@@ -54,12 +54,12 @@ from src.tools.interface import (
     _make_api_request,
 )
 
-# Stop the settings patcher — we only needed it for import.
-# Individual tests that need specific settings values use inline patches.
+
+
 PATCHER_SETTINGS.stop()
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def make_resp(status_code: int, json_data: dict) -> MagicMock:
     r = MagicMock()
@@ -72,9 +72,9 @@ ADMIN_CFG = {"configurable": {"token": "Bearer admin-token"}}
 NO_AUTH_CFG = {"configurable": {}}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1. get_user_balance
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestGetUserBalance:
 
@@ -112,9 +112,9 @@ class TestGetUserBalance:
                 await get_user_balance.ainvoke({}, config=ADMIN_CFG)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 2. get_transaction_history
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestGetTransactionHistory:
 
@@ -142,7 +142,7 @@ class TestGetTransactionHistory:
         with patch("src.tools.interface._make_api_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = make_resp(200, {"data": transactions})
             result = await get_transaction_history.ainvoke({}, config=ADMIN_CFG)
-        # Should only count up to 5 entries "1" through "5"
+
         assert "6. " not in result
 
     @pytest.mark.asyncio
@@ -158,9 +158,9 @@ class TestGetTransactionHistory:
         assert "gián đoạn" in result.lower() or "sự cố" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3. redeem_voucher
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestRedeemVoucher:
 
@@ -199,14 +199,14 @@ class TestRedeemVoucher:
         with patch("src.tools.interface._make_api_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = make_resp(200, {"data": {"bonus_dl": 50}})
             result = await redeem_voucher.ainvoke({"code": "  CODE  "}, config=ADMIN_CFG)
-            # Verify the API was called with stripped code
+
             call_kwargs = mock_req.call_args
             assert call_kwargs[1]["json"]["code"] == "CODE"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 4. get_revenue_report
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestGetRevenueReport:
 
@@ -238,9 +238,9 @@ class TestGetRevenueReport:
         assert "0" in result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 5. get_my_documents
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestGetMyDocuments:
 
@@ -276,9 +276,9 @@ class TestGetMyDocuments:
         assert "khó khăn" in result.lower() or "tải" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 6. get_trash_documents  (requires admin check)
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestGetTrashDocuments:
 
@@ -311,9 +311,9 @@ class TestGetTrashDocuments:
         assert "không" in result.lower() or "trống" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 7. delete_document
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestDeleteDocument:
 
@@ -321,7 +321,7 @@ class TestDeleteDocument:
     async def test_delete_succeeds(self):
         with patch("src.tools.interface._make_api_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = make_resp(200, {})
-            # Also mock vector_store.delete_by_document
+
             with patch("src.store.database.vector_store") as mock_vs:
                 mock_vs.delete_by_document = AsyncMock()
                 result = await delete_document.ainvoke({"document_id": "doc-123"}, config=ADMIN_CFG)
@@ -347,13 +347,13 @@ class TestDeleteDocument:
             with patch("src.store.database.vector_store") as mock_vs:
                 mock_vs.delete_by_document = AsyncMock(side_effect=Exception("VS error"))
                 result = await delete_document.ainvoke({"document_id": "doc-999"}, config=ADMIN_CFG)
-        # Should still indicate success or deletion
+
         assert "xóa" in result.lower() or "thành công" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 8. restore_document
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestRestoreDocument:
 
@@ -377,9 +377,9 @@ class TestRestoreDocument:
         assert "thất bại" in result.lower() or "quá trình" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 9. get_document_analytics (requires admin check)
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestGetDocumentAnalytics:
 
@@ -412,9 +412,9 @@ class TestGetDocumentAnalytics:
         assert "lỗi" in result.lower() or "gặp" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 10. create_deposit_link
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestCreateDepositLink:
 
@@ -445,16 +445,16 @@ class TestCreateDepositLink:
         assert "lỗi" in result.lower() or "gặp" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 11. create_document
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestCreateDocument:
 
     @pytest.mark.asyncio
     async def test_create_json_document(self):
         with patch("src.tools.interface._make_api_request", new_callable=AsyncMock) as mock_req:
-            # First call: get profile; second call: create doc
+
             mock_req.side_effect = [
                 make_resp(200, {"data": {"full_name": "Test User"}}),
                 make_resp(201, {"data": {"id": "new-doc-id"}}),
@@ -517,9 +517,9 @@ class TestCreateDocument:
         assert "trục trặc" in result.lower() or "thất bại" in result.lower() or "lỗi" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 12. read_document
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestReadDocument:
 
@@ -560,9 +560,9 @@ class TestReadDocument:
         assert "không thể" in result.lower() or "trích xuất" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 13. update_document
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestUpdateDocument:
 
@@ -620,9 +620,9 @@ class TestUpdateDocument:
         assert "không được phép" in result.lower() or "không còn tồn tại" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 14. translate_document
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestTranslateDocument:
 
@@ -634,7 +634,7 @@ class TestTranslateDocument:
             "title": "Vietnamese Doc",
         }
         with patch("src.tools.interface._make_api_request", new_callable=AsyncMock) as mock_req:
-            # fetch original, translate, create new
+
             mock_req.side_effect = [
                 make_resp(200, {"data": source_doc}),
                 make_resp(200, {"translation": "Hello"}),
@@ -675,7 +675,7 @@ class TestTranslateDocument:
         with patch("src.tools.interface._make_api_request", new_callable=AsyncMock) as mock_req:
             mock_req.side_effect = [
                 make_resp(200, {"data": source_doc}),
-                make_resp(503, {}),  # translation service down
+                make_resp(503, {}),
             ]
             result = await translate_document.ainvoke({
                 "document_id": "vn-doc",
@@ -684,9 +684,9 @@ class TestTranslateDocument:
         assert "sự cố" in result.lower() or "dịch" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 15. _check_system_access
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 _TEST_SECRET = "test-secret-key-for-check-access"
 
@@ -731,7 +731,7 @@ class TestCheckSystemAccess:
             _TEST_SECRET,
             algorithm="HS256",
         )
-        # Without "Bearer " prefix, the raw JWT is decoded directly
+
         with patch("src.core.infrastructure.configuration.settings") as mock_s:
             mock_s.SECRET_KEY = _TEST_SECRET
             result = _check_system_access(token)

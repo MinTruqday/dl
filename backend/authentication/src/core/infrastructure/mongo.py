@@ -28,7 +28,7 @@ class MockPipeline:
     def __await__(self):
         return self._motor_pipeline.to_list(length=None).__await__()
 
-# Patch raw AsyncIOMotorCursor to make `await cursor` work
+
 try:
     from motor.motor_asyncio import AsyncIOMotorCursor, AsyncIOMotorCommandCursor
     def _cursor_await(self):
@@ -59,7 +59,7 @@ class MongoClient:
         if limit:
             cursor = cursor.limit(limit)
         return MockCursor(cursor)
-        
+
     def aggregate(self, collection: str, pipeline: list):
         cursor = self.get_db()[collection].aggregate(pipeline)
         return MockPipeline(cursor)

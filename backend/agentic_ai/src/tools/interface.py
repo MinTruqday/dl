@@ -44,7 +44,7 @@ import jwt
 def _check_system_access(token: str) -> bool:
     try:
         from src.core.infrastructure.configuration import settings
-        # Strip "Bearer " prefix if present
+
         raw_token = token.removeprefix("Bearer ").strip()
         payload = jwt.decode(raw_token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "guest")
@@ -774,15 +774,15 @@ async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
     try:
         workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../"))
         frontend_dir = os.path.join(workspace_root, "frontend/features/editor/components")
-        
+
         results = []
         for file_path in glob.glob(f"{frontend_dir}/*{query}*.ts*", recursive=True):
             basename = os.path.basename(file_path)
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
-                # Truncate to save LLM context, focusing on the class interface and save() method
+
                 results.append(f"--- Component: {basename} ---\n{content[:2000]}")
-                
+
         if not results:
             return f"No custom UI components found matching '{query}'. Try a different keyword."
         return "\n\n".join(results)

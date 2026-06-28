@@ -19,7 +19,7 @@ import httpx
 import jwt
 from datetime import datetime, timedelta, timezone
 
-# ── Token generation ──────────────────────────────────────────────────────────
+
 SECRET_KEY = os.getenv("SECRET_KEY", "doclib-password")
 AGENTIC_AI_BASE = "http://localhost:8400"
 
@@ -41,7 +41,7 @@ ADMIN_TOKEN = make_admin_token()
 AUTH_HEADERS = {"Authorization": f"Bearer {ADMIN_TOKEN}"}
 
 
-# ── Fixtures ─────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture(scope="module")
 def admin_http_client():
@@ -53,9 +53,9 @@ def admin_http_client():
         yield client
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Health check
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestHealthEndpoint:
 
@@ -66,9 +66,9 @@ class TestHealthEndpoint:
         assert data.get("status") == "healthy"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Inference endpoints
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestInferenceEndpoints:
 
@@ -77,7 +77,7 @@ class TestInferenceEndpoints:
             "/suy-luan/tao-noi-dung",
             json={"prompt": "Write a one-sentence summary of Python.", "max_tokens": 100, "temperature": 0.3},
         )
-        # Should return 200 or 429 (quota exceeded) – not 404 or 422
+
         assert response.status_code in [200, 429, 500]
 
     def test_translate_text_endpoint_exists(self, admin_http_client):
@@ -106,7 +106,7 @@ class TestInferenceEndpoints:
             "/suy-luan/kiem-tra-ngu-phap",
             json={"text": "I are going to the store"},
         )
-        # Admin has PREMIUM, so 200 or service error (500 if HF key invalid)
+
         assert response.status_code in [200, 500]
 
     def test_synonyms_endpoint_exists(self, admin_http_client):
@@ -163,9 +163,9 @@ class TestInferenceEndpoints:
         assert response.status_code in [200, 500]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Chat endpoint (interaction)
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestChatEndpoint:
 
@@ -178,7 +178,7 @@ class TestChatEndpoint:
                 "user_id": "test-user-001",
             },
         )
-        # May be 200 (answered) or 500 (HF unavailable)
+
         assert response.status_code in [200, 500]
         if response.status_code == 200:
             data = response.json()
@@ -195,7 +195,7 @@ class TestChatEndpoint:
                 "user_id": "user-001",
             },
         )
-        # Should return 200 with a blocked message OR 500 if LLM offline
+
         assert response.status_code in [200, 500]
 
     def test_chat_without_user_id_still_works(self, admin_http_client):
@@ -206,9 +206,9 @@ class TestChatEndpoint:
         assert response.status_code in [200, 500]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Feedback endpoints
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestFeedbackEndpoints:
 
@@ -228,9 +228,9 @@ class TestFeedbackEndpoints:
         assert response.status_code in [200, 404, 500]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# History endpoints
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestHistoryEndpoints:
 
@@ -247,9 +247,9 @@ class TestHistoryEndpoints:
         assert response.status_code in [200, 404, 500]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Ingestion endpoints
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestIngestionEndpoints:
 
@@ -270,9 +270,9 @@ class TestIngestionEndpoints:
         assert response.status_code in [200, 404, 500]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Evaluate endpoints
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestEvaluateEndpoints:
 
@@ -288,9 +288,9 @@ class TestEvaluateEndpoints:
         assert response.status_code in [200, 404, 500]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Fine-tuning endpoints
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestFinetuningEndpoints:
 

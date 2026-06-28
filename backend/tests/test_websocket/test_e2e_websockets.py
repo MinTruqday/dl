@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock
 from starlette.websockets import WebSocketDisconnect
 
-# Ensure we can import src from backend/websocket
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../websocket"))
 
 from src.main import app
@@ -38,17 +38,17 @@ def test_message_socket_authentication_success(valid_token):
     """Test successful connection when token and user_id match"""
     with patch("src.api.message.database.redis") as mock_redis:
         mock_redis.get = AsyncMock(return_value=None)
-        
+
         with client.websocket_connect(f"/user_123?token={valid_token}") as websocket:
             websocket.send_text("Hello E2E")
-            # If the connection doesn't disconnect immediately, the test passes
+
             assert websocket is not None
 
 def test_message_socket_authentication_banned_user(valid_token):
     """Test that banned user gets disconnected"""
     with patch("src.api.message.database.redis") as mock_redis:
-        mock_redis.get = AsyncMock(return_value=b"1") # Banned
-        
+        mock_redis.get = AsyncMock(return_value=b"1")
+
         with pytest.raises(WebSocketDisconnect) as exc_info:
             with client.websocket_connect(f"/user_123?token={valid_token}"):
                 pass
@@ -58,16 +58,16 @@ def test_crdt_broadcast_multiple_clients():
     """Test broadcasting between two clients on the same document"""
     with client.websocket_connect("/crdt/doc_xyz") as websocket_alice:
         with client.websocket_connect("/crdt/doc_xyz") as websocket_bob:
-            # Alice sends a change
+
             websocket_alice.send_bytes(b"crdt_op_1")
-            
-            # Bob should receive it
+
+
             data = websocket_bob.receive_bytes()
             assert data == b"crdt_op_1"
-            
-            # Bob sends a change
+
+
             websocket_bob.send_bytes(b"crdt_op_2")
-            
-            # Alice should receive it
+
+
             data2 = websocket_alice.receive_bytes()
             assert data2 == b"crdt_op_2"

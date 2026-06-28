@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../agentic_ai"))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# _make_api_request retry logic
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestMakeApiRequest:
 
@@ -147,9 +147,9 @@ class TestMakeApiRequest:
                     await _make_api_request("GET", "http://test.com/api")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Finetuning service functions
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestFinetuningService:
 
@@ -214,12 +214,12 @@ class TestFinetuningService:
 
         with patch.object(FinetuneRepository, "update_job", new_callable=AsyncMock, return_value=True):
             await svc.report_progress("job-1", {"status": "running", "progress": 50})
-            # Simply ensuring no exception is raised
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SandboxAgent (tools dispatcher) tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
+
 
 class TestSandboxAgent:
 
@@ -303,7 +303,7 @@ class TestSandboxAgent:
                 mock_reg.get = MagicMock(return_value="System prompt")
                 result = await agent.execute("get balance", {}, "user-123", "Bearer valid-token")
 
-        # Tool was called via ainvoke
+
         mock_tool_fn.ainvoke.assert_called_once()
         assert "500" in result or "balance" in result.lower()
 

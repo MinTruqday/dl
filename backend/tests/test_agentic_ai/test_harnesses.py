@@ -17,7 +17,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../agentic_ai"))
 
-# Import all harness classes directly (real module, in-container)
+
 from src.harness.security import SecurityHarness
 from src.harness.evaluation import EvaluationHarness, _compute_bleu, _compute_rouge_l
 from src.harness.tool import ToolHarness
@@ -25,9 +25,9 @@ from src.harness.agentops import AgentopsHarness
 from src.harness.context import ContextHarness, _estimate_tokens, _truncate_history, AgentContext
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SecurityHarness tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestSecurityHarness:
 
@@ -56,7 +56,7 @@ class TestSecurityHarness:
     def test_anomaly_score_single_char(self):
         sec = SecurityHarness()
         score = sec._anomaly_score("a")
-        # Single normal char should have near-zero anomaly score
+
         assert score <= 0.01
 
     def test_anomaly_score_pure_special_chars(self):
@@ -80,8 +80,8 @@ class TestSecurityHarness:
     @pytest.mark.asyncio
     async def test_clean_text_passes(self):
         sec = SecurityHarness()
-        # SecurityHarness uses local imports inside _adetect_security_issues
-        # We patch at the huggingface_hub level
+
+
         mock_eval = MagicMock()
         mock_eval.is_malicious = False
         mock_eval.has_credentials = False
@@ -156,7 +156,7 @@ class TestSecurityHarness:
                 mock_hf.return_value = mock_llm
                 result = await sec.ascan_input("Some query")
 
-        # LLM failure → no violations → passes (fail-safe)
+
         assert result.passed is True
         assert len(result.violations) == 0
 
@@ -207,15 +207,15 @@ class TestSecurityHarness:
         assert result == ""
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# EvaluationHarness tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestBLEU:
     """Test the _compute_bleu function in isolation."""
 
     def test_identical_long_text_gives_high_score(self):
-        # Use text long enough for 4-grams
+
         text = "the quick brown fox jumps over the lazy dog near the river bank and forest"
         score = _compute_bleu(text, text)
         assert score > 0.8
@@ -233,7 +233,7 @@ class TestBLEU:
         assert score == 0.0
 
     def test_partial_match_between_zero_and_one(self):
-        # "the quick brown fox" vs "the quick red fox" — 3 out of 4 unigrams match
+
         score = _compute_bleu(
             "the quick brown fox jumps over the lazy dog",
             "the quick red fox jumps over the heavy dog"
@@ -363,9 +363,9 @@ class TestEvaluationHarness:
         assert len(harness._dataset) == 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ToolHarness tests (using real module, no patching needed)
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestToolHarness:
 
@@ -474,9 +474,9 @@ class TestToolHarness:
         assert call_count[0] == 3
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# AgentopsHarness tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestAgentopsHarness:
 
@@ -489,7 +489,7 @@ class TestAgentopsHarness:
 
     def test_record_session_end_for_unknown_session_is_noop(self):
         harness = AgentopsHarness()
-        harness.record_session_end("nonexistent-sess", "done")  # should not raise
+        harness.record_session_end("nonexistent-sess", "done")
 
     def test_record_tool_call_increments_counter(self):
         harness = AgentopsHarness()
@@ -559,9 +559,9 @@ class TestAgentopsHarness:
         assert sess.total_tokens_out == 60
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ContextHarness tests
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestContextHarness:
 
@@ -580,7 +580,7 @@ class TestContextHarness:
             {"role": "assistant", "content": "b" * 40},
             {"role": "user", "content": "c" * 40},
         ]
-        # Large budget: all should fit
+
         result = _truncate_history(history, budget_tokens=1000)
         assert len(result) == 3
 
@@ -594,15 +594,15 @@ class TestContextHarness:
         assert result == []
 
     def test_truncate_history_prunes_oldest_when_over_budget(self):
-        # Each turn is 100 chars → 100//CHARS_PER_TOKEN tokens
-        # Budget of 1 means very little space
+
+
         history = [
             {"role": "user", "content": "a" * 100},
             {"role": "assistant", "content": "b" * 100},
-            {"role": "user", "content": "c" * 4},  # Very short — fits first
+            {"role": "user", "content": "c" * 4},
         ]
         result = _truncate_history(history, budget_tokens=2)
-        # Only the very last tiny turn can fit
+
         assert len(result) <= 2
 
     @pytest.mark.asyncio

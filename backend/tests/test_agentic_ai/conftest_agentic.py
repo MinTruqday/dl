@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
-# ── Shared mock data ──────────────────────────────────────────────────────────
+
 
 FAKE_TOKEN = "Bearer fake-jwt-admin-token"
 FAKE_USER_ID = "test-user-123"
@@ -76,7 +76,7 @@ FAKE_VOUCHER_RESPONSE = {
 }
 
 
-# ── HTTP response mock helper ──────────────────────────────────────────────────
+
 
 def make_mock_response(status_code: int, data: dict) -> MagicMock:
     """Create a mock httpx.Response."""
@@ -86,7 +86,7 @@ def make_mock_response(status_code: int, data: dict) -> MagicMock:
     return mock_resp
 
 
-# ── Pytest fixtures ─────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def mock_api_request():

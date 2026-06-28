@@ -6,7 +6,7 @@ import sys
 import os
 import pytest
 
-# Ensure agentic_ai src is on path
+
 _ai_src = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../agentic_ai"))
 if _ai_src not in sys.path:
     sys.path.insert(0, _ai_src)

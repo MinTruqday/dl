@@ -13,13 +13,13 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch, call
 
-# ── sys.path bootstrap ────────────────────────────────────────────────────────
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../agentic_ai"))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# EngineAgent tests (src/agents/engine.py)
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestEngineAgent:
 
@@ -93,9 +93,9 @@ class TestEngineAgent:
         assert "https://python.org" in result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# InterpreterAgent tests (src/agents/interpreter.py)
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestInterpreterAgent:
 
@@ -126,7 +126,7 @@ class TestInterpreterAgent:
                         mock_wait.return_value = (b"Hello from interpreter\n", b"")
                         with patch("os.path.exists", return_value=False):
                             result = await agent.execute("Print hello world")
-        # Result should contain the output
+
         assert "Hello from interpreter" in result or "execution" in result.lower()
 
     @pytest.mark.asyncio
@@ -185,9 +185,9 @@ class TestInterpreterAgent:
         assert "42" in result or "execution" in result.lower()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ReasoningAgent tests (src/agents/reasoning.py)
-# ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 class TestReasoningAgent:
 
@@ -253,7 +253,7 @@ class TestReasoningAgent:
         long_text = "x" * 2000
         docs = [{"metadata": {"title": "Long Doc", "author": "Author"}, "text": long_text}]
         result = agent._build_context(docs)
-        # The text is sliced at [:800], so the total result should be < 1000 from that doc
+
         assert len(result) < 2500
 
     @pytest.mark.asyncio
@@ -308,6 +308,6 @@ class TestReasoningAgent:
                 with patch("src.agents.reasoning.registry") as mock_reg:
                     mock_reg.get.return_value.format = MagicMock(return_value="prompt")
                     result = await agent.evaluate_quality("Q", "A", [])
-        # On failure, should_retry is False and feedback contains error info
+
         assert result["should_retry"] is False
         assert "error" in result["feedback"].lower() or "encountered" in result["feedback"].lower()
