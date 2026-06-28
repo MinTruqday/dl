@@ -5,7 +5,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from loguru import logger
 from pydantic import BaseModel, Field
-from src.agents.sandbox import actor
+from src.agents.acting import actor
 from src.agents.interpreter import interpreter
 from src.agents.plan import planner
 from src.agents.reasoning import reasoner

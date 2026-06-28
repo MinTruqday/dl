@@ -95,6 +95,4 @@ class Settings(BaseModel):
 
     INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL", os.getenv("API_URL", "http://doclib_traefik:8000"))
 
-    FALLBACK_MODEL: str = os.getenv("FALLBACK_MODEL", os.getenv("LLAMA_MODEL", ""))
-
 settings = Settings()

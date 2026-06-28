@@ -1,11 +1,3 @@
-"""
-Heavy-duty unit tests for agentic_ai harnesses (FIXED VERSION):
- - SecurityHarness (src/harness/security.py)
- - EvaluationHarness (src/harness/evaluation.py)
- - ToolHarness (src/harness/tool.py)
- - AgentopsHarness (src/harness/agentops.py)
- - ContextHarness (src/harness/context.py)
-"""
 import sys
 import os
 import asyncio
@@ -15,14 +7,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../../agentic_ai"))
-
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../agentic_ai"))
 
 from src.harness.security import SecurityHarness
 from src.harness.evaluation import EvaluationHarness, _compute_bleu, _compute_rouge_l
 from src.harness.tool import ToolHarness
 from src.harness.agentops import AgentopsHarness
 from src.harness.context import ContextHarness, _estimate_tokens, _truncate_history, AgentContext
+from src.harness.failure import FailureAttributionHarness, _classify_failure
+from src.harness.verification import VerificationHarness
+from src.harness.entropy import EntropyAuditor
+from src.harness.intervention import InterventionHarness
 
 
 
@@ -671,3 +666,476 @@ class TestContextHarness:
         req = FakeReq()
         harness.apply_context_to_acting_req(ctx, req)
         assert req.conversation_history == [{"role": "user", "content": "hello"}]
+
+
+class TestFailureAttributionHarness:
+
+    def test_classify_json_decode_error(self):
+        harness = FailureAttributionHarness()
+        err = json.JSONDecodeError("Expecting value", "", 0)
+        failure_type = harness.classify(err)
+        assert failure_type == "BAD_MODEL_CALL"
+
+    def test_classify_timeout_error(self):
+        harness = FailureAttributionHarness()
+        err = asyncio.TimeoutError()
+        failure_type = harness.classify(err, node="tool_execution")
+        assert failure_type == "TOOL_TIMEOUT"
+
+    def test_classify_unknown_error(self):
+        harness = FailureAttributionHarness()
+        err = Exception("Some random failure")
+        failure_type = harness.classify(err)
+        assert failure_type == "UNKNOWN"
+
+    def test_classify_rag_node_retrieval_failure(self):
+        harness = FailureAttributionHarness()
+        err = IndexError("list index out of range")
+        failure_type = harness.classify(err, node="rag_retrieval")
+        assert failure_type in ("RETRIEVAL_FAILURE", "UNKNOWN")
+
+    def test_classify_plan_node_error(self):
+        harness = FailureAttributionHarness()
+        err = Exception("could not parse output")
+        failure_type = harness.classify(err, node="planner")
+        assert failure_type in ("PLAN_PARSE_ERROR", "UNKNOWN")
+
+    def test_record_failure_stores_record(self):
+        harness = FailureAttributionHarness()
+        err = Exception("test error")
+        record = harness.record_failure(
+            session_id="sess-fail-1",
+            user_id="user-1",
+            error=err,
+            node="test_node",
+            tool_name="test_tool",
+        )
+        assert record.session_id == "sess-fail-1"
+        assert record.node == "test_node"
+        assert record.tool_name == "test_tool"
+        assert record.suggestion != ""
+
+    def test_get_report_empty_session(self):
+        harness = FailureAttributionHarness()
+        report = harness.get_report("no-such-session")
+        assert report.total_failures == 0
+        assert report.most_recent is None
+
+    def test_get_report_multiple_failures(self):
+        harness = FailureAttributionHarness()
+        harness.record_failure("sess-f2", "u1", Exception("err1"), node="node_a")
+        harness.record_failure("sess-f2", "u1", asyncio.TimeoutError(), node="tool_exec")
+        report = harness.get_report("sess-f2")
+        assert report.total_failures == 2
+        assert report.most_recent is not None
+        assert "TOOL_TIMEOUT" in report.failure_breakdown
+
+    def test_clear_session_removes_records(self):
+        harness = FailureAttributionHarness()
+        harness.record_failure("sess-f3", "u1", Exception("err"))
+        harness.clear_session("sess-f3")
+        report = harness.get_report("sess-f3")
+        assert report.total_failures == 0
+
+    def test_record_failure_captures_error_message(self):
+        harness = FailureAttributionHarness()
+        err = ValueError("Invalid argument type provided")
+        record = harness.record_failure("sess-f4", "u1", err)
+        assert "Invalid argument type provided" in record.error_message
+
+    def test_record_failure_includes_suggestion(self):
+        harness = FailureAttributionHarness()
+        err = asyncio.TimeoutError()
+        record = harness.record_failure("sess-f5", "u1", err)
+        assert record.suggestion != ""
+
+
+class TestVerificationHarness:
+
+    def test_valid_response_passes(self):
+        harness = VerificationHarness()
+        result = harness.verify_task_completion(
+            session_id="sess-v1",
+            task_id="task-1",
+            response="Đây là câu trả lời đầy đủ và chi tiết",
+        )
+        assert result.passed is True
+        assert len(result.failed_checks) == 0
+
+    def test_empty_response_fails(self):
+        harness = VerificationHarness()
+        result = harness.verify_task_completion(
+            session_id="sess-v2",
+            task_id="task-2",
+            response="",
+        )
+        assert result.passed is False
+        assert any(c.name == "response_not_empty" for c in result.failed_checks)
+
+    def test_whitespace_only_response_fails(self):
+        harness = VerificationHarness()
+        result = harness.verify_task_completion(
+            session_id="sess-v3",
+            task_id="task-3",
+            response="   ",
+        )
+        assert result.passed is False
+
+    def test_hallucination_marker_detected(self):
+        harness = VerificationHarness()
+        result = harness.verify_task_completion(
+            session_id="sess-v4",
+            task_id="task-4",
+            response="I don't know the answer to your question",
+        )
+        assert result.passed is False
+        assert any(c.name == "no_hallucination_markers" for c in result.failed_checks)
+
+    def test_vietnamese_hallucination_marker_detected(self):
+        harness = VerificationHarness()
+        result = harness.verify_task_completion(
+            session_id="sess-v5",
+            task_id="task-5",
+            response="Tôi không biết câu trả lời cho câu hỏi này",
+        )
+        assert result.passed is False
+
+    def test_plan_fully_executed_check(self):
+        harness = VerificationHarness()
+        steps = [{"agent": "A", "task": "t1"}, {"agent": "B", "task": "t2"}]
+        result = harness.verify_task_completion(
+            session_id="sess-v6",
+            task_id="task-6",
+            response="Kết quả đầy đủ và hoàn chỉnh của quá trình xử lý",
+            steps=steps,
+            current_step_index=2,
+        )
+        assert result.passed is True
+
+    def test_plan_not_fully_executed_fails(self):
+        harness = VerificationHarness()
+        steps = [{"agent": "A", "task": "t1"}, {"agent": "B", "task": "t2"}]
+        result = harness.verify_task_completion(
+            session_id="sess-v7",
+            task_id="task-7",
+            response="Phản hồi trung gian chưa hoàn chỉnh",
+            steps=steps,
+            current_step_index=1,
+        )
+        assert result.passed is False
+
+    def test_verify_tool_result_none_fails(self):
+        harness = VerificationHarness()
+        result = harness.verify_tool_result("sess-v8", "task-8", None)
+        assert result.passed is False
+
+    def test_verify_tool_result_dict_with_error_fails(self):
+        harness = VerificationHarness()
+        result = harness.verify_tool_result("sess-v9", "task-9", {"error": "Tool failed"})
+        assert result.passed is False
+
+    def test_verify_tool_result_valid_data_passes(self):
+        harness = VerificationHarness()
+        result = harness.verify_tool_result("sess-v10", "task-10", {"data": "some content"})
+        assert result.passed is True
+
+    def test_get_session_history_accumulates(self):
+        harness = VerificationHarness()
+        harness.verify_task_completion("sess-v11", "t1", "Câu trả lời hợp lệ")
+        harness.verify_task_completion("sess-v11", "t2", "")
+        history = harness.get_session_history("sess-v11")
+        assert len(history) == 2
+
+    def test_clear_session_removes_history(self):
+        harness = VerificationHarness()
+        harness.verify_task_completion("sess-v12", "t1", "Valid response text here")
+        harness.clear_session("sess-v12")
+        assert harness.get_session_history("sess-v12") == []
+
+    def test_error_prefix_response_fails(self):
+        harness = VerificationHarness()
+        result = harness.verify_task_completion(
+            session_id="sess-v13",
+            task_id="task-13",
+            response="error: something went wrong during processing",
+        )
+        assert result.passed is False
+
+
+class TestEntropyAuditor:
+
+    def test_register_session_tracks_session(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e1")
+        assert "sess-e1" in auditor._session_start_times
+
+    def test_compute_entropy_fresh_session_is_low(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e2")
+        snapshot = auditor.compute_entropy("sess-e2", message_count=1, estimated_tokens=100)
+        assert 0.0 <= snapshot.entropy_score <= 1.0
+        assert snapshot.entropy_score < 0.5
+
+    def test_compute_entropy_heavy_session_is_high(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e3")
+        snapshot = auditor.compute_entropy("sess-e3", message_count=30, estimated_tokens=30000)
+        assert snapshot.entropy_score > 0.3
+
+    def test_should_reset_fresh_session_is_false(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e4")
+        result = auditor.should_reset("sess-e4", message_count=2, estimated_tokens=200)
+        assert result is False
+
+    def test_record_tool_dispatched_increments_unresolved(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e5")
+        auditor.record_tool_dispatched("sess-e5")
+        auditor.record_tool_dispatched("sess-e5")
+        assert auditor._unresolved_tool_calls["sess-e5"] == 2
+
+    def test_record_tool_resolved_decrements_unresolved(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e6")
+        auditor.record_tool_dispatched("sess-e6")
+        auditor.record_tool_dispatched("sess-e6")
+        auditor.record_tool_resolved("sess-e6")
+        assert auditor._unresolved_tool_calls["sess-e6"] == 1
+
+    def test_record_tool_resolved_does_not_go_below_zero(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e7")
+        auditor.record_tool_resolved("sess-e7")
+        assert auditor._unresolved_tool_calls["sess-e7"] == 0
+
+    def test_get_latest_snapshot_returns_last(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e8")
+        auditor.compute_entropy("sess-e8", 1, 100)
+        auditor.compute_entropy("sess-e8", 5, 500)
+        snapshot = auditor.get_latest_snapshot("sess-e8")
+        assert snapshot is not None
+        assert snapshot.message_count == 5
+
+    def test_clear_session_removes_all_tracking(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e9")
+        auditor.compute_entropy("sess-e9", 2, 200)
+        auditor.clear_session("sess-e9")
+        assert "sess-e9" not in auditor._session_start_times
+        assert auditor.get_latest_snapshot("sess-e9") is None
+
+    def test_entropy_snapshot_fields_populated(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e10")
+        snapshot = auditor.compute_entropy("sess-e10", message_count=5, estimated_tokens=1000)
+        assert snapshot.session_id == "sess-e10"
+        assert snapshot.message_count == 5
+        assert snapshot.estimated_tokens == 1000
+        assert snapshot.session_age_seconds >= 0.0
+
+    def test_unresolved_contributes_to_entropy(self):
+        auditor = EntropyAuditor()
+        auditor.register_session("sess-e11")
+        snap_clean = auditor.compute_entropy("sess-e11", 5, 500)
+        auditor.record_tool_dispatched("sess-e11")
+        auditor.record_tool_dispatched("sess-e11")
+        auditor.record_tool_dispatched("sess-e11")
+        auditor.record_tool_dispatched("sess-e11")
+        auditor.record_tool_dispatched("sess-e11")
+        snap_busy = auditor.compute_entropy("sess-e11", 5, 500)
+        assert snap_busy.entropy_score > snap_clean.entropy_score
+
+
+class TestInterventionHarness:
+
+    @pytest.mark.asyncio
+    async def test_request_approval_creates_pending(self):
+        harness = InterventionHarness()
+        harness._redis_client = MagicMock()
+        harness._redis_client.setex = AsyncMock(return_value=True)
+        with patch.object(harness, "_get_redis", return_value=harness._redis_client):
+            request = await harness.request_approval(
+                session_id="sess-i1",
+                user_id="user-1",
+                action_type="FILE_DELETE",
+                description="Sẽ xóa toàn bộ dữ liệu người dùng",
+                proposed_action="DELETE /api/user/data",
+                risk_level="high",
+                ttl_seconds=1000,
+            )
+        assert request.intervention_id in harness._pending
+        assert request.status == "PENDING_APPROVAL"
+        assert request.risk_level == "high"
+
+    @pytest.mark.asyncio
+    async def test_record_feedback_approved(self):
+        harness = InterventionHarness()
+        harness._redis_client = MagicMock()
+        harness._redis_client.setex = AsyncMock(return_value=True)
+        harness._redis_client.delete = AsyncMock(return_value=True)
+        with patch.object(harness, "_get_redis", return_value=harness._redis_client):
+            request = await harness.request_approval(
+                session_id="sess-i2",
+                user_id="user-2",
+                action_type="API_CALL",
+                description="Gọi API bên ngoài",
+                proposed_action="POST /external/api",
+                risk_level="medium",
+                ttl_seconds=1000,
+            )
+            resolved = await harness.record_feedback(
+                intervention_id=request.intervention_id,
+                status="APPROVED",
+                human_feedback="Cho phép thực hiện",
+            )
+        assert resolved is not None
+        assert resolved.status == "APPROVED"
+        assert resolved.intervention_id not in harness._pending
+
+    @pytest.mark.asyncio
+    async def test_record_feedback_rejected(self):
+        harness = InterventionHarness()
+        harness._redis_client = MagicMock()
+        harness._redis_client.setex = AsyncMock(return_value=True)
+        harness._redis_client.delete = AsyncMock(return_value=True)
+        with patch.object(harness, "_get_redis", return_value=harness._redis_client):
+            request = await harness.request_approval(
+                session_id="sess-i3",
+                user_id="user-3",
+                action_type="RISKY_OP",
+                description="Thao tác nguy hiểm",
+                proposed_action="DROP TABLE users",
+                risk_level="critical",
+                ttl_seconds=1000,
+            )
+            resolved = await harness.record_feedback(
+                request.intervention_id, "REJECTED", "Không cho phép"
+            )
+        assert resolved.status == "REJECTED"
+
+    @pytest.mark.asyncio
+    async def test_record_feedback_unknown_id_returns_none(self):
+        harness = InterventionHarness()
+        harness._redis_client = MagicMock()
+        harness._redis_client.keys = AsyncMock(return_value=[])
+        with patch.object(harness, "_get_redis", return_value=harness._redis_client):
+            result = await harness.record_feedback("nonexistent-id", "APPROVED")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_record_feedback_with_correction(self):
+        harness = InterventionHarness()
+        harness._redis_client = MagicMock()
+        harness._redis_client.setex = AsyncMock(return_value=True)
+        harness._redis_client.delete = AsyncMock(return_value=True)
+        with patch.object(harness, "_get_redis", return_value=harness._redis_client):
+            request = await harness.request_approval(
+                session_id="sess-i4",
+                user_id="user-4",
+                action_type="WRITE",
+                description="Ghi dữ liệu",
+                proposed_action="PUT /api/data",
+                risk_level="low",
+                ttl_seconds=1000,
+            )
+            resolved = await harness.record_feedback(
+                request.intervention_id,
+                "CORRECTED",
+                human_feedback="Thay đổi endpoint",
+                correction="PATCH /api/data/partial",
+            )
+        assert resolved.status == "CORRECTED"
+        assert resolved.correction == "PATCH /api/data/partial"
+
+    def test_get_pending_by_session(self):
+        harness = InterventionHarness()
+        from src.harness.intervention import InterventionRequest
+        req = InterventionRequest(
+            intervention_id="iid-1",
+            session_id="sess-i5",
+            user_id="u1",
+            action_type="READ",
+            description="Đọc dữ liệu nhạy cảm",
+            proposed_action="GET /secrets",
+            risk_level="medium",
+        )
+        harness._pending["iid-1"] = req
+        results = harness.get_pending_by_session("sess-i5")
+        assert len(results) == 1
+        assert results[0].intervention_id == "iid-1"
+
+    def test_get_pending_by_session_empty_for_other_session(self):
+        harness = InterventionHarness()
+        from src.harness.intervention import InterventionRequest
+        req = InterventionRequest(
+            intervention_id="iid-2",
+            session_id="sess-i6",
+            user_id="u1",
+            action_type="READ",
+            description="Đọc",
+            proposed_action="GET /data",
+            risk_level="low",
+        )
+        harness._pending["iid-2"] = req
+        results = harness.get_pending_by_session("different-session")
+        assert len(results) == 0
+
+    def test_get_audit_log_after_feedback(self):
+        harness = InterventionHarness()
+        from src.harness.intervention import InterventionRequest
+        from datetime import datetime, timezone
+        req = InterventionRequest(
+            intervention_id="iid-3",
+            session_id="sess-i7",
+            user_id="u1",
+            action_type="WRITE",
+            description="Ghi",
+            proposed_action="POST /data",
+            risk_level="medium",
+            status="APPROVED",
+            resolved_at=datetime.now(timezone.utc),
+        )
+        harness._record_audit(req)
+        log = harness.get_audit_log("sess-i7")
+        assert len(log) == 1
+        assert log[0].status == "APPROVED"
+
+    def test_get_session_summary_empty(self):
+        harness = InterventionHarness()
+        summary = harness.get_session_summary("no-session")
+        assert summary["total"] == 0
+
+    def test_get_session_summary_with_entries(self):
+        harness = InterventionHarness()
+        from src.harness.intervention import InterventionRequest
+        from datetime import datetime, timezone
+        req1 = InterventionRequest(
+            intervention_id="iid-4",
+            session_id="sess-i8",
+            user_id="u1",
+            action_type="A",
+            description="D",
+            proposed_action="P",
+            risk_level="low",
+            status="APPROVED",
+            resolved_at=datetime.now(timezone.utc),
+        )
+        req2 = InterventionRequest(
+            intervention_id="iid-5",
+            session_id="sess-i8",
+            user_id="u1",
+            action_type="B",
+            description="D2",
+            proposed_action="P2",
+            risk_level="high",
+            status="REJECTED",
+            resolved_at=datetime.now(timezone.utc),
+        )
+        harness._record_audit(req1)
+        harness._record_audit(req2)
+        summary = harness.get_session_summary("sess-i8")
+        assert summary["total"] == 2
+        assert "APPROVED" in summary["breakdown"]
+        assert "REJECTED" in summary["breakdown"]

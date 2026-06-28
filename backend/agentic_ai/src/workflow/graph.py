@@ -57,19 +57,6 @@ llama_client = AsyncInferenceClient(
 )
 llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 
-try:
-    _fallback_client = AsyncInferenceClient(
-        model=settings.FALLBACK_MODEL,
-        token=settings.HF_TOKEN,
-    )
-    _fallback_llm = HFInferenceChat(
-        client=_fallback_client, model=settings.FALLBACK_MODEL
-    )
-    llm = llm.with_fallbacks([_fallback_llm])
-    logger.info("Thiết lập dự phòng mô hình ngôn ngữ thành công")
-except Exception as e:
-    logger.exception("Lỗi cấu hình mô hình ngôn ngữ thay thế")
-
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
 from src.schemas.model import (
