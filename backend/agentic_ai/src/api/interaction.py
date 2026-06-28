@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from loguru import logger
 from src.agents.route import semantic_router
+from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.harness.agentops import agentops
 from src.harness.context import context
@@ -210,7 +211,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             else:
                 import asyncio
 
-                heartbeat_queue: asyncio.QueueCore = asyncio.QueueCore()
+                heartbeat_queue: asyncio.Queue = asyncio.Queue()
 
                 async def heartbeat_sender():
                     while True:

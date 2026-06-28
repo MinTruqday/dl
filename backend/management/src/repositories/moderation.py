@@ -28,3 +28,47 @@ class ModerationRepository:
     @classmethod
     def find_moderator_activities(cls, *args, **kwargs):
         return mongo.query("moderator_activity").filter(*args, **kwargs)
+
+    @classmethod
+    async def insert_one(cls, *args, **kwargs):
+        return await mongo.insert_one("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    async def insert_many(cls, *args, **kwargs):
+        return await mongo.insert_many("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    async def find_one(cls, *args, **kwargs):
+        return await mongo.find_one("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    async def update_one(cls, *args, **kwargs):
+        return await mongo.update_one("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    async def update_many(cls, *args, **kwargs):
+        return await mongo.update_many("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    async def delete_one(cls, *args, **kwargs):
+        return await mongo.delete_one("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    async def delete_many(cls, *args, **kwargs):
+        return await mongo.delete_many("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    async def count_documents(cls, *args, **kwargs):
+        return await mongo.count_documents("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return mongo.find("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    def aggregate(cls, *args, **kwargs):
+        return mongo.aggregate("moderator_notes", *args, **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return mongo.query("moderator_notes", *args, **kwargs)

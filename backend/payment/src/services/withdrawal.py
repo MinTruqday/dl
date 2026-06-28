@@ -30,7 +30,7 @@ class WithdrawalService:
         res = await cursor 
         total_revenue = res[0]["total_revenue"] if res else 0
         withdrawal_res = (
-            await db["withdrawal_requests"]
+            await database.mongodb["withdrawal_requests"]
             .aggregate(
                 [
                     {"$match": {"user_id": str(current_user.id), "status": "PENDING"}},
@@ -119,7 +119,7 @@ class WithdrawalService:
 
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         daily_withdrawals = (
-            await db["withdrawal_requests"]
+            await database.mongodb["withdrawal_requests"]
             .aggregate(
                 [
                     {
@@ -161,7 +161,7 @@ class WithdrawalService:
 
         withdrawal_id = str(uuid7())
         try:
-            deduct_result = await db["wallets"].update_one(
+            deduct_result = await mongo.update_one("wallets", 
                 {"_id": str(current_user.id), "balance": {"$gte": amount}},
                 {"$inc": {"balance": -amount}},
                 session=session,
@@ -181,7 +181,7 @@ class WithdrawalService:
                 "status": "PENDING",
                 "created_at": datetime.now(timezone.utc),
             }
-            await db["withdrawal_requests"].insert_one(
+            await mongo.insert_one("withdrawal_requests", 
                 withdrawal_request, session=session
             )
             transaction = Transaction(
@@ -191,7 +191,7 @@ class WithdrawalService:
                 note="Funds temporarily reserved for pending withdrawal processing",
                 reference_id=withdrawal_id,
             )
-            await db["transactions"].insert_one(
+            await mongo.insert_one("transactions", 
                 transaction.model_dump(by_alias=True), session=session
             )
 
@@ -307,7 +307,7 @@ class WithdrawalService:
         status = "APPROVED" if normalized_action == "approve" else "REJECTED"
 
         try:
-            update_result = await db["withdrawal_requests"].update_one(
+            update_result = await mongo.update_one("withdrawal_requests", 
                 {"_id": withdrawal_id, "status": "PENDING"},
                 {
                     "$set": {
@@ -326,7 +326,7 @@ class WithdrawalService:
                 )
 
             if status == "REJECTED":
-                await db["wallets"].update_one(
+                await mongo.update_one("wallets", 
                     {"_id": withdrawal.get("user_id")},
                     {"$inc": {"balance": withdrawal.get("amount", 0)}},
                     upsert=True,
@@ -339,7 +339,7 @@ class WithdrawalService:
                     note="Reserved funds refunded due to rejected withdrawal application following administrative review",
                     reference_id=withdrawal_id,
                 )
-                await db["transactions"].insert_one(
+                await mongo.insert_one("transactions", 
                     refund_transaction.model_dump(by_alias=True), session=session
                 )
 
@@ -347,7 +347,7 @@ class WithdrawalService:
             masked_bank = (
                 bank_info[:4] + "***" + bank_info[-3:] if len(bank_info) > 8 else "***"
             )
-            await db["audit_logs"].insert_one(
+            await mongo.insert_one("audit_logs", 
                 {
                     "action": f"WITHDRAWAL_{status}",
                     "actor_id": str(current_user.id),
@@ -386,7 +386,7 @@ class WithdrawalService:
             session.start_transaction()
             should_close_session = True
 
-        withdrawal = await db["withdrawal_requests"].find_one(
+        withdrawal = await mongo.find_one("withdrawal_requests", 
             {"_id": withdrawal_id, "user_id": str(current_user.id)}
         )
         if not withdrawal:
@@ -406,7 +406,7 @@ class WithdrawalService:
             )
 
         try:
-            update_result = await db["withdrawal_requests"].update_one(
+            update_result = await mongo.update_one("withdrawal_requests", 
                 {
                     "_id": withdrawal_id,
                     "user_id": str(current_user.id),
@@ -427,7 +427,7 @@ class WithdrawalService:
                     status_code=400, detail="Lỗi cập nhật trạng thái yêu cầu rút tiền"
                 )
 
-            await db["wallets"].update_one(
+            await mongo.update_one("wallets", 
                 {"_id": str(current_user.id)},
                 {"$inc": {"balance": withdrawal.get("amount", 0)}},
                 upsert=True,
@@ -440,7 +440,7 @@ class WithdrawalService:
                 note="Reserved funds successfully restored following cancellation of withdrawal request",
                 reference_id=withdrawal_id,
             )
-            await db["transactions"].insert_one(
+            await mongo.insert_one("transactions", 
                 refund_transaction.model_dump(by_alias=True), session=session
             )
 

@@ -1,3 +1,6 @@
+from src.core.infrastructure.mongo import mongo
+from src.core.infrastructure.database import database
+from motor.motor_asyncio import AsyncIOMotorClient
 import contextvars
 import sys
 import uuid
@@ -58,7 +61,7 @@ async def health_check():
     return {"status": "healthy"}
 @app.get("/evaluate/metrics")
 async def harness_metrics():
-    from fastapi.response import PlainTextResponse
+    from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
         content=agentops.get_prometheus_metrics(),
         media_type="text/plain; version=0.0.4",
@@ -98,6 +101,7 @@ async def startup_event():
             await db["finetune_jobs"].create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
+            client.close()
             logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
     except Exception as e:
         logger.exception(f"Lỗi khởi tạo chỉ mục cơ sở dữ liệu: {e}")

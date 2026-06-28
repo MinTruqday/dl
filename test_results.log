@@ -1,0 +1,656 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/caominhtrung/Documents/DocLib
+plugins: anyio-4.12.1, asyncio-1.2.0
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 224 items
+
+backend/tests/test_authentication/test_auto.py .............             [  5%]
+backend/tests/test_cloud/test_auto.py ..F.F...............               [ 14%]
+backend/tests/test_compilation/test_auto.py ...................          [ 23%]
+backend/tests/test_content/test_auto.py .F....F.FFF......F......FF.FF.FF [ 37%]
+F......F....FF....F........F.......................F..FFF......          [ 65%]
+backend/tests/test_content/test_document_ingestion.py F                  [ 66%]
+backend/tests/test_drm/test_auto.py ......                               [ 68%]
+backend/tests/test_management/test_auto.py F.....F.FF...F.......F...FFFF [ 81%]
+....FF...F.....                                                          [ 88%]
+backend/tests/test_notification/test_auto.py F...F.                      [ 91%]
+backend/tests/test_payment/test_auto.py .....F....F.....F..              [ 99%]
+backend/tests/test_websocket/test_auto.py .                              [100%]
+
+=================================== FAILURES ===================================
+__________________ test_auto_list_items_luu_tru_danh_sach_get __________________
+
+cloud_client = <httpx.AsyncClient object at 0x10b387f70>
+
+    async def test_auto_list_items_luu_tru_danh_sach_get(cloud_client):
+        """Test for GET /luu-tru/danh-sach"""
+        response = await cloud_client.get('/luu-tru/danh-sach')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_cloud/test_auto.py:27: AssertionError
+________________ test_auto_get_recent_items_luu_tru_gan_day_get ________________
+
+cloud_client = <httpx.AsyncClient object at 0x10b387f70>
+
+    async def test_auto_get_recent_items_luu_tru_gan_day_get(cloud_client):
+        """Test for GET /luu-tru/gan-day"""
+        response = await cloud_client.get('/luu-tru/gan-day')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_cloud/test_auto.py:39: AssertionError
+____________________ test_auto_list_documents_tai_lieu_get _____________________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_list_documents_tai_lieu_get(content_client):
+        """Test for GET /tai-lieu"""
+        response = await content_client.get('/tai-lieu')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:21: AssertionError
+__________________ test_auto_get_folders_tai_lieu_thu_muc_get __________________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_folders_tai_lieu_thu_muc_get(content_client):
+        """Test for GET /tai-lieu/thu-muc"""
+        response = await content_client.get('/tai-lieu/thu-muc')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:51: AssertionError
+_________ test_auto_delete_folder_tai_lieu_thu_muc__folder_id__delete __________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_delete_folder_tai_lieu_thu_muc__folder_id__delete(content_client):
+        """Test for DELETE /tai-lieu/thu-muc/{folder_id}"""
+        response = await content_client.delete('/tai-lieu/thu-muc/test_id')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:63: AssertionError
+_______________ test_auto_get_my_documents_tai_lieu_ca_nhan_get ________________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_my_documents_tai_lieu_ca_nhan_get(content_client):
+        """Test for GET /tai-lieu/ca-nhan"""
+        response = await content_client.get('/tai-lieu/ca-nhan')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:69: AssertionError
+__________________ test_auto_get_trash_tai_lieu_thung_rac_get __________________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_trash_tai_lieu_thung_rac_get(content_client):
+        """Test for GET /tai-lieu/thung-rac"""
+        response = await content_client.get('/tai-lieu/thung-rac')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:75: AssertionError
+_____ test_auto_toggle_star_document_tai_lieu__document_id__danh_dau_post ______
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_toggle_star_document_tai_lieu__document_id__danh_dau_post(content_client):
+        """Test for POST /tai-lieu/{document_id}/danh-dau"""
+        response = await content_client.post('/tai-lieu/test_id/danh-dau', json={'test': 'data'})
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:117: AssertionError
+___________ test_auto_get_trending_documents_kham_pha_thinh_hanh_get ___________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_trending_documents_kham_pha_thinh_hanh_get(content_client):
+        """Test for GET /kham-pha/thinh-hanh"""
+        response = await content_client.get('/kham-pha/thinh-hanh')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:159: AssertionError
+_____________ test_auto_get_tags_categories_kham_pha_the_loai_get ______________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_tags_categories_kham_pha_the_loai_get(content_client):
+        """Test for GET /kham-pha/the-loai"""
+        response = await content_client.get('/kham-pha/the-loai')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:165: AssertionError
+____________ test_auto_get_ai_recommendations_kham_pha_goi_y_ai_get ____________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_ai_recommendations_kham_pha_goi_y_ai_get(content_client):
+        """Test for GET /kham-pha/goi-y-ai"""
+        response = await content_client.get('/kham-pha/goi-y-ai')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:177: AssertionError
+_________ test_auto_get_trending_tags_kham_pha_tu_khoa_thinh_hanh_get __________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_trending_tags_kham_pha_tu_khoa_thinh_hanh_get(content_client):
+        """Test for GET /kham-pha/tu-khoa-thinh-hanh"""
+        response = await content_client.get('/kham-pha/tu-khoa-thinh-hanh')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:183: AssertionError
+_____ test_auto_get_document_versions_phien_ban_tai_lieu__document_id__get _____
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_document_versions_phien_ban_tai_lieu__document_id__get(content_client):
+        """Test for GET /phien-ban/tai-lieu/{document_id}"""
+        response = await content_client.get('/phien-ban/tai-lieu/test_id')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:195: AssertionError
+_______ test_auto_restore_version_phien_ban__version_id__khoi_phuc_post ________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_restore_version_phien_ban__version_id__khoi_phuc_post(content_client):
+        """Test for POST /phien-ban/{version_id}/khoi-phuc"""
+        response = await content_client.post('/phien-ban/test_id/khoi-phuc', json={'test': 'data'})
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:201: AssertionError
+__________________ test_auto_get_history_doc_hieu_lich_su_get __________________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_history_doc_hieu_lich_su_get(content_client):
+        """Test for GET /doc-hieu/lich-su"""
+        response = await content_client.get('/doc-hieu/lich-su')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:207: AssertionError
+_____________ test_auto_get_bookmark_folders_danh_dau_thu_muc_get ______________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_bookmark_folders_danh_dau_thu_muc_get(content_client):
+        """Test for GET /danh-dau/thu-muc"""
+        response = await content_client.get('/danh-dau/thu-muc')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:249: AssertionError
+_____________________ test_auto_get_bookmarks_danh_dau_get _____________________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_bookmarks_danh_dau_get(content_client):
+        """Test for GET /danh-dau"""
+        response = await content_client.get('/danh-dau')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:279: AssertionError
+________________ test_auto_get_my_lists_thu_vien_danh_sach_get _________________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_my_lists_thu_vien_danh_sach_get(content_client):
+        """Test for GET /thu-vien/danh-sach"""
+        response = await content_client.get('/thu-vien/danh-sach')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:285: AssertionError
+_________ test_auto_get_my_collaboration_invites_cong_tac_loi_moi_get __________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_my_collaboration_invites_cong_tac_loi_moi_get(content_client):
+        """Test for GET /cong-tac/loi-moi"""
+        response = await content_client.get('/cong-tac/loi-moi')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:315: AssertionError
+_ test_auto_get_online_collaborators_cong_tac_tai_lieu__document_id__truc_tuyen_get _
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_online_collaborators_cong_tac_tai_lieu__document_id__truc_tuyen_get(content_client):
+        """Test for GET /cong-tac/tai-lieu/{document_id}/truc-tuyen"""
+        response = await content_client.get('/cong-tac/tai-lieu/test_id/truc-tuyen')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:369: AssertionError
+_________ test_auto_get_highlights_danh_dau_tai_lieu__document_id__get _________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_highlights_danh_dau_tai_lieu__document_id__get(content_client):
+        """Test for GET /danh-dau/tai-lieu/{document_id}"""
+        response = await content_client.get('/danh-dau/tai-lieu/test_id')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:513: AssertionError
+_________________ test_auto_get_all_notes_danh_dau_ghi_chu_get _________________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_all_notes_danh_dau_ghi_chu_get(content_client):
+        """Test for GET /danh-dau/ghi-chu"""
+        response = await content_client.get('/danh-dau/ghi-chu')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:531: AssertionError
+_ test_auto_export_highlights_markdown_danh_dau_tai_lieu__document_id__ket_xuat_get _
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_export_highlights_markdown_danh_dau_tai_lieu__document_id__ket_xuat_get(content_client):
+        """Test for GET /danh-dau/tai-lieu/{document_id}/ket-xuat"""
+        response = await content_client.get('/danh-dau/tai-lieu/test_id/ket-xuat')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:537: AssertionError
+______________ test_auto_get_approval_queue_ban_nhap_hang_doi_get ______________
+
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_auto_get_approval_queue_ban_nhap_hang_doi_get(content_client):
+        """Test for GET /ban-nhap/hang-doi"""
+        response = await content_client.get('/ban-nhap/hang-doi')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_content/test_auto.py:543: AssertionError
+______________________ test_document_upload_and_ingestion ______________________
+
+cloud_client = <httpx.AsyncClient object at 0x10b387f70>
+content_client = <httpx.AsyncClient object at 0x10b398a30>
+
+    async def test_document_upload_and_ingestion(cloud_client: AsyncClient, content_client: AsyncClient):
+        pdf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../doc/827-thoi-quen-nguyen-tu-thuviensach.vn.pdf"))
+        assert os.path.exists(pdf_path), "Sample PDF file not found!"
+    
+        # 1. Upload to Cloud Service
+        with open(pdf_path, "rb") as f:
+            files = {"file": ("827-thoi-quen-nguyen-tu-thuviensach.vn.pdf", f, "application/pdf")}
+            upload_res = await cloud_client.post("/tai-len/tai-lieu", files=files)
+    
+        assert upload_res.status_code in [200, 201], f"Upload failed: {upload_res.text}"
+        upload_data = upload_res.json()
+        file_url = upload_data.get("data", {}).get("url", "")
+        assert file_url, "File URL not returned by Cloud service"
+    
+        # 2. Create Document in Content Service
+        doc_payload = {
+            "title": "Thói Quen Nguyên Tử",
+            "slug": "thoi-quen-nguyen-tu",
+            "description": "Test upload",
+            "source_url": file_url,
+            "format": "pdf",
+            "tags": ["test"],
+            "categories": ["test"],
+            "is_public": False
+        }
+    
+        create_res = await content_client.post("/tai-lieu", json=doc_payload)
+>       assert create_res.status_code in [200, 201], f"Document creation failed: {create_res.text}"
+E       AssertionError: Document creation failed: {"detail":"Đường dẫn định tuyến đã được sử dụng"}
+E       assert 400 in [200, 201]
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+
+backend/tests/test_content/test_document_ingestion.py:34: AssertionError
+____________________ test_auto_get_all_users_nguoi_dung_get ____________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_all_users_nguoi_dung_get(management_client):
+        """Test for GET /nguoi-dung"""
+        response = await management_client.get('/nguoi-dung')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:15: AssertionError
+_____________ test_auto_get_notes_nguoi_dung__user_id__ghi_chu_get _____________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_notes_nguoi_dung__user_id__ghi_chu_get(management_client):
+        """Test for GET /nguoi-dung/{user_id}/ghi-chu"""
+        response = await management_client.get('/nguoi-dung/test_id/ghi-chu')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:51: AssertionError
+________________ test_auto_search_users_nguoi_dung_tim_kiem_get ________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_search_users_nguoi_dung_tim_kiem_get(management_client):
+        """Test for GET /nguoi-dung/tim-kiem"""
+        response = await management_client.get('/nguoi-dung/tim-kiem')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:63: AssertionError
+__________________ test_auto_get_activity_kiem_toan_logs_get ___________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_activity_kiem_toan_logs_get(management_client):
+        """Test for GET /kiem-toan/logs"""
+        response = await management_client.get('/kiem-toan/logs')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:69: AssertionError
+________________ test_auto_get_activity_giam_sat_hoat_dong_get _________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_activity_giam_sat_hoat_dong_get(management_client):
+        """Test for GET /giam-sat/hoat-dong"""
+        response = await management_client.get('/giam-sat/hoat-dong')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:93: AssertionError
+_______________ test_auto_get_admin_reports_van_hanh_bao_cao_get _______________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_admin_reports_van_hanh_bao_cao_get(management_client):
+        """Test for GET /van-hanh/bao-cao"""
+        response = await management_client.get('/van-hanh/bao-cao')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:141: AssertionError
+__________________ test_auto_get_my_quota_han_muc_ca_nhan_get __________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_my_quota_han_muc_ca_nhan_get(management_client):
+        """Test for GET /han-muc/ca-nhan"""
+        response = await management_client.get('/han-muc/ca-nhan')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:165: AssertionError
+___________ test_auto_update_role_quota_han_muc__role__cau_hinh_put ____________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_update_role_quota_han_muc__role__cau_hinh_put(management_client):
+        """Test for PUT /han-muc/{role}/cau-hinh"""
+        response = await management_client.put('/han-muc/test_id/cau-hinh', json={'test': 'data'})
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:171: AssertionError
+_______________ test_auto_get_global_config_han_muc_cau_hinh_get _______________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_global_config_han_muc_cau_hinh_get(management_client):
+        """Test for GET /han-muc/cau-hinh"""
+        response = await management_client.get('/han-muc/cau-hinh')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:177: AssertionError
+__________________ test_auto_get_my_profile_ho_so_ca_nhan_get __________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_my_profile_ho_so_ca_nhan_get(management_client):
+        """Test for GET /ho-so/ca-nhan"""
+        response = await management_client.get('/ho-so/ca-nhan')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:183: AssertionError
+___________________ test_auto_get_settings_ho_so_cai_dat_get ___________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_settings_ho_so_cai_dat_get(management_client):
+        """Test for GET /ho-so/cai-dat"""
+        response = await management_client.get('/ho-so/cai-dat')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:213: AssertionError
+_________________ test_auto_update_settings_ho_so_cai_dat_put __________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_update_settings_ho_so_cai_dat_put(management_client):
+        """Test for PUT /ho-so/cai-dat"""
+        response = await management_client.put('/ho-so/cai-dat', json={'test': 'data'})
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:219: AssertionError
+________________ test_auto_get_public_profile_ho_so__slug__get _________________
+
+management_client = <httpx.AsyncClient object at 0x10b48a4f0>
+
+    async def test_auto_get_public_profile_ho_so__slug__get(management_client):
+        """Test for GET /ho-so/{slug}"""
+        response = await management_client.get('/ho-so/test_id')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_management/test_auto.py:243: AssertionError
+__________________ test_auto_get_notifications_thong_bao_get ___________________
+
+notification_client = <httpx.AsyncClient object at 0x10b49b160>
+
+    async def test_auto_get_notifications_thong_bao_get(notification_client):
+        """Test for GET /thong-bao"""
+        response = await notification_client.get('/thong-bao')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_notification/test_auto.py:15: AssertionError
+_______________ test_auto_update_settings_thong_bao_cai_dat_post _______________
+
+notification_client = <httpx.AsyncClient object at 0x10b49b160>
+
+    async def test_auto_update_settings_thong_bao_cai_dat_post(notification_client):
+        """Test for POST /thong-bao/cai-dat"""
+        response = await notification_client.post('/thong-bao/cai-dat', json={'test': 'data'})
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_notification/test_auto.py:39: AssertionError
+_____________ test_auto_get_withdrawal_queue_rut_tien_hang_doi_get _____________
+
+payment_client = <httpx.AsyncClient object at 0x10afe9790>
+
+    async def test_auto_get_withdrawal_queue_rut_tien_hang_doi_get(payment_client):
+        """Test for GET /rut-tien/hang-doi"""
+        response = await payment_client.get('/rut-tien/hang-doi')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_payment/test_auto.py:45: AssertionError
+_____________ test_auto_get_author_revenue_kiem_tien_doanh_thu_get _____________
+
+payment_client = <httpx.AsyncClient object at 0x10afe9790>
+
+    async def test_auto_get_author_revenue_kiem_tien_doanh_thu_get(payment_client):
+        """Test for GET /kiem-tien/doanh-thu"""
+        response = await payment_client.get('/kiem-tien/doanh-thu')
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_payment/test_auto.py:75: AssertionError
+_______ test_auto_approve_coupon_ma_qua_tang__coupon_id__phe_duyet_post ________
+
+payment_client = <httpx.AsyncClient object at 0x10afe9790>
+
+    async def test_auto_approve_coupon_ma_qua_tang__coupon_id__phe_duyet_post(payment_client):
+        """Test for POST /ma-qua-tang/{coupon_id}/phe-duyet"""
+        response = await payment_client.post('/ma-qua-tang/test_id/phe-duyet', json={'test': 'data'})
+        # We just want to ensure it doesn't return 404 or 500, but rather a structural response
+>       assert response.status_code < 500
+E       assert 500 < 500
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+backend/tests/test_payment/test_auto.py:111: AssertionError
+=============================== warnings summary ===============================
+backend/tests/test_authentication/test_auto.py::test_auto_read_users_me_xac_thuc_ca_nhan_get
+  /Users/caominhtrung/Documents/DocLib/venv/lib/python3.9/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 15 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/tests/test_cloud/test_auto.py::test_auto_list_items_luu_tru_danh_sach_get
+FAILED backend/tests/test_cloud/test_auto.py::test_auto_get_recent_items_luu_tru_gan_day_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_list_documents_tai_lieu_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_folders_tai_lieu_thu_muc_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_delete_folder_tai_lieu_thu_muc__folder_id__delete
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_my_documents_tai_lieu_ca_nhan_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_trash_tai_lieu_thung_rac_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_toggle_star_document_tai_lieu__document_id__danh_dau_post
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_trending_documents_kham_pha_thinh_hanh_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_tags_categories_kham_pha_the_loai_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_ai_recommendations_kham_pha_goi_y_ai_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_trending_tags_kham_pha_tu_khoa_thinh_hanh_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_document_versions_phien_ban_tai_lieu__document_id__get
+FAILED backend/tests/test_content/test_auto.py::test_auto_restore_version_phien_ban__version_id__khoi_phuc_post
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_history_doc_hieu_lich_su_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_bookmark_folders_danh_dau_thu_muc_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_bookmarks_danh_dau_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_my_lists_thu_vien_danh_sach_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_my_collaboration_invites_cong_tac_loi_moi_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_online_collaborators_cong_tac_tai_lieu__document_id__truc_tuyen_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_highlights_danh_dau_tai_lieu__document_id__get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_all_notes_danh_dau_ghi_chu_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_export_highlights_markdown_danh_dau_tai_lieu__document_id__ket_xuat_get
+FAILED backend/tests/test_content/test_auto.py::test_auto_get_approval_queue_ban_nhap_hang_doi_get
+FAILED backend/tests/test_content/test_document_ingestion.py::test_document_upload_and_ingestion
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_all_users_nguoi_dung_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_notes_nguoi_dung__user_id__ghi_chu_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_search_users_nguoi_dung_tim_kiem_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_activity_kiem_toan_logs_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_activity_giam_sat_hoat_dong_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_admin_reports_van_hanh_bao_cao_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_my_quota_han_muc_ca_nhan_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_update_role_quota_han_muc__role__cau_hinh_put
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_global_config_han_muc_cau_hinh_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_my_profile_ho_so_ca_nhan_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_settings_ho_so_cai_dat_get
+FAILED backend/tests/test_management/test_auto.py::test_auto_update_settings_ho_so_cai_dat_put
+FAILED backend/tests/test_management/test_auto.py::test_auto_get_public_profile_ho_so__slug__get
+FAILED backend/tests/test_notification/test_auto.py::test_auto_get_notifications_thong_bao_get
+FAILED backend/tests/test_notification/test_auto.py::test_auto_update_settings_thong_bao_cai_dat_post
+FAILED backend/tests/test_payment/test_auto.py::test_auto_get_withdrawal_queue_rut_tien_hang_doi_get
+FAILED backend/tests/test_payment/test_auto.py::test_auto_get_author_revenue_kiem_tien_doanh_thu_get
+FAILED backend/tests/test_payment/test_auto.py::test_auto_approve_coupon_ma_qua_tang__coupon_id__phe_duyet_post
+================== 43 failed, 181 passed, 1 warning in 3.90s ===================

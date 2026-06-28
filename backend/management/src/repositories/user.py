@@ -28,3 +28,27 @@ class UserRepository:
     @classmethod
     async def insert_one(cls, *args, **kwargs):
         return await mongo.insert_one("users", *args, **kwargs)
+
+    @classmethod
+    async def insert_many(cls, *args, **kwargs):
+        return await mongo.insert_many("users", *args, **kwargs)
+
+    @classmethod
+    async def delete_one(cls, *args, **kwargs):
+        return await mongo.delete_one("users", *args, **kwargs)
+
+    @classmethod
+    async def delete_many(cls, *args, **kwargs):
+        return await mongo.delete_many("users", *args, **kwargs)
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return mongo.find("users", *args, **kwargs)
+
+    @classmethod
+    def aggregate(cls, *args, **kwargs):
+        return mongo.aggregate("users", *args, **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return mongo.query("users", *args, **kwargs)

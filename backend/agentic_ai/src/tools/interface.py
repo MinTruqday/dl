@@ -44,8 +44,9 @@ import jwt
 def _check_system_access(token: str) -> bool:
     try:
         from src.core.infrastructure.configuration import settings
-
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        # Strip "Bearer " prefix if present
+        raw_token = token.removeprefix("Bearer ").strip()
+        payload = jwt.decode(raw_token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "guest")
         return role == "admin"
     except:

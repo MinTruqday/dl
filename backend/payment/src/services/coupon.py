@@ -85,7 +85,7 @@ class CouponService:
                 status_code=403, detail="Không có quyền thực hiện thao tác này"
             )
         status = CouponStatus.APPROVED if action == "approve" else CouponStatus.REJECTED
-        res = await db["coupons"].update_one(
+        res = await mongo.update_one("coupons", 
             {"_id": coupon_id}, {"$set": {"status": status}}
         )
         if res.modified_count == 0:
@@ -97,7 +97,7 @@ class CouponService:
     async def validate_coupon(
         code: str, user: Any, document_id: Optional[str] = None
     ) -> dict:
-        coupon = await db["coupons"].find_one(
+        coupon = await mongo.find_one("coupons", 
             {"code": code.upper(), "is_active": True, "status": CouponStatus.APPROVED}
         )
         if not coupon:
@@ -118,7 +118,7 @@ class CouponService:
             )
         target = coupon.get("target_type", CouponTargetType.ALL)
         if target == CouponTargetType.NEW_USER:
-            purchase_count = await db["purchases"].count_documents(
+            purchase_count = await mongo.count_documents("purchases", 
                 {"user_id": str(user.id)}
             )
             if purchase_count > 0:
@@ -141,7 +141,7 @@ class CouponService:
         if not coupon:
             raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá")
         new_status = not coupon.get("is_active", True)
-        await db["coupons"].update_one(
+        await mongo.update_one("coupons", 
             {"_id": coupon_id}, {"$set": {"is_active": new_status}}
         )
         logger.info("Cập nhật trạng thái mã giảm giá thành công")

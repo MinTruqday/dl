@@ -50,8 +50,8 @@ class ReadingService:
             {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}},
         ]
         history = (
-            await ReadingHistoryRepository
-            .aggregate(pipeline)
+            await mongo
+            .aggregate("reading_history", pipeline)
             .execute()
         )
         result = []

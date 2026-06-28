@@ -51,10 +51,10 @@ class ModerationService:
     async def generate_gdpr_takeout(current_user):
         user_id = str(current_user.id)
         full_data = {
-            "profile": await db["users"].find_one(
+            "profile": await mongo.find_one("users", 
                 {"_id": str(current_user.id)}, {"password_hash": 0}
             ),
-            "documents": await db["documents"]
+            "documents": await database.mongodb["documents"]
             .find({"creator_id": user_id})
             .execute(),
         }

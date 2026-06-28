@@ -32,3 +32,27 @@ class NotificationRepository:
     @classmethod
     async def update_user_announcement_status(cls, *args, **kwargs):
         return await mongo.update_one("users", *args, **kwargs)
+
+    @classmethod
+    async def insert_many(cls, *args, **kwargs):
+        return await mongo.insert_many("notifications", *args, **kwargs)
+
+    @classmethod
+    async def find_one(cls, *args, **kwargs):
+        return await mongo.find_one("notifications", *args, **kwargs)
+
+    @classmethod
+    async def delete_many(cls, *args, **kwargs):
+        return await mongo.delete_many("notifications", *args, **kwargs)
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return mongo.find("notifications", *args, **kwargs)
+
+    @classmethod
+    def aggregate(cls, *args, **kwargs):
+        return mongo.aggregate("notifications", *args, **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return mongo.query("notifications", *args, **kwargs)

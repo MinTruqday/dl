@@ -211,8 +211,8 @@ class AccountService:
     @staticmethod
     async def get_notes(user_id: str) -> list:
         notes = (
-            await ModeratorNoteRepository
-            .find({"user_id": user_id})
+            await mongo
+            .find("moderator_notes", {"user_id": user_id})
             .sort("created_at", -1)
             .execute()
         )
@@ -277,8 +277,8 @@ class AccountService:
             ]
         )
         reports = (
-            await ReportRepository
-            .aggregate(pipeline)
+            await mongo
+            .aggregate("reports", pipeline)
             .execute()
         )
         result = []
@@ -327,8 +327,8 @@ class AccountService:
     @staticmethod
     async def get_moderator_activity_log(actor_id: str) -> list:
         logs = (
-            await AuditLogRepository
-            .find({"actor_id": actor_id})
+            await mongo
+            .find("audit_logs", {"actor_id": actor_id})
             .sort("timestamp", -1)
             .limit(50)
             .execute()

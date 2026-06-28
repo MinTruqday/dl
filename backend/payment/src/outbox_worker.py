@@ -1,3 +1,4 @@
+from src.core.infrastructure.database import database
 import asyncio
 from loguru import logger
 from src.core.infrastructure.mongo import mongo
@@ -9,13 +10,13 @@ async def process_outbox():
         try:
             db = mongo.get_db()
             if db is not None:
-                event = await db["outbox_events"].find_one_and_update(
+                event = await mongo.get_db()["outbox_events"].find_one_and_update(
                     {"status": "pending"},
                     {"$set": {"status": "processing"}}
                 )
                 if event:
                     await mq.publish(event["queue_name"], event["payload"])
-                    await db["outbox_events"].update_one(
+                    await mongo.update_one("outbox_events", 
                         {"_id": event["_id"]},
                         {"$set": {"status": "done"}}
                     )

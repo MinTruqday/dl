@@ -30,8 +30,8 @@ class LibraryService:
     @staticmethod
     async def get_my_reading_lists(current_user):
         return (
-            await ReadingListRepository
-            .find({"user_id": str(current_user.id)})
+            await mongo
+            .find("reading_lists", {"user_id": str(current_user.id)})
             .execute()
         )
 

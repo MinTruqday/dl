@@ -14,9 +14,9 @@ from src.schemas.account import Role
 from src.repositories.user import UserRepository
 from src.repositories.system import SystemRepository
 
-from src.repositories.moderation import BugModerationRepository
-from src.repositories.task import TaskRepository
-from src.repositories.policy_proposal import PolicyProposalRepository
+
+
+from src.repositories.policy import PolicyProposalRepository
 
 class HealthService:
 
@@ -118,7 +118,7 @@ class HealthService:
         from src.core.infrastructure.configuration import settings as shared_settings
 
         try:
-            await db.command("ping")
+            await mongo.get_db().command("ping")
             db_status = "connected"
         except Exception:
             db_status = "disconnected"

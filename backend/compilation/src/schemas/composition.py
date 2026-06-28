@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Any
 
 class CompileRequest(BaseModel):
-    content: Any
+    content: str
 
 class KeystrokeSyncRequest(BaseModel):
     content: str

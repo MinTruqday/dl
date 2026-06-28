@@ -12,8 +12,8 @@ class PinService:
 
     @staticmethod
     async def get_pinned_documents(current_user) -> list:
-        profile = await BaseRepository.get("user_content_profiles").find_one(
-            {"_id": str(current_user.id)}, projection={"pinned_documents": 1}
+        profile = await mongo.find_one(
+            "user_content_profiles", {"_id": str(current_user.id)}, projection={"pinned_documents": 1}
         )
         if not profile or "pinned_documents" not in profile:
             return []
@@ -29,9 +29,9 @@ class PinService:
                 doc_ids.append(d_id)
                 pinned_at_map[d_id] = item.get("pinned_at")
         docs = (
-            await BaseRepository.get("documents")
-            .find({"_id": {"$in": doc_ids}})
-            .execute()
+            await mongo
+            .find("documents", {"_id": {"$in": doc_ids}})
+            
         )
         doc_map = {str(d["_id"]): d for d in docs}
         result = []
@@ -52,7 +52,8 @@ class PinService:
 
     @staticmethod
     async def pin_document(document_id: str, current_user) -> dict:
-        await BaseRepository.get("user_content_profiles").update_one(
+        await mongo.update_one(
+            "user_content_profiles",
             {"_id": str(current_user.id)},
             {
                 "$addToSet": {
@@ -69,7 +70,8 @@ class PinService:
 
     @staticmethod
     async def unpin_document(document_id: str, current_user) -> dict:
-        await BaseRepository.get("user_content_profiles").update_one(
+        await mongo.update_one(
+            "user_content_profiles",
             {"_id": str(current_user.id)},
             {"$pull": {"pinned_documents": document_id}},
             upsert=True,
@@ -81,7 +83,8 @@ class PinService:
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user) -> dict:
-        await BaseRepository.get("user_content_profiles").update_one(
+        await mongo.update_one(
+            "user_content_profiles",
             {"_id": str(current_user.id)},
             {"$set": {"pinned_documents": document_ids}},
             upsert=True,

@@ -20,7 +20,7 @@ class VerificationService:
                 status_code=400,
                 detail="Chỉ tài khoản độc giả mới có thể nâng cấp",
             )
-        await db["users"].update_one(
+        await mongo.update_one("users", 
             {"_id": user_id},
             {
                 "$set": {
@@ -69,7 +69,7 @@ class VerificationService:
             "created_at": datetime.now(timezone.utc),
         }
         await mongo.insert_one(collection="author_applications", document=application_data)
-        await db["users"].update_one(
+        await mongo.update_one("users", 
             {"_id": user_id},
             {
                 "$set": {
@@ -103,7 +103,7 @@ class VerificationService:
             "created_at": datetime.now(timezone.utc),
         }
         await mongo.insert_one(collection="kyc_applications", document=kyc_data)
-        await db["users"].update_one(
+        await mongo.update_one("users", 
             {"_id": user_id}, {"$set": {"kyc_status": KYC.PENDING}}
         )
         logger.info("Tải lên tài liệu xác minh thành công")
@@ -114,7 +114,7 @@ class VerificationService:
 
     @staticmethod
     async def get_public_profile(slug: str) -> dict:
-        author = await db["users"].find_one(
+        author = await mongo.find_one("users", 
             {
                 "$or": [{"slug": slug}, {"username": slug}, {"_id": slug}],
                 "is_active": {"$ne": False},
@@ -126,7 +126,7 @@ class VerificationService:
             )
         creator_id = str(author["_id"])
         docs = (
-            await db["documents"]
+            await database.mongodb["documents"]
             .find({"creator_id": creator_id, "status": "PUBLISHED"})
             .sort("created_at", -1)
             .limit(10)

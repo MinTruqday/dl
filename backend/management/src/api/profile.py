@@ -4,11 +4,11 @@ import json
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
-from fastapi.response import StreamingResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from src.services.verification import VerificationService
 from src.services.moderation import ModerationService
-from src.services.profile import ProfileService
+from src.services.user import UserService
 from src.services.configuration import ConfigurationService
 
 from src.core.dependency import RateLimiting, get_current_user, get_db
@@ -22,7 +22,7 @@ async def get_my_profile(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await ProfileService.get_user_profile(current_user),
+        data=await UserService.get_user_profile(current_user),
         message="Lấy thông tin người dùng thành công",
         status=200,
     )
@@ -34,7 +34,7 @@ async def update_my_profile(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ProfileService.update_profile(
+        data=await UserService.update_profile(
             data.model_dump(exclude_unset=True), current_user
         ),
         message="Cập nhật thông tin hồ sơ thành công",
@@ -126,7 +126,7 @@ async def block_user(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ProfileService.block_user(target_id, current_user),
+        data=await UserService.block_user(target_id, current_user),
         message="Hạn chế người dùng thành công",
         status=200,
     )
@@ -138,7 +138,7 @@ async def update_brand_page(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await ProfileService.update_brand_page(
+        data=await UserService.update_brand_page(
             data.model_dump(exclude_unset=True), current_user
         ),
         message="Cập nhật trang hồ sơ tác giả thành công",

@@ -40,7 +40,7 @@ class IdentityRepository:
 
     @staticmethod
     async def update_password_hash(email: str, password_hash: str):
-        return await db["auth_credentials"].update_one(
+        return await mongo.update_one("auth_credentials", 
             {"email": email},
             {"$set": {"password_hash": password_hash}},
         )
@@ -53,19 +53,19 @@ class IdentityRepository:
     async def get_valid_password_reset_token(
         token: str
     ) -> Optional[Dict[str, Any]]:
-        return await db["password_reset_tokens"].find_one(
+        return await mongo.find_one("password_reset_tokens", 
             {"token": token, "used": False}
         )
 
     @staticmethod
     async def mark_password_reset_token_used(token_id: str):
-        return await db["password_reset_tokens"].update_one(
+        return await mongo.update_one("password_reset_tokens", 
             {"_id": token_id}, {"$set": {"used": True}}
         )
 
     @staticmethod
     async def upsert_passkey_challenge(email: str, challenge: str):
-        return await db["passkey_challenges"].update_one(
+        return await mongo.update_one("passkey_challenges", 
             {"_id": f"auth:{email}"},
             {
                 "$set": {
@@ -88,7 +88,7 @@ class IdentityRepository:
     async def update_passkey_sign_count(
         user_id: str, credential_id: str, sign_count: int
     ):
-        return await db["auth_credentials"].update_one(
+        return await mongo.update_one("auth_credentials", 
             {"_id": user_id, "passkeys.credential_id": credential_id},
             {"$set": {"passkeys.$.sign_count": sign_count}},
         )

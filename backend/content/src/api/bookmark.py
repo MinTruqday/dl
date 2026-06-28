@@ -42,7 +42,7 @@ async def assign_bookmarks(
 ):
     return APIResponse(
         data=await BookmarkService.assign_bookmarks_to_folder(
-            folder_id, data.bookmark_ids, current_user
+            folder_id, data.document_ids, current_user
         ),
         message="Cập nhật thư mục dấu trang thành công",
     )

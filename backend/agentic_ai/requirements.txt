@@ -24,7 +24,7 @@ boto3>=1.28.57
 motor>=3.4.0
 pymongo<5.0.0
 pymupdf==1.24.2
-chandra-ocr[hf]
+chandra-ocr
 pypdfium2>=4.30.0
 beautifulsoup4>=4.12.0
 markitdown[all]
@@ -44,5 +44,5 @@ aio-pika==9.4.1
 PyJWT==2.8.0
 argon2-cffi==23.1.0
 aioboto3==12.3.0
-redis>=5.0.0
+redis==5.2.1
 tenacity>=8.0.0

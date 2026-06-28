@@ -1,3 +1,4 @@
+from src.core.infrastructure.mongo import mongo
 import base64
 import json
 import os
@@ -220,7 +221,7 @@ class PasskeyService:
             "created_at": datetime.now(timezone.utc)
         }
 
-        await db["auth_credentials"].update_one(
+        await mongo.update_one("auth_credentials", 
             {"_id": user["_id"]},
             {"$push": {"passkeys": new_passkey}}
         )

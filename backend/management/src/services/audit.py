@@ -15,7 +15,7 @@ class AuditService:
                 "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
             }
         logs = (
-            await db["audit_logs"]
+            await database.mongodb["audit_logs"]
             .find(query)
             .sort("timestamp", -1)
             .limit(limit)
@@ -42,7 +42,7 @@ class AuditService:
     async def log_action(
         action: str, actor_id: str, target_id: str = None, details: dict = None
     ):
-        await db["audit_logs"].insert_one(
+        await mongo.insert_one("audit_logs", 
             {
                 "action": action,
                 "actor_id": actor_id,

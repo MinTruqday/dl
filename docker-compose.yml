@@ -197,7 +197,6 @@ services:
     depends_on:
       - redis
       - qdrant
-      - ollama
     volumes:
       - ./backend/agentic_ai/src:/app/src
       - hf_cache:/home/appuser/.cache/huggingface
@@ -505,5 +504,4 @@ volumes:
   prometheus_data: null
   grafana_data: null
   hf_cache: null
-  ollama_data: null
   tectonic_cache: null

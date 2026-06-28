@@ -68,7 +68,7 @@ class TelemetryService:
     @staticmethod
     async def get_sys_health() -> dict:
         try:
-            await db.command("ping")
+            await mongo.get_db().command("ping")
             mongo_status = "healthy"
         except Exception:
             mongo_status = "unhealthy"

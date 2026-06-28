@@ -53,7 +53,7 @@ class QuotaService:
             },
         }
 
-        await db.quota_configs.update_one(
+        await mongo.update_one("quota_configs", 
             {"_id": "global"}, {"$set": {"role_limits": default_limits}}, upsert=True
         )
         return default_limits
@@ -63,7 +63,7 @@ class QuotaService:
         global_cfg = await QuotaService.get_global_config_from_db()
         if tier in global_cfg:
             global_cfg[tier].update(limits_dict)
-            await db.quota_configs.update_one(
+            await mongo.update_one("quota_configs", 
                 {"_id": "global"}, {"$set": {f"role_limits.{tier}": global_cfg[tier]}}
             )
 

@@ -71,7 +71,7 @@ class DepositService:
             "signature": signature,
         }
 
-        await db["orders"].insert_one(
+        await mongo.insert_one("orders", 
             {
                 "order_code": order_code,
                 "user_id": str(current_user.id),
@@ -98,7 +98,7 @@ class DepositService:
             res_data = response.json()
             if res_data.get("code") == "00":
                 checkout_url = res_data["data"]["checkoutUrl"]
-                await db["orders"].update_one(
+                await mongo.update_one("orders", 
                     {"order_code": order_code},
                     {
                         "$set": {
@@ -110,7 +110,7 @@ class DepositService:
                 return {"checkout_url": checkout_url, "order_code": order_code}
             else:
                 logger.error("Từ chối tạo liên kết thanh toán")
-                await db["orders"].update_one(
+                await mongo.update_one("orders", 
                     {"order_code": order_code}, {"$set": {"status": "FAILED"}}
                 )
                 raise HTTPException(
@@ -120,7 +120,7 @@ class DepositService:
         except HTTPException:
             raise
         except Exception as e:
-            await db["orders"].update_one(
+            await mongo.update_one("orders", 
                 {"order_code": order_code}, {"$set": {"status": "FAILED"}}
             )
             logger.error(f"Lỗi mạng kết nối cổng thanh toán: {e}")
@@ -242,9 +242,9 @@ class DepositService:
             session.start_transaction()
             should_close_session = True
 
-        orders = db["orders"]
-        wallets = db["wallets"]
-        transactions = db["transactions"]
+        orders = database.mongodb["orders"]
+        wallets = database.mongodb["wallets"]
+        transactions = database.mongodb["transactions"]
 
         order = await orders.find_one(
             {"order_code": order_code, "status": {"$in": ["INIT", "pending"]}}

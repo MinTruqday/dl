@@ -30,3 +30,47 @@ class LicenseRepository:
     @classmethod
     async def record_audit_log(cls, log_doc: Dict[str, Any]):
         return await mongo.insert_one("audit_logs", log_doc)
+
+    @classmethod
+    async def insert_one(cls, *args, **kwargs):
+        return await mongo.insert_one("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    async def insert_many(cls, *args, **kwargs):
+        return await mongo.insert_many("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    async def find_one(cls, *args, **kwargs):
+        return await mongo.find_one("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    async def update_one(cls, *args, **kwargs):
+        return await mongo.update_one("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    async def update_many(cls, *args, **kwargs):
+        return await mongo.update_many("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    async def delete_one(cls, *args, **kwargs):
+        return await mongo.delete_one("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    async def delete_many(cls, *args, **kwargs):
+        return await mongo.delete_many("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    async def count_documents(cls, *args, **kwargs):
+        return await mongo.count_documents("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return mongo.find("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    def aggregate(cls, *args, **kwargs):
+        return mongo.aggregate("drm_licenses", *args, **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return mongo.query("drm_licenses", *args, **kwargs)

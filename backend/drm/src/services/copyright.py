@@ -1,3 +1,4 @@
+from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
@@ -26,7 +27,7 @@ class CopyrightService:
     @staticmethod
     async def update_drm_settings(document_id: str, disable_copy: bool, hide_from_search: bool, current_user) -> dict:
         db = database.mongodb.get_database(settings.SERVICE_DB_NAME)
-        await db["document_drm_settings"].update_one(
+        await mongo.update_one("document_drm_settings", 
             {"document_id": document_id},
             {
                 "$set": {

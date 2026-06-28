@@ -76,3 +76,47 @@ class CollaborationRepository:
     @classmethod
     async def insert_task_comment(cls, *args, **kwargs):
         return await mongo.insert_one("collaboration_task_comments", *args, **kwargs)
+
+    @classmethod
+    async def insert_one(cls, *args, **kwargs):
+        return await mongo.insert_one("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    async def insert_many(cls, *args, **kwargs):
+        return await mongo.insert_many("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    async def find_one(cls, *args, **kwargs):
+        return await mongo.find_one("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    async def update_one(cls, *args, **kwargs):
+        return await mongo.update_one("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    async def update_many(cls, *args, **kwargs):
+        return await mongo.update_many("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    async def delete_one(cls, *args, **kwargs):
+        return await mongo.delete_one("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    async def delete_many(cls, *args, **kwargs):
+        return await mongo.delete_many("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    async def count_documents(cls, *args, **kwargs):
+        return await mongo.count_documents("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return mongo.find("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    def aggregate(cls, *args, **kwargs):
+        return mongo.aggregate("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return mongo.query("collaboration_activities", *args, **kwargs)

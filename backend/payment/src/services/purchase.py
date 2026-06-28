@@ -84,7 +84,7 @@ class PurchaseService:
         session = await database.mongodb.start_session()
         session.start_transaction()
         try:
-            deduct_result = await db["wallets"].update_one(
+            deduct_result = await mongo.update_one("wallets", 
                 {"_id": str(current_user.id), "balance": {"$gte": price}},
                 {"$inc": {"balance": -price}},
                 session=session,
@@ -96,7 +96,7 @@ class PurchaseService:
                     detail="Số dư không đủ để đăng ký gói thành viên",
                 )
 
-            await db["users"].update_one(
+            await mongo.update_one("users", 
                 {"_id": str(current_user.id)},
                 {"$set": {"ai_tier": tier}},
                 session=session,
@@ -108,7 +108,7 @@ class PurchaseService:
                 amount=-price,
                 note=f"Membership upgrade to {tier} plan",
             )
-            await db["transactions"].insert_one(
+            await mongo.insert_one("transactions", 
                 tx.model_dump(by_alias=True), session=session
             )
 
@@ -168,7 +168,7 @@ class PurchaseService:
             )
             await lock.acquire()
         try:
-            existing = await db["purchases"].find_one(
+            existing = await mongo.find_one("purchases", 
                 {
                     "user_id": str(current_user.id),
                     "document_id": document_id,
@@ -182,7 +182,7 @@ class PurchaseService:
             creator_id = doc.get("creator_id")
 
             try:
-                deduct_result = await db["wallets"].update_one(
+                deduct_result = await mongo.update_one("wallets", 
                     {"_id": str(current_user.id), "balance": {"$gte": price}},
                     {"$inc": {"balance": -price}},
                     session=session,
@@ -194,13 +194,13 @@ class PurchaseService:
                         status_code=400, detail="Tài khoản không đủ tiền để giao dịch"
                     )
                 if creator_id:
-                    await db["wallets"].update_one(
+                    await mongo.update_one("wallets", 
                         {"_id": creator_id},
                         {"$inc": {"balance": price}},
                         upsert=True,
                         session=session,
                     )
-                await db["purchases"].insert_one(
+                await mongo.insert_one("purchases", 
                     {
                         "_id": str(uuid7()),
                         "user_id": str(current_user.id),
@@ -223,10 +223,10 @@ class PurchaseService:
                     amount=price,
                     note="Revenue earned from the sale of a published digital document",
                 )
-                await db["transactions"].insert_one(
+                await mongo.insert_one("transactions", 
                     tx_buyer.model_dump(by_alias=True), session=session
                 )
-                await db["transactions"].insert_one(
+                await mongo.insert_one("transactions", 
                     tx_seller.model_dump(by_alias=True), session=session
                 )
 
@@ -301,7 +301,7 @@ class PurchaseService:
             session.start_transaction()
             should_close_session = True
 
-        purchase = await db["purchases"].find_one(
+        purchase = await mongo.find_one("purchases", 
             {"_id": purchase_id, "user_id": str(current_user.id)}
         )
         if not purchase:
@@ -325,14 +325,14 @@ class PurchaseService:
         creator_id = doc.get("creator_id") if doc else None
 
         try:
-            await db["wallets"].update_one(
+            await mongo.update_one("wallets", 
                 {"_id": str(current_user.id)},
                 {"$inc": {"balance": price}},
                 upsert=True,
                 session=session,
             )
             if creator_id:
-                deduct_result = await db["wallets"].update_one(
+                deduct_result = await mongo.update_one("wallets", 
                     {"_id": creator_id, "balance": {"$gte": price}},
                     {"$inc": {"balance": -price}},
                     session=session,
@@ -345,7 +345,7 @@ class PurchaseService:
                         detail="Tài khoản không đủ số dư để hoàn tiền",
                     )
 
-            await db["purchases"].update_one(
+            await mongo.update_one("purchases", 
                 {"_id": purchase_id},
                 {
                     "$set": {
@@ -367,10 +367,10 @@ class PurchaseService:
                 amount=-price,
                 note="Funds deducted for previously cancelled purchase transaction refund",
             )
-            await db["transactions"].insert_one(
+            await mongo.insert_one("transactions", 
                 tx_refund_buyer.model_dump(by_alias=True), session=session
             )
-            await db["transactions"].insert_one(
+            await mongo.insert_one("transactions", 
                 tx_refund_seller.model_dump(by_alias=True), session=session
             )
 

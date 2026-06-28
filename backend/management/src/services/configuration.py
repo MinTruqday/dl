@@ -9,7 +9,7 @@ class ConfigurationService:
 
     @staticmethod
     async def get_settings(current_user) -> dict:
-        user = await db["users"].find_one(
+        user = await mongo.find_one("users", 
             {"_id": str(current_user.id)}, {"settings": 1}
         )
         defaults = {
@@ -34,7 +34,7 @@ class ConfigurationService:
         user = await mongo.find_one("users", {"_id": user_id}, {"settings": 1})
         current_settings = user.get("settings", {}) if user else {}
         merged_settings = {**current_settings, **settings_data}
-        await db["users"].update_one(
+        await mongo.update_one("users", 
             {"_id": user_id},
             {
                 "$set": {

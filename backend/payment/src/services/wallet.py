@@ -58,7 +58,7 @@ class WalletService:
             should_close_session = True
 
         try:
-            coupon = await db["coupons"].find_one(
+            coupon = await mongo.find_one("coupons", 
                 {"code": req.code}, session=session
             )
             if not coupon:
@@ -76,7 +76,7 @@ class WalletService:
                 )
 
             bonus_dl = coupon.get("amount_dl", coupon.get("amount_dls", 0))
-            result = await db["coupons"].update_one(
+            result = await mongo.update_one("coupons", 
                 {"_id": coupon["_id"]},
                 {"$set": {"is_used": True, "used_by": str(current_user.id), "used_at": datetime.now(timezone.utc)}},
                 session=session
@@ -88,7 +88,7 @@ class WalletService:
                     status_code=400, detail="Mã giảm giá đã hết lượt sử dụng"
                 )
 
-            await db["wallets"].update_one(
+            await mongo.update_one("wallets", 
                 {"_id": str(current_user.id)},
                 {"$inc": {"balance": bonus_dl}},
                 upsert=True,
@@ -100,7 +100,7 @@ class WalletService:
                 amount=bonus_dl,
                 note="Promotional coupon successfully redeemed and credited",
             )
-            await db["transactions"].insert_one(
+            await mongo.insert_one("transactions", 
                 tx.model_dump(by_alias=True), session=session
             )
 

@@ -99,8 +99,8 @@ class BookmarkService:
     @staticmethod
     async def get_bookmark_folders(current_user) -> list:
         folders = (
-            await BookmarkFolderRepository
-            .find({"user_id": str(current_user.id)})
+            await mongo
+            .find("bookmark_folders", {"user_id": str(current_user.id)})
             .sort("created_at", -1)
             .execute()
         )

@@ -47,7 +47,7 @@ async def get_pricing_config(db=Depends(get_db)):
 
 @router.get("/doanh-thu", response_model=APIResponse[Any])
 async def get_author_revenue(current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)):
-    revenue_data = await PurchaseService.get_author_revenue(current_user)
+    revenue_data = await PurchaseService.get_revenue(current_user)
     return APIResponse(
         data=revenue_data,
         message="Lấy số liệu doanh thu thành công",

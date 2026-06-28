@@ -91,5 +91,10 @@ class Settings(BaseModel):
     MONGO_URL: str = os.getenv("MONGO_URL", "http://doclib_database:8800/co-so-du-lieu")
     QUEUE_URL: str = os.getenv("QUEUE_URL", "http://doclib_queue:8802/hang-doi")
     CACHE_URL: str = os.getenv("CACHE_URL", "http://doclib_cache:8801")
+    # INTERNAL_API_URL is used by tools/interface.py to call internal microservices.
+    # Defaults to API_URL if not explicitly set (they point to the same gateway).
+    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL", os.getenv("API_URL", "http://doclib_traefik:8000"))
+
+    FALLBACK_MODEL: str = os.getenv("FALLBACK_MODEL", os.getenv("LLAMA_MODEL", ""))
 
 settings = Settings()

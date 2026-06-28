@@ -24,7 +24,7 @@ class UserService:
                 status_code=400, detail="Không thể cập nhật do thiếu thông tin hợp lệ"
             )
         update_fields["updated_at"] = datetime.now(timezone.utc)
-        await db["users"].update_one(
+        await mongo.update_one("users", 
             {"_id": str(current_user.id)}, {"$set": update_fields}
         )
         logger.info("Cập nhật hồ sơ cá nhân thành công")
@@ -32,7 +32,7 @@ class UserService:
 
     @staticmethod
     async def get_user_profile(current_user) -> dict:
-        user = await db["users"].find_one(
+        user = await mongo.find_one("users", 
             {"_id": str(current_user.id)}, {"password_hash": 0}
         )
         if not user:
@@ -58,7 +58,7 @@ class UserService:
                 status_code=400, detail="Không thể cập nhật do thiếu thông tin hợp lệ"
             )
         update_fields["updated_at"] = datetime.now(timezone.utc)
-        await db["users"].update_one(
+        await mongo.update_one("users", 
             {"_id": str(current_user.id)}, {"$set": update_fields}
         )
         logger.info("Cập nhật trang hồ sơ tác giả thành công")
@@ -71,7 +71,7 @@ class UserService:
         target_user = await mongo.find_one(collection="users", query={"_id": target_id})
         if not target_user:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản đích")
-        await db["users"].update_one(
+        await mongo.update_one("users", 
             {"_id": str(current_user.id)}, {"$addToSet": {"blocked_users": target_id}}
         )
         return {"status": "ok", "message": "Đã hạn chế tài khoản tương tác"}

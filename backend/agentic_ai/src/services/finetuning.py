@@ -12,9 +12,7 @@ from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
-from src.repositories.finetune import FinetuneRepository
-from src.repositories.finetune import FinetuneRepository
-from src.repositories.finetune import FinetuneRepository
+from src.repositories.finetuning import FinetuneRepository
 from src.repositories.chat import ChatRepository
 
 active_jobs = {}

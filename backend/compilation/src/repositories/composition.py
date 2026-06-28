@@ -36,3 +36,47 @@ class CompositionRepository:
     @classmethod
     def find_comments(cls, *args, **kwargs):
         return mongo.query("editor_comments").filter(*args, **kwargs)
+
+    @classmethod
+    async def insert_one(cls, *args, **kwargs):
+        return await mongo.insert_one("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    async def insert_many(cls, *args, **kwargs):
+        return await mongo.insert_many("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    async def find_one(cls, *args, **kwargs):
+        return await mongo.find_one("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    async def update_one(cls, *args, **kwargs):
+        return await mongo.update_one("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    async def update_many(cls, *args, **kwargs):
+        return await mongo.update_many("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    async def delete_one(cls, *args, **kwargs):
+        return await mongo.delete_one("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    async def delete_many(cls, *args, **kwargs):
+        return await mongo.delete_many("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    async def count_documents(cls, *args, **kwargs):
+        return await mongo.count_documents("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return mongo.find("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    def aggregate(cls, *args, **kwargs):
+        return mongo.aggregate("editor_suggestions", *args, **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return mongo.query("editor_suggestions", *args, **kwargs)

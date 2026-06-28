@@ -32,3 +32,43 @@ class SystemRepository:
     @classmethod
     def aggregate_telemetry(cls, *args, **kwargs):
         return mongo.aggregate("telemetry", *args, **kwargs)
+
+    @classmethod
+    async def insert_one(cls, *args, **kwargs):
+        return await mongo.insert_one("system_config", *args, **kwargs)
+
+    @classmethod
+    async def insert_many(cls, *args, **kwargs):
+        return await mongo.insert_many("system_config", *args, **kwargs)
+
+    @classmethod
+    async def find_one(cls, *args, **kwargs):
+        return await mongo.find_one("system_config", *args, **kwargs)
+
+    @classmethod
+    async def update_one(cls, *args, **kwargs):
+        return await mongo.update_one("system_config", *args, **kwargs)
+
+    @classmethod
+    async def update_many(cls, *args, **kwargs):
+        return await mongo.update_many("system_config", *args, **kwargs)
+
+    @classmethod
+    async def delete_one(cls, *args, **kwargs):
+        return await mongo.delete_one("system_config", *args, **kwargs)
+
+    @classmethod
+    async def delete_many(cls, *args, **kwargs):
+        return await mongo.delete_many("system_config", *args, **kwargs)
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return mongo.find("system_config", *args, **kwargs)
+
+    @classmethod
+    def aggregate(cls, *args, **kwargs):
+        return mongo.aggregate("system_config", *args, **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return mongo.query("system_config", *args, **kwargs)

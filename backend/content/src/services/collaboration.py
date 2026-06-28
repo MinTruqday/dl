@@ -105,8 +105,8 @@ class CollaborationService:
     @staticmethod
     async def get_my_collaboration_invites(current_user) -> list:
         invites = (
-            await CollaborationInviteRepository
-            .find({"invitee_id": str(current_user.id), "status": "PENDING"})
+            await mongo
+            .find("collaboration_invites", {"invitee_id": str(current_user.id), "status": "PENDING"})
             .sort("created_at", -1)
             .execute()
         )
@@ -166,8 +166,8 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         invites = (
-            await CollaborationInviteRepository
-            .find({"document_id": document_id, "status": "ACCEPTED"})
+            await mongo
+            .find("collaboration_invites", {"document_id": document_id, "status": "ACCEPTED"})
             .execute()
         )
         collaborators = []
@@ -247,8 +247,8 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         activities = (
-            await CollaborationActivitieRepository
-            .find({"document_id": document_id})
+            await mongo
+            .find("collaboration_activities", {"document_id": document_id})
             .sort("timestamp", -1)
             .limit(50)
             .execute()
@@ -340,9 +340,8 @@ class CollaborationService:
     async def get_online_collaborators(document_id: str) -> list:
         cutoff = datetime.now(timezone.utc).timestamp() - 60
         online_users = (
-            await CollaborationStatuRepository
-            .find({"document_id": document_id})
-            .execute()
+            await mongo
+            .find("collaboration_status", {"document_id": document_id})
         )
         result = []
         for u in online_users:
@@ -436,8 +435,8 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         memos = (
-            await CollaborationMemoRepository
-            .find({"document_id": document_id})
+            await mongo
+            .find("collaboration_memos", {"document_id": document_id})
             .sort("timestamp", 1)
             .limit(100)
             .execute()
@@ -498,8 +497,8 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         invites = (
-            await CollaborationInviteRepository
-            .find({"document_id": document_id, "status": "PENDING"})
+            await mongo
+            .find("collaboration_invites", {"document_id": document_id, "status": "PENDING"})
             .sort("created_at", -1)
             .execute()
         )
@@ -555,8 +554,8 @@ class CollaborationService:
             {"$sort": {"count": -1}},
         ]
         stats = (
-            await CollaborationActivitieRepository
-            .aggregate(pipeline)
+            await mongo
+            .aggregate("collaboration_activities", pipeline)
             .execute()
         )
         return [{"user_name": s["_id"], "count": s["count"]} for s in stats]
@@ -613,8 +612,8 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         draft = (
-            await CollaborationDraftRepository
-            .find({"document_id": document_id})
+            await mongo
+            .find("collaboration_drafts", {"document_id": document_id})
             .sort("timestamp", -1)
             .execute()
         )
@@ -857,8 +856,8 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         tasks = (
-            await CollaborationTaskRepository
-            .find({"document_id": document_id})
+            await mongo
+            .find("collaboration_tasks", {"document_id": document_id})
             .sort("created_at", -1)
             .execute()
         )
@@ -968,8 +967,8 @@ class CollaborationService:
                 status_code=403, detail="Không có quyền thảo luận trong nhiệm vụ này"
             )
         comments = (
-            await CollaborationTaskCommentRepository
-            .find({"task_id": task_id})
+            await mongo
+            .find("collaboration_task_comments", {"task_id": task_id})
             .sort("timestamp", 1)
             .execute()
         )

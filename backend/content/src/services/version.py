@@ -43,8 +43,8 @@ class VersionService:
     @staticmethod
     async def get_versions(document_id, current_user):
         cursor = (
-            DocumentVersionRepository
-            .find({"document_id": document_id, "creator_id": str(current_user.id)})
+            mongo
+            .find("document_versions", {"document_id": document_id, "creator_id": str(current_user.id)})
             .sort("created_at", -1)
         )
         versions = await cursor 
@@ -55,8 +55,8 @@ class VersionService:
 
     @staticmethod
     async def restore_version(version_id: str, current_user):
-        version = await db["document_versions"].find_one(
-            {"_id": version_id, "creator_id": str(current_user.id)}
+        version = await mongo.find_one(
+            "document_versions", {"_id": version_id, "creator_id": str(current_user.id)}
         )
         if not version:
             raise HTTPException(

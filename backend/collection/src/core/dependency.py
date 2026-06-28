@@ -175,3 +175,9 @@ def get_current_user_from_header(
             detail="Thiếu thông tin định danh người dùng",
         )
     return AuthenticatedUser(x_user_id, x_user_name)
+
+
+from src.core.infrastructure.mongo import mongo
+
+async def get_db():
+    return mongo.get_db()

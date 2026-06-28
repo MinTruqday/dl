@@ -701,8 +701,8 @@ class DocumentService:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
         logs = (
-            await AuditLogRepository
-            .find({"document_id": document_id})
+            await mongo
+            .find("audit_logs", {"document_id": document_id})
             .sort("timestamp", -1)
             .limit(100)
             .execute()
@@ -864,29 +864,29 @@ class DocumentService:
     @staticmethod
     async def delete_folder(folder_id: str, current_user):
         
-        folder = await db["workspace_folders"].find_one(
-            {"_id": folder_id, "creator_id": str(current_user.id)}
+        folder = await mongo.find_one(
+            "workspace_folders", {"_id": folder_id, "creator_id": str(current_user.id)}
         )
         if not folder:
             raise HTTPException(status_code=404, detail="Không tìm thấy thư mục làm việc")
-        await mongo.delete_one(collection="workspace_folders", filter={"_id": folder_id})
-        await db["documents"].update_many(
-            {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
+        await mongo.delete_one("workspace_folders", {"_id": folder_id})
+        await mongo.update_many(
+            "documents", {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
         )
         return {"deleted": True}
 
     @staticmethod
     async def toggle_star_document(document_id: str, current_user):
         
-        doc = await db["documents"].find_one(
-            {"_id": document_id, "creator_id": str(current_user.id)}
+        doc = await mongo.find_one(
+            "documents", {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
             )
         current_starred = doc.get("is_starred", False)
-        await db["documents"].update_one(
+        await mongo.update_one("documents", 
             {"_id": document_id}, {"$set": {"is_starred": not current_starred}}
         )
         return {"starred": not current_starred}
@@ -894,7 +894,7 @@ class DocumentService:
     @staticmethod
     async def transfer_document(document_id: str, new_owner_id: str, current_user):
         
-        doc = await db["documents"].find_one(
+        doc = await mongo.find_one("documents", 
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
@@ -916,7 +916,7 @@ class DocumentService:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài khoản chuyển nhượng"
             )
-        await db["documents"].update_one(
+        await mongo.update_one("documents", 
             {"_id": document_id},
             {
                 "$set": {
@@ -940,7 +940,7 @@ class DocumentService:
         total_words = len(content.split()) if content else 0
         avg_read_time_min = max(1, total_words // 200)
         bookmark_count = await mongo.count_documents(collection="bookmarks", filter={"document_id": document_id})
-        purchase_count = await db["transactions"].count_documents(
+        purchase_count = await mongo.count_documents("transactions", 
             {"reference_id": document_id, "type": {"$in": ["purchase", "receive"]}}
         )
         return {
