@@ -13,7 +13,7 @@ from src.services.configuration import ConfigurationService
 
 from src.core.dependency import RateLimiting, get_current_user, get_db
 from src.core.response import APIResponse
-from src.schemas.account import BrandPageUpdate, ProfileUpdate, SettingsUpdate, UserInDB
+from src.schemas.account import ProfileUpdate, SettingsUpdate, UserInDB
 
 router = APIRouter(prefix="/ho-so")
 
@@ -131,18 +131,6 @@ async def block_user(
         status=200,
     )
 
-@router.put("/trang-tac-gia", response_model=APIResponse[Any])
-async def update_brand_page(
-    data: BrandPageUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
-):
-    return APIResponse(
-        data=await UserService.update_brand_page(
-            data.model_dump(exclude_unset=True), current_user
-        ),
-        message="Cập nhật trang hồ sơ tác giả thành công",
-    )
 
 @router.get("/{slug}", response_model=APIResponse[Any])
 async def get_public_profile(slug: str, db=Depends(get_db)):

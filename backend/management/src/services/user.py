@@ -43,28 +43,6 @@ class UserService:
         return user
 
     @staticmethod
-    async def update_brand_page(data: dict, current_user) -> dict:
-        update_fields = {}
-        if "cover_image_url" in data:
-            update_fields["author_profile.cover_image_url"] = data["cover_image_url"]
-        if "welcome_video_url" in data:
-            update_fields["author_profile.welcome_video_url"] = data[
-                "welcome_video_url"
-            ]
-        if "custom_theme" in data:
-            update_fields["author_profile.custom_theme"] = data["custom_theme"]
-        if not update_fields:
-            raise HTTPException(
-                status_code=400, detail="Không thể cập nhật do thiếu thông tin hợp lệ"
-            )
-        update_fields["updated_at"] = datetime.now(timezone.utc)
-        await mongo.update_one("users", 
-            {"_id": str(current_user.id)}, {"$set": update_fields}
-        )
-        logger.info("Cập nhật trang hồ sơ tác giả thành công")
-        return {"message": "Cập nhật trang hồ sơ tác giả thành công"}
-
-    @staticmethod
     async def block_user(target_id: str, current_user) -> dict:
         if str(current_user.id) == target_id:
             raise HTTPException(status_code=400, detail="Không thể tự chặn chính mình")

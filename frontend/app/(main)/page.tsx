@@ -7,7 +7,7 @@ import {
   getAIRecommendationsAPI,
   smartSearchAPI,
 } from "@/features/content/services/content_discovery.service";
-import { getActiveBannersAPI } from "@/features/provision/services/promotional_banner.service";
+
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import Link from "next/link";
 import { useToast } from "@/shared/contexts/ToastContext";
@@ -33,22 +33,20 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [useSmart, setUseSmart] = useState(false);
-  const [banners, setBanners] = useState<any[]>([]);
+
 
   const { user } = useAuth();
 
   const loadInitialData = useCallback(async () => {
     try {
-      const [catData, trendData, recData, bannerData] = await Promise.all([
+      const [catData, trendData, recData] = await Promise.all([
         getTagsCategoriesAPI(),
         getTrendingDocumentsAPI(5),
         getAIRecommendationsAPI(4),
-        getActiveBannersAPI().catch(() => ({ data: [] })),
       ]);
       setCategories(catData.data?.categories || catData.categories || []);
       setTrending(trendData.data || trendData || []);
       setRecommendations(recData.data || recData || []);
-      setBanners(bannerData.data || bannerData || []);
     } catch (err) {
       showToast("Lỗi tải dữ liệu khám phá", "error");
     }
@@ -105,30 +103,6 @@ export default function ExplorePage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-4 md:px-6 py-6 font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white">
-      {banners.length > 0 && (
-        <div className="mb-6 relative h-[120px] md:h-[180px] bg-white border border-zinc-100 flex items-center justify-center rounded-3xl overflow-hidden shadow-sm">
-          <a
-            href={banners[0].link_url || "#"}
-            target="_blank"
-            rel="noreferrer"
-            className="w-full h-full block"
-          >
-            {banners[0].image_url ? (
-              <img
-                src={banners[0].image_url}
-                alt={banners[0].title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-zinc-50 to-zinc-100">
-                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Quảng cáo</p>
-                <p className="text-base font-bold text-zinc-800">{banners[0].title}</p>
-              </div>
-            )}
-          </a>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-4">
           <div className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">

@@ -230,11 +230,7 @@ async def test_auto_block_user_ho_so_chan__target_id__post(management_client):
     # We just want to ensure it doesn't return 404 or 500, but rather a structural response
     assert response.status_code < 500
 
-async def test_auto_update_brand_page_ho_so_trang_tac_gia_put(management_client):
-    """Test for PUT /ho-so/trang-tac-gia"""
-    response = await management_client.put('/ho-so/trang-tac-gia', json={'banner_url': {}, 'theme_color': {}, 'layout_type': {}})
-    # We just want to ensure it doesn't return 404 or 500, but rather a structural response
-    assert response.status_code < 500
+
 
 async def test_auto_get_public_profile_ho_so__slug__get(management_client):
     """Test for GET /ho-so/{slug}"""

@@ -23,9 +23,6 @@ from src.schemas.document import (
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.core.storage import upload_file
-from src.repositories.document import DocumentRepository
 from src.repositories.document import DocumentRepository
 
 def serialize_document(document):

@@ -111,11 +111,6 @@ class SettingsUpdate(BaseModel):
     notifications_enabled: Optional[bool] = None
     privacy_mode: Optional[bool] = None
 
-class BrandPageUpdate(BaseModel):
-    banner_url: Optional[str] = None
-    theme_color: Optional[str] = None
-    layout_type: Optional[str] = None
-
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
