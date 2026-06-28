@@ -22,6 +22,6 @@ async def process_outbox():
                     )
                     continue # process next immediately
         except Exception as e:
-            logger.error(f"Lỗi Outbox Worker: {e}")
+            logger.exception("Lỗi quá trình đồng bộ hóa Outbox Worker")
             
         await asyncio.sleep(5)

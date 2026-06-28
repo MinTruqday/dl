@@ -17,7 +17,7 @@ class Database:
             logger.info("Tạo bản ghi tài liệu thành công")
             return str(res.inserted_id)
         except Exception as e:
-            logger.error(f"Lỗi lưu tài liệu vào cơ sở dữ liệu: {e}")
+            logger.exception("Lỗi lưu tài liệu vào Database")
             return None
 
     async def update_document(self, document_id: str, update_data: dict):
@@ -29,6 +29,6 @@ class Database:
             )
             logger.info("Cập nhật bản ghi tài liệu thành công")
         except Exception as e:
-            logger.error(f"Lỗi cập nhật dữ liệu tài liệu: {e}")
+            logger.exception("Lỗi cập nhật dữ liệu tài liệu")
 
 database = Database()

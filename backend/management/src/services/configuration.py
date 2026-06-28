@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
@@ -8,6 +9,7 @@ from src.core.infrastructure.database import database
 class ConfigurationService:
 
     @staticmethod
+    @log_logic_execution
     async def get_settings(current_user) -> dict:
         user = await mongo.find_one("users", 
             {"_id": str(current_user.id)}, {"settings": 1}
@@ -29,6 +31,7 @@ class ConfigurationService:
         return defaults
 
     @staticmethod
+    @log_logic_execution
     async def update_settings(settings_data: dict, current_user) -> dict:
         user_id = str(current_user.id)
         user = await mongo.find_one("users", {"_id": user_id}, {"settings": 1})

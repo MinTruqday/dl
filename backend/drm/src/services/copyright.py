@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from src.core.infrastructure.database import database
@@ -7,6 +8,7 @@ from loguru import logger
 
 class CopyrightService:
     @staticmethod
+    @log_logic_execution
     async def resolve_copyright_dispute(
         dispute_id: str, resolution: str, current_user
     ) -> dict:
@@ -25,6 +27,7 @@ class CopyrightService:
         return {"message": "Đã giải quyết tranh chấp bản quyền"}
     
     @staticmethod
+    @log_logic_execution
     async def update_drm_settings(document_id: str, disable_copy: bool, hide_from_search: bool, current_user) -> dict:
         db = database.mongodb.get_database(settings.SERVICE_DB_NAME)
         await mongo.update_one("document_drm_settings", 

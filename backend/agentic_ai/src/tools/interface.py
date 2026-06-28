@@ -84,7 +84,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
             return "Phiên đăng nhập của bạn đã quá hạn an toàn, vui lòng tiến hành đăng nhập lại"
         raise Exception("Lỗi tải số dư tài khoản")
     except Exception as e:
-        logger.exception(f"Lỗi truy cập dữ liệu số dư: {e}")
+        logger.exception("Lỗi truy cập dữ liệu số dư")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -114,7 +114,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
             return f"Dưới đây là lịch sử giao dịch gần đây của bạn\n{history_text}"
         return "Hệ thống đang gặp gián đoạn khi truy xuất lịch sử giao dịch thanh toán của bạn"
     except Exception as e:
-        logger.exception(f"Hệ thống đang gặp gián đoạn khi truy xuất lịch sử giao dịch thanh toán của bạn: {e}")
+        logger.exception("Hệ thống đang gặp gián đoạn khi truy xuất lịch sử giao dịch thanh toán của bạn")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -140,7 +140,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
             return f"Đổi mã quà tặng thành công và tài khoản của bạn đã được cộng {bonus} credits"
         return "Hệ thống không thể xử lý yêu cầu quy đổi mã quà tặng lúc này"
     except Exception as e:
-        logger.exception(f"Lỗi xử lý yêu cầu đổi thưởng: {e}")
+        logger.exception("Lỗi xử lý yêu cầu đổi thưởng")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -164,7 +164,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
             return f"Báo cáo tài chính cho thấy tổng doanh thu là {total} currency units with {pending} units pending withdrawal"
         return "Không thể truy xuất số liệu thống kê doanh thu tài chính"
     except Exception as e:
-        logger.exception(f"Lỗi tải báo cáo doanh thu: {e}")
+        logger.exception("Lỗi tải báo cáo doanh thu")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -191,7 +191,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
             return res
         return "Gặp khó khăn trong việc tải danh sách tài liệu từ cơ sở dữ liệu"
     except Exception as e:
-        logger.exception(f"Gặp khó khăn trong việc tải danh sách tài liệu từ cơ sở dữ liệu: {e}")
+        logger.exception("Gặp khó khăn trong việc tải danh sách tài liệu từ Database")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -221,7 +221,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
             return res
         return "Đường truyền truy cập vào dữ liệu thùng rác đang gặp sự cố"
     except Exception as e:
-        logger.exception(f"Lỗi tải danh sách mục đã xóa: {e}")
+        logger.exception("Lỗi tải danh sách mục đã xóa")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -246,11 +246,11 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
                 await vector_store.delete_by_document(document_id)
                 logger.info("Dọn dẹp chỉ mục tài liệu thành công")
             except Exception as e:
-                logger.warning(f"Lỗi dọn dẹp chỉ mục tài liệu: {e}")
+                logger.exception("Lỗi dọn dẹp chỉ mục tài liệu")
             return "Tài liệu đã được dọn dẹp và xóa bỏ hoàn toàn khỏi hệ thống"
         return "Thao tác xóa bỏ tài liệu đã thất bại do lỗi hệ thống"
     except Exception as e:
-        logger.exception(f"Thao tác xóa bỏ tài liệu đã thất bại do lỗi hệ thống: {e}")
+        logger.exception("Thao tác xóa bỏ tài liệu đã thất bại do lỗi hệ thống")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -272,7 +272,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
             return "Tài liệu của bạn đã được khôi phục thành công về trạng thái ban đầu"
         return "Quá trình khôi phục tài liệu từ thùng rác đã thất bại"
     except Exception as e:
-        logger.exception(f"Quá trình khôi phục tài liệu từ thùng rác đã thất bại: {e}")
+        logger.exception("Quá trình khôi phục tài liệu từ thùng rác đã thất bại")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -299,7 +299,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
             return f"Phân tích độc giả cho thấy {readers} readers with a bounce rate of {rate} percent"
         return "Gặp lỗi trong việc tổng hợp và xuất dữ liệu báo cáo thống kê"
     except Exception as e:
-        logger.exception(f"Lỗi truy xuất dữ liệu phân tích: {e}")
+        logger.exception("Lỗi truy xuất dữ liệu phân tích")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 async def _get_doc_text(document_id: str, token: str) -> str:
@@ -313,7 +313,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
     except Exception as e:
-        logger.error(f"Lỗi tải nội dung tài liệu: {e}")
+        logger.exception("Lỗi tải nội dung tài liệu")
     return ""
 
 from src.api.inference import peer_review, suggest_citations, transform_tone
@@ -338,7 +338,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         data = await suggest_citations(req)
         return f"Dưới đây là các trích dẫn đề xuất cho tài liệu\n\n{data.get('citations', '')}"
     except Exception as e:
-        logger.exception(f"Lỗi tạo gợi ý trích dẫn: {e}")
+        logger.exception("Lỗi tạo gợi ý trích dẫn")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -359,7 +359,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         data = await peer_review(req)
         return f"Dưới đây là báo cáo phản biện cho tài liệu\n\n{data.get('review_report', '')}"
     except Exception as e:
-        logger.exception(f"Lỗi quá trình đánh giá chéo: {e}")
+        logger.exception("Lỗi quá trình đánh giá chéo")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -382,7 +382,7 @@ async def agent_transform_tone(
         data = await transform_tone(req)
         return f"Dưới đây là văn bản đã được chuyển đổi theo văn phong yêu cầu\n\n{data.get('transformed_text', '')}"
     except Exception as e:
-        logger.exception(f"Lỗi thay đổi giọng văn: {e}")
+        logger.exception("Lỗi thay đổi giọng văn")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
@@ -408,7 +408,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             return "Hệ thống không thể khởi tạo đường dẫn thanh toán an toàn tại thời điểm này"
         return "Gặp lỗi nghiêm trọng khi bắt đầu tiến trình giao dịch thanh toán"
     except Exception as e:
-        logger.exception(f"Lỗi xử lý yêu cầu nạp tiền: {e}")
+        logger.exception("Lỗi xử lý yêu cầu nạp tiền")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 from src.workflow.reduction import agent_summarize_long_document
@@ -455,7 +455,7 @@ async def create_document(
                 profile_data.get("full_name") or profile_data.get("name") or "User"
             )
     except Exception as e:
-        logger.warning(f"Lỗi tải hồ sơ người dùng để lấy thông tin tác giả: {e}")
+        logger.exception("Lỗi tải hồ sơ người dùng để lấy thông tin tác giả")
 
     if format == "latex":
         if "\\documentclass" not in content:
@@ -760,6 +760,9 @@ async def translate_document(
                 return f"Tạo và lưu bản dịch thành công, bạn có thể xem tại đây [Xem bản dịch](/editor?document_id={new_doc_id})"
             return "Bản dịch đã hoàn tất nhưng không thể liên kết với mã định danh tệp tin"
         return "Quá trình dịch thuật đã hoàn tất nhưng gặp sự cố khi lưu trữ kết quả vào máy chủ"
+    except Exception as e:
+        logger.exception("Lỗi trong quá trình tạo tài liệu dịch")
+        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool
 async def inspect_ui_components(query: str, config: RunnableConfig) -> str:

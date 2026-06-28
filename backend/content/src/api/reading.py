@@ -1,5 +1,6 @@
 from typing import Any, List
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from src.api.dependency import get_current_user, get_db
@@ -9,7 +10,7 @@ from src.services.reading import ReadingService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/doc-hieu")
+router = APIRouter(route_class=LoggingRoute, prefix="/doc-hieu")
 
 @router.get("/lich-su", response_model=APIResponse[Any])
 async def get_history(

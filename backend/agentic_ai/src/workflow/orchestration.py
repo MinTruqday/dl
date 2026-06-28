@@ -117,7 +117,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                     final_res = res
                     break
             except Exception as e:
-                logger.debug(f"Lỗi phân tích kết quả đánh giá: {e}")
+                logger.exception("Lỗi phân tích kết quả đánh giá")
                 final_res = res
                 break
 
@@ -130,7 +130,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "last_agent_result": final_res,
         }
     except Exception as e:
-        logger.exception(f"Lỗi máy chủ thực thi: {e}")
+        logger.exception("Lỗi máy chủ thực thi")
         return {
             "consolidated_results": ["The execution step failed"],
             "error": "Internal processing error",
@@ -169,7 +169,7 @@ async def trimmer_node(state: ActingState):
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception as e:
-            logger.exception(f"Lỗi rút gọn tóm tắt: {e}")
+            logger.exception("Lỗi rút gọn tóm tắt")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
 

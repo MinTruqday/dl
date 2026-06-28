@@ -94,7 +94,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception as e:
-        logger.warning(f"Lỗi đánh giá đầu ra mô hình ngôn ngữ: {e}")
+        logger.exception("Lỗi đánh giá đầu ra mô hình ngôn ngữ")
         return {
             "accuracy": 0,
             "completeness": 0,
@@ -113,7 +113,7 @@ class EvaluationHarness:
                 self._dataset = json.load(f)
             logger.info("Tải bộ dữ liệu kiểm tra thành công")
         except Exception as e:
-            logger.error(f"Lỗi tải bộ dữ liệu kiểm tra: {e}")
+            logger.exception("Lỗi tải bộ dữ liệu kiểm tra")
             self._dataset = []
 
     async def evaluate_rag_response(

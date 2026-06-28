@@ -82,9 +82,9 @@ class State:
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.error(f"Lỗi xử lý tài sản nội bộ: {e}")
+                    logger.exception("Lỗi xử lý tài sản nội bộ")
         except Exception as e:
-            logger.error(f"Lỗi phân tích luồng dữ liệu mạng: {e}")
+            logger.exception("Lỗi phân tích luồng dữ liệu mạng")
 
     async def process_viewer(self, page):
         try:
@@ -109,7 +109,7 @@ class State:
                     logger.info("Quá trình quét tài liệu bị gián đoạn")
                     break
         except Exception as e:
-            logger.error(f"Lỗi đồng bộ đọc tài liệu: {e}")
+            logger.exception("Lỗi đồng bộ đọc tài liệu")
 
     async def compile_and_upload(self, title: str, author: str):
         import tempfile
@@ -136,7 +136,7 @@ class State:
                     files_by_page["unknown"].append(os.path.join(self.temp_dir, f))
 
         if not files_by_page:
-            logger.warning("Bỏ qua quá trình biên dịch do không có nội dung")
+            logger.warning("Bỏ qua quá Tectonic do không có nội dung")
             return
 
         images = []
@@ -178,7 +178,7 @@ class State:
                             Image.open(t).convert("RGB").save(page_path, "JPEG")
                             images.append(page_path)
                 except Exception as e:
-                    logger.warning(f"Lỗi căn chỉnh hình ảnh trang: {e}")
+                    logger.exception("Lỗi căn chỉnh hình ảnh trang")
 
             if "unknown" in files_by_page:
                 for f in sorted(files_by_page["unknown"]):
@@ -189,7 +189,7 @@ class State:
                         Image.open(f).convert("RGB").save(page_path, "JPEG")
                         images.append(page_path)
                     except Exception as e:
-                        logger.error(f"Lỗi tải hình ảnh do định dạng bị lỗi: {e}")
+                        logger.exception("Lỗi tải hình ảnh do định dạng bị lỗi")
 
             if images:
                 logger.info("Đang tổng hợp hình ảnh thành tệp PDF")
@@ -224,7 +224,7 @@ class State:
                 os.remove(pdf_path)
 
         except Exception as e:
-            logger.error(f"Lỗi đóng gói và lưu trữ tài liệu: {e}")
+            logger.exception("Lỗi đóng gói và lưu trữ tài liệu")
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -306,7 +306,7 @@ class NxbstSource:
                         except Exception:
                             break
             except Exception as e:
-                logger.error(f"Lỗi quét danh sách trang: {e}")
+                logger.exception("Lỗi quét danh sách trang")
                 raise
 
     @staticmethod
@@ -369,5 +369,5 @@ class NxbstSource:
                 else:
                     logger.warning("Không tìm thấy cấu trúc quyền truy cập")
             except Exception as e:
-                logger.error(f"Lỗi đồng bộ luồng xem tài liệu: {e}")
+                logger.exception("Lỗi đồng bộ luồng xem tài liệu")
                 raise

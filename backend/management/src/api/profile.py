@@ -3,6 +3,7 @@ import io
 import json
 from typing import Any, Optional
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -15,7 +16,7 @@ from src.core.dependency import RateLimiting, get_current_user, get_db
 from src.core.response import APIResponse
 from src.schemas.account import ProfileUpdate, SettingsUpdate, UserInDB
 
-router = APIRouter(prefix="/ho-so")
+router = APIRouter(route_class=LoggingRoute, prefix="/ho-so")
 
 @router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_profile(

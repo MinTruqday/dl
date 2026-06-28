@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.configuration import settings
@@ -16,6 +17,7 @@ from src.core.infrastructure.database import database
 class PurchaseService:
 
     @staticmethod
+    @log_logic_execution
     async def get_revenue(current_user) -> dict:
         docs_cursor = mongo.query("documents").filter({"creator_id": str(current_user.id)})
         documents = await docs_cursor 
@@ -58,6 +60,7 @@ class PurchaseService:
         return revenue_data
 
     @staticmethod
+    @log_logic_execution
     async def buy_ai_tier(tier: str, current_user) -> dict:
         tier = tier.upper()
         if tier not in ["PRO", "PREMIUM"]:
@@ -122,7 +125,7 @@ class PurchaseService:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Lỗi nâng cấp gói thành viên: {e}")
+            logger.exception("Lỗi nâng cấp gói thành viên hệ thống")
             raise HTTPException(
                 status_code=500,
                 detail=f"Lỗi nâng cấp gói thành viên, vui lòng thử lại sau: {e}",
@@ -131,6 +134,7 @@ class PurchaseService:
             await session.end_session()
 
     @staticmethod
+    @log_logic_execution
     async def purchase_document(
         document_id: str, current_user, session=None
     ) -> dict:
@@ -261,7 +265,7 @@ class PurchaseService:
                                         },
                                     )
                         except Exception as e:
-                            logger.error(f"Lỗi gửi thông báo giao dịch thành công: {e}")
+                            logger.exception("Lỗi gửi thông báo xác nhận giao dịch thành công")
                 logger.info("Giao dịch mua tài liệu thành công")
                 return {
                     "message": "Thanh toán mua tài liệu thành công",
@@ -272,7 +276,7 @@ class PurchaseService:
             except Exception as e:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.error(f"Lỗi xử lý thanh toán tài liệu: {e}")
+                logger.exception("Lỗi quá trình xử lý thanh toán tài liệu")
                 raise HTTPException(
                     status_code=500, detail=f"Lỗi xử lý giao dịch tài chính: {e}"
                 )
@@ -292,6 +296,7 @@ class PurchaseService:
                     pass
 
     @staticmethod
+    @log_logic_execution
     async def cancel_purchase(
         purchase_id: str, current_user, session=None
     ) -> dict:
@@ -382,7 +387,7 @@ class PurchaseService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error(f"Lỗi xử lý hoàn tiền: {e}")
+            logger.exception("Lỗi quá trình xử lý hoàn tiền giao dịch")
             raise HTTPException(status_code=500, detail=f"Lỗi xử lý hoàn tiền: {e}")
         finally:
             if should_close_session:

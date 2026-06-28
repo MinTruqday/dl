@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 
 import httpx
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query, status
 from src.api.dependency import get_current_user_optional, get_db
 from src.services.document import DocumentService
@@ -9,7 +10,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/kham-pha")
+router = APIRouter(route_class=LoggingRoute, prefix="/kham-pha")
 
 @router.get("/thinh-hanh", response_model=APIResponse[Any])
 async def get_trending_documents(
@@ -72,7 +73,7 @@ async def smart_search(
                     message="Tìm kiếm tiêu chuẩn thành công",
                 )
     except Exception as e:
-        logger.error(f"Lỗi tìm kiếm ngữ nghĩa: {e}")
+        logger.exception("Lỗi thực thi tìm kiếm ngữ nghĩa")
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
             message=f"Tìm kiếm tiêu chuẩn thành công: {e}",

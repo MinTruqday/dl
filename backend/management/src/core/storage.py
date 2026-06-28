@@ -32,9 +32,9 @@ async def initialize_bucket():
     try:
         await storage_client.head_bucket(Bucket=MINIO_BUCKET_NAME)
     except ClientError as e:
-        logger.info(f"Đang khởi tạo không gian lưu trữ: {e}")
+        logger.exception("Đang khởi tạo không gian lưu trữ")
         await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
-        logger.info(f"Khởi tạo không gian lưu trữ thành công: {e}")
+        logger.exception("Khởi tạo không gian lưu trữ thành công")
 
 async def upload_file(
     file_content: bytes,

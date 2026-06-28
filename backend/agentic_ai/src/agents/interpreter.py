@@ -127,7 +127,7 @@ class InterpreterAgent:
 
             return final_res
         except Exception as e:
-            logger.error(f"Lỗi thực thi hệ thống nội bộ: {e}")
+            logger.exception("Lỗi thực thi hệ thống nội bộ")
             return f"Đã xảy ra lỗi trong quá trình thực thi lệnh, vui lòng thử lại sau giây lát: {e}"
 
 interpreter = InterpreterAgent()

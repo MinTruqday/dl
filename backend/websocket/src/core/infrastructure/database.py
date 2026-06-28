@@ -19,7 +19,7 @@ async def init_db():
     redis_uri = settings.REDIS_URI
 
     if not mongo_uri or not redis_uri :
-        logger.error("Lỗi khởi tạo do thiếu kết nối cơ sở dữ liệu")
+        logger.error("Lỗi khởi tạo do thiếu kết nối Database")
         import sys
 
         sys.exit(1)
@@ -28,7 +28,7 @@ async def init_db():
         from motor.motor_asyncio import AsyncIOMotorClient
         database.mongodb = AsyncIOMotorClient(mongo_uri)
     except Exception as e:
-        logger.error(f"Lỗi khởi tạo MongoDB: {e}")
+        logger.exception("Lỗi khởi tạo kết nối Database MongoDB")
 
     database.redis = aioredis.from_url(redis_uri, decode_responses=True)
 
@@ -37,15 +37,15 @@ async def init_db():
     for i in range(max_retries):
         try:
             if await mq.health_check():
-                logger.info("Kết nối hàng đợi tin nhắn nền ổn định")
+                logger.info("Kết nối RabbitMQ ổn định")
                 break
             else:
                 raise Exception("MQ health check failed")
         except Exception as e:
             if i == max_retries - 1:
-                logger.error(f"Lỗi kết nối hàng đợi tin nhắn: {e}")
+                logger.exception("Lỗi kết nối RabbitMQ")
                 raise e
-            logger.warning(f"Đang thử kết nối lại hàng đợi: {e}")
+            logger.exception("Đang thử kết nối lại RabbitMQ")
             await asyncio.sleep(5)
 
     await setup_indexes()
@@ -54,9 +54,9 @@ async def setup_indexes():
     try:
         db = database.mongodb[settings.SERVICE_DB_NAME]
 
-        logger.info("Hoàn tất tạo chỉ mục cơ sở dữ liệu")
+        logger.info("Hoàn tất tạo chỉ mục Database")
     except Exception as e:
-        logger.error(f"Lỗi tạo chỉ mục cơ sở dữ liệu: {e}")
+        logger.exception("Lỗi khởi tạo chỉ mục cho Database")
 
 async def close_db():
     if database.mongodb:

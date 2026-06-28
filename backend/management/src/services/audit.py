@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
@@ -8,6 +9,7 @@ from src.core.infrastructure.database import database
 class AuditService:
 
     @staticmethod
+    @log_logic_execution
     async def get_audit_logs(limit: int = 50, cursor: str = None) -> list:
         query = {}
         if cursor:
@@ -39,6 +41,7 @@ class AuditService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def log_action(
         action: str, actor_id: str, target_id: str = None, details: dict = None
     ):

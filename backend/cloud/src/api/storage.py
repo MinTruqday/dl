@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from loguru import logger
 from src.api.dependency import get_db, require_role
@@ -14,7 +15,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/luu-tru")
+router = APIRouter(route_class=LoggingRoute, prefix="/luu-tru")
 
 @router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
 async def create_folder(
@@ -172,7 +173,7 @@ async def download_zip(
                         file_data = await resp["Body"].read()
                         zip_file.writestr(item.name, file_data)
                     except Exception as e:
-                        logger.warning(f"Lỗi tải tệp nén: {e}")
+                        logger.exception("Lỗi tải tệp nén")
     zip_buffer.seek(0)
     return StreamingResponse(
         zip_buffer,

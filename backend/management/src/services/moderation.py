@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
@@ -9,6 +10,7 @@ from src.core.infrastructure.database import database
 class ModerationService:
 
     @staticmethod
+    @log_logic_execution
     async def request_data_takeout(current_user):
         user_id = str(current_user.id)
         documents = (
@@ -28,6 +30,7 @@ class ModerationService:
         return takeout_payload
 
     @staticmethod
+    @log_logic_execution
     async def right_to_be_forgotten(current_user):
         user_id = str(current_user.id)
         await mongo.delete_many(collection="documents", filter={"creator_id": user_id})
@@ -41,6 +44,7 @@ class ModerationService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def request_data_export(current_user):
         logger.info("Yêu cầu xuất dữ liệu đã được ghi nhận")
         return {
@@ -48,6 +52,7 @@ class ModerationService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def generate_gdpr_takeout(current_user):
         user_id = str(current_user.id)
         full_data = {

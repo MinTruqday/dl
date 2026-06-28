@@ -54,7 +54,7 @@ class EngineAgent:
                 formatted += f"- {res.get('title')} {res.get('body')}\n  Source link {res.get('href')}\n"
             return formatted
         except Exception as e:
-            logger.error(f"Quá trình tìm kiếm bằng công cụ dự phòng đã thất bại: {e}")
+            logger.exception("Quá trình tìm kiếm bằng công cụ dự phòng đã thất bại")
             return ""
 
     async def execute(self, query: str) -> str:
@@ -71,9 +71,7 @@ class EngineAgent:
                     return result
                 logger.warning("Đang chuyển sang công cụ tìm kiếm thay thế")
             except Exception as e:
-                logger.warning(
-                    f"Hệ thống tra cứu chính gặp sự cố kết nối, tự động chuyển hướng sang cụm máy chủ dự phòng: {e}"
-                )
+                logger.exception("Hệ thống tra cứu chính gặp sự cố kết nối, tự động chuyển hướng sang cụm máy chủ dự phòng")
 
         result = await self._duckduckgo_search(query)
         if result:

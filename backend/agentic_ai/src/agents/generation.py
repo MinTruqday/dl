@@ -37,7 +37,7 @@ class GenerationAgent:
                     yield chunk.content
 
         except Exception as e:
-            logger.error(f"Lỗi tạo nội dung phản hồi: {e}")
+            logger.exception("Lỗi tạo nội dung phản hồi")
             yield f"Hệ thống gặp lỗi không mong đợi trong quá trình tạo phản hồi, vui lòng thử lại sau: {e}"
 
 response_generator = GenerationAgent()

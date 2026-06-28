@@ -25,7 +25,7 @@ class RabbitMQClient:
                 logger.info("Kết nối RabbitMQ thành công")
                 return
             except Exception as e:
-                logger.error(f"Lỗi kết nối RabbitMQ, đang thử lại: {e}")
+                logger.exception("Lỗi kết nối RabbitMQ, đang thử lại")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)
@@ -54,7 +54,7 @@ class RabbitMQClient:
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             return True
         except Exception as e:
-            logger.error(f"Lỗi phân phối tin nhắn: {e}")
+            logger.exception("Lỗi phân phối tin nhắn vào RabbitMQ")
             return False
 
     async def consume(self, queue_name: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
@@ -79,14 +79,14 @@ class RabbitMQClient:
         except aio_pika.exceptions.QueueEmpty:
             return None
         except Exception as e:
-            logger.error(f"Lỗi lấy tin nhắn: {e}")
+            logger.exception("Lỗi lấy tin nhắn từ RabbitMQ")
             return None
 
     async def _auto_nack_if_timeout(self, ack_id: str, delay: int):
         await asyncio.sleep(delay)
         message = self.pending_acks.pop(ack_id, None)
         if message:
-            logger.warning(f"Timeout! Không thấy ai ACK, NACK tin nhắn {ack_id} để retry.")
+            logger.warning(f"Quá thời gian chờ xác nhận (ACK/NACK) cho tin nhắn {ack_id} từ RabbitMQ, tiến hành thử lại")
             try:
                 await message.nack(requeue=True)
             except Exception as e:
@@ -99,7 +99,7 @@ class RabbitMQClient:
                 await message.ack()
                 return True
             except Exception as e:
-                logger.error(f"Lỗi ACK tin nhắn: {e}")
+                logger.exception("Lỗi phản hồi xác nhận (ACK) tin nhắn tới RabbitMQ")
                 return False
         return False
 

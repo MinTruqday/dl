@@ -1,5 +1,6 @@
 from typing import Any
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_current_user, get_db
 from src.schemas.highlight import (
@@ -12,7 +13,7 @@ from src.services.highlight import HighlightService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/danh-dau")
+router = APIRouter(route_class=LoggingRoute, prefix="/danh-dau")
 
 @router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def create_highlight(

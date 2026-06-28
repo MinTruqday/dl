@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -12,6 +13,7 @@ from src.core.infrastructure.database import database
 class StorageService:
 
     @staticmethod
+    @log_logic_execution
     async def create_item(
         item: StorageItemCreate, owner_id: str
     ) -> StorageItemInDB:
@@ -26,6 +28,7 @@ class StorageService:
         return db_item
 
     @staticmethod
+    @log_logic_execution
     async def get_storage_quota(owner_id: str) -> dict:
         user = await database.mongodb.get_default_database().users.find_one(
             {"_id": owner_id}
@@ -39,6 +42,7 @@ class StorageService:
         return {"used": used, "limit": limit}
 
     @staticmethod
+    @log_logic_execution
     async def create_shortcut(
         item_id: str, parent_id: Optional[str], owner_id: str
     ) -> Optional[StorageItemInDB]:
@@ -59,6 +63,7 @@ class StorageService:
         return shortcut
 
     @staticmethod
+    @log_logic_execution
     async def get_items_by_parent(
         parent_id: Optional[str],
         owner_id: str,
@@ -81,6 +86,7 @@ class StorageService:
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
+    @log_logic_execution
     async def search_items(
         query_str: str, owner_id: str, type_filter: Optional[str] = None
     ) -> List[StorageItemInDB]:
@@ -102,6 +108,7 @@ class StorageService:
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
+    @log_logic_execution
     async def get_item(
         item_id: str, owner_id: str = None
     ) -> Optional[StorageItemInDB]:
@@ -116,6 +123,7 @@ class StorageService:
         return None
 
     @staticmethod
+    @log_logic_execution
     async def update_item(
         item_id: str, owner_id: str, update_data: StorageItemUpdate
     ) -> Optional[StorageItemInDB]:
@@ -133,6 +141,7 @@ class StorageService:
         return None
 
     @staticmethod
+    @log_logic_execution
     async def delete_item(item_id: str, owner_id: str) -> bool:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
@@ -187,11 +196,12 @@ class StorageService:
                     except Exception:
                         pass
             except Exception as e:
-                logger.error(f"Lỗi dọn dẹp bộ nhớ: {e}")
+                logger.exception("Lỗi dọn dẹp tệp tin lưu trữ tạm")
 
         return True
 
     @staticmethod
+    @log_logic_execution
     async def _copy_children(source_parent_id: str, new_parent_id: str, owner_id: str):
         cursor = database.mongodb.get_default_database().storage_items.find(
             {"owner_id": owner_id, "parent_id": source_parent_id, "is_trashed": False}
@@ -211,6 +221,7 @@ class StorageService:
                 )
 
     @staticmethod
+    @log_logic_execution
     async def copy_item(
         item_id: str, owner_id: str, target_parent_id: Optional[str] = None
     ) -> Optional[StorageItemInDB]:
@@ -231,6 +242,7 @@ class StorageService:
         return new_item
 
     @staticmethod
+    @log_logic_execution
     async def add_version(
         item_id: str, owner_id: str, url: str, size: int
     ) -> Optional[StorageItemInDB]:
@@ -265,6 +277,7 @@ class StorageService:
         return await StorageService.get_item(item_id, owner_id)
 
     @staticmethod
+    @log_logic_execution
     async def get_public_item(share_token: str) -> Optional[StorageItemInDB]:
         item = await database.mongodb.get_default_database().storage_items.find_one(
             {"share_token": share_token, "is_public": True}
@@ -274,6 +287,7 @@ class StorageService:
         return None
 
     @staticmethod
+    @log_logic_execution
     async def share_item(
         item_id: str, email: str, role: str, owner_id: str
     ) -> dict:
@@ -317,6 +331,7 @@ class StorageService:
         return {"message": "Chia sẻ tệp thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_recent_items(
         owner_id: str,
         limit: int = Query(

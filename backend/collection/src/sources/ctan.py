@@ -44,7 +44,7 @@ class CtanSource:
                     try:
                         await page.wait_for_selector("main", timeout=15000)
                     except Exception as e:
-                        logger.warning(f"Không tìm thấy tài liệu trong danh mục chữ cái: {e}")
+                        logger.exception("Không tìm thấy tài liệu trong danh mục chữ cái")
                         continue
 
                     book_nodes = await page.query_selector_all(list_css)
@@ -69,7 +69,7 @@ class CtanSource:
                             await dedup.mark_collected("ctan_url", url)
 
             except Exception as e:
-                logger.error(f"Lỗi lấy danh sách dữ liệu chữ cái: {e}")
+                logger.exception("Lỗi lấy danh sách dữ liệu chữ cái")
                 raise
 
     @staticmethod
@@ -144,7 +144,7 @@ class CtanSource:
                     logger.warning("Không tìm thấy nút tải xuống trên trang")
 
             except Exception as e:
-                logger.error(f"Lỗi xử lý dữ liệu tệp nén: {e}")
+                logger.exception("Lỗi xử lý dữ liệu tệp nén")
                 raise
 
     @staticmethod
@@ -237,7 +237,7 @@ class CtanSource:
                             except UnicodeDecodeError:
                                 pass
                             except Exception as e:
-                                logger.warning(f"Lỗi đọc tệp tin lồng nhau: {e}")
+                                logger.exception("Lỗi đọc tệp tin lồng nhau")
 
                 md_filename = f"{slug}_source.md"
                 md_path = os.path.join(temp_base, md_filename)
@@ -255,7 +255,7 @@ class CtanSource:
                 logger.error("Lỗi tải tệp nén từ máy chủ từ xa")
                 return
         except Exception as e:
-            logger.error(f"Lỗi xử lý tệp nén: {e}")
+            logger.exception("Lỗi xử lý tệp nén")
             raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)

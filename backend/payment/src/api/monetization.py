@@ -1,5 +1,6 @@
 from typing import Any
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from src.schemas.monetization import PurchaseRequest, MembershipRequest
 from src.services.pricing import PricingService
@@ -9,7 +10,7 @@ from src.core.dependency import get_current_user, get_db
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/kiem-tien")
+router = APIRouter(route_class=LoggingRoute, prefix="/kiem-tien")
 
 @router.post("/mua/tai-lieu", response_model=APIResponse[Any])
 async def purchase_document(

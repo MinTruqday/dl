@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import json
@@ -14,10 +15,12 @@ from src.core.infrastructure.database import database
 class WalletService:
 
     @staticmethod
+    @log_logic_execution
     async def get_balance(current_user):
         wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
         return {"balance": wallet.get("balance", 0) if wallet else 0}
     @staticmethod
+    @log_logic_execution
     async def get_history(
         current_user,
         cursor: str = None,
@@ -34,7 +37,7 @@ class WalletService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except Exception as e:
-                logger.warning(f"Lỗi định dạng phân trang: {e}")
+                logger.exception("Lỗi định dạng phân trang")
         txs = await mongo.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit)
         type_translations = {
             "topup": "Deposit",

@@ -28,7 +28,7 @@ try:
     nli_model = CrossEncoder(nli_model_name)
 except Exception as e:
     nli_model = None
-    logger.error(f"Lỗi tải mô hình ngôn ngữ: {e}")
+    logger.exception("Lỗi tải mô hình ngôn ngữ")
 
 try:
     from sentence_transformers import CrossEncoder
@@ -46,7 +46,7 @@ try:
     )
     logger.info("Khởi tạo bộ nhớ đệm ngữ nghĩa thành công")
 except Exception as e:
-    logger.warning(f"Lỗi khởi tạo bộ nhớ đệm: {e}")
+    logger.exception("Lỗi khởi tạo bộ nhớ đệm")
 
 from huggingface_hub import AsyncInferenceClient
 from src.utils.huggingface import HFInferenceChat
@@ -68,7 +68,7 @@ try:
     llm = llm.with_fallbacks([_fallback_llm])
     logger.info("Thiết lập dự phòng mô hình ngôn ngữ thành công")
 except Exception as e:
-    logger.warning(f"Lỗi cấu hình mô hình ngôn ngữ thay thế: {e}")
+    logger.exception("Lỗi cấu hình mô hình ngôn ngữ thay thế")
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
@@ -100,7 +100,7 @@ async def contextualize_question(state: AgentState):
         )
         return {"question": response.question}
     except Exception as e:
-        logger.error(f"Lỗi xử lý ngữ cảnh: {e}")
+        logger.exception("Lỗi xử lý ngữ cảnh")
         return {"question": question}
 
 async def route_question(state: AgentState):
@@ -115,7 +115,7 @@ async def route_question(state: AgentState):
         response = await structured_llm.ainvoke(prompt.format(question=question))
         return {"current_source": "db", "route": response.route}
     except Exception as e:
-        logger.error(f"Lỗi điều hướng: {e}")
+        logger.exception("Lỗi điều hướng")
         return {"current_source": "db", "route": "rag"}
 
 def decide_initial_route(state: AgentState):
@@ -158,7 +158,7 @@ async def retrieve_db(state: AgentState):
                 )
             return {"documents": list(set(extracted_documents)), "current_source": "db"}
         except Exception as e:
-            logger.error(f"Lỗi truy xuất tài liệu liên kết: {e}")
+            logger.exception("Lỗi truy xuất tài liệu liên kết")
 
     from src.core.registry import PromptType, registry
 
@@ -173,7 +173,7 @@ async def retrieve_db(state: AgentState):
         if not response.is_simple and response.queries:
             queries.extend(response.queries)
     except Exception as e:
-        logger.error(f"Lỗi tạo chiến lược truy xuất tối ưu: {e}")
+        logger.exception("Lỗi tạo chiến lược truy xuất tối ưu")
 
     extracted_documents = []
 
@@ -189,7 +189,7 @@ async def retrieve_db(state: AgentState):
                 doc["_query"] = q
                 all_raw_documents.append(doc)
         except Exception as e:
-            logger.error(f"Lỗi tìm kiếm tương đồng vector: {e}")
+            logger.exception("Lỗi tìm kiếm tương đồng vector")
 
     if all_raw_documents:
         if reranker:
@@ -204,7 +204,7 @@ async def retrieve_db(state: AgentState):
                     [doc for doc, score in scored_documents[:6]]
                 )[:3]
             except Exception as e:
-                logger.error(f"Lỗi sắp xếp kết quả tìm kiếm bằng mô hình xếp hạng: {e}")
+                logger.exception("Lỗi sắp xếp kết quả tìm kiếm bằng mô hình xếp hạng")
                 top_documents = all_raw_documents[:3]
         else:
             top_documents = all_raw_documents[:3]
@@ -229,7 +229,7 @@ async def retrieve_internet(state: AgentState):
             "current_source": "internet",
         }
     except Exception as e:
-        logger.error(f"Lỗi tìm kiếm trên web: {e}")
+        logger.exception("Lỗi tìm kiếm trên web")
         return {"documents": [], "current_source": "internet"}
 
 async def grade_documents(state: AgentState):
@@ -253,7 +253,7 @@ async def grade_documents(state: AgentState):
             if response.is_relevant:
                 filtered_documents.append(d)
         except Exception as e:
-            logger.error(f"Lỗi đánh giá mức độ liên quan của tài liệu: {e}")
+            logger.exception("Lỗi đánh giá mức độ liên quan của tài liệu")
             filtered_documents.append(d)
     return {"documents": filtered_documents}
 
@@ -281,7 +281,7 @@ async def transform_query(state: AgentState):
             "current_source": "db",
         }
     except Exception as e:
-        logger.error(f"Lỗi tối ưu lệnh tìm kiếm: {e}")
+        logger.exception("Lỗi tối ưu lệnh tìm kiếm")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
 async def generate_direct(state: AgentState):
@@ -294,7 +294,7 @@ async def generate_direct(state: AgentState):
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
     except Exception as e:
-        logger.error(f"Quá trình tổng hợp và kiến tạo phản hồi từ AI đã gặp sự cố: {e}")
+        logger.exception("Quá trình tổng hợp và kiến tạo phản hồi từ AI đã gặp sự cố")
         return {
             "generation": "The system encountered an unexpected error during generation and requires you to try again later"
         }
@@ -346,7 +346,7 @@ async def generate(state: AgentState):
         generation = response.content
         return {"generation": generation}
     except Exception as e:
-        logger.error(f"Lỗi tạo nội dung tài liệu: {e}")
+        logger.exception("Lỗi tạo nội dung tài liệu")
         return {
             "generation": "The system encountered an unexpected error during generation and requires you to try again later"
         }
@@ -382,7 +382,7 @@ async def grade_generation(state: AgentState):
 
         return {"hallucination_pass": "no" if is_hallucination else "yes"}
     except Exception as e:
-        logger.exception(f"Lỗi đánh giá nội dung tạo ra: {e}")
+        logger.exception("Lỗi đánh giá nội dung tạo ra")
         return {"hallucination_pass": "yes"}
 
 def check_hallucination(state: AgentState):

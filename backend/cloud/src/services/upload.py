@@ -1,5 +1,6 @@
 import uuid
 
+from src.core.logic_logger import log_logic_execution
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -9,6 +10,7 @@ from src.core.storage import generate_presigned_url, upload_file
 class UploadService:
 
     @staticmethod
+    @log_logic_execution
     async def upload_image(file):
         if "svg" in file.content_type.lower() or file.filename.lower().endswith(".svg"):
             raise HTTPException(
@@ -25,7 +27,7 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error(f"Lỗi lưu hình ảnh: {e}")
+            logger.exception("Lỗi lưu trữ hình ảnh")
             raise HTTPException(
                 status_code=500, detail=f"Lỗi truyền tệp hình ảnh vào bộ nhớ vĩnh viễn: {e}"
             )
@@ -36,6 +38,7 @@ class UploadService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def upload_document(file):
         allowed_extensions = [
             "pdf",
@@ -77,7 +80,7 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error(f"Lỗi mạng khi lưu trữ tài liệu: {e}")
+            logger.exception("Lỗi mạng trong quá trình lưu trữ tài liệu")
             raise HTTPException(
                 status_code=500, detail=f"Lỗi lưu trữ, không thể tải lên tài liệu: {e}"
             )
@@ -89,6 +92,7 @@ class UploadService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_presigned_url(file_path: str):
         if ".." in file_path or file_path.startswith("/"):
             raise HTTPException(
@@ -98,7 +102,7 @@ class UploadService:
             url = await generate_presigned_url(file_path, 3600)
             return {"download_url": url}
         except Exception as e:
-            logger.error(f"Lỗi tạo liên kết tải xuống bảo mật: {e}")
+            logger.exception("Lỗi tạo đường dẫn tải xuống bảo mật")
             raise HTTPException(
                 status_code=500, detail=f"Lỗi tạo liên kết truy cập bảo mật: {e}"
             )

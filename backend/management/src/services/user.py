@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
@@ -9,6 +10,7 @@ from src.core.infrastructure.database import database
 class UserService:
 
     @staticmethod
+    @log_logic_execution
     async def update_profile(data: dict, current_user) -> dict:
         update_fields = {}
         if "full_name" in data and data["full_name"].strip():
@@ -31,6 +33,7 @@ class UserService:
         return {"message": "Cập nhật thông tin cá nhân thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_user_profile(current_user) -> dict:
         user = await mongo.find_one("users", 
             {"_id": str(current_user.id)}, {"password_hash": 0}
@@ -43,6 +46,7 @@ class UserService:
         return user
 
     @staticmethod
+    @log_logic_execution
     async def block_user(target_id: str, current_user) -> dict:
         if str(current_user.id) == target_id:
             raise HTTPException(status_code=400, detail="Không thể tự chặn chính mình")

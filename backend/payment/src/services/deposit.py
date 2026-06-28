@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import hashlib
@@ -27,6 +28,7 @@ class DepositService:
         ).hexdigest()
 
     @staticmethod
+    @log_logic_execution
     async def create_deposit_link(req, current_user):
         if req.amount < 1000:
             raise HTTPException(
@@ -109,7 +111,7 @@ class DepositService:
                 )
                 return {"checkout_url": checkout_url, "order_code": order_code}
             else:
-                logger.error("Từ chối tạo liên kết thanh toán")
+                logger.warning("Yêu cầu khởi tạo liên kết thanh toán bị từ chối")
                 await mongo.update_one("orders", 
                     {"order_code": order_code}, {"$set": {"status": "FAILED"}}
                 )
@@ -123,10 +125,11 @@ class DepositService:
             await mongo.update_one("orders", 
                 {"order_code": order_code}, {"$set": {"status": "FAILED"}}
             )
-            logger.error(f"Lỗi mạng kết nối cổng thanh toán: {e}")
+            logger.exception("Lỗi kết nối mạng tới cổng thanh toán")
             raise HTTPException(status_code=500, detail=f"Lỗi kết nối cổng thanh toán: {e}")
 
     @staticmethod
+    @log_logic_execution
     async def deposit_webhook(request):
         data = await request.json()
         logger.info("Cập nhật trạng thái thanh toán thành công")
@@ -166,7 +169,7 @@ class DepositService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.error(f"Lỗi xử lý phản hồi thanh toán: {e}")
+                logger.exception("Lỗi xử lý phản hồi dữ liệu thanh toán")
         return Response(
             content=json.dumps({"code": "00", "desc": "success"}),
             media_type="application/json",
@@ -174,6 +177,7 @@ class DepositService:
         )
 
     @staticmethod
+    @log_logic_execution
     async def verify_deposit(order_code: int, current_user):
         order = await mongo.find_one(collection="orders", query={"order_code": order_code})
         if not order:
@@ -199,7 +203,7 @@ class DepositService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.warning(f"Quá tải yêu cầu xác minh giao dịch: {e}")
+                logger.exception("Quá tải yêu cầu xác minh giao dịch")
 
         try:
             async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
@@ -229,10 +233,11 @@ class DepositService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Lỗi xác minh trạng thái giao dịch: {e}")
+            logger.exception("Lỗi xác minh trạng thái giao dịch trên cổng thanh toán")
             raise HTTPException(status_code=500, detail=f"Lỗi xác minh giao dịch: {e}")
 
     @staticmethod
+    @log_logic_execution
     async def process_success_order(
         order_code: int, paid_amount: int = None, session=None
     ):
@@ -312,12 +317,12 @@ class DepositService:
                     }
                 )
             except Exception as e:
-                logger.warning(f"Lỗi đẩy thông báo nạp tiền qua MQ: {e}")
+                logger.exception("Lỗi đẩy thông báo nạp tiền qua MQ")
             logger.info("Đã xác minh và nạp tiền vào tài khoản")
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error(f"Lỗi hoàn tất giao dịch nạp tiền: {e}")
+            logger.exception("Lỗi xử lý hoàn tất giao dịch nạp tiền vào hệ thống")
             raise HTTPException(
                 status_code=500, detail=f"Tính năng thanh toán đang bảo trì: {e}"
             )

@@ -25,7 +25,7 @@ class ReasoningAgent:
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             return result.content.strip()
         except Exception as e:
-            logger.exception(f"Lỗi thực thi tác vụ suy luận: {e}")
+            logger.exception("Lỗi thực thi tác vụ suy luận")
             return f"Mô hình AI đang gặp trục trặc trong quá trình tư duy và suy luận: {e}"
 
     async def evaluate_quality(
@@ -54,7 +54,7 @@ class ReasoningAgent:
                 "feedback": eval_res.feedback,
             }
         except Exception as e:
-            logger.exception(f"Lỗi đánh giá chất lượng tài liệu: {e}")
+            logger.exception("Lỗi đánh giá chất lượng tài liệu")
             return {
                 "should_retry": False,
                 "feedback": "The system encountered an error during the quality evaluation phase",

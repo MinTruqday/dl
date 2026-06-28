@@ -1,8 +1,9 @@
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
 from src.sockets.composition import composition_socket_manager
 
-router = APIRouter()
+router = APIRouter(route_class=LoggingRoute)
 
 @router.websocket("/crdt/{document_id}")
 async def editor_websocket(websocket: WebSocket, document_id: str):
@@ -14,5 +15,5 @@ async def editor_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         composition_socket_manager.disconnect(websocket, document_id)
     except Exception as e:
-        logger.error(f"Lỗi kết nối dữ liệu theo thời gian thực: {e}")
+        logger.exception("Lỗi thiết lập kết nối dữ liệu theo thời gian thực")
         composition_socket_manager.disconnect(websocket, document_id)

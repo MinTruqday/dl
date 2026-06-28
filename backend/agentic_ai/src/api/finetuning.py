@@ -1,9 +1,10 @@
 import asyncio
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Query, HTTPException
 import src.services.finetuning as finetune_service
 from src.core.infrastructure.configuration import settings
 
-router = APIRouter(prefix="/tinh-chinh")
+router = APIRouter(route_class=LoggingRoute, prefix="/tinh-chinh")
 
 @router.post("/tap-du-lieu")
 async def create_dataset(req: dict):

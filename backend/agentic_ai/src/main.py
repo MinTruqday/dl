@@ -82,9 +82,9 @@ async def startup_event():
     from src.core.infrastructure.configuration import settings
     try:
         await vector_store.ensure_collection()
-        logger.info("Khởi tạo cơ sở dữ liệu vector thành công")
+        logger.info("Khởi tạo Qdrant thành công")
     except Exception as e:
-        logger.error(f"Lỗi khởi tạo cơ sở dữ liệu vector: {e}")
+        logger.exception("Lỗi khởi tạo cấu trúc Qdrant")
     try:
         if settings.MONGODB_URI:
             client = AsyncIOMotorClient(settings.MONGODB_URI)
@@ -102,9 +102,9 @@ async def startup_event():
                 [("dataset_id", 1), ("status", 1)], background=True
             )
             client.close()
-            logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
+            logger.info("Khởi tạo chỉ mục Database thành công")
     except Exception as e:
-        logger.exception(f"Lỗi khởi tạo chỉ mục cơ sở dữ liệu: {e}")
+        logger.exception("Lỗi khởi tạo chỉ mục Database")
 @app.on_event("shutdown")
 async def shutdown_event():
     try:

@@ -60,7 +60,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
             logger.warning("Lỗi xác minh mã thông báo do thiếu thông tin")
             raise credentials_exception
     except jwt.PyJWTError as e:
-        logger.warning(f"Lỗi giải mã xác thực do dữ liệu không hợp lệ: {e}")
+        logger.exception("Lỗi giải mã xác thực do dữ liệu không hợp lệ")
         raise credentials_exception
 
     uid = payload.get("uid")

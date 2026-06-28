@@ -1,5 +1,6 @@
 from typing import Any
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Response, HTTPException
 from src.core.dependency import get_current_user, get_db
 
@@ -8,7 +9,7 @@ from src.services.watermark import WatermarkService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/ket-xuat")
+router = APIRouter(route_class=LoggingRoute, prefix="/ket-xuat")
 
 @router.get("/{document_id}/drm")
 async def export_document_pdf(

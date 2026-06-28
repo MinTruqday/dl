@@ -1,6 +1,7 @@
 from src.core.dependency import CurrentUser
 from typing import Any, Optional
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_current_user, get_db, require_role
 from src.services.account import AccountService
@@ -17,7 +18,7 @@ from src.schemas.account import (
     InternalCreateUserRequest,
 )
 
-router = APIRouter(prefix="/nguoi-dung")
+router = APIRouter(route_class=LoggingRoute, prefix="/nguoi-dung")
 
 @router.get(
     "",

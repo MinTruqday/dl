@@ -347,7 +347,7 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         else:
             logger.warning("Không hỗ trợ chuyển đổi định dạng")
     except Exception as e:
-        logger.error(f"Lỗi chuyển đổi định dạng mô hình: {e}")
+        logger.exception("Lỗi chuyển đổi định dạng mô hình")
 
     return result
 
@@ -554,7 +554,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                     Image.open(io.BytesIO(image_data)).convert("RGB").resize((512, 512))
                 )
             except Exception as e:
-                logger.error(f"Lỗi xử lý dữ liệu hình ảnh: {e}")
+                logger.exception("Lỗi xử lý dữ liệu hình ảnh")
                 continue
 
             optimizer.zero_grad()
@@ -600,7 +600,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 optimizer.step()
                 final_loss = float(loss)
             except Exception as e:
-                logger.error(f"Lỗi huấn luyện mô hình khuếch tán: {e}")
+                logger.exception("Lỗi huấn luyện mô hình khuếch tán")
                 final_loss = 0.0
 
             current_step += 1

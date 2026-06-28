@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import json
 import os
@@ -19,6 +20,7 @@ from src.repositories.pomodoro import PomodoroRepository
 class CompositionService:
 
     @staticmethod
+    @log_logic_execution
     async def export_to_format(
         content: str, format_type: str, compiler_url: str = settings.COMPILATION_URL
     ):
@@ -42,10 +44,11 @@ class CompositionService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Lỗi chuyển đổi khi xuất tài liệu: {e}")
+            logger.exception("Lỗi chuyển đổi định dạng khi xuất tài liệu")
             raise HTTPException(status_code=500, detail=f"Lỗi xuất tài liệu: {e}")
 
     @staticmethod
+    @log_logic_execution
     async def compile_editorjs_to_pdf(
         content: str, compiler_url: str = settings.COMPILATION_URL
     ):
@@ -70,10 +73,11 @@ class CompositionService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Lỗi quá trình biên dịch tài liệu: {e}")
+            logger.exception("Lỗi trong quá Tectonic tài liệu")
             raise HTTPException(status_code=500, detail=f"Lỗi biên dịch tài liệu: {e}")
 
     @staticmethod
+    @log_logic_execution
     async def sync_keystroke_buffer(
         document_id: str, payload: dict, current_user, cache=None
     ):
@@ -88,10 +92,11 @@ class CompositionService:
                 )
             return {"status": "synced_cache", "timestamp": payload.get("timestamp")}
         except Exception as e:
-            logger.error(f"Lỗi đồng bộ hóa dữ liệu bộ nhớ đệm: {e}")
+            logger.exception("Lỗi đồng bộ hóa dữ liệu từ bộ nhớ đệm")
             return {"status": "sync_failed", "error": f"Lỗi đồng bộ hóa dữ liệu: {e}"}
 
     @staticmethod
+    @log_logic_execution
     async def add_inline_suggestion(
         document_id: str, payload: dict, current_user
     ):
@@ -111,6 +116,7 @@ class CompositionService:
         return {"message": "Đã gửi đề xuất chỉnh sửa"}
 
     @staticmethod
+    @log_logic_execution
     async def resolve_suggestion(
         suggestion_id: str, payload: dict, current_user
     ):
@@ -131,7 +137,7 @@ class CompositionService:
                 if r.status_code == 200:
                     doc = r.json().get("data")
         except Exception as e:
-            logger.warning(f"Không thể lấy thông tin tài liệu để kiểm tra quyền: {e}")
+            logger.exception("Không thể lấy thông tin tài liệu để kiểm tra quyền")
         if (
             doc
             and str(doc.get("creator_id")) != user_id
@@ -156,6 +162,7 @@ class CompositionService:
         return {"message": "Cập nhật đề xuất chỉnh sửa thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def sync_pomodoro_session(payload: dict, current_user):
         user_id = str(current_user.id)
         await PomodoroRepository.insert_session(
@@ -171,6 +178,7 @@ class CompositionService:
         return {"status": "The session metrics have been successfully recorded"}
 
     @staticmethod
+    @log_logic_execution
     async def auto_save_draft(document_id: str, content: dict, current_user):
         import re
 
@@ -214,7 +222,7 @@ class CompositionService:
                 if "data" in block and "text" in block["data"]:
                     words += len(str(block["data"]["text"]).split())
         except Exception as e:
-            logger.error(f"Lỗi cấu trúc khi phân tích bản nháp: {e}")
+            logger.exception("Lỗi cấu trúc trong quá trình phân tích bản nháp")
 
         reading_time_minutes = max(1, words // 200)
         try:
@@ -229,13 +237,14 @@ class CompositionService:
                     headers={"X-User-Id": user_id},
                 )
         except Exception as e:
-            logger.error(f"Lỗi lưu bản nháp sang content service: {e}")
+            logger.exception("Lỗi lưu trữ bản nháp vào hệ thống quản lý nội dung")
         return {
             "message": "Lưu bản nháp thành công",
             "timestamp": str(datetime.now(timezone.utc)),
         }
 
     @staticmethod
+    @log_logic_execution
     async def submit_for_review(document_id: str, current_user):
         user_id = str(current_user.id)
         try:
@@ -246,11 +255,12 @@ class CompositionService:
                     headers={"X-User-Id": user_id},
                 )
         except Exception as e:
-            logger.error(f"Lỗi gửi yêu cầu xét duyệt sang content service: {e}")
+            logger.exception("Lỗi gửi yêu cầu xét duyệt tài liệu")
         logger.info("Đã chuyển tài liệu vào hàng đợi xét duyệt")
         return {"message": "Đã đưa tài liệu vào hàng đợi xét duyệt"}
 
     @staticmethod
+    @log_logic_execution
     async def global_find_replace(
         document_id: str,
         search_term: str,
@@ -270,7 +280,7 @@ class CompositionService:
                 if r.status_code == 200:
                     document = r.json().get("data")
         except Exception as e:
-            logger.error(f"Lỗi lấy tài liệu từ content service: {e}")
+            logger.exception("Lỗi tải thông tin tài liệu từ hệ thống quản lý nội dung")
         if not document or str(document.get("creator_id")) != user_id:
             raise HTTPException(
                 status_code=403,
@@ -320,7 +330,7 @@ class CompositionService:
                     headers={"X-User-Id": user_id},
                 )
         except Exception as e:
-            logger.error(f"Lỗi cập nhật tài liệu sang content service: {e}")
+            logger.exception("Lỗi cập nhật nội dung tài liệu")
         
         logger.info("Tìm kiếm và thay thế thành công")
         return {
@@ -329,6 +339,7 @@ class CompositionService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def add_inline_comment(
         document_id: str, data: dict, current_user
     ) -> dict:
@@ -348,6 +359,7 @@ class CompositionService:
         return {"_id": comment_id, "message": "Ghi nhận bình luận thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_inline_comments(
         document_id: str, current_user
     ) -> List[dict]:
@@ -366,6 +378,7 @@ class CompositionService:
         return comments
 
     @staticmethod
+    @log_logic_execution
     async def resolve_comment(comment_id: str, current_user) -> dict:
         comment = await CompositionRepository.find_comment(
             {"_id": comment_id}
@@ -384,7 +397,7 @@ class CompositionService:
                 if r.status_code == 200:
                     doc = r.json().get("data")
         except Exception as e:
-            logger.warning(f"Không thể lấy thông tin tài liệu để kiểm tra quyền: {e}")
+            logger.exception("Không thể lấy thông tin tài liệu để kiểm tra quyền")
         if (
             doc
             and str(doc.get("creator_id")) != str(current_user.id)
@@ -407,6 +420,7 @@ class CompositionService:
         return {"message": "Đã đánh dấu bình luận là đã giải quyết"}
 
     @staticmethod
+    @log_logic_execution
     async def get_version_diff(
         document_id: str, version_id_a: str, version_id_b: str, current_user
     ) -> dict:
@@ -424,7 +438,7 @@ class CompositionService:
                         if str(v.get("_id")) == version_id_b:
                             v_b = v
         except Exception as e:
-            logger.error(f"Lỗi lấy lịch sử phiên bản từ content service: {e}")
+            logger.exception("Lỗi truy xuất lịch sử phiên bản tài liệu")
         if not v_a or not v_b:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy phiên bản tài liệu để so sánh"

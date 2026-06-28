@@ -53,7 +53,7 @@ class MessageSocket:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            logger.error(f"Lỗi kết nối nhận tín hiệu tin nhắn nền: {e}")
+            logger.exception("Lỗi kết nối máy chủ nhận tín hiệu tin nhắn nền")
             self._listener_task = None
 
     async def connect(self, user_id: str, websocket: WebSocket):

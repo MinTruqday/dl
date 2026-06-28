@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import io
@@ -70,6 +71,7 @@ class DocumentService:
             return fragments
 
     @staticmethod
+    @log_logic_execution
     async def get_tags_categories():
         
         docs_col = DocumentRepository
@@ -91,6 +93,7 @@ class DocumentService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_trending_documents(
         limit: int = Query(
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
@@ -109,6 +112,7 @@ class DocumentService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
+    @log_logic_execution
     async def get_text_search(
         query: str,
         limit: int = Query(
@@ -128,6 +132,7 @@ class DocumentService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
+    @log_logic_execution
     async def create_document(doc_in: DocumentCreate, current_user):
         
         docs_collection = DocumentRepository
@@ -147,6 +152,7 @@ class DocumentService:
         return doc_doc
 
     @staticmethod
+    @log_logic_execution
     async def get_my_documents(
         current_user,
         q: str = None,
@@ -191,6 +197,7 @@ class DocumentService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def update_document_content(
         document_id: str, content_in: DocumentContentUpdate, current_user
     ):
@@ -249,7 +256,7 @@ class DocumentService:
                         },
                     )
             except Exception as e:
-                logger.error(f"Lỗi gửi chuỗi thông báo cập nhật tài liệu: {e}")
+                logger.exception("Lỗi phân phối sự kiện cập nhật tài liệu")
 
         logger.info("Cập nhật nội dung tài liệu thành công")
 
@@ -261,6 +268,7 @@ class DocumentService:
         return serialize_document(await docs_collection.find_one({"_id": document_id}))
 
     @staticmethod
+    @log_logic_execution
     async def update_document(document_id: str, doc_update, current_user) -> dict:
         
         docs_col = DocumentRepository
@@ -321,6 +329,7 @@ class DocumentService:
         return serialize_document(await docs_col.find_one({"_id": document_id}))
 
     @staticmethod
+    @log_logic_execution
     async def list_documents(
         limit: int,
         cursor: str,
@@ -357,6 +366,7 @@ class DocumentService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
+    @log_logic_execution
     async def get_document_by_id(document_id: str, current_user, password: str = None):
         
         docs_collection = DocumentRepository
@@ -430,6 +440,7 @@ class DocumentService:
         return document
 
     @staticmethod
+    @log_logic_execution
     async def soft_delete_document(document_id: str, current_user) -> dict:
         
         res = await DocumentRepository.update_one(
@@ -447,6 +458,7 @@ class DocumentService:
         return {"message": "Đã chuyển tài liệu vào thùng rác"}
 
     @staticmethod
+    @log_logic_execution
     async def restore_document(document_id: str, current_user) -> dict:
         
         res = await DocumentRepository.update_one(
@@ -466,6 +478,7 @@ class DocumentService:
         return {"message": "Khôi phục tài liệu từ thùng rác thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_trash(current_user) -> list:
         
         docs = (
@@ -488,6 +501,7 @@ class DocumentService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def set_document_password(
         document_id: str, password: str, current_user
     ) -> dict:
@@ -513,6 +527,7 @@ class DocumentService:
         return {"message": "Thiết lập mật khẩu tài liệu thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def invite_coauthor(document_id: str, email: str, current_user):
         
         document = await DocumentRepository.find_one(
@@ -530,7 +545,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
         except Exception as e:
-            logger.warning(f"Lỗi đồng bộ thông tin tác giả: {e}")
+            logger.exception("Lỗi đồng bộ thông tin tác giả")
 
         if not target_user:
             raise HTTPException(
@@ -547,6 +562,7 @@ class DocumentService:
         return {"message": "Bổ nhiệm cộng tác viên thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_document_by_slug(slug: str, current_user=None):
         
         docs_collection = DocumentRepository
@@ -615,7 +631,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     author = resp.json().get("data")
         except Exception as e:
-            logger.warning(f"Lỗi đồng bộ hồ sơ tác giả: {e}")
+            logger.exception("Lỗi đồng bộ hồ sơ tác giả")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),
@@ -643,6 +659,7 @@ class DocumentService:
         return document
 
     @staticmethod
+    @log_logic_execution
     async def get_document_decryption_key(document_id: str, current_user):
         user_id = str(current_user.id) if current_user else "guest"
         if redis:
@@ -652,6 +669,7 @@ class DocumentService:
         raise HTTPException(status_code=403, detail="Khóa giải mã không tồn tại hoặc đã hết hạn")
 
     @staticmethod
+    @log_logic_execution
     async def get_document_preview(slug: str) -> dict:
         
         doc = await DocumentRepository.find_one(
@@ -689,6 +707,7 @@ class DocumentService:
         return preview_data
 
     @staticmethod
+    @log_logic_execution
     async def get_document_audit_logs(document_id: str, current_user) -> list:
         
         document = await DocumentRepository.find_one(
@@ -720,6 +739,7 @@ class DocumentService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def get_approval_queue(
         cursor: str = None,
         limit: int = 50,
@@ -777,6 +797,7 @@ class DocumentService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def moderate_document(
         document_id: str, action: str, reason: str, current_user
     ) -> dict:
@@ -816,6 +837,7 @@ class DocumentService:
         return {"message": "Cập nhật trạng thái kiểm duyệt tài liệu thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_trending_tags(
         limit: int = Query(
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
@@ -833,6 +855,7 @@ class DocumentService:
         return [r["_id"] for r in results]
 
     @staticmethod
+    @log_logic_execution
     async def get_folders(parent_id: str, current_user):
         
         query = {"creator_id": str(current_user.id)}
@@ -845,6 +868,7 @@ class DocumentService:
         return folders
 
     @staticmethod
+    @log_logic_execution
     async def create_folder(name: str, parent_id: str, current_user):
         
         folder_doc = {
@@ -859,6 +883,7 @@ class DocumentService:
         return folder_doc
 
     @staticmethod
+    @log_logic_execution
     async def delete_folder(folder_id: str, current_user):
         
         folder = await mongo.find_one(
@@ -873,6 +898,7 @@ class DocumentService:
         return {"deleted": True}
 
     @staticmethod
+    @log_logic_execution
     async def toggle_star_document(document_id: str, current_user):
         
         doc = await mongo.find_one(
@@ -889,6 +915,7 @@ class DocumentService:
         return {"starred": not current_starred}
 
     @staticmethod
+    @log_logic_execution
     async def transfer_document(document_id: str, new_owner_id: str, current_user):
         
         doc = await mongo.find_one("documents", 
@@ -925,6 +952,7 @@ class DocumentService:
         return {"status": "transferred", "new_owner_id": new_owner_id}
 
     @staticmethod
+    @log_logic_execution
     async def get_document_analytics(document_id: str, current_user):
         
         doc = await mongo.find_one(collection="documents", query={"_id": document_id})
@@ -950,6 +978,7 @@ class DocumentService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_document_academic(document_id: str, current_user):
         
         doc = await mongo.find_one(collection="documents", query={"_id": document_id})
@@ -973,6 +1002,7 @@ class DocumentService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_suggested_documents(
         limit: int = Query(
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT

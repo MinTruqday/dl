@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 
@@ -10,7 +11,7 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 from src.services.history import HistoryService
 
-router = APIRouter(prefix="/lich-su")
+router = APIRouter(route_class=LoggingRoute, prefix="/lich-su")
 
 @router.get("", response_model=List[dict])
 async def get_user_sessions(

@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import os
 from datetime import datetime, timezone
@@ -12,6 +13,7 @@ from src.core.infrastructure.configuration import settings
 from src.schemas.ingestion import Collection
 from src.repositories.archive import ArchiveRepository
 
+@log_logic_execution
 async def trigger_collection(req: Collection):
     source = req.source
     pages = req.pages
@@ -47,11 +49,12 @@ async def trigger_collection(req: Collection):
             "message": "Bắt đầu quá trình thu thập dữ liệu ngầm",
         }
     except Exception as e:
-        logger.error(f"Lỗi bắt đầu thu thập dữ liệu ngầm: {e}")
+        logger.exception("Lỗi kích hoạt tiến trình thu thập dữ liệu ngầm")
         raise HTTPException(
             status_code=500, detail=f"Lỗi đưa quá trình thu thập dữ liệu vào hàng đợi: {e}"
         )
 
+@log_logic_execution
 async def stop_collection():
     try:
         logger.info("Tạm dừng quá trình thu thập dữ liệu thành công")
@@ -60,11 +63,12 @@ async def stop_collection():
             "message": "Đã tạm dừng quá trình thu thập",
         }
     except Exception as e:
-        logger.error(f"Lỗi truyền tín hiệu tạm dừng quá trình thu thập: {e}")
+        logger.exception("Lỗi truyền tín hiệu tạm dừng luồng thu thập dữ liệu")
         raise HTTPException(
             status_code=500, detail=f"Lỗi gửi lệnh tạm dừng cho tiến trình nền: {e}"
         )
 
+@log_logic_execution
 async def get_active_jobs():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
@@ -80,6 +84,7 @@ async def get_active_jobs():
     ]
     return jobs
 
+@log_logic_execution
 async def get_collector_stats():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
@@ -112,6 +117,7 @@ async def get_collector_stats():
         "status": "operational",
     }
 
+@log_logic_execution
 async def get_collector_logs():
     log_file = "logs/backend.log"
     logs = []

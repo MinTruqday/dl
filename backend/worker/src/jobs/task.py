@@ -55,7 +55,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
             )
         logger.info("Xóa vĩnh viễn tài liệu thành công")
     except Exception as e:
-        logger.error(f"Lỗi xóa vĩnh viễn tài liệu: {e}")
+        logger.exception("Lỗi xóa vĩnh viễn dữ liệu tài liệu")
         raise hard_delete_document_task.retry(exc=e)
 
 @celery_app.task(
@@ -66,7 +66,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     default_retry_delay=10,
 )
 def compile_document_tectonic(document_id, tex_content):
-    logger.info("Đang bắt đầu quá trình biên dịch tài liệu")
+    logger.info("Đang bắt đầu quá Tectonic tài liệu")
     with tempfile.TemporaryDirectory() as temp_dir:
         tex_path = os.path.join(temp_dir, f"{document_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{document_id}.pdf")
@@ -115,14 +115,14 @@ def compile_document_tectonic(document_id, tex_content):
                 "logs": process.stdout,
             }
         except subprocess.TimeoutExpired as e:
-            logger.error(f"Quá thời gian biên dịch tài liệu: {e}")
+            logger.exception("Lỗi vượt quá thời gian cho phép khi biên dịch")
             return {
                 "status": "error",
                 "error": "Quá thời gian biên dịch, vui lòng kiểm tra cấu trúc tài liệu",
                 "document_id": document_id,
             }
         except Exception as e:
-            logger.exception(f"Lỗi khi biên dịch tài liệu: {e}")
+            logger.exception("Lỗi khi biên dịch tài liệu")
             return {
                 "status": "error",
                 "error": "Lỗi xử lý tài liệu, vui lòng thử lại sau",

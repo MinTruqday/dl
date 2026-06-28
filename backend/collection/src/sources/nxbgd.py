@@ -68,9 +68,9 @@ class NxbgdSource:
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.warning(f"Lỗi tải hình ảnh trang: {e}")
+                    logger.exception("Lỗi tải hình ảnh trang")
         except Exception as e:
-            logger.warning(f"Lỗi phân tích dữ liệu mạng: {e}")
+            logger.exception("Lỗi phân tích dữ liệu mạng")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -101,7 +101,7 @@ class NxbgdSource:
         )
 
         if not image_files:
-            logger.warning("Bỏ qua quá trình biên dịch do không quét được ảnh hợp lệ")
+            logger.warning("Bỏ qua quá Tectonic do không quét được ảnh hợp lệ")
             return
 
         try:
@@ -136,15 +136,15 @@ class NxbgdSource:
                     pass
 
         except Exception as e:
-            logger.error(f"Lỗi biên dịch và tải lên tài liệu: {e}")
+            logger.exception("Lỗi biên dịch và tải lên tài liệu")
             raise
         finally:
 
-            logger.info(f"Đang xóa dữ liệu tạm thời: {e}")
+            logger.exception("Đang xóa dữ liệu tạm thời")
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception as e:
-                logger.warning(f"Lỗi quyền truy cập khi xóa tệp tạm thời: {e}")
+                logger.exception("Lỗi quyền truy cập khi xóa tệp tạm thời")
 
     async def execute(self):
         await self.init_browser()
@@ -234,7 +234,7 @@ class NxbgdSource:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
                                 except Exception as e:
-                                    logger.warning(f"Lỗi tương tác trình xem tài liệu: {e}")
+                                    logger.exception("Lỗi tương tác trình xem tài liệu")
                                 await asyncio.sleep(2)
 
                                 current_pages = len(self.captured_hashes)
@@ -254,7 +254,7 @@ class NxbgdSource:
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
                     except Exception as e:
-                        logger.error(f"Lỗi kiểm tra thông tin tài liệu: {e}")
+                        logger.exception("Lỗi kiểm tra thông tin tài liệu")
 
                 try:
                     await self.page.goto(url, timeout=60000)
@@ -273,13 +273,13 @@ class NxbgdSource:
                         has_next = False
                         logger.info("Đã quét đến trang cuối cùng")
                 except Exception as e:
-                    logger.error(f"Lỗi chuyển trang tự động: {e}")
+                    logger.exception("Lỗi chuyển trang tự động")
                     has_next = False
 
                 break
 
         except Exception as e:
-            logger.error(f"Lỗi chuyển hướng khi thu thập dữ liệu nguồn: {e}")
+            logger.exception("Lỗi chuyển hướng khi thu thập dữ liệu nguồn")
             raise
         finally:
             await self.close()

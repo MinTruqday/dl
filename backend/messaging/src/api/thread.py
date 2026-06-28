@@ -2,6 +2,7 @@ from src.core.infrastructure.redis import redis
 import json
 from typing import Any, List
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Query
 from src.schemas.thread import Conversation, Creation, Response
 from src.services.thread import ThreadService
@@ -12,7 +13,7 @@ from src.core.dependency import get_current_user_from_header as get_current_user
 from src.core.response import APIResponse
 from src.repositories.message import MessageRepository
 
-router = APIRouter(prefix="/tin-nhan")
+router = APIRouter(route_class=LoggingRoute, prefix="/tin-nhan")
 
 async def publish_personal_message(message: dict, receiver_id: str):
     import json

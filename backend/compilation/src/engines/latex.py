@@ -71,7 +71,7 @@ class LatexEngine:
                 try:
                     process.kill()
                 except Exception as e:
-                    logger.warning(f"Lỗi dừng tác vụ biên dịch: {e}")
+                    logger.exception("Lỗi dừng tác vụ biên dịch")
             raise Exception("Hết thời gian chờ quá trình biên dịch tài liệu")
 
         finally:
@@ -79,7 +79,7 @@ class LatexEngine:
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.warning(f"Lỗi dọn dẹp tệp tạm thời: {e}")
+                    logger.exception("Lỗi dọn dẹp tệp tạm thời")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -114,7 +114,7 @@ class LatexEngine:
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.warning(f"Lỗi dọn dẹp tệp tạm thời: {e}")
+                    logger.exception("Lỗi dọn dẹp tệp tạm thời")
 
     @staticmethod
     def format_latex(content: str) -> dict:

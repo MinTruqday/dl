@@ -106,7 +106,7 @@ class OrchestrationHarness:
         except asyncio.TimeoutError as e:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.error(f"Quá thời gian thực thi, phiên làm việc bị hủy: {e}")
+            logger.exception("Quá thời gian thực thi, phiên làm việc bị hủy")
             yield {
                 "type": "error",
                 "message": "Quá thời gian xử lý yêu cầu",
@@ -114,7 +114,7 @@ class OrchestrationHarness:
 
         except asyncio.CancelledError as e:
             self._close_session(session_id, "cancelled")
-            logger.warning(f"Đã hủy phiên làm việc: {e}")
+            logger.exception("Đã hủy phiên làm việc")
             yield {
                 "type": "error",
                 "message": "Mất kết nối",
@@ -123,7 +123,7 @@ class OrchestrationHarness:
         except Exception as e:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.error(f"Lỗi điều phối phiên làm việc: {e}")
+            logger.exception("Lỗi điều phối phiên làm việc")
             yield {
                 "type": "error",
                 "message": f"Orchestration error, please retry: {e}",

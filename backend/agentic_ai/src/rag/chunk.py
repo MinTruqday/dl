@@ -47,16 +47,16 @@ class ChunkRag:
                 self.type = "chonkie_semantic"
                 logger.info("Khởi tạo công cụ phân mảnh ngữ nghĩa thành công")
             except Exception as e:
-                logger.warning(f"Khởi tạo công cụ chia nhỏ văn bản thất bại, đang chuyển sang chế độ tiêu chuẩn: {e}")
+                logger.exception("Khởi tạo công cụ chia nhỏ văn bản thất bại, đang chuyển sang chế độ tiêu chuẩn")
                 try:
                     self.chunker = TokenChunker(
                         chunk_size=settings.DEFAULT_CHUNK_SIZE,
                         chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
                     )
                     self.type = "chonkie_token"
-                    logger.info(f"Tải công cụ phân đoạn văn bản thành công: {e}")
+                    logger.exception("Tải công cụ phân đoạn văn bản thành công")
                 except Exception as e:
-                    logger.error(f"Sự cố xảy ra khi khởi tạo bộ xử lý phân mảnh văn bản: {e}")
+                    logger.exception("Sự cố xảy ra khi khởi tạo bộ xử lý phân mảnh văn bản")
 
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
         logger.info("Đang xử lý phân đoạn văn bản")
@@ -96,7 +96,7 @@ class ChunkRag:
             return chunks
 
         except Exception as e:
-            logger.error(f"Lỗi phân mảnh văn bản, đang chuyển sang phương pháp thay thế: {e}")
+            logger.exception("Lỗi phân mảnh văn bản, đang chuyển sang phương pháp thay thế")
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:

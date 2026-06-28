@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -16,6 +17,7 @@ from src.repositories.moderation import ModerationRepository
 class TelemetryService:
 
     @staticmethod
+    @log_logic_execution
     async def track_event(
         event_name: str,
         properties: Dict[str, Any],
@@ -33,6 +35,7 @@ class TelemetryService:
         return {"status": "success"}
 
     @staticmethod
+    @log_logic_execution
     async def get_activity_stats(days: int = 7):
         since = datetime.now(timezone.utc) - timedelta(days=days)
         pipeline = [
@@ -44,6 +47,7 @@ class TelemetryService:
         return await cursor 
 
     @staticmethod
+    @log_logic_execution
     async def log_performance_metric(
         metric_name: str, value: float, current_user: Optional[UserInDB] = None
     ):
@@ -52,6 +56,7 @@ class TelemetryService:
         )
 
     @staticmethod
+    @log_logic_execution
     async def get_system_stats() -> dict:
         total_users = await UserRepository.count_documents({})
         total_documents = await SystemRepository.count_documents({})
@@ -66,6 +71,7 @@ class TelemetryService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_sys_health() -> dict:
         try:
             await mongo.get_db().command("ping")
@@ -79,6 +85,7 @@ class TelemetryService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_activity_log(user_id: str) -> list:
         return (
             await ModerationRepository.find_moderator_activities({"actor_id": user_id})

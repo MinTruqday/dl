@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import uuid
 from datetime import datetime, timezone
@@ -13,6 +14,7 @@ from src.repositories.reading import ReadingRepository
 class LibraryService:
 
     @staticmethod
+    @log_logic_execution
     async def create_reading_list(data, current_user):
         new_list = {
             "_id": str(uuid7()),
@@ -28,6 +30,7 @@ class LibraryService:
         return new_list
 
     @staticmethod
+    @log_logic_execution
     async def get_my_reading_lists(current_user):
         return (
             await mongo
@@ -36,6 +39,7 @@ class LibraryService:
         )
 
     @staticmethod
+    @log_logic_execution
     async def get_reading_list_by_id(list_id: str, current_user):
         reading_list = await ReadingRepository.find_list(
             {"_id": list_id, "user_id": str(current_user.id)}
@@ -55,6 +59,7 @@ class LibraryService:
         return reading_list
 
     @staticmethod
+    @log_logic_execution
     async def add_document_to_list(
         list_id: str, document_id: str, current_user
     ) -> dict:
@@ -70,6 +75,7 @@ class LibraryService:
         return {"status": "success", "message": "Đã thêm tài liệu vào danh sách đọc"}
 
     @staticmethod
+    @log_logic_execution
     async def remove_document_from_list(
         list_id: str, document_id: str, current_user
     ) -> dict:

@@ -1,5 +1,6 @@
 from typing import Any
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query
 from src.schemas.withdrawal import WithdrawalRequest
 from src.services.withdrawal import WithdrawalService
@@ -8,7 +9,7 @@ from src.core.dependency import get_current_user, get_db, require_role
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/rut-tien")
+router = APIRouter(route_class=LoggingRoute, prefix="/rut-tien")
 
 @router.post("", response_model=APIResponse[Any])
 async def request_withdrawal(

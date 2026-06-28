@@ -1,5 +1,6 @@
 from typing import Any
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from src.services.passkey import PasskeyService
 
@@ -7,7 +8,7 @@ from src.core.dependency import get_current_user
 from src.core.response import APIResponse
 from src.schemas.identity import PasskeyFinishRequest, PasskeyRequest
 
-router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")
+router = APIRouter(route_class=LoggingRoute, prefix="/xac-thuc/khoa-bao-mat")
 
 @router.post("/dang-nhap/bat-dau", response_model=APIResponse[Any])
 async def passkey_login_begin(payload: PasskeyRequest):

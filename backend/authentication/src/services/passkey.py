@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import base64
 import json
@@ -41,6 +42,7 @@ ORIGIN = settings.PASSKEY_ALLOWED_ORIGINS
 class PasskeyService:
 
     @staticmethod
+    @log_logic_execution
     async def login_begin(email: str):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
@@ -65,11 +67,12 @@ class PasskeyService:
         try:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
         except Exception as e:
-            logger.warning(f"Lỗi lưu trữ tạm thời mã xác thực: {e}")
+            logger.exception("Lỗi lưu trữ tạm thời mã xác thực")
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)
         return json.loads(options_to_json(options))
 
     @staticmethod
+    @log_logic_execution
     async def login_finish(email: str, credential_data: dict):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
@@ -78,7 +81,7 @@ class PasskeyService:
         try:
             challenge = await AuthenticationRepository.get_redis_passkey_challenge(email)
         except Exception as e:
-            logger.warning(f"Lỗi tải thông tin xác thực: {e}")
+            logger.exception("Lỗi tải thông tin xác thực")
         if not challenge:
             chal_doc = await AuthenticationRepository.get_passkey_challenge(email)
             if chal_doc:
@@ -121,7 +124,7 @@ class PasskeyService:
         try:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
         except Exception as e:
-            logger.error(f"Lỗi xóa mã xác thực khỏi bộ nhớ: {e}")
+            logger.exception("Lỗi dọn dẹp mã xác thực")
         user_doc = None
         try:
             async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
@@ -142,6 +145,7 @@ class PasskeyService:
         return await SessionService.issue_token_for_user(user_doc, "passkey_login")
 
     @staticmethod
+    @log_logic_execution
     async def register_begin(email: str):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
@@ -171,13 +175,14 @@ class PasskeyService:
         try:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
         except Exception as e:
-            logger.warning(f"Lỗi lưu trữ tạm thời mã xác thực: {e}")
+            logger.exception("Lỗi lưu trữ tạm thời mã xác thực")
             
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)
 
         return json.loads(options_to_json(options))
 
     @staticmethod
+    @log_logic_execution
     async def register_finish(email: str, credential_data: dict):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
@@ -187,7 +192,7 @@ class PasskeyService:
         try:
             challenge = await AuthenticationRepository.get_redis_passkey_challenge(email)
         except Exception as e:
-            logger.warning(f"Lỗi tải thông tin xác thực: {e}")
+            logger.exception("Lỗi tải thông tin xác thực")
             
         if not challenge:
             chal_doc = await AuthenticationRepository.get_passkey_challenge(email)
@@ -230,6 +235,6 @@ class PasskeyService:
         try:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
         except Exception as e:
-            logger.error(f"Lỗi xóa mã xác thực khỏi bộ nhớ: {e}")
+            logger.exception("Lỗi dọn dẹp mã xác thực")
 
         return {"message": "Đăng ký Passkey thành công"}

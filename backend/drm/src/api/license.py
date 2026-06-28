@@ -2,12 +2,13 @@ import base64
 import os
 import uuid
 import datetime
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, HTTPException, Depends
 from loguru import logger
 
 from src.repositories.license import LicenseRepository
 
-router = APIRouter(prefix="/drm")
+router = APIRouter(route_class=LoggingRoute, prefix="/drm")
 
 from src.core.dependency import CurrentUser, get_current_user
 from src.schemas.license import Acquisition, Token
@@ -56,7 +57,7 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
             )
             encoded_encrypted_key = base64.b64encode(encrypted_aes_key).decode('utf-8')
         except Exception as e:
-            logger.error(f"Lỗi mã hóa RSA: {e}")
+            logger.exception("Lỗi mã hóa RSA dữ liệu hệ thống")
             raise HTTPException(status_code=400, detail="Public Key không hợp lệ")
         
         logger.info(f"Đã cấp phép truy cập cho tài liệu {req.file_id} cho người dùng {user_id}")
@@ -64,5 +65,5 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Lỗi khi yêu cầu cấp phép bản quyền: {e}")
+        logger.exception("Lỗi cấp phép bản quyền tài liệu")
         raise HTTPException(status_code=500, detail=f"Lỗi hệ thống nội bộ: {e}")

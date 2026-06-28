@@ -3,10 +3,12 @@ import datetime
 import os
 import uuid
 
+from src.core.logic_logger import log_logic_execution
 from src.repositories.license import LicenseRepository
 
 class LicenseService:
     @staticmethod
+    @log_logic_execution
     async def create_license(document_id: str, user_id: str) -> tuple[str, bytes]:
         file_id = str(uuid.uuid4())
         raw_key = os.urandom(32)  

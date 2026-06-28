@@ -1,4 +1,5 @@
 import asyncio
+from src.core.logic_logger import log_logic_execution
 from loguru import logger
 from src.core.infrastructure.mq import mq
 from src.sources.anna import AnnaSource
@@ -6,17 +7,21 @@ from src.sources.ctan import CtanSource
 from src.sources.nxbgd import NxbgdSource
 from src.sources.nxbst import NxbstSource
 
+@log_logic_execution
 async def run_worker():
     logger.info("Khởi động nền tiêu thụ tin nhắn từ Queue Service")
 
+    @log_logic_execution
     async def route_anna_collector(payload):
         pages = int(payload.get("pages", 0))
         await AnnaSource.run_list_collector(search_query="", pages=pages)
 
+    @log_logic_execution
     async def route_ctan_collector(payload):
         pages = int(payload.get("pages", 0))
         await CtanSource.run_list_collector(pages)
 
+    @log_logic_execution
     async def route_list_collector(payload):
         source = payload.get("source", "AnnaArchive")
         pages = int(payload.get("pages", 0))
@@ -27,6 +32,7 @@ async def run_worker():
         else:
             await AnnaSource.run_list_collector(search_query="", pages=pages)
 
+    @log_logic_execution
     async def route_detail_collector(payload):
         source = payload.get("source", "AnnaArchive")
         if source == "NXBST":
@@ -36,6 +42,7 @@ async def run_worker():
         else:
             await AnnaSource.run_detail_collector(payload["url"])
 
+    @log_logic_execution
     async def route_download_processor(payload):
         source = payload.get("source", "AnnaArchive")
         if source == "CTAN":
@@ -43,6 +50,7 @@ async def run_worker():
         else:
             await AnnaSource.run_download_processor(payload)
 
+    @log_logic_execution
     async def route_nxbst_collector(payload):
         url = payload.get("url")
         if url:
@@ -50,6 +58,7 @@ async def run_worker():
         else:
             await NxbstSource.run_list_collector(int(payload.get("pages", 0)))
 
+    @log_logic_execution
     async def poll_queue(queue_name, handler_func):
         while True:
             try:
@@ -63,7 +72,7 @@ async def run_worker():
                 elif res: 
                     await handler_func(res)
             except Exception as e:
-                logger.error(f"Lỗi tiêu thụ tin nhắn từ {queue_name}: {e}")
+                logger.exception(f"Lỗi nhận tín hiệu xử lý hàng đợi {queue_name} từ RabbitMQ")
                 await asyncio.sleep(5)
             await asyncio.sleep(1)
 

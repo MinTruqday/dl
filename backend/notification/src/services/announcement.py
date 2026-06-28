@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
@@ -14,6 +15,7 @@ from src.repositories.notification import NotificationRepository
 class AnnouncementService:
 
     @staticmethod
+    @log_logic_execution
     async def get_notifications(user_id: str, skip: int, limit: int, db):
         cursor = (
             NotificationRepository
@@ -34,6 +36,7 @@ class AnnouncementService:
         return {"items": docs, "total": total, "unread": unread}
 
     @staticmethod
+    @log_logic_execution
     async def mark_as_read(notif_id: str, user_id: str, db):
         result = await NotificationRepository.update_one(
             {"_id": notif_id, "target_user_id": user_id}, {"$set": {"is_read": True}}
@@ -46,6 +49,7 @@ class AnnouncementService:
         return {"id": notif_id}
 
     @staticmethod
+    @log_logic_execution
     async def mark_all_as_read(user_id: str, db):
         await NotificationRepository.update_many(
             {"target_user_id": user_id, "is_read": False}, {"$set": {"is_read": True}}
@@ -53,6 +57,7 @@ class AnnouncementService:
         return {"success": True}
 
     @staticmethod
+    @log_logic_execution
     async def delete_notification(notif_id: str, user_id: str, db):
         result = await NotificationRepository.delete_one(
             {"_id": notif_id, "target_user_id": user_id}
@@ -65,6 +70,7 @@ class AnnouncementService:
         return {"id": notif_id}
 
     @staticmethod
+    @log_logic_execution
     async def create_notification(data: AnnouncementCreate, db):
         notif_id = str(uuid7())
         doc = {
@@ -84,5 +90,5 @@ class AnnouncementService:
                 json.dumps({"title": data.title, "body": data.body}),
             )
         except Exception as e:
-                logger.error(f"Lỗi gửi thông báo theo thời gian thực: {e}")
+                logger.exception("Lỗi phân phối thông báo theo thời gian thực")
         return {"id": notif_id}

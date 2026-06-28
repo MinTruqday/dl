@@ -1,6 +1,7 @@
 import asyncio
 import io
 
+from src.core.logic_logger import log_logic_execution
 from fastapi import HTTPException
 from loguru import logger
 
@@ -16,7 +17,7 @@ try:
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
 except ImportError as e:
-    logger.error(f"Công cụ hiển thị tài liệu bị lỗi: {e}")
+    logger.exception("Lỗi hệ thống công cụ hiển thị tài liệu")
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
@@ -24,6 +25,7 @@ else:
 class WatermarkService:
 
     @staticmethod
+    @log_logic_execution
     async def export_document_pdf_watermarked(document_id: str, current_user):
         if not REPORTLAB_AVAILABLE:
             raise HTTPException(
@@ -126,7 +128,7 @@ class WatermarkService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.error(f"Lỗi quá trình xuất PDF: {e}")
+                logger.exception("Lỗi quá trình kết xuất định dạng PDF")
                 return None
 
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
@@ -143,7 +145,7 @@ class WatermarkService:
         try:
             file_id, aes_key = await LicenseService.create_license(str(document["_id"]), user_id)
         except Exception as e:
-            logger.error(f"Lỗi tạo giấy phép E-DRM: {e}")
+            logger.exception("Lỗi khởi tạo cấu trúc giấy phép E-DRM")
             raise HTTPException(status_code=500, detail=f"Lỗi tạo khóa bảo mật tài liệu: {e}")
             
         try:
@@ -154,13 +156,14 @@ class WatermarkService:
             file_id_bytes = uuid.UUID(file_id).bytes 
             final_doclib_data = file_id_bytes + nonce + ciphertext
         except Exception as e:
-            logger.error(f"Lỗi mã hóa AES: {e}")
+            logger.exception("Lỗi mã hóa AES nội dung tài liệu")
             raise HTTPException(status_code=500, detail=f"Lỗi mã hóa tài liệu: {e}")
 
         logger.info(f"Xuất tài liệu E-DRM thành công, file_id={file_id}")
         return final_doclib_data
 
     @staticmethod
+    @log_logic_execution
     async def verify_watermark(text: str) -> str:
         import re
         matches = re.findall(r'\u200D([\u200B\u200C]+)\u200D', text)

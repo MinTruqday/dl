@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import uuid
@@ -21,6 +22,7 @@ from src.repositories.policy import PolicyProposalRepository
 class HealthService:
 
     @staticmethod
+    @log_logic_execution
     async def get_all_users(
         limit: int = Query(
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
@@ -58,6 +60,7 @@ class HealthService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def update_user_role(user_id: str, role: str) -> dict:
         res = await UserRepository.update_one(
             {"_id": user_id},
@@ -71,6 +74,7 @@ class HealthService:
         return {"message": "Cập nhật quyền truy cập thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def update_user_status(user_id: str, is_active: bool) -> dict:
         res = await UserRepository.update_one(
             {"_id": user_id},
@@ -89,6 +93,7 @@ class HealthService:
         return {"message": "Cập nhật trạng thái hoạt động thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def toggle_maintenance_mode(
         enabled: bool, message: str = ""
     ) -> dict:
@@ -107,11 +112,13 @@ class HealthService:
         return {"message": "Cập nhật cấu hình bảo trì thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def trigger_backup(action: str = "FULL") -> dict:
         logger.info("Đã lên lịch sao lưu dữ liệu")
         return {"message": "Đang chạy tác vụ sao lưu dữ liệu"}
 
     @staticmethod
+    @log_logic_execution
     async def get_system_health() -> dict:
         import os
 
@@ -161,6 +168,7 @@ class HealthService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_maintenance_mode() -> dict:
         config = await SystemRepository.find_config(
             {"key": "maintenance_mode"}
@@ -173,6 +181,7 @@ class HealthService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_minio_stats() -> dict:
         from src.core.storage import get_storage_client
 
@@ -257,7 +266,7 @@ class HealthService:
                     "categories": formatted_categories,
                 }
         except Exception as e:
-            logger.error(f"Lỗi truy xuất thống kê lưu trữ do sự cố mạng: {e}")
+            logger.exception("Lỗi truy xuất thống kê lưu trữ do sự cố kết nối")
             return {
                 "status": "unreachable",
                 "total_buckets": 0,
@@ -268,6 +277,7 @@ class HealthService:
             }
 
     @staticmethod
+    @log_logic_execution
     async def handle_bug_report(data: dict, current_user) -> dict:
         report_id = str(uuid7())
         await ModerationRepository.insert_bug_report(
@@ -284,6 +294,7 @@ class HealthService:
         return {"message": "Báo cáo sự cố thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def submit_policy_proposal(data: dict, current_user) -> dict:
         proposal_id = str(uuid7())
         await PolicyProposalRepository.insert_one(
@@ -299,14 +310,17 @@ class HealthService:
         logger.info("Đã gửi đề xuất chính sách")
 
     @staticmethod
+    @log_logic_execution
     async def create_marketing_campaign(data: dict) -> dict:
         return {}
         
     @staticmethod
+    @log_logic_execution
     async def bulk_update_shadowban(user_ids, status, current_user) -> dict:
         return {}
         
     @staticmethod
+    @log_logic_execution
     async def bulk_verify_kyc(user_ids, status, current_user) -> dict:
         return {}
 

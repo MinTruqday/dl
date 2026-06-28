@@ -3,6 +3,7 @@ import json
 import time
 
 import jwt
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from loguru import logger
 from src.sockets.message import message_manager
@@ -10,7 +11,7 @@ from src.sockets.message import message_manager
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-router = APIRouter()
+router = APIRouter(route_class=LoggingRoute)
 
 @router.websocket("/{user_id}")
 async def websocket_endpoint(
@@ -27,9 +28,7 @@ async def websocket_endpoint(
             await websocket.close(code=1008)
             return
     except Exception as e:
-        logger.error(
-            f"Lỗi xác thực kết nối do mã thông báo không hợp lệ hoặc đã hết hạn: {e}"
-        )
+        logger.exception("Lỗi xác thực kết nối do mã thông báo không hợp lệ hoặc đã hết hạn")
         await websocket.close(code=1008)
         return
 
@@ -72,5 +71,5 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
     except Exception as e:
-        logger.error(f"Lỗi xử lý tin nhắn trực tiếp: {e}")
+        logger.exception("Lỗi xử lý luồng tin nhắn trực tiếp")
         message_manager.disconnect(user_id, websocket)

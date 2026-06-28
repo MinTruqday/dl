@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
@@ -16,6 +17,7 @@ ALLOWED_WITHDRAWAL_ACTIONS = {"approve", "reject"}
 class WithdrawalService:
 
     @staticmethod
+    @log_logic_execution
     async def get_revenue(current_user):
         pipeline = [
             {
@@ -47,6 +49,7 @@ class WithdrawalService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def request_withdrawal(
         data: dict, current_user, session=None
     ) -> dict:
@@ -86,7 +89,7 @@ class WithdrawalService:
                 if resp.status_code == 200:
                     user_info = resp.json().get("data") or {}
         except Exception as e:
-            logger.warning(f"Lỗi đồng bộ hồ sơ tài khoản bên ngoài: {e}")
+            logger.exception("Lỗi đồng bộ hồ sơ tài khoản bên ngoài")
 
         if user_info.get("last_password_change"):
             last_pw_str = user_info["last_password_change"]
@@ -208,7 +211,7 @@ class WithdrawalService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error(f"Lỗi khởi tạo giao dịch rút tiền: {e}")
+            logger.exception("Lỗi khởi tạo luồng giao dịch rút tiền")
             raise HTTPException(
                 status_code=500, detail=f"Không thể xử lý yêu cầu rút tiền lúc này: {e}"
             )
@@ -217,6 +220,7 @@ class WithdrawalService:
                 await session.end_session()
 
     @staticmethod
+    @log_logic_execution
     async def get_withdrawal_queue(status: str = "pending", limit: int = 100) -> list:
         normalized_status = status.upper()
         if normalized_status not in ALLOWED_WITHDRAWAL_QUEUE_STATUSES:
@@ -261,6 +265,7 @@ class WithdrawalService:
         return result
 
     @staticmethod
+    @log_logic_execution
     async def verify_withdrawal(
         withdrawal_id: str, action: str, current_user, session=None
     ) -> dict:
@@ -368,7 +373,7 @@ class WithdrawalService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error(f"Lỗi xác minh yêu cầu rút tiền: {e}")
+            logger.exception("Lỗi quá trình xác minh yêu cầu rút tiền")
             raise HTTPException(
                 status_code=500, detail=f"Giao dịch thanh toán đang gặp lỗi: {e}"
             )
@@ -377,6 +382,7 @@ class WithdrawalService:
                 await session.end_session()
 
     @staticmethod
+    @log_logic_execution
     async def cancel_withdrawal(
         withdrawal_id: str, current_user, session=None
     ) -> dict:
@@ -454,7 +460,7 @@ class WithdrawalService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error(f"Lỗi hủy yêu cầu rút tiền: {e}")
+            logger.exception("Lỗi xử lý hủy bỏ yêu cầu rút tiền")
             raise HTTPException(
                 status_code=500, detail=f"Giao dịch thanh toán đang gặp lỗi: {e}"
             )

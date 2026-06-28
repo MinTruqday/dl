@@ -51,7 +51,7 @@ class ContextHarness:
                     settings.REDIS_URI, decode_responses=True
                 )
             except Exception as e:
-                logger.error(f"Lỗi kết nối bộ đệm tốc độ cao: {e}")
+                logger.exception("Lỗi kết nối Redis")
         return self._redis_client
 
     async def _load_short_term_history(self, session_id: str) -> list:
@@ -72,7 +72,7 @@ class ContextHarness:
                     pass
             return history
         except Exception as e:
-            logger.warning(f"Lỗi tải lịch sử cuộc trò chuyện từ bộ nhớ tạm: {e}")
+            logger.exception("Lỗi tải lịch sử cuộc trò chuyện từ bộ nhớ tạm")
             return []
 
     async def _load_user_preferences(self, user_id: str) -> str:
@@ -84,7 +84,7 @@ class ContextHarness:
             prefs = await mem0_manager.get_user_preferences(user_id)
             return prefs or ""
         except Exception as e:
-            logger.warning(f"Lỗi tải cấu hình cá nhân: {e}")
+            logger.exception("Lỗi tải cấu hình cá nhân")
             return ""
 
     async def build_context(
@@ -143,7 +143,7 @@ class ContextHarness:
                 pipe.expire(key, ttl_seconds)
                 await pipe.execute()
         except Exception as e:
-            logger.warning(f"Lỗi lưu phiên tương tác: {e}")
+            logger.exception("Lỗi lưu phiên tương tác")
 
     async def clear_session(self, session_id: str):
         redis = self._get_redis()
@@ -153,7 +153,7 @@ class ContextHarness:
             await redis.delete(f"session:{session_id}:history")
             logger.info("Xóa lịch sử phiên làm việc thành công")
         except Exception as e:
-            logger.warning(f"Lỗi xóa phiên làm việc khỏi bộ nhớ: {e}")
+            logger.exception("Lỗi xóa phiên làm việc khỏi bộ nhớ")
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history

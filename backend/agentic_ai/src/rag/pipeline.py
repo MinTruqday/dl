@@ -93,7 +93,7 @@ class PipelineRag:
                     },
                 }
             except Exception as e:
-                logger.error(f"Lỗi tạo tóm tắt tài liệu: {e}")
+                logger.exception("Lỗi tạo tóm tắt tài liệu")
                 return None
 
         if doc_chunks:
@@ -232,7 +232,7 @@ class PipelineRag:
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
                         except Exception as e:
-                            logger.error(f"Lỗi tải dữ liệu từ tệp nén: {e}")
+                            logger.exception("Lỗi tải dữ liệu từ tệp nén")
 
         return "\n\n".join(all_text)
 
@@ -272,7 +272,7 @@ class PipelineRag:
             logger.info("Tải xuống dữ liệu tệp thành công")
             return data
         except Exception as e:
-            logger.error(f"Lỗi tải xuống tệp tin: {e}")
+            logger.exception("Lỗi tải xuống tệp tin")
             return None
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
@@ -298,10 +298,10 @@ class PipelineRag:
             logger.info("Phân tích nội dung tài liệu thành công")
             return full_text
         except ImportError as e:
-            logger.error(f"Thiếu thư viện phân tích nội dung: {e}")
+            logger.exception("Thiếu thư viện phân tích nội dung")
             return ""
         except Exception as e:
-            logger.error(f"Lỗi phân tích dữ liệu: {e}")
+            logger.exception("Lỗi phân tích dữ liệu")
             return ""
 
 ingestion_pipeline = PipelineRag()

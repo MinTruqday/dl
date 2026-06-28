@@ -1,6 +1,7 @@
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,7 +10,7 @@ from src.schemas.model import FeedbackRequest
 
 from src.core.infrastructure.configuration import settings
 
-router = APIRouter(prefix="/phan-hoi")
+router = APIRouter(route_class=LoggingRoute, prefix="/phan-hoi")
 
 @router.post("/phan-hoi")
 async def submit_feedback(req: FeedbackRequest):
@@ -34,5 +35,5 @@ async def submit_feedback(req: FeedbackRequest):
             "message": "Cảm ơn phản hồi của bạn",
         }
     except Exception as e:
-        logger.error(f"Lỗi lưu phản hồi người dùng: {e}")
+        logger.exception("Lỗi lưu trữ dữ liệu phản hồi người dùng")
         return {"status": "error", "message": f"Lỗi lưu phản hồi, vui lòng thử lại sau: {e}"}

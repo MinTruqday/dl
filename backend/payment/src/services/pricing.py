@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -9,6 +10,7 @@ from src.repositories.pricing import PricingRepository
 class PricingService:
 
     @staticmethod
+    @log_logic_execution
     async def set_document_pricing(
         document_id: str, data: dict, current_user
     ) -> dict:
@@ -25,6 +27,7 @@ class PricingService:
         return {"message": "Cập nhật cấu hình giá tài liệu thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_pricing_config() -> dict:
         config = await PricingRepository.get_pricing_config()
         if config:

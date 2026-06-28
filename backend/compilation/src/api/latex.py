@@ -1,5 +1,6 @@
 from src.core.infrastructure.redis import redis
 import httpx
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
 from fastapi.responses import Response
 from loguru import logger
@@ -8,7 +9,7 @@ from src.engines.latex import LatexEngine
 from src.core.dependency import get_current_user, get_current_user_optional, CurrentUser
 from src.core.infrastructure.database import database
 
-router = APIRouter()
+router = APIRouter(route_class=LoggingRoute)
 
 @router.post("/bien-dich")
 async def compile_latex(req: CompileRequest):
@@ -16,7 +17,7 @@ async def compile_latex(req: CompileRequest):
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception as e:
-        logger.error(f"Lỗi biên dịch tài liệu định dạng: {e}")
+        logger.exception("Lỗi xử lý biên dịch tài liệu")
         raise HTTPException(
             status_code=400, detail=f"Lỗi biên dịch do cú pháp không hợp lệ: {e}"
         )
@@ -37,7 +38,7 @@ async def export_document(format: str, req: CompileRequest):
 
         return Response(content=file_bytes, media_type=media_type)
     except Exception as e:
-        logger.error(f"Lỗi chuyển đổi định dạng tài liệu: {e}")
+        logger.exception("Lỗi chuyển đổi định dạng tài liệu LaTeX")
         raise HTTPException(status_code=500, detail=f"Lỗi xuất tài liệu: {e}")
 
 @router.post("/dinh-dang")

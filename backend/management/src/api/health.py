@@ -1,6 +1,7 @@
 from src.core.dependency import CurrentUser
 from typing import Any, List, Optional
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, status
 from src.api.dependency import get_current_user, get_db, require_role
 from src.schemas.health import CampaignRequest
@@ -11,7 +12,7 @@ from src.services.account import AccountService
 from src.core.response import APIResponse
 from src.schemas.account import Role, UserInDB
 
-router = APIRouter(prefix="/van-hanh")
+router = APIRouter(route_class=LoggingRoute, prefix="/van-hanh")
 
 @router.get(
     "/chi-so",

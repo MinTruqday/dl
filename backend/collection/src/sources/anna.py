@@ -72,7 +72,7 @@ class AnnaSource:
                     try:
                         await page.wait_for_selector(list_selector, timeout=15000)
                     except Exception as e:
-                        logger.error(f"Lỗi trích xuất liên kết do thay đổi giao diện: {e}")
+                        logger.exception("Lỗi trích xuất liên kết do thay đổi giao diện")
 
                     document_nodes = await page.query_selector_all(list_selector)
                     if not document_nodes:
@@ -109,7 +109,7 @@ class AnnaSource:
                         break
                     page_num += 1
             except Exception as e:
-                logger.error(f"Lỗi tải danh sách tài liệu từ nguồn ngoài: {e}")
+                logger.exception("Lỗi tải danh sách tài liệu từ nguồn ngoài")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
@@ -146,7 +146,7 @@ class AnnaSource:
                             await context.add_cookies(formatted_cookies)
                         return context
         except Exception as e:
-            logger.error(f"Lỗi vượt tường lửa: {e}")
+            logger.exception("Lỗi vượt tường lửa")
         return await get_stealth_context(browser)
 
     @staticmethod
@@ -255,7 +255,7 @@ class AnnaSource:
                                 if download_link:
                                     break
                             except Exception as e:
-                                logger.warning(f"Lỗi trích xuất liên kết tải xuống: {e}")
+                                logger.exception("Lỗi trích xuất liên kết tải xuống")
 
                             await page.wait_for_timeout(5000)
 
@@ -280,7 +280,7 @@ class AnnaSource:
                         else:
                             logger.warning("Quá thời gian chờ bảo mật")
                     except Exception as e:
-                        logger.error(f"Lỗi giám sát tạo liên kết tải xuống: {e}")
+                        logger.exception("Lỗi giám sát tạo liên kết tải xuống")
                 if not slow_link_el:
                     logger.warning("Không tìm thấy nút tải xuống")
                     await page.screenshot(
@@ -293,7 +293,7 @@ class AnnaSource:
                     await page.close()
                     raise Exception("Không tìm thấy liên kết tải xuống")
             except Exception as e:
-                logger.error(f"Lỗi trích xuất tài liệu: {e}")
+                logger.exception("Lỗi trích xuất tài liệu")
                 raise
 
     @staticmethod
@@ -327,7 +327,7 @@ class AnnaSource:
             if os.path.exists(target_local):
                 os.unlink(target_local)
         except Exception as e:
-            logger.error(f"Lỗi tải xuống và lưu trữ tài liệu: {e}")
+            logger.exception("Lỗi tải xuống và lưu trữ tài liệu")
             raise
 
         if minio_url:

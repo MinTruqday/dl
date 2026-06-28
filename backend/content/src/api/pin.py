@@ -1,5 +1,6 @@
 from typing import Any, List
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_current_user, get_db
 from src.schemas.library import PinnedDocumentRequest
@@ -8,7 +9,7 @@ from src.services.pin import PinService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/ghim")
+router = APIRouter(route_class=LoggingRoute, prefix="/ghim")
 
 @router.get("", response_model=APIResponse[Any])
 async def get_pinned_documents(

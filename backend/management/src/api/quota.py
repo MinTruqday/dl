@@ -1,6 +1,7 @@
 from src.core.dependency import CurrentUser
 from typing import Any
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, HTTPException
 from src.api.dependency import get_current_user, get_db, require_role
 from src.services.quota import QuotaService
@@ -9,7 +10,7 @@ from src.core.response import APIResponse
 from src.schemas.quota import QuotaLimit, ConsumeQuotaRequest
 from src.schemas.account import Role, UserInDB
 
-router = APIRouter(prefix="/han-muc")
+router = APIRouter(route_class=LoggingRoute, prefix="/han-muc")
 
 @router.get("/kiem-tra", response_model=APIResponse[Any], include_in_schema=False)
 async def check_quota_internal(

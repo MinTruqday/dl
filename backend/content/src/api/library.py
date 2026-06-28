@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api.dependency import get_current_user, get_db
@@ -13,7 +14,7 @@ from src.services.library import LibraryService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/thu-vien")
+router = APIRouter(route_class=LoggingRoute, prefix="/thu-vien")
 
 @router.post("/danh-sach", response_model=APIResponse[Any])
 async def create_reading_list(

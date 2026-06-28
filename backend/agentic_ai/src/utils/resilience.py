@@ -23,7 +23,7 @@ def with_retry(max_retries=3, base_wait=2, max_wait=10):
                     with attempt:
                         return await func(*args, **kwargs)
             except Exception as e:
-                logger.exception(f"Thao tác vẫn không thành công mặc dù hệ thống đã nỗ lực thử lại nhiều lần: {e}")
+                logger.exception("Thao tác vẫn không thành công mặc dù hệ thống đã nỗ lực thử lại nhiều lần")
                 raise e
 
         return wrapper

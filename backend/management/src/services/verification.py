@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import uuid
 from datetime import datetime, timezone
@@ -13,6 +14,7 @@ from src.core.storage import upload_file
 class VerificationService:
 
     @staticmethod
+    @log_logic_execution
     async def become_author(current_user):
         user_id = str(current_user.id)
         if current_user.role != Role.READER:
@@ -33,6 +35,7 @@ class VerificationService:
         return {"status": "success", "message": "Đã nâng cấp tài khoản tác giả"}
 
     @staticmethod
+    @log_logic_execution
     async def apply_author(application, current_user):
         user_id = str(current_user.id)
         if current_user.role == Role.AUTHOR:
@@ -82,6 +85,7 @@ class VerificationService:
         return {"status": "success", "message": "Đã gửi yêu cầu nâng cấp tác giả"}
 
     @staticmethod
+    @log_logic_execution
     async def upload_kyc(file, current_user):
         user_id = str(current_user.id)
         if current_user.kyc_status == KYC.PENDING:
@@ -113,6 +117,7 @@ class VerificationService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_public_profile(slug: str) -> dict:
         author = await mongo.find_one("users", 
             {

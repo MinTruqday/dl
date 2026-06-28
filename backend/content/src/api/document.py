@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, List, Optional
 
 from bson import ObjectId
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel
 from src.api.dependency import (
@@ -27,7 +28,7 @@ from src.core.infrastructure.database import database
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/tai-lieu")
+router = APIRouter(route_class=LoggingRoute, prefix="/tai-lieu")
 
 @router.post("", response_model=APIResponse[DocumentResponse])
 async def create_document(

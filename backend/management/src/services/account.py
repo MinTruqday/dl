@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import json
 import uuid
@@ -21,6 +22,7 @@ from src.repositories.moderation import ModerationRepository
 class AccountService:
 
     @staticmethod
+    @log_logic_execution
     async def get_all_users(
         limit: int = 50,
         offset: int = 0,
@@ -56,6 +58,7 @@ class AccountService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def update_user_role(user_id: str, role: str) -> Dict[str, str]:
         res = await UserRepository.update_one(
             {"_id": user_id},
@@ -69,6 +72,7 @@ class AccountService:
         return {"message": "Cập nhật quyền truy cập thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def update_user_status(
         user_id: str, is_active: bool
     ) -> Dict[str, str]:
@@ -89,6 +93,7 @@ class AccountService:
         return {"message": "Cập nhật trạng thái hoạt động thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def warn_user(user_id: str, reason: str, current_user) -> dict:
         user = await UserRepository.find_one({"_id": user_id})
         if not user:
@@ -127,11 +132,12 @@ class AccountService:
                         },
                     )
         except Exception as e:
-            logger.warning(f"Không thể gửi thông báo cảnh báo qua hệ thống bên ngoài: {e}")
+            logger.exception("Không thể gửi thông báo cảnh báo qua hệ thống bên ngoài")
         logger.info("Cảnh báo vi phạm đã được ghi nhận vào hệ thống thành công")
         return {"message": "Gửi cảnh báo quản trị thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def lock_user(
         user_id: str, reason: str, duration_hours: int, current_user
     ) -> dict:
@@ -161,6 +167,7 @@ class AccountService:
         return {"message": "Tạm khóa tài khoản thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def shadowban_user(
         user_id: str, is_banned: bool, current_user
     ) -> dict:
@@ -186,6 +193,7 @@ class AccountService:
         return {"message": "Cập nhật trạng thái hiển thị thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def verify_kyc(user_id: str, status: str, current_user) -> dict:
         await UserRepository.update_one(
             {"_id": user_id},
@@ -209,6 +217,7 @@ class AccountService:
         return {"message": "Đã cập nhật trạng thái xác minh"}
 
     @staticmethod
+    @log_logic_execution
     async def get_notes(user_id: str) -> list:
         notes = (
             await mongo
@@ -231,6 +240,7 @@ class AccountService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def add_note(user_id: str, note: str, current_user) -> dict:
         await ModerationRepository.insert_moderator_note(
             {
@@ -245,6 +255,7 @@ class AccountService:
         return {"message": "Ghi chú kiểm duyệt thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_report_queue(
         status_filter: str = "pending",
         cursor: str = None,
@@ -258,7 +269,7 @@ class AccountService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except ValueError as e:
-                logger.warning(f"Lỗi định dạng phân trang: {e}")
+                logger.exception("Lỗi định dạng phân trang")
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
             pipeline.append({"$skip": skip})
@@ -307,6 +318,7 @@ class AccountService:
         return result
 
     @staticmethod
+    @log_logic_execution
     async def resolve_report(
         report_id: str, action: str, current_user
     ) -> dict:
@@ -325,6 +337,7 @@ class AccountService:
         return {"message": "Xử lý báo cáo vi phạm thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_moderator_activity_log(actor_id: str) -> list:
         logs = (
             await mongo
@@ -371,6 +384,7 @@ class AccountService:
         return result
 
     @staticmethod
+    @log_logic_execution
     async def search_users(
         query: str,
         limit: int = 50,
@@ -407,6 +421,7 @@ class AccountService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def unlock_accounts_task():
         now = datetime.now(timezone.utc)
         res = await UserRepository.update_many(
@@ -421,6 +436,7 @@ class AccountService:
         return res.modified_count
 
     @staticmethod
+    @log_logic_execution
     async def internal_get_user_by_id(
         user_id: str
     ) -> Optional[Dict[str, Any]]:
@@ -437,6 +453,7 @@ class AccountService:
         return user
 
     @staticmethod
+    @log_logic_execution
     async def internal_get_users_by_ids(
         user_ids: List[str]
     ) -> List[Dict[str, Any]]:
@@ -454,6 +471,7 @@ class AccountService:
         return users
 
     @staticmethod
+    @log_logic_execution
     async def internal_get_user_by_email(
         email: str
     ) -> Optional[Dict[str, Any]]:
@@ -468,6 +486,7 @@ class AccountService:
         return user
 
     @staticmethod
+    @log_logic_execution
     async def internal_get_user_by_slug(slug: str) -> Optional[Dict[str, Any]]:
         user = await UserRepository.find_one({"slug": slug})
         if not user:
@@ -480,6 +499,7 @@ class AccountService:
         return user
 
     @staticmethod
+    @log_logic_execution
     async def internal_create_user(user_data: Dict[str, Any]) -> str:
         user_id = str(uuid7())
         user_data["_id"] = user_id

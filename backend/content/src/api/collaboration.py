@@ -1,5 +1,6 @@
 from typing import Any, List
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from src.api.dependency import get_db, require_role
 from src.schemas.document import (
@@ -19,7 +20,7 @@ from src.services.collaboration import CollaborationService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/cong-tac")
+router = APIRouter(route_class=LoggingRoute, prefix="/cong-tac")
 
 @router.post("/loi-moi", response_model=APIResponse[Any])
 async def invite_collaborator(

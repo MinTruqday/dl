@@ -43,7 +43,7 @@ class RouteAgent:
             return {"route": route, "answer": res.answer}
 
         except Exception as e:
-            logger.exception(f"Lỗi điều hướng ngữ nghĩa: {e}")
+            logger.exception("Lỗi điều hướng ngữ nghĩa")
             return {"route": "knowledge", "answer": ""}
 
 semantic_router = RouteAgent()

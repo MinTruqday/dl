@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import uuid
 from datetime import datetime, timezone
@@ -16,6 +17,7 @@ ALLOWED_HIGHLIGHT_COLORS = ["#18181b", "#71717a", "#e4e4e7"]
 class HighlightService:
 
     @staticmethod
+    @log_logic_execution
     async def create_highlight(
         document_id: str, data: dict, current_user
     ) -> dict:
@@ -38,6 +40,7 @@ class HighlightService:
         return highlight
 
     @staticmethod
+    @log_logic_execution
     async def get_highlights(document_id: str, current_user) -> list:
         highlights = (
             await HighlightRepository
@@ -63,6 +66,7 @@ class HighlightService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def update_highlight_note(
         highlight_id: str, note: str, current_user
     ) -> dict:
@@ -77,6 +81,7 @@ class HighlightService:
         return {"message": "Cập nhật chú thích đoạn nổi bật thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def delete_highlight(highlight_id: str, current_user) -> dict:
         result = await HighlightRepository.delete_one(
             {"_id": highlight_id, "user_id": str(current_user.id)}
@@ -89,6 +94,7 @@ class HighlightService:
         return {"message": "Đã xóa phần đánh dấu văn bản"}
 
     @staticmethod
+    @log_logic_execution
     async def get_all_notes(
         current_user,
         cursor: str = None,
@@ -102,7 +108,7 @@ class HighlightService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except ValueError as e:
-                logger.warning(f"Lỗi định dạng phân trang: {e}")
+                logger.exception("Lỗi định dạng phân trang")
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
             pipeline.append({"$skip": skip})
@@ -147,6 +153,7 @@ class HighlightService:
         return result
 
     @staticmethod
+    @log_logic_execution
     async def export_highlights_markdown(
         document_id: str, current_user
     ) -> dict:

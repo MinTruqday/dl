@@ -1,6 +1,7 @@
 from src.core.dependency import CurrentUser
 from typing import Any
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_current_user, get_db, require_role
 from src.services.telemetry import TelemetryService
@@ -9,7 +10,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.response import APIResponse
 from src.schemas.account import Role, UserInDB
 
-router = APIRouter(prefix="/giam-sat")
+router = APIRouter(route_class=LoggingRoute, prefix="/giam-sat")
 
 @router.get(
     "/thong-ke",

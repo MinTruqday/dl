@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import asyncio
 from datetime import datetime, timezone
@@ -17,6 +18,7 @@ from src.repositories.message import MessageRepository
 class ThreadService:
 
     @staticmethod
+    @log_logic_execution
     async def _upsert_conversation(
         db, sender_id: str, receiver_id: str, message_data: dict
     ):
@@ -55,6 +57,7 @@ class ThreadService:
         )
 
     @staticmethod
+    @log_logic_execution
     async def send_message(
         receiver_id: str,
         content: str,
@@ -130,6 +133,7 @@ class ThreadService:
         return msg_dict
 
     @staticmethod
+    @log_logic_execution
     async def get_messages(
         other_user_id: str,
         current_user,
@@ -172,6 +176,7 @@ class ThreadService:
         return messages[::-1]
 
     @staticmethod
+    @log_logic_execution
     async def get_conversations(current_user):
         conversations = (
             await ConversationRepository
@@ -272,6 +277,7 @@ class ThreadService:
         return results
 
     @staticmethod
+    @log_logic_execution
     async def toggle_pin(message_id: str, current_user):
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
@@ -306,6 +312,7 @@ class ThreadService:
         return await MessageRepository.find_one({"_id": message_id})
 
     @staticmethod
+    @log_logic_execution
     async def edit_message(message_id: str, new_content: str, current_user):
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg or msg["sender_id"] != str(current_user.id):
@@ -346,6 +353,7 @@ class ThreadService:
         return updated_msg
 
     @staticmethod
+    @log_logic_execution
     async def recall_message(message_id: str, current_user):
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg or msg["sender_id"] != str(current_user.id):
@@ -410,6 +418,7 @@ class ThreadService:
         return await MessageRepository.find_one({"_id": message_id})
 
     @staticmethod
+    @log_logic_execution
     async def search_messages(
         other_user_id: str, query_str: str, current_user
     ) -> list:
@@ -430,6 +439,7 @@ class ThreadService:
         return messages
 
     @staticmethod
+    @log_logic_execution
     async def delete_conversation(other_user_id: str, current_user) -> dict:
         if other_user_id.startswith("group_"):
             group = await MessageRepository.find_group(
@@ -473,6 +483,7 @@ class ThreadService:
         return {"status": "success"}
 
     @staticmethod
+    @log_logic_execution
     async def add_reaction(message_id: str, reaction: str, current_user):
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
@@ -497,6 +508,7 @@ class ThreadService:
         return await MessageRepository.find_one({"_id": message_id})
 
     @staticmethod
+    @log_logic_execution
     async def mark_as_read(other_user_id: str, current_user):
         user_id = str(current_user.id)
         participant_key = (
@@ -555,6 +567,7 @@ class ThreadService:
         return {"status": "success"}
 
     @staticmethod
+    @log_logic_execution
     async def share_document(receiver_id: str, document_id: str, current_user):
         doc = await MessageRepository.find_shared_document({"_id": document_id})
         if not doc:
@@ -585,6 +598,7 @@ class ThreadService:
         return msg_dict
 
     @staticmethod
+    @log_logic_execution
     async def get_shared_attachments(other_user_id: str, current_user) -> list:
         if other_user_id.startswith("group_"):
             query = {"receiver_id": other_user_id}
@@ -637,6 +651,7 @@ class ThreadService:
         return attachments
 
     @staticmethod
+    @log_logic_execution
     async def block_user(other_user_id: str, current_user) -> dict:
         await ContactProfileRepository.update_contact_profile(
             {"_id": str(current_user.id)},
@@ -646,6 +661,7 @@ class ThreadService:
         return {"status": "blocked", "other_user_id": other_user_id}
 
     @staticmethod
+    @log_logic_execution
     async def unblock_user(other_user_id: str, current_user) -> dict:
         await ContactProfileRepository.update_contact_profile(
             {"_id": str(current_user.id)}, {"$pull": {"blocked_users": other_user_id}}
@@ -653,6 +669,7 @@ class ThreadService:
         return {"status": "unblocked", "other_user_id": other_user_id}
 
     @staticmethod
+    @log_logic_execution
     async def check_blocked_status(user_id: str, other_user_id: str) -> bool:
         user_doc = await ContactProfileRepository.find_contact_profile(
             {"_id": user_id}
@@ -671,6 +688,7 @@ class ThreadService:
         return user_blocked_other or other_blocked_user
 
     @staticmethod
+    @log_logic_execution
     async def toggle_pin_conversation(other_user_id: str, current_user):
         participant_key = (
             other_user_id
@@ -695,6 +713,7 @@ class ThreadService:
             return {"is_pinned": True}
 
     @staticmethod
+    @log_logic_execution
     async def translate_message(
         message_id: str, target_lang: str, current_user
     ):
@@ -728,6 +747,7 @@ class ThreadService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def create_group(group_name: str, member_ids: list, current_user):
         from uuid6 import uuid7
 
@@ -744,6 +764,7 @@ class ThreadService:
         return group_doc
 
     @staticmethod
+    @log_logic_execution
     async def save_draft(other_user_id: str, content: str, current_user):
         participant_key = (
             other_user_id
@@ -758,6 +779,7 @@ class ThreadService:
         return {"status": "success"}
 
     @staticmethod
+    @log_logic_execution
     async def get_draft(other_user_id: str, current_user):
         participant_key = (
             other_user_id
@@ -771,6 +793,7 @@ class ThreadService:
         return {"draft": draft}
 
     @staticmethod
+    @log_logic_execution
     async def toggle_self_destruct(
         other_user_id: str, seconds: int, current_user
     ):
@@ -787,6 +810,7 @@ class ThreadService:
         return {"self_destruct_seconds": seconds}
 
     @staticmethod
+    @log_logic_execution
     async def toggle_mute(other_user_id: str, current_user):
         participant_key = (
             other_user_id
@@ -811,6 +835,7 @@ class ThreadService:
             return {"is_muted": True}
 
     @staticmethod
+    @log_logic_execution
     async def get_conversation_settings(other_user_id: str, current_user):
         settings_id = (
             other_user_id

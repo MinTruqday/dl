@@ -52,3 +52,4 @@ async def shutdown_event():
         await mq.aclose()
     except Exception:
         pass
+

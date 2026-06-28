@@ -82,12 +82,12 @@ class SandboxAgent:
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    logger.warning(f"Gặp sự cố khi xử lý dữ liệu, hệ thống đang tự động thử lại: {e}")
+                    logger.exception("Gặp sự cố khi xử lý dữ liệu, hệ thống đang tự động thử lại")
                     if attempt == 2:
                         return "Thao tác vẫn không thành công mặc dù hệ thống đã nỗ lực thử lại nhiều lần"
 
         except Exception as e:
-            logger.error(f"Quá trình thực thi bị gián đoạn: {e}")
+            logger.exception("Quá trình thực thi bị gián đoạn")
             return f"Đã xảy ra lỗi trong quá trình thực thi lệnh, vui lòng thử lại sau giây lát: {e}"
 
 actor = SandboxAgent()

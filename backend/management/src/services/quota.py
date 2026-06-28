@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
 import json
@@ -13,6 +14,7 @@ from src.schemas.quota import QuotaLimit
 
 class QuotaService:
     @staticmethod
+    @log_logic_execution
     async def get_global_config_from_db() -> dict:
         config = await mongo.find_one(collection="quota_configs", query={"_id": "global"})
         if config and "role_limits" in config:
@@ -59,6 +61,7 @@ class QuotaService:
         return default_limits
 
     @staticmethod
+    @log_logic_execution
     async def update_role_quota(tier: str, limits_dict: dict):
         global_cfg = await QuotaService.get_global_config_from_db()
         if tier in global_cfg:
@@ -68,6 +71,7 @@ class QuotaService:
             )
 
     @staticmethod
+    @log_logic_execution
     async def get_user_limits(
         user_id: str, role: str, ai_tier: str = "BASIC"
     ) -> QuotaLimit:
@@ -89,6 +93,7 @@ class QuotaService:
         )
 
     @staticmethod
+    @log_logic_execution
     async def check_quota(
         user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat"
     ):
@@ -114,6 +119,7 @@ class QuotaService:
         return limits
 
     @staticmethod
+    @log_logic_execution
     async def consume_request(
         user_id: str, feature: str = "chat", req_reset_hours: int = 24
     ):
@@ -123,6 +129,7 @@ class QuotaService:
             await redis.expire(req_key, req_reset_hours * 3600)
 
     @staticmethod
+    @log_logic_execution
     async def consume_tokens(
         user_id: str,
         tokens: int,
@@ -137,6 +144,7 @@ class QuotaService:
             await redis.expire(token_key, req_reset_hours * 3600)
 
     @staticmethod
+    @log_logic_execution
     async def get_current_usage(
         user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat"
     ):

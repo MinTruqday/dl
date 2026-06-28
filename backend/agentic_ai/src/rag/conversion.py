@@ -148,7 +148,7 @@ class ConversionRag:
                 return await self._parse_image_with_chandra(tmp_path)
             return await self._parse_pdf_with_chandra(tmp_path)
         except Exception as e:
-            logger.error(f"Lỗi phân tích nội dung tài liệu: {e}")
+            logger.exception("Lỗi phân tích nội dung tài liệu")
             return {"error": f"Lỗi phân tích cú pháp tài liệu: {e}"}
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -237,7 +237,7 @@ class ConversionRag:
             logger.info("Trích xuất bảng dữ liệu thành công")
             return tables
         except Exception as e:
-            logger.error(f"Lỗi trích xuất bảng dữ liệu: {e}")
+            logger.exception("Lỗi trích xuất bảng dữ liệu")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -407,7 +407,7 @@ class ConversionRag:
             return data, ext
 
         except Exception as e:
-            logger.error(f"Lỗi kết nối tải tệp: {e}")
+            logger.exception("Lỗi kết nối tải tệp")
             return None, ""
 
 document_parser = ConversionRag()

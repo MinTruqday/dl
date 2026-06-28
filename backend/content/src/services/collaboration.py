@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import uuid
 from datetime import datetime, timezone
@@ -23,6 +24,7 @@ from src.repositories.collaboration import CollaborationRepository
 class CollaborationService:
 
     @staticmethod
+    @log_logic_execution
     async def log_activity(
         document_id: str, user_name: str, action: str, details: str
     ):
@@ -38,6 +40,7 @@ class CollaborationService:
         )
 
     @staticmethod
+    @log_logic_execution
     async def send_collaboration_invite(
         document_id: str, invitee_email: str, role: str, current_user
     ) -> dict:
@@ -103,6 +106,7 @@ class CollaborationService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_my_collaboration_invites(current_user) -> list:
         invites = (
             await mongo
@@ -113,6 +117,7 @@ class CollaborationService:
         return invites
 
     @staticmethod
+    @log_logic_execution
     async def respond_to_collaboration_invite(
         invite_id: str, status: str, current_user
     ) -> dict:
@@ -150,6 +155,7 @@ class CollaborationService:
         return {"message": "Ghi nhận phản hồi lời mời thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_collaborators(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {
@@ -198,6 +204,7 @@ class CollaborationService:
         return collaborators
 
     @staticmethod
+    @log_logic_execution
     async def remove_collaborator(collaboration_id: str, current_user) -> dict:
         invite = await CollaborationRepository.find_invite(
             {"_id": collaboration_id}
@@ -231,6 +238,7 @@ class CollaborationService:
         return {"message": "Xóa thành viên cộng tác thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_activities(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {
@@ -269,6 +277,7 @@ class CollaborationService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def transfer_ownership(
         document_id: str, target_user_id: str, current_user
     ) -> dict:
@@ -323,6 +332,7 @@ class CollaborationService:
         return {"message": "Chuyển quyền sở hữu tài liệu thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def update_status(document_id: str, current_user) -> dict:
         await CollaborationRepository.update_status(
             {"document_id": document_id, "user_id": str(current_user.id)},
@@ -337,6 +347,7 @@ class CollaborationService:
         return {"message": "Đồng bộ trạng thái hoạt động thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_online_collaborators(document_id: str) -> list:
         cutoff = datetime.now(timezone.utc).timestamp() - 60
         online_users = (
@@ -360,6 +371,7 @@ class CollaborationService:
         return result
 
     @staticmethod
+    @log_logic_execution
     async def update_collaborator_role(
         collaboration_id: str, role: str, current_user
     ) -> dict:
@@ -392,6 +404,7 @@ class CollaborationService:
         return {"message": "Cập nhật quyền cộng tác viên thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def send_memo(document_id: str, message: str, current_user) -> dict:
         doc = await DocumentRepository.find_one(
             {
@@ -419,6 +432,7 @@ class CollaborationService:
         return {"message": "Gửi tin nhắn cộng tác nội bộ thành công", "memo": memo}
 
     @staticmethod
+    @log_logic_execution
     async def get_memos(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {
@@ -457,6 +471,7 @@ class CollaborationService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def update_collab_access(
         document_id: str, access_level: str, current_user
     ) -> dict:
@@ -487,6 +502,7 @@ class CollaborationService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def get_sent_pending_invites(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -505,6 +521,7 @@ class CollaborationService:
         return invites
 
     @staticmethod
+    @log_logic_execution
     async def revoke_invite(invite_id: str, current_user) -> dict:
         invite = await CollaborationRepository.find_invite(
             {"_id": invite_id, "status": "PENDING"}
@@ -533,6 +550,7 @@ class CollaborationService:
         return {"message": "Thu hồi lời mời cộng tác thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_contribution_stats(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {
@@ -561,6 +579,7 @@ class CollaborationService:
         return [{"user_name": s["_id"], "count": s["count"]} for s in stats]
 
     @staticmethod
+    @log_logic_execution
     async def create_snapshot(
         document_id: str, version_name: str, current_user
     ) -> dict:
@@ -596,6 +615,7 @@ class CollaborationService:
         return {"message": "Lưu lịch sử tài liệu thành công", "snapshot": snapshot}
 
     @staticmethod
+    @log_logic_execution
     async def get_snapshots(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {
@@ -632,6 +652,7 @@ class CollaborationService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def acquire_lock(document_id: str, current_user) -> dict:
         doc = await DocumentRepository.find_one(
             {
@@ -683,6 +704,7 @@ class CollaborationService:
         return {"message": "Đã khóa phiên chỉnh sửa"}
 
     @staticmethod
+    @log_logic_execution
     async def release_lock(document_id: str, current_user) -> dict:
         existing = await CollaborationRepository.find_lock(
             {"document_id": document_id}
@@ -700,6 +722,7 @@ class CollaborationService:
         return {"message": "Đã mở khóa phiên chỉnh sửa"}
 
     @staticmethod
+    @log_logic_execution
     async def get_lock_status(document_id: str) -> dict:
         existing = await CollaborationRepository.find_lock(
             {"document_id": document_id}
@@ -724,6 +747,7 @@ class CollaborationService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def generate_invite_code(document_id: str, current_user) -> dict:
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -753,6 +777,7 @@ class CollaborationService:
         return {"invite_code": invite_code}
 
     @staticmethod
+    @log_logic_execution
     async def join_via_invite_code(invite_code: str, current_user) -> dict:
         code_entry = await CollaborationRepository.find_invite_code(
             {"invite_code": invite_code.upper()}
@@ -804,6 +829,7 @@ class CollaborationService:
         }
 
     @staticmethod
+    @log_logic_execution
     async def create_task(
         document_id: str, task_desc: str, assigned_to: str, current_user
     ) -> dict:
@@ -840,6 +866,7 @@ class CollaborationService:
         return {"task": task}
 
     @staticmethod
+    @log_logic_execution
     async def get_tasks(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {
@@ -878,6 +905,7 @@ class CollaborationService:
         ]
 
     @staticmethod
+    @log_logic_execution
     async def update_task(task_id: str, is_done: bool, current_user) -> dict:
         task = await CollaborationRepository.find_task(
             {"_id": task_id}
@@ -911,6 +939,7 @@ class CollaborationService:
         return {"message": "Cập nhật trạng thái nhiệm vụ cộng tác thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def add_task_comment(
         task_id: str, comment_text: str, current_user
     ) -> dict:
@@ -945,6 +974,7 @@ class CollaborationService:
         return {"comment": comment}
 
     @staticmethod
+    @log_logic_execution
     async def get_task_comments(task_id: str, current_user) -> list:
         task = await CollaborationRepository.find_task(
             {"_id": task_id}

@@ -40,7 +40,7 @@ class StorageService:
             client = await self.get_client()
             await client.head_bucket(Bucket=self.bucket)
         except ClientError as e:
-            logger.info(f"Đang khởi tạo không gian lưu trữ đa phương tiện: {e}")
+            logger.exception("Đang khởi tạo không gian lưu trữ đa phương tiện")
             client = await self.get_client()
             await client.create_bucket(Bucket=self.bucket)
 
@@ -62,7 +62,7 @@ class StorageService:
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.error(f"Lỗi mạng khi lưu tệp vĩnh viễn: {e}")
+            logger.exception("Lỗi mạng khi lưu tệp vĩnh viễn")
             raise e
 
 storage = StorageService()

@@ -1,5 +1,6 @@
 import httpx
 import secrets
+from src.core.logic_logger import log_logic_execution
 from fastapi import HTTPException, status
 from loguru import logger
 from src.core.infrastructure.configuration import settings
@@ -7,11 +8,12 @@ from src.repositories.identity import IdentityRepository as AuthenticationReposi
 
 class GoogleService:
     @staticmethod
+    @log_logic_execution
     async def get_google_auth_url():
         google_client_id = settings.GOOGLE_CLIENT_ID
         redirect_uri = settings.GOOGLE_REDIRECT_URI
         if not google_client_id or not redirect_uri:
-            logger.error("Lỗi cấu hình nhà cung cấp xác thực")
+            logger.error("Lỗi cấu hình nhà cung cấp dịch vụ xác thực hệ thống")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Chưa cấu hình xác thực bên ngoài",
@@ -20,6 +22,7 @@ class GoogleService:
         return auth_url
 
     @staticmethod
+    @log_logic_execution
     async def handle_google_callback(code: str, client_ip: str):
         from src.services.session import SessionService
         google_client_id = settings.GOOGLE_CLIENT_ID
@@ -38,7 +41,7 @@ class GoogleService:
             )
             token_data = token_resp.json()
             if "access_token" not in token_data:
-                logger.error("Từ chối yêu cầu xác thực")
+                logger.warning("Yêu cầu xác thực tài khoản bị từ chối")
                 raise HTTPException(status_code=400, detail="Lỗi xác thực liên kết")
             user_resp = await client.get(
                 settings.GOOGLE_USERINFO_URL,

@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -9,6 +10,7 @@ from src.repositories.document import DocumentRepository
 class PublicationService:
 
     @staticmethod
+    @log_logic_execution
     async def update_seo_metadata(
         document_id: str, seo_data: dict, current_user
     ):
@@ -37,6 +39,7 @@ class PublicationService:
         return {"message": "Cập nhật thông tin và thẻ phân loại thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_readability_score(document_id: str, current_user):
         doc = await DocumentRepository.find_one(
             {"_id": str(document_id)}
@@ -65,13 +68,14 @@ class PublicationService:
                 "analysis": "Readable structure" if score > 60 else "Complex structure",
             }
         except ImportError as e:
-            logger.error(f"Lỗi phân tích ngôn ngữ: {e}")
+            logger.exception("Lỗi phân tích cú pháp ngôn ngữ")
             return {"error": f"Đánh giá khả năng đọc đang bảo trì: {e}"}
         except Exception as e:
-            logger.error(f"Lỗi phân tích cấu trúc tài liệu: {e}")
+            logger.exception("Lỗi phân tích cấu trúc văn bản")
             return {"error": f"Lỗi phân tích ngôn ngữ do định dạng không xác định: {e}"}
 
     @staticmethod
+    @log_logic_execution
     async def schedule_publish(
         document_id: str, publish_at: str, current_user
     ):
@@ -84,6 +88,7 @@ class PublicationService:
         return {"message": "Ghi nhận lịch xuất bản thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def publish_document(document_id: str, current_user):
         docs_collection = DocumentRepository
         user_id = str(current_user.id)

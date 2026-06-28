@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import json
 import re
@@ -15,6 +16,7 @@ from src.repositories.document import DocumentRepository
 class VersionService:
 
     @staticmethod
+    @log_logic_execution
     async def save_version(document_id, version_note, current_user):
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -41,6 +43,7 @@ class VersionService:
         return {"message": "Lưu bản nháp lịch sử thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def get_versions(document_id, current_user):
         cursor = (
             mongo
@@ -54,6 +57,7 @@ class VersionService:
         return versions
 
     @staticmethod
+    @log_logic_execution
     async def restore_version(version_id: str, current_user):
         version = await mongo.find_one(
             "document_versions", {"_id": version_id, "creator_id": str(current_user.id)}

@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query, status
 from src.schemas.library import BookmarkFolderCreate, BookmarkFolderAssign
 from src.api.dependency import get_current_user, get_db
@@ -8,7 +9,7 @@ from src.services.bookmark import BookmarkService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(prefix="/danh-dau")
+router = APIRouter(route_class=LoggingRoute, prefix="/danh-dau")
 
 @router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(

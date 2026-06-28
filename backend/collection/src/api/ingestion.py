@@ -1,9 +1,10 @@
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from src.services.ingestion import collector as collector_service
 from src.schemas.ingestion import Collection
 from src.core.dependency import get_current_user, require_role, Role
 
-router = APIRouter(prefix="/thu-thap")
+router = APIRouter(route_class=LoggingRoute, prefix="/thu-thap")
 
 @router.post("/kich-hoat", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def trigger_collection(req: Collection, current_user = Depends(get_current_user)):

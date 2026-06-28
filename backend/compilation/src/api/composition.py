@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 
+from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter
 from loguru import logger
 from src.schemas.composition import (
@@ -28,7 +29,7 @@ def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_use
         )
     return current_user
 
-router = APIRouter(prefix="/trinh-soan-thao")
+router = APIRouter(route_class=LoggingRoute, prefix="/trinh-soan-thao")
 
 @router.post("/{document_id}/dong-bo")
 async def sync_keystroke_buffer(

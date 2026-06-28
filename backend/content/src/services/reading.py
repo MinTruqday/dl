@@ -1,3 +1,4 @@
+from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
@@ -12,6 +13,7 @@ from src.repositories.reading import ReadingRepository
 class ReadingService:
 
     @staticmethod
+    @log_logic_execution
     async def get_reading_history(
         current_user,
         cursor: str = None,
@@ -76,6 +78,7 @@ class ReadingService:
         return result
 
     @staticmethod
+    @log_logic_execution
     async def update_progress(data, current_user):
         user_id = str(current_user.id)
         now = datetime.now(timezone.utc)
@@ -94,6 +97,7 @@ class ReadingService:
         return {"status": "success"}
 
     @staticmethod
+    @log_logic_execution
     async def search_in_document(
         document_id: str, query: str, current_user
     ) -> dict:
@@ -119,6 +123,7 @@ class ReadingService:
         return {"total": len(results), "results": results, "query": query}
 
     @staticmethod
+    @log_logic_execution
     async def clear_reading_history(current_user) -> dict:
         await ReadingRepository.delete_historys(
             {"user_id": str(current_user.id)}
@@ -126,6 +131,7 @@ class ReadingService:
         return {"status": "success", "message": "Xóa toàn bộ lịch sử đọc thành công"}
 
     @staticmethod
+    @log_logic_execution
     async def delete_history_item(document_id: str, current_user) -> dict:
         await ReadingRepository.delete_history(
             {"user_id": str(current_user.id), "document_id": document_id}

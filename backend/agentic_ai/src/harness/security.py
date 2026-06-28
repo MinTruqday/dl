@@ -49,7 +49,7 @@ class SecurityHarness:
             
             sanitized = result.sanitized_text or text
         except Exception as e:
-            logger.error(f"Truy vết bảo mật AI thất bại: {e}")
+            logger.exception("Truy vết bảo mật AI thất bại")
             
         return sanitized, violations
 
