@@ -58,7 +58,7 @@ export default function PaymentResultPage() {
   const IconComponent = current.icon;
 
   return (
-    <div className="w-full h-[calc(100vh-44px)] flex flex-col items-center justify-center font-sans text-[#1D1D1F] px-6">
+    <div className="w-full h-[calc(100vh-56px)] flex flex-col items-center justify-center font-sans text-[#1D1D1F] px-6">
       <div className="w-full max-w-[480px] bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm p-10 flex flex-col items-center text-center">
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${current.bgClass}`}>
           <IconComponent className={`w-10 h-10 ${current.color} ${status === "loading" ? "animate-spin" : ""}`} />

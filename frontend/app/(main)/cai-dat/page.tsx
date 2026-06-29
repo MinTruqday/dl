@@ -119,7 +119,7 @@ export default function SettingsPage() {
   ].filter((s) => !user || s.roles.includes(user.role));
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-44px)] font-sans text-[#1D1D1F]">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
       <div className={`transition-opacity duration-500 mb-8 ${visible ? "opacity-100" : "opacity-0"}`}>
         <h1 className="text-[32px] font-semibold tracking-tight text-[#1D1D1F]">Cài đặt hệ thống</h1>
         <p className="text-[15px] text-[#6E6E73] mt-1">Tùy chọn và kiểm soát hệ thống</p>

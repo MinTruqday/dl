@@ -65,7 +65,7 @@ export default function OperationDashboard() {
 
   if (authLoading || isLoading) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
   if (user?.role !== "admin") return (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-44px)] gap-6 font-sans text-center">
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
       <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[24px]"><ShieldAlert className="w-10 h-10 text-[#FF3B30]" /></div>
       <div className="space-y-2 max-w-[300px]"><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Truy cập bị hạn chế</h2><p className="text-[15px] text-[#6E6E73]">Bạn không có quyền quản trị để truy cập trang này.</p></div>
     </div>

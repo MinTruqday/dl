@@ -38,7 +38,7 @@ export default function UpgradePage() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-44px)] font-sans text-[#1D1D1F] py-12 px-6">
+    <div className="w-full min-h-[calc(100vh-56px)] font-sans text-[#1D1D1F] py-12 px-6">
       <div className="max-w-6xl mx-auto space-y-12">
         <div className="text-center space-y-4">
           <h1 className="text-[40px] md:text-[48px] font-semibold tracking-tight flex items-center justify-center gap-3"><Sparkles className="w-8 h-8 text-[#0071E3]" /> Nâng cấp Trải nghiệm AI</h1>

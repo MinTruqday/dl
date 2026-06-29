@@ -108,7 +108,7 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1000px] mx-auto px-6 py-8 min-h-[calc(100dvh-44px)] flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full max-w-[1000px] mx-auto px-6 py-8 min-h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
       <div className={`transition-opacity duration-500 mb-8 ${visible ? "opacity-100" : "opacity-0"}`}>
         <h1 className="text-[32px] font-semibold tracking-tight text-[#1D1D1F]">Hồ sơ cá nhân</h1>
         <p className="text-[15px] text-[#6E6E73] mt-1">Quản lý thông tin định danh và cài đặt tài khoản</p>

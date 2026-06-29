@@ -45,14 +45,14 @@ export default function UsersManagementPage() {
 
   if (authLoading || isLoading) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
   if (user?.role !== "admin") return (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-44px)] gap-6 font-sans text-center">
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
       <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[24px]"><AlertTriangle className="w-10 h-10 text-[#FF9500]" /></div>
       <div className="space-y-2 max-w-[300px]"><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Truy cập bị hạn chế</h2><p className="text-[15px] text-[#6E6E73]">Bạn không có quyền quản trị để truy cập trang này.</p></div>
     </div>
   );
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-44px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-[#F5F5F7] rounded-[14px] flex items-center justify-center text-[#1D1D1F] hidden md:flex"><Users className="w-6 h-6" /></div>

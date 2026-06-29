@@ -132,7 +132,7 @@ export default function LibraryPage() {
   ];
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-44px)] font-sans text-[#1D1D1F]">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-[280px] shrink-0 space-y-6">
           <div className="bg-[#F5F5F7] rounded-[18px] p-6">

@@ -115,7 +115,7 @@ export default function WalletPage() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-44px)] gap-6 px-6 text-center">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 px-6 text-center">
         <div className="w-20 h-20 bg-[#F5F5F7] rounded-[24px] flex items-center justify-center"><AlertCircle className="w-8 h-8 text-[#6E6E73]" /></div>
         <div>
           <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Truy cập bị hạn chế</h2>
@@ -127,7 +127,7 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-44px)] font-sans text-[#1D1D1F]">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
       <Modal isOpen={showTopupModal} onClose={() => { setShowTopupModal(false); setCheckoutUrl(null); }} className={`rounded-[24px] bg-[#F5F5F7] p-0 border-none shadow-2xl ${checkoutUrl ? "max-w-2xl" : "max-w-md"}`}>
         <ModalHeader className="p-6">
           <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">{checkoutUrl ? "Thanh toán giao dịch" : "Nạp tiền"}</ModalTitle>

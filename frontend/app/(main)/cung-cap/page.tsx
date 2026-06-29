@@ -54,7 +54,7 @@ export default function CreateDocumentPage() {
         showToast("Khởi tạo tác phẩm thành công.", "success");
         setTimeout(() => {
           router.push(
-            `/compose?tai-lieu=${res.data?.id || res.data?._id || res.id || res._id}`,
+            `/soan-thao?tai-lieu=${res.data?.id || res.data?._id || res.id || res._id}`,
           );
         }, 1000);
       }

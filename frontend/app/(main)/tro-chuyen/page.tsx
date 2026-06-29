@@ -426,9 +426,9 @@ export default function TroChuyenPage() {
   };
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100vh-44px)] font-sans text-[#1D1D1F]">
-      <div className="grid lg:grid-cols-12 gap-6 h-full w-full items-start">
-        <aside className="lg:col-span-3 bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-full w-full h-full">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
+      <div className="flex flex-1 min-h-0 gap-6">
+        <aside className="w-full lg:w-[320px] bg-[#F5F5F7] rounded-[18px] flex flex-col overflow-hidden shrink-0 hidden lg:flex">
           <div className="p-6 flex items-center justify-between shrink-0">
             <h2 className="text-[17px] font-semibold text-[#1D1D1F]">Lịch sử</h2>
             <button
@@ -453,7 +453,7 @@ export default function TroChuyenPage() {
               </div>
             ) : (
               sessions.map((s) => (
-                <div key={s._id} className={`p-4 border bg-white group relative rounded-[18px] transition-colors ${currentSessionId === s._id ? "border-[#0071E3]" : "border-[#E8E8ED] hover:border-[#D2D2D7]"}`}>
+                <div key={s._id} className={`p-3 mx-2 mt-2 rounded-[14px] cursor-pointer transition-colors ${currentSessionId === s._id ? "bg-white shadow-sm border border-transparent" : "border border-transparent hover:bg-[#E8E8ED]"}`}>
                   <div className="flex items-center justify-between gap-3">
                     <div
                       className="flex-1 min-w-0 cursor-pointer"
@@ -549,7 +549,7 @@ export default function TroChuyenPage() {
           </div>
         </aside>
 
-        <main className="lg:col-span-9 flex flex-col h-full bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 h-full bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm relative overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col min-h-0 custom-scrollbar relative">
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6">

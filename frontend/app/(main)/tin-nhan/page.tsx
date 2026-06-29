@@ -504,7 +504,7 @@ export default function MessagesPage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-44px)] flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
       <Modal isOpen={showNewChatModal} onClose={() => setShowNewChatModal(false)} className="max-w-xl rounded-[18px] bg-[#F5F5F7] p-0 border-none shadow-2xl">
         <ModalHeader className="p-6">
           <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Bắt đầu hội thoại mới</ModalTitle>

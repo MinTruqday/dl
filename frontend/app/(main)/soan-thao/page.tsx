@@ -154,7 +154,7 @@ function StudioContent() {
   if (isLoading) return <div className="flex-1 flex flex-col items-center justify-center min-h-[80vh]"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-44px)] flex flex-col gap-6 text-[#1D1D1F]">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] flex flex-col gap-6 text-[#1D1D1F]">
       <div className="h-[64px] bg-white rounded-[24px] px-6 flex items-center justify-between shadow-sm border border-[#E8E8ED] shrink-0">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-[#F5F5F7] flex items-center justify-center rounded-full"><FileText className="w-5 h-5 text-[#1D1D1F]" /></div>

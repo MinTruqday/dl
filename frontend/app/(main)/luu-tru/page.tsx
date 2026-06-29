@@ -157,7 +157,7 @@ export default function StoragePage() {
   };
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-44px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">Lưu trữ</h1>

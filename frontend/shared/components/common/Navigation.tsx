@@ -54,8 +54,8 @@ export default function Navigation() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-[100] w-full border-b border-[#D2D2D7] glass-nav transition-all duration-300"
-      style={{ height: "44px" }}
+      className="fixed top-0 left-0 right-0 z-[100] w-full bg-white/80 backdrop-blur-xl border-b border-[#E8E8ED] transition-all duration-300"
+      style={{ height: "56px" }}
     >
       <div className="h-full flex items-center justify-between px-6 w-full gap-4 max-w-[1200px] mx-auto">
         <Link

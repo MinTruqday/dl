@@ -34,7 +34,7 @@ export const MENU_ITEMS = [
   { id: "profile", label: "Hồ sơ", href: "/ho-so", icon: User, requireAuth: true },
   { id: "wallet", label: "Ví", href: "/vi-tien", icon: Wallet, requireAuth: true },
   { id: "settings", label: "Cài đặt", href: "/cai-dat", icon: Settings, requireAuth: true },
-  { id: "provision", label: "Soạn thảo", href: "/soan-thao", icon: PenTool, roles: ["author", "admin"] },
+  { id: "provision", label: "Sáng tác", href: "/cung-cap", icon: PenTool, roles: ["author", "admin"] },
   { id: "collaboration", label: "Cộng tác", href: "/cong-tac", icon: Users, roles: ["author", "admin"] },
   { id: "storage", label: "Lưu trữ", href: "/luu-tru", icon: FolderOpen, roles: ["author", "admin"] },
   { id: "document", label: "Tài liệu", href: "/tai-lieu", icon: Files, roles: ["admin", "author"] },
@@ -81,7 +81,7 @@ export default function Dock() {
   };
 
   return (
-    <aside className="fixed left-0 top-[44px] bottom-0 w-[240px] bg-[#F5F5F7] border-r border-[#D2D2D7] overflow-y-auto hide-scrollbar z-[90]">
+    <aside className="fixed left-0 top-[56px] bottom-0 w-[240px] bg-[#F5F5F7] border-r border-[#D2D2D7] overflow-y-auto hide-scrollbar z-[90]">
       <div className="py-6 px-4">
         <div className="space-y-1">
           {availableItems.map((item) => {
