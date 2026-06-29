@@ -38,17 +38,17 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 animate-in fade-in  backdrop-blur-sm bg-black/40">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 animate-in fade-in backdrop-blur-sm bg-black/40">
       <div
         className={cn(
-          "bg-white w-full max-w-lg border border-zinc-200 animate-in zoom-in-95  rounded-none relative p-0",
+          "bg-white w-full max-w-lg border border-[#D2D2D7] animate-in zoom-in-95 rounded-[24px] relative p-0 shadow-2xl",
           className,
         )}
       >
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 text-zinc-400 hover:text-black transition-colors"
+            className="absolute top-5 right-5 text-[#6E6E73] hover:text-[#1D1D1F] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -67,7 +67,7 @@ export function ModalHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("border-b border-zinc-200 p-5 mb-0", className)}>
+    <div className={cn("border-b border-[#E8E8ED] p-6 mb-0", className)}>
       {children}
     </div>
   );
@@ -81,7 +81,7 @@ export function ModalTitle({
   className?: string;
 }) {
   return (
-    <h3 className={cn("text-sm font-semibold text-black pr-8", className)}>
+    <h3 className={cn("text-[20px] font-semibold text-[#1D1D1F] pr-8", className)}>
       {children}
     </h3>
   );
@@ -97,7 +97,7 @@ export function ModalDescription({
   return (
     <p
       className={cn(
-        "text-[10px] font-bold text-zinc-300 uppercase tracking-widest mt-2",
+        "text-[13px] text-[#6E6E73] mt-1",
         className,
       )}
     >
@@ -126,7 +126,7 @@ export function ModalFooter({
   return (
     <div
       className={cn(
-        "flex gap-3 border-t border-zinc-200 p-5 bg-zinc-50 mt-0 space-y-0",
+        "flex gap-3 border-t border-[#E8E8ED] p-6 bg-[#F5F5F7] rounded-b-[24px] mt-0 space-y-0",
         className,
       )}
     >
