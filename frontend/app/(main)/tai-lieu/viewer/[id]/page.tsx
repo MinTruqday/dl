@@ -8,6 +8,7 @@ import { queryRagAPI, translateTextAPI } from "@/features/ai/services/agentic_ai
 import { createHighlightAPI, getHighlightsAPI, deleteHighlightAPI } from "@/features/content/services/text_highlight.service";
 import { toggleBookmarkAPI, getBookmarksAPI } from "@/features/content/services/document_bookmark.service";
 import { Lock, AlertTriangle, Send, ArrowLeft, Loader2, User, Bot, Highlighter, Bookmark, Zap, Trash2, BookmarkCheck, ZoomIn, ZoomOut, Columns, Square, Languages, BookOpen, History, Maximize2, Minimize2, Paperclip, Edit2, X, FileText, Image as ImageIcon, Folder } from "lucide-react";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 export default function DocumentViewer() {
   const { showToast } = useToast();
@@ -200,7 +201,7 @@ export default function DocumentViewer() {
     } catch { showToast("Cập nhật dấu trang thất bại", "error"); }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-[#F5F5F7]"><Loader2 className="w-8 h-8 animate-spin text-[#0071E3]" /></div>;
+  if (loading) return <PageLoader />;
 
   const CanvasRenderer = ({ text }: { text: string }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);

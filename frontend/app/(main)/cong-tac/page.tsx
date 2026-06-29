@@ -18,6 +18,7 @@ import { Users, Mail, Check, Loader2, Shield, Trash2, Activity, MessageSquare, G
 import { useRouter } from "next/navigation";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 export default function StudioCollabPage() {
   const { user, isLoading } = useAuth() as any;
@@ -230,7 +231,7 @@ export default function StudioCollabPage() {
 
   const totalLogs = contributionStats.reduce((acc, c) => acc + c.count, 0);
 
-  if (loading || isLoading) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
+  if (loading || isLoading) return <PageLoader />;
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">

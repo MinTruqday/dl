@@ -9,6 +9,7 @@ import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawa
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 import { usePayOS } from "@payos/payos-checkout";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 interface Transaction {
   _id: string;
@@ -111,7 +112,7 @@ export default function WalletPage() {
     } catch (e: any) { showToast(e.message || "Rút tiền thất bại", "error"); } finally { setWithdrawLoading(false); }
   };
 
-  if (authLoading) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
+  if (authLoading) return <PageLoader />;
 
   if (!user) {
     return (

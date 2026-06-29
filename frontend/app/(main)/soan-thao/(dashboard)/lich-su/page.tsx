@@ -6,6 +6,7 @@ import { getDocumentVersionsAPI, restoreVersionAPI } from "@/features/content/se
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2, Clock, RotateCcw, BookOpen, GitCompare, History, CheckCircle2 } from "lucide-react";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter, ModalDescription } from "@/shared/components/ui/Modal";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 function renderLineDiff(textA: string, textB: string) {
   const cleanText = (txt: string) => {
@@ -93,10 +94,7 @@ export default function HistoryPage() {
   };
 
   if (loadingDocs) return (
-    <div className="h-full min-h-[400px] flex flex-col items-center justify-center font-sans">
-      <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
-      <p className="text-[13px] font-medium text-[#6E6E73]">Đang tải lịch sử...</p>
-    </div>
+    <PageLoader />
   );
 
   return (

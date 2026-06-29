@@ -8,6 +8,7 @@ import { getPrivacySettingsAPI, updatePrivacySettingsAPI, updateGeneralSettingsA
 import { getNotificationSettingsAPI, updateNotificationSettingsAPI } from "@/features/communication/services/push_notification.service";
 import { getMaintenanceModeAPI, getAdminConfigAPI, toggleMaintenanceModeAPI, updateAdminConfigAPI } from "@/features/provision/services/system_operation.service";
 import { Shield, Bell, Lock, ChevronRight, Save, Loader2, Sparkles, PenTool, ShieldCheck, Zap, UserPlus, Award, Clock, AlertCircle, ShieldAlert } from "lucide-react";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 type TabKey = "privacy" | "notifications" | "account" | "apply_author" | "author" | "moderator" | "admin";
 
@@ -106,7 +107,7 @@ export default function SettingsPage() {
     </button>
   );
 
-  if (authLoading) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
+  if (authLoading) return <PageLoader />;
 
   const sections = [
     { id: "privacy", label: "Quyền riêng tư", icon: Shield, roles: ["reader", "potential_author", "author", "moderator", "admin"] },

@@ -8,6 +8,7 @@ import { AlertTriangle, FileText, Eye, Trash2, RefreshCcw, Loader2, X, Search, U
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 export default function DocumentsPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
@@ -117,7 +118,7 @@ export default function DocumentsPage() {
   const handleShareSubmit = async (e: React.FormEvent) => { e.preventDefault(); if (!shareModal?.docId) return; setPublicUrl(`${window.location.origin}/document/viewer/${shareModal.docId}${sharePassword ? `?pwd=${sharePassword}` : ""}`); showToast("Sẵn sàng chia sẻ", "success"); };
   const toggleStar = async (id: string) => { try { await toggleStarDocumentAPI(id); fetchData(); } catch (err: any) { showToast("Lỗi thao tác", "error"); } };
 
-  if (authLoading || isLoading) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
+  if (authLoading || isLoading) return <PageLoader />;
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">

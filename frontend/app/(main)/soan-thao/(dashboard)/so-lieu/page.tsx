@@ -7,6 +7,7 @@ import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawa
 import { Eye, Database, Wallet, Banknote, Loader2, BarChart3, ArrowUpRight, Clock, Bookmark, MessageSquare, FileText, Percent, BookOpen } from "lucide-react";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter, ModalDescription } from "@/shared/components/ui/Modal";
 import { getAuthorRevenueAPI, setDocumentPricingAPI } from "@/features/finance/services/content_monetization.service";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 export default function StatsPage() {
   const { showToast } = useToast();
@@ -71,10 +72,7 @@ export default function StatsPage() {
   };
 
   if (loading) return (
-    <div className="h-full min-h-[400px] flex flex-col items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
-      <p className="text-[13px] font-medium text-[#6E6E73]">Đang tải số liệu...</p>
-    </div>
+    <PageLoader />
   );
 
   return (

@@ -6,6 +6,7 @@ import { getGlobalQuotaConfigAPI, updateRoleQuotaAPI } from "@/features/provisio
 import { Loader2, Save, Server, Database, Cpu, Brain, HardDrive, RefreshCcw, ShieldAlert, Archive, Zap, Shield } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 export default function OperationDashboard() {
   const { user, isLoading: authLoading } = useAuth() as any;
@@ -63,7 +64,7 @@ export default function OperationDashboard() {
 
   const roleLabels: Record<string, string> = { BASIC: "Cơ bản", PRO: "Nâng cao", PREMIUM: "Cao cấp", admin: "Quản trị viên" };
 
-  if (authLoading || isLoading) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
+  if (authLoading || isLoading) return <PageLoader />;
   if (user?.role !== "admin") return (
     <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
       <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[24px]"><ShieldAlert className="w-10 h-10 text-[#FF3B30]" /></div>

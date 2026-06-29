@@ -11,6 +11,7 @@ import { purchaseDocumentAPI } from "@/features/finance/services/content_monetiz
 import Comment from "@/features/communication/components/Comment";
 import Report from "@/features/provision/components/Report";
 import { getToken } from "@/features/auth/services/user_authentication.service";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -113,7 +114,7 @@ export default function DocumentDetailsPage() {
     showToast("Đã sao chép liên kết", "success");
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-[#F5F5F7]"><Loader2 className="w-8 h-8 text-[#6E6E73] animate-spin" /></div>;
+  if (loading) return <PageLoader />;
   if (error || !docData) return <div className="flex h-screen flex-col items-center justify-center gap-4 bg-[#F5F5F7]"><AlertCircle className="w-12 h-12 text-[#FF3B30]" /><p className="text-[#6E6E73]">{error || "Tài liệu không tồn tại"}</p><button onClick={() => router.back()} className="px-6 py-2 bg-[#0071E3] text-white rounded-full text-[15px] font-medium mt-4">Quay lại</button></div>;
 
   return (

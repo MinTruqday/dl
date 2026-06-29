@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/shared/lib/app_utils";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 const CustomAudioPlayer = ({ src, isSender }: { src: string; isSender: boolean }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -500,7 +501,7 @@ export default function MessagesPage() {
     return new Date(b.last_message?.created_at || 0).getTime() - new Date(a.last_message?.created_at || 0).getTime();
   });
 
-  if (authLoading) return <div className="flex h-[80vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
+  if (authLoading) return <PageLoader />;
   if (!user) return null;
 
   return (

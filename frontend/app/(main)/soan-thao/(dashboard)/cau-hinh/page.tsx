@@ -8,6 +8,7 @@ import { ingestDocumentAPI } from "@/features/ai/services/rag_pipeline.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2, Settings, Hash, Folder, Brain, Shield, Users, Trash2, Tag, X, BookOpen, Send, Ticket, ArrowRightLeft, ChevronDown } from "lucide-react";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter, ModalDescription } from "@/shared/components/ui/Modal";
+import PageLoader from "@/shared/components/common/PageLoader";
 
 export default function ConfigPage() {
   const { showToast } = useToast();
@@ -116,10 +117,7 @@ export default function ConfigPage() {
   };
 
   if (loadingDocs) return (
-    <div className="h-full min-h-[400px] flex flex-col items-center justify-center font-sans">
-      <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
-      <p className="text-[13px] font-medium text-[#6E6E73]">Đang tải cấu hình...</p>
-    </div>
+    <PageLoader />
   );
 
   return (
