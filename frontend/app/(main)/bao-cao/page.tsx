@@ -45,11 +45,7 @@ export default function ReportsManagementPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#F5F5F7] rounded-[14px] flex items-center justify-center text-[#1D1D1F] hidden md:flex"><AlertOctagon className="w-6 h-6" /></div>
-          <div><h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">Báo cáo & Vi phạm</h1><p className="text-[15px] text-[#6E6E73] mt-1">Quản lý các vi phạm nội dung trên hệ thống.</p></div>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <div className="flex items-center gap-3">
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E73]" />

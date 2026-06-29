@@ -46,11 +46,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">Thông báo</h1>
-          <p className="text-[15px] text-[#6E6E73] mt-1">Trung tâm hoạt động và tin tức mới nhất.</p>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-end justify-end gap-4">
         <button onClick={handleMarkAllRead} disabled={isProcessing || !notifications.some(n => !n.is_read)} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2 disabled:opacity-50">
           {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Đánh dấu tất cả đã đọc
         </button>

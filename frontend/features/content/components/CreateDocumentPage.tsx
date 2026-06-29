@@ -67,14 +67,7 @@ export default function CreateDocumentPage() {
 
   return (
     <form onSubmit={handleCreate} className="flex flex-col h-full font-sans text-[#1D1D1F]">
-      <div className="border-b border-[#E8E8ED] pb-6 mb-8 shrink-0">
-        <h1 className="text-[28px] font-semibold text-[#1D1D1F] mb-2 tracking-tight">
-          Thông tin sơ bộ
-        </h1>
-        <p className="text-[15px] text-[#6E6E73]">
-          Thiết lập cấu trúc cơ bản cho tác phẩm mới
-        </p>
-      </div>
+
 
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-8">
         <div className="space-y-6">
@@ -90,7 +83,7 @@ export default function CreateDocumentPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Nhập tiêu đề tác phẩm..."
-                className="w-full h-[52px] pl-12 pr-4 bg-[#F5F5F7] border border-transparent focus:bg-white focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none"
+                className="w-full h-[52px] pl-12 pr-4 bg-white border border-transparent focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none shadow-sm"
               />
             </div>
           </div>
@@ -106,7 +99,7 @@ export default function CreateDocumentPage() {
                 type="text"
                 value={publisherName}
                 onChange={(e) => setPublisherName(e.target.value)}
-                className={`w-full h-[52px] pl-12 pr-4 bg-[#F5F5F7] border border-transparent focus:bg-white focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none ${user?.role === "admin" ? "opacity-60 cursor-not-allowed" : ""}`}
+                className={`w-full h-[52px] pl-12 pr-4 bg-white border border-transparent focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none shadow-sm ${user?.role === "admin" ? "opacity-60 cursor-not-allowed" : ""}`}
               />
             </div>
           </div>
@@ -119,7 +112,7 @@ export default function CreateDocumentPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Mô tả ngắn gọn về nội dung tác phẩm..."
-              className="w-full min-h-[140px] p-4 bg-[#F5F5F7] border border-transparent focus:bg-white focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none resize-none"
+              className="w-full min-h-[140px] p-4 bg-white border border-transparent focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none resize-none shadow-sm"
             />
           </div>
         </div>
@@ -152,7 +145,7 @@ export default function CreateDocumentPage() {
                   onClick={() => setVisibility(opt.id)}
                   className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group border ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-white border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
                 >
-                  <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#6E6E73]"}`}>
+                  <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border border-[#E8E8ED] text-[#6E6E73]"}`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
@@ -197,7 +190,7 @@ export default function CreateDocumentPage() {
                   onClick={() => setContentFormat(opt.id)}
                   className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group border ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-white border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
                 >
-                  <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#6E6E73]"}`}>
+                  <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border border-[#E8E8ED] text-[#6E6E73]"}`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
@@ -216,7 +209,7 @@ export default function CreateDocumentPage() {
       </div>
 
       <div className="mt-8 pt-6 border-t border-[#E8E8ED] shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 px-4 py-3 bg-[#F5F5F7] rounded-[14px]">
+        <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-[14px] shadow-sm">
           <div className="w-2.5 h-2.5 bg-[#34C759] rounded-full animate-pulse shadow-[0_0_8px_rgba(52,199,89,0.4)]" />
           <div className="flex flex-col">
             <span className="text-[12px] text-[#6E6E73] font-medium">Trạng thái hệ thống</span>

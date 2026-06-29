@@ -37,12 +37,6 @@ export default function AuthorAnalyticsPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">Phân tích dữ liệu</h1>
-          <p className="text-[15px] text-[#6E6E73] mt-1 flex items-center gap-2">AI-Driven Insights & Global Metrics <Award className="w-4 h-4" /></p>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[

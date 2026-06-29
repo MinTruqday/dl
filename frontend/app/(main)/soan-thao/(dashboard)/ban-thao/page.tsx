@@ -33,10 +33,7 @@ export default function DraftsPage() {
 
   return (
     <div className="flex flex-col h-full font-sans">
-      <div className={`border-b border-[#E8E8ED] pb-6 mb-6 shrink-0 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
-        <h1 className="text-[24px] font-semibold text-[#1D1D1F] mb-2">Kho lưu trữ nháp</h1>
-        <p className="text-[15px] text-[#6E6E73]">Quản lý các tác phẩm đang trong quá trình sáng tác</p>
-      </div>
+
 
       <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
         {loading ? (

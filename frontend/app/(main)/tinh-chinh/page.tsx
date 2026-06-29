@@ -81,11 +81,7 @@ export default function FineTuningPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">Tinh chỉnh Mô hình AI</h1>
-          <p className="text-[15px] text-[#6E6E73] mt-1 flex items-center gap-2">Huấn luyện trợ lý AI với dữ liệu cá nhân <BrainCircuit className="w-4 h-4" /></p>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-end justify-end gap-4">
         <div className="flex items-center gap-3">
           <button onClick={handleImportFeedback} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2"><Upload className="w-4 h-4" /> Nhập phản hồi</button>
           <button onClick={() => setShowNewJob(true)} className="pill-button bg-[#0071E3] text-white hover:bg-[#0077ED] flex items-center gap-2"><Play className="w-4 h-4" /> Huấn luyện mới</button>

@@ -599,7 +599,7 @@ export default function MessagesPage() {
         <div className={`flex-1 flex flex-col min-w-0 bg-[#F5F5F7] rounded-[18px] overflow-hidden ${!selectedConv ? "hidden md:flex items-center justify-center" : "flex"}`}>
           {selectedConv ? (
             <>
-              <div className="h-[64px] px-6 flex items-center justify-between border-b border-[#D2D2D7] bg-white">
+              <div className="h-[64px] px-6 flex items-center justify-between border-b border-[#D2D2D7] bg-transparent">
                 <div className="flex items-center gap-4">
                   <button onClick={() => setSelectedConv(null)} className="md:hidden text-[#0071E3]"><ArrowLeft className="w-6 h-6" /></button>
                   <div className="w-10 h-10 rounded-full bg-[#D2D2D7] overflow-hidden">
@@ -613,7 +613,7 @@ export default function MessagesPage() {
                 <button onClick={() => setShowConvMenu(!showConvMenu)} className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full"><MoreVertical className="w-5 h-5" /></button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 bg-white hide-scrollbar relative">
+              <div className="flex-1 overflow-y-auto p-6 bg-transparent hide-scrollbar relative">
                 {loadingMsgs ? <div className="flex h-full items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0071E3]" /></div> : (
                   <div className="space-y-4">
                     {messages.map((msg, i) => {
@@ -637,12 +637,12 @@ export default function MessagesPage() {
                 )}
               </div>
 
-              <div className="p-4 bg-white border-t border-[#D2D2D7]">
+              <div className="p-4 bg-transparent border-t border-[#D2D2D7]">
                 <div className="flex items-center gap-3">
                   <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full transition-colors shrink-0"><ImageIcon className="w-6 h-6" /></button>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)} />
                   <div className="flex-1 relative">
-                    <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }} placeholder="Nhập tin nhắn..." className="w-full bg-[#F5F5F7] border border-transparent rounded-[980px] pl-4 pr-12 py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]" />
+                    <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }} placeholder="Nhập tin nhắn..." className="w-full bg-white border border-transparent rounded-[980px] pl-4 pr-12 py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]" />
                     <button onClick={handleStartRecording} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-white rounded-full"><Mic className="w-5 h-5" /></button>
                   </div>
                   <button onClick={handleSend} disabled={!newMessage.trim() && !imageFile} className="p-3 bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors shrink-0"><Send className="w-5 h-5 ml-0.5" /></button>

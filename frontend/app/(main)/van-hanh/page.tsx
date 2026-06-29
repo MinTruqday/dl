@@ -73,11 +73,7 @@ export default function OperationDashboard() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-[#1D1D1F] flex flex-col gap-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">Vận hành</h1>
-          <p className="text-[15px] text-[#6E6E73] mt-1">Hệ thống điều hành trung tâm DocLib.</p>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <button onClick={fetchData} disabled={isRefreshing} className="pill-button flex items-center gap-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED]">
           {isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />} Đồng bộ
         </button>

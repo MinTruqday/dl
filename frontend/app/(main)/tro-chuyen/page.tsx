@@ -549,7 +549,7 @@ export default function TroChuyenPage() {
           </div>
         </aside>
 
-        <main className="flex-1 flex flex-col min-w-0 h-full bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 h-full bg-[#F5F5F7] rounded-[24px] relative overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col min-h-0 custom-scrollbar relative">
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
@@ -642,7 +642,7 @@ export default function TroChuyenPage() {
               )}
 
               {showAttachments && (
-                <div className="absolute bottom-full left-0 mb-2 w-40 bg-white border border-[#E8E8ED] rounded-[14px] shadow-sm py-2 z-50">
+                <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-[14px] shadow-sm py-2 z-50">
                   <input type="file" ref={fileInputRef} className="hidden" accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.mobi,.zip,.csv" onChange={(e) => { handleFileUpload(e, "file"); setShowAttachments(false); }} />
                   <input type="file" ref={imageInputRef} className="hidden" accept="image/*" onChange={(e) => { handleFileUpload(e, "image"); setShowAttachments(false); }} />
                   <button onClick={() => { fileInputRef.current?.click(); setShowAttachments(false); }} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3">
@@ -655,7 +655,7 @@ export default function TroChuyenPage() {
               )}
 
               <form onSubmit={handleSubmit} className="flex gap-3">
-                <div className="flex-1 min-h-[56px] bg-[#F5F5F7] flex items-center px-4 gap-3 focus-within:bg-white focus-within:border-[#0071E3] border border-transparent rounded-[20px] transition-colors shadow-sm">
+                <div className="flex-1 min-h-[56px] bg-white flex items-center px-4 gap-3 focus-within:border-[#0071E3] border border-transparent rounded-[20px] transition-colors shadow-sm">
                   {useSmart && (
                     <button type="button" onClick={handleAttach} className="text-[#6E6E73] shrink-0 rounded-full p-2 hover:bg-[#E8E8ED] transition-colors">
                       <PlusIcon className="w-5 h-5" />

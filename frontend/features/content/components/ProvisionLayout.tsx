@@ -95,7 +95,7 @@ export default function ProvisionLayout({ children }: { children: React.ReactNod
         </aside>
 
         <main className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-          <div className="bg-white border border-[#E8E8ED] p-8 rounded-[24px] shadow-sm flex-1 overflow-y-auto custom-scrollbar">
+          <div className="bg-[#F5F5F7] rounded-[24px] p-8 flex-1 overflow-y-auto custom-scrollbar">
             {children}
           </div>
         </main>

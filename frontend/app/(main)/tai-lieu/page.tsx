@@ -121,11 +121,7 @@ export default function DocumentsPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">Tài liệu hệ thống</h1>
-          <p className="text-[15px] text-[#6E6E73] mt-1">Quản lý không gian tài liệu trực tuyến của bạn.</p>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <div className="flex items-center gap-3">
           <button onClick={() => setCreateFolderModal(true)} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2"><FolderPlus className="w-4 h-4"/> Thư mục mới</button>
           <button onClick={() => setCreateDocModal(true)} className="pill-button flex items-center gap-2"><Plus className="w-4 h-4"/> Thêm tài liệu</button>

@@ -234,11 +234,7 @@ export default function StudioCollabPage() {
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">Cộng tác không gian</h1>
-          <p className="text-[15px] text-[#6E6E73] mt-1">Quản lý dự án, cộng tác viên, và theo dõi tiến độ công việc.</p>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <div className="flex items-center gap-2">
           <input type="text" placeholder="Nhập mã tham gia..." value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value)} className="apple-input w-48" />
           <button onClick={handleJoinWithCode} className="pill-button">Gia nhập</button>

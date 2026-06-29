@@ -67,20 +67,7 @@ export default function LogsPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#F5F5F7] rounded-[14px] flex items-center justify-center text-[#1D1D1F] hidden md:flex">
-            <Activity className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">
-              Nhật ký hệ thống
-            </h1>
-            <p className="text-[15px] text-[#6E6E73] mt-1">
-              Giám sát hoạt động quản trị và kiểm duyệt.
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
 
         <div className="flex items-center gap-3">
           <button
