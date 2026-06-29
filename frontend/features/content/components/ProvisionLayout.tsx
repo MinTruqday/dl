@@ -6,7 +6,7 @@ import { ChevronRight, PenTool, LayoutTemplate, FileEdit, BarChart3, Settings2, 
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useState, useEffect } from "react";
 
-export default function CreationLayout({ children }: { children: React.ReactNode }) {
+export default function ProvisionLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth() as any;
   const isAdminOrMod = user?.role === "admin" || user?.role === "moderator";
@@ -17,20 +17,20 @@ export default function CreationLayout({ children }: { children: React.ReactNode
   }, []);
 
   const navItems = [
-    { id: "step1", label: "Thông tin sơ bộ", href: "/cung-cap", icon: LayoutTemplate },
-    { id: "step2", label: "Kho lưu trữ nháp", href: "/cung-cap/ban-thao", icon: FileEdit },
-    { id: "step3", label: "Số liệu", href: "/cung-cap/so-lieu", icon: BarChart3 },
-    { id: "step4", label: "Cấu hình", href: "/cung-cap/cau-hinh", icon: Settings2 },
-    { id: "step5", label: "Lịch sử", href: "/cung-cap/lich-su", icon: History },
-    { id: "step6", label: "Bình luận", href: "/cung-cap/binh-luan", icon: MessageSquare },
-    { id: "step7", label: "Thùng rác", href: "/cung-cap/thung-rac", icon: Trash2 },
+    { id: "step1", label: "Thông tin sơ bộ", href: "/soan-thao", icon: LayoutTemplate },
+    { id: "step2", label: "Kho lưu trữ nháp", href: "/soan-thao/ban-thao", icon: FileEdit },
+    { id: "step3", label: "Số liệu", href: "/soan-thao/so-lieu", icon: BarChart3 },
+    { id: "step4", label: "Cấu hình", href: "/soan-thao/cau-hinh", icon: Settings2 },
+    { id: "step5", label: "Lịch sử", href: "/soan-thao/lich-su", icon: History },
+    { id: "step6", label: "Bình luận", href: "/soan-thao/binh-luan", icon: MessageSquare },
+    { id: "step7", label: "Thùng rác", href: "/soan-thao/thung-rac", icon: Trash2 },
     ...(isAdminOrMod
-      ? [{ id: "step8", label: "Duyệt bản thảo", href: "/cung-cap/duyet-ban-thao", icon: ShieldCheck, highlight: true }]
+      ? [{ id: "step8", label: "Duyệt bản thảo", href: "/soan-thao/duyet-ban-thao", icon: ShieldCheck, highlight: true }]
       : []),
   ];
 
   const isActive = (href: string) => {
-    if (href === "/cung-cap") return pathname === "/cung-cap";
+    if (href === "/soan-thao") return pathname === "/soan-thao";
     return pathname.startsWith(href);
   };
 
