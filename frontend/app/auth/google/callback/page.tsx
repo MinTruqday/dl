@@ -45,7 +45,7 @@ function GoogleCallbackContent() {
 
   if (pendingPasskeyEmail) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+      <div className="min-h-screen flex items-center justify-center bg-white font-sans">
         <Passkey
           email={pendingPasskeyEmail}
           onClose={() => router.push("/")}
@@ -57,15 +57,15 @@ function GoogleCallbackContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 font-sans">
-        <div className="bg-white/90 backdrop-blur-md p-8 border border-zinc-100 shadow-xl max-w-md w-full text-center rounded-3xl transition-all duration-300">
-          <h2 className="text-xl font-bold text-black tracking-tight">
+      <div className="min-h-screen flex items-center justify-center bg-white font-sans px-4">
+        <div className="auth-panel max-w-md w-full text-center">
+          <h2 className="text-[20px] font-semibold text-[#1D1D1F] tracking-tight">
             Lỗi xác thực
           </h2>
-          <p className="mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{error}</p>
+          <p className="mt-2 text-[15px] text-[#FF3B30]">{error}</p>
           <button
             onClick={() => router.push("/dang-nhap")}
-            className="mt-6 w-full flex justify-center items-center h-11 text-xs font-bold text-white bg-black rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-1 shadow-md"
+            className="pill-button w-full mt-6"
           >
             Quay lại đăng nhập
           </button>
@@ -75,10 +75,10 @@ function GoogleCallbackContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 font-sans">
-      <div className="text-center flex flex-col items-center justify-center gap-4 bg-white/90 backdrop-blur-md p-8 border border-zinc-100 shadow-xl rounded-3xl">
-        <Loader2 className="h-8 w-8 animate-spin text-black" />
-        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+    <div className="min-h-screen flex items-center justify-center bg-white font-sans px-4">
+      <div className="auth-panel flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0071E3]" />
+        <p className="text-[15px] font-medium text-[#1D1D1F]">
           Đang xử lý đăng nhập bằng Google
         </p>
       </div>
@@ -90,8 +90,8 @@ export default function GoogleCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-zinc-50 font-sans">
-          <Loader2 className="h-10 w-10 animate-spin text-black" />
+        <div className="min-h-screen flex items-center justify-center bg-white font-sans px-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[#0071E3]" />
         </div>
       }
     >

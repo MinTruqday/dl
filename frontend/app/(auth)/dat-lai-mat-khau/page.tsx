@@ -46,10 +46,10 @@ function ResetPasswordContent() {
       <div className="w-full max-w-[420px]">
         <div className="auth-panel">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-black">
+            <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">
               Mật khẩu mới
             </h1>
-            <p className="mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            <p className="mt-2 text-[15px] text-[#6E6E73]">
               Thiết lập mật khẩu mới cho tài khoản của bạn
             </p>
           </div>
@@ -58,12 +58,12 @@ function ResetPasswordContent() {
             <div>
               <label
                 htmlFor="new-password"
-                className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
+                className="block text-[13px] font-medium text-[#6E6E73] mb-2 ml-1"
               >
                 Mật khẩu mới
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
                 <input
                   id="new-password"
                   name="new-password"
@@ -73,15 +73,15 @@ function ResetPasswordContent() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setNewPassword(e.target.value)
                   }
-                  className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
+                  className="apple-input w-full pl-11 pr-12"
                   placeholder="Tối thiểu 6 ký tự"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6E73]"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -90,9 +90,9 @@ function ResetPasswordContent() {
               <button
                  type="submit"
                  disabled={loading}
-                 className="w-full flex justify-center items-center gap-2 h-12 text-xs font-bold text-white bg-black rounded-3xl shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                 className="pill-button w-full flex justify-center items-center gap-2 disabled:opacity-50"
               >
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                 {loading ? "Đang xử lý" : "Cập nhật mật khẩu"}
               </button>
             </div>
@@ -105,7 +105,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans selection:bg-zinc-900 selection:text-white flex flex-col">
+    <div className="min-h-screen bg-white font-sans flex flex-col">
       <Suspense fallback={<div className="flex-1 min-h-screen" />}>
         <ResetPasswordContent />
       </Suspense>

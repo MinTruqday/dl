@@ -107,6 +107,8 @@ export default function Editor({
   const [originalContentForUndo, setOriginalContentForUndo] = useState<
     string | null
   >(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [plagiarismScore, setPlagiarismScore] = useState<number | null>(null);
   const latexValueRef = useRef<string>(initialContent || "");
 
   useEffect(() => {
@@ -813,42 +815,42 @@ ${latexCode}
         )}
       </div>
 
-      <div className="h-8 border-t border-zinc-200 bg-white px-6 flex items-center justify-between shrink-0 z-30">
+      <div className="h-10 border-t border-[#D2D2D7] bg-white px-6 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            <span className="text-[13px] text-[#6E6E73]">
               Tốc độ
             </span>
-            <span className="text-[10px] font-bold text-black">
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {stats.wpm} WPM
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            <span className="text-[13px] text-[#6E6E73]">
               Số ký tự
             </span>
-            <span className="text-[10px] font-bold text-black">
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {stats.charCount}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            <span className="text-[13px] text-[#6E6E73]">
               Thời gian đọc
             </span>
-            <span className="text-[10px] font-bold text-black">
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {readingTime} phút
             </span>
           </div>
           {tags.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+              <span className="text-[13px] text-[#6E6E73]">
                 Thẻ
               </span>
-              <div className="flex gap-1">
+              <div className="flex gap-1.5">
                 {tags.map((t, idx) => (
                   <span
                     key={idx}
-                    className="px-1.5 py-0.5 bg-zinc-100 text-[10px] text-zinc-600 font-medium"
+                    className="px-2 py-0.5 bg-[#F5F5F7] rounded-md text-[13px] text-[#6E6E73] font-medium"
                   >
                     #{t}
                   </span>
@@ -859,12 +861,12 @@ ${latexCode}
         </div>
         <div className="flex items-center gap-4">
           {plagiarismScore !== null && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-zinc-50 border border-zinc-200">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#F5F5F7] rounded-full">
+              <span className="text-[13px] text-[#6E6E73]">
                 Bản quyền
               </span>
               <span
-                className={`text-[10px] font-bold ${plagiarismScore > 20 ? "text-red-600" : "text-green-600"}`}
+                className={`text-[13px] font-medium ${plagiarismScore > 20 ? "text-[#FF3B30]" : "text-[#34C759]"}`}
               >
                 {plagiarismScore}%
               </span>
@@ -872,34 +874,34 @@ ${latexCode}
           )}
           <div className="flex items-center gap-2">
             <span
-              className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-green-500" : "bg-zinc-400"}`}
+              className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-[#34C759]" : "bg-[#D2D2D7]"}`}
             ></span>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            <span className="text-[13px] text-[#6E6E73]">
               Cộng tác
             </span>
-            <span className="text-[10px] font-bold text-black">
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {onlineUsers > 1
                 ? `${onlineUsers} trực tuyến`
                 : "Đang trực tuyến"}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            <span className="text-[13px] text-[#6E6E73]">
               Trạng thái
             </span>
-            <span className="text-[10px] font-bold text-black">
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {saveStatus}
             </span>
           </div>
-          <div className="w-32 h-1 bg-zinc-100 relative">
+          <div className="w-32 h-1.5 bg-[#E8E8ED] rounded-full relative overflow-hidden">
             <div
-              className="absolute top-0 left-0 h-full bg-black  "
+              className="absolute top-0 left-0 h-full bg-[#0071E3] transition-all duration-300"
               style={{
                 width: `${Math.min(100, (stats.charCount / parseInt(typeof window !== "undefined" ? localStorage.getItem("doclib_daily_goal") || "5000" : "5000")) * 100)}%`,
               }}
             />
           </div>
-          <span className="text-[10px] font-bold text-zinc-400 uppercase">
+          <span className="text-[13px] text-[#6E6E73]">
             Mục tiêu ngày
           </span>
         </div>

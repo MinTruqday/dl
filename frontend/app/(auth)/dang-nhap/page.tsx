@@ -35,7 +35,7 @@ function bytesToB64url(bytes: ArrayBuffer): string {
 
 function GoogleIcon() {
   return (
-    <svg className="w-4 h-4 text-black" viewBox="0 0 24 24" fill="currentColor">
+    <svg className="w-5 h-5 text-[#1D1D1F]" viewBox="0 0 24 24" fill="currentColor">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -140,7 +140,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans selection:bg-zinc-900 selection:text-white flex flex-col">
+    <div className="min-h-screen bg-white font-sans flex flex-col">
       <main className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 py-12">
         <div className="w-full max-w-[420px]">
           {pendingPasskeyEmail && (
@@ -155,10 +155,10 @@ export default function LoginPage() {
 
           <div className="auth-panel">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold tracking-tight text-black">
+              <h1 className="text-[28px] font-semibold text-[#1D1D1F] tracking-tight">
                 Đăng nhập
               </h1>
-              <p className="mt-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+              <p className="mt-2 text-[15px] text-[#6E6E73]">
                 Chào mừng trở lại! Vui lòng nhập thông tin.
               </p>
             </div>
@@ -167,12 +167,12 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
+                  className="block text-[13px] font-medium text-[#6E6E73] mb-2 ml-1"
                 >
                   Tài khoản
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
                   <input
                     id="email"
                     name="email"
@@ -183,7 +183,7 @@ export default function LoginPage() {
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       setEmail(e.target.value)
                     }
-                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-4 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
+                    className="apple-input w-full pl-11"
                     placeholder="Email hoặc tên tài khoản"
                   />
                 </div>
@@ -192,12 +192,12 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1"
+                  className="block text-[13px] font-medium text-[#6E6E73] mb-2 ml-1"
                 >
                   Mật khẩu
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
                   <input
                     id="password"
                     name="password"
@@ -207,15 +207,15 @@ export default function LoginPage() {
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                       setPassword(e.target.value)
                     }
-                    className="w-full bg-white border border-zinc-200 rounded-3xl pl-11 pr-12 py-3 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm"
+                    className="apple-input w-full pl-11 pr-12"
                     placeholder="Nhập mật khẩu"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6E73]"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -226,18 +226,18 @@ export default function LoginPage() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-black focus:ring-0 border border-zinc-300 rounded cursor-pointer"
+                    className="h-4 w-4 accent-[#0071E3] rounded cursor-pointer"
                   />
                   <label
                     htmlFor="remember-me"
-                    className="ml-2 block text-xs font-medium text-zinc-500"
+                    className="ml-2 block text-[13px] text-[#1D1D1F]"
                   >
                     Ghi nhớ phiên
                   </label>
                 </div>
                 <a
                   href="/quen-mat-khau"
-                  className="text-xs font-bold text-zinc-500"
+                  className="text-[13px] font-medium text-[#0071E3] hover:text-[#0055C6]"
                 >
                   Quên mật khẩu?
                 </a>
@@ -247,10 +247,10 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full flex justify-center items-center gap-2 h-12 rounded-3xl text-xs font-bold text-white bg-black shadow-md disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="pill-button w-full flex justify-center items-center gap-2 disabled:opacity-50"
                 >
                   {isSubmitting && (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   )}
                   {isSubmitting ? "Đang xử lý" : "Đăng nhập"}
                 </button>
@@ -258,11 +258,11 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-7 flex items-center justify-center gap-3">
-              <div className="h-px bg-zinc-100 flex-1" />
-              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+              <div className="h-px bg-[#D2D2D7] flex-1" />
+              <span className="text-[13px] text-[#6E6E73]">
                 Hoặc
               </span>
-              <div className="h-px bg-zinc-100 flex-1" />
+              <div className="h-px bg-[#D2D2D7] flex-1" />
             </div>
 
             <div className="mt-7 grid grid-cols-2 gap-3">
@@ -278,9 +278,9 @@ export default function LoginPage() {
                   }
                   await completePasskeyLogin(email);
                 }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-3xl bg-white text-xs font-bold text-zinc-700 gap-2 shadow-sm"
+                className="w-full inline-flex justify-center items-center py-3 border border-[#D2D2D7] rounded-[10px] bg-white text-[15px] font-medium text-[#1D1D1F] gap-2 hover:bg-[#F5F5F7] transition-colors"
               >
-                <KeyRound className="w-4 h-4" />
+                <KeyRound className="w-5 h-5 text-[#1D1D1F]" />
                 Passkey
               </button>
               <button
@@ -293,7 +293,7 @@ export default function LoginPage() {
                     showToast("Không thể kết nối với Google", "error");
                   }
                 }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-3xl bg-white text-xs font-bold text-zinc-700 gap-2 shadow-sm"
+                className="w-full inline-flex justify-center items-center py-3 border border-[#D2D2D7] rounded-[10px] bg-white text-[15px] font-medium text-[#1D1D1F] gap-2 hover:bg-[#F5F5F7] transition-colors"
               >
                 <GoogleIcon />
                 Google
@@ -301,11 +301,11 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-8 text-center">
-              <p className="text-xs font-medium text-zinc-500">
+              <p className="text-[15px] text-[#6E6E73]">
                 Chưa có tài khoản?{" "}
                 <a
                   href="/dang-ky"
-                  className="font-bold text-black"
+                  className="font-medium text-[#0071E3] hover:text-[#0055C6]"
                 >
                   Đăng ký ngay
                 </a>

@@ -5,14 +5,8 @@ import { smartSearchAPI } from "@/features/content/services/content_discovery.se
 import { useRouter } from "next/navigation";
 import {
   Bell,
-  User,
-  LogOut,
-  ChevronDown,
   Search,
   X,
-  Monitor,
-  MessageCircle,
-  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useNotifications } from "@/shared/contexts/NotificationContext";
@@ -51,9 +45,8 @@ export default function Navigation() {
     setIsSearching(true);
     try {
       await smartSearchAPI(searchQuery);
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      router.push(`/tim-kiem?q=${encodeURIComponent(searchQuery)}`);
     } catch (err: any) {
-      console.error(err);
     } finally {
       setIsSearching(false);
     }
@@ -61,92 +54,73 @@ export default function Navigation() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-[100] w-full bg-white border-b border-zinc-200 font-sans transition-all duration-300"
-      style={{ height: "var(--navbar-height)" }}
+      className="fixed top-0 left-0 right-0 z-[100] w-full border-b border-[#D2D2D7] glass-nav transition-all duration-300"
+      style={{ height: "44px" }}
     >
-      <div className="h-full flex items-center justify-between px-6 w-full gap-4">
+      <div className="h-full flex items-center justify-between px-6 w-full gap-4 max-w-[1200px] mx-auto">
         <Link
           href="/"
-          className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 shrink-0 transition-all duration-200 hover:scale-105"
+          className="text-lg font-semibold tracking-tight text-[#1D1D1F] leading-none flex items-center gap-2 shrink-0 transition-opacity hover:opacity-80"
         >
-          <div className="w-10 h-10 bg-black flex items-center justify-center text-white text-sm font-bold rounded-2xl shadow-sm">
-            dl
-          </div>
-          <span className="hidden sm:block text-sm font-bold text-black">DocLib</span>
+          <span>DocLib</span>
         </Link>
 
-        <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden lg:block">
+        <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden lg:block relative">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-black transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6E6E73] transition-colors group-focus-within:text-[#0071E3]" />
             <input
               type="text"
-              placeholder=""
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-zinc-200 rounded-2xl pl-10 pr-10 py-2.5 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 shadow-sm transition-all duration-200"
+              className="w-full bg-[#F5F5F7] border border-transparent rounded-[10px] pl-9 pr-9 py-1 text-[13px] focus:bg-white focus:border-[#0071E3] focus:outline-none transition-all duration-200"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6E6E73] hover:text-[#1D1D1F] transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         </form>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-4 shrink-0">
           {user ? (
             <>
-              <Link
-                href="/upgrade"
-                className="relative h-11 px-4 flex items-center gap-2 text-black bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-50"
-                title="Nâng cấp AI"
-              >
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                <span className="text-xs font-bold text-black hidden md:block">Nâng cấp AI</span>
-              </Link>
-              <Link
-                href="/chat"
-                className="w-11 h-11 flex items-center justify-center text-zinc-500 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-110 hover:text-black hover:bg-zinc-50"
-                title="DocLib AI"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </Link>
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className={`relative w-11 h-11 flex items-center justify-center text-zinc-500 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-110 hover:text-black hover:bg-zinc-50 ${
-                    showNotifications ? "bg-zinc-100 text-black shadow-inner" : ""
+                  className={`relative flex items-center justify-center transition-opacity hover:opacity-80 ${
+                    showNotifications ? "text-[#0071E3]" : "text-[#1D1D1F]"
                   }`}
                   aria-label="Thông báo"
                 >
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-[18px] h-[18px]" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-black rounded-full" />
+                    <span className="absolute -top-1 -right-1 w-[8px] h-[8px] bg-[#0071E3] rounded-full" />
                   )}
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-4 w-[360px] bg-white border border-zinc-200 z-[200] rounded-3xl shadow-xl animate-in fade-in zoom-in-95 duration-200 p-4">
-                    <div className="flex items-center justify-between mb-3 pl-1">
-                      <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Thông báo</span>
+                  <div className="absolute right-0 mt-4 w-[360px] bg-white border border-[#D2D2D7] z-[200] rounded-[18px] shadow-2xl p-4">
+                    <div className="flex items-center justify-between mb-4 px-2">
+                      <span className="text-[13px] font-semibold text-[#1D1D1F]">Thông báo</span>
                       {unreadCount > 0 && (
-                        <span className="px-2 py-0.5 bg-black text-white text-[10px] font-bold rounded-xl">
+                        <span className="text-[12px] text-[#0071E3] font-medium">
                           {unreadCount} mới
                         </span>
                       )}
                     </div>
-                    <div className="max-h-[360px] overflow-y-auto -mx-2">
+                    <div className="max-h-[360px] overflow-y-auto">
                       {notifications.length > 0 ? (
                         <div className="space-y-1">
                           {notifications.slice(0, 8).map((notif: any) => (
                             <div
                               key={notif._id}
-                              className={`px-3 py-3 mx-2 rounded-2xl cursor-pointer transition-colors hover:bg-zinc-50 ${
-                                !notif.is_read ? "bg-zinc-50" : "bg-white"
+                              className={`px-3 py-3 rounded-[10px] cursor-pointer transition-colors hover:bg-[#F5F5F7] ${
+                                !notif.is_read ? "bg-[#F5F5F7]" : "bg-white"
                               }`}
                               onClick={() => {
                                 if (!notif.is_read) markAsRead(notif._id);
@@ -157,13 +131,13 @@ export default function Navigation() {
                               <div className="flex gap-3 items-start">
                                 <div className="flex-1 min-w-0">
                                   <p
-                                    className={`text-sm leading-snug truncate ${
-                                      notif.is_read ? "text-zinc-500 font-medium" : "text-black font-semibold"
+                                    className={`text-[13px] leading-snug ${
+                                      notif.is_read ? "text-[#6E6E73]" : "text-[#1D1D1F] font-medium"
                                     }`}
                                   >
                                     {notif.message}
                                   </p>
-                                  <span className="text-[10px] text-zinc-400 mt-1.5 block font-medium">
+                                  <span className="text-[11px] text-[#6E6E73] mt-1 block">
                                     {new Date(notif.created_at).toLocaleDateString("vi-VN")}
                                   </span>
                                 </div>
@@ -172,19 +146,18 @@ export default function Navigation() {
                           ))}
                         </div>
                       ) : (
-                        <div className="py-12 text-center">
-                          <Bell className="w-8 h-8 mx-auto text-zinc-200 mb-3" />
-                          <p className="text-xs font-medium text-zinc-400">Không có thông báo mới</p>
+                        <div className="py-8 text-center">
+                          <p className="text-[13px] text-[#6E6E73]">Không có thông báo mới</p>
                         </div>
                       )}
                     </div>
-                    <div className="pt-3 mt-1">
+                    <div className="pt-3 mt-2 border-t border-[#D2D2D7]">
                       <Link
-                        href="/notification"
+                        href="/thong-bao"
                         onClick={() => setShowNotifications(false)}
-                        className="block py-3 text-center text-xs font-bold text-zinc-600 bg-zinc-50 rounded-2xl hover:bg-zinc-100 hover:text-black transition-colors"
+                        className="block text-center text-[13px] text-[#0071E3] hover:underline"
                       >
-                        Xem tất cả thông báo
+                        Xem tất cả
                       </Link>
                     </div>
                   </div>
@@ -194,65 +167,47 @@ export default function Navigation() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className={`flex items-center gap-3 h-11 px-3 bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-50 ${
-                    showUserMenu ? "bg-zinc-100 text-black shadow-inner" : ""
-                  }`}
+                  className="flex items-center justify-center transition-opacity hover:opacity-80"
                 >
-                  <div className="w-6 h-6 bg-white border border-zinc-200 text-black flex items-center justify-center relative rounded-xl overflow-hidden shrink-0">
+                  <div className="w-[24px] h-[24px] bg-[#F5F5F7] rounded-full overflow-hidden shrink-0 border border-[#D2D2D7]">
                     {user.avatar_url ? (
                       <img
                         src={user.avatar_url}
-                        className="w-full h-full object-cover grayscale"
+                        className="w-full h-full object-cover"
                         alt=""
                       />
                     ) : (
-                      <User className="w-3.5 h-3.5" />
+                      <div className="w-full h-full bg-[#1D1D1F]" />
                     )}
                   </div>
-                  <div className="hidden sm:flex flex-col items-start min-w-[60px] max-w-[120px]">
-                    <span className="text-xs font-semibold text-black truncate w-full leading-tight text-left">
-                      {user.full_name || user.username}
-                    </span>
-                    <span className="text-[10px] font-medium text-zinc-400 leading-tight capitalize mt-0.5">
-                      {user.role}
-                    </span>
-                  </div>
-                  <ChevronDown
-                    className={`w-4 h-4 text-zinc-400 hidden sm:block shrink-0 transition-transform duration-200 ${showUserMenu ? "rotate-180" : ""}`}
-                  />
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-4 w-64 bg-white border border-zinc-200 z-[200] p-4 rounded-3xl shadow-xl animate-in fade-in zoom-in-95 duration-200">
-                    <div className="mb-3 pl-1">
-                      <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Tài khoản</p>
-                    </div>
-                    <div className="bg-zinc-50 border border-zinc-100 rounded-2xl px-3 py-2.5 mb-3">
-                      <p className="text-sm font-semibold truncate text-black">{user.email}</p>
+                  <div className="absolute right-0 mt-4 w-[240px] bg-white border border-[#D2D2D7] z-[200] p-4 rounded-[18px] shadow-2xl">
+                    <div className="mb-4 px-2">
+                      <p className="text-[15px] font-semibold text-[#1D1D1F]">{user.full_name || user.username}</p>
+                      <p className="text-[13px] text-[#6E6E73]">{user.email}</p>
                     </div>
                     <div className="space-y-1">
                       <Link
-                        href="/profile"
+                        href="/ho-so"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 hover:text-black rounded-2xl transition-colors"
+                        className="block px-3 py-2 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-[10px] transition-colors"
                       >
-                        <User className="w-4 h-4" />
-                        Hồ sơ cá nhân
+                        Hồ sơ
                       </Link>
                       <Link
-                        href="/settings"
+                        href="/cai-dat"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 hover:text-black rounded-2xl transition-colors"
+                        className="block px-3 py-2 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-[10px] transition-colors"
                       >
-                        <Monitor className="w-4 h-4" />
-                        Cài đặt hệ thống
+                        Cài đặt
                       </Link>
-                      <div className="h-px bg-zinc-100 my-2 mx-2" />
+                      <div className="h-px bg-[#D2D2D7] my-2 mx-2" />
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-zinc-600 w-full text-left hover:bg-zinc-50 hover:text-black rounded-2xl transition-colors"
+                        className="block w-full text-left px-3 py-2 text-[15px] text-[#FF3B30] hover:bg-[#F5F5F7] rounded-[10px] transition-colors"
                       >
-                        <LogOut className="w-4 h-4" />
                         Đăng xuất
                       </button>
                     </div>
@@ -261,16 +216,16 @@ export default function Navigation() {
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <Link
                 href="/dang-nhap"
-                className="h-11 px-4 flex items-center justify-center text-xs font-semibold text-black bg-white border border-zinc-200 rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-50"
+                className="text-[13px] text-[#1D1D1F] hover:text-[#0071E3] transition-colors"
               >
                 Đăng nhập
               </Link>
               <Link
                 href="/dang-ky"
-                className="h-11 px-4 flex items-center justify-center text-xs font-semibold text-white bg-black rounded-2xl shadow-sm transition-all duration-200 hover:scale-105 hover:bg-zinc-800"
+                className="text-[13px] bg-[#0071E3] text-white px-3 py-1.5 rounded-[980px] hover:bg-[#0055C6] transition-colors"
               >
                 Đăng ký
               </Link>

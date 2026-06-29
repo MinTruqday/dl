@@ -7,18 +7,12 @@ import {
   getAIRecommendationsAPI,
   smartSearchAPI,
 } from "@/features/content/services/content_discovery.service";
-
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import Link from "next/link";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   LayoutGrid,
   List as ListIcon,
-  Eye,
-  Star,
-  BookOpen,
-  TrendingUp,
-  Sparkles,
   ChevronRight,
 } from "lucide-react";
 
@@ -33,7 +27,6 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [useSmart, setUseSmart] = useState(false);
-
 
   const { user } = useAuth();
 
@@ -86,38 +79,38 @@ export default function ExplorePage() {
 
   const SkeletonCard = ({ mode }: { mode: "grid" | "list" }) => (
     <div
-      className={`bg-white border border-zinc-100 rounded-2xl overflow-hidden animate-pulse ${
-        mode === "grid" ? "flex flex-col" : "flex flex-row gap-4 p-3"
+      className={`bg-[#F5F5F7] rounded-[18px] overflow-hidden animate-pulse ${
+        mode === "grid" ? "flex flex-col" : "flex flex-row gap-4 p-4"
       }`}
     >
-      <div className={`bg-zinc-100 ${mode === "grid" ? "aspect-[2/3] w-full" : "w-20 h-28 shrink-0 rounded-xl"}`} />
+      <div className={`bg-[#D2D2D7] ${mode === "grid" ? "aspect-[4/3] w-full" : "w-24 h-32 shrink-0 rounded-[10px]"}`} />
       {mode === "grid" && (
-        <div className="p-3 space-y-2">
-          <div className="h-2 w-1/3 bg-zinc-100 rounded-full" />
-          <div className="h-3 w-full bg-zinc-100 rounded-full" />
-          <div className="h-3 w-2/3 bg-zinc-100 rounded-full" />
+        <div className="p-4 space-y-3">
+          <div className="h-3 w-1/3 bg-[#D2D2D7] rounded-full" />
+          <div className="h-4 w-full bg-[#D2D2D7] rounded-full" />
+          <div className="h-4 w-2/3 bg-[#D2D2D7] rounded-full" />
         </div>
       )}
     </div>
   );
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-4 md:px-6 py-6 font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <aside className="lg:col-span-3 space-y-4">
-          <div className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3">Phân loại</p>
-            <nav className="flex flex-col gap-1">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-10 font-sans text-[#1D1D1F]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Phân loại</p>
+            <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 ${
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${
                   !selectedCategory
-                    ? "bg-zinc-900 text-white shadow-md"
-                    : "text-zinc-500 hover:bg-zinc-50"
+                    ? "bg-white text-[#0071E3] font-medium shadow-sm"
+                    : "text-[#1D1D1F] hover:bg-[#E8E8ED]"
                 }`}
               >
                 <span>Tất cả tài liệu</span>
-                {!selectedCategory && <ChevronRight className="w-3.5 h-3.5" />}
+                {!selectedCategory && <ChevronRight className="w-4 h-4" />}
               </button>
               {categories.map((cat) => (
                 <button
@@ -125,42 +118,38 @@ export default function ExplorePage() {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat ? null : cat)
                   }
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 ${
+                  className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${
                     selectedCategory === cat
-                      ? "bg-zinc-900 text-white shadow-md"
-                      : "text-zinc-500 hover:bg-zinc-50"
+                      ? "bg-white text-[#0071E3] font-medium shadow-sm"
+                      : "text-[#1D1D1F] hover:bg-[#E8E8ED]"
                   }`}
                 >
                   <span className="truncate text-left">{cat}</span>
-                  {selectedCategory === cat && <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
+                  {selectedCategory === cat && <ChevronRight className="w-4 h-4 shrink-0" />}
                 </button>
               ))}
             </nav>
           </div>
 
           {trending.length > 0 && (
-            <div className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="w-3.5 h-3.5 text-zinc-400" />
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Xu hướng</p>
-              </div>
-              <div className="flex flex-col gap-1">
+            <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Xu hướng</p>
+              <div className="flex flex-col gap-2">
                 {trending.map((document, i) => (
                   <Link
                     key={`trending-${document._id || i}`}
                     href={`/document/${document.slug}`}
-                    className="flex gap-3 items-start px-2 py-2.5 rounded-2xl transition-all duration-200 hover:scale-105 hover:-translate-y-1 hover:bg-zinc-50 hover:shadow-sm"
+                    className="flex gap-4 items-start px-3 py-3 rounded-[10px] transition-colors hover:bg-white hover:shadow-sm"
                   >
-                    <span className="text-xs font-bold text-zinc-300 w-4 text-center shrink-0 mt-0.5">
+                    <span className="text-[15px] font-semibold text-[#6E6E73] w-4 text-center shrink-0">
                       {i + 1}
                     </span>
-                    <div className="space-y-0.5 flex-1 min-w-0">
-                      <h4 className="text-xs font-semibold text-zinc-800 line-clamp-2 leading-snug">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <h4 className="text-[15px] font-medium text-[#1D1D1F] line-clamp-2 leading-snug">
                         {document.title}
                       </h4>
-                      <div className="text-[10px] font-medium text-zinc-400 flex items-center gap-1">
-                        <Eye className="w-2.5 h-2.5" />
-                        {document.views_count?.toLocaleString("vi-VN") || 0}
+                      <div className="text-[13px] text-[#6E6E73]">
+                        {document.views_count?.toLocaleString("vi-VN") || 0} lượt xem
                       </div>
                     </div>
                   </Link>
@@ -170,21 +159,18 @@ export default function ExplorePage() {
           )}
         </aside>
 
-        <main className="lg:col-span-9 space-y-5">
+        <main className="lg:col-span-9 space-y-8">
           {recommendations.length > 0 && !searchQuery && (
-            <section className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <h2 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gợi ý dành cho bạn</h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <section className="bg-[#F5F5F7] rounded-[18px] p-8">
+              <h2 className="text-[28px] font-semibold text-[#1D1D1F] mb-6 tracking-tight">Gợi ý dành cho bạn</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/document/${doc.slug}`}
-                    className="flex gap-3 p-3 border border-zinc-100 bg-white rounded-2xl shadow-sm transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-md"
+                    className="flex gap-4 p-4 bg-white rounded-[18px] transition-transform hover:scale-[1.02] shadow-sm"
                   >
-                    <div className="w-16 h-22 shrink-0 bg-zinc-200 rounded-xl overflow-hidden relative" style={{ height: "88px" }}>
+                    <div className="w-[88px] h-[88px] shrink-0 bg-[#F5F5F7] rounded-[10px] overflow-hidden">
                       {doc.cover_url ? (
                         <img
                           src={doc.cover_url}
@@ -192,17 +178,17 @@ export default function ExplorePage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-zinc-200" />
+                        <div className="w-full h-full bg-[#F5F5F7]" />
                       )}
                     </div>
-                    <div className="flex-1 flex flex-col gap-1 min-w-0">
-                      <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider truncate">
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <span className="text-[12px] font-medium text-[#0071E3] mb-1">
                         {doc.categories?.[0] || "Tài liệu"}
                       </span>
-                      <h3 className="text-xs font-semibold text-zinc-900 line-clamp-2 leading-snug">
+                      <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-2 leading-snug mb-2">
                         {doc.title}
                       </h3>
-                      <div className="mt-auto text-[10px] font-medium text-zinc-400 truncate">
+                      <div className="mt-auto text-[13px] text-[#6E6E73] truncate">
                         {doc.author?.full_name || doc.author?.username || "Ẩn danh"}
                       </div>
                     </div>
@@ -212,32 +198,32 @@ export default function ExplorePage() {
             </section>
           )}
 
-          <section className="bg-white/90 backdrop-blur-sm border border-zinc-100 rounded-3xl shadow-sm p-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-              <h2 className="text-sm font-bold text-zinc-900">
+          <section>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-[28px] font-semibold text-[#1D1D1F] tracking-tight">
                 {searchQuery ? `Kết quả cho "${searchQuery}"` : "Kho nội dung"}
               </h2>
-              <div className="flex items-center gap-2">
-                <div className="flex border border-zinc-200 bg-zinc-50 rounded-2xl overflow-hidden p-0.5 gap-0.5">
+              <div className="flex items-center">
+                <div className="flex bg-[#F5F5F7] rounded-[10px] p-1 gap-1">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 rounded-xl transition-all duration-200 hover:scale-110 ${
+                    className={`p-2 rounded-[8px] transition-colors ${
                       viewMode === "grid"
-                        ? "bg-white text-zinc-900 shadow-sm"
-                        : "bg-transparent text-zinc-400"
+                        ? "bg-white text-[#1D1D1F] shadow-sm"
+                        : "bg-transparent text-[#6E6E73]"
                     }`}
                   >
-                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <LayoutGrid className="w-[18px] h-[18px]" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 rounded-xl transition-all duration-200 hover:scale-110 ${
+                    className={`p-2 rounded-[8px] transition-colors ${
                       viewMode === "list"
-                        ? "bg-white text-zinc-900 shadow-sm"
-                        : "bg-transparent text-zinc-400"
+                        ? "bg-white text-[#1D1D1F] shadow-sm"
+                        : "bg-transparent text-[#6E6E73]"
                     }`}
                   >
-                    <ListIcon className="w-3.5 h-3.5" />
+                    <ListIcon className="w-[18px] h-[18px]" />
                   </button>
                 </div>
               </div>
@@ -245,7 +231,7 @@ export default function ExplorePage() {
 
             {loading ? (
               <div
-                className={`grid gap-5 ${
+                className={`grid gap-6 ${
                   viewMode === "grid"
                     ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
@@ -257,7 +243,7 @@ export default function ExplorePage() {
               </div>
             ) : documents.length > 0 ? (
               <div
-                className={`grid gap-5 ${
+                className={`grid gap-6 ${
                   viewMode === "grid"
                     ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
@@ -268,15 +254,15 @@ export default function ExplorePage() {
                     key={`doc-${document._id || i}`}
                     href={`/document/${document.slug}`}
                     className={`flex ${
-                      viewMode === "grid" ? "flex-col" : "flex-row gap-5 p-3"
-                    } border border-zinc-100 bg-white rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-md hover:border-zinc-200`}
+                      viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-4 items-center"
+                    } bg-[#F5F5F7] rounded-[18px] overflow-hidden transition-transform hover:scale-[1.02]`}
                   >
                     <div
                       className={`${
                         viewMode === "grid"
-                          ? "aspect-[2/3] w-full border-b border-zinc-100"
-                          : "w-20 h-28 shrink-0 rounded-xl"
-                      } bg-zinc-100 relative overflow-hidden`}
+                          ? "aspect-[4/3] w-full"
+                          : "w-[120px] h-[120px] shrink-0 rounded-[10px]"
+                      } bg-white relative overflow-hidden`}
                     >
                       {document.cover_url ? (
                         <img
@@ -285,21 +271,21 @@ export default function ExplorePage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-zinc-100" />
+                        <div className="w-full h-full bg-white" />
                       )}
                     </div>
 
                     <div
                       className={`${
-                        viewMode === "grid" ? "p-3" : "flex-1 py-0.5"
-                      } flex flex-col flex-1 gap-1.5`}
+                        viewMode === "grid" ? "p-5" : "flex-1"
+                      } flex flex-col gap-2`}
                     >
                       {document.categories && document.categories.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {document.categories.slice(0, 2).map((tag: string, idx: number) => (
+                        <div className="flex flex-wrap gap-2 mb-1">
+                          {document.categories.slice(0, 1).map((tag: string, idx: number) => (
                             <span
                               key={idx}
-                              className="px-1.5 py-0.5 text-[9px] font-bold text-zinc-400 bg-zinc-100 rounded-lg uppercase tracking-wide"
+                              className="text-[12px] font-medium text-[#0071E3]"
                             >
                               {tag}
                             </span>
@@ -309,17 +295,17 @@ export default function ExplorePage() {
 
                       <h3
                         className={`${
-                          viewMode === "grid" ? "text-xs" : "text-sm"
-                        } font-semibold text-zinc-900 line-clamp-2 leading-snug`}
+                          viewMode === "grid" ? "text-[17px]" : "text-[20px]"
+                        } font-medium text-[#1D1D1F] line-clamp-2 leading-snug`}
                       >
                         {document.title}
                       </h3>
 
-                      <div className="text-[10px] text-zinc-400 flex items-center gap-1">
-                        <span className="truncate font-medium text-zinc-600">
+                      <div className="text-[13px] text-[#6E6E73] flex items-center gap-2">
+                        <span className="truncate">
                           {document.author?.full_name || document.author?.username || "Ẩn danh"}
                         </span>
-                        <span className="text-zinc-200">•</span>
+                        <span>•</span>
                         <span className="shrink-0">
                           {document.created_at
                             ? new Date(document.created_at).toLocaleDateString("vi-VN")
@@ -327,31 +313,18 @@ export default function ExplorePage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2.5 text-[10px] text-zinc-400">
-                        <div className="flex items-center gap-0.5">
-                          <Eye className="w-3 h-3" />
-                          <span>{document.views_count?.toLocaleString("vi-VN") || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                          <Star className="w-3 h-3" />
-                          <span>{document.average_rating?.toFixed(1) || "0.0"}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                          <BookOpen className="w-3 h-3" />
-                          <span>{document.chapters_count || 0}</span>
-                        </div>
+                      <div className="flex items-center gap-4 text-[13px] text-[#6E6E73] mt-2">
+                        <span>{document.views_count?.toLocaleString("vi-VN") || 0} lượt xem</span>
+                        <span>{document.average_rating?.toFixed(1) || "0.0"} sao</span>
+                        <span>{document.chapters_count || 0} chương</span>
                       </div>
 
-                      <div
-                        className={`mt-auto pt-2 flex items-center justify-between ${
-                          viewMode === "grid" ? "border-t border-zinc-50" : ""
-                        }`}
-                      >
-                        <span className="text-[10px] font-bold text-zinc-900">
+                      <div className="mt-4 pt-4 border-t border-[#D2D2D7] flex items-center justify-between">
+                        <span className="text-[15px] font-medium text-[#1D1D1F]">
                           {document.is_premium ? `${document.price || 0} dl` : "Miễn phí"}
                         </span>
-                        <span className="text-[9px] font-bold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-xl uppercase tracking-widest">
-                          Xem
+                        <span className="text-[15px] text-[#0071E3] font-medium">
+                          Xem chi tiết
                         </span>
                       </div>
                     </div>
@@ -359,9 +332,8 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : (
-              <div className="py-20 flex flex-col items-center justify-center border border-zinc-100 bg-zinc-50 rounded-2xl gap-3">
-                <BookOpen className="w-8 h-8 text-zinc-200 stroke-[1.5]" />
-                <p className="text-xs font-medium text-zinc-400">Chưa có dữ liệu</p>
+              <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
+                <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
               </div>
             )}
           </section>

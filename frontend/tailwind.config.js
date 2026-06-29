@@ -15,12 +15,13 @@ module.exports = {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1400px",
+        "2xl": "1200px",
       },
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "SF Pro Text", "SF Pro Display", "sans-serif"],
+        display: ["SF Pro Display", "var(--font-sans)", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
