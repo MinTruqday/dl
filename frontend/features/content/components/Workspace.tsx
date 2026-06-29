@@ -38,16 +38,10 @@ export default function Workspace({
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans selection:bg-[#0071E3] selection:text-white overflow-x-hidden relative pb-28">
+    <div className="h-[100dvh] bg-[#FFFFFF] md:bg-[#F5F5F7] text-[#1D1D1F] font-sans selection:bg-[#0071E3] selection:text-white flex flex-col overflow-hidden relative">
       <Navigation />
       
-      <main
-        className="relative px-2 md:px-4 lg:ml-[240px]"
-        style={{
-          paddingTop: "calc(var(--navbar-height) + 32px)",
-          minHeight: "100vh",
-        }}
-      >
+      <main className="flex-1 flex flex-col min-h-0 pt-[56px] pb-24 md:pb-8 relative lg:ml-[240px]">
         {children}
       </main>
 

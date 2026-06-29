@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 import PageLoader from "@/shared/components/common/PageLoader";
+import EmptyState from "@/shared/components/common/EmptyState";
 
 export default function StudioCollabPage() {
   const { user, isLoading } = useAuth() as any;
@@ -348,7 +349,7 @@ export default function StudioCollabPage() {
                     );
                   })}
                 </div>
-              ) : <p className="text-[14px] text-[#6E6E73] text-center py-4">Chưa có ai tham gia</p>}
+              ) : <EmptyState text="Chưa có ai tham gia" compact={true} />}
             </div>
           )}
         </aside>
@@ -439,7 +440,7 @@ export default function StudioCollabPage() {
                 <div className="flex justify-between text-[11px] text-[#6E6E73] mb-1"><span className="font-semibold text-[#1D1D1F]">{c.sender_name}</span><span>{new Date(c.timestamp).toLocaleTimeString("vi-VN")}</span></div>
                 <p className="text-[14px] text-[#1D1D1F]">{c.comment_text}</p>
               </div>
-            )) : <p className="text-center text-[#6E6E73] text-[14px] py-10">Chưa có bình luận.</p>}
+            )) : <EmptyState text="Chưa có bình luận." compact={true} />}
           </div>
           <div className="flex gap-2">
             <input type="text" placeholder="Thêm bình luận..." value={activeTaskCommentText} onChange={(e) => setActiveTaskCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSendTaskComment()} className="apple-input flex-1" />

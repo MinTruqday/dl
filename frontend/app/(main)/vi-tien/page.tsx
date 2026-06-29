@@ -10,6 +10,7 @@ import { useToast } from "@/shared/contexts/ToastContext";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 import { usePayOS } from "@payos/payos-checkout";
 import PageLoader from "@/shared/components/common/PageLoader";
+import EmptyState from "@/shared/components/common/EmptyState";
 
 interface Transaction {
   _id: string;
@@ -218,7 +219,7 @@ export default function WalletPage() {
             {isLoading ? (
               <div className="py-24 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>
             ) : history.length === 0 ? (
-              <div className="py-24 text-center"><History className="w-12 h-12 text-[#D2D2D7] mx-auto mb-4" /><p className="text-[15px] text-[#6E6E73]">Chưa có giao dịch</p></div>
+              <EmptyState text="Chưa có giao dịch" />
             ) : (
               <div className="space-y-3">
                 {history.map((tx) => (

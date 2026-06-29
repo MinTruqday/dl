@@ -13,6 +13,7 @@ import { useToast } from "@/shared/contexts/ToastContext";
 import {
   LayoutGrid,
   List as ListIcon,
+  List,
   ChevronRight,
 } from "lucide-react";
 
@@ -97,7 +98,7 @@ export default function ExplorePage() {
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-10 font-sans text-[#1D1D1F]">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <aside className="lg:col-span-3 space-y-6">
+        <aside className="lg:col-span-3 space-y-6 sticky top-0 h-fit">
           <div className="bg-[#F5F5F7] rounded-[18px] p-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Phân loại</p>
             <nav className="flex flex-col gap-1.5">
@@ -204,28 +205,14 @@ export default function ExplorePage() {
                 {searchQuery ? `Kết quả cho "${searchQuery}"` : "Kho nội dung"}
               </h2>
               <div className="flex items-center">
-                <div className="flex bg-[#F5F5F7] rounded-[10px] p-1 gap-1">
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={`p-2 rounded-[8px] transition-colors ${
-                      viewMode === "grid"
-                        ? "bg-white text-[#1D1D1F] shadow-sm"
-                        : "bg-transparent text-[#6E6E73]"
-                    }`}
-                  >
-                    <LayoutGrid className="w-[18px] h-[18px]" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode("list")}
-                    className={`p-2 rounded-[8px] transition-colors ${
-                      viewMode === "list"
-                        ? "bg-white text-[#1D1D1F] shadow-sm"
-                        : "bg-transparent text-[#6E6E73]"
-                    }`}
-                  >
-                    <ListIcon className="w-[18px] h-[18px]" />
-                  </button>
-                </div>
+                <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
               </div>
             </div>
 

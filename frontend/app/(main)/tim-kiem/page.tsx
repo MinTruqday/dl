@@ -3,7 +3,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getDocumentsAPI } from "@/features/content/services/document_metadata.service";
-import { Filter, Clock, X, ArrowUpDown, BookOpen, Eye, LayoutGrid, List as ListIcon } from "lucide-react";
+import { Filter, Clock, X, ArrowUpDown, BookOpen, Eye, LayoutGrid, List as ListIcon, List } from "lucide-react";
 
 function SearchResultsContent() {
   const searchParams = useSearchParams();
@@ -44,10 +44,14 @@ function SearchResultsContent() {
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-8">
-        <div className="flex items-center gap-2 bg-[#F5F5F7] p-1 rounded-full">
-          <button onClick={() => setViewMode("grid")} className={`p-2 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "bg-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
-          <button onClick={() => setViewMode("list")} className={`p-2 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "bg-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}><ListIcon className="w-4 h-4" /></button>
-        </div>
+        <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { getToken as getAuthToken } from "@/features/auth/services/user_authentication.service";
 import { StorageItem, listStorageItemsAPI, createFolderAPI, uploadStorageFileAPI, deleteStorageItemAPI, updateStorageItemAPI, searchStorageItemsAPI, copyStorageItemAPI, uploadFileVersionAPI, getRecentStorageItemsAPI, shareStorageItemAPI, getStorageQuotaAPI, createShortcutAPI, downloadZipAPI } from "@/features/content/services/file_storage.service";
 import { useToast } from "@/shared/contexts/ToastContext";
-import { Folder, File, Upload, Plus, ChevronRight, MoreVertical, Trash2, Edit2, Download, Loader2, Search, Copy, Star, Share2, History, Tag, MessageSquare, Grid, List as ListIcon, Clock, Info, Link as LinkIcon, Palette, Archive, Home, X } from "lucide-react";
+import { Folder, File, Upload, Plus, ChevronRight, MoreVertical, Trash2, Edit2, Download, Loader2, Search, Copy, Star, Share2, History, Tag, MessageSquare, Grid, List, LayoutGrid, Clock, Info, Link as LinkIcon, Palette, Archive, Home, X } from "lucide-react";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 
 export default function StoragePage() {
@@ -211,9 +211,9 @@ export default function StoragePage() {
                   <option value="file">Tệp tin</option>
                 </select>
                 {selectedIds.size > 0 && <button onClick={handleZipDownload} className="pill-button px-4 py-1.5 h-[36px] text-[13px] bg-[#1D1D1F] flex items-center gap-1"><Archive className="w-3.5 h-3.5"/> ZIP ({selectedIds.size})</button>}
-                <div className="flex bg-[#E8E8ED] rounded-[12px] p-0.5 ml-2">
-                  <button onClick={() => setLayoutMode("list")} className={`p-1.5 rounded-[10px] transition-colors ${layoutMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><ListIcon className="w-4 h-4" /></button>
-                  <button onClick={() => setLayoutMode("grid")} className={`p-1.5 rounded-[10px] transition-colors ${layoutMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><Grid className="w-4 h-4" /></button>
+                <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0 ml-2">
+                  <button onClick={() => setLayoutMode("grid")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
+                  <button onClick={() => setLayoutMode("list")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
                 </div>
               </form>
             )}

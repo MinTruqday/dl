@@ -9,6 +9,7 @@ import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2, Settings, Hash, Folder, Brain, Shield, Users, Trash2, Tag, X, BookOpen, Send, Ticket, ArrowRightLeft, ChevronDown } from "lucide-react";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter, ModalDescription } from "@/shared/components/ui/Modal";
 import PageLoader from "@/shared/components/common/PageLoader";
+import EmptyState from "@/shared/components/common/EmptyState";
 
 export default function ConfigPage() {
   const { showToast } = useToast();
@@ -219,7 +220,7 @@ export default function ConfigPage() {
                         </li>
                       ))}
                     </ul>
-                  ) : <div className="text-center p-4"><p className="text-[13px] text-[#6E6E73]">Chưa có người cộng tác</p></div>}
+                  ) : <EmptyState text="Chưa có người cộng tác" compact={true} />}
                 </div>
               </div>
 
@@ -232,7 +233,7 @@ export default function ConfigPage() {
                   <button onClick={handleCreateCoupon} className="col-span-3 h-[48px] bg-[#1D1D1F] text-white text-[15px] font-medium rounded-full hover:bg-[#333336] transition-colors">Tạo mã ưu đãi</button>
                 </div>
                 <div className="bg-[#F5F5F7] border border-[#E8E8ED] rounded-[18px] p-4 max-h-[160px] overflow-y-auto custom-scrollbar">
-                  {coupons.length === 0 ? <div className="text-center p-4"><p className="text-[13px] text-[#6E6E73]">Chưa có mã ưu đãi</p></div> : (
+                  {coupons.length === 0 ? <EmptyState text="Chưa có mã ưu đãi" compact={true} /> : (
                     <div className="flex flex-col gap-2">
                       {coupons.map((c: any) => (
                         <div key={c.id || c._id} className="bg-white border border-[#E8E8ED] p-3 rounded-[14px] shadow-sm flex items-center justify-between">

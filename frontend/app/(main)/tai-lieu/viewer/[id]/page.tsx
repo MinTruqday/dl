@@ -9,6 +9,7 @@ import { createHighlightAPI, getHighlightsAPI, deleteHighlightAPI } from "@/feat
 import { toggleBookmarkAPI, getBookmarksAPI } from "@/features/content/services/document_bookmark.service";
 import { Lock, AlertTriangle, Send, ArrowLeft, Loader2, User, Bot, Highlighter, Bookmark, Zap, Trash2, BookmarkCheck, ZoomIn, ZoomOut, Columns, Square, Languages, BookOpen, History, Maximize2, Minimize2, Paperclip, Edit2, X, FileText, Image as ImageIcon, Folder } from "lucide-react";
 import PageLoader from "@/shared/components/common/PageLoader";
+import EmptyState from "@/shared/components/common/EmptyState";
 
 export default function DocumentViewer() {
   const { showToast } = useToast();
@@ -362,13 +363,13 @@ export default function DocumentViewer() {
             </div>
           ) : sidebarTab === "highlights" ? (
             <div className="space-y-4">
-              {!highlights.length ? <div className="py-12 text-center text-[#6E6E73]"><Highlighter className="w-10 h-10 mx-auto mb-4 text-[#C7C7CC]" /><p className="text-[13px] font-medium">Chưa có nêu bật nào</p></div> : highlights.map((h, i) => (
+              {!highlights.length ? <EmptyState text="Chưa có nêu bật nào" /> : highlights.map((h, i) => (
                 <div key={i} className="p-5 border border-[#E8E8ED] bg-[#F5F5F7] rounded-[18px] group"><p className="text-[15px] text-[#1D1D1F] mb-4 italic pl-4 border-l-2 border-[#0071E3]">"{h.text}"</p><div className="flex justify-between items-center"><span className="text-[12px] text-[#6E6E73]">{new Date(h.created_at).toLocaleDateString("vi-VN")}</span><button onClick={() => deleteHighlightItem(h.id || h._id)} className="p-2 text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FFEBEB] rounded-full"><Trash2 className="w-4 h-4" /></button></div></div>
               ))}
             </div>
           ) : sidebarTab === "history" ? (
             <div className="space-y-4">
-              {!sessions.length ? <div className="py-12 text-center text-[#6E6E73]"><History className="w-10 h-10 mx-auto mb-4 text-[#C7C7CC]" /><p className="text-[13px] font-medium">Chưa có lịch sử hội thoại</p></div> : sessions.map((s) => (
+              {!sessions.length ? <EmptyState text="Chưa có lịch sử hội thoại" /> : sessions.map((s) => (
                 <div key={s._id} onClick={() => { setCurrentSessionId(s._id); setSidebarTab("chat"); }} className={`p-5 border cursor-pointer rounded-[18px] relative ${currentSessionId === s._id ? "border-[#0071E3] bg-[#EBF4FF]" : "border-[#E8E8ED] bg-[#F5F5F7]"}`}><p className="text-[15px] font-medium text-[#1D1D1F] pr-8">{s.title}</p><p className="text-[12px] text-[#6E6E73] mt-2">{new Date(s.updated_at).toLocaleDateString("vi-VN")}</p></div>
               ))}
             </div>

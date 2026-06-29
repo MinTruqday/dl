@@ -7,11 +7,12 @@ import { createReadingListAPI, getMyReadingListsAPI as getReadingListsAPI } from
 import { getPinnedDocumentsAPI, getReadingHistoryAPI, clearReadingHistoryAPI, deleteReadingHistoryItemAPI } from "@/features/content/services/reading_progress.service";
 import { API_URL } from "@/features/auth/services/user_authentication.service";
 import { multiDocSynthesisAPI } from "@/features/ai/services/agentic_ai.service";
-import { LayoutGrid, List as ListIcon, Layers, FolderPlus, Loader2, FileText, Trash2, ChevronRight, Search, X, Combine, Sparkles, Plus } from "lucide-react";
+import { LayoutGrid, List as ListIcon, List, Layers, FolderPlus, Loader2, FileText, Trash2, ChevronRight, Search, X, Combine, Sparkles, Plus } from "lucide-react";
 import Link from "next/link";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 import { useToast } from "@/shared/contexts/ToastContext";
 import ReactMarkdown from "react-markdown";
+import EmptyState from "@/shared/components/common/EmptyState";
 
 export default function LibraryPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
@@ -168,7 +169,7 @@ export default function LibraryPage() {
                     <h4 className="text-[15px] font-medium text-[#1D1D1F] line-clamp-2 leading-[1.3] group-hover:text-[#0071E3] transition-colors">{doc.title}</h4>
                   </div>
                 </Link>
-              )) : <p className="text-[13px] text-[#6E6E73] text-center py-4">Chưa có tài liệu ghim</p>}
+              )) : <EmptyState text="Chưa có tài liệu ghim" compact={true} />}
             </div>
           </div>
         </aside>
@@ -200,9 +201,13 @@ export default function LibraryPage() {
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lịch sử</h2>
                 <div className="flex items-center gap-4">
                   {history.length > 0 && <button onClick={() => setIsClearModalOpen(true)} className="text-[13px] text-[#0071E3] hover:underline">Xóa tất cả</button>}
-                  <div className="flex bg-[#F5F5F7] p-1 rounded-full">
-                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full ${viewMode === "grid" ? "bg-white shadow-sm text-[#1D1D1F]" : "text-[#6E6E73]"}`}><LayoutGrid className="w-4 h-4" /></button>
-                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full ${viewMode === "list" ? "bg-white shadow-sm text-[#1D1D1F]" : "text-[#6E6E73]"}`}><ListIcon className="w-4 h-4" /></button>
+                  <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -222,7 +227,7 @@ export default function LibraryPage() {
                     </div>
                     <button onClick={() => handleDeleteHistoryItem(item.document_id)} className={`absolute ${viewMode === "grid" ? "top-2 right-2" : "right-4"} p-2 bg-white rounded-full text-[#6E6E73] hover:text-[#FF3B30] shadow-sm opacity-0 group-hover:opacity-100 transition-opacity`}><Trash2 className="w-4 h-4" /></button>
                   </div>
-                )) : <p className="text-[15px] text-[#6E6E73] col-span-full py-12 text-center">Chưa có lịch sử đọc</p>}
+                )) : <EmptyState text="Chưa có lịch sử đọc" compact={true} />}
               </div>
             </section>
           )}
@@ -242,7 +247,7 @@ export default function LibraryPage() {
                     <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-1">{folder.name}</h3>
                     <p className="text-[13px] text-[#6E6E73]">{folder.bookmark_ids?.length || 0} mục</p>
                   </Link>
-                )) : <p className="text-[15px] text-[#6E6E73] col-span-full py-12 text-center">Chưa có thư mục nào</p>}
+                )) : <EmptyState text="Chưa có thư mục nào" compact={true} />}
               </div>
             </section>
           )}
@@ -262,7 +267,7 @@ export default function LibraryPage() {
                     <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-1">{list.name}</h3>
                     <p className="text-[13px] text-[#6E6E73]">{list.documents?.length || 0} tài liệu</p>
                   </Link>
-                )) : <p className="text-[15px] text-[#6E6E73] col-span-full py-12 text-center">Chưa có danh sách đọc nào</p>}
+                )) : <EmptyState text="Chưa có danh sách đọc nào" compact={true} />}
               </div>
             </section>
           )}
@@ -333,7 +338,7 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: { isOp
               <p className="text-[13px] text-[#6E6E73]">Phân tích dữ liệu từ thư viện cá nhân</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-[#6E6E73] hover:bg-[#F5F5F7] rounded-full transition-colors"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-2 text-[#6E6E73] hover:bg-[#F5F5F7] rounded-full transition-colors"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 flex overflow-hidden">

@@ -81,7 +81,7 @@ export default function Dock() {
   };
 
   return (
-    <aside className="fixed left-0 top-[56px] bottom-0 w-[240px] bg-[#F5F5F7] border-r border-[#D2D2D7] overflow-y-auto hide-scrollbar z-[90]">
+    <aside className="fixed left-0 top-[56px] bottom-0 w-[240px] bg-[#F5F5F7] border-r border-[#D2D2D7] overflow-y-auto hide-scrollbar z-[90] hidden lg:block">
       <div className="py-6 px-4">
         <div className="space-y-1">
           {availableItems.map((item) => {
