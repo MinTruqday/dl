@@ -38,7 +38,7 @@ function PayOSEmbedded({ checkoutUrl }: { checkoutUrl: string }) {
   return (
     <div
       id={elementId.current}
-      className="w-full min-h-[450px] border border-[#E8E8ED] rounded-[18px] my-4 bg-white overflow-hidden shadow-sm"
+      className="w-full min-h-[450px] border-[#E8E8ED] rounded-[18px] my-4 bg-[#F5F5F7] overflow-hidden"
     ></div>
   );
 }

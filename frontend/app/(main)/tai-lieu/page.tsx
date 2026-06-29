@@ -166,7 +166,7 @@ export default function DocumentsPage() {
           </div>
 
           {viewMode === "list" ? (
-            <div className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm flex-1 overflow-y-auto no-scrollbar">
+            <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-y-auto no-scrollbar">
               <table className="w-full text-left">
                 <thead className="sticky top-0 bg-white z-10 border-b border-[#E8E8ED]">
                   <tr className="text-[13px] text-[#6E6E73]">
@@ -204,13 +204,13 @@ export default function DocumentsPage() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
               {folders.map(folder => (
-                <div key={folder._id} onClick={() => { setCurrentFolder(folder); setBreadcrumbs([...breadcrumbs, folder]); }} className="bg-white border border-[#E8E8ED] p-6 flex flex-col items-center justify-center gap-3 cursor-pointer rounded-[24px] shadow-sm hover:shadow-md transition-shadow group">
+                <div key={folder._id} onClick={() => { setCurrentFolder(folder); setBreadcrumbs([...breadcrumbs, folder]); }} className="bg-[#F5F5F7] border-[#E8E8ED] p-6 flex flex-col items-center justify-center gap-3 cursor-pointer rounded-[24px] hover: transition-shadow group">
                   <div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[16px] text-[#1D1D1F]"><Folder className="w-8 h-8"/></div>
                   <span className="text-[15px] font-medium text-[#1D1D1F] text-center">{folder.name}</span>
                 </div>
               ))}
               {documents.map(doc => (
-                <div key={doc._id || doc.id} className="bg-white border border-[#E8E8ED] p-5 flex flex-col rounded-[24px] shadow-sm hover:shadow-md transition-shadow group relative">
+                <div key={doc._id || doc.id} className="bg-[#F5F5F7] border-[#E8E8ED] p-5 flex flex-col rounded-[24px] hover: transition-shadow group relative">
                   <button onClick={() => toggleStar(doc._id || doc.id)} className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"><Star className={`w-4 h-4 ${doc.is_starred ? "text-[#FF9500] fill-[#FF9500]" : "text-[#6E6E73]"}`}/></button>
                   <div className="flex flex-col items-center gap-4 mb-4 mt-2">
                     <div className="w-24 h-32 bg-[#F5F5F7] flex items-center justify-center rounded-[14px] text-[#A1A1A6] overflow-hidden border border-[#E8E8ED]">
@@ -233,7 +233,7 @@ export default function DocumentsPage() {
           )}
 
           {documents.length === 0 && folders.length === 0 && !isLoading && (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm">
+            <div className="flex-1 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED]">
               <Search className="w-12 h-12 text-[#C7C7CC] mb-4"/>
               <h2 className="text-[17px] font-medium text-[#1D1D1F]">Không có tài liệu</h2>
               <p className="text-[14px] text-[#6E6E73] mt-2">Thư mục hiện đang trống.</p>
@@ -266,7 +266,7 @@ export default function DocumentsPage() {
             <div>
               <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Tệp đính kèm</label>
               <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.zip,.csv,.json,.md" />
-              <div onClick={() => fileInputRef.current?.click()} className="h-32 bg-white border border-[#E8E8ED] rounded-[18px] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#0071E3] transition-colors border-dashed">
+              <div onClick={() => fileInputRef.current?.click()} className="h-32 bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#0071E3] transition-colors border-dashed">
                 <div className="w-10 h-10 bg-[#F5F5F7] rounded-full flex items-center justify-center text-[#0071E3]">{file ? <FileCheck className="w-5 h-5"/> : <Upload className="w-5 h-5"/>}</div>
                 <p className="text-[14px] font-medium text-[#1D1D1F]">{file ? file.name : "Chọn tệp tin"}</p>
               </div>
@@ -296,13 +296,13 @@ export default function DocumentsPage() {
         <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold flex items-center gap-2"><Share2 className="w-5 h-5"/> Chia sẻ tài liệu</ModalTitle></ModalHeader>
         <ModalContent className="p-6 pt-0 space-y-4">
           <form id="share-form" onSubmit={handleShareSubmit} className="space-y-4">
-            <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-[#E8E8ED]"><input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="w-5 h-5 rounded-[6px] border-[#C7C7CC] accent-[#0071E3]" /><span className="text-[15px] font-medium">Bật liên kết công khai</span></div>
+            <div className="flex items-center gap-3 bg-[#F5F5F7] p-4 rounded-[16px] border-[#E8E8ED]"><input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="w-5 h-5 rounded-[6px] border-[#C7C7CC] accent-[#0071E3]" /><span className="text-[15px] font-medium">Bật liên kết công khai</span></div>
             <div className="grid grid-cols-2 gap-4">
               <div><label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Mật khẩu (Tùy chọn)</label><input type="password" value={sharePassword} onChange={(e) => setSharePassword(e.target.value)} className="apple-input w-full bg-white" /></div>
               <div><label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Thời hạn</label><select value={shareExpires} onChange={(e) => setShareExpires(e.target.value)} className="apple-input w-full bg-white"><option value="1">24 giờ</option><option value="7">7 ngày</option><option value="30">30 ngày</option></select></div>
             </div>
             {publicUrl && (
-              <div className="bg-white p-6 rounded-[18px] border border-[#E8E8ED] flex flex-col items-center gap-4 mt-4">
+              <div className="bg-[#F5F5F7] p-6 rounded-[18px] border-[#E8E8ED] flex flex-col items-center gap-4 mt-4">
                 <input type="text" readOnly value={publicUrl} className="apple-input w-full text-center bg-[#F5F5F7] text-[#0071E3]" onFocus={e=>e.target.select()} />
                 <div className="p-2 bg-white rounded-xl shadow-sm border border-[#E8E8ED]"><QRCodeSVG value={publicUrl} size={100} /></div>
               </div>

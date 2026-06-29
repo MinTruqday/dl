@@ -127,7 +127,7 @@ export default function HistoryPage() {
         </div>
 
         {selectedDocumentId ? (
-          <div className="flex-1 min-h-0 flex flex-col bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm overflow-hidden pb-6">
+          <div className="flex-1 min-h-0 flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] overflow-hidden pb-6">
             <div className="border-b border-[#E8E8ED] p-6 bg-[#F5F5F7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
               <div>
                 <h2 className="text-[15px] font-semibold text-[#1D1D1F] flex items-center gap-2 mb-1"><History className="w-5 h-5" /> Danh sách phiên bản</h2>
@@ -148,7 +148,7 @@ export default function HistoryPage() {
                   {versions.map((v) => {
                     const isSelected = selectedVersions.includes(v.id);
                     return (
-                      <div key={v.id} onClick={() => toggleVersionSelection(v.id)} className={`flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-[24px] transition-all cursor-pointer relative overflow-hidden group border ${isSelected ? "bg-[#0071E3]/5 border-[#0071E3]" : "bg-white border-[#E8E8ED] hover:shadow-sm"}`}>
+                      <div key={v.id} onClick={() => toggleVersionSelection(v.id)} className={`flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-[24px] transition-all cursor-pointer relative overflow-hidden group ${isSelected ? "bg-[#0071E3]/5 border-[#0071E3]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:"}`}>
                         {isSelected && <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0071E3]" />}
                         <div className="flex items-center gap-4 mb-4 sm:mb-0 ml-2">
                           <div className={`w-12 h-12 flex items-center justify-center rounded-[14px] shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#6E6E73] border border-[#E8E8ED]"}`}>
@@ -171,13 +171,13 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="flex-1 bg-[#F5F5F7] border border-[#E8E8ED] rounded-[24px] p-12 flex flex-col items-center justify-center gap-4 text-center">
-            <div className="w-16 h-16 bg-white border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-2"><History className="w-8 h-8 text-[#C7C7CC]" /></div>
+            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-2"><History className="w-8 h-8 text-[#C7C7CC]" /></div>
             <p className="text-[15px] text-[#6E6E73] max-w-sm">Vui lòng chọn một tác phẩm từ danh sách để xem lịch sử phiên bản</p>
           </div>
         )}
       </div>
 
-      <Modal isOpen={!!confirmRestore} onClose={() => setConfirmRestore(null)} className="max-w-md rounded-[24px] border border-[#E8E8ED] bg-white p-0 shadow-lg overflow-hidden">
+      <Modal isOpen={!!confirmRestore} onClose={() => setConfirmRestore(null)} className="max-w-md rounded-[24px] border-[#E8E8ED] bg-[#F5F5F7] p-0 shadow-lg overflow-hidden">
         <ModalHeader className="border-b border-[#E8E8ED] p-6 bg-[#FF9F0A]/10">
           <ModalTitle className="text-[17px] font-semibold text-[#FF9F0A] flex items-center gap-2"><RotateCcw className="w-5 h-5" /> Xác nhận khôi phục</ModalTitle>
           <ModalDescription className="text-[13px] text-[#FF9F0A] mt-2 ml-7">Thay thế nội dung hiện tại</ModalDescription>
@@ -194,7 +194,7 @@ export default function HistoryPage() {
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={!!diffData} onClose={() => setDiffData(null)} className="max-w-[90vw] md:max-w-5xl h-[85vh] rounded-[24px] border border-[#E8E8ED] bg-white p-0 shadow-lg flex flex-col overflow-hidden">
+      <Modal isOpen={!!diffData} onClose={() => setDiffData(null)} className="max-w-[90vw] md:max-w-5xl h-[85vh] rounded-[24px] border-[#E8E8ED] bg-[#F5F5F7] p-0 shadow-lg flex flex-col overflow-hidden">
         <ModalHeader className="border-b border-[#E8E8ED] p-6 shrink-0 bg-[#F5F5F7]">
           <ModalTitle className="text-[17px] font-semibold text-[#1D1D1F] flex items-center gap-2"><GitCompare className="w-5 h-5" /> So sánh sự khác biệt</ModalTitle>
         </ModalHeader>

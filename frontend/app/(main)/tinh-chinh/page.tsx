@@ -89,7 +89,7 @@ export default function FineTuningPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
-        <div className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm flex flex-col overflow-hidden min-h-0">
+        <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex flex-col overflow-hidden min-h-0">
           <div className="p-5 border-b border-[#E8E8ED] flex justify-between items-center bg-[#F5F5F7]/30">
             <h2 className="text-[16px] font-medium text-[#1D1D1F] flex items-center gap-2"><Database className="w-5 h-5 text-[#6E6E73]" /> Tập dữ liệu <span className="px-2 py-0.5 bg-[#F5F5F7] text-[#6E6E73] rounded-full text-[12px]">{datasets.length}</span></h2>
             <button onClick={() => setShowNewDataset(true)} className="w-8 h-8 flex items-center justify-center bg-[#F5F5F7] text-[#1D1D1F] rounded-full hover:bg-[#E8E8ED] transition-colors"><Plus className="w-4 h-4" /></button>
@@ -98,7 +98,7 @@ export default function FineTuningPage() {
             {loading ? <div className="py-10 flex justify-center"><div className="w-6 h-6 border-2 border-[#0071E3] border-t-transparent rounded-full animate-spin"></div></div> : datasets.length === 0 ? <div className="text-center py-10 text-[#6E6E73] text-[14px]">Chưa có tập dữ liệu nào.</div> : (
               <div className="space-y-3">
                 {datasets.map(ds => (
-                  <div key={ds._id} className="p-4 bg-[#F5F5F7] border border-transparent rounded-[18px] hover:border-[#E8E8ED] hover:bg-white transition-colors shadow-sm">
+                  <div key={ds._id} className="p-4 bg-[#F5F5F7] border-transparent rounded-[18px] hover:border-[#E8E8ED] hover:bg-[#F5F5F7] transition-colors">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-[15px] font-medium text-[#1D1D1F]">{ds.name}</h3>
                       <span className="text-[12px] px-2.5 py-1 bg-[#E8E8ED] text-[#6E6E73] rounded-full font-medium">{ds.sample_count} mẫu</span>
@@ -111,7 +111,7 @@ export default function FineTuningPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm flex flex-col overflow-hidden min-h-0">
+        <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex flex-col overflow-hidden min-h-0">
           <div className="p-5 border-b border-[#E8E8ED] bg-[#F5F5F7]/30">
             <h2 className="text-[16px] font-medium text-[#1D1D1F] flex items-center gap-2"><Activity className="w-5 h-5 text-[#6E6E73]" /> Tiến trình Huấn luyện <span className="px-2 py-0.5 bg-[#F5F5F7] text-[#6E6E73] rounded-full text-[12px]">{jobs.length}</span></h2>
           </div>
@@ -119,7 +119,7 @@ export default function FineTuningPage() {
             {loading ? <div className="py-10 flex justify-center"><div className="w-6 h-6 border-2 border-[#34C759] border-t-transparent rounded-full animate-spin"></div></div> : jobs.length === 0 ? <div className="text-center py-10 text-[#6E6E73] text-[14px]">Chưa có tiến trình huấn luyện nào.</div> : (
               <div className="space-y-4">
                 {jobs.map(job => (
-                  <div key={job._id} className="p-5 bg-[#F5F5F7] border border-transparent rounded-[18px] hover:border-[#E8E8ED] hover:bg-white transition-colors shadow-sm">
+                  <div key={job._id} className="p-5 bg-[#F5F5F7] border-transparent rounded-[18px] hover:border-[#E8E8ED] hover:bg-[#F5F5F7] transition-colors">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-[15px] font-medium text-[#1D1D1F]">{job.job_name}</h3>

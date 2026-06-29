@@ -45,7 +45,7 @@ export default function AuthorAnalyticsPage() {
           { label: "Doanh thu (dl)", val: revenue?.total_revenue || 0, icon: TrendingUp, color: "text-[#34C759]", bg: "bg-[#34C759]/10" },
           { label: "Tác phẩm", val: documents.length, icon: BookOpen, color: "text-[#AF52DE]", bg: "bg-[#AF52DE]/10" }
         ].map((item, i) => (
-          <div key={i} className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-6 flex flex-col gap-4">
+          <div key={i} className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-4">
             <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center ${item.bg}`}>
               <item.icon className={`w-6 h-6 ${item.color}`} />
             </div>
@@ -59,7 +59,7 @@ export default function AuthorAnalyticsPage() {
         ))}
       </div>
       
-      <div className="flex-1 bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px] text-center">
+      <div className="flex-1 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-8 flex flex-col items-center justify-center min-h-[300px] text-center">
         <div className="w-20 h-20 bg-[#F5F5F7] flex items-center justify-center rounded-[20px] mb-4">
           <BarChart3 className="w-10 h-10 text-[#C7C7CC]" />
         </div>

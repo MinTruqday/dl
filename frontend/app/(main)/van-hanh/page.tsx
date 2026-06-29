@@ -80,7 +80,7 @@ export default function OperationDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="lg:col-span-2 bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-6 flex flex-col gap-6">
+        <section className="lg:col-span-2 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-6">
           <h2 className="text-[18px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Server className="w-5 h-5 text-[#6E6E73]" /> Sức khỏe hệ thống</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-3">
@@ -114,7 +114,7 @@ export default function OperationDashboard() {
           </div>
         </section>
 
-        <section className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-6 flex flex-col gap-6">
+        <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-6">
           <h2 className="text-[18px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Shield className="w-5 h-5 text-[#6E6E73]" /> Điều hành</h2>
           <div className="flex flex-col gap-4">
             <div className="bg-[#FFF4E5] rounded-[18px] p-5 border border-[#FF9500]/20 flex flex-col gap-4">
@@ -137,7 +137,7 @@ export default function OperationDashboard() {
         </section>
       </div>
 
-      <section className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-6 flex flex-col gap-6">
+      <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h2 className="text-[18px] font-semibold text-[#1D1D1F] flex items-center gap-2"><HardDrive className="w-5 h-5 text-[#6E6E73]" /> Kho lưu trữ (MinIO)</h2>
           <div className="flex items-center gap-2 bg-[#F5F5F7] px-3 py-1.5 rounded-full"><div className={`w-2 h-2 rounded-full ${minioStats?.status === "healthy" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`} /><span className="text-[12px] font-medium text-[#6E6E73]">{minioStats?.status === "healthy" ? "Đã kết nối" : "Mất kết nối"}</span></div>
@@ -161,7 +161,7 @@ export default function OperationDashboard() {
         )}
       </section>
 
-      <section className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-6 flex flex-col gap-6">
+      <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-6">
         <h2 className="text-[18px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Zap className="w-5 h-5 text-[#6E6E73]" /> Hạn mức AI</h2>
         {quotaLoading ? <div className="py-10 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" /></div> : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

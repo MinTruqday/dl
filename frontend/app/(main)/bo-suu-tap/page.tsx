@@ -68,7 +68,7 @@ export default function CollectorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-4 xl:col-span-3 flex flex-col gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <section className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-6 space-y-6">
+          <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 space-y-6">
             <h3 className="text-[15px] font-medium text-[#1D1D1F] flex items-center gap-2 border-b border-[#E8E8ED] pb-3"><Settings2 className="w-5 h-5 text-[#6E6E73]" /> Trạng thái hệ thống</h3>
             <div className="space-y-4">
               <div className="bg-[#F5F5F7] rounded-[18px] p-5">
@@ -88,7 +88,7 @@ export default function CollectorPage() {
             </div>
           </section>
 
-          <section className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-6 space-y-6">
+          <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 space-y-6">
             <h3 className="text-[15px] font-medium text-[#1D1D1F] flex items-center gap-2 border-b border-[#E8E8ED] pb-3"><PlayCircle className="w-5 h-5 text-[#6E6E73]" /> Khởi tạo nhiệm vụ</h3>
             <div className="space-y-4">
               <div>
@@ -152,7 +152,7 @@ export default function CollectorPage() {
       <Modal isOpen={confirmModal} onClose={() => !isProcessing && setConfirmModal(false)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">
         <ModalHeader className="p-6 pb-2"><ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Xác nhận thu thập</ModalTitle></ModalHeader>
         <ModalContent className="p-6 pt-2">
-          <div className="bg-white p-4 rounded-[16px] border border-[#E8E8ED] mb-4">
+          <div className="bg-[#F5F5F7] p-4 rounded-[16px] border-[#E8E8ED] mb-4">
             <span className="text-[13px] text-[#6E6E73]">Nguồn thu thập: </span><strong className="text-[#1D1D1F]">{collectionForm.source}</strong>
           </div>
           <p className="text-[14px] text-[#6E6E73] leading-relaxed">Hệ thống sẽ bắt đầu thu thập dữ liệu tự động. Quá trình này có thể tốn một khoảng thời gian.</p>

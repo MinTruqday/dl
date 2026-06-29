@@ -53,7 +53,7 @@ export default function NotificationsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
-        <div className="md:col-span-8 flex flex-col h-full bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm overflow-hidden">
+        <div className="md:col-span-8 flex flex-col h-full bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] overflow-hidden">
           <div className="flex border-b border-[#E8E8ED] bg-[#F5F5F7]/30 px-6 pt-4 gap-6">
             <button onClick={() => setActiveTab("all")} className={`pb-3 text-[14px] font-medium border-b-2 transition-colors ${activeTab === "all" ? "border-[#1D1D1F] text-[#1D1D1F]" : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}>Tất cả</button>
             <button onClick={() => setActiveTab("unread")} className={`pb-3 text-[14px] font-medium border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === "unread" ? "border-[#1D1D1F] text-[#1D1D1F]" : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}>

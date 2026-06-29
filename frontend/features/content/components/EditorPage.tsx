@@ -155,7 +155,7 @@ function StudioContent() {
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] flex flex-col gap-6 text-[#1D1D1F]">
-      <div className="h-[64px] bg-white rounded-[24px] px-6 flex items-center justify-between shadow-sm border border-[#E8E8ED] shrink-0">
+      <div className="h-[64px] bg-[#F5F5F7] rounded-[24px] px-6 flex items-center justify-between border-[#E8E8ED] shrink-0">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-[#F5F5F7] flex items-center justify-center rounded-full"><FileText className="w-5 h-5 text-[#1D1D1F]" /></div>
           <span className="text-[17px] font-semibold text-[#1D1D1F] truncate max-w-[200px] md:max-w-[400px]">
@@ -185,7 +185,7 @@ function StudioContent() {
         </div>
       </div>
 
-      <div className="flex-1 w-full flex flex-col bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm overflow-hidden">
+      <div className="flex-1 w-full flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] overflow-hidden">
         <div className="h-[48px] bg-[#F5F5F7] px-6 flex items-center border-b border-[#E8E8ED] gap-2 shrink-0">
           {(["edit", "preview", "raw"] as const).map((m) => (
             <button key={m} onClick={() => setEditorMode(m)} className={`h-full px-4 text-[14px] font-medium flex items-center transition-colors border-b-2 ${editorMode === m ? "border-[#1D1D1F] text-[#1D1D1F]" : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}>

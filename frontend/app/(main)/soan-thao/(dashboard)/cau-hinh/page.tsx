@@ -148,7 +148,7 @@ export default function ConfigPage() {
         {selectedDocumentId ? (
           <div className="flex-1 min-h-0 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[24px] shadow-sm">
+              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
                 <div className="flex items-center gap-2 mb-4"><Hash className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Phân loại & Thẻ</h3></div>
                 <p className="text-[13px] text-[#6E6E73] mb-4">Sử dụng thẻ để phân loại tác phẩm.</p>
                 <div className="flex flex-wrap gap-2 mb-4 min-h-[32px]">
@@ -162,7 +162,7 @@ export default function ConfigPage() {
                 <div className="relative"><Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" /><input type="text" value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} onKeyDown={handleAddTag} placeholder="Nhập tên thẻ & Enter (VD: TIENHIEP)" className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" /></div>
               </div>
 
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[24px] shadow-sm">
+              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
                 <div className="flex items-center gap-2 mb-4"><Folder className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Thư mục làm việc</h3></div>
                 <p className="text-[13px] text-[#6E6E73] mb-4">Di chuyển tác phẩm này vào thư mục.</p>
                 <div className="relative">
@@ -175,7 +175,7 @@ export default function ConfigPage() {
                 </div>
               </div>
 
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[24px] shadow-sm">
+              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2"><Shield className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Bảo vệ bản quyền</h3></div>
                   <button onClick={handleSaveDRM} disabled={savingDrm || !selectedDocumentId} className="h-[36px] px-4 bg-[#0071E3] text-white text-[13px] font-medium rounded-full disabled:opacity-50 transition-colors hover:bg-[#0077ED]">{savingDrm ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Lưu DRM"}</button>
@@ -201,7 +201,7 @@ export default function ConfigPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[24px] shadow-sm relative overflow-hidden">
+              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px] relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Brain className="w-24 h-24" /></div>
                 <div className="flex items-center gap-2 mb-4 relative z-10"><Brain className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Trí tuệ nhân tạo</h3></div>
                 <p className="text-[13px] text-[#6E6E73] mb-4 relative z-10">Đồng bộ nội dung với hệ thống RAG để AI hỗ trợ độc giả.</p>
@@ -210,7 +210,7 @@ export default function ConfigPage() {
                 </button>
               </div>
 
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[24px] shadow-sm">
+              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
                 <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Cộng tác viên</h3></div>
                 <div className="flex gap-2 mb-4">
                   <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="Email người cộng tác..." className="flex-1 h-[48px] pl-4 pr-4 border border-[#E8E8ED] text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
@@ -230,7 +230,7 @@ export default function ConfigPage() {
                 </div>
               </div>
 
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[24px] shadow-sm">
+              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
                 <div className="flex items-center gap-2 mb-4"><Ticket className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Mã ưu đãi</h3></div>
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <input type="text" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="MÃ" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] uppercase outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
@@ -264,13 +264,13 @@ export default function ConfigPage() {
           </div>
         ) : (
           <div className="flex-1 bg-[#F5F5F7] border border-[#E8E8ED] rounded-[24px] p-12 flex flex-col items-center justify-center gap-4 text-center">
-            <div className="w-16 h-16 bg-white border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-2"><Settings className="w-8 h-8 text-[#C7C7CC]" /></div>
+            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-2"><Settings className="w-8 h-8 text-[#C7C7CC]" /></div>
             <p className="text-[15px] text-[#6E6E73] max-w-sm">Vui lòng chọn một tác phẩm từ danh sách để định cấu hình</p>
           </div>
         )}
       </div>
 
-      <Modal isOpen={confirmTransfer} onClose={() => setConfirmTransfer(false)} className="max-w-md rounded-[24px] border border-[#E8E8ED] bg-white p-0 shadow-lg overflow-hidden">
+      <Modal isOpen={confirmTransfer} onClose={() => setConfirmTransfer(false)} className="max-w-md rounded-[24px] border-[#E8E8ED] bg-[#F5F5F7] p-0 shadow-lg overflow-hidden">
         <ModalHeader className="border-b border-[#E8E8ED] p-6 bg-[#FF3B30]/10">
           <ModalTitle className="text-[17px] font-semibold text-[#FF3B30] flex items-center gap-2"><ArrowRightLeft className="w-5 h-5" /> Xác nhận chuyển nhượng</ModalTitle>
           <ModalDescription className="text-[13px] text-[#FF3B30] mt-2 ml-7">Hành động nguy hiểm</ModalDescription>

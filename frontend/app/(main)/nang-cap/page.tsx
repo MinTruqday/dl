@@ -46,7 +46,7 @@ export default function UpgradePage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 items-start">
-          <div className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-8 flex flex-col h-full hover:shadow-md transition-shadow">
+          <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-8 flex flex-col h-full hover: transition-shadow">
             <div className="mb-8">
               <h3 className="text-[24px] font-semibold text-[#1D1D1F] mb-2">Cơ bản</h3>
               <p className="text-[14px] text-[#6E6E73] min-h-[40px]">Trải nghiệm AI giới hạn dành cho người dùng mới.</p>
@@ -80,7 +80,7 @@ export default function UpgradePage() {
             </button>
           </div>
 
-          <div className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm p-8 flex flex-col h-full hover:shadow-md transition-shadow">
+          <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-8 flex flex-col h-full hover: transition-shadow">
             <div className="mb-8">
               <h3 className="text-[24px] font-semibold text-[#1D1D1F] mb-2">Cao cấp</h3>
               <p className="text-[14px] text-[#6E6E73] min-h-[40px]">Dành cho chuyên gia cần sức mạnh xử lý tối đa.</p>

@@ -55,7 +55,7 @@ export default function ReportsManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm flex-1 overflow-hidden flex flex-col min-h-0">
+      <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-hidden flex flex-col min-h-0">
         <div className="flex items-center justify-between p-6 border-b border-[#E8E8ED] bg-[#F5F5F7]/30">
           <div className="flex items-center gap-3">
             <h2 className="text-[16px] font-medium text-[#1D1D1F]">Hàng đợi báo cáo</h2>
@@ -110,7 +110,7 @@ export default function ReportsManagementPage() {
       <Modal isOpen={!!confirmModal} onClose={() => !isProcessing && setConfirmModal(null)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">
         <ModalHeader className="p-6 pb-2"><ModalTitle className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">{confirmModal?.action === "RESOLVED" ? <><AlertOctagon className="w-5 h-5 text-[#FF3B30]" /> Xác nhận xử lý</> : <><XCircle className="w-5 h-5 text-[#6E6E73]" /> Xác nhận bỏ qua</>}</ModalTitle></ModalHeader>
         <ModalContent className="p-6 pt-2">
-          <div className="bg-white p-4 rounded-[16px] border border-[#E8E8ED] mb-4 font-mono text-[13px] text-[#6E6E73]">ID: {confirmModal?.reportId}</div>
+          <div className="bg-[#F5F5F7] p-4 rounded-[16px] border-[#E8E8ED] mb-4 font-mono text-[13px] text-[#6E6E73]">ID: {confirmModal?.reportId}</div>
           <p className="text-[14px] text-[#6E6E73] leading-relaxed">{confirmModal?.action === "RESOLVED" ? "Bạn có chắc chắn muốn xử lý vi phạm này? Tác giả sẽ nhận được cảnh báo." : "Bạn muốn bỏ qua báo cáo này? Nội dung sẽ vẫn hiển thị bình thường."}</p>
         </ModalContent>
         <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => !isProcessing && setConfirmModal(null)} disabled={isProcessing} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full disabled:opacity-50">Hủy</button><button onClick={confirmResolve} disabled={isProcessing} className={`pill-button disabled:opacity-50 flex items-center gap-2 ${confirmModal?.action === "RESOLVED" ? "bg-[#FF3B30] hover:bg-[#D70015]" : ""}`}>{isProcessing && <Loader2 className="w-4 h-4 animate-spin" />} Xác nhận</button></ModalFooter>

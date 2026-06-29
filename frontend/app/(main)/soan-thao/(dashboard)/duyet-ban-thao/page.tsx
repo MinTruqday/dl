@@ -58,7 +58,7 @@ export default function ApprovalPage() {
           </div>
         ) : pendingDocs.length === 0 ? (
           <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] border border-[#E8E8ED] rounded-[24px] p-12 text-center">
-            <div className="w-16 h-16 bg-white border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4">
+            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4">
               <ShieldCheck className="w-8 h-8 text-[#34C759]" />
             </div>
             <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">Hàng đợi trống</h3>
@@ -67,7 +67,7 @@ export default function ApprovalPage() {
         ) : (
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pb-6">
             {pendingDocs.map((doc: any) => (
-              <div key={doc._id} className="bg-white border border-[#E8E8ED] p-6 rounded-[24px] shadow-sm flex flex-col group hover:shadow-md transition-all duration-300">
+              <div key={doc._id} className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px] flex flex-col group hover: transition-all duration-300">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="space-y-2 flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ export default function ApprovalPage() {
         )}
       </div>
 
-      <Modal isOpen={!!confirmModal} onClose={() => !isProcessing && setConfirmModal(null)} className="max-w-md rounded-[24px] border border-[#E8E8ED] bg-white p-0 shadow-lg overflow-hidden">
+      <Modal isOpen={!!confirmModal} onClose={() => !isProcessing && setConfirmModal(null)} className="max-w-md rounded-[24px] border-[#E8E8ED] bg-[#F5F5F7] p-0 shadow-lg overflow-hidden">
         <ModalHeader className={`border-b border-[#E8E8ED] p-6 ${confirmModal?.type === 'reject' ? 'bg-[#FF3B30]/10' : 'bg-[#34C759]/10'}`}>
           <ModalTitle className={`text-[17px] font-semibold flex items-center gap-2 ${confirmModal?.type === 'reject' ? 'text-[#FF3B30]' : 'text-[#34C759]'}`}>
             {confirmModal?.type === "approve" ? <><ShieldCheck className="w-5 h-5" /> Xác nhận phê duyệt</> : <><AlertOctagon className="w-5 h-5" /> Xác nhận từ chối</>}

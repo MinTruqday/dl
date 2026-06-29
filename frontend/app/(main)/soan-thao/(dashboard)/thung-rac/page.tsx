@@ -50,7 +50,7 @@ export default function TrashPage() {
           </div>
         ) : !Array.isArray(trash) || trash.length === 0 ? (
           <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] border border-[#E8E8ED] rounded-[24px] p-12 text-center">
-            <div className="w-16 h-16 bg-white border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4">
+            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4">
               <Trash2 className="w-8 h-8 text-[#C7C7CC]" />
             </div>
             <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">Thùng rác trống</h3>
@@ -59,7 +59,7 @@ export default function TrashPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 pb-6">
             {trash.map((doc: any) => (
-              <div key={doc._id} className="bg-white border border-[#E8E8ED] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5">
+              <div key={doc._id} className="bg-[#F5F5F7] border-[#E8E8ED] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[24px] hover: transition-all duration-300 group hover:-translate-y-0.5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-[#F5F5F7] flex items-center justify-center rounded-[14px] border border-[#E8E8ED] shrink-0 group-hover:bg-white group-hover:border-[#0071E3] transition-all">
                     <FileText className="w-6 h-6 text-[#6E6E73] group-hover:text-[#0071E3] transition-colors" />

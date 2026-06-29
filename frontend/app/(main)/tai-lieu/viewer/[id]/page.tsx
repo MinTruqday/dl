@@ -245,7 +245,7 @@ export default function DocumentViewer() {
   const getPageContent = () => {
     if (document?.content_format === "zip") {
       return (
-        <div className="w-full h-full flex flex-col bg-white border border-[#E8E8ED] rounded-[24px] overflow-hidden shadow-sm">
+        <div className="w-full h-full flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] overflow-hidden">
           <div className="h-14 border-b border-[#E8E8ED] bg-[#F5F5F7] flex items-center px-6 shrink-0">
             <FileText className="w-4 h-4 mr-3 text-[#6E6E73]" />
             <span className="text-[13px] font-medium text-[#1D1D1F]">{selectedZipFile ? selectedZipFile.name : "Trình duyệt mã nguồn ZIP"}</span>
@@ -264,7 +264,7 @@ export default function DocumentViewer() {
 
   if (isLocked) return (
     <div className="min-h-screen flex items-center justify-center bg-[#F5F5F7] font-sans px-6">
-      <div className="bg-white p-10 w-full max-w-[400px] border border-[#E8E8ED] flex flex-col items-center text-center rounded-[24px] shadow-sm">
+      <div className="bg-[#F5F5F7] p-10 w-full max-w-[400px] border-[#E8E8ED] flex flex-col items-center text-center rounded-[24px]">
         <div className="w-20 h-20 bg-[#F5F5F7] flex items-center justify-center mb-6 rounded-full"><Lock className="w-8 h-8 text-[#0071E3]" /></div>
         <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-2">Thực thể bảo mật</h2>
         <p className="text-[15px] text-[#6E6E73] mb-8">Nhập mã định danh để tiếp cận dữ liệu</p>
@@ -318,11 +318,11 @@ export default function DocumentViewer() {
         </header>
 
         <main className="flex-1 overflow-auto bg-[#F5F5F7] p-6 md:p-8 relative flex justify-center custom-scrollbar">
-          <div className={`mx-auto bg-white border border-[#E8E8ED] shadow-sm ${document?.content_format === "zip" ? "p-0 h-full max-w-full rounded-[24px]" : "p-12 md:p-16 min-h-full origin-top rounded-[24px]"} transition-transform duration-300 ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-5xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`} style={{ transform: document?.content_format === "zip" ? "none" : `scale(${zoom / 100})` }}>
+          <div className={`mx-auto bg-[#F5F5F7] border-[#E8E8ED] ${document?.content_format === "zip" ? "p-0 h-full max-w-full rounded-[24px]" : "p-12 md:p-16 min-h-full origin-top rounded-[24px]"} transition-transform duration-300 ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-5xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`} style={{ transform: document?.content_format === "zip" ? "none" : `scale(${zoom / 100})` }}>
             {getPageContent()}
           </div>
           {selection && (
-            <div className="fixed z-50 flex gap-2 bg-white/90 backdrop-blur-md p-2 border border-[#E8E8ED] rounded-[18px] shadow-sm transition-all" style={{ left: selection.x, top: selection.y, transform: "translateX(-50%)" }}>
+            <div className="fixed z-50 flex gap-2 bg-[#F5F5F7]/90 backdrop-blur-md p-2 border-[#E8E8ED] rounded-[18px] transition-all" style={{ left: selection.x, top: selection.y, transform: "translateX(-50%)" }}>
               <button onClick={saveHighlight} className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors"><Highlighter className="w-5 h-5" /></button>
               <button onClick={handleTranslate} disabled={translating} className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors">{translating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Languages className="w-5 h-5" />}</button>
               <button className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors"><Zap className="w-5 h-5" /></button>

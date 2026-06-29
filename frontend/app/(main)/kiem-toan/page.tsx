@@ -85,7 +85,7 @@ export default function LogsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+      <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] overflow-hidden flex flex-col flex-1 min-h-0">
         <div className="flex items-center justify-between p-6 border-b border-[#E8E8ED] bg-[#F5F5F7]/30">
           <h2 className="text-[16px] font-medium text-[#1D1D1F] flex items-center gap-2">
             <Database className="w-5 h-5 text-[#6E6E73]" /> Bản ghi nhật ký

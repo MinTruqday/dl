@@ -84,7 +84,7 @@ export default function CommentsPage() {
         </div>
 
         {selectedDocumentId ? (
-          <div className="flex-1 min-h-0 flex flex-col bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] overflow-hidden">
             <div className="border-b border-[#E8E8ED] p-6 flex justify-between items-center bg-[#F5F5F7] shrink-0">
               <h2 className="text-[15px] font-semibold text-[#1D1D1F] flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Danh sách bình luận</h2>
               <span className="px-4 py-1.5 bg-white border border-[#E8E8ED] text-[#1D1D1F] text-[13px] font-medium rounded-full">{comments.length} phản hồi</span>
@@ -104,7 +104,7 @@ export default function CommentsPage() {
               ) : (
                 <div className="space-y-6 pb-6">
                   {comments.map((comment: any) => (
-                    <div key={comment.id || comment._id} className="bg-white border border-[#E8E8ED] p-6 rounded-[24px] shadow-sm transition-all hover:shadow-md group relative">
+                    <div key={comment.id || comment._id} className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px] transition-all hover: group relative">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-[#F5F5F7] border border-[#E8E8ED] rounded-full flex items-center justify-center overflow-hidden shrink-0">
@@ -120,7 +120,7 @@ export default function CommentsPage() {
                       <div className="ml-14">
                         <p className="text-[15px] text-[#1D1D1F] leading-relaxed mb-4 bg-[#F5F5F7] p-4 rounded-[18px]">{comment.content}</p>
                         {replyingTo === (comment.id || comment._id) ? (
-                          <div className="flex flex-col sm:flex-row gap-3 mt-4 items-end sm:items-center bg-white p-4 rounded-[18px] border border-[#E8E8ED] shadow-sm">
+                          <div className="flex flex-col sm:flex-row gap-3 mt-4 items-end sm:items-center bg-[#F5F5F7] p-4 rounded-[18px] border-[#E8E8ED]">
                             <div className="relative w-full">
                               <CornerDownRight className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
                               <input type="text" value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="Nhập phản hồi của bạn..." className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] bg-[#F5F5F7] focus:bg-white text-[15px] text-[#1D1D1F] rounded-[14px] outline-none focus:border-[#0071E3] transition-colors" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleReplyComment(); if (e.key === 'Escape') setReplyingTo(null); }} />
@@ -142,7 +142,7 @@ export default function CommentsPage() {
           </div>
         ) : (
           <div className="flex-1 bg-[#F5F5F7] border border-[#E8E8ED] rounded-[24px] p-12 flex flex-col items-center justify-center gap-4 text-center">
-            <div className="w-16 h-16 bg-white border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-2"><MessageSquare className="w-8 h-8 text-[#C7C7CC]" /></div>
+            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-2"><MessageSquare className="w-8 h-8 text-[#C7C7CC]" /></div>
             <p className="text-[15px] text-[#6E6E73] max-w-sm">Vui lòng chọn một tác phẩm từ danh sách để xem và quản lý bình luận</p>
           </div>
         )}

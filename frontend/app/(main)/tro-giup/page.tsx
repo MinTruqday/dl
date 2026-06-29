@@ -32,7 +32,7 @@ export default function HelpPage() {
           { icon: LifeBuoy, title: "Studio & xuất bản", desc: "Đăng tài liệu, thiết lập giá và quản lý thu nhập", color: "text-[#FF9500]", bg: "bg-[#FF9500]/10" },
           { icon: Shield, title: "Tài khoản & ví", desc: "Bảo mật thông tin, đơn vị dl và các giao dịch", color: "text-[#34C759]", bg: "bg-[#34C759]/10" },
         ].map((item, idx) => (
-          <div key={idx} className="p-8 bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+          <div key={idx} className="p-8 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] hover: transition-shadow cursor-pointer">
             <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center mb-6 ${item.bg}`}><item.icon className={`w-6 h-6 ${item.color}`} /></div>
             <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">{item.title}</h3>
             <p className="text-[14px] text-[#6E6E73] leading-relaxed">{item.desc}</p>

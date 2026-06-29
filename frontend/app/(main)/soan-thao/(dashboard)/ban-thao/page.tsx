@@ -43,7 +43,7 @@ export default function DraftsPage() {
           </div>
         ) : drafts.length === 0 ? (
           <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] border border-[#E8E8ED] rounded-[24px] p-12 text-center">
-            <div className="w-16 h-16 bg-white border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4">
+            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4">
               <FolderOpen className="w-8 h-8 text-[#C7C7CC]" />
             </div>
             <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">Chưa có bản nháp nào</h3>
@@ -55,7 +55,7 @@ export default function DraftsPage() {
         ) : (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-6">
             {drafts.map((draft: any) => (
-              <button key={draft._id || draft.id} onClick={() => router.push(`/soan-thao?tai-lieu=${draft._id || draft.id}`)} className="group flex flex-col bg-white border border-[#E8E8ED] rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden text-left hover:-translate-y-1">
+              <button key={draft._id || draft.id} onClick={() => router.push(`/soan-thao?tai-lieu=${draft._id || draft.id}`)} className="group flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] hover: transition-all duration-300 overflow-hidden text-left hover:-translate-y-1">
                 <div className="aspect-[3/4] w-full border-b border-[#E8E8ED] bg-[#F5F5F7] relative overflow-hidden flex items-center justify-center">
                   {draft.cover_url ? (
                     <img src={draft.cover_url} alt={draft.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />

@@ -219,7 +219,7 @@ export default function StoragePage() {
             )}
           </div>
 
-          <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className={`bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm flex-1 overflow-y-auto no-scrollbar p-2 ${isDraggingOver ? "border-[#0071E3] bg-[#F5F5F7]/50" : ""}`}>
+          <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className={`bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-y-auto no-scrollbar p-2 ${isDraggingOver ? "border-[#0071E3] bg-[#F5F5F7]/50" : ""}`}>
             {loading ? (
               <div className="flex justify-center items-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>
             ) : layoutMode === "list" ? (
@@ -302,7 +302,7 @@ export default function StoragePage() {
         </main>
 
         {detailsItem && (
-          <aside className="lg:col-span-4 flex flex-col gap-6 h-full min-h-0 bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm overflow-hidden relative">
+          <aside className="lg:col-span-4 flex flex-col gap-6 h-full min-h-0 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] overflow-hidden relative">
             <div className="p-6 border-b border-[#E8E8ED] flex justify-between items-center bg-white sticky top-0 z-10">
               <h2 className="text-[18px] font-semibold text-[#1D1D1F]">Chi tiết</h2>
               <button onClick={() => setDetailsItem(null)} className="w-8 h-8 flex items-center justify-center bg-[#F5F5F7] rounded-full text-[#6E6E73] hover:text-[#1D1D1F]"><X className="w-4 h-4"/></button>

@@ -143,7 +143,7 @@ export default function CreateDocumentPage() {
                   key={opt.id}
                   type="button"
                   onClick={() => setVisibility(opt.id)}
-                  className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group border ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-white border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
+                  className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
                 >
                   <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border border-[#E8E8ED] text-[#6E6E73]"}`}>
                     <Icon className="w-6 h-6" />
@@ -188,7 +188,7 @@ export default function CreateDocumentPage() {
                   key={opt.id}
                   type="button"
                   onClick={() => setContentFormat(opt.id)}
-                  className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group border ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-white border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
+                  className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
                 >
                   <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border border-[#E8E8ED] text-[#6E6E73]"}`}>
                     <Icon className="w-6 h-6" />

@@ -65,7 +65,7 @@ export default function UsersManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-[24px] border border-[#E8E8ED] shadow-sm flex-1 overflow-y-auto no-scrollbar">
+      <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-y-auto no-scrollbar">
         <table className="w-full text-left text-[14px]">
           <thead className="sticky top-0 bg-white z-10">
             <tr className="border-b border-[#E8E8ED] text-[13px] text-[#6E6E73]">

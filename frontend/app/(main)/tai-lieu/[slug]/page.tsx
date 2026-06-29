@@ -183,7 +183,7 @@ export default function DocumentDetailsPage() {
           </div>
         </div>
 
-        <div className="flex-1 bg-white border border-[#E8E8ED] rounded-[24px] p-8 shadow-sm min-h-[400px]">
+        <div className="flex-1 bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] p-8 min-h-[400px]">
           {activeTab === "about" && (
             <div className="space-y-6">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tóm lược nội dung</h2>

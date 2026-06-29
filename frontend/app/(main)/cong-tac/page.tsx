@@ -358,7 +358,7 @@ export default function StudioCollabPage() {
             {filteredInvites.length > 0 ? (
               <div className="grid gap-4">
                 {filteredInvites.map(inv => (
-                  <div key={inv._id || inv.id} className="bg-white border border-[#E8E8ED] rounded-[18px] p-5 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center shadow-sm">
+                  <div key={inv._id || inv.id} className="bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] p-5 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
                     <div>
                       <h4 className="text-[16px] font-medium text-[#1D1D1F]">{inv.document_title}</h4>
                       <p className="text-[13px] text-[#6E6E73] mt-1">Từ: {inv.inviter_name} • Vai trò: {inv.role === "editor" ? "Biên tập" : "Xem"}</p>
@@ -386,7 +386,7 @@ export default function StudioCollabPage() {
                 </div>
                 <div className="space-y-3">
                   {tasks.map((task) => (
-                    <div key={task.id} className="bg-white p-4 rounded-[16px] flex justify-between items-start gap-4 border border-[#E8E8ED] shadow-sm">
+                    <div key={task.id} className="bg-[#F5F5F7] p-4 rounded-[16px] flex justify-between items-start gap-4 border-[#E8E8ED]">
                       <div className="flex gap-3 items-start">
                         <button onClick={() => handleToggleTask(task.id, task.is_done)} className="mt-1">{task.is_done ? <CheckSquare className="w-5 h-5 text-[#34C759]" /> : <Square className="w-5 h-5 text-[#6E6E73]" />}</button>
                         <div>
@@ -402,7 +402,7 @@ export default function StudioCollabPage() {
 
               <div className="bg-[#F5F5F7] rounded-[24px] p-8 shadow-sm space-y-6">
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Bảng ghim & Trao đổi</h2>
-                <div className="h-64 bg-white rounded-[18px] border border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
+                <div className="h-64 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
                   {memos.length > 0 ? memos.map(m => (
                     <div key={m.id} className="bg-[#F5F5F7] p-4 rounded-[16px] max-w-[85%] border border-[#E8E8ED]">
                       <div className="flex justify-between text-[12px] text-[#6E6E73] mb-2"><span className="font-semibold text-[#1D1D1F]">{m.sender_name}</span><span>{new Date(m.timestamp).toLocaleTimeString("vi-VN")}</span></div>
@@ -432,7 +432,7 @@ export default function StudioCollabPage() {
       <Modal isOpen={!!activeTaskId} onClose={() => setActiveTaskId(null)} className="max-w-xl bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">
         <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Thảo luận nhiệm vụ</ModalTitle></ModalHeader>
         <ModalContent className="p-6 pt-0 space-y-4">
-          <div className="h-64 bg-white rounded-[18px] border border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
+          <div className="h-64 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
             {activeTaskComments.length > 0 ? activeTaskComments.map(c => (
               <div key={c.id} className="bg-[#F5F5F7] p-3 rounded-[14px] border border-[#E8E8ED] max-w-[90%]">
                 <div className="flex justify-between text-[11px] text-[#6E6E73] mb-1"><span className="font-semibold text-[#1D1D1F]">{c.sender_name}</span><span>{new Date(c.timestamp).toLocaleTimeString("vi-VN")}</span></div>
