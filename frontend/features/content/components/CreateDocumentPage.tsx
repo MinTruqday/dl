@@ -82,7 +82,7 @@ export default function CreateDocumentPage() {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Nhập tiêu đề tác phẩm..."
+                placeholder=""
                 className="w-full h-[52px] pl-12 pr-4 bg-white border border-transparent focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none shadow-sm"
               />
             </div>
@@ -111,7 +111,7 @@ export default function CreateDocumentPage() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Mô tả ngắn gọn về nội dung tác phẩm..."
+              placeholder=""
               className="w-full min-h-[140px] p-4 bg-white border border-transparent focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none resize-none shadow-sm"
             />
           </div>

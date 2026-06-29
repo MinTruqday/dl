@@ -48,10 +48,7 @@ export default function ReportsManagementPage() {
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <div className="flex items-center gap-3">
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E73]" />
-            <input type="text" placeholder="Tìm kiếm báo cáo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="apple-input w-full pl-9 bg-[#F5F5F7] border-transparent" />
-          </div>
+
           <button onClick={fetchData} disabled={isRefreshing} className="w-10 h-10 flex items-center justify-center bg-[#F5F5F7] text-[#1D1D1F] rounded-[12px] hover:bg-[#E8E8ED] transition-colors">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}</button>
         </div>
       </div>

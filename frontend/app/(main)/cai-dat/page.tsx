@@ -196,7 +196,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="p-5 space-y-3">
                     <h4 className="text-[17px] font-medium text-[#1D1D1F]">Thông tin thụ hưởng</h4>
-                    <textarea value={payoutInfo} onChange={(e) => setPayoutInfo(e.target.value)} className="apple-input w-full min-h-[100px] resize-none py-3" placeholder="Ngân hàng..."></textarea>
+                    <textarea value={payoutInfo} onChange={(e) => setPayoutInfo(e.target.value)} className="apple-input w-full min-h-[100px] resize-none py-3" placeholder=""></textarea>
                   </div>
                 </div>
                 <div className="flex justify-end pt-4"><button onClick={async () => { setLoading(true); await handleUpdateGeneral({ payout_info: payoutInfo }); setLoading(false); showToast("Đã lưu", "success"); }} className="pill-button">Lưu cấu hình</button></div>

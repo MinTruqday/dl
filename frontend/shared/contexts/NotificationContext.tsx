@@ -75,34 +75,15 @@ export function NotificationProvider({
 
     fetchNotifications();
 
-    const token = getToken();
-    if (!token) return;
-
-    const eventSource = new EventSource(
-      `${API_URL}/thong-bao/dong-du-lieu?token=${token}`,
-    );
-
-    eventSource.onmessage = (event) => {
-      try {
-        const newNotif = JSON.parse(event.data);
-        setNotifications((prev) => [newNotif, ...prev]);
-        showToast(
-          newNotif.message || newNotif.body || "Bạn có thông báo mới",
-          "info",
-        );
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    eventSource.onerror = (e) => {
-      eventSource.close();
-    };
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000);
 
     return () => {
-      eventSource.close();
+      clearInterval(interval);
     };
-  }, [user, fetchNotifications, showToast]);
+  }, [user, fetchNotifications]);
 
   const unreadCount = Array.isArray(notifications) ? notifications.filter((n) => !n.is_read).length : 0;
 

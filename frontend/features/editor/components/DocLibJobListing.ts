@@ -97,7 +97,7 @@ export default class DocLibJobListing implements BlockTool {
     const createTag = (key: string, icon: string, placeholder: string) => {
       const tag = document.createElement("div");
       tag.classList.add("doclib-job-tag");
-      tag.innerHTML = `<span>${icon}</span> <span class="doclib-job-tag-text" data-placeholder="${placeholder}">${this.data[key]}</span>`;
+      tag.innerHTML = `<span>${icon}</span> <span class="doclib-job-tag-text" data-placeholder="">${this.data[key]}</span>`;
       const textNode = tag.querySelector(".doclib-job-tag-text") as HTMLElement;
       if (!this.readOnly) {
         textNode.contentEditable = "true";

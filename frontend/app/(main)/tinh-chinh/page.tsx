@@ -151,8 +151,8 @@ export default function FineTuningPage() {
       <Modal isOpen={showNewDataset} onClose={() => setShowNewDataset(false)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">
         <ModalHeader className="p-6 pb-2"><ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Tạo Tập Dữ Liệu</ModalTitle></ModalHeader>
         <ModalContent className="p-6 pt-2 space-y-4">
-          <div><label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Tên tập dữ liệu</label><input type="text" value={newDatasetName} onChange={e => setNewDatasetName(e.target.value)} className="apple-input w-full bg-white" placeholder="VD: Dữ liệu luật lao động" /></div>
-          <div><label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Mô tả (Tùy chọn)</label><textarea value={newDatasetDesc} onChange={e => setNewDatasetDesc(e.target.value)} className="apple-input w-full bg-white h-24 py-3" placeholder="Mô tả ngắn gọn về tập dữ liệu" /></div>
+          <div><label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Tên tập dữ liệu</label><input type="text" value={newDatasetName} onChange={e => setNewDatasetName(e.target.value)} className="apple-input w-full bg-white" placeholder="" /></div>
+          <div><label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Mô tả (Tùy chọn)</label><textarea value={newDatasetDesc} onChange={e => setNewDatasetDesc(e.target.value)} className="apple-input w-full bg-white h-24 py-3" placeholder="" /></div>
         </ModalContent>
         <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setShowNewDataset(false)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleCreateDataset} className="pill-button">Tạo mới</button></ModalFooter>
       </Modal>

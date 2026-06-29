@@ -57,10 +57,6 @@ export default function UsersManagementPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
 
         <div className="flex items-center gap-3">
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E73]" />
-            <input type="text" placeholder="Tìm kiếm..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="apple-input w-full pl-9 bg-[#F5F5F7] border-transparent" />
-          </div>
           <button onClick={fetchData} disabled={isRefreshing} className="w-10 h-10 flex items-center justify-center bg-[#F5F5F7] text-[#1D1D1F] rounded-[12px] hover:bg-[#E8E8ED] transition-colors">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}</button>
           <button className="pill-button flex items-center gap-2 bg-[#0071E3] text-white hover:bg-[#0077ED]"><UserPlus className="w-4 h-4" /> Thêm mới</button>
         </div>

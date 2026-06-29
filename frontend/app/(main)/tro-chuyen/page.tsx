@@ -154,10 +154,12 @@ export default function TroChuyenPage() {
   const fetchHistory = async () => {
     try {
       const token = getToken();
-      const res = await fetch(`${API_URL}/lich-su`, { headers: { Authorization: `Bearer ${token}` } });
+      const userId = user?.id || user?._id;
+      if (!userId) return;
+      const res = await fetch(`${API_URL}/lich-su?user_id=${userId}`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
-        setSessions(data.data || []);
+        setSessions(data.data || data || []);
       }
     } catch (err) {
       console.error("Error loading chat history:", err);
@@ -219,14 +221,15 @@ export default function TroChuyenPage() {
     if (!sessionId) {
       try {
         const token = getToken();
+        const userId = user?.id || user?._id;
         const res = await fetch(`${API_URL}/lich-su`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ first_query: userMessage }),
+          body: JSON.stringify({ first_query: userMessage, user_id: userId }),
         });
         if (res.ok) {
           const data = await res.json();
-          sessionId = data.data._id;
+          sessionId = data.data?._id || data._id;
           setCurrentSessionId(sessionId);
           fetchHistory();
         }
@@ -665,7 +668,7 @@ export default function TroChuyenPage() {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Nhập câu hỏi của bạn..."
+                    placeholder=""
                     disabled={isSending}
                     className="flex-1 min-w-0 h-full py-4 text-[15px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73]"
                   />

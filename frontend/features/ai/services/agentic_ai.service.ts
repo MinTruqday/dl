@@ -29,10 +29,11 @@ export async function smartSearchAIAPI(query: string) {
   return data;
 }
 
-export async function getAiSessionsAPI(documentId?: string) {
-  const url = documentId
-    ? `${API_URL}/lich-su?document_id=${documentId}`
-    : `${API_URL}/lich-su`;
+export async function getAiSessionsAPI(documentId?: string, userId?: string) {
+  const params = new URLSearchParams();
+  if (documentId) params.set("document_id", documentId);
+  if (userId) params.set("user_id", userId);
+  const url = `${API_URL}/lich-su?${params.toString()}`;
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   });

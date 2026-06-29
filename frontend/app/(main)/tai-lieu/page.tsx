@@ -136,10 +136,7 @@ export default function DocumentsPage() {
 
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-            <h3 className="text-[17px] font-medium text-[#6E6E73] flex items-center gap-2"><Search className="w-4 h-4" /> Tìm kiếm</h3>
-            <input type="text" placeholder="Nhập từ khóa..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="apple-input w-full bg-white" />
-          </div>
+
           <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
             <h3 className="text-[17px] font-medium text-[#6E6E73] flex items-center gap-2"><Database className="w-4 h-4" /> Lọc dữ liệu</h3>
             <button onClick={() => setFilterStar(!filterStar)} className={`w-full py-3 rounded-[14px] flex items-center justify-center gap-2 font-medium text-[14px] transition-colors ${filterStar ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] border border-[#E8E8ED]"}`}><Star className={`w-4 h-4 ${filterStar ? "fill-white" : "text-[#6E6E73]"}`} /> Yêu thích</button>
@@ -283,13 +280,13 @@ export default function DocumentsPage() {
 
       <Modal isOpen={createFolderModal} onClose={() => setCreateFolderModal(false)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">
         <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Tạo thư mục</ModalTitle></ModalHeader>
-        <ModalContent className="p-6 pt-0"><input type="text" value={folderName} onChange={(e) => setFolderName(e.target.value)} placeholder="Tên thư mục" className="apple-input w-full bg-white" autoFocus /></ModalContent>
+        <ModalContent className="p-6 pt-0"><input type="text" value={folderName} onChange={(e) => setFolderName(e.target.value)} placeholder="" className="apple-input w-full bg-white" autoFocus /></ModalContent>
         <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setCreateFolderModal(false)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleCreateFolder} disabled={!folderName} className="pill-button disabled:opacity-50">Tạo</button></ModalFooter>
       </Modal>
 
       <Modal isOpen={!!lockModal} onClose={() => setLockModal(null)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">
         <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold flex items-center gap-2"><Lock className="w-5 h-5"/> Khóa tài liệu</ModalTitle></ModalHeader>
-        <ModalContent className="p-6 pt-0"><form id="lock-form" onSubmit={handleLockDocument}><input type="password" placeholder="Mật khẩu bảo vệ" value={lockPassword} onChange={(e) => setLockPassword(e.target.value)} className="apple-input w-full bg-white" required autoFocus/></form></ModalContent>
+        <ModalContent className="p-6 pt-0"><form id="lock-form" onSubmit={handleLockDocument}><input type="password" placeholder="" value={lockPassword} onChange={(e) => setLockPassword(e.target.value)} className="apple-input w-full bg-white" required autoFocus/></form></ModalContent>
         <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setLockModal(null)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button type="submit" form="lock-form" className="pill-button">Khóa</button></ModalFooter>
       </Modal>
 

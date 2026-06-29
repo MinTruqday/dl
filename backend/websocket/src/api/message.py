@@ -11,7 +11,7 @@ from src.sockets.message import message_manager
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter(route_class=LoggingRoute, prefix="/ws")
 
 @router.websocket("/{user_id}")
 async def websocket_endpoint(

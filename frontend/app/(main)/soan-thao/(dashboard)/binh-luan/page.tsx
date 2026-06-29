@@ -116,7 +116,7 @@ export default function CommentsPage() {
                           <div className="flex flex-col sm:flex-row gap-3 mt-4 items-end sm:items-center bg-[#F5F5F7] p-4 rounded-[18px] border-[#E8E8ED]">
                             <div className="relative w-full">
                               <CornerDownRight className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
-                              <input type="text" value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="Nhập phản hồi của bạn..." className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] bg-[#F5F5F7] focus:bg-white text-[15px] text-[#1D1D1F] rounded-[14px] outline-none focus:border-[#0071E3] transition-colors" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleReplyComment(); if (e.key === 'Escape') setReplyingTo(null); }} />
+                              <input type="text" value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="" className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] bg-[#F5F5F7] focus:bg-white text-[15px] text-[#1D1D1F] rounded-[14px] outline-none focus:border-[#0071E3] transition-colors" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleReplyComment(); if (e.key === 'Escape') setReplyingTo(null); }} />
                             </div>
                             <div className="flex gap-2 w-full sm:w-auto shrink-0">
                               <button onClick={() => setReplyingTo(null)} className="flex-1 sm:flex-none h-[48px] px-6 border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] rounded-full hover:bg-[#F5F5F7] transition-colors bg-white">Hủy</button>

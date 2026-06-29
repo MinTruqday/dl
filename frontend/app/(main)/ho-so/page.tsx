@@ -173,7 +173,7 @@ export default function ProfilePage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="apple-input w-full h-[48px]"
-                  placeholder="Nhập tên hiển thị"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -183,7 +183,7 @@ export default function ProfilePage() {
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Nhập thông tin giới thiệu ngắn gọn"
+                placeholder=""
                 className="apple-input w-full min-h-[100px] resize-none py-3"
               />
             </div>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
                 <input
                   value={motivation}
                   onChange={(e) => setMotivation(e.target.value)}
-                  placeholder="Lý do ứng tuyển..."
+                  placeholder=""
                   className="apple-input flex-1 h-[48px] border-[#FFD699] focus:border-[#FF9500] bg-white"
                 />
                 <button onClick={handleApplyAuthor} disabled={isApplying} className="pill-button bg-[#FF9500] hover:bg-[#CC7700] shrink-0">

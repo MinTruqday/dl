@@ -169,8 +169,8 @@ export default function WalletPage() {
           <p className="text-[13px] text-[#6E6E73] mt-1">1 dl = 1.000 VNĐ (Phí 2%)</p>
         </ModalHeader>
         <ModalContent className="p-6 pt-0 space-y-4">
-          <input type="number" value={withdrawalAmount} onChange={(e) => setWithdrawalAmount(e.target.value)} className="apple-input w-full" placeholder="Số tiền rút (dl) tối thiểu 50.000" />
-          <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="apple-input w-full" placeholder="VCB - 123456789 - NGUYEN VAN A" />
+          <input type="number" value={withdrawalAmount} onChange={(e) => setWithdrawalAmount(e.target.value)} className="apple-input w-full" placeholder="" />
+          <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="apple-input w-full" placeholder="" />
           <div className="bg-[#EBF4FF] p-4 rounded-[14px]">
             <h4 className="text-[13px] font-semibold text-[#0071E3] flex items-center gap-1.5 mb-2"><Info className="w-4 h-4" /> Lưu ý</h4>
             <ul className="text-[12px] text-[#0055C6] list-disc list-inside space-y-1"><li>Xử lý trong 48h</li><li>Kiểm tra kỹ thông tin</li></ul>
@@ -203,7 +203,7 @@ export default function WalletPage() {
               <h3 className="text-[17px] font-medium text-[#1D1D1F]">Voucher</h3>
             </div>
             <form onSubmit={handleRedeemVoucher} className="space-y-4">
-              <input type="text" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} placeholder="Nhập mã ưu đãi" className="apple-input w-full text-center uppercase tracking-wider" />
+              <input type="text" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} placeholder="" className="apple-input w-full text-center uppercase tracking-wider" />
               <button type="submit" disabled={isRedeeming || !voucherCode.trim()} className="pill-button w-full">{isRedeeming ? <Loader2 className="w-5 h-5 animate-spin" /> : "Kích hoạt"}</button>
             </form>
           </div>

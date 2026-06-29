@@ -199,23 +199,13 @@ export default function StoragePage() {
               ))}
             </div>
             {viewMode === "files" && (
-              <form onSubmit={handleSearch} className="flex items-center gap-2 mt-4 md:mt-0">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E73]" />
-                  <input type="text" placeholder={useAISearch ? "AI tìm tài liệu..." : "Tìm kiếm theo tên..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="apple-input pl-9 pr-4 w-64 text-[14px]" />
-                </div>
-                <button type="button" onClick={() => setUseAISearch(!useAISearch)} className={`px-3 py-1.5 rounded-[12px] text-[13px] font-semibold transition-colors ${useAISearch ? "bg-[#0071E3] text-white" : "bg-[#E8E8ED] text-[#6E6E73] hover:bg-[#D1D1D6]"}`}>AI</button>
-                <select value={searchType} onChange={(e) => setSearchType(e.target.value as any)} className="apple-input px-3 py-1.5 text-[14px] bg-white h-[36px] w-28">
-                  <option value="">Tất cả</option>
-                  <option value="folder">Thư mục</option>
-                  <option value="file">Tệp tin</option>
-                </select>
+              <div className="flex items-center gap-2 mt-4 md:mt-0">
                 {selectedIds.size > 0 && <button onClick={handleZipDownload} className="pill-button px-4 py-1.5 h-[36px] text-[13px] bg-[#1D1D1F] flex items-center gap-1"><Archive className="w-3.5 h-3.5"/> ZIP ({selectedIds.size})</button>}
                 <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0 ml-2">
                   <button onClick={() => setLayoutMode("grid")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
                   <button onClick={() => setLayoutMode("list")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
                 </div>
-              </form>
+              </div>
             )}
           </div>
 
@@ -366,7 +356,7 @@ export default function StoragePage() {
                     }
                   } catch (e) { setChatHistory(p => [...p, { role: "bot", content: "Lỗi kết nối AI." }]); }
                 }} className="flex gap-2">
-                  <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Hỏi AI trợ lý..." className="apple-input flex-1 bg-[#F5F5F7] border-transparent" />
+                  <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="" className="apple-input flex-1 bg-[#F5F5F7] border-transparent" />
                   <button type="submit" className="pill-button">Gửi</button>
                 </form>
               </div>
@@ -377,13 +367,13 @@ export default function StoragePage() {
 
       <Modal isOpen={createFolderOpen} onClose={() => setCreateFolderOpen(false)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">
         <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Tạo thư mục mới</ModalTitle></ModalHeader>
-        <ModalContent className="p-6 pt-0"><input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Nhập tên thư mục" className="apple-input w-full bg-white" autoFocus /></ModalContent>
+        <ModalContent className="p-6 pt-0"><input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="" className="apple-input w-full bg-white" autoFocus /></ModalContent>
         <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setCreateFolderOpen(false)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleCreateFolder} className="pill-button">Tạo</button></ModalFooter>
       </Modal>
 
       <Modal isOpen={!!renameItem} onClose={() => setRenameItem(null)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">
         <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Đổi tên</ModalTitle></ModalHeader>
-        <ModalContent className="p-6 pt-0"><input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Tên mới" className="apple-input w-full bg-white" autoFocus /></ModalContent>
+        <ModalContent className="p-6 pt-0"><input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="" className="apple-input w-full bg-white" autoFocus /></ModalContent>
         <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setRenameItem(null)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleRename} className="pill-button">Lưu</button></ModalFooter>
       </Modal>
 
@@ -392,7 +382,7 @@ export default function StoragePage() {
         <ModalContent className="p-6 pt-0 space-y-6">
           <div>
             <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Mời người dùng</label>
-            <div className="flex gap-2"><input type="email" value={shareEmail} onChange={(e) => setShareEmail(e.target.value)} placeholder="Email..." className="apple-input flex-1 bg-white" /><select value={shareRole} onChange={(e) => setShareRole(e.target.value)} className="apple-input w-28 bg-white"><option value="viewer">Xem</option><option value="editor">Sửa</option></select></div>
+            <div className="flex gap-2"><input type="email" value={shareEmail} onChange={(e) => setShareEmail(e.target.value)} placeholder="" className="apple-input flex-1 bg-white" /><select value={shareRole} onChange={(e) => setShareRole(e.target.value)} className="apple-input w-28 bg-white"><option value="viewer">Xem</option><option value="editor">Sửa</option></select></div>
             <button onClick={handleShareSubmit} className="mt-3 w-full pill-button">Chia sẻ ngay</button>
           </div>
           <div className="pt-4 border-t border-[#E8E8ED]">

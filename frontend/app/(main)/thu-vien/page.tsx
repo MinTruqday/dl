@@ -290,9 +290,9 @@ export default function LibraryPage() {
           <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">{createType === "folder" ? "Tạo thư mục" : "Tạo danh sách đọc"}</ModalTitle>
         </ModalHeader>
         <ModalContent className="px-6 pt-0 space-y-4">
-          <input type="text" value={createType === "folder" ? newFolderName : createListForm.name} onChange={(e) => createType === "folder" ? setNewFolderName(e.target.value) : setCreateListForm({ ...createListForm, name: e.target.value })} className="apple-input w-full" placeholder="Tên gọi" />
+          <input type="text" value={createType === "folder" ? newFolderName : createListForm.name} onChange={(e) => createType === "folder" ? setNewFolderName(e.target.value) : setCreateListForm({ ...createListForm, name: e.target.value })} className="apple-input w-full" placeholder="" />
           {createType !== "folder" && (
-            <textarea value={createListForm.description} onChange={(e) => setCreateListForm({ ...createListForm, description: e.target.value })} className="apple-input w-full min-h-[100px] py-3 resize-none" placeholder="Mô tả" />
+            <textarea value={createListForm.description} onChange={(e) => setCreateListForm({ ...createListForm, description: e.target.value })} className="apple-input w-full min-h-[100px] py-3 resize-none" placeholder="" />
           )}
         </ModalContent>
         <ModalFooter className="px-6 py-4 flex justify-end gap-3 bg-white rounded-b-[18px]">
@@ -359,7 +359,7 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: { isOp
             <div className="p-6 bg-white border-b border-[#D2D2D7]">
               <div className="relative flex items-center">
                 <Search className="absolute left-4 w-5 h-5 text-[#6E6E73]" />
-                <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSynthesize()} placeholder="Nhập câu hỏi tổng hợp..." className="w-full bg-[#F5F5F7] border border-transparent rounded-[980px] pl-12 pr-[120px] py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]" />
+                <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSynthesize()} placeholder="" className="w-full bg-[#F5F5F7] border border-transparent rounded-[980px] pl-12 pr-[120px] py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]" />
                 <button onClick={handleSynthesize} disabled={loading || selectedIds.length === 0} className="absolute right-2 pill-button h-auto py-2 px-6 disabled:opacity-50">{loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Tổng hợp"}</button>
               </div>
             </div>

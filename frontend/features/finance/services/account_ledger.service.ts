@@ -42,4 +42,3 @@ export async function redeemVoucherAPI(code: string) {
   if (!res.ok) throw new Error(data.message || "Không thể đổi mã quà tặng");
   return data;
 }
-

@@ -238,7 +238,7 @@ export default function StudioCollabPage() {
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <div className="flex items-center gap-2">
-          <input type="text" placeholder="Nhập mã tham gia..." value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value)} className="apple-input w-48" />
+          <input type="text" placeholder="" value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value)} className="apple-input w-48" />
           <button onClick={handleJoinWithCode} className="pill-button">Gia nhập</button>
         </div>
       </div>
@@ -281,7 +281,7 @@ export default function StudioCollabPage() {
           {selectedDocumentId && (
             <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Mời cộng tác</h2>
-              <input type="email" placeholder="Email người dùng" value={collaboratorEmail} onChange={(e) => setCollaboratorEmail(e.target.value)} className="apple-input w-full" />
+              <input type="email" placeholder="" value={collaboratorEmail} onChange={(e) => setCollaboratorEmail(e.target.value)} className="apple-input w-full" />
               <div className="flex gap-2">
                 <button onClick={() => setRole("editor")} className={`flex-1 py-2 text-[13px] font-medium rounded-[14px] transition-colors ${role === "editor" ? "bg-black text-white" : "bg-white text-[#1D1D1F]"}`}>Biên tập</button>
                 <button onClick={() => setRole("viewer")} className={`flex-1 py-2 text-[13px] font-medium rounded-[14px] transition-colors ${role === "viewer" ? "bg-black text-white" : "bg-white text-[#1D1D1F]"}`}>Người xem</button>
@@ -382,8 +382,8 @@ export default function StudioCollabPage() {
               <div className="bg-[#F5F5F7] rounded-[24px] p-8 shadow-sm space-y-6">
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><CheckSquare className="w-5 h-5" /> Nhiệm vụ & Checklist</h2>
                 <div className="flex gap-2">
-                  <input type="text" placeholder="Thêm nhiệm vụ mới..." value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} className="apple-input flex-1" />
-                  <input type="text" placeholder="Giao cho..." value={newTaskAssigned} onChange={(e) => setNewTaskAssigned(e.target.value)} className="apple-input w-32" />
+                  <input type="text" placeholder="" value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} className="apple-input flex-1" />
+                  <input type="text" placeholder="" value={newTaskAssigned} onChange={(e) => setNewTaskAssigned(e.target.value)} className="apple-input w-32" />
                   <button onClick={handleCreateTask} className="pill-button px-6">Thêm</button>
                 </div>
                 <div className="space-y-3">
@@ -413,7 +413,7 @@ export default function StudioCollabPage() {
                   )) : <p className="text-center text-[#6E6E73] text-[14px] py-10">Bảng tin trống.</p>}
                 </div>
                 <div className="flex gap-2">
-                  <input type="text" placeholder="Nhập tin nhắn..." value={newMemo} onChange={(e) => setNewMemo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSendMemo()} className="apple-input flex-1" />
+                  <input type="text" placeholder="" value={newMemo} onChange={(e) => setNewMemo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSendMemo()} className="apple-input flex-1" />
                   <button onClick={handleSendMemo} className="pill-button px-6">Gửi</button>
                 </div>
               </div>
@@ -443,7 +443,7 @@ export default function StudioCollabPage() {
             )) : <EmptyState text="Chưa có bình luận." compact={true} />}
           </div>
           <div className="flex gap-2">
-            <input type="text" placeholder="Thêm bình luận..." value={activeTaskCommentText} onChange={(e) => setActiveTaskCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSendTaskComment()} className="apple-input flex-1" />
+            <input type="text" placeholder="" value={activeTaskCommentText} onChange={(e) => setActiveTaskCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSendTaskComment()} className="apple-input flex-1" />
             <button onClick={handleSendTaskComment} className="pill-button px-6">Gửi</button>
           </div>
         </ModalContent>

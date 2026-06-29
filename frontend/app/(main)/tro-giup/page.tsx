@@ -20,10 +20,7 @@ export default function HelpPage() {
       <div className="text-center mb-16 space-y-6">
         <h1 className="text-[40px] md:text-[56px] font-semibold tracking-tight leading-tight">Trung tâm hỗ trợ</h1>
         <p className="text-[17px] text-[#6E6E73] max-w-xl mx-auto leading-relaxed">Giải đáp các thắc mắc về trải nghiệm sử dụng hệ thống DocLib.</p>
-        <div className="relative max-w-md mx-auto mt-8">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
-          <input type="text" placeholder="Tìm kiếm câu hỏi..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-14 pl-12 pr-4 bg-[#F5F5F7] rounded-full text-[15px] font-medium focus:outline-none focus:bg-[#E8E8ED] transition-colors" />
-        </div>
+
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mb-16">

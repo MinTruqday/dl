@@ -113,7 +113,7 @@ export default function Editor({
 
   useEffect(() => {
     if (!documentId) return;
-    let wsUrl = `ws://localhost:8200/editor/ws-crdt/${documentId}`;
+    let wsUrl = `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace("http", "ws")}/ws/crdt/${documentId}`;
     let ws: WebSocket;
     try {
       ws = new WebSocket(wsUrl);
@@ -559,7 +559,7 @@ ${latexCode}
               <div className="flex gap-2 items-center">
                 <input
                   type="text"
-                  placeholder="Từ cần tìm"
+                  placeholder=""
                   className="px-3 py-1.5 text-xs border border-zinc-200 focus:outline-none"
                   value={findText}
                   onChange={(e) => setFindText(e.target.value)}
@@ -567,7 +567,7 @@ ${latexCode}
                 <span className="text-xs text-zinc-400">{"->"}</span>
                 <input
                   type="text"
-                  placeholder="Thay bằng"
+                  placeholder=""
                   className="px-3 py-1.5 text-xs border border-zinc-200 focus:outline-none"
                   value={replaceText}
                   onChange={(e) => setReplaceText(e.target.value)}

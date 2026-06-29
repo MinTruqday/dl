@@ -90,7 +90,7 @@ export default function DocumentViewer() {
     try {
       const token = getToken();
       const res = await fetch(`${API_URL}/lich-su?document_id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) { const data = await res.json(); setSessions(data.data || []); }
+      if (res.ok) { const data = await res.json(); setSessions(data.data || data || []); }
     } catch { showToast("Không thể đồng bộ lịch sử", "error"); }
   }, [id, showToast]);
 
@@ -143,7 +143,7 @@ export default function DocumentViewer() {
       try {
         const token = getToken();
         const res = await fetch(`${API_URL}/lich-su`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ document_id: id, first_query: textToSubmit }) });
-        if (res.ok) { const data = await res.json(); sessionId = data.data._id; setCurrentSessionId(sessionId); fetchSessions(); }
+        if (res.ok) { const data = await res.json(); sessionId = data.data?._id || data._id; setCurrentSessionId(sessionId); fetchSessions(); }
       } catch { showToast("Không thể khởi tạo phiên làm việc", "error"); setAsking(false); return; }
     }
     setMessages(prev => [...prev, { id: Date.now().toString(), role: "user", content: textToSubmit }]);
@@ -271,7 +271,7 @@ export default function DocumentViewer() {
         <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-2">Thực thể bảo mật</h2>
         <p className="text-[15px] text-[#6E6E73] mb-8">Nhập mã định danh để tiếp cận dữ liệu</p>
         <div className="w-full space-y-4">
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && fetchDocument(password)} placeholder="Nhập mã bảo mật" className="w-full h-[52px] bg-[#F5F5F7] border border-transparent px-4 text-center text-[15px] focus:outline-none focus:border-[#0071E3] focus:bg-white rounded-[14px] transition-all" />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && fetchDocument(password)} placeholder="" className="w-full h-[52px] bg-[#F5F5F7] border border-transparent px-4 text-center text-[15px] focus:outline-none focus:border-[#0071E3] focus:bg-white rounded-[14px] transition-all" />
           <button onClick={() => fetchDocument(password)} className="w-full h-[52px] bg-[#0071E3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ED] transition-colors">Xác thực quyền truy cập</button>
         </div>
       </div>
@@ -387,7 +387,7 @@ export default function DocumentViewer() {
         {sidebarTab === "chat" && (
           <div className="p-6 border-t border-[#E8E8ED] bg-white shrink-0">
             <div className="relative">
-              <textarea value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleAskAI())} className="w-full min-h-[120px] p-4 pb-16 text-[15px] bg-[#F5F5F7] border border-transparent focus:bg-white focus:border-[#0071E3] resize-none rounded-[18px] text-[#1D1D1F] placeholder:text-[#6E6E73] outline-none" placeholder="Hỏi AI về tài liệu..." disabled={asking} />
+              <textarea value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleAskAI())} className="w-full min-h-[120px] p-4 pb-16 text-[15px] bg-[#F5F5F7] border border-transparent focus:bg-white focus:border-[#0071E3] resize-none rounded-[18px] text-[#1D1D1F] placeholder:text-[#6E6E73] outline-none" placeholder="" disabled={asking} />
               <div className="absolute bottom-4 left-4"><button className="w-10 h-10 flex items-center justify-center text-[#6E6E73] bg-white border border-[#E8E8ED] hover:bg-[#F5F5F7] rounded-full shadow-sm"><Paperclip className="w-5 h-5" /></button></div>
               <button onClick={() => handleAskAI()} disabled={asking || !question.trim()} className="absolute bottom-4 right-4 w-10 h-10 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 rounded-full shadow-sm hover:bg-[#0077ED]"><Send className="w-4 h-4" /></button>
             </div>

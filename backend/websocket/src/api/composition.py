@@ -3,7 +3,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
 from src.sockets.composition import composition_socket_manager
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter(route_class=LoggingRoute, prefix="/ws")
 
 @router.websocket("/crdt/{document_id}")
 async def editor_websocket(websocket: WebSocket, document_id: str):

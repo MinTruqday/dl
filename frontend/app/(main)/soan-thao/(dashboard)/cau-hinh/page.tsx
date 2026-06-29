@@ -153,7 +153,7 @@ export default function ConfigPage() {
                   ))}
                   {docTags.length === 0 && <span className="text-[13px] text-[#C7C7CC]">Chưa có thẻ nào</span>}
                 </div>
-                <div className="relative"><Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" /><input type="text" value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} onKeyDown={handleAddTag} placeholder="Nhập tên thẻ & Enter (VD: TIENHIEP)" className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" /></div>
+                <div className="relative"><Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" /><input type="text" value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} onKeyDown={handleAddTag} placeholder="" className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" /></div>
               </div>
 
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
@@ -207,7 +207,7 @@ export default function ConfigPage() {
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
                 <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Cộng tác viên</h3></div>
                 <div className="flex gap-2 mb-4">
-                  <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="Email người cộng tác..." className="flex-1 h-[48px] pl-4 pr-4 border border-[#E8E8ED] text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
+                  <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="" className="flex-1 h-[48px] pl-4 pr-4 border border-[#E8E8ED] text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
                   <button onClick={handleInviteCollab} disabled={!inviteEmail.trim()} className="h-[48px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-[14px] disabled:opacity-50 flex items-center gap-2 hover:bg-[#0077ED] transition-colors">Mời <Send className="w-4 h-4" /></button>
                 </div>
                 <div className="bg-[#F5F5F7] border border-[#E8E8ED] rounded-[18px] p-4 max-h-[160px] overflow-y-auto custom-scrollbar">
@@ -227,9 +227,9 @@ export default function ConfigPage() {
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
                 <div className="flex items-center gap-2 mb-4"><Ticket className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Mã ưu đãi</h3></div>
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  <input type="text" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="MÃ" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] uppercase outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
-                  <input type="number" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(Number(e.target.value))} placeholder="%" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} max={100} />
-                  <input type="number" value={newCouponQuantity} onChange={(e) => setNewCouponQuantity(Number(e.target.value))} placeholder="SL" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} />
+                  <input type="text" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] uppercase outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
+                  <input type="number" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(Number(e.target.value))} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} max={100} />
+                  <input type="number" value={newCouponQuantity} onChange={(e) => setNewCouponQuantity(Number(e.target.value))} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} />
                   <button onClick={handleCreateCoupon} className="col-span-3 h-[48px] bg-[#1D1D1F] text-white text-[15px] font-medium rounded-full hover:bg-[#333336] transition-colors">Tạo mã ưu đãi</button>
                 </div>
                 <div className="bg-[#F5F5F7] border border-[#E8E8ED] rounded-[18px] p-4 max-h-[160px] overflow-y-auto custom-scrollbar">
@@ -250,7 +250,7 @@ export default function ConfigPage() {
                 <div className="flex items-center gap-2 mb-2 text-[#FF3B30]"><ArrowRightLeft className="w-5 h-5" /><h3 className="text-[17px] font-medium">Bàn giao tác phẩm</h3></div>
                 <p className="text-[13px] text-[#FF3B30] mb-4">Bạn sẽ mất toàn quyền kiểm soát sau khi chuyển.</p>
                 <div className="flex gap-2">
-                  <input type="text" value={transferUserId} onChange={(e) => setTransferUserId(e.target.value)} placeholder="Mã ID người nhận..." className="flex-1 h-[48px] pl-4 pr-4 border border-[#FF3B30]/30 text-[15px] rounded-[14px] outline-none focus:border-[#FF3B30] bg-white transition-colors" />
+                  <input type="text" value={transferUserId} onChange={(e) => setTransferUserId(e.target.value)} placeholder="" className="flex-1 h-[48px] pl-4 pr-4 border border-[#FF3B30]/30 text-[15px] rounded-[14px] outline-none focus:border-[#FF3B30] bg-white transition-colors" />
                   <button onClick={() => setConfirmTransfer(true)} disabled={isTransferring || !selectedDocumentId || !transferUserId.trim()} className="h-[48px] px-6 bg-[#FF3B30] text-white text-[15px] font-medium rounded-[14px] disabled:opacity-50 hover:bg-[#E0332A] transition-colors">Chuyển</button>
                 </div>
               </div>

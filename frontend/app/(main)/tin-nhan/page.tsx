@@ -167,7 +167,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!user?._id) return;
-    const wsUrl = `${WS_URL}/chat/ws/${user._id}?token=${getToken()}`;
+    const wsUrl = `${WS_URL}/ws/${user._id}?token=${getToken()}`;
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
     socket.onopen = () => {
@@ -511,7 +511,7 @@ export default function MessagesPage() {
           <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Bắt đầu hội thoại mới</ModalTitle>
         </ModalHeader>
         <ModalContent className="p-6 pt-0 space-y-6">
-          <input value={searchQuery} onChange={(e) => handleSearchUsers(e.target.value)} placeholder="Nhập tên người dùng" className="apple-input w-full" />
+          <input value={searchQuery} onChange={(e) => handleSearchUsers(e.target.value)} placeholder="" className="apple-input w-full" />
           <div className="max-h-[300px] overflow-y-auto space-y-2">
             {searching ? <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" /></div> : searchResults.length > 0 ? searchResults.map((u) => (
               <div key={u._id || u.id} onClick={() => startNewChat(u)} className="flex items-center justify-between p-4 bg-white rounded-[10px] cursor-pointer hover:shadow-sm">
@@ -536,7 +536,7 @@ export default function MessagesPage() {
           <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Tạo nhóm</ModalTitle>
         </ModalHeader>
         <ModalContent className="p-6 pt-0 space-y-4">
-          <input type="text" placeholder="Tên nhóm" value={groupName} onChange={(e) => setGroupName(e.target.value)} className="apple-input w-full" />
+          <input type="text" placeholder="" value={groupName} onChange={(e) => setGroupName(e.target.value)} className="apple-input w-full" />
           <div className="max-h-48 overflow-y-auto space-y-2 bg-white rounded-[10px] p-2 border border-[#D2D2D7]">
             {loadingGroupUsers ? <div className="py-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-[#6E6E73]" /></div> : allUsersForGroup.map((u) => (
               <div key={u._id || u.id} className="flex items-center gap-3 p-2 hover:bg-[#F5F5F7] rounded-[8px]">
@@ -643,7 +643,7 @@ export default function MessagesPage() {
                   <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full transition-colors shrink-0"><ImageIcon className="w-6 h-6" /></button>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)} />
                   <div className="flex-1 relative">
-                    <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }} placeholder="Nhập tin nhắn..." className="w-full bg-white border border-transparent rounded-[980px] pl-4 pr-12 py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]" />
+                    <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }} placeholder="" className="w-full bg-white border border-transparent rounded-[980px] pl-4 pr-12 py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]" />
                     <button onClick={handleStartRecording} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-white rounded-full"><Mic className="w-5 h-5" /></button>
                   </div>
                   <button onClick={handleSend} disabled={!newMessage.trim() && !imageFile} className="p-3 bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors shrink-0"><Send className="w-5 h-5 ml-0.5" /></button>
