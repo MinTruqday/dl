@@ -61,10 +61,10 @@ export default function Navigation() {
 
   return (
     <nav
-      className="fixed top-4 left-4 right-4 z-[100] common-panel font-sans transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-[100] w-full bg-white border-b border-zinc-200 font-sans transition-all duration-300"
       style={{ height: "var(--navbar-height)" }}
     >
-      <div className="h-full flex items-center justify-between px-4 max-w-[1440px] mx-auto w-full gap-4">
+      <div className="h-full flex items-center justify-between px-6 w-full gap-4">
         <Link
           href="/"
           className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 shrink-0 transition-all duration-200 hover:scale-105"

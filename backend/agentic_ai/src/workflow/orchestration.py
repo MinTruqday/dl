@@ -203,19 +203,12 @@ workflow.set_entry_point("supervisor")
 workflow.add_conditional_edges(
     "supervisor",
     router,
-    {
-        "interpreter": "interpreter",
-        "search_engine": "search_engine",
-        "action": "action",
-        "knowledge": "knowledge",
-        "reasoning": "reasoning",
-        "aggregator": "aggregator",
-        "trimmer": "trimmer",
-    },
+    {n: n for n in workflow.nodes.keys() if n not in ["supervisor", "sanitizer"]},
 )
 
-for node in ["interpreter", "search_engine", "action", "knowledge", "reasoning"]:
-    workflow.add_edge(node, "supervisor")
+for node in workflow.nodes.keys():
+    if node not in ["supervisor", "aggregator", "trimmer", "sanitizer"]:
+        workflow.add_edge(node, "supervisor")
 
 workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregator": "sanitizer"})
 workflow.add_edge("sanitizer", "aggregator")

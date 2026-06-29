@@ -24,7 +24,6 @@ boto3>=1.28.57
 motor>=3.4.0
 pymongo<5.0.0
 pymupdf==1.24.2
-chandra-ocr
 pypdfium2>=4.30.0
 beautifulsoup4>=4.12.0
 markitdown[all]

@@ -5,16 +5,41 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-_SSRF_PATTERN = re.compile(
-    r"(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0"
-    r"|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+"
-    r"|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+"
-    r"|::1|fd[0-9a-f]{2}:)",
-    re.IGNORECASE,
-)
-
 def _is_ssrf_attempt(query: str) -> bool:
-    return bool(_SSRF_PATTERN.search(query))
+    import socket
+    import ipaddress
+    from urllib.parse import urlparse
+    urls = re.findall(r'https?://[^\s]+', query)
+    for url in urls:
+        try:
+            hostname = urlparse(url).hostname
+            if hostname:
+                ip_info = socket.getaddrinfo(hostname, None)
+                for res in ip_info:
+                    ip = ipaddress.ip_address(res[4][0])
+                    if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_unspecified:
+                        return True
+        except Exception:
+            pass
+    words = re.findall(r'[0-9a-fA-F.:]+', query)
+    for word in words:
+        try:
+            ip = ipaddress.ip_address(word.strip(".:"))
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_unspecified:
+                return True
+        except ValueError:
+            pass
+    if "localhost" in query.lower():
+        try:
+            ip_info = socket.getaddrinfo("localhost", None)
+            for res in ip_info:
+                ip = ipaddress.ip_address(res[4][0])
+                if ip.is_private or ip.is_loopback:
+                    return True
+        except Exception:
+            pass
+
+    return False
 
 class EngineAgent:
     def __init__(self):

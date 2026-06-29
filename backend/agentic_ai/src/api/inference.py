@@ -22,6 +22,8 @@ from src.schemas.inference import (
     SynthesisRequest,
     ToneRequest,
     TranslationRequest,
+    GlossaryRequest,
+    StyleImitationRequest,
 )
 from src.core.dependency import CurrentUser, Role
 
@@ -599,3 +601,53 @@ async def delete_vector_document(document_id: str):
     except Exception as e:
         logger.exception("Lỗi xóa chỉ mục dữ liệu vector của tài liệu")
         raise HTTPException(status_code=500, detail="Đã xảy ra lỗi khi xóa chỉ mục tài liệu")
+
+def _extract_json(text: str) -> dict:
+    import re
+    import json
+    match = re.search(r'\{.*\}', text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except:
+            pass
+    return {}
+
+@router.post("/giai-thich-thuat-ngu")
+async def extract_glossary(
+    req: GlossaryRequest, current_user: CurrentUser = Depends(get_current_user)
+):
+    logger.info(f"Bắt đầu API giải thích thuật ngữ cho user_id={current_user.id}")
+    try:
+        prompt = registry.get(PromptType.EXTRACT_GLOSSARY).format(text=req.text)
+        result = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.3,
+        )
+        data = _extract_json(result)
+        logger.info(f"Hoàn tất API giải thích thuật ngữ cho user_id={current_user.id}")
+        return data if data else {"glossary": []}
+    except Exception as e:
+        logger.exception("Lỗi trong quá trình giải thích thuật ngữ")
+        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau")
+
+@router.post("/bat-chuoc-van-phong")
+async def imitate_style(
+    req: StyleImitationRequest, current_user: CurrentUser = Depends(get_current_user)
+):
+    logger.info(f"Bắt đầu API bắt chước văn phong cho user_id={current_user.id}")
+    try:
+        prompt = registry.get(PromptType.IMITATE_STYLE).format(reference_text=req.reference_text, text=req.text)
+        result = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.5,
+        )
+        logger.info(f"Hoàn tất API bắt chước văn phong cho user_id={current_user.id}")
+        return {"result": result}
+    except Exception as e:
+        logger.exception("Lỗi trong quá trình bắt chước văn phong")
+        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau")

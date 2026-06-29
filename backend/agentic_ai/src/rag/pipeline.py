@@ -129,7 +129,7 @@ class PipelineRag:
             if summary_chunk:
                 chunks.append(summary_chunk)
 
-            extracted_chunks = chunker.chunk_document(raw_text, metadata)
+            extracted_chunks = await chunker.chunk_document(raw_text, metadata)
             chunks.extend(extracted_chunks)
 
         if not chunks:

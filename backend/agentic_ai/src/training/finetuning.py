@@ -387,7 +387,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
         r=lora_rank,
         lora_alpha=lora_rank * 2,
         lora_dropout=0.05,
-        target_modules=["q_proj", "v_proj"],
+        target_modules="all-linear",
         bias="none",
         task_type="SEQ_2_SEQ_LM",
     )
@@ -528,7 +528,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
         r=lora_rank,
         lora_alpha=lora_rank * 2,
         lora_dropout=0.05,
-        target_modules=["up_q", "up_k", "up_v", "up_out.0"],
+        target_modules="all-linear",
         bias="none",
     )
     transformer = get_peft_model(transformer, lora_config)

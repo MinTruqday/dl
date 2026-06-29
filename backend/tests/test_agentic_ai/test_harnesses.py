@@ -752,9 +752,9 @@ class TestFailureAttributionHarness:
 
 class TestVerificationHarness:
 
-    def test_valid_response_passes(self):
+    async def test_valid_response_passes(self):
         harness = VerificationHarness()
-        result = harness.verify_task_completion(
+        result = await harness.verify_task_completion(
             session_id="sess-v1",
             task_id="task-1",
             response="Đây là câu trả lời đầy đủ và chi tiết",
@@ -762,9 +762,9 @@ class TestVerificationHarness:
         assert result.passed is True
         assert len(result.failed_checks) == 0
 
-    def test_empty_response_fails(self):
+    async def test_empty_response_fails(self):
         harness = VerificationHarness()
-        result = harness.verify_task_completion(
+        result = await harness.verify_task_completion(
             session_id="sess-v2",
             task_id="task-2",
             response="",
@@ -772,18 +772,18 @@ class TestVerificationHarness:
         assert result.passed is False
         assert any(c.name == "response_not_empty" for c in result.failed_checks)
 
-    def test_whitespace_only_response_fails(self):
+    async def test_whitespace_only_response_fails(self):
         harness = VerificationHarness()
-        result = harness.verify_task_completion(
+        result = await harness.verify_task_completion(
             session_id="sess-v3",
             task_id="task-3",
             response="   ",
         )
         assert result.passed is False
 
-    def test_hallucination_marker_detected(self):
+    async def test_hallucination_marker_detected(self):
         harness = VerificationHarness()
-        result = harness.verify_task_completion(
+        result = await harness.verify_task_completion(
             session_id="sess-v4",
             task_id="task-4",
             response="I don't know the answer to your question",
@@ -791,19 +791,19 @@ class TestVerificationHarness:
         assert result.passed is False
         assert any(c.name == "no_hallucination_markers" for c in result.failed_checks)
 
-    def test_vietnamese_hallucination_marker_detected(self):
+    async def test_vietnamese_hallucination_marker_detected(self):
         harness = VerificationHarness()
-        result = harness.verify_task_completion(
+        result = await harness.verify_task_completion(
             session_id="sess-v5",
             task_id="task-5",
             response="Tôi không biết câu trả lời cho câu hỏi này",
         )
         assert result.passed is False
 
-    def test_plan_fully_executed_check(self):
+    async def test_plan_fully_executed_check(self):
         harness = VerificationHarness()
         steps = [{"agent": "A", "task": "t1"}, {"agent": "B", "task": "t2"}]
-        result = harness.verify_task_completion(
+        result = await harness.verify_task_completion(
             session_id="sess-v6",
             task_id="task-6",
             response="Kết quả đầy đủ và hoàn chỉnh của quá trình xử lý",
@@ -812,10 +812,10 @@ class TestVerificationHarness:
         )
         assert result.passed is True
 
-    def test_plan_not_fully_executed_fails(self):
+    async def test_plan_not_fully_executed_fails(self):
         harness = VerificationHarness()
         steps = [{"agent": "A", "task": "t1"}, {"agent": "B", "task": "t2"}]
-        result = harness.verify_task_completion(
+        result = await harness.verify_task_completion(
             session_id="sess-v7",
             task_id="task-7",
             response="Phản hồi trung gian chưa hoàn chỉnh",
@@ -839,22 +839,22 @@ class TestVerificationHarness:
         result = harness.verify_tool_result("sess-v10", "task-10", {"data": "some content"})
         assert result.passed is True
 
-    def test_get_session_history_accumulates(self):
+    async def test_get_session_history_accumulates(self):
         harness = VerificationHarness()
-        harness.verify_task_completion("sess-v11", "t1", "Câu trả lời hợp lệ")
-        harness.verify_task_completion("sess-v11", "t2", "")
+        await harness.verify_task_completion("sess-v11", "t1", "Câu trả lời hợp lệ")
+        await harness.verify_task_completion("sess-v11", "t2", "")
         history = harness.get_session_history("sess-v11")
         assert len(history) == 2
 
-    def test_clear_session_removes_history(self):
+    async def test_clear_session_removes_history(self):
         harness = VerificationHarness()
-        harness.verify_task_completion("sess-v12", "t1", "Valid response text here")
+        await harness.verify_task_completion("sess-v12", "t1", "Valid response text here")
         harness.clear_session("sess-v12")
         assert harness.get_session_history("sess-v12") == []
 
-    def test_error_prefix_response_fails(self):
+    async def test_error_prefix_response_fails(self):
         harness = VerificationHarness()
-        result = harness.verify_task_completion(
+        result = await harness.verify_task_completion(
             session_id="sess-v13",
             task_id="task-13",
             response="error: something went wrong during processing",

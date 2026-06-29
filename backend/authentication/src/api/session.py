@@ -25,7 +25,21 @@ router = APIRouter(route_class=LoggingRoute, prefix="/xac-thuc")
 async def read_users_me(
     current_user: CurrentUser = Depends(get_current_user)
 ):
-    user_doc = await mongo.find_one(collection="users", query={"_id": current_user.id})
+    try:
+        from src.core.infrastructure.configuration import settings
+        import httpx
+        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            resp = await client.get(
+                f"{settings.MANAGEMENT_URL}/nguoi-dung/{current_user.id}",
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            )
+            if resp.status_code == 200:
+                user_doc = resp.json().get("data")
+            else:
+                user_doc = None
+    except Exception as e:
+        user_doc = None
+
     if not user_doc:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")

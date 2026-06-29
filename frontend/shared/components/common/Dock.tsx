@@ -132,8 +132,8 @@ export default function Dock() {
 
   return (
     <>
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex items-end">
-        <nav className="common-panel p-2 flex items-center gap-2 transition-all duration-300">
+      <div className="fixed top-1/2 -translate-y-1/2 left-4 z-[100] flex">
+        <nav className="common-panel p-2 flex flex-col items-center gap-2 transition-all duration-300">
           {pinnedItems.map((item) => {
             const active = isActive(item.href);
             return (
@@ -146,20 +146,20 @@ export default function Dock() {
               >
                 <item.icon className={`w-5 h-5 transition-all duration-200 ${active ? "scale-110" : ""}`} />
                 {/* Tooltip */}
-                <div className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform origin-bottom bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl whitespace-nowrap shadow-md">
+                <div className="absolute left-14 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-transform origin-left bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl whitespace-nowrap shadow-md z-[200]">
                   {item.label}
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black"></div>
+                  <div className="absolute top-1/2 -translate-y-1/2 -left-1 border-4 border-transparent border-r-black"></div>
                 </div>
                 {/* Indicator dot */}
                 {active && (
-                  <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-black rounded-full" />
+                  <div className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-1 h-1 bg-black rounded-full" />
                 )}
               </Link>
             );
           })}
           
           {/* Divider */}
-          {pinnedItems.length > 0 && <div className="w-px h-8 bg-zinc-200 mx-1" />}
+          {pinnedItems.length > 0 && <div className="h-px w-8 bg-zinc-200 my-1" />}
 
           {/* More button */}
           <div className="relative">
@@ -171,9 +171,9 @@ export default function Dock() {
             >
               <MoreHorizontal className="w-5 h-5" />
               {/* Tooltip */}
-              <div className={`absolute -top-10 transition-transform origin-bottom bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl whitespace-nowrap shadow-md ${showLaunchpad ? "scale-0" : "scale-0 group-hover:scale-100"}`}>
+              <div className={`absolute left-14 top-1/2 -translate-y-1/2 transition-transform origin-left bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl whitespace-nowrap shadow-md z-[200] ${showLaunchpad ? "scale-0" : "scale-0 group-hover:scale-100"}`}>
                 Tất cả tính năng
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black"></div>
+                <div className="absolute top-1/2 -translate-y-1/2 -left-1 border-4 border-transparent border-r-black"></div>
               </div>
             </button>
 
@@ -181,7 +181,7 @@ export default function Dock() {
             {showLaunchpad && (
               <div
                 ref={launchpadRef}
-                className="absolute bottom-16 right-0 w-[320px] sm:w-[400px] common-panel p-4 grid grid-cols-4 sm:grid-cols-5 gap-3 animate-in fade-in zoom-in-95 duration-200"
+                className="absolute left-16 bottom-0 w-[320px] sm:w-[400px] common-panel p-4 grid grid-cols-4 sm:grid-cols-5 gap-3 animate-in fade-in slide-in-from-left-4 duration-200"
               >
                 <div className="col-span-full mb-2">
                   <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest pl-1">

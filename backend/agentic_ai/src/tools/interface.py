@@ -355,7 +355,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     )
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
-        req = ReviewRequest(text=safe_text, criteria=["logic", "clear"])
+        req = ReviewRequest(text=safe_text)
         data = await peer_review(req)
         return f"Dưới đây là báo cáo phản biện cho tài liệu\n\n{data.get('review_report', '')}"
     except Exception as e:

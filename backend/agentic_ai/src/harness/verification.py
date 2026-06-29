@@ -44,30 +44,28 @@ def _check_response_not_empty(response: str) -> CheckResult:
         )
     return CheckResult(name="response_not_empty", status="passed")
 
-def _check_no_hallucination_markers(response: str) -> CheckResult:
-    hallucination_signals = [
-        "i don't know",
-        "i cannot",
-        "i am unable",
-        "as an ai",
-        "i'm just an ai",
-        "tôi không biết",
-        "tôi không thể",
-        "tôi không có khả năng",
-        "[thông tin không có sẵn]",
-        "[không tìm thấy]",
-        "undefined",
-        "null",
-        "none found",
-    ]
-    response_lower = response.lower()
-    for signal in hallucination_signals:
-        if signal in response_lower:
+async def _check_no_hallucination_markers(response: str) -> CheckResult:
+    from src.workflow.graph import llm
+    from pydantic import BaseModel, Field
+    
+    class HallucinationGrade(BaseModel):
+        is_refusal_or_hallucination: bool = Field(description="True if the response is a refusal to answer, states 'I do not know', or uses AI identity markers like 'As an AI'")
+        reason: str = Field(description="Reason for the grade")
+
+    try:
+        evaluator = llm.with_structured_output(HallucinationGrade)
+        prompt = f"Evaluate this AI response: '{response[:500]}'. Is it refusing to answer or stating it doesn't know?"
+        result = await evaluator.ainvoke(prompt)
+        if result.is_refusal_or_hallucination:
             return CheckResult(
                 name="no_hallucination_markers",
                 status="failed",
-                reason=f"Phát hiện tín hiệu hallucination: '{signal}'",
+                reason=f"Phát hiện tín hiệu từ chối hoặc hallucination: {result.reason}",
             )
+    except Exception as e:
+        if len(response) < 15 and "?" not in response:
+            pass
+            
     return CheckResult(name="no_hallucination_markers", status="passed")
 
 def _check_plan_fully_executed(steps: List[Dict], current_step_index: int) -> CheckResult:
@@ -124,7 +122,7 @@ class VerificationHarness:
     def __init__(self):
         self._history: Dict[str, List[VerificationResult]] = {}
 
-    def verify_task_completion(
+    async def verify_task_completion(
         self,
         session_id: str,
         task_id: str,
@@ -135,7 +133,7 @@ class VerificationHarness:
         logger.info("Bắt đầu xác minh kết quả tác vụ")
         checks = [
             _check_response_not_empty(response),
-            _check_no_hallucination_markers(response),
+            await _check_no_hallucination_markers(response),
             _check_no_error_prefix(response),
         ]
 

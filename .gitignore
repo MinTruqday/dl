@@ -7,3 +7,12 @@ frontend/public/
 backend/logs/
 *.bak
 
+# Python virtual environments
+**/venv/
+**/.venv/
+**/env/
+**/.env/
+*.egg-info/
+dist/
+build/
+

@@ -13,6 +13,7 @@ class InterpreterAgent:
         pass
 
     async def execute(self, task_desc: str) -> str:
+        import sys
         logger.info("Hệ thống đang tích cực xử lý yêu cầu của bạn, vui lòng đợi")
 
         try:
@@ -26,7 +27,7 @@ class InterpreterAgent:
                 "- Output ONLY valid Python code wrapped in ```python code_here ``` tags.\n"
                 "- Do NOT include any conversational text or explanations.\n"
                 "- Use the `print` function to output results.\n"
-                "- Assume a standard Python 3.9 environment with standard libraries only"
+                "- Assume a standard Python {sys.version_info.major}.{sys.version_info.minor} environment with standard libraries only"
             )
             messages = [
                 SystemMessage(content=system_prompt),
@@ -58,7 +59,20 @@ class InterpreterAgent:
                 return f.name
 
             script_path = await asyncio.to_thread(write_temp_script, code)
-
+            import psutil
+            import sys
+            
+            total_ram_mb = psutil.virtual_memory().total / (1024 * 1024)
+            allocated_ram = int(max(128, min(1024, total_ram_mb * 0.05)))
+            ram_str = f"{allocated_ram}m"
+            
+            total_cpus = psutil.cpu_count(logical=True) or 1
+            allocated_cpus = max(0.5, min(2.0, total_cpus * 0.1))
+            cpu_str = f"{allocated_cpus:.1f}"
+            
+            py_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+            image_str = f"python:{py_version}-slim"
+            
             try:
                 docker_cmd = [
                     "docker",
@@ -69,11 +83,11 @@ class InterpreterAgent:
                     "--network",
                     "none",
                     "--memory",
-                    "128m",
+                    ram_str,
                     "--memory-swap",
-                    "128m",
+                    ram_str,
                     "--cpus",
-                    "0.5",
+                    cpu_str,
                     "--pids-limit",
                     "64",
                     "--read-only",
@@ -81,7 +95,7 @@ class InterpreterAgent:
                     "/tmp:size=50m,noexec,nosuid",
                     "--cap-drop",
                     "ALL",
-                    "python:3.9-slim",
+                    image_str,
                     "python",
                     "/app/script.py",
                 ]

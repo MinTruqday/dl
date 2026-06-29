@@ -54,7 +54,6 @@ class Settings(BaseModel):
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL")
     NLLB_MODEL: str = os.getenv("NLLB_MODEL")
     NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME")
-    IMAGE_GEN_MODEL: str = os.getenv("IMAGE_GEN_MODEL")
 
     HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA"))
     EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS"))
@@ -70,9 +69,8 @@ class Settings(BaseModel):
     CHARS_PER_TOKEN_APPROX: int = int(os.getenv("CHARS_PER_TOKEN_APPROX"))
     DEFAULT_CHUNK_SIZE: int = int(os.getenv("DEFAULT_CHUNK_SIZE"))
     DEFAULT_CHUNK_OVERLAP: int = int(os.getenv("DEFAULT_CHUNK_OVERLAP"))
-    API_URL: str = os.getenv("API_URL")
+    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
     AGENTIC_AI_URL: str = os.getenv("AGENTIC_AI_URL")
-    SHARED_URL: Optional[str] = os.getenv("SHARED_URL")
     COMPILATION_URL: str = os.getenv("COMPILATION_URL")
     COLLECTION_URL: str = os.getenv("COLLECTION_URL")
     MESSAGING_URL: str = os.getenv("MESSAGING_URL")
@@ -87,12 +85,5 @@ class Settings(BaseModel):
     MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
     DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT"))
     LONG_PROCESS_TIMEOUT: float = float(os.getenv("LONG_PROCESS_TIMEOUT"))
-
-    MONGO_URL: str = os.getenv("MONGO_URL", "http://doclib_database:8800/co-so-du-lieu")
-    QUEUE_URL: str = os.getenv("QUEUE_URL", "http://doclib_queue:8802/hang-doi")
-    CACHE_URL: str = os.getenv("CACHE_URL", "http://doclib_cache:8801")
-
-
-    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL", os.getenv("API_URL", "http://doclib_traefik:8000"))
 
 settings = Settings()
