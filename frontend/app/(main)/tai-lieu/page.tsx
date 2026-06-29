@@ -136,11 +136,11 @@ export default function DocumentsPage() {
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
           <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-            <h3 className="text-[15px] font-medium text-[#6E6E73] flex items-center gap-2"><Search className="w-4 h-4" /> Tìm kiếm</h3>
+            <h3 className="text-[17px] font-medium text-[#6E6E73] flex items-center gap-2"><Search className="w-4 h-4" /> Tìm kiếm</h3>
             <input type="text" placeholder="Nhập từ khóa..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="apple-input w-full bg-white" />
           </div>
           <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-            <h3 className="text-[15px] font-medium text-[#6E6E73] flex items-center gap-2"><Database className="w-4 h-4" /> Lọc dữ liệu</h3>
+            <h3 className="text-[17px] font-medium text-[#6E6E73] flex items-center gap-2"><Database className="w-4 h-4" /> Lọc dữ liệu</h3>
             <button onClick={() => setFilterStar(!filterStar)} className={`w-full py-3 rounded-[14px] flex items-center justify-center gap-2 font-medium text-[14px] transition-colors ${filterStar ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] border border-[#E8E8ED]"}`}><Star className={`w-4 h-4 ${filterStar ? "fill-white" : "text-[#6E6E73]"}`} /> Yêu thích</button>
             <div className="space-y-2 pt-2">
               <label className="text-[13px] font-medium text-[#6E6E73]">Định dạng</label>
@@ -235,7 +235,7 @@ export default function DocumentsPage() {
           {documents.length === 0 && folders.length === 0 && !isLoading && (
             <div className="flex-1 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED]">
               <Search className="w-12 h-12 text-[#C7C7CC] mb-4"/>
-              <h2 className="text-[17px] font-medium text-[#1D1D1F]">Không có tài liệu</h2>
+              <h2 className="text-[20px] font-medium text-[#1D1D1F]">Không có tài liệu</h2>
               <p className="text-[14px] text-[#6E6E73] mt-2">Thư mục hiện đang trống.</p>
             </div>
           )}

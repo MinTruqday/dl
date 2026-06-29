@@ -141,7 +141,7 @@ function SearchResultsContent() {
                         ))}
                       </div>
                     )}
-                    <h3 className={`${viewMode === "grid" ? "text-[17px]" : "text-[20px]"} font-medium text-[#1D1D1F] line-clamp-2 leading-snug`}>{document.title}</h3>
+                    <h3 className={`${viewMode === "grid" ? "text-[17px]" : "text-[17px]"} font-medium text-[#1D1D1F] line-clamp-2 leading-snug`}>{document.title}</h3>
                     <div className="text-[13px] text-[#6E6E73] flex items-center gap-2">
                       <span className="truncate">{document.author_name || document.author?.full_name || document.author?.username || "Ẩn danh"}</span>
                       <span>•</span>
@@ -161,7 +161,7 @@ function SearchResultsContent() {
           ) : (
             <div className="py-32 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px]">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4"><BookOpen className="w-8 h-8 text-[#C7C7CC]" /></div>
-              <h3 className="text-[20px] font-semibold text-[#1D1D1F] mb-2">Chưa có kết quả</h3>
+              <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có kết quả</h3>
               <p className="text-[15px] text-[#6E6E73]">Thử thay đổi từ khóa hoặc bộ lọc để tìm kiếm lại.</p>
             </div>
           )}

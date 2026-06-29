@@ -60,17 +60,12 @@ export default function CommentsPage() {
 
   return (
     <div className="flex flex-col h-full font-sans">
-      <div className={`border-b border-[#E8E8ED] pb-6 mb-6 shrink-0 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
-        <h1 className="text-[24px] font-semibold text-[#1D1D1F] mb-2">Bình luận & Phản hồi</h1>
-        <p className="text-[15px] text-[#6E6E73]">Theo dõi và tương tác với độc giả</p>
-      </div>
-
       <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
         <div className="bg-[#F5F5F7] border border-[#E8E8ED] p-6 rounded-[24px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white border border-[#E8E8ED] rounded-[14px] flex items-center justify-center shrink-0"><BookOpen className="w-6 h-6 text-[#1D1D1F]" /></div>
             <div>
-              <h2 className="text-[15px] font-semibold text-[#1D1D1F]">Chọn tác phẩm</h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Chọn tác phẩm</h2>
               <p className="text-[13px] text-[#6E6E73]">Lọc bình luận theo từng tài liệu</p>
             </div>
           </div>
@@ -86,7 +81,7 @@ export default function CommentsPage() {
         {selectedDocumentId ? (
           <div className="flex-1 min-h-0 flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] overflow-hidden">
             <div className="border-b border-[#E8E8ED] p-6 flex justify-between items-center bg-[#F5F5F7] shrink-0">
-              <h2 className="text-[15px] font-semibold text-[#1D1D1F] flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Danh sách bình luận</h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Danh sách bình luận</h2>
               <span className="px-4 py-1.5 bg-white border border-[#E8E8ED] text-[#1D1D1F] text-[13px] font-medium rounded-full">{comments.length} phản hồi</span>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
@@ -98,7 +93,7 @@ export default function CommentsPage() {
               ) : comments.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-12">
                   <div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4"><MessageSquare className="w-8 h-8 text-[#C7C7CC]" /></div>
-                  <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">Chưa có bình luận</h3>
+                  <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có bình luận</h3>
                   <p className="text-[15px] text-[#6E6E73] max-w-sm">Tác phẩm này hiện chưa nhận được phản hồi nào từ độc giả.</p>
                 </div>
               ) : (

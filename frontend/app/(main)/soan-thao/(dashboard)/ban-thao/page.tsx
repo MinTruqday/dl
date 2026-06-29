@@ -46,7 +46,7 @@ export default function DraftsPage() {
             <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4">
               <FolderOpen className="w-8 h-8 text-[#C7C7CC]" />
             </div>
-            <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">Chưa có bản nháp nào</h3>
+            <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có bản nháp nào</h3>
             <p className="text-[15px] text-[#6E6E73] max-w-sm mb-6">Bạn chưa có tác phẩm nào đang trong quá trình soạn thảo. Bắt đầu sáng tác ngay.</p>
             <button onClick={() => router.push("/cung-cap")} className="h-[44px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ED] transition-colors flex items-center gap-2 shadow-sm">
               <PenTool className="w-4 h-4" /> Tạo tác phẩm mới
@@ -76,7 +76,7 @@ export default function DraftsPage() {
                   </div>
                 </div>
                 <div className="p-5 flex flex-col flex-1 gap-4 w-full bg-white">
-                  <h3 className="text-[15px] font-semibold text-[#1D1D1F] line-clamp-2 leading-relaxed">{draft.title || "Tác phẩm chưa có tiêu đề"}</h3>
+                  <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-2 leading-relaxed">{draft.title || "Tác phẩm chưa có tiêu đề"}</h3>
                   <div className="mt-auto pt-4 border-t border-[#E8E8ED] flex items-center justify-between">
                     <div className="flex items-center gap-2 text-[#6E6E73]">
                       <Calendar className="w-4 h-4" />

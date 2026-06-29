@@ -277,7 +277,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="bg-[#FFF0F0] rounded-[18px] p-6 mt-8">
-                  <h3 className="text-[17px] font-semibold text-[#FF3B30] mb-4">Vùng nguy hiểm</h3>
+                  <h3 className="text-[17px] font-medium text-[#FF3B30] mb-4">Vùng nguy hiểm</h3>
                   <button className="py-2 px-4 bg-[#FF3B30] text-white rounded-[14px] text-[15px] font-medium">Xóa tài khoản</button>
                 </div>
               </div>

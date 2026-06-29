@@ -79,18 +79,6 @@ export default function StatsPage() {
 
   return (
     <div className="flex flex-col h-full font-sans">
-      <div className={`border-b border-[#E8E8ED] pb-6 mb-6 shrink-0 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[24px] font-semibold text-[#1D1D1F] mb-2 flex items-center gap-2">Báo cáo & Số liệu</h1>
-            <p className="text-[15px] text-[#6E6E73]">Tổng quan về hiệu suất nội dung và doanh thu</p>
-          </div>
-          <button onClick={() => setShowWithdrawalModal(true)} className="h-[44px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-full flex items-center gap-2 transition-colors hover:bg-[#0077ED] shadow-sm">
-            <Banknote className="w-4 h-4" /> <span className="hidden sm:inline">Rút tiền doanh thu</span><span className="sm:hidden">Rút tiền</span>
-          </button>
-        </div>
-      </div>
-
       <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
           {[
@@ -111,13 +99,13 @@ export default function StatsPage() {
         <div className="bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] flex flex-col flex-1 min-h-0 overflow-hidden pb-6">
           <div className="p-6 border-b border-[#E8E8ED] flex items-center gap-3 bg-[#F5F5F7] shrink-0">
             <BarChart3 className="w-5 h-5 text-[#1D1D1F]" />
-            <h3 className="text-[15px] font-semibold text-[#1D1D1F]">Hiệu suất tác phẩm</h3>
+            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Hiệu suất tác phẩm</h3>
           </div>
           <div className="flex-1 overflow-auto custom-scrollbar">
             {(stats?.documents || []).length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center p-12 text-center">
                 <div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4"><BookOpen className="w-8 h-8 text-[#C7C7CC]" /></div>
-                <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">Chưa có dữ liệu</h3>
+                <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có dữ liệu</h3>
                 <p className="text-[15px] text-[#6E6E73] max-w-sm">Bạn chưa có tác phẩm nào phát sinh số liệu. Hãy xuất bản thêm nội dung.</p>
               </div>
             ) : (
@@ -166,7 +154,7 @@ export default function StatsPage() {
             ) : (
               <div className="p-6 space-y-8 bg-white">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-[#E8E8ED] pb-3"><Eye className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Tương tác độc giả</h3></div>
+                  <div className="flex items-center gap-2 border-b border-[#E8E8ED] pb-3"><Eye className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Tương tác độc giả</h3></div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="p-5 bg-[#F5F5F7] border border-[#E8E8ED] rounded-[18px] flex flex-col justify-between h-[120px]"><Eye className="w-5 h-5 text-[#0071E3] mb-2" /><div><p className="text-[12px] font-medium text-[#6E6E73] mb-1">Lượt xem</p><p className="text-[24px] font-semibold text-[#1D1D1F]">{(selectedAnalytics?.views || 0).toLocaleString()}</p></div></div>
                     <div className="p-5 bg-[#F5F5F7] border border-[#E8E8ED] rounded-[18px] flex flex-col justify-between h-[120px]"><Clock className="w-5 h-5 text-[#AF52DE] mb-2" /><div><p className="text-[12px] font-medium text-[#6E6E73] mb-1">Đọc TB</p><p className="text-[24px] font-semibold text-[#1D1D1F]">{selectedAnalytics?.avg_read_time || "0 phút"}</p></div></div>
@@ -175,7 +163,7 @@ export default function StatsPage() {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-[#E8E8ED] pb-3"><BookOpen className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Chỉ số học thuật</h3></div>
+                  <div className="flex items-center gap-2 border-b border-[#E8E8ED] pb-3"><BookOpen className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Chỉ số học thuật</h3></div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-6 bg-[#F5F5F7] border border-[#E8E8ED] rounded-[18px] flex items-center justify-between"><div><p className="text-[12px] font-medium text-[#6E6E73] mb-1">Tổng số từ</p><p className="text-[24px] font-semibold text-[#1D1D1F]">{(selectedAcademic?.word_count || 0).toLocaleString()}</p></div><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-[#E8E8ED]"><FileText className="w-5 h-5 text-[#1D1D1F]" /></div></div>
                     <div className="p-6 bg-[#F5F5F7] border border-[#E8E8ED] rounded-[18px] flex items-center justify-between"><div><p className="text-[12px] font-medium text-[#6E6E73] mb-1">Độ đọc hiểu</p><p className="text-[24px] font-semibold text-[#1D1D1F] flex items-baseline gap-1">{selectedAcademic?.readability_score || 0}<span className="text-[15px] text-[#6E6E73]">/100</span></p></div><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-[#E8E8ED]"><Percent className="w-5 h-5 text-[#1D1D1F]" /></div></div>

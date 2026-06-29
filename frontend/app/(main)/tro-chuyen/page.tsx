@@ -430,7 +430,7 @@ export default function TroChuyenPage() {
       <div className="flex flex-1 min-h-0 gap-6">
         <aside className="w-full lg:w-[320px] bg-[#F5F5F7] rounded-[18px] flex flex-col overflow-hidden shrink-0 hidden lg:flex">
           <div className="p-6 flex items-center justify-between shrink-0">
-            <h2 className="text-[17px] font-semibold text-[#1D1D1F]">Lịch sử</h2>
+            <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lịch sử</h2>
             <button
               onClick={() => { setCurrentSessionId(null); setMessages([]); }}
               className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"

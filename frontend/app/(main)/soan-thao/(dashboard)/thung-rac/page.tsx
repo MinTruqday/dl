@@ -30,18 +30,6 @@ export default function TrashPage() {
 
   return (
     <div className="flex flex-col h-full font-sans">
-      <div className={`border-b border-[#E8E8ED] pb-6 mb-6 shrink-0 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[24px] font-semibold text-[#1D1D1F] mb-2 flex items-center gap-2">Thùng rác</h1>
-            <p className="text-[15px] text-[#6E6E73]">Quản lý các tài liệu đã bị gỡ bỏ tạm thời</p>
-          </div>
-          <div className="w-12 h-12 bg-[#FF3B30]/10 border border-[#FF3B30]/20 rounded-[14px] flex items-center justify-center shrink-0">
-            <Trash2 className="w-6 h-6 text-[#FF3B30]" />
-          </div>
-        </div>
-      </div>
-
       <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
         {loading ? (
           <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] border border-[#E8E8ED] rounded-[24px]">
@@ -53,7 +41,7 @@ export default function TrashPage() {
             <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4">
               <Trash2 className="w-8 h-8 text-[#C7C7CC]" />
             </div>
-            <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">Thùng rác trống</h3>
+            <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Thùng rác trống</h3>
             <p className="text-[15px] text-[#6E6E73] max-w-sm">Không có tài liệu nào bị xóa gần đây. Các tài liệu trong thùng rác có thể được khôi phục.</p>
           </div>
         ) : (

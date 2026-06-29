@@ -244,7 +244,7 @@ export default function StudioCollabPage() {
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-4 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
           <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-            <h2 className="text-[17px] font-semibold text-[#1D1D1F]">Tài liệu hoạt động</h2>
+            <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tài liệu hoạt động</h2>
             <div className="relative">
               <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[44px] bg-white border border-[#E8E8ED] px-4 text-[15px] focus:outline-none focus:border-[#0071E3] appearance-none rounded-[14px]">
                 <option value="">Chọn tài liệu biên tập</option>
@@ -266,7 +266,7 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && (
             <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-              <h2 className="text-[17px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Key className="w-4 h-4" /> Khóa phiên</h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Key className="w-4 h-4" /> Khóa phiên</h2>
               {lockStatus.is_locked ? (
                 <div className="p-4 bg-[#FFF0F0] text-[#FF3B30] text-[14px] rounded-[14px]">
                   Khóa bởi: <strong className="font-semibold">{lockStatus.user_name}</strong>
@@ -278,7 +278,7 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && (
             <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-              <h2 className="text-[17px] font-semibold text-[#1D1D1F]">Mời cộng tác</h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Mời cộng tác</h2>
               <input type="email" placeholder="Email người dùng" value={collaboratorEmail} onChange={(e) => setCollaboratorEmail(e.target.value)} className="apple-input w-full" />
               <div className="flex gap-2">
                 <button onClick={() => setRole("editor")} className={`flex-1 py-2 text-[13px] font-medium rounded-[14px] transition-colors ${role === "editor" ? "bg-black text-white" : "bg-white text-[#1D1D1F]"}`}>Biên tập</button>
@@ -290,7 +290,7 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && isOwnerOfSelected() && (
             <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-              <h2 className="text-[17px] font-semibold text-[#1D1D1F] flex items-center justify-between">Mã mời nhanh <QrCode className="w-4 h-4 text-[#6E6E73]" /></h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center justify-between">Mã mời nhanh <QrCode className="w-4 h-4 text-[#6E6E73]" /></h2>
               {inviteCode ? (
                 <div className="flex items-center gap-2 bg-white p-3 rounded-[14px] border border-[#E8E8ED]">
                   <span className="font-mono font-bold tracking-wider text-[14px] flex-1 text-center select-all">{inviteCode}</span>
@@ -302,7 +302,7 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && sentPendingInvites.length > 0 && (
             <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-              <h2 className="text-[17px] font-semibold text-[#1D1D1F]">Lời mời đã gửi (chờ)</h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lời mời đã gửi (chờ)</h2>
               <div className="space-y-3">
                 {sentPendingInvites.map(sp => (
                   <div key={sp._id || sp.id} className="flex justify-between items-center bg-white p-3 rounded-[14px]">
@@ -319,7 +319,7 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && (
             <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-              <div className="flex justify-between items-center"><h2 className="text-[17px] font-semibold text-[#1D1D1F]">Cộng tác viên</h2><span className="text-[13px] text-[#6E6E73]">{collaborators.length}</span></div>
+              <div className="flex justify-between items-center"><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Cộng tác viên</h2><span className="text-[13px] text-[#6E6E73]">{collaborators.length}</span></div>
               {collaborators.length > 0 ? (
                 <div className="space-y-3">
                   {collaborators.map(c => {

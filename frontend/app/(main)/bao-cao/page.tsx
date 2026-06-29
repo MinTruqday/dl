@@ -58,7 +58,7 @@ export default function ReportsManagementPage() {
       <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-hidden flex flex-col min-h-0">
         <div className="flex items-center justify-between p-6 border-b border-[#E8E8ED] bg-[#F5F5F7]/30">
           <div className="flex items-center gap-3">
-            <h2 className="text-[16px] font-medium text-[#1D1D1F]">Hàng đợi báo cáo</h2>
+            <h2 className="text-[20px] font-medium text-[#1D1D1F]">Hàng đợi báo cáo</h2>
             {pendingCount > 0 && <span className="px-3 py-1 bg-[#FF3B30]/10 text-[#FF3B30] text-[13px] font-medium rounded-full flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#FF3B30] animate-pulse"></div>{pendingCount} chờ xử lý</span>}
           </div>
           <span className="text-[13px] text-[#6E6E73] font-medium">Tổng: {reports.length}</span>
@@ -77,7 +77,7 @@ export default function ReportsManagementPage() {
                   <td colSpan={5} className="py-24 text-center">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                       <div className="w-16 h-16 bg-[#F5F5F7] rounded-[16px] flex items-center justify-center mb-4"><FileWarning className="w-8 h-8 text-[#C7C7CC]" /></div>
-                      <h2 className="text-[17px] font-medium text-[#1D1D1F] mb-1">{searchQuery ? "Không tìm thấy" : "Chưa có báo cáo"}</h2>
+                      <h2 className="text-[20px] font-medium text-[#1D1D1F] mb-1">{searchQuery ? "Không tìm thấy" : "Chưa có báo cáo"}</h2>
                       <p className="text-[14px] text-[#6E6E73]">{searchQuery ? "Vui lòng thử từ khóa khác." : "Hệ thống hiện không có vi phạm nào."}</p>
                     </div>
                   </td>

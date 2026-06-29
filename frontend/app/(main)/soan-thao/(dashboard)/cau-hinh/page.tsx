@@ -124,16 +124,11 @@ export default function ConfigPage() {
 
   return (
     <div className="flex flex-col h-full font-sans">
-      <div className={`border-b border-[#E8E8ED] pb-6 mb-6 shrink-0 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
-        <h1 className="text-[24px] font-semibold text-[#1D1D1F] mb-2">Cấu hình tác phẩm</h1>
-        <p className="text-[15px] text-[#6E6E73]">Quản lý và tinh chỉnh các cài đặt cho tài liệu</p>
-      </div>
-
       <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
         <div className="bg-[#F5F5F7] border border-[#E8E8ED] p-6 rounded-[24px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white border border-[#E8E8ED] rounded-[14px] flex items-center justify-center shrink-0"><Settings className="w-6 h-6 text-[#1D1D1F]" /></div>
-            <div><h2 className="text-[15px] font-semibold text-[#1D1D1F]">Chọn tác phẩm</h2><p className="text-[13px] text-[#6E6E73]">Tác phẩm cần thiết lập</p></div>
+            <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Chọn tác phẩm</h2><p className="text-[13px] text-[#6E6E73]">Tác phẩm cần thiết lập</p></div>
           </div>
           <div className="relative w-full sm:w-[320px]">
             <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
@@ -149,7 +144,7 @@ export default function ConfigPage() {
           <div className="flex-1 min-h-0 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
-                <div className="flex items-center gap-2 mb-4"><Hash className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Phân loại & Thẻ</h3></div>
+                <div className="flex items-center gap-2 mb-4"><Hash className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Phân loại & Thẻ</h3></div>
                 <p className="text-[13px] text-[#6E6E73] mb-4">Sử dụng thẻ để phân loại tác phẩm.</p>
                 <div className="flex flex-wrap gap-2 mb-4 min-h-[32px]">
                   {docTags.map((tag) => (
@@ -163,7 +158,7 @@ export default function ConfigPage() {
               </div>
 
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
-                <div className="flex items-center gap-2 mb-4"><Folder className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Thư mục làm việc</h3></div>
+                <div className="flex items-center gap-2 mb-4"><Folder className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Thư mục làm việc</h3></div>
                 <p className="text-[13px] text-[#6E6E73] mb-4">Di chuyển tác phẩm này vào thư mục.</p>
                 <div className="relative">
                   <Folder className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
@@ -177,7 +172,7 @@ export default function ConfigPage() {
 
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2"><Shield className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Bảo vệ bản quyền</h3></div>
+                  <div className="flex items-center gap-2"><Shield className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Bảo vệ bản quyền</h3></div>
                   <button onClick={handleSaveDRM} disabled={savingDrm || !selectedDocumentId} className="h-[36px] px-4 bg-[#0071E3] text-white text-[13px] font-medium rounded-full disabled:opacity-50 transition-colors hover:bg-[#0077ED]">{savingDrm ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Lưu DRM"}</button>
                 </div>
                 <div className="space-y-4 bg-[#F5F5F7] p-4 rounded-[18px] border border-[#E8E8ED]">
@@ -203,7 +198,7 @@ export default function ConfigPage() {
             <div className="space-y-6">
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px] relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Brain className="w-24 h-24" /></div>
-                <div className="flex items-center gap-2 mb-4 relative z-10"><Brain className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Trí tuệ nhân tạo</h3></div>
+                <div className="flex items-center gap-2 mb-4 relative z-10"><Brain className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Trí tuệ nhân tạo</h3></div>
                 <p className="text-[13px] text-[#6E6E73] mb-4 relative z-10">Đồng bộ nội dung với hệ thống RAG để AI hỗ trợ độc giả.</p>
                 <button onClick={handleIngestAI} disabled={isIngesting || !selectedDocumentId} className="w-full h-[48px] bg-[#1D1D1F] text-white text-[15px] font-medium flex items-center justify-center gap-2 rounded-full disabled:opacity-50 transition-colors hover:bg-[#333336] relative z-10">
                   {isIngesting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Brain className="w-5 h-5" />} Đồng bộ dữ liệu AI
@@ -211,7 +206,7 @@ export default function ConfigPage() {
               </div>
 
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
-                <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Cộng tác viên</h3></div>
+                <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Cộng tác viên</h3></div>
                 <div className="flex gap-2 mb-4">
                   <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="Email người cộng tác..." className="flex-1 h-[48px] pl-4 pr-4 border border-[#E8E8ED] text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
                   <button onClick={handleInviteCollab} disabled={!inviteEmail.trim()} className="h-[48px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-[14px] disabled:opacity-50 flex items-center gap-2 hover:bg-[#0077ED] transition-colors">Mời <Send className="w-4 h-4" /></button>
@@ -231,7 +226,7 @@ export default function ConfigPage() {
               </div>
 
               <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
-                <div className="flex items-center gap-2 mb-4"><Ticket className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[15px] font-semibold text-[#1D1D1F]">Mã ưu đãi</h3></div>
+                <div className="flex items-center gap-2 mb-4"><Ticket className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Mã ưu đãi</h3></div>
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <input type="text" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="MÃ" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] uppercase outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
                   <input type="number" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(Number(e.target.value))} placeholder="%" className="col-span-1 h-[48px] px-4 text-[15px] font-medium border border-[#E8E8ED] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} max={100} />
@@ -253,7 +248,7 @@ export default function ConfigPage() {
               </div>
 
               <div className="bg-[#FF3B30]/10 border border-[#FF3B30]/20 p-6 rounded-[24px]">
-                <div className="flex items-center gap-2 mb-2 text-[#FF3B30]"><ArrowRightLeft className="w-5 h-5" /><h3 className="text-[15px] font-semibold">Bàn giao tác phẩm</h3></div>
+                <div className="flex items-center gap-2 mb-2 text-[#FF3B30]"><ArrowRightLeft className="w-5 h-5" /><h3 className="text-[17px] font-medium">Bàn giao tác phẩm</h3></div>
                 <p className="text-[13px] text-[#FF3B30] mb-4">Bạn sẽ mất toàn quyền kiểm soát sau khi chuyển.</p>
                 <div className="flex gap-2">
                   <input type="text" value={transferUserId} onChange={(e) => setTransferUserId(e.target.value)} placeholder="Mã ID người nhận..." className="flex-1 h-[48px] pl-4 pr-4 border border-[#FF3B30]/30 text-[15px] rounded-[14px] outline-none focus:border-[#FF3B30] bg-white transition-colors" />

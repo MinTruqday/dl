@@ -198,7 +198,7 @@ export default function ProfilePage() {
           {user.role === "reader" && (
             <div className="bg-[#EBF4FF] rounded-[24px] p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div>
-                <h3 className="text-[17px] font-semibold text-[#0071E3] flex items-center gap-2 mb-2">
+                <h3 className="text-[17px] font-medium text-[#0071E3] flex items-center gap-2 mb-2">
                   <BadgeCheck className="w-5 h-5" /> Trở thành Tác giả
                 </h3>
                 <p className="text-[14px] text-[#0055C6]">
@@ -214,7 +214,7 @@ export default function ProfilePage() {
           {user.role === "author" && (
             <div className="bg-[#FFF4E5] rounded-[24px] p-8 space-y-6">
               <div>
-                <h3 className="text-[17px] font-semibold text-[#FF9500] flex items-center gap-2 mb-2">
+                <h3 className="text-[17px] font-medium text-[#FF9500] flex items-center gap-2 mb-2">
                   <Crown className="w-5 h-5" /> Ứng tuyển Tác giả Tiềm năng
                 </h3>
                 <p className="text-[14px] text-[#CC7700]">
@@ -241,7 +241,7 @@ export default function ProfilePage() {
                 <Crown className="w-8 h-8 text-[#FF9500]" />
               </div>
               <div className="relative z-10">
-                <h3 className="text-[17px] font-semibold text-white mb-1">Tác giả Tiềm năng</h3>
+                <h3 className="text-[17px] font-medium text-white mb-1">Tác giả Tiềm năng</h3>
                 <p className="text-[14px] text-[#A1A1A6]">Danh hiệu cao quý dành cho tác giả xuất sắc</p>
               </div>
             </div>

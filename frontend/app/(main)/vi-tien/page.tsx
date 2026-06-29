@@ -198,7 +198,7 @@ export default function WalletPage() {
           <div className="bg-[#F5F5F7] rounded-[24px] p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm"><Ticket className="w-5 h-5 text-[#0071E3]" /></div>
-              <h3 className="text-[17px] font-semibold text-[#1D1D1F]">Voucher</h3>
+              <h3 className="text-[17px] font-medium text-[#1D1D1F]">Voucher</h3>
             </div>
             <form onSubmit={handleRedeemVoucher} className="space-y-4">
               <input type="text" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} placeholder="Nhập mã ưu đãi" className="apple-input w-full text-center uppercase tracking-wider" />

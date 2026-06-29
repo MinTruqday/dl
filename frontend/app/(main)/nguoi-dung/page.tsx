@@ -126,7 +126,7 @@ export default function UsersManagementPage() {
                 <td colSpan={5} className="py-24 text-center">
                   <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                     <div className="w-16 h-16 bg-[#F5F5F7] rounded-[16px] flex items-center justify-center mb-4"><Search className="w-8 h-8 text-[#C7C7CC]" /></div>
-                    <h2 className="text-[17px] font-medium text-[#1D1D1F] mb-1">Không tìm thấy</h2>
+                    <h2 className="text-[20px] font-medium text-[#1D1D1F] mb-1">Không tìm thấy</h2>
                     <p className="text-[14px] text-[#6E6E73]">Thử với một từ khóa khác.</p>
                   </div>
                 </td>

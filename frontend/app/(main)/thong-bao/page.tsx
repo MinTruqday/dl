@@ -74,7 +74,7 @@ export default function NotificationsPage() {
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
-                        <h3 className={`text-[15px] truncate ${n.is_read ? "font-medium text-[#1D1D1F]" : "font-semibold text-[#1D1D1F]"}`}>{n.title}</h3>
+                        <h3 className={`text-[17px] truncate ${n.is_read ? "font-medium text-[#1D1D1F]" : "font-medium text-[#1D1D1F]"}`}>{n.title}</h3>
                         <span className="text-[13px] text-[#6E6E73] shrink-0">{new Date(n.created_at).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" })}</span>
                       </div>
                       <p className={`text-[14px] line-clamp-2 leading-relaxed ${n.is_read ? "text-[#6E6E73]" : "text-[#1D1D1F]"}`}>{n.message || n.body}</p>
@@ -98,7 +98,7 @@ export default function NotificationsPage() {
 
         <aside className="md:col-span-4 space-y-6 flex flex-col shrink-0">
           <div className="bg-[#0071E3]/5 border border-[#0071E3]/20 rounded-[24px] p-6 space-y-3">
-            <h3 className="text-[15px] font-medium text-[#0071E3] flex items-center gap-2"><Info className="w-5 h-5" /> Ghi chú hệ thống</h3>
+            <h3 className="text-[17px] font-medium text-[#0071E3] flex items-center gap-2"><Info className="w-5 h-5" /> Ghi chú hệ thống</h3>
             <p className="text-[14px] text-[#0071E3]/80 leading-relaxed">Các thông báo sẽ được lưu trữ tự động trong vòng 30 ngày kể từ ngày khởi tạo nhằm tối ưu hóa hiệu năng truy xuất của hệ thống lưu trữ.</p>
           </div>
         </aside>

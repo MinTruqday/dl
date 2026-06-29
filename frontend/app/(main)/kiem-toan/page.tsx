@@ -87,7 +87,7 @@ export default function LogsPage() {
 
       <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] overflow-hidden flex flex-col flex-1 min-h-0">
         <div className="flex items-center justify-between p-6 border-b border-[#E8E8ED] bg-[#F5F5F7]/30">
-          <h2 className="text-[16px] font-medium text-[#1D1D1F] flex items-center gap-2">
+          <h2 className="text-[20px] font-medium text-[#1D1D1F] flex items-center gap-2">
             <Database className="w-5 h-5 text-[#6E6E73]" /> Bản ghi nhật ký
           </h2>
           <span className="px-3 py-1 bg-[#F5F5F7] text-[#6E6E73] text-[13px] font-medium rounded-full">
@@ -113,7 +113,7 @@ export default function LogsPage() {
                       <div className="w-16 h-16 bg-[#F5F5F7] rounded-[16px] flex items-center justify-center mb-4">
                         <FileText className="w-8 h-8 text-[#C7C7CC]" />
                       </div>
-                      <h2 className="text-[17px] font-medium text-[#1D1D1F] mb-1">Nhật ký trống</h2>
+                      <h2 className="text-[20px] font-medium text-[#1D1D1F] mb-1">Nhật ký trống</h2>
                       <p className="text-[14px] text-[#6E6E73]">
                         Chưa có hoạt động quản trị nào được ghi nhận.
                       </p>

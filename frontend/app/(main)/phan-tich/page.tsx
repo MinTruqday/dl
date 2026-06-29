@@ -50,7 +50,7 @@ export default function AuthorAnalyticsPage() {
               <item.icon className={`w-6 h-6 ${item.color}`} />
             </div>
             <div>
-              <h3 className="text-[32px] font-semibold text-[#1D1D1F] tracking-tight leading-none mb-1">
+              <h3 className="text-[17px] font-medium text-[#1D1D1F] tracking-tight leading-none mb-1">
                 {typeof item.val === "number" && item.val > 1000 ? `${(item.val / 1000).toFixed(1)}K` : item.val}
               </h3>
               <p className="text-[14px] text-[#6E6E73] font-medium">{item.label}</p>
@@ -63,7 +63,7 @@ export default function AuthorAnalyticsPage() {
         <div className="w-20 h-20 bg-[#F5F5F7] flex items-center justify-center rounded-[20px] mb-4">
           <BarChart3 className="w-10 h-10 text-[#C7C7CC]" />
         </div>
-        <h3 className="text-[20px] font-semibold text-[#1D1D1F] mb-2">Đang phân tích dữ liệu chuyên sâu</h3>
+        <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Đang phân tích dữ liệu chuyên sâu</h3>
         <p className="text-[15px] text-[#6E6E73] max-w-md">
           Hệ thống AI đang thu thập và tính toán các chỉ số về tương tác và tăng trưởng của tác phẩm. Vui lòng quay lại sau.
         </p>

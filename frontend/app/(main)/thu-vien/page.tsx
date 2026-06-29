@@ -136,7 +136,7 @@ export default function LibraryPage() {
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-[280px] shrink-0 space-y-6">
           <div className="bg-[#F5F5F7] rounded-[18px] p-6">
-            <h3 className="text-[15px] font-semibold text-[#1D1D1F] mb-4">Quản lý thư viện</h3>
+            <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-4">Quản lý thư viện</h3>
             <nav className="flex flex-col gap-2">
               {tabs.map((t) => (
                 <button
@@ -157,7 +157,7 @@ export default function LibraryPage() {
           </div>
 
           <div className="bg-[#F5F5F7] rounded-[18px] p-6">
-            <h3 className="text-[15px] font-semibold text-[#1D1D1F] mb-4">Tài liệu đã ghim</h3>
+            <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-4">Tài liệu đã ghim</h3>
             <div className="flex flex-col gap-3">
               {pinnedDocs.length > 0 ? pinnedDocs.map((doc, i) => (
                 <Link key={`pinned-${doc.id || i}`} href={`/document/${doc.slug}`} className="flex gap-4 items-center group p-2 -mx-2 rounded-[12px] hover:bg-white transition-colors">
@@ -176,7 +176,7 @@ export default function LibraryPage() {
         <main className="flex-1 min-w-0 space-y-8">
           {activeTab === "history" && continueDocs.length > 0 && (
             <section>
-              <h2 className="text-[24px] font-semibold text-[#1D1D1F] mb-6">Đang đọc</h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Đang đọc</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {continueDocs.map((doc) => (
                   <Link key={doc.document_id} href={`/document/${doc.document_slug}`} className="group flex flex-col">
@@ -186,7 +186,7 @@ export default function LibraryPage() {
                         <div className="h-full bg-[#0071E3]" style={{ width: `${doc.progress_percentage}%` }} />
                       </div>
                     </div>
-                    <h3 className="text-[15px] font-medium text-[#1D1D1F] line-clamp-2 leading-[1.3] group-hover:text-[#0071E3] transition-colors">{doc.document_title}</h3>
+                    <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-2 leading-[1.3] group-hover:text-[#0071E3] transition-colors">{doc.document_title}</h3>
                     <p className="text-[13px] text-[#6E6E73] mt-1">{doc.progress_percentage}% hoàn thành</p>
                   </Link>
                 ))}
@@ -197,7 +197,7 @@ export default function LibraryPage() {
           {activeTab === "history" && (
             <section>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-[24px] font-semibold text-[#1D1D1F]">Lịch sử</h2>
+                <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lịch sử</h2>
                 <div className="flex items-center gap-4">
                   {history.length > 0 && <button onClick={() => setIsClearModalOpen(true)} className="text-[13px] text-[#0071E3] hover:underline">Xóa tất cả</button>}
                   <div className="flex bg-[#F5F5F7] p-1 rounded-full">
@@ -216,7 +216,7 @@ export default function LibraryPage() {
                     </Link>
                     <div className="flex-1 min-w-0">
                       <Link href={`/document/${item.document_slug}`}>
-                        <h3 className={`font-medium text-[#1D1D1F] line-clamp-2 leading-[1.3] group-hover:text-[#0071E3] transition-colors ${viewMode === "grid" ? "text-[14px]" : "text-[16px]"}`}>{item.document_title}</h3>
+                        <h3 className={`font-medium text-[#1D1D1F] line-clamp-2 leading-[1.3] group-hover:text-[#0071E3] transition-colors ${viewMode === "grid" ? "text-[17px]" : "text-[17px]"}`}>{item.document_title}</h3>
                       </Link>
                       <p className="text-[13px] text-[#6E6E73] mt-1">{item.progress_percentage || 0}% hoàn thành</p>
                     </div>
@@ -230,7 +230,7 @@ export default function LibraryPage() {
           {activeTab === "folders" && (
             <section>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-[24px] font-semibold text-[#1D1D1F]">Thư mục dấu trang</h2>
+                <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Thư mục dấu trang</h2>
                 <button onClick={() => { setCreateType("folder"); setIsCreateModalOpen(true); }} className="pill-button flex items-center gap-2"><Plus className="w-4 h-4" /> Tạo thư mục</button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -239,7 +239,7 @@ export default function LibraryPage() {
                     <div className="aspect-square bg-[#F5F5F7] rounded-[18px] flex items-center justify-center mb-3 group-hover:bg-[#E8E8ED] transition-colors">
                       <FolderPlus className="w-12 h-12 text-[#0071E3]" />
                     </div>
-                    <h3 className="text-[15px] font-medium text-[#1D1D1F] line-clamp-1">{folder.name}</h3>
+                    <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-1">{folder.name}</h3>
                     <p className="text-[13px] text-[#6E6E73]">{folder.bookmark_ids?.length || 0} mục</p>
                   </Link>
                 )) : <p className="text-[15px] text-[#6E6E73] col-span-full py-12 text-center">Chưa có thư mục nào</p>}
@@ -250,7 +250,7 @@ export default function LibraryPage() {
           {activeTab === "lists" && (
             <section>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-[24px] font-semibold text-[#1D1D1F]">Danh sách đọc</h2>
+                <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Danh sách đọc</h2>
                 <button onClick={() => { setCreateType("list"); setIsCreateModalOpen(true); }} className="pill-button flex items-center gap-2"><Plus className="w-4 h-4" /> Tạo danh sách</button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -259,7 +259,7 @@ export default function LibraryPage() {
                     <div className="aspect-square bg-[#F5F5F7] rounded-[18px] flex items-center justify-center mb-3 group-hover:bg-[#E8E8ED] transition-colors">
                       <Layers className="w-12 h-12 text-[#0071E3]" />
                     </div>
-                    <h3 className="text-[15px] font-medium text-[#1D1D1F] line-clamp-1">{list.name}</h3>
+                    <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-1">{list.name}</h3>
                     <p className="text-[13px] text-[#6E6E73]">{list.documents?.length || 0} tài liệu</p>
                   </Link>
                 )) : <p className="text-[15px] text-[#6E6E73] col-span-full py-12 text-center">Chưa có danh sách đọc nào</p>}

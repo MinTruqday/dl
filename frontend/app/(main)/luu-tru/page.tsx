@@ -304,7 +304,7 @@ export default function StoragePage() {
         {detailsItem && (
           <aside className="lg:col-span-4 flex flex-col gap-6 h-full min-h-0 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] overflow-hidden relative">
             <div className="p-6 border-b border-[#E8E8ED] flex justify-between items-center bg-white sticky top-0 z-10">
-              <h2 className="text-[18px] font-semibold text-[#1D1D1F]">Chi tiết</h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Chi tiết</h2>
               <button onClick={() => setDetailsItem(null)} className="w-8 h-8 flex items-center justify-center bg-[#F5F5F7] rounded-full text-[#6E6E73] hover:text-[#1D1D1F]"><X className="w-4 h-4"/></button>
             </div>
             <div className="flex bg-[#F5F5F7] mx-6 mt-4 p-1 rounded-[14px]">
@@ -318,7 +318,7 @@ export default function StoragePage() {
                   <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[20px] mb-4">
                     {detailsItem.is_folder ? <Folder className="w-12 h-12 text-[#1D1D1F]" /> : <File className="w-12 h-12 text-[#6E6E73]" />}
                   </div>
-                  <h3 className="text-[16px] font-semibold text-[#1D1D1F] text-center max-w-full break-words">{detailsItem.name}</h3>
+                  <h3 className="text-[17px] font-medium text-[#1D1D1F] text-center max-w-full break-words">{detailsItem.name}</h3>
                 </div>
                 <div className="bg-[#F5F5F7] rounded-[18px] p-5 space-y-3">
                   <div className="flex justify-between items-center text-[14px]"><span className="text-[#6E6E73]">Loại</span><span className="font-medium">{detailsItem.is_folder ? "Thư mục" : detailsItem.mime_type || "Tệp tin"}</span></div>

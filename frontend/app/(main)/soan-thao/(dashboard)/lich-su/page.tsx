@@ -101,11 +101,6 @@ export default function HistoryPage() {
 
   return (
     <div className="flex flex-col h-full font-sans">
-      <div className={`border-b border-[#E8E8ED] pb-6 mb-6 shrink-0 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
-        <h1 className="text-[24px] font-semibold text-[#1D1D1F] mb-2">Lịch sử phiên bản</h1>
-        <p className="text-[15px] text-[#6E6E73]">Khôi phục hoặc so sánh sự thay đổi của nội dung qua từng thời điểm</p>
-      </div>
-
       <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
         <div className="bg-[#F5F5F7] border border-[#E8E8ED] p-6 rounded-[24px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
@@ -113,7 +108,7 @@ export default function HistoryPage() {
               <BookOpen className="w-6 h-6 text-[#1D1D1F]" />
             </div>
             <div>
-              <h2 className="text-[15px] font-semibold text-[#1D1D1F]">Chọn tác phẩm</h2>
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Chọn tác phẩm</h2>
               <p className="text-[13px] text-[#6E6E73]">Xem lịch sử của tài liệu cụ thể</p>
             </div>
           </div>
@@ -130,7 +125,7 @@ export default function HistoryPage() {
           <div className="flex-1 min-h-0 flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] overflow-hidden pb-6">
             <div className="border-b border-[#E8E8ED] p-6 bg-[#F5F5F7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
               <div>
-                <h2 className="text-[15px] font-semibold text-[#1D1D1F] flex items-center gap-2 mb-1"><History className="w-5 h-5" /> Danh sách phiên bản</h2>
+                <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2 mb-1"><History className="w-5 h-5" /> Danh sách phiên bản</h2>
                 <p className="text-[13px] text-[#6E6E73]">{selectedVersions.length === 2 ? "Đã chọn đủ 2 phiên bản để so sánh" : "Bạn có thể chọn 2 phiên bản bất kỳ để xem sự khác biệt"}</p>
               </div>
               <button onClick={handleCompareVersions} disabled={selectedVersions.length !== 2 || isComparing} className={`h-[44px] px-6 text-[15px] font-medium rounded-full flex items-center justify-center gap-2 transition-colors ${selectedVersions.length === 2 ? "bg-[#0071E3] text-white hover:bg-[#0077ED] shadow-sm" : "bg-[#F5F5F7] text-[#C7C7CC] cursor-not-allowed border border-[#E8E8ED]"}`}>
@@ -142,7 +137,7 @@ export default function HistoryPage() {
               {loadingVersions ? (
                 <div className="h-full flex flex-col items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" /><p className="text-[13px] font-medium text-[#6E6E73]">Đang tải dữ liệu...</p></div>
               ) : versions.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-12"><div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4"><History className="w-8 h-8 text-[#C7C7CC]" /></div><h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">Chưa có phiên bản</h3><p className="text-[15px] text-[#6E6E73] max-w-sm">Tác phẩm này chưa có phiên bản nào được lưu lại trong lịch sử.</p></div>
+                <div className="h-full flex flex-col items-center justify-center text-center p-12"><div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4"><History className="w-8 h-8 text-[#C7C7CC]" /></div><h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có phiên bản</h3><p className="text-[15px] text-[#6E6E73] max-w-sm">Tác phẩm này chưa có phiên bản nào được lưu lại trong lịch sử.</p></div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {versions.map((v) => {

@@ -192,7 +192,7 @@ export default function DocumentDetailsPage() {
               </div>
               {docData.tags?.length > 0 && (
                 <div className="pt-6 border-t border-[#E8E8ED] mt-6">
-                  <h3 className="text-[13px] font-medium text-[#6E6E73] mb-4">Từ khóa</h3>
+                  <h3 className="text-[17px] font-medium text-[#6E6E73] mb-4">Từ khóa</h3>
                   <div className="flex flex-wrap gap-2">
                     {docData.tags.map((tag: string, i: number) => (
                       <span key={i} className="px-4 py-2 bg-[#F5F5F7] text-[#1D1D1F] text-[13px] rounded-full">#{tag}</span>

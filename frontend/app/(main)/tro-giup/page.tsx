@@ -34,14 +34,14 @@ export default function HelpPage() {
         ].map((item, idx) => (
           <div key={idx} className="p-8 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] hover: transition-shadow cursor-pointer">
             <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center mb-6 ${item.bg}`}><item.icon className={`w-6 h-6 ${item.color}`} /></div>
-            <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-2">{item.title}</h3>
+            <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">{item.title}</h3>
             <p className="text-[14px] text-[#6E6E73] leading-relaxed">{item.desc}</p>
           </div>
         ))}
       </div>
 
       <div className="space-y-6">
-        <h2 className="text-[24px] font-semibold text-[#1D1D1F] border-b border-[#E8E8ED] pb-4">Câu hỏi thường gặp</h2>
+        <h2 className="text-[20px] font-semibold text-[#1D1D1F] border-b border-[#E8E8ED] ">Câu hỏi thường gặp</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredFaqs.map((faq, i) => (
             <div key={i} className="p-6 bg-[#F5F5F7] rounded-[24px] hover:bg-[#E8E8ED] transition-colors">
@@ -55,7 +55,7 @@ export default function HelpPage() {
 
       <div className="mt-20 p-12 bg-[#F5F5F7] rounded-[32px] text-center border border-[#E8E8ED]">
         <div className="w-16 h-16 bg-white rounded-[16px] shadow-sm flex items-center justify-center mx-auto mb-6"><MessageCircle className="w-8 h-8 text-[#1D1D1F]" /></div>
-        <h2 className="text-[24px] font-semibold text-[#1D1D1F] mb-2">Cần thêm thông tin?</h2>
+        <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-2">Cần thêm thông tin?</h2>
         <p className="text-[15px] text-[#6E6E73] mb-8">Liên hệ với chúng tôi để được giải đáp thắc mắc trực tiếp.</p>
         <button className="pill-button bg-[#1D1D1F] text-white hover:bg-[#333336]">Gửi yêu cầu hỗ trợ</button>
       </div>
