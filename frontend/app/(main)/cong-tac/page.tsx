@@ -238,17 +238,17 @@ export default function StudioCollabPage() {
  <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
  <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
  <aside className="lg:col-span-4 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Gia nhập phiên</h2>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Gia nhập phiên</p>
  <div className="flex flex-col xl:flex-row items-center gap-2">
  <input type="text" placeholder="Mã gia nhập..." value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value)} className="apple-input w-full" />
  <button onClick={handleJoinWithCode} className="pill-button w-full xl:w-auto shrink-0">Gia nhập</button>
  </div>
  </div>
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tài liệu hoạt động</h2>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Tài liệu hoạt động</p>
  <div className="relative">
- <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[44px] bg-white  px-4 text-[15px] focus:outline-none focus:border-[#0071E3] appearance-none rounded-[14px]">
+ <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[44px] bg-white  px-4 text-[15px] focus:outline-none focus:border-[#0071E3] appearance-none rounded-[10px]">
  <option value="">Chọn tài liệu biên tập</option>
  {documents.map((doc) => (<option key={doc._id || doc.id} value={doc._id || doc.id}>{doc.title}</option>))}
  </select>
@@ -259,55 +259,55 @@ export default function StudioCollabPage() {
  <div className="space-y-3 pt-4 border-t border-[#E8E8ED]">
  <label className="text-[13px] font-medium text-[#6E6E73]">Quyền truy cập</label>
  <div className="flex flex-col gap-2">
- <button onClick={() => handleUpdateAccessLevel("invite_only")} className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-[14px] transition-colors ${accessLevel === "invite_only" ? "bg-[#0071E3] text-white" : "bg-white text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}>Chỉ người được mời</button>
- <button onClick={() => handleUpdateAccessLevel("anyone_with_link")} className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-[14px] transition-colors ${accessLevel === "anyone_with_link" ? "bg-[#0071E3] text-white" : "bg-white text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}>Có link tham gia</button>
+ <button onClick={() => handleUpdateAccessLevel("invite_only")} className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-[10px] transition-colors ${accessLevel === "invite_only" ? "bg-[#0071E3] text-white" : "bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED]"}`}>Chỉ người được mời</button>
+ <button onClick={() => handleUpdateAccessLevel("anyone_with_link")} className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-[10px] transition-colors ${accessLevel === "anyone_with_link" ? "bg-[#0071E3] text-white" : "bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED]"}`}>Có link tham gia</button>
  </div>
  </div>
  )}
  </div>
 
  {selectedDocumentId && (
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Khóa phiên</h2>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Khóa phiên</p>
  {lockStatus.is_locked ? (
- <div className="p-4 bg-[#FFF0F0] text-[#FF3B30] text-[14px] rounded-[14px]">
+ <div className="p-4 bg-[#FFF0F0] text-[#FF3B30] text-[14px] rounded-[10px]">
  Khóa bởi: <strong className="font-semibold">{lockStatus.user_name}</strong>
  {lockStatus.user_id === (user._id || user.id) && <button onClick={handleReleaseLock} className="mt-3 w-full py-2 bg-white rounded-[10px] font-medium text-[#FF3B30]">Nhả khóa</button>}
  </div>
- ) : <button onClick={handleAcquireLock} className="w-full py-3 bg-[#0071E3] text-white text-[14px] font-medium rounded-[14px] hover:bg-[#005bb5] transition-colors">Yêu cầu khóa độc quyền</button>}
+ ) : <button onClick={handleAcquireLock} className="w-full py-3 bg-[#0071E3] text-white text-[14px] font-medium rounded-[10px] hover:bg-[#005bb5] transition-colors">Yêu cầu khóa độc quyền</button>}
  </div>
  )}
 
  {selectedDocumentId && (
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Mời cộng tác</h2>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Mời cộng tác</p>
  <input type="email" placeholder="" value={collaboratorEmail} onChange={(e) => setCollaboratorEmail(e.target.value)} className="apple-input w-full" />
  <div className="flex gap-2">
- <button onClick={() => setRole("editor")} className={`flex-1 py-2 text-[13px] font-medium rounded-[14px] transition-colors ${role === "editor" ? "bg-black text-white" : "bg-white text-[#1D1D1F]"}`}>Biên tập</button>
- <button onClick={() => setRole("viewer")} className={`flex-1 py-2 text-[13px] font-medium rounded-[14px] transition-colors ${role === "viewer" ? "bg-black text-white" : "bg-white text-[#1D1D1F]"}`}>Người xem</button>
+ <button onClick={() => setRole("editor")} className={`flex-1 py-2 text-[13px] font-medium rounded-[10px] transition-colors ${role === "editor" ? "bg-black text-white" : "bg-white text-[#0071E3] font-medium"}`}>Biên tập</button>
+ <button onClick={() => setRole("viewer")} className={`flex-1 py-2 text-[13px] font-medium rounded-[10px] transition-colors ${role === "viewer" ? "bg-black text-white" : "bg-white text-[#0071E3] font-medium"}`}>Người xem</button>
  </div>
- <button onClick={handleInvite} disabled={actionLoading || !collaboratorEmail} className="w-full py-3 bg-[#0071E3] text-white text-[14px] font-medium rounded-[14px] disabled:opacity-50">{actionLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Gửi lời mời"}</button>
+ <button onClick={handleInvite} disabled={actionLoading || !collaboratorEmail} className="w-full py-3 bg-[#0071E3] text-white text-[14px] font-medium rounded-[10px] disabled:opacity-50">{actionLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Gửi lời mời"}</button>
  </div>
  )}
 
  {selectedDocumentId && isOwnerOfSelected() && (
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Mã mời nhanh</h2>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Mã mời nhanh</p>
  {inviteCode ? (
- <div className="flex items-center gap-2 bg-white p-3 rounded-[14px] ">
+ <div className="flex items-center gap-2 bg-white p-3 rounded-[10px] ">
  <span className="font-mono font-bold tracking-wider text-[14px] flex-1 text-center select-all">{inviteCode}</span>
  <button onClick={() => { navigator.clipboard.writeText(inviteCode); showToast("Đã copy mã", "success"); }} className="text-[13px] font-medium text-[#0071E3]">Copy</button>
  </div>
- ) : <button onClick={handleGenerateCode} className="w-full py-3 bg-white text-[14px] font-medium rounded-[14px] ">Tạo mã mời</button>}
+ ) : <button onClick={handleGenerateCode} className="w-full py-3 bg-white text-[14px] font-medium rounded-[10px] ">Tạo mã mời</button>}
  </div>
  )}
 
  {selectedDocumentId && sentPendingInvites.length > 0 && (
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lời mời đã gửi (chờ)</h2>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Lời mời đã gửi (chờ)</p>
  <div className="space-y-3">
  {sentPendingInvites.map(sp => (
- <div key={sp._id || sp.id} className="flex justify-between items-center bg-white p-3 rounded-[14px]">
+ <div key={sp._id || sp.id} className="flex justify-between items-center bg-white p-3 rounded-[10px]">
  <div>
  <p className="font-medium text-[14px]">{sp.invitee_id}</p>
  <p className="text-[12px] text-[#6E6E73]">Vai trò: {sp.role}</p>
@@ -320,8 +320,8 @@ export default function StudioCollabPage() {
  )}
 
  {selectedDocumentId && (
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <div className="flex justify-between items-center"><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Cộng tác viên</h2><span className="text-[13px] text-[#6E6E73]">{collaborators.length}</span></div>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <div className="flex justify-between items-center"><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Cộng tác viên</p><span className="text-[13px] text-[#6E6E73]">{collaborators.length}</span></div>
  {collaborators.length > 0 ? (
  <div className="space-y-3">
  {collaborators.map(c => {
@@ -355,8 +355,8 @@ export default function StudioCollabPage() {
  </aside>
 
  <main className="lg:col-span-8 space-y-6 overflow-y-auto no-scrollbar pb-6">
- <div className="bg-[#F5F5F7] rounded-[24px] p-8 space-y-6">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Thư mời cộng tác</h2>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8 space-y-6">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Thư mời cộng tác</p>
  {filteredInvites.length > 0 ? (
  <div className="grid gap-4">
  {filteredInvites.map(inv => (
@@ -379,7 +379,7 @@ export default function StudioCollabPage() {
 
  {selectedDocumentId && (
  <>
- <div className="bg-[#F5F5F7] rounded-[24px] p-8 space-y-6">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8 space-y-6">
  <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><CheckSquare className="w-5 h-5" /> Nhiệm vụ & Checklist</h2>
  <div className="flex gap-2">
  <input type="text" placeholder="" value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} className="apple-input flex-1" />
@@ -402,7 +402,7 @@ export default function StudioCollabPage() {
  </div>
  </div>
 
- <div className="bg-[#F5F5F7] rounded-[24px] p-8 space-y-6">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8 space-y-6">
  <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Bảng ghim & Trao đổi</h2>
  <div className="h-64 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
  {memos.length > 0 ? memos.map(m => (
@@ -422,7 +422,7 @@ export default function StudioCollabPage() {
  </main>
  </div>
 
- <Modal isOpen={!!transferId} onClose={() => setTransferId(null)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!transferId} onClose={() => setTransferId(null)} className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Chuyển nhượng quyền sở hữu</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0"><p className="text-[15px] text-[#6E6E73]">Bạn muốn chuyển quyền sở hữu tài liệu cho <strong className="text-[#1D1D1F]">{transferName}</strong>? Sau khi chuyển, bạn sẽ chỉ còn quyền cộng tác viên.</p></ModalContent>
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
@@ -431,12 +431,12 @@ export default function StudioCollabPage() {
  </ModalFooter>
  </Modal>
 
- <Modal isOpen={!!activeTaskId} onClose={() => setActiveTaskId(null)} className="max-w-xl bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!activeTaskId} onClose={() => setActiveTaskId(null)} className="max-w-xl bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Thảo luận nhiệm vụ</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0 space-y-4">
  <div className="h-64 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
  {activeTaskComments.length > 0 ? activeTaskComments.map(c => (
- <div key={c.id} className="bg-[#F5F5F7] p-3 rounded-[14px]  max-w-[90%]">
+ <div key={c.id} className="bg-[#F5F5F7] p-3 rounded-[10px]  max-w-[90%]">
  <div className="flex justify-between text-[11px] text-[#6E6E73] mb-1"><span className="font-semibold text-[#1D1D1F]">{c.sender_name}</span><span>{new Date(c.timestamp).toLocaleTimeString("vi-VN")}</span></div>
  <p className="text-[14px] text-[#1D1D1F]">{c.comment_text}</p>
  </div>

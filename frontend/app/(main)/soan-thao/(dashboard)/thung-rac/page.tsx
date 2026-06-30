@@ -32,24 +32,24 @@ export default function TrashPage() {
  <div className="flex flex-col h-full font-sans">
  <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
  {loading ? (
- <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px]">
+ <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
  <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
  <p className="text-[13px] font-medium text-[#6E6E73]">Đang tải dữ liệu...</p>
  </div>
  ) : !Array.isArray(trash) || trash.length === 0 ? (
- <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px] p-12 text-center">
+ <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] p-12 text-center">
  <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4">
  <Trash2 className="w-8 h-8 text-[#C7C7CC]" />
  </div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Thùng rác trống</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">Thùng rác trống</p>
  <p className="text-[15px] text-[#6E6E73] max-w-sm">Không có tài liệu nào bị xóa gần đây. Các tài liệu trong thùng rác có thể được khôi phục.</p>
  </div>
  ) : (
  <div className="grid grid-cols-1 gap-4 pb-6">
  {trash.map((doc: any) => (
- <div key={doc._id} className="bg-[#F5F5F7] border-[#E8E8ED] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[24px] hover: transition-all duration-300 group hover:-translate-y-0.5">
+ <div key={doc._id} className="bg-[#F5F5F7] border-[#E8E8ED] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[18px] hover: transition-all duration-300 group hover:-translate-y-0.5">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-[#F5F5F7] flex items-center justify-center rounded-[14px] shrink-0 group-hover:bg-white group-hover:border-[#0071E3] transition-all">
+ <div className="w-12 h-12 bg-[#F5F5F7] flex items-center justify-center rounded-[10px] shrink-0 group-hover:bg-white group-hover:border-[#0071E3] transition-all">
  <FileText className="w-6 h-6 text-[#6E6E73] group-hover:text-[#0071E3] transition-colors" />
  </div>
  <div className="space-y-1">

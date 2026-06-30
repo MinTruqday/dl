@@ -46,9 +46,9 @@ export default function UpgradePage() {
  </div>
 
  <div className="grid md:grid-cols-3 gap-6 items-start">
- <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-8 flex flex-col h-full hover: transition-">
+ <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-8 flex flex-col h-full hover: transition-">
  <div className="mb-8">
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Cơ bản</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">Cơ bản</p>
  <p className="text-[14px] text-[#6E6E73] min-h-[40px]">Trải nghiệm AI giới hạn dành cho người dùng mới.</p>
  <div className="mt-6 flex items-baseline gap-2"><span className="text-[32px] font-semibold text-[#1D1D1F]">Miễn phí</span></div>
  </div>
@@ -62,7 +62,7 @@ export default function UpgradePage() {
  </button>
  </div>
 
- <div className="bg-[#1D1D1F] rounded-[24px] border border-[#333336] p-8 flex flex-col h-full relative transform md:-translate-y-4">
+ <div className="bg-[#1D1D1F] rounded-[18px] border border-[#333336] p-8 flex flex-col h-full relative transform md:-translate-y-4">
  <div className="absolute top-0 right-8 bg-[#0071E3] text-white px-4 py-1.5 text-[12px] font-medium rounded-b-lg">Phổ biến nhất</div>
  <div className="mb-8 mt-4">
  <h3 className="text-[17px] font-medium text-white mb-2">Nâng cao</h3>
@@ -80,9 +80,9 @@ export default function UpgradePage() {
  </button>
  </div>
 
- <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-8 flex flex-col h-full hover: transition-">
+ <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-8 flex flex-col h-full hover: transition-">
  <div className="mb-8">
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Cao cấp</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">Cao cấp</p>
  <p className="text-[14px] text-[#6E6E73] min-h-[40px]">Dành cho chuyên gia cần sức mạnh xử lý tối đa.</p>
  <div className="mt-6 flex items-baseline gap-2"><span className="text-[32px] font-semibold text-[#1D1D1F]">2.500</span><span className="text-[14px] font-medium text-[#6E6E73]">dl / tháng</span></div>
  </div>

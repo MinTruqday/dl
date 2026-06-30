@@ -47,29 +47,29 @@ export default function UsersManagementPage() {
  if (authLoading || isLoading) return <PageLoader />;
  if (user?.role !== "admin") return (
  <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
- <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[24px]"><AlertTriangle className="w-10 h-10 text-[#FF9500]" /></div>
- <div className="space-y-2 max-w-[300px]"><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Truy cập bị hạn chế</h2><p className="text-[15px] text-[#6E6E73]">Bạn không có quyền quản trị để truy cập trang này.</p></div>
+ <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]"><AlertTriangle className="w-10 h-10 text-[#FF9500]" /></div>
+ <div className="space-y-2 max-w-[300px]"><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Truy cập bị hạn chế</p><p className="text-[15px] text-[#6E6E73]">Bạn không có quyền quản trị để truy cập trang này.</p></div>
  </div>
  );
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
  <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
  <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Quản lý</h3>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quản lý</p>
  <div className="flex flex-col gap-2">
  <button className="pill-button w-full justify-center flex items-center gap-2">Thêm mới</button>
  </div>
  </div>
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
- <button onClick={fetchData} disabled={isRefreshing} className="w-full py-2 rounded-[14px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Làm mới</button>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
+ <button onClick={fetchData} disabled={isRefreshing} className="w-full py-2 rounded-[10px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Làm mới</button>
  </div>
  </aside>
 
  <main className="lg:col-span-9 flex flex-col min-h-0">
- <div className="bg-[#F5F5F7] rounded-[24px] flex-1 overflow-y-auto no-scrollbar">
+ <div className="bg-[#F5F5F7] rounded-[18px] flex-1 overflow-y-auto no-scrollbar">
  <table className="w-full text-left text-[14px] border-collapse">
  <thead>
  <tr className="text-[13px] text-[#6E6E73]">
@@ -114,7 +114,7 @@ export default function UsersManagementPage() {
  {openDropdownId === u._id && (
  <>
  <div className="fixed inset-0 z-40" onClick={() => setOpenDropdownId(null)} />
- <div className="absolute right-6 top-10 mt-1 w-44 bg-white  rounded-[14px] z-50 overflow-hidden py-1">
+ <div className="absolute right-6 top-10 mt-1 w-44 bg-white  rounded-[10px] z-50 overflow-hidden py-1">
  <button onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); setConfirmModal({ type: "status", user: u, value: !u.is_active }); }} className="w-full text-left px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-2">{u.is_active ? <Lock className="w-4 h-4 text-[#6E6E73]" /> : <Unlock className="w-4 h-4 text-[#6E6E73]" />} {u.is_active ? "Khóa tài khoản" : "Kích hoạt"}</button>
  <button onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); showToast("Tính năng đang phát triển", "error"); }} className="w-full text-left px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-[#6E6E73]" /> Cảnh báo</button>
  <div className="w-full h-[1px] bg-[#E8E8ED] my-1"></div>
@@ -142,7 +142,7 @@ export default function UsersManagementPage() {
  </main>
  </div>
 
- <Modal isOpen={!!confirmModal} onClose={() => !isUpdating && setConfirmModal(null)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!confirmModal} onClose={() => !isUpdating && setConfirmModal(null)} className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6 pb-2"><ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Xác nhận thay đổi</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-2">
  <p className="text-[15px] text-[#6E6E73] leading-relaxed">

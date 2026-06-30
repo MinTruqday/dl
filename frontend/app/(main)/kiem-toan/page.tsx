@@ -50,13 +50,13 @@ export default function LogsPage() {
  if (user?.role !== "admin" && user?.role !== "moderator") {
  return (
  <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
- <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[24px]">
+ <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]">
  <ShieldAlert className="w-10 h-10 text-[#FF3B30]" />
  </div>
  <div className="space-y-2 max-w-[300px]">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
  Truy cập bị hạn chế
- </h2>
+ </p>
  <p className="text-[15px] text-[#6E6E73]">
  Bạn không có quyền quản trị để truy cập trang này.
  </p>
@@ -66,8 +66,8 @@ export default function LogsPage() {
  }
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
- <div className="bg-[#F5F5F7] rounded-[24px] overflow-hidden flex flex-col flex-1 min-h-0">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+ <div className="bg-[#F5F5F7] rounded-[18px] overflow-hidden flex flex-col flex-1 min-h-0">
  <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
  <button
  onClick={fetchData}

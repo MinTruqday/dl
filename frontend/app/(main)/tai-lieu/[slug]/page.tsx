@@ -123,7 +123,7 @@ export default function DocumentDetailsPage() {
  
  <div className="flex flex-col md:flex-row gap-12 mb-12">
  <div className="w-full md:w-[320px] shrink-0">
- <div className="aspect-[3/4] w-full rounded-[24px] overflow-hidden bg-[#F5F5F7] ">
+ <div className="aspect-[3/4] w-full rounded-[18px] overflow-hidden bg-[#F5F5F7] ">
  {docData.cover_url || docData.cover_image ? <img src={docData.cover_url || docData.cover_image} className="w-full h-full object-cover" alt={docData.title} /> : <div className="w-full h-full flex items-center justify-center"><BookOpen className="w-12 h-12 text-[#C7C7CC]" /></div>}
  </div>
  </div>
@@ -177,17 +177,17 @@ export default function DocumentDetailsPage() {
  { id: "chapters", label: "Mục lục" },
  { id: "comments", label: "Thảo luận" },
  ].map((tab) => (
- <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`text-left px-5 py-3 rounded-[14px] text-[15px] font-medium transition-colors ${activeTab === tab.id ? "bg-[#F5F5F7] text-[#1D1D1F]" : "text-[#6E6E73] hover:bg-[#F5F5F7]"}`}>
+ <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`text-left px-5 py-3 rounded-[10px] text-[15px] font-medium transition-colors ${activeTab === tab.id ? "bg-[#F5F5F7] text-[#1D1D1F]" : "text-[#6E6E73] hover:bg-[#F5F5F7]"}`}>
  {tab.label}
  </button>
  ))}
  </div>
  </div>
 
- <div className="flex-1 bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] p-8 min-h-[400px]">
+ <div className="flex-1 bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] p-8 min-h-[400px]">
  {activeTab === "about" && (
  <div className="space-y-6">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tóm lược nội dung</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Tóm lược nội dung</p>
  <div className="prose prose-zinc max-w-none text-[#1D1D1F] text-[15px] leading-relaxed">
  {docData.description ? <div dangerouslySetInnerHTML={{ __html: docData.description.replace(/\n/g, "<br/>") }} /> : <p className="text-[#6E6E73]">Chưa có thông tin tóm tắt.</p>}
  </div>
@@ -206,7 +206,7 @@ export default function DocumentDetailsPage() {
 
  {activeTab === "chapters" && (
  <div className="space-y-4">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Mục lục chi tiết</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-6">Mục lục chi tiết</p>
  {docData.chapters && docData.chapters.length > 0 ? (
  <div className="divide-y divide-[#E8E8ED]">
  {docData.chapters.map((chapter: any, idx: number) => (
@@ -231,7 +231,7 @@ export default function DocumentDetailsPage() {
 
  {activeTab === "comments" && (
  <div>
- <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Thảo luận</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-6">Thảo luận</p>
  <Comment itemId={docData._id || docData.id} itemType="document" />
  </div>
  )}

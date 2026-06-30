@@ -125,23 +125,23 @@ export default function SettingsPage() {
 
  <div className={`grid lg:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
  <aside className="lg:col-span-4 xl:col-span-4 space-y-6">
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <div className="text-[13px] font-medium text-[#6E6E73] mb-2 px-2">Danh mục</div>
  <nav className="flex flex-col gap-1">
  {sections.map((section) => {
  const Icon = section.icon;
  return (
- <button key={section.id} onClick={() => setActiveSection(section.id as TabKey)} className={`flex items-center justify-between px-4 py-3 rounded-[14px] transition-colors ${activeSection === section.id ? "bg-[#0071E3] text-white" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}>
+ <button key={section.id} onClick={() => setActiveSection(section.id as TabKey)} className={`flex items-center justify-between px-4 py-3 rounded-[10px] transition-colors ${activeSection === section.id ? "bg-[#0071E3] text-white" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}>
  <div className="flex items-center gap-3 font-medium text-[15px]"><Icon className="w-5 h-5" /> {section.label}</div>
  </button>
  );
  })}
  </nav>
  </div>
- <div className="bg-[#F5F5F7] rounded-[24px] p-6">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6">
  <div className="text-[13px] font-medium text-[#6E6E73] mb-4">Định danh hiện tại</div>
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-white rounded-[14px] flex items-center justify-center text-[15px] font-semibold text-[#1D1D1F] uppercase">{user?.role?.slice(0, 3)}</div>
+ <div className="w-12 h-12 bg-white rounded-[10px] flex items-center justify-center text-[15px] font-semibold text-[#1D1D1F] uppercase">{user?.role?.slice(0, 3)}</div>
  <div>
  <p className="text-[15px] font-medium text-[#1D1D1F]">{user?.role === "admin" ? "Quản trị viên" : user?.role === "author" ? "Tác giả" : user?.role === "moderator" ? "Kiểm duyệt viên" : user?.role === "potential_author" ? "Tác giả tiềm năng" : "Độc giả"}</p>
  <p className="text-[13px] text-[#6E6E73] mt-0.5">{user?.email || "Chưa định danh"}</p>
@@ -151,11 +151,11 @@ export default function SettingsPage() {
  </aside>
 
  <main className="lg:col-span-8 xl:col-span-8">
- <div className="bg-[#F5F5F7] rounded-[24px] p-8 min-h-[600px]">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8 min-h-[600px]">
  {activeSection === "privacy" && (
  <div className="space-y-8">
  <div>
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Quyền riêng tư</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quyền riêng tư</p>
  <p className="text-[15px] text-[#6E6E73]">Thiết lập khả năng hiển thị cá nhân</p>
  </div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
@@ -180,7 +180,7 @@ export default function SettingsPage() {
 
  {activeSection === "author" && (
  <div className="space-y-8">
- <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Cấu hình Tác giả</h2><p className="text-[15px] text-[#6E6E73]">Quản lý sáng tác</p></div>
+ <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Cấu hình Tác giả</p><p className="text-[15px] text-[#6E6E73]">Quản lý sáng tác</p></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  <div className="p-5 flex items-center justify-between">
  <div><h4 className="text-[17px] font-medium text-[#1D1D1F]">Tự động sao lưu</h4><p className="text-[14px] text-[#6E6E73]">Sao lưu 30 giây.</p></div>
@@ -190,7 +190,7 @@ export default function SettingsPage() {
  <h4 className="text-[17px] font-medium text-[#1D1D1F]">Trạng thái xuất bản mặc định</h4>
  <div className="grid grid-cols-2 gap-4">
  {["public", "private"].map((m) => (
- <button key={m} onClick={async () => { const s = await handleUpdateGeneral({ default_visibility: m }); if(s) setDefaultVisibility(m); }} className={`py-3 rounded-[14px] font-medium transition-colors ${defaultVisibility === m ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#1D1D1F]"}`}>{m === "public" ? "Công khai" : "Riêng tư"}</button>
+ <button key={m} onClick={async () => { const s = await handleUpdateGeneral({ default_visibility: m }); if(s) setDefaultVisibility(m); }} className={`py-3 rounded-[10px] font-medium transition-colors ${defaultVisibility === m ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#1D1D1F]"}`}>{m === "public" ? "Công khai" : "Riêng tư"}</button>
  ))}
  </div>
  </div>
@@ -205,7 +205,7 @@ export default function SettingsPage() {
 
  {activeSection === "moderator" && (
  <div className="space-y-8">
- <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Kiểm duyệt viên</h2></div>
+ <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Kiểm duyệt viên</p></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  <div className="p-5 flex items-center justify-between">
  <div><h4 className="text-[17px] font-medium text-[#1D1D1F]">Thông báo vi phạm</h4></div>
@@ -221,7 +221,7 @@ export default function SettingsPage() {
 
  {activeSection === "admin" && (
  <div className="space-y-8">
- <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Quản trị viên</h2></div>
+ <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quản trị viên</p></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  <div className="p-5 flex items-center justify-between bg-[#FFF0F0] rounded-t-[18px]">
  <div><h4 className="text-[17px] font-medium text-[#FF3B30]">Bảo trì hệ thống</h4><p className="text-[14px] text-[#FF6961]">Khóa ghi dữ liệu.</p></div>
@@ -237,7 +237,7 @@ export default function SettingsPage() {
 
  {activeSection === "apply_author" && (
  <div className="space-y-8">
- <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tác giả tiềm năng</h2></div>
+ <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Tác giả tiềm năng</p></div>
  {user?.author_status === "pending" ? (
  <div className="py-12 text-center bg-white rounded-[18px]"><Clock className="w-12 h-12 text-[#6E6E73] mx-auto mb-4" /><p className="text-[15px] font-medium text-[#1D1D1F]">Đang xem xét</p></div>
  ) : (
@@ -254,7 +254,7 @@ export default function SettingsPage() {
 
  {activeSection === "notifications" && (
  <div className="space-y-8">
- <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Thông báo</h2></div>
+ <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Thông báo</p></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  {[{ id: "notifyCommunity", label: "Cộng đồng" }, { id: "notifyFinance", label: "Tài chính" }, { id: "notifyUpdates", label: "Cập nhật" }].map((item, i) => (
  <div key={i} className="p-5 flex items-center justify-between">
@@ -271,7 +271,7 @@ export default function SettingsPage() {
 
  {activeSection === "account" && (
  <div className="space-y-8">
- <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tài khoản</h2></div>
+ <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Tài khoản</p></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  <div className="p-5 flex items-center justify-between">
  <div><h4 className="text-[15px] font-medium text-[#1D1D1F]">Email</h4><p className="text-[14px] text-[#6E6E73]">{user?.email}</p></div>
@@ -279,7 +279,7 @@ export default function SettingsPage() {
  </div>
  <div className="bg-[#FFF0F0] rounded-[18px] p-6 mt-8">
  <h3 className="text-[17px] font-medium text-[#FF3B30] mb-4">Vùng nguy hiểm</h3>
- <button className="py-2 px-4 bg-[#FF3B30] text-white rounded-[14px] text-[15px] font-medium">Xóa tài khoản</button>
+ <button className="py-2 px-4 bg-[#FF3B30] text-white rounded-[10px] text-[15px] font-medium">Xóa tài khoản</button>
  </div>
  </div>
  )}
@@ -287,7 +287,7 @@ export default function SettingsPage() {
  </main>
  </div>
 
- <Modal isOpen={!!confirmModal} onClose={() => !loading && setConfirmModal(null)} className="max-w-sm rounded-[24px] bg-[#F5F5F7] p-0 border-none -2xl">
+ <Modal isOpen={!!confirmModal} onClose={() => !loading && setConfirmModal(null)} className="max-w-sm rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Xác nhận</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0"><p className="text-[15px] text-[#6E6E73]">Bạn chắc chắn thay đổi hệ thống?</p></ModalContent>
  <ModalFooter className="p-4 flex justify-end gap-3 bg-white rounded-b-[24px]">

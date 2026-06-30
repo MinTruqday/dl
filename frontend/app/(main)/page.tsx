@@ -206,13 +206,13 @@ export default function ExplorePage() {
  </h2>
  <div className="flex items-center">
  <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
- <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
- <LayoutGrid className="w-4 h-4" />
- </button>
- <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
- <List className="w-4 h-4" />
- </button>
- </div>
+                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-full transition-colors ${setViewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-full transition-colors ${setViewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-5 h-5" />
+                    </button>
+                  </div>
  </div>
  </div>
 

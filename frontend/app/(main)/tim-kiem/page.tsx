@@ -42,21 +42,21 @@ function SearchResultsContent() {
  };
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
  <aside className="lg:col-span-3 space-y-6">
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
  <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
- <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors w-1/2 flex justify-center ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
- <LayoutGrid className="w-4 h-4" />
- </button>
- <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors w-1/2 flex justify-center ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
- <List className="w-4 h-4" />
- </button>
+                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-full transition-colors ${setViewMode === "grid" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-full transition-colors ${setViewMode === "list" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-5 h-5" />
+                    </button>
+                  </div>
  </div>
- </div>
- <div className="bg-[#F5F5F7] rounded-[24px] p-6">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6">
  <div className="flex items-center justify-between mb-6">
  <span className="text-[15px] font-semibold text-[#1D1D1F]">Bộ lọc nâng cao</span>
  </div>
@@ -98,7 +98,7 @@ function SearchResultsContent() {
  </div>
 
  {history.length > 0 && (
- <div className="bg-[#F5F5F7] rounded-[24px] p-6">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6">
  <div className="flex items-center justify-between mb-4">
  <span className="text-[15px] font-semibold text-[#1D1D1F]">Tìm kiếm gần đây</span>
  <button onClick={clearHistory} className="text-[13px] text-[#0071E3] hover:underline font-medium">Xóa lịch sử</button>
@@ -162,9 +162,9 @@ function SearchResultsContent() {
  ))}
  </div>
  ) : (
- <div className="py-32 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px]">
+ <div className="py-32 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4"><BookOpen className="w-8 h-8 text-[#C7C7CC]" /></div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có kết quả</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">Chưa có kết quả</p>
  <p className="text-[17px] text-[#6E6E73]">Thử thay đổi từ khóa hoặc bộ lọc để tìm kiếm lại.</p>
  </div>
  )}

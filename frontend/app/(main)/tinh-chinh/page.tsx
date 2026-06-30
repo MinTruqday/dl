@@ -80,20 +80,20 @@ export default function FineTuningPage() {
  };
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
  <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
  <div className="flex flex-col gap-2">
  <button onClick={() => setShowNewJob(true)} className="pill-button w-full justify-center flex items-center gap-2 bg-[#0071E3] text-white hover:bg-[#0077ED]">Huấn luyện mới</button>
- <button onClick={handleImportFeedback} className="pill-button w-full justify-center flex items-center gap-2 bg-white text-[#1D1D1F]  hover:bg-[#F5F5F7]">Nhập phản hồi</button>
+ <button onClick={handleImportFeedback} className="pill-button w-full justify-center flex items-center gap-2 bg-white text-[#0071E3] font-medium  hover:bg-[#F5F5F7]">Nhập phản hồi</button>
  </div>
  </div>
  </aside>
 
  <main className="lg:col-span-9 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
- <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex flex-col overflow-hidden min-h-0">
+ <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] flex flex-col overflow-hidden min-h-0">
  <div className="p-5  flex justify-between items-center bg-[#F5F5F7]/30">
  <h2 className="text-[20px] font-medium text-[#1D1D1F] flex items-center gap-2">Tập dữ liệu <span className="px-2 py-0.5 bg-[#F5F5F7] text-[#6E6E73] rounded-full text-[12px]">{datasets.length}</span></h2>
  <button onClick={() => setShowNewDataset(true)} className="px-4 py-1.5 flex items-center justify-center bg-[#F5F5F7] text-[#1D1D1F] rounded-full hover:bg-[#E8E8ED] transition-colors text-[13px] font-medium">Tạo mới</button>
@@ -104,7 +104,7 @@ export default function FineTuningPage() {
  {datasets.map(ds => (
  <div key={ds._id} className="p-4 bg-[#F5F5F7] border-transparent rounded-[18px] hover:border-[#E8E8ED] hover:bg-[#F5F5F7] transition-colors">
  <div className="flex justify-between items-start mb-2">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">{ds.name}</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">{ds.name}</p>
  <span className="text-[12px] px-2.5 py-1 bg-[#E8E8ED] text-[#6E6E73] rounded-full font-medium">{ds.sample_count} mẫu</span>
  </div>
  {ds.description && <p className="text-[13px] text-[#6E6E73] line-clamp-1">{ds.description}</p>}
@@ -115,7 +115,7 @@ export default function FineTuningPage() {
  </div>
  </div>
 
- <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex flex-col overflow-hidden min-h-0">
+ <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] flex flex-col overflow-hidden min-h-0">
  <div className="p-5  bg-[#F5F5F7]/30">
  <h2 className="text-[20px] font-medium text-[#1D1D1F] flex items-center gap-2">Tiến trình Huấn luyện <span className="px-2 py-0.5 bg-[#F5F5F7] text-[#6E6E73] rounded-full text-[12px]">{jobs.length}</span></h2>
  </div>
@@ -126,7 +126,7 @@ export default function FineTuningPage() {
  <div key={job._id} className="p-5 bg-[#F5F5F7] border-transparent rounded-[18px] hover:border-[#E8E8ED] hover:bg-[#F5F5F7] transition-colors">
  <div className="flex justify-between items-start mb-4">
  <div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">{job.job_name}</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">{job.job_name}</p>
  <p className="text-[12px] text-[#6E6E73] mt-0.5">Mô hình gốc: {job.base_model}</p>
  </div>
  <span className={`text-[12px] px-2.5 py-1 rounded-full font-medium ${getStatusColor(job.status)}`}>{getStatusText(job.status)}</span>
@@ -152,7 +152,7 @@ export default function FineTuningPage() {
  </main>
  </div>
 
- <Modal isOpen={showNewDataset} onClose={() => setShowNewDataset(false)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={showNewDataset} onClose={() => setShowNewDataset(false)} className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6 pb-2"><ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Tạo Tập Dữ Liệu</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-2 space-y-4">
  <div><label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Tên tập dữ liệu</label><input type="text" value={newDatasetName} onChange={e => setNewDatasetName(e.target.value)} className="apple-input w-full bg-white" placeholder="" /></div>
@@ -161,7 +161,7 @@ export default function FineTuningPage() {
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setShowNewDataset(false)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleCreateDataset} className="pill-button">Tạo mới</button></ModalFooter>
  </Modal>
 
- <Modal isOpen={showNewJob} onClose={() => setShowNewJob(false)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={showNewJob} onClose={() => setShowNewJob(false)} className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6 pb-2"><ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Bắt đầu Huấn luyện</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-2 space-y-4">
  <div>

@@ -157,34 +157,34 @@ export default function StoragePage() {
  };
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
  <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
  <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Quản lý</h3>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quản lý</p>
  <div className="flex flex-col gap-2">
  <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="pill-button w-full justify-center flex items-center gap-2 disabled:opacity-50">
  {uploading ? <Loader2 className="w-4 h-4 animate-spin"/> : null} Tải lên
  </button>
- <button onClick={() => setCreateFolderOpen(true)} className="pill-button bg-white text-[#1D1D1F]  w-full justify-center flex items-center gap-2">Thư mục mới</button>
+ <button onClick={() => setCreateFolderOpen(true)} className="pill-button bg-white text-[#0071E3] font-medium  w-full justify-center flex items-center gap-2">Thư mục mới</button>
  </div>
  <input type="file" ref={fileInputRef} onChange={handleUpload} className="hidden" multiple />
  <input type="file" ref={versionInputRef} onChange={handleUploadVersion} className="hidden" />
  </div>
 
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Duyệt file</h3>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Duyệt file</p>
  <div className="flex flex-col gap-2">
- <button onClick={() => setViewMode("files")} className={`w-full py-3 rounded-[14px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "files" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F]  hover:bg-[#F5F5F7]"}`}>Lưu trữ gốc</button>
- <button onClick={() => setViewMode("recent")} className={`w-full py-3 rounded-[14px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "recent" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F]  hover:bg-[#F5F5F7]"}`}>Gần đây</button>
- <button onClick={() => setViewMode("trash")} className={`w-full py-3 rounded-[14px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "trash" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F]  hover:bg-[#F5F5F7]"}`}>Thùng rác</button>
+ <button onClick={() => setViewMode("files")} className={`w-full py-3 rounded-[10px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "files" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium  hover:bg-[#F5F5F7]"}`}>Lưu trữ gốc</button>
+ <button onClick={() => setViewMode("recent")} className={`w-full py-3 rounded-[10px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "recent" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium  hover:bg-[#F5F5F7]"}`}>Gần đây</button>
+ <button onClick={() => setViewMode("trash")} className={`w-full py-3 rounded-[10px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "trash" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium  hover:bg-[#F5F5F7]"}`}>Thùng rác</button>
  </div>
  </div>
 
  {quota && (
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-2">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Dung lượng</h3>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-2">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Dung lượng</p>
  <div className="flex flex-col">
  <span className="text-[13px] font-medium text-[#6E6E73] mb-1">{formatSize(quota.used)} / {formatSize(quota.limit)}</span>
  <div className="w-full h-1.5 bg-[#E8E8ED] rounded-full mt-1 overflow-hidden">
@@ -197,7 +197,7 @@ export default function StoragePage() {
  </aside>
 
  <main className={`flex flex-col gap-6 h-full min-h-0 ${detailsItem ? "lg:col-span-5" : "lg:col-span-9"}`}>
- <div className="bg-[#F5F5F7] rounded-[24px] p-4 flex flex-col md:flex-row justify-between items-center">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-4 flex flex-col md:flex-row justify-between items-center">
  <div className="flex items-center gap-2 text-[15px] text-[#6E6E73] font-medium px-2">
  {viewMode === "trash" ? <span className="text-[#1D1D1F]">Thùng rác</span> : viewMode === "recent" ? <span className="text-[#1D1D1F]">Mở gần đây</span> : breadcrumbs.map((crumb, idx) => (
  <div key={idx} className="flex items-center gap-2">
@@ -211,15 +211,19 @@ export default function StoragePage() {
  {viewMode === "files" && (
  <div className="flex items-center gap-2 mt-4 md:mt-0">
  {selectedIds.size > 0 && <button onClick={handleZipDownload} className="pill-button px-4 py-1.5 h-[36px] text-[13px] bg-[#1D1D1F] flex items-center gap-1"><Archive className="w-3.5 h-3.5"/> ZIP ({selectedIds.size})</button>}
- <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0 ml-2">
- <button onClick={() => setLayoutMode("grid")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
- <button onClick={() => setLayoutMode("list")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
- </div>
+ <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
+                    <button onClick={() => setLayoutMode("grid")} className={`p-2 rounded-full transition-colors ${setLayoutMode === "grid" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setLayoutMode("list")} className={`p-2 rounded-full transition-colors ${setLayoutMode === "list" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-5 h-5" />
+                    </button>
+                  </div>
  </div>
  )}
  </div>
 
- <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className={`bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-y-auto no-scrollbar p-2 ${isDraggingOver ? "border-[#0071E3] bg-[#F5F5F7]/50" : ""}`}>
+ <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className={`bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] flex-1 overflow-y-auto no-scrollbar p-2 ${isDraggingOver ? "border-[#0071E3] bg-[#F5F5F7]/50" : ""}`}>
  {loading ? (
  <div className="flex justify-center items-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>
  ) : layoutMode === "list" ? (
@@ -286,9 +290,9 @@ export default function StoragePage() {
  <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
  <input type="checkbox" checked={selectedIds.has(item._id)} onChange={() => toggleSelect(item._id)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 rounded-[4px] border-[#C7C7CC] accent-[#0071E3]" />
  </div>
- <div className="w-16 h-16 bg-white flex items-center justify-center mb-3 rounded-[14px] relative">
+ <div className="w-16 h-16 bg-white flex items-center justify-center mb-3 rounded-[10px] relative">
  {item.color && <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white" style={{ backgroundColor: item.color }} />}
- {item.is_shortcut ? <LinkIcon className="w-8 h-8 text-[#0071E3]" /> : item.is_folder ? <Folder className="w-8 h-8 text-[#1D1D1F]" /> : item.mime_type?.startsWith("image/") ? <img src={item.url} alt={item.name} className="w-full h-full object-cover rounded-[14px]" /> : <File className="w-8 h-8 text-[#6E6E73]" />}
+ {item.is_shortcut ? <LinkIcon className="w-8 h-8 text-[#0071E3]" /> : item.is_folder ? <Folder className="w-8 h-8 text-[#1D1D1F]" /> : item.mime_type?.startsWith("image/") ? <img src={item.url} alt={item.name} className="w-full h-full object-cover rounded-[10px]" /> : <File className="w-8 h-8 text-[#6E6E73]" />}
  </div>
  <div className="w-full">
  {item.is_folder ? <button onClick={(e) => { e.stopPropagation(); handleNavigate(item); }} className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block">{item.name}</button> : <span className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block">{item.name}</span>}
@@ -302,14 +306,14 @@ export default function StoragePage() {
  </main>
 
  {detailsItem && (
- <aside className="lg:col-span-4 flex flex-col gap-6 h-full min-h-0 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] overflow-hidden relative">
+ <aside className="lg:col-span-4 flex flex-col gap-6 h-full min-h-0 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] overflow-hidden relative">
  <div className="p-6  flex justify-between items-center bg-white sticky top-0 z-10">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Chi tiết</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Chi tiết</p>
  <button onClick={() => setDetailsItem(null)} className="w-8 h-8 flex items-center justify-center bg-[#F5F5F7] rounded-full text-[#6E6E73] hover:text-[#1D1D1F]"><X className="w-4 h-4"/></button>
  </div>
- <div className="flex bg-[#F5F5F7] mx-6 mt-4 p-1 rounded-[14px]">
- <button className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "info" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73]"}`} onClick={() => setActiveSidebarTab("info")}>Thông tin</button>
- <button className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "ai" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73]"}`} onClick={() => setActiveSidebarTab("ai")}>AI Trợ lý</button>
+ <div className="flex bg-[#F5F5F7] mx-6 mt-4 p-1 rounded-[10px]">
+ <button className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "info" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73]"}`} onClick={() => setActiveSidebarTab("info")}>Thông tin</button>
+ <button className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "ai" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73]"}`} onClick={() => setActiveSidebarTab("ai")}>AI Trợ lý</button>
  </div>
 
  {activeSidebarTab === "info" ? (
@@ -318,7 +322,7 @@ export default function StoragePage() {
  <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[20px] mb-4">
  {detailsItem.is_folder ? <Folder className="w-12 h-12 text-[#1D1D1F]" /> : <File className="w-12 h-12 text-[#6E6E73]" />}
  </div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] text-center max-w-full break-words">{detailsItem.name}</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 text-center max-w-full break-words">{detailsItem.name}</p>
  </div>
  <div className="bg-[#F5F5F7] rounded-[18px] p-5 space-y-3">
  <div className="flex justify-between items-center text-[14px]"><span className="text-[#6E6E73]">Loại</span><span className="font-medium">{detailsItem.is_folder ? "Thư mục" : detailsItem.mime_type || "Tệp tin"}</span></div>
@@ -327,7 +331,7 @@ export default function StoragePage() {
  <div className="flex justify-between items-center text-[14px]"><span className="text-[#6E6E73]">Sửa đổi</span><span className="font-medium">{new Date(detailsItem.updated_at).toLocaleDateString("vi-VN")}</span></div>
  </div>
  {detailsItem.description && (
- <div><h4 className="text-[14px] font-medium text-[#6E6E73] mb-2">Ghi chú AI</h4><div className="bg-[#F5F5F7] rounded-[14px] p-4 text-[14px] leading-relaxed">{detailsItem.description}</div></div>
+ <div><h4 className="text-[14px] font-medium text-[#6E6E73] mb-2">Ghi chú AI</h4><div className="bg-[#F5F5F7] rounded-[10px] p-4 text-[14px] leading-relaxed">{detailsItem.description}</div></div>
  )}
  {detailsItem.tags && detailsItem.tags.length > 0 && (
  <div>
@@ -340,7 +344,7 @@ export default function StoragePage() {
  <h4 className="text-[14px] font-medium text-[#6E6E73] mb-2">Liên quan</h4>
  <div className="space-y-2">
  {relatedItems.map((item) => (
- <div key={item._id} onClick={() => setDetailsItem(item)} className="flex items-center gap-3 p-3 bg-[#F5F5F7] hover:bg-[#E8E8ED] rounded-[14px] cursor-pointer transition-colors"><File className="w-4 h-4 text-[#6E6E73]" /><span className="text-[14px] font-medium flex-1 truncate">{item.name}</span></div>
+ <div key={item._id} onClick={() => setDetailsItem(item)} className="flex items-center gap-3 p-3 bg-[#F5F5F7] hover:bg-[#E8E8ED] rounded-[10px] cursor-pointer transition-colors"><File className="w-4 h-4 text-[#6E6E73]" /><span className="text-[14px] font-medium flex-1 truncate">{item.name}</span></div>
  ))}
  </div>
  </div>
@@ -375,19 +379,19 @@ export default function StoragePage() {
  )}
  </div>
 
- <Modal isOpen={createFolderOpen} onClose={() => setCreateFolderOpen(false)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={createFolderOpen} onClose={() => setCreateFolderOpen(false)} className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Tạo thư mục mới</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0"><input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="" className="apple-input w-full bg-white" autoFocus /></ModalContent>
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setCreateFolderOpen(false)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleCreateFolder} className="pill-button">Tạo</button></ModalFooter>
  </Modal>
 
- <Modal isOpen={!!renameItem} onClose={() => setRenameItem(null)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!renameItem} onClose={() => setRenameItem(null)} className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Đổi tên</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0"><input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="" className="apple-input w-full bg-white" autoFocus /></ModalContent>
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setRenameItem(null)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleRename} className="pill-button">Lưu</button></ModalFooter>
  </Modal>
 
- <Modal isOpen={!!shareItem} onClose={() => setShareItem(null)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!shareItem} onClose={() => setShareItem(null)} className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Chia sẻ {shareItem?.name}</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0 space-y-6">
  <div>
@@ -397,20 +401,20 @@ export default function StoragePage() {
  </div>
  <div className="pt-4 border-t border-[#E8E8ED]">
  <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Liên kết công khai</label>
- <button onClick={() => handleTogglePublic(shareItem!)} className="w-full py-3 bg-white rounded-[14px] text-[14px] font-medium text-[#1D1D1F]  flex items-center justify-center gap-2"><Share2 className="w-4 h-4"/>{shareItem?.is_public ? "Sao chép link public" : "Tạo link public"}</button>
+ <button onClick={() => handleTogglePublic(shareItem!)} className="w-full py-3 bg-white rounded-[10px] text-[14px] font-medium text-[#1D1D1F]  flex items-center justify-center gap-2"><Share2 className="w-4 h-4"/>{shareItem?.is_public ? "Sao chép link public" : "Tạo link public"}</button>
  </div>
  </ModalContent>
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end"><button onClick={() => setShareItem(null)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Đóng</button></ModalFooter>
  </Modal>
 
- <Modal isOpen={!!moveItem} onClose={() => setMoveItem(null)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!moveItem} onClose={() => setMoveItem(null)} className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Chuyển đến</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0 max-h-[300px] overflow-y-auto no-scrollbar">
  <div className="flex gap-1 text-[13px] text-[#0071E3] mb-4 overflow-x-auto no-scrollbar whitespace-nowrap">
  {moveBreadcrumbs.map((c, i) => (<button key={i} onClick={() => { setMoveTargetId(c.id); setMoveBreadcrumbs(moveBreadcrumbs.slice(0, i + 1)); }} className="hover:underline">{c.name}{i < moveBreadcrumbs.length - 1 && " / "}</button>))}
  </div>
  <div className="space-y-2">
- {moveFolders.map(f => (<button key={f._id} onClick={() => { setMoveTargetId(f._id); setMoveBreadcrumbs([...moveBreadcrumbs, { id: f._id, name: f.name }]); }} className="w-full flex items-center gap-3 p-3 bg-white rounded-[14px] hover:bg-[#E8E8ED] transition-colors"><Folder className="w-5 h-5 text-[#1D1D1F]"/><span className="text-[14px] font-medium truncate">{f.name}</span></button>))}
+ {moveFolders.map(f => (<button key={f._id} onClick={() => { setMoveTargetId(f._id); setMoveBreadcrumbs([...moveBreadcrumbs, { id: f._id, name: f.name }]); }} className="w-full flex items-center gap-3 p-3 bg-white rounded-[10px] hover:bg-[#E8E8ED] transition-colors"><Folder className="w-5 h-5 text-[#1D1D1F]"/><span className="text-[14px] font-medium truncate">{f.name}</span></button>))}
  {moveFolders.length === 0 && <p className="text-center text-[#6E6E73] text-[13px]">Không có thư mục con</p>}
  </div>
  </ModalContent>

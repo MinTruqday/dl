@@ -67,13 +67,13 @@ export default function OperationDashboard() {
  if (authLoading || isLoading) return <PageLoader />;
  if (user?.role !== "admin") return (
  <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
- <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[24px]"><ShieldAlert className="w-10 h-10 text-[#FF3B30]" /></div>
- <div className="space-y-2 max-w-[300px]"><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Truy cập bị hạn chế</h2><p className="text-[15px] text-[#6E6E73]">Bạn không có quyền quản trị để truy cập trang này.</p></div>
+ <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]"><ShieldAlert className="w-10 h-10 text-[#FF3B30]" /></div>
+ <div className="space-y-2 max-w-[300px]"><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Truy cập bị hạn chế</p><p className="text-[15px] text-[#6E6E73]">Bạn không có quyền quản trị để truy cập trang này.</p></div>
  </div>
  );
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-[#1D1D1F] flex flex-col gap-8">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F] flex flex-col gap-8">
  <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
  <button onClick={fetchData} disabled={isRefreshing} className="pill-button flex items-center gap-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED]">
  {isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />} Đồng bộ
@@ -81,7 +81,7 @@ export default function OperationDashboard() {
  </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
- <section className="lg:col-span-2 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-6">
+ <section className="lg:col-span-2 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-6">
  <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Server className="w-5 h-5 text-[#6E6E73]" /> Sức khỏe hệ thống</h2>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-3">
@@ -115,7 +115,7 @@ export default function OperationDashboard() {
  </div>
  </section>
 
- <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-6">
+ <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-6">
  <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Shield className="w-5 h-5 text-[#6E6E73]" /> Điều hành</h2>
  <div className="flex flex-col gap-4">
  <div className="bg-[#FFF4E5] rounded-[18px] p-5 border border-[#FF9500]/20 flex flex-col gap-4">
@@ -129,16 +129,16 @@ export default function OperationDashboard() {
  </div>
  <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-4">
  <div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Sao lưu dữ liệu</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Sao lưu dữ liệu</p>
  <p className="text-[13px] text-[#6E6E73] mt-1">Snapshot toàn bộ DB về kho lạnh.</p>
  </div>
- <button onClick={triggerBackup} disabled={isProcessing} className="w-full py-2.5 bg-white text-[#1D1D1F] rounded-full text-[13px] font-medium hover:bg-[#E8E8ED] ">Tiến hành sao lưu</button>
+ <button onClick={triggerBackup} disabled={isProcessing} className="w-full py-2.5 bg-white text-[#0071E3] font-medium rounded-full text-[13px] font-medium hover:bg-[#E8E8ED] ">Tiến hành sao lưu</button>
  </div>
  </div>
  </section>
  </div>
 
- <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-6">
+ <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-6">
  <div className="flex items-center justify-between">
  <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><HardDrive className="w-5 h-5 text-[#6E6E73]" /> Kho lưu trữ (MinIO)</h2>
  <div className="flex items-center gap-2 bg-[#F5F5F7] px-3 py-1.5 rounded-full"><div className={`w-2 h-2 rounded-full ${minioStats?.status === "healthy" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`} /><span className="text-[12px] font-medium text-[#6E6E73]">{minioStats?.status === "healthy" ? "Đã kết nối" : "Mất kết nối"}</span></div>
@@ -162,7 +162,7 @@ export default function OperationDashboard() {
  )}
  </section>
 
- <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 flex flex-col gap-6">
+ <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-6">
  <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Zap className="w-5 h-5 text-[#6E6E73]" /> Hạn mức AI</h2>
  {quotaLoading ? <div className="py-10 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" /></div> : (
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

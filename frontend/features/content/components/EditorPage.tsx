@@ -15,17 +15,17 @@ import edjsHTML from "editorjs-html";
 import { compileLatexPreviewAPI } from "@/features/editor/services/latex_compilation.service";
 
 const customParsers = {
-  alert: (block: any) => `<div class="p-4 rounded-[14px] my-4 bg-[#F5F5F7]"><strong>${block.data.type || "Lưu ý"}</strong>: ${block.data.message}</div>`,
+  alert: (block: any) => `<div class="p-4 rounded-[10px] my-4 bg-[#F5F5F7]"><strong>${block.data.type || "Lưu ý"}</strong>: ${block.data.message}</div>`,
   table: (block: any) => `<table class="w-full border-collapse  border-[#D2D2D7] my-4">${(block.data.content || []).map((row: any) => `<tr>${row.map((cell: any) => `<td class=" border-[#D2D2D7] p-2">${cell}</td>`).join("")}</tr>`).join("")}</table>`,
-  toggle: (block: any) => `<details class="p-4  border-[#D2D2D7] rounded-[14px] my-4"><summary class="font-semibold cursor-pointer">${block.data.text}</summary><div class="mt-2 text-[14px] text-[#6E6E73]">${block.data.items}</div></details>`,
+  toggle: (block: any) => `<details class="p-4  border-[#D2D2D7] rounded-[10px] my-4"><summary class="font-semibold cursor-pointer">${block.data.text}</summary><div class="mt-2 text-[14px] text-[#6E6E73]">${block.data.items}</div></details>`,
   checklist: (block: any) => `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.text}</span></li>`).join("")}</ul>`,
   nestedChecklist: (block: any) => `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.content}</span></li>`).join("")}</ul>`,
   originalQuote: (block: any) => `<blockquote class="-4 border-[#D2D2D7] pl-4 py-2 italic my-4 text-[#6E6E73]">${block.data.text} <br/><cite class="text-[14px] font-semibold mt-2 block">- ${block.data.caption}</cite></blockquote>`,
   divider: () => `<hr class="my-6 border-[#D2D2D7]" />`,
-  math: (block: any) => `<div class="p-4 bg-[#F5F5F7] font-mono text-[14px] my-4 overflow-x-auto rounded-[14px]">${block.data.math}</div>`,
-  mermaid: (block: any) => `<div class="p-4  border-[#D2D2D7] rounded-[14px] my-4 text-[14px] text-[#6E6E73] italic">[Biểu đồ Mermaid không được hỗ trợ trong xem trước]</div>`,
-  attaches: (block: any) => `<div class="p-4  border-[#D2D2D7] rounded-[14px] my-4 flex flex-col gap-1 text-[14px] bg-[#F5F5F7]"><span class="font-semibold text-[#1D1D1F]">${block.data.title || "Tập tin đính kèm"}</span><a href="${block.data.file?.url}" class="text-[#0071E3] hover:underline break-all">${block.data.file?.url}</a></div>`,
-  personality: (block: any) => `<div class="p-4  border-[#D2D2D7] rounded-[14px] my-4 flex gap-4 items-center bg-[#F5F5F7]"><img src="${block.data.photo}" class="w-16 h-16 rounded-full object-cover" /><div><div class="font-semibold text-[#1D1D1F]">${block.data.name}</div><div class="text-[14px] text-[#6E6E73]">${block.data.description}</div></div></div>`,
+  math: (block: any) => `<div class="p-4 bg-[#F5F5F7] font-mono text-[14px] my-4 overflow-x-auto rounded-[10px]">${block.data.math}</div>`,
+  mermaid: (block: any) => `<div class="p-4  border-[#D2D2D7] rounded-[10px] my-4 text-[14px] text-[#6E6E73] italic">[Biểu đồ Mermaid không được hỗ trợ trong xem trước]</div>`,
+  attaches: (block: any) => `<div class="p-4  border-[#D2D2D7] rounded-[10px] my-4 flex flex-col gap-1 text-[14px] bg-[#F5F5F7]"><span class="font-semibold text-[#1D1D1F]">${block.data.title || "Tập tin đính kèm"}</span><a href="${block.data.file?.url}" class="text-[#0071E3] hover:underline break-all">${block.data.file?.url}</a></div>`,
+  personality: (block: any) => `<div class="p-4  border-[#D2D2D7] rounded-[10px] my-4 flex gap-4 items-center bg-[#F5F5F7]"><img src="${block.data.photo}" class="w-16 h-16 rounded-full object-cover" /><div><div class="font-semibold text-[#1D1D1F]">${block.data.name}</div><div class="text-[14px] text-[#6E6E73]">${block.data.description}</div></div></div>`,
 };
 
 const edjsParser = edjsHTML(customParsers);
@@ -33,7 +33,7 @@ const safeParseEditorJs = (data: any) => {
   if (!data || !data.blocks) return "";
   const supportedTypes = ["paragraph", "header", "list", "quote", "image", "delimiter", ...Object.keys(customParsers)];
   const sanitizedData = { ...data, blocks: data.blocks.map((b: any) => {
-    if (!supportedTypes.includes(b.type)) return { type: "paragraph", data: { text: `<div class="p-4 bg-[#FFF0F0] text-[#FF3B30] text-[14px] my-4 rounded-[14px]">Khối chưa hỗ trợ xem trước: ${b.type}</div>` } };
+    if (!supportedTypes.includes(b.type)) return { type: "paragraph", data: { text: `<div class="p-4 bg-[#FFF0F0] text-[#FF3B30] text-[14px] my-4 rounded-[10px]">Khối chưa hỗ trợ xem trước: ${b.type}</div>` } };
     return b;
   }) };
   return edjsParser.parse(sanitizedData).join("");
@@ -154,11 +154,11 @@ function StudioContent() {
   if (isLoading) return <div className="flex-1 flex flex-col items-center justify-center min-h-[80vh]"><Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" /></div>;
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
-            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Chi tiết tác phẩm</h3>
+          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Chi tiết tác phẩm</p>
             <div className="flex flex-col gap-1">
               <span className="text-[15px] font-semibold text-[#1D1D1F] truncate" title={selectedDocument?.title || "Bản thảo chưa đặt tên"}>
                 {selectedDocument?.title || "Bản thảo chưa đặt tên"}
@@ -166,29 +166,29 @@ function StudioContent() {
               <span className="text-[13px] text-[#6E6E73]">{statusMsg}</span>
             </div>
           </div>
-          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
-            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Hành động</h3>
+          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Hành động</p>
             <div className="flex flex-col gap-2">
-              <button disabled={!selectedDocumentId || isExporting} onClick={handleExportPDF} className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[14px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50">
+              <button disabled={!selectedDocumentId || isExporting} onClick={handleExportPDF} className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[10px] bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED] transition-colors disabled:opacity-50">
                 Xuất PDF
               </button>
-              <button disabled={!selectedDocumentId || isExporting} onClick={handleExportDOCX} className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[14px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50">
+              <button disabled={!selectedDocumentId || isExporting} onClick={handleExportDOCX} className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[10px] bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED] transition-colors disabled:opacity-50">
                 Xuất DOCX
               </button>
-              <button onClick={handleSave} disabled={!selectedDocumentId || isSaving} className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[14px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50 flex items-center gap-2">
+              <button onClick={handleSave} disabled={!selectedDocumentId || isSaving} className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[10px] bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED] transition-colors disabled:opacity-50 flex items-center gap-2">
                 {isSaving ? "Đang lưu..." : "Lưu nháp"}
               </button>
-              <button onClick={handlePublish} disabled={!selectedDocumentId} className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[14px] bg-[#0071E3] text-white hover:bg-[#0077ED] transition-colors disabled:opacity-50">
+              <button onClick={handlePublish} disabled={!selectedDocumentId} className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[10px] bg-[#0071E3] text-white hover:bg-[#0077ED] transition-colors disabled:opacity-50">
                 Phát hành
               </button>
             </div>
           </div>
         </aside>
 
-        <main className="lg:col-span-9 flex flex-col min-h-0 bg-[#F5F5F7] rounded-[24px] overflow-hidden">
+        <main className="lg:col-span-9 flex flex-col min-h-0 bg-[#F5F5F7] rounded-[18px] overflow-hidden">
           <div className="h-[48px] px-6 flex items-center gap-2 shrink-0">
             {(["edit", "preview", "raw"] as const).map((m) => (
-              <button key={m} onClick={() => setEditorMode(m)} className={`h-full px-4 text-[14px] font-medium flex items-center transition-colors ${editorMode === m ? "text-[#1D1D1F] border-b-2 border-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+              <button key={m} onClick={() => setEditorMode(m)} className={`h-full px-4 text-[14px] font-medium flex items-center transition-colors ${editorMode === m ? "text-[#1D1D1F] -2 border-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
                 {m === "edit" ? "Soạn thảo" : m === "preview" ? "Xem trước" : "Mã nguồn"}
               </button>
             ))}

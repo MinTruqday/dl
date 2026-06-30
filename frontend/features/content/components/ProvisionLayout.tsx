@@ -35,11 +35,11 @@ export default function ProvisionLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className={`w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6 transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6 transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
-            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Sáng tác</h3>
+          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Sáng tác</p>
             <div className="flex flex-col gap-2">
               {navItems.map((item) => {
                 const active = isActive(item.href);
@@ -47,7 +47,7 @@ export default function ProvisionLayout({ children }: { children: React.ReactNod
                   <Link
                     key={item.id}
                     href={item.href}
-                    className={`flex items-center justify-between px-4 py-3 rounded-[14px] transition-colors ${ active ? item.highlight ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] font-medium" : "bg-transparent text-[#6E6E73] hover:bg-white hover:text-[#1D1D1F]" }`}
+                    className={`flex items-center justify-between px-4 py-3 rounded-[10px] transition-colors ${ active ? item.highlight ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium" : "bg-transparent text-[#6E6E73] hover:bg-white hover:text-[#1D1D1F]" }`}
                   >
                     <span className="text-[14px]">{item.label}</span>
                   </Link>
@@ -56,9 +56,9 @@ export default function ProvisionLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           
-          <div className="bg-[#F5F5F7] rounded-[24px] p-6">
+          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-[14px] bg-[#E8E8ED] flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-10 h-10 rounded-[10px] bg-[#E8E8ED] flex items-center justify-center overflow-hidden shrink-0">
                 {user?.avatar_url ? (
                   <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (

@@ -124,14 +124,14 @@ export default function ConfigPage() {
  return (
  <div className="flex flex-col h-full font-sans">
  <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
- <div className="bg-[#F5F5F7] p-6 rounded-[24px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+ <div className="bg-[#F5F5F7] p-6 rounded-[18px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
  <div className="flex items-center gap-3">
- <div className="w-12 h-12 bg-white rounded-[14px] flex items-center justify-center shrink-0"><Settings className="w-6 h-6 text-[#1D1D1F]" /></div>
- <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Chọn tác phẩm</h2><p className="text-[13px] text-[#6E6E73]">Tác phẩm cần thiết lập</p></div>
+ <div className="w-12 h-12 bg-white rounded-[10px] flex items-center justify-center shrink-0"><Settings className="w-6 h-6 text-[#1D1D1F]" /></div>
+ <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Chọn tác phẩm</p><p className="text-[13px] text-[#6E6E73]">Tác phẩm cần thiết lập</p></div>
  </div>
  <div className="relative w-full sm:w-[320px]">
  <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
- <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[14px] appearance-none transition-colors cursor-pointer">
+ <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[10px] appearance-none transition-colors cursor-pointer">
  {documents.length === 0 && <option value="" disabled>Chưa có tác phẩm</option>}
  {documents.map((d) => <option key={d.id || d._id} value={d.id || d._id}>{d.title || "Chưa có tiêu đề"}</option>)}
  </select>
@@ -142,8 +142,8 @@ export default function ConfigPage() {
  {selectedDocumentId ? (
  <div className="flex-1 min-h-0 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
  <div className="space-y-6">
- <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
- <div className="flex items-center gap-2 mb-4"><Hash className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Phân loại & Thẻ</h3></div>
+ <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
+ <div className="flex items-center gap-2 mb-4"><Hash className="w-5 h-5 text-[#1D1D1F]" /><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Phân loại & Thẻ</p></div>
  <p className="text-[13px] text-[#6E6E73] mb-4">Sử dụng thẻ để phân loại tác phẩm.</p>
  <div className="flex flex-wrap gap-2 mb-4 min-h-[32px]">
  {docTags.map((tag) => (
@@ -153,15 +153,15 @@ export default function ConfigPage() {
  ))}
  {docTags.length === 0 && <span className="text-[13px] text-[#C7C7CC]">Chưa có thẻ nào</span>}
  </div>
- <div className="relative"><Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" /><input type="text" value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} onKeyDown={handleAddTag} placeholder="" className="w-full h-[48px] pl-12 pr-4 text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" /></div>
+ <div className="relative"><Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" /><input type="text" value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} onKeyDown={handleAddTag} placeholder="" className="w-full h-[48px] pl-12 pr-4 text-[15px] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" /></div>
  </div>
 
- <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
- <div className="flex items-center gap-2 mb-4"><Folder className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Thư mục làm việc</h3></div>
+ <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
+ <div className="flex items-center gap-2 mb-4"><Folder className="w-5 h-5 text-[#1D1D1F]" /><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Thư mục làm việc</p></div>
  <p className="text-[13px] text-[#6E6E73] mb-4">Di chuyển tác phẩm này vào thư mục.</p>
  <div className="relative">
  <Folder className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
- <select value={selectedDocument?.folder_id || ""} onChange={async (e) => { try { await updateDocumentAPI(selectedDocumentId, { folder_id: e.target.value || null }); showToast("Đã di chuyển tác phẩm", "success"); fetchInitData(); } catch { showToast("Không thể di chuyển", "error"); } }} className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium rounded-[14px] outline-none bg-[#F5F5F7] focus:bg-white focus:border-[#0071E3] appearance-none transition-colors cursor-pointer">
+ <select value={selectedDocument?.folder_id || ""} onChange={async (e) => { try { await updateDocumentAPI(selectedDocumentId, { folder_id: e.target.value || null }); showToast("Đã di chuyển tác phẩm", "success"); fetchInitData(); } catch { showToast("Không thể di chuyển", "error"); } }} className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium rounded-[10px] outline-none bg-[#F5F5F7] focus:bg-white focus:border-[#0071E3] appearance-none transition-colors cursor-pointer">
  <option value="">(Thư mục gốc)</option>
  {folders.map((f) => <option key={f._id || f.id} value={f._id || f.id}>{f.name}</option>)}
  </select>
@@ -169,9 +169,9 @@ export default function ConfigPage() {
  </div>
  </div>
 
- <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
+ <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
  <div className="flex items-center justify-between mb-4">
- <div className="flex items-center gap-2"><Shield className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Bảo vệ bản quyền</h3></div>
+ <div className="flex items-center gap-2"><Shield className="w-5 h-5 text-[#1D1D1F]" /><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Bảo vệ bản quyền</p></div>
  <button onClick={handleSaveDRM} disabled={savingDrm || !selectedDocumentId} className="h-[36px] px-4 bg-[#0071E3] text-white text-[13px] font-medium rounded-full disabled:opacity-50 transition-colors hover:bg-[#0077ED]">{savingDrm ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Lưu DRM"}</button>
  </div>
  <div className="space-y-4 bg-[#F5F5F7] p-4 rounded-[18px]">
@@ -195,26 +195,26 @@ export default function ConfigPage() {
  </div>
 
  <div className="space-y-6">
- <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px] relative overflow-hidden">
+ <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px] relative overflow-hidden">
  <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Brain className="w-24 h-24" /></div>
- <div className="flex items-center gap-2 mb-4 relative z-10"><Brain className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Trí tuệ nhân tạo</h3></div>
+ <div className="flex items-center gap-2 mb-4 relative z-10"><Brain className="w-5 h-5 text-[#1D1D1F]" /><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Trí tuệ nhân tạo</p></div>
  <p className="text-[13px] text-[#6E6E73] mb-4 relative z-10">Đồng bộ nội dung với hệ thống RAG để AI hỗ trợ độc giả.</p>
  <button onClick={handleIngestAI} disabled={isIngesting || !selectedDocumentId} className="w-full h-[48px] bg-[#1D1D1F] text-white text-[15px] font-medium flex items-center justify-center gap-2 rounded-full disabled:opacity-50 transition-colors hover:bg-[#333336] relative z-10">
  {isIngesting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Brain className="w-5 h-5" />} Đồng bộ dữ liệu AI
  </button>
  </div>
 
- <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
- <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Cộng tác viên</h3></div>
+ <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
+ <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-[#1D1D1F]" /><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Cộng tác viên</p></div>
  <div className="flex gap-2 mb-4">
- <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="" className="flex-1 h-[48px] pl-4 pr-4 text-[15px] rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
- <button onClick={handleInviteCollab} disabled={!inviteEmail.trim()} className="h-[48px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-[14px] disabled:opacity-50 flex items-center gap-2 hover:bg-[#0077ED] transition-colors">Mời <Send className="w-4 h-4" /></button>
+ <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="" className="flex-1 h-[48px] pl-4 pr-4 text-[15px] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
+ <button onClick={handleInviteCollab} disabled={!inviteEmail.trim()} className="h-[48px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-[10px] disabled:opacity-50 flex items-center gap-2 hover:bg-[#0077ED] transition-colors">Mời <Send className="w-4 h-4" /></button>
  </div>
  <div className="bg-[#F5F5F7] rounded-[18px] p-4 max-h-[160px] overflow-y-auto custom-scrollbar">
  {loadingCollabs ? <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-[#0071E3]" /></div> : collaborators.length > 0 ? (
  <ul className="space-y-2">
  {collaborators.map((c: any) => (
- <li key={c.id} className="flex justify-between items-center bg-white p-3 rounded-[14px]">
+ <li key={c.id} className="flex justify-between items-center bg-white p-3 rounded-[10px]">
  <div className="flex flex-col"><span className="text-[15px] font-semibold text-[#1D1D1F]">{c.email || c.user_id}</span><span className="text-[13px] text-[#6E6E73] capitalize">{c.role}</span></div>
  <button onClick={() => handleRemoveCollab(c.id)} className="w-8 h-8 flex items-center justify-center text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FFEBEB] rounded-full transition-colors"><Trash2 className="w-4 h-4" /></button>
  </li>
@@ -224,19 +224,19 @@ export default function ConfigPage() {
  </div>
  </div>
 
- <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px]">
- <div className="flex items-center gap-2 mb-4"><Ticket className="w-5 h-5 text-[#1D1D1F]" /><h3 className="text-[17px] font-medium text-[#1D1D1F]">Mã ưu đãi</h3></div>
+ <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
+ <div className="flex items-center gap-2 mb-4"><Ticket className="w-5 h-5 text-[#1D1D1F]" /><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Mã ưu đãi</p></div>
  <div className="grid grid-cols-3 gap-2 mb-4">
- <input type="text" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium rounded-[14px] uppercase outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
- <input type="number" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(Number(e.target.value))} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} max={100} />
- <input type="number" value={newCouponQuantity} onChange={(e) => setNewCouponQuantity(Number(e.target.value))} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium rounded-[14px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} />
+ <input type="text" value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium rounded-[10px] uppercase outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
+ <input type="number" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(Number(e.target.value))} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} max={100} />
+ <input type="number" value={newCouponQuantity} onChange={(e) => setNewCouponQuantity(Number(e.target.value))} placeholder="" className="col-span-1 h-[48px] px-4 text-[15px] font-medium rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" min={1} />
  <button onClick={handleCreateCoupon} className="col-span-3 h-[48px] bg-[#1D1D1F] text-white text-[15px] font-medium rounded-full hover:bg-[#333336] transition-colors">Tạo mã ưu đãi</button>
  </div>
  <div className="bg-[#F5F5F7] rounded-[18px] p-4 max-h-[160px] overflow-y-auto custom-scrollbar">
  {coupons.length === 0 ? <EmptyState text="Chưa có mã ưu đãi" compact={true} /> : (
  <div className="flex flex-col gap-2">
  {coupons.map((c: any) => (
- <div key={c.id || c._id} className="bg-white p-3 rounded-[14px] flex items-center justify-between">
+ <div key={c.id || c._id} className="bg-white p-3 rounded-[10px] flex items-center justify-between">
  <div className="flex items-center gap-2"><span className="font-semibold text-[15px] text-[#1D1D1F] bg-[#F5F5F7] px-2.5 py-1 rounded-[10px]">{c.code}</span><span className="text-[12px] bg-[#FF9F0A]/10 text-[#FF9F0A] px-2 py-1 font-medium rounded-[8px]">-{c.discount_percent}%</span></div>
  <span className="text-[13px] font-medium text-[#6E6E73]">Lượt: {c.used_count || 0}/{c.max_uses}</span>
  </div>
@@ -246,31 +246,31 @@ export default function ConfigPage() {
  </div>
  </div>
 
- <div className="bg-[#FF3B30]/10 border-[#FF3B30]/20 p-6 rounded-[24px]">
+ <div className="bg-[#FF3B30]/10 border-[#FF3B30]/20 p-6 rounded-[18px]">
  <div className="flex items-center gap-2 mb-2 text-[#FF3B30]"><ArrowRightLeft className="w-5 h-5" /><h3 className="text-[17px] font-medium">Bàn giao tác phẩm</h3></div>
  <p className="text-[13px] text-[#FF3B30] mb-4">Bạn sẽ mất toàn quyền kiểm soát sau khi chuyển.</p>
  <div className="flex gap-2">
- <input type="text" value={transferUserId} onChange={(e) => setTransferUserId(e.target.value)} placeholder="" className="flex-1 h-[48px] pl-4 pr-4 border-[#FF3B30]/30 text-[15px] rounded-[14px] outline-none focus:border-[#FF3B30] bg-white transition-colors" />
- <button onClick={() => setConfirmTransfer(true)} disabled={isTransferring || !selectedDocumentId || !transferUserId.trim()} className="h-[48px] px-6 bg-[#FF3B30] text-white text-[15px] font-medium rounded-[14px] disabled:opacity-50 hover:bg-[#E0332A] transition-colors">Chuyển</button>
+ <input type="text" value={transferUserId} onChange={(e) => setTransferUserId(e.target.value)} placeholder="" className="flex-1 h-[48px] pl-4 pr-4 border-[#FF3B30]/30 text-[15px] rounded-[10px] outline-none focus:border-[#FF3B30] bg-white transition-colors" />
+ <button onClick={() => setConfirmTransfer(true)} disabled={isTransferring || !selectedDocumentId || !transferUserId.trim()} className="h-[48px] px-6 bg-[#FF3B30] text-white text-[15px] font-medium rounded-[10px] disabled:opacity-50 hover:bg-[#E0332A] transition-colors">Chuyển</button>
  </div>
  </div>
  </div>
  </div>
  ) : (
- <div className="flex-1 bg-[#F5F5F7] rounded-[24px] p-12 flex flex-col items-center justify-center gap-4 text-center">
+ <div className="flex-1 bg-[#F5F5F7] rounded-[18px] p-12 flex flex-col items-center justify-center gap-4 text-center">
  <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-2"><Settings className="w-8 h-8 text-[#C7C7CC]" /></div>
  <p className="text-[15px] text-[#6E6E73] max-w-sm">Vui lòng chọn một tác phẩm từ danh sách để định cấu hình</p>
  </div>
  )}
  </div>
 
- <Modal isOpen={confirmTransfer} onClose={() => setConfirmTransfer(false)} className="max-w-md rounded-[24px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden">
+ <Modal isOpen={confirmTransfer} onClose={() => setConfirmTransfer(false)} className="max-w-md rounded-[18px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden">
  <ModalHeader className="p-6 bg-[#FF3B30]/10">
  <ModalTitle className="text-[17px] font-semibold text-[#FF3B30] flex items-center gap-2"><ArrowRightLeft className="w-5 h-5" /> Xác nhận chuyển nhượng</ModalTitle>
  <ModalDescription className="text-[13px] text-[#FF3B30] mt-2 ml-7">Hành động nguy hiểm</ModalDescription>
  </ModalHeader>
  <ModalContent className="p-6">
- <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed bg-[#F5F5F7] p-4 rounded-[14px]">
+ <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed bg-[#F5F5F7] p-4 rounded-[10px]">
  Bạn có chắc chắn muốn chuyển nhượng tác phẩm này cho ID <span className="font-semibold">{transferUserId}</span>? <br/><br/>
  <span className="text-[#FF3B30] font-semibold">Hành động này không thể hoàn tác và bạn sẽ mất toàn quyền truy cập.</span>
  </p>

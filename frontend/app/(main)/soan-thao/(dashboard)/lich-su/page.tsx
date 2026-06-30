@@ -100,19 +100,19 @@ export default function HistoryPage() {
  return (
  <div className="flex flex-col h-full font-sans">
  <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
- <div className="bg-[#F5F5F7] p-6 rounded-[24px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+ <div className="bg-[#F5F5F7] p-6 rounded-[18px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
  <div className="flex items-center gap-3">
- <div className="w-12 h-12 bg-white rounded-[14px] flex items-center justify-center shrink-0">
+ <div className="w-12 h-12 bg-white rounded-[10px] flex items-center justify-center shrink-0">
  <BookOpen className="w-6 h-6 text-[#1D1D1F]" />
  </div>
  <div>
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Chọn tác phẩm</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Chọn tác phẩm</p>
  <p className="text-[13px] text-[#6E6E73]">Xem lịch sử của tài liệu cụ thể</p>
  </div>
  </div>
  <div className="relative w-full sm:w-[320px]">
  <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
- <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-4 text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[14px] appearance-none transition-colors cursor-pointer">
+ <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-4 text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[10px] appearance-none transition-colors cursor-pointer">
  {documents.length === 0 && <option value="" disabled>Chưa có tác phẩm</option>}
  {documents.map((d) => <option key={d.id || d._id} value={d.id || d._id}>{d.title || "Chưa có tiêu đề"}</option>)}
  </select>
@@ -120,7 +120,7 @@ export default function HistoryPage() {
  </div>
 
  {selectedDocumentId ? (
- <div className="flex-1 min-h-0 flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[24px] overflow-hidden pb-6">
+ <div className="flex-1 min-h-0 flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] overflow-hidden pb-6">
  <div className="p-6 bg-[#F5F5F7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
  <div>
  <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2 mb-1"><History className="w-5 h-5" /> Danh sách phiên bản</h2>
@@ -135,16 +135,16 @@ export default function HistoryPage() {
  {loadingVersions ? (
  <div className="h-full flex flex-col items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" /><p className="text-[13px] font-medium text-[#6E6E73]">Đang tải dữ liệu...</p></div>
  ) : versions.length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-center p-12"><div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[18px] mb-4"><History className="w-8 h-8 text-[#C7C7CC]" /></div><h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có phiên bản</h3><p className="text-[15px] text-[#6E6E73] max-w-sm">Tác phẩm này chưa có phiên bản nào được lưu lại trong lịch sử.</p></div>
+ <div className="h-full flex flex-col items-center justify-center text-center p-12"><div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[18px] mb-4"><History className="w-8 h-8 text-[#C7C7CC]" /></div><p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">Chưa có phiên bản</p><p className="text-[15px] text-[#6E6E73] max-w-sm">Tác phẩm này chưa có phiên bản nào được lưu lại trong lịch sử.</p></div>
  ) : (
  <div className="grid grid-cols-1 gap-4">
  {versions.map((v) => {
  const isSelected = selectedVersions.includes(v.id);
  return (
- <div key={v.id} onClick={() => toggleVersionSelection(v.id)} className={`flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-[24px] transition-all cursor-pointer relative overflow-hidden group ${isSelected ? "bg-[#0071E3]/5 border-[#0071E3]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:"}`}>
+ <div key={v.id} onClick={() => toggleVersionSelection(v.id)} className={`flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-[18px] transition-all cursor-pointer relative overflow-hidden group ${isSelected ? "bg-[#0071E3]/5 border-[#0071E3]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:"}`}>
  {isSelected && <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0071E3]" />}
  <div className="flex items-center gap-4 mb-4 sm:mb-0 ml-2">
- <div className={`w-12 h-12 flex items-center justify-center rounded-[14px] shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#6E6E73] "}`}>
+ <div className={`w-12 h-12 flex items-center justify-center rounded-[10px] shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#6E6E73] "}`}>
  {isSelected ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
  </div>
  <div className="space-y-1">
@@ -163,20 +163,20 @@ export default function HistoryPage() {
  </div>
  </div>
  ) : (
- <div className="flex-1 bg-[#F5F5F7] rounded-[24px] p-12 flex flex-col items-center justify-center gap-4 text-center">
+ <div className="flex-1 bg-[#F5F5F7] rounded-[18px] p-12 flex flex-col items-center justify-center gap-4 text-center">
  <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-2"><History className="w-8 h-8 text-[#C7C7CC]" /></div>
  <p className="text-[15px] text-[#6E6E73] max-w-sm">Vui lòng chọn một tác phẩm từ danh sách để xem lịch sử phiên bản</p>
  </div>
  )}
  </div>
 
- <Modal isOpen={!!confirmRestore} onClose={() => setConfirmRestore(null)} className="max-w-md rounded-[24px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden">
+ <Modal isOpen={!!confirmRestore} onClose={() => setConfirmRestore(null)} className="max-w-md rounded-[18px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden">
  <ModalHeader className="p-6 bg-[#FF9F0A]/10">
  <ModalTitle className="text-[17px] font-semibold text-[#FF9F0A] flex items-center gap-2"><RotateCcw className="w-5 h-5" /> Xác nhận khôi phục</ModalTitle>
  <ModalDescription className="text-[13px] text-[#FF9F0A] mt-2 ml-7">Thay thế nội dung hiện tại</ModalDescription>
  </ModalHeader>
  <ModalContent className="p-6">
- <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed bg-[#F5F5F7] p-4 rounded-[14px]">
+ <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed bg-[#F5F5F7] p-4 rounded-[10px]">
  Bạn có chắc chắn muốn khôi phục về phiên bản này? <br/><br/>
  <span className="font-semibold text-[#FF3B30]">Nội dung hiện tại sẽ bị ghi đè và bạn sẽ mất các thay đổi mới nhất chưa được lưu.</span>
  </p>
@@ -187,7 +187,7 @@ export default function HistoryPage() {
  </ModalFooter>
  </Modal>
 
- <Modal isOpen={!!diffData} onClose={() => setDiffData(null)} className="max-w-[90vw] md:max-w-5xl h-[85vh] rounded-[24px] border-[#E8E8ED] bg-[#F5F5F7] p-0 flex flex-col overflow-hidden">
+ <Modal isOpen={!!diffData} onClose={() => setDiffData(null)} className="max-w-[90vw] md:max-w-5xl h-[85vh] rounded-[18px] border-[#E8E8ED] bg-[#F5F5F7] p-0 flex flex-col overflow-hidden">
  <ModalHeader className="p-6 shrink-0 bg-[#F5F5F7]">
  <ModalTitle className="text-[17px] font-semibold text-[#1D1D1F] flex items-center gap-2"><GitCompare className="w-5 h-5" /> So sánh sự khác biệt</ModalTitle>
  </ModalHeader>

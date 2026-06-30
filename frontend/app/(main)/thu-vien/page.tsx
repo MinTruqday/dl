@@ -137,7 +137,7 @@ export default function LibraryPage() {
  <div className="flex flex-col lg:flex-row gap-8">
  <aside className="w-full lg:w-[280px] shrink-0 space-y-6">
  <div className="bg-[#F5F5F7] rounded-[18px] p-6">
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-4">Quản lý thư viện</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-4">Quản lý thư viện</p>
  <nav className="flex flex-col gap-2">
  {tabs.map((t) => (
  <button
@@ -158,7 +158,7 @@ export default function LibraryPage() {
  </div>
 
  <div className="bg-[#F5F5F7] rounded-[18px] p-6">
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-4">Tài liệu đã ghim</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-4">Tài liệu đã ghim</p>
  <div className="flex flex-col gap-3">
  {pinnedDocs.length > 0 ? pinnedDocs.map((doc, i) => (
  <Link key={`pinned-${doc.id || i}`} href={`/document/${doc.slug}`} className="flex gap-4 items-center group p-2 -mx-2 rounded-[12px] hover:bg-white transition-colors">
@@ -177,17 +177,17 @@ export default function LibraryPage() {
  <main className="flex-1 min-w-0 space-y-8">
  {activeTab === "history" && continueDocs.length > 0 && (
  <section>
- <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Đang đọc</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-6">Đang đọc</p>
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
  {continueDocs.map((doc) => (
  <Link key={doc.document_id} href={`/document/${doc.document_slug}`} className="group flex flex-col">
- <div className="aspect-[2/3] w-full rounded-[14px] bg-[#F5F5F7] overflow-hidden relative mb-3">
+ <div className="aspect-[2/3] w-full rounded-[10px] bg-[#F5F5F7] overflow-hidden relative mb-3">
  {doc.cover_url ? <img src={doc.cover_url.startsWith("http") ? doc.cover_url : `${API_URL}/storage/${doc.cover_url}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" /> : <FileText className="w-10 h-10 text-[#D2D2D7] m-auto mt-[40%]" />}
  <div className="absolute bottom-0 left-0 w-full h-1.5 bg-[rgba(0,0,0,0.1)]">
  <div className="h-full bg-[#0071E3]" style={{ width: `${doc.progress_percentage}%` }} />
  </div>
  </div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-2 leading-[1.3] group-hover:text-[#0071E3] transition-colors">{doc.document_title}</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 line-clamp-2 leading-[1.3] group-hover:text-[#0071E3] transition-colors">{doc.document_title}</p>
  <p className="text-[13px] text-[#6E6E73] mt-1">{doc.progress_percentage}% hoàn thành</p>
  </Link>
  ))}
@@ -198,17 +198,17 @@ export default function LibraryPage() {
  {activeTab === "history" && (
  <section>
  <div className="flex items-center justify-between mb-6">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lịch sử</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Lịch sử</p>
  <div className="flex items-center gap-4">
  {history.length > 0 && <button onClick={() => setIsClearModalOpen(true)} className="text-[13px] text-[#0071E3] hover:underline">Xóa tất cả</button>}
  <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
- <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
- <LayoutGrid className="w-4 h-4" />
- </button>
- <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
- <List className="w-4 h-4" />
- </button>
- </div>
+                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-full transition-colors ${setViewMode === "grid" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-full transition-colors ${setViewMode === "list" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-5 h-5" />
+                    </button>
+                  </div>
  </div>
  </div>
  
@@ -235,7 +235,7 @@ export default function LibraryPage() {
  {activeTab === "folders" && (
  <section>
  <div className="flex items-center justify-between mb-6">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Thư mục dấu trang</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Thư mục dấu trang</p>
  <button onClick={() => { setCreateType("folder"); setIsCreateModalOpen(true); }} className="pill-button flex items-center gap-2"><Plus className="w-4 h-4" /> Tạo thư mục</button>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -244,7 +244,7 @@ export default function LibraryPage() {
  <div className="aspect-square bg-[#F5F5F7] rounded-[18px] flex items-center justify-center mb-3 group-hover:bg-[#E8E8ED] transition-colors">
  <FolderPlus className="w-12 h-12 text-[#0071E3]" />
  </div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-1">{folder.name}</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 line-clamp-1">{folder.name}</p>
  <p className="text-[13px] text-[#6E6E73]">{folder.bookmark_ids?.length || 0} mục</p>
  </Link>
  )) : <EmptyState text="Chưa có thư mục nào" compact={true} />}
@@ -255,7 +255,7 @@ export default function LibraryPage() {
  {activeTab === "lists" && (
  <section>
  <div className="flex items-center justify-between mb-6">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Danh sách đọc</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Danh sách đọc</p>
  <button onClick={() => { setCreateType("list"); setIsCreateModalOpen(true); }} className="pill-button flex items-center gap-2"><Plus className="w-4 h-4" /> Tạo danh sách</button>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -264,7 +264,7 @@ export default function LibraryPage() {
  <div className="aspect-square bg-[#F5F5F7] rounded-[18px] flex items-center justify-center mb-3 group-hover:bg-[#E8E8ED] transition-colors">
  <Layers className="w-12 h-12 text-[#0071E3]" />
  </div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-1">{list.name}</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 line-clamp-1">{list.name}</p>
  <p className="text-[13px] text-[#6E6E73]">{list.documents?.length || 0} tài liệu</p>
  </Link>
  )) : <EmptyState text="Chưa có danh sách đọc nào" compact={true} />}
@@ -329,12 +329,12 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: { isOp
 
  return (
  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(0,0,0,0.4)] p-6">
- <div className="bg-[#F5F5F7] w-full max-w-5xl h-[85vh] rounded-[24px] -2xl flex flex-col overflow-hidden">
+ <div className="bg-[#F5F5F7] w-full max-w-5xl h-[85vh] rounded-[18px] -2xl flex flex-col overflow-hidden">
  <div className="flex items-center justify-between px-8 py-4 bg-white border-b border-[#D2D2D7]">
  <div className="flex items-center gap-4">
  <div className="w-10 h-10 bg-[#0071E3] rounded-full flex items-center justify-center"><Combine className="w-5 h-5 text-white" /></div>
  <div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Tổng hợp AI</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Tổng hợp AI</p>
  <p className="text-[13px] text-[#6E6E73]">Phân tích dữ liệu từ thư viện cá nhân</p>
  </div>
  </div>

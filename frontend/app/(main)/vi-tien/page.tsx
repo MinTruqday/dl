@@ -118,9 +118,9 @@ export default function WalletPage() {
  if (!user) {
  return (
  <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 px-6 text-center">
- <div className="w-20 h-20 bg-[#F5F5F7] rounded-[24px] flex items-center justify-center"><AlertCircle className="w-8 h-8 text-[#6E6E73]" /></div>
+ <div className="w-20 h-20 bg-[#F5F5F7] rounded-[18px] flex items-center justify-center"><AlertCircle className="w-8 h-8 text-[#6E6E73]" /></div>
  <div>
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Truy cập bị hạn chế</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Truy cập bị hạn chế</p>
  <p className="text-[15px] text-[#6E6E73] mt-2">Đăng nhập để quản lý ví cá nhân</p>
  </div>
  <button onClick={() => (window.location.href = "/dang-nhap")} className="pill-button">Đăng nhập</button>
@@ -130,7 +130,7 @@ export default function WalletPage() {
 
  return (
  <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
- <Modal isOpen={showTopupModal} onClose={() => { setShowTopupModal(false); setCheckoutUrl(null); }} className={`rounded-[24px] bg-[#F5F5F7] p-0 border-none -2xl ${checkoutUrl ? "max-w-2xl" : "max-w-md"}`}>
+ <Modal isOpen={showTopupModal} onClose={() => { setShowTopupModal(false); setCheckoutUrl(null); }} className={`rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl ${checkoutUrl ? "max-w-2xl" : "max-w-md"}`}>
  <ModalHeader className="p-6">
  <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">{checkoutUrl ? "Thanh toán giao dịch" : "Nạp tiền"}</ModalTitle>
  {!checkoutUrl && <p className="text-[13px] text-[#6E6E73] mt-1">Chọn mệnh giá nạp (VNĐ)</p>}
@@ -142,7 +142,7 @@ export default function WalletPage() {
  <div className="space-y-6">
  <div className="grid grid-cols-2 gap-3">
  {[50000, 100000, 200000, 500000].map((amt) => (
- <button key={amt} onClick={() => setTopupAmount(amt)} className={`py-3 text-[15px] font-medium rounded-[14px] transition-colors ${topupAmount === amt ? "bg-[#0071E3] text-white" : "bg-white text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}>
+ <button key={amt} onClick={() => setTopupAmount(amt)} className={`py-3 text-[15px] font-medium rounded-[10px] transition-colors ${topupAmount === amt ? "bg-[#0071E3] text-white" : "bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED]"}`}>
  {amt.toLocaleString()} ₫
  </button>
  ))}
@@ -163,7 +163,7 @@ export default function WalletPage() {
  )}
  </Modal>
 
- <Modal isOpen={showWithdrawModal} onClose={() => setShowWithdrawModal(false)} className="max-w-md rounded-[24px] bg-[#F5F5F7] p-0 border-none -2xl">
+ <Modal isOpen={showWithdrawModal} onClose={() => setShowWithdrawModal(false)} className="max-w-md rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl">
  <ModalHeader className="p-6">
  <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Rút thu nhập</ModalTitle>
  <p className="text-[13px] text-[#6E6E73] mt-1">1 dl = 1.000 VNĐ (Phí 2%)</p>
@@ -171,7 +171,7 @@ export default function WalletPage() {
  <ModalContent className="p-6 pt-0 space-y-4">
  <input type="number" value={withdrawalAmount} onChange={(e) => setWithdrawalAmount(e.target.value)} className="apple-input w-full" placeholder="" />
  <input type="text" value={bankInfo} onChange={(e) => setBankInfo(e.target.value)} className="apple-input w-full" placeholder="" />
- <div className="bg-[#EBF4FF] p-4 rounded-[14px]">
+ <div className="bg-[#EBF4FF] p-4 rounded-[10px]">
  <h4 className="text-[13px] font-semibold text-[#0071E3] flex items-center gap-1.5 mb-2"><Info className="w-4 h-4" /> Lưu ý</h4>
  <ul className="text-[12px] text-[#0055C6] list-disc list-inside space-y-1"><li>Xử lý trong 48h</li><li>Kiểm tra kỹ thông tin</li></ul>
  </div>
@@ -184,7 +184,7 @@ export default function WalletPage() {
 
  <div className={`grid lg:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
  <aside className="lg:col-span-4 xl:col-span-4 space-y-8">
- <div className="bg-[#F5F5F7] rounded-[24px] p-8 text-center">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8 text-center">
  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4"><Wallet className="w-8 h-8 text-[#0071E3]" /></div>
  <p className="text-[14px] font-medium text-[#6E6E73] mb-1">Số dư khả dụng</p>
  <div className="flex items-baseline justify-center gap-1">
@@ -193,14 +193,14 @@ export default function WalletPage() {
  </div>
  <div className="flex flex-col gap-3 mt-8">
  <button onClick={() => setShowTopupModal(true)} className="pill-button w-full">Nạp tiền</button>
- {(user?.role === "author" || user?.role === "admin") && <button onClick={() => setShowWithdrawModal(true)} className="py-3 bg-white text-[#1D1D1F] font-medium rounded-full hover:bg-[#E8E8ED] transition-colors">Rút tiền</button>}
+ {(user?.role === "author" || user?.role === "admin") && <button onClick={() => setShowWithdrawModal(true)} className="py-3 bg-white text-[#0071E3] font-medium font-medium rounded-full hover:bg-[#E8E8ED] transition-colors">Rút tiền</button>}
  </div>
  </div>
 
- <div className="bg-[#F5F5F7] rounded-[24px] p-8">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8">
  <div className="flex items-center gap-3 mb-6">
  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center"><Ticket className="w-5 h-5 text-[#0071E3]" /></div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Voucher</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Voucher</p>
  </div>
  <form onSubmit={handleRedeemVoucher} className="space-y-4">
  <input type="text" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} placeholder="" className="apple-input w-full text-center uppercase tracking-wider" />
@@ -210,9 +210,9 @@ export default function WalletPage() {
  </aside>
 
  <main className="lg:col-span-8 xl:col-span-8">
- <div className="bg-[#F5F5F7] rounded-[24px] p-8 min-h-[500px]">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8 min-h-[500px]">
  <div className="flex items-center justify-between mb-8">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lịch sử giao dịch</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Lịch sử giao dịch</p>
  <span className="px-3 py-1 bg-[#E8E8ED] text-[#1D1D1F] text-[13px] font-medium rounded-full">{history.length} mục</span>
  </div>
 

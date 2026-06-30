@@ -54,23 +54,23 @@ export default function CollectorPage() {
  if (authLoading || isLoading) return <PageLoader />;
  if (user?.role !== "admin") return (
  <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
- <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[24px]"><ShieldAlert className="w-10 h-10 text-[#FF3B30]" /></div>
- <div className="space-y-2 max-w-[300px]"><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Truy cập bị hạn chế</h2><p className="text-[15px] text-[#6E6E73]">Bạn không có quyền quản trị để truy cập trang này.</p></div>
+ <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]"><ShieldAlert className="w-10 h-10 text-[#FF3B30]" /></div>
+ <div className="space-y-2 max-w-[300px]"><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Truy cập bị hạn chế</p><p className="text-[15px] text-[#6E6E73]">Bạn không có quyền quản trị để truy cập trang này.</p></div>
  </div>
  );
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 min-h-0">
  <aside className="lg:col-span-4 xl:col-span-3 flex flex-col gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
- <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
- <button onClick={fetchData} disabled={isRefreshing} className="w-full py-2 rounded-[14px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+ <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
+ <button onClick={fetchData} disabled={isRefreshing} className="w-full py-2 rounded-[10px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
  {isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Đồng bộ
  </button>
  </div>
- <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 space-y-6">
- <h3 className="text-[17px] font-medium text-[#1D1D1F] flex items-center gap-2  ">Trạng thái hệ thống</h3>
+ <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 space-y-6">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 flex items-center gap-2  ">Trạng thái hệ thống</p>
  <div className="space-y-4">
  <div className="bg-[#F5F5F7] rounded-[18px] p-5">
  <p className="text-[13px] text-[#6E6E73] mb-2 font-medium">Tài liệu đã thu thập</p>
@@ -89,8 +89,8 @@ export default function CollectorPage() {
  </div>
  </section>
 
- <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 space-y-6">
- <h3 className="text-[17px] font-medium text-[#1D1D1F] flex items-center gap-2  ">Khởi tạo nhiệm vụ</h3>
+ <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 space-y-6">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 flex items-center gap-2  ">Khởi tạo nhiệm vụ</p>
  <div className="space-y-4">
  <div>
  <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Nguồn dữ liệu</label>
@@ -111,7 +111,7 @@ export default function CollectorPage() {
  </section>
  </aside>
 
- <main className="lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 bg-[#1D1D1F] rounded-[24px] overflow-hidden">
+ <main className="lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 bg-[#1D1D1F] rounded-[18px] overflow-hidden">
  <div className="flex items-center justify-between px-6 py-4 border-b border-[#333336] bg-[#2A2A2D]">
  <div className="flex items-center gap-4">
  <div className="flex gap-2"><div className="w-3 h-3 rounded-full bg-[#FF3B30]"></div><div className="w-3 h-3 rounded-full bg-[#FF9500]"></div><div className="w-3 h-3 rounded-full bg-[#34C759]"></div></div>
@@ -150,7 +150,7 @@ export default function CollectorPage() {
  </main>
  </div>
 
- <Modal isOpen={confirmModal} onClose={() => !isProcessing && setConfirmModal(false)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={confirmModal} onClose={() => !isProcessing && setConfirmModal(false)} className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6 pb-2"><ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Xác nhận thu thập</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-2">
  <div className="bg-[#F5F5F7] p-4 rounded-[16px] border-[#E8E8ED] mb-4">

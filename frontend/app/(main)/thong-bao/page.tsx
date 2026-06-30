@@ -45,7 +45,7 @@ export default function NotificationsPage() {
  };
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
  <div className="flex flex-col md:flex-row md:items-end justify-end gap-4">
  <button onClick={handleMarkAllRead} disabled={isProcessing || !notifications.some(n => !n.is_read)} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2 disabled:opacity-50">
  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Đánh dấu tất cả đã đọc
@@ -53,7 +53,7 @@ export default function NotificationsPage() {
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
- <div className="md:col-span-8 flex flex-col h-full bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] overflow-hidden">
+ <div className="md:col-span-8 flex flex-col h-full bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] overflow-hidden">
  <div className="flex  bg-[#F5F5F7]/30 px-6 pt-4 gap-6">
  <button onClick={() => setActiveTab("all")} className={`pb-3 text-[14px] font-medium border-b-2 transition-colors ${activeTab === "all" ? "border-[#1D1D1F] text-[#1D1D1F]" : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}>Tất cả</button>
  <button onClick={() => setActiveTab("unread")} className={`pb-3 text-[14px] font-medium border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === "unread" ? "border-[#1D1D1F] text-[#1D1D1F]" : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
@@ -69,7 +69,7 @@ export default function NotificationsPage() {
  {filteredNotifications.map((n) => (
  <div key={n._id || n.id} className={`p-6 flex gap-4 transition-colors hover:bg-[#F5F5F7] border-b border-[#F5F5F7] group relative ${n.is_read ? "" : "bg-[#0071E3]/5"}`}>
  {!n.is_read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0071E3]"></div>}
- <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${n.is_read ? "bg-[#F5F5F7]" : "bg-[#0071E3]/10"}`}>
+ <div className={`w-12 h-12 rounded-[10px] flex items-center justify-center shrink-0 transition-colors ${n.is_read ? "bg-[#F5F5F7]" : "bg-[#0071E3]/10"}`}>
  {getIcon(n.type, n.is_read)}
  </div>
  <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -89,7 +89,7 @@ export default function NotificationsPage() {
  ) : (
  <div className="h-full flex flex-col items-center justify-center p-12 text-center">
  <div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[16px] mb-4"><Bell className="w-8 h-8 text-[#C7C7CC]" /></div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-1">Hộp thư trống</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-1">Hộp thư trống</p>
  <p className="text-[14px] text-[#6E6E73]">Bạn không có thông báo nào cần xử lý lúc này.</p>
  </div>
  )}
@@ -97,7 +97,7 @@ export default function NotificationsPage() {
  </div>
 
  <aside className="md:col-span-4 space-y-6 flex flex-col shrink-0">
- <div className="bg-[#0071E3]/5 border border-[#0071E3]/20 rounded-[24px] p-6 space-y-3">
+ <div className="bg-[#0071E3]/5 border border-[#0071E3]/20 rounded-[18px] p-6 space-y-3">
  <h3 className="text-[17px] font-medium text-[#0071E3] flex items-center gap-2"><Info className="w-5 h-5" /> Ghi chú hệ thống</h3>
  <p className="text-[14px] text-[#0071E3]/80 leading-relaxed">Các thông báo sẽ được lưu trữ tự động trong vòng 30 ngày kể từ ngày khởi tạo nhằm tối ưu hóa hiệu năng truy xuất của hệ thống lưu trữ.</p>
  </div>

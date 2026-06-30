@@ -113,7 +113,7 @@ export default function ProfilePage() {
 
  <div className={`grid md:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
  <aside className="md:col-span-4 xl:col-span-4 space-y-6">
- <div className="bg-[#F5F5F7] rounded-[24px] p-8 flex flex-col items-center text-center">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8 flex flex-col items-center text-center">
  <div className="relative group mb-6">
  <div className="w-32 h-32 rounded-full bg-[#D2D2D7] flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
  {avatarUrl ? (
@@ -131,7 +131,7 @@ export default function ProfilePage() {
 
  <div className="w-full mb-8">
  <div className="flex items-center justify-center gap-2 mb-1">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F] truncate px-2">{user.full_name || "Ẩn danh"}</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 truncate px-2">{user.full_name || "Ẩn danh"}</p>
  {user.role === "admin" && <ShieldCheck className="w-5 h-5 text-[#8E8D91]" />}
  {user.role === "author" && <BadgeCheck className="w-5 h-5 text-[#0071E3]" />}
  {user.role === "potential_author" && <Crown className="w-5 h-5 text-[#FF9500]" />}
@@ -157,13 +157,13 @@ export default function ProfilePage() {
  </aside>
 
  <main className="md:col-span-8 xl:col-span-8 space-y-6">
- <div className="bg-[#F5F5F7] rounded-[24px] p-8 space-y-6">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Thông tin cá nhân</h2>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-8 space-y-6">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-4">Thông tin cá nhân</p>
 
  <div className="grid sm:grid-cols-2 gap-6">
  <div className="space-y-2">
  <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">Địa chỉ Email</label>
- <div className="w-full h-[48px] bg-[#E8E8ED] px-4 flex items-center text-[#6E6E73] text-[15px] cursor-not-allowed rounded-[14px]">
+ <div className="w-full h-[48px] bg-[#E8E8ED] px-4 flex items-center text-[#6E6E73] text-[15px] cursor-not-allowed rounded-[10px]">
  {user.email}
  </div>
  </div>
@@ -196,7 +196,7 @@ export default function ProfilePage() {
  </div>
 
  {user.role === "reader" && (
- <div className="bg-[#EBF4FF] rounded-[24px] p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+ <div className="bg-[#EBF4FF] rounded-[18px] p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
  <div>
  <h3 className="text-[17px] font-medium text-[#0071E3] flex items-center gap-2 mb-2">
  <BadgeCheck className="w-5 h-5" /> Trở thành Tác giả
@@ -212,7 +212,7 @@ export default function ProfilePage() {
  )}
 
  {user.role === "author" && (
- <div className="bg-[#FFF4E5] rounded-[24px] p-8 space-y-6">
+ <div className="bg-[#FFF4E5] rounded-[18px] p-8 space-y-6">
  <div>
  <h3 className="text-[17px] font-medium text-[#FF9500] flex items-center gap-2 mb-2">
  <Crown className="w-5 h-5" /> Ứng tuyển Tác giả Tiềm năng
@@ -236,7 +236,7 @@ export default function ProfilePage() {
  )}
 
  {user.role === "potential_author" && (
- <div className="bg-[#1D1D1F] rounded-[24px] p-8 flex items-center gap-6 relative overflow-hidden">
+ <div className="bg-[#1D1D1F] rounded-[18px] p-8 flex items-center gap-6 relative overflow-hidden">
  <div className="w-16 h-16 bg-[#333336] rounded-full flex items-center justify-center shrink-0 z-10">
  <Crown className="w-8 h-8 text-[#FF9500]" />
  </div>

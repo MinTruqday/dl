@@ -29,19 +29,19 @@ export default function HelpPage() {
  { icon: LifeBuoy, title: "Studio & xuất bản", desc: "Đăng tài liệu, thiết lập giá và quản lý thu nhập", color: "text-[#FF9500]", bg: "bg-[#FF9500]/10" },
  { icon: Shield, title: "Tài khoản & ví", desc: "Bảo mật thông tin, đơn vị dl và các giao dịch", color: "text-[#34C759]", bg: "bg-[#34C759]/10" },
  ].map((item, idx) => (
- <div key={idx} className="p-8 bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] hover: transition- cursor-pointer">
- <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center mb-6 ${item.bg}`}><item.icon className={`w-6 h-6 ${item.color}`} /></div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">{item.title}</h3>
+ <div key={idx} className="p-8 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] hover: transition- cursor-pointer">
+ <div className={`w-12 h-12 rounded-[10px] flex items-center justify-center mb-6 ${item.bg}`}><item.icon className={`w-6 h-6 ${item.color}`} /></div>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">{item.title}</p>
  <p className="text-[14px] text-[#6E6E73] leading-relaxed">{item.desc}</p>
  </div>
  ))}
  </div>
 
  <div className="space-y-6">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]  ">Câu hỏi thường gặp</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4  ">Câu hỏi thường gặp</p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  {filteredFaqs.map((faq, i) => (
- <div key={i} className="p-6 bg-[#F5F5F7] rounded-[24px] hover:bg-[#E8E8ED] transition-colors">
+ <div key={i} className="p-6 bg-[#F5F5F7] rounded-[18px] hover:bg-[#E8E8ED] transition-colors">
  <h4 className="text-[15px] font-semibold text-[#1D1D1F] mb-3 flex items-start gap-3"><HelpCircle className="w-5 h-5 text-[#0071E3] shrink-0 mt-0.5" />{faq.q}</h4>
  <p className="text-[14px] text-[#6E6E73] leading-relaxed ml-8">{faq.a}</p>
  </div>
@@ -52,7 +52,7 @@ export default function HelpPage() {
 
  <div className="mt-20 p-12 bg-[#F5F5F7] rounded-[32px] text-center ">
  <div className="w-16 h-16 bg-white rounded-[16px] flex items-center justify-center mx-auto mb-6"><MessageCircle className="w-8 h-8 text-[#1D1D1F]" /></div>
- <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-2">Cần thêm thông tin?</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">Cần thêm thông tin?</p>
  <p className="text-[15px] text-[#6E6E73] mb-8">Liên hệ với chúng tôi để được giải đáp thắc mắc trực tiếp.</p>
  <button className="pill-button bg-[#1D1D1F] text-white hover:bg-[#333336]">Gửi yêu cầu hỗ trợ</button>
  </div>

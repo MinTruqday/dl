@@ -37,22 +37,22 @@ export default function ApprovalPage() {
  <div className="flex flex-col h-full font-sans">
  <div className={`flex-1 overflow-y-auto custom-scrollbar pr-2 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
  {loading ? (
- <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px]">
+ <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
  <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
  <p className="text-[13px] font-medium text-[#6E6E73]">Đang đồng bộ dữ liệu...</p>
  </div>
  ) : pendingDocs.length === 0 ? (
- <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px] p-12 text-center">
+ <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] p-12 text-center">
  <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4">
  <ShieldCheck className="w-8 h-8 text-[#34C759]" />
  </div>
- <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Hàng đợi trống</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">Hàng đợi trống</p>
  <p className="text-[15px] text-[#6E6E73] max-w-sm">Tất cả bản thảo đã được kiểm duyệt. Hệ thống hiện không có tác phẩm nào đang chờ xử lý.</p>
  </div>
  ) : (
  <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pb-6">
  {pendingDocs.map((doc: any) => (
- <div key={doc._id} className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[24px] flex flex-col group hover: transition-all duration-300">
+ <div key={doc._id} className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px] flex flex-col group hover: transition-all duration-300">
  <div className="flex items-start justify-between gap-4 mb-4">
  <div className="space-y-2 flex-1 min-w-0">
  <div className="flex items-center gap-2">
@@ -66,7 +66,7 @@ export default function ApprovalPage() {
  <Eye className="w-5 h-5" />
  </button>
  </div>
- <div className="bg-[#F5F5F7] p-4 rounded-[14px] mb-6 flex-1">
+ <div className="bg-[#F5F5F7] p-4 rounded-[10px] mb-6 flex-1">
  <p className="text-[13px] text-[#1D1D1F] line-clamp-3 leading-relaxed font-medium">{doc.description || "Không có mô tả chi tiết cho bản thảo này."}</p>
  </div>
  <div className="flex gap-3 mt-auto pt-4 border-[#E8E8ED]">
@@ -83,7 +83,7 @@ export default function ApprovalPage() {
  )}
  </div>
 
- <Modal isOpen={!!confirmModal} onClose={() => !isProcessing && setConfirmModal(null)} className="max-w-md rounded-[24px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden">
+ <Modal isOpen={!!confirmModal} onClose={() => !isProcessing && setConfirmModal(null)} className="max-w-md rounded-[18px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden">
  <ModalHeader className={`p-6 ${confirmModal?.type === 'reject' ? 'bg-[#FF3B30]/10' : 'bg-[#34C759]/10'}`}>
  <ModalTitle className={`text-[17px] font-semibold flex items-center gap-2 ${confirmModal?.type === 'reject' ? 'text-[#FF3B30]' : 'text-[#34C759]'}`}>
  {confirmModal?.type === "approve" ? <><ShieldCheck className="w-5 h-5" /> Xác nhận phê duyệt</> : <><AlertOctagon className="w-5 h-5" /> Xác nhận từ chối</>}
@@ -91,7 +91,7 @@ export default function ApprovalPage() {
  <ModalDescription className={`text-[13px] mt-2 ml-7 ${confirmModal?.type === 'reject' ? 'text-[#FF3B30]' : 'text-[#34C759]'}`}>Kiểm duyệt bản thảo</ModalDescription>
  </ModalHeader>
  <ModalContent className="p-6">
- <div className="bg-[#F5F5F7] p-4 rounded-[14px] mb-4">
+ <div className="bg-[#F5F5F7] p-4 rounded-[10px] mb-4">
  <h4 className="text-[15px] font-semibold text-[#1D1D1F] mb-1 line-clamp-1">{confirmModal?.data?.title}</h4>
  <p className="text-[13px] text-[#6E6E73]">Tác giả: {confirmModal?.data?.author_name}</p>
  </div>

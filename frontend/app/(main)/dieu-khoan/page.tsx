@@ -25,8 +25,8 @@ export default function TermsPage() {
  { icon: Scale, label: "Pháp lý", bg: "bg-[#FF9500]/10", color: "text-[#FF9500]" },
  { icon: ShieldCheck, label: "Bản quyền", bg: "bg-[#AF52DE]/10", color: "text-[#AF52DE]" }
  ].map((item, idx) => (
- <div key={idx} className="flex flex-col items-center p-6 bg-[#F5F5F7] rounded-[24px]">
- <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center mb-3 ${item.bg}`}><item.icon className={`w-6 h-6 ${item.color}`} /></div>
+ <div key={idx} className="flex flex-col items-center p-6 bg-[#F5F5F7] rounded-[18px]">
+ <div className={`w-12 h-12 rounded-[10px] flex items-center justify-center mb-3 ${item.bg}`}><item.icon className={`w-6 h-6 ${item.color}`} /></div>
  <span className="text-[14px] font-medium text-[#1D1D1F]">{item.label}</span>
  </div>
  ))}
@@ -35,7 +35,7 @@ export default function TermsPage() {
  <div className="space-y-12">
  {sections.map((section, i) => (
  <section key={i} className="space-y-4">
- <h2 className="text-[20px] font-semibold text-[#1D1D1F]">{section.title}</h2>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">{section.title}</p>
  <p className="text-[16px] text-[#6E6E73] leading-relaxed">{section.content}</p>
  </section>
  ))}

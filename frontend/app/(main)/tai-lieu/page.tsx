@@ -121,36 +121,40 @@ export default function DocumentsPage() {
  if (authLoading || isLoading) return <PageLoader />;
 
  return (
- <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
  <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
  <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Quản lý</h3>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quản lý</p>
  <div className="flex flex-col gap-2">
  <button onClick={() => setCreateDocModal(true)} className="pill-button w-full justify-center flex items-center gap-2">Thêm tài liệu</button>
- <button onClick={() => setCreateFolderModal(true)} className="pill-button bg-white text-[#1D1D1F]  w-full justify-center flex items-center gap-2">Thư mục mới</button>
+ <button onClick={() => setCreateFolderModal(true)} className="pill-button bg-white text-[#0071E3] font-medium  w-full justify-center flex items-center gap-2">Thư mục mới</button>
  </div>
  </div>
 
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <div className="flex items-center justify-between">
- <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
  <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
- <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
- <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
+                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-full transition-colors ${setViewMode === "grid" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-full transition-colors ${setViewMode === "list" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-5 h-5" />
+                    </button>
+                  </div>
  </div>
- </div>
- <button onClick={() => fetchData()} className="w-full py-2 rounded-[14px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin"/> : null} Làm mới</button>
+ <button onClick={() => fetchData()} className="w-full py-2 rounded-[10px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin"/> : null} Làm mới</button>
  </div>
 
- <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
- <h3 className="text-[17px] font-medium text-[#1D1D1F] flex items-center gap-2">Lọc dữ liệu</h3>
- <button onClick={() => setFilterStar(!filterStar)} className={`w-full py-3 rounded-[14px] flex items-center justify-center gap-2 font-medium text-[14px] transition-colors ${filterStar ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] "}`}>Yêu thích</button>
+ <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+ <p className="text-[13px] font-medium text-[#6E6E73] mb-4 flex items-center gap-2">Lọc dữ liệu</p>
+ <button onClick={() => setFilterStar(!filterStar)} className={`w-full py-3 rounded-[10px] flex items-center justify-center gap-2 font-medium text-[14px] transition-colors ${filterStar ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium "}`}>Yêu thích</button>
  <div className="space-y-2 pt-2">
  <label className="text-[13px] font-medium text-[#6E6E73]">Định dạng</label>
  <div className="relative">
- <select value={filterFormat} onChange={(e) => setFilterFormat(e.target.value)} className="w-full h-[44px] bg-white  px-4 text-[14px] font-medium focus:outline-none focus:border-[#0071E3] appearance-none rounded-[14px]">
+ <select value={filterFormat} onChange={(e) => setFilterFormat(e.target.value)} className="w-full h-[44px] bg-white  px-4 text-[14px] font-medium focus:outline-none focus:border-[#0071E3] appearance-none rounded-[10px]">
  <option value="all">Mọi định dạng</option><option value="pdf">PDF</option><option value="docx">Word</option><option value="xlsx">Excel</option><option value="pptx">PowerPoint</option><option value="zip">ZIP</option>
  </select>
  <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-[#6E6E73]" />
@@ -171,7 +175,7 @@ export default function DocumentsPage() {
  </div>
 
  {viewMode === "list" ? (
- <div className="bg-[#F5F5F7] rounded-[24px] flex-1 overflow-y-auto no-scrollbar">
+ <div className="bg-[#F5F5F7] rounded-[18px] flex-1 overflow-y-auto no-scrollbar">
  <table className="w-full text-left border-collapse">
  <thead>
  <tr className="text-[13px] text-[#6E6E73]">
@@ -209,16 +213,16 @@ export default function DocumentsPage() {
  ) : (
  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  {folders.map(folder => (
- <div key={folder._id} onClick={() => { setCurrentFolder(folder); setBreadcrumbs([...breadcrumbs, folder]); }} className="bg-[#F5F5F7] p-6 flex flex-col items-center justify-center gap-3 cursor-pointer rounded-[24px] hover: transition- group">
+ <div key={folder._id} onClick={() => { setCurrentFolder(folder); setBreadcrumbs([...breadcrumbs, folder]); }} className="bg-[#F5F5F7] p-6 flex flex-col items-center justify-center gap-3 cursor-pointer rounded-[18px] hover: transition- group">
  <div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[16px] text-[#1D1D1F]"><Folder className="w-8 h-8"/></div>
  <span className="text-[15px] font-medium text-[#1D1D1F] text-center">{folder.name}</span>
  </div>
  ))}
  {documents.map(doc => (
- <div key={doc._id || doc.id} className="bg-[#F5F5F7] p-5 flex flex-col rounded-[24px] hover: transition- group relative">
+ <div key={doc._id || doc.id} className="bg-[#F5F5F7] p-5 flex flex-col rounded-[18px] hover: transition- group relative">
  <button onClick={() => toggleStar(doc._id || doc.id)} className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Star className={`w-4 h-4 ${doc.is_starred ? "text-[#FF9500] fill-[#FF9500]" : "text-[#6E6E73]"}`}/></button>
  <div className="flex flex-col items-center gap-4 mb-4 mt-2">
- <div className="w-24 h-32 bg-[#F5F5F7] flex items-center justify-center rounded-[14px] text-[#A1A1A6] overflow-hidden ">
+ <div className="w-24 h-32 bg-[#F5F5F7] flex items-center justify-center rounded-[10px] text-[#A1A1A6] overflow-hidden ">
  {doc.cover_url ? <img src={doc.cover_url} className="w-full h-full object-cover" alt="" /> : <FileText className="w-10 h-10"/>}
  </div>
  <div className="text-center w-full px-2">
@@ -238,7 +242,7 @@ export default function DocumentsPage() {
  )}
 
  {documents.length === 0 && folders.length === 0 && !isLoading && (
- <div className="flex-1 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px]">
+ <div className="flex-1 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
  <Search className="w-12 h-12 text-[#C7C7CC] mb-4"/>
  <h2 className="text-[20px] font-medium text-[#1D1D1F]">Không có tài liệu</h2>
  <p className="text-[17px] text-[#6E6E73] mt-2">Thư mục hiện đang trống.</p>
@@ -250,13 +254,13 @@ export default function DocumentsPage() {
  </main>
  </div>
 
- <Modal isOpen={!!confirmModal} onClose={() => setConfirmModal(null)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!confirmModal} onClose={() => setConfirmModal(null)} className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6 pb-2"><ModalTitle className="text-[20px] font-semibold text-[#FF3B30] flex items-center gap-2"><AlertTriangle className="w-5 h-5"/> Cảnh báo xóa</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-2"><p className="text-[15px] text-[#6E6E73]">Bạn có chắc chắn muốn xóa <strong className="text-[#1D1D1F]">{confirmModal?.title}</strong>? Hành động này không thể hoàn tác.</p></ModalContent>
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setConfirmModal(null)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={executeDelete} className="pill-button bg-[#FF3B30] hover:bg-[#D70015]">Xóa vĩnh viễn</button></ModalFooter>
  </Modal>
 
- <Modal isOpen={createDocModal} onClose={() => setCreateDocModal(false)} className="max-w-3xl bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={createDocModal} onClose={() => setCreateDocModal(false)} className="max-w-3xl bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6  bg-white rounded-t-[24px]"><ModalTitle className="text-[20px] font-semibold">Khởi tạo tài liệu</ModalTitle></ModalHeader>
  <ModalContent className="p-6 grid md:grid-cols-2 gap-8">
  <div className="space-y-4">
@@ -285,19 +289,19 @@ export default function DocumentsPage() {
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setCreateDocModal(false)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleCreateDocument} disabled={isCreating || !file || !newDoc.title} className="pill-button disabled:opacity-50 flex items-center gap-2">{isCreating ? <Loader2 className="w-4 h-4 animate-spin"/> : "Tải lên"}</button></ModalFooter>
  </Modal>
 
- <Modal isOpen={createFolderModal} onClose={() => setCreateFolderModal(false)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={createFolderModal} onClose={() => setCreateFolderModal(false)} className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold">Tạo thư mục</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0"><input type="text" value={folderName} onChange={(e) => setFolderName(e.target.value)} placeholder="" className="apple-input w-full bg-white" autoFocus /></ModalContent>
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setCreateFolderModal(false)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button onClick={handleCreateFolder} disabled={!folderName} className="pill-button disabled:opacity-50">Tạo</button></ModalFooter>
  </Modal>
 
- <Modal isOpen={!!lockModal} onClose={() => setLockModal(null)} className="max-w-sm bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!lockModal} onClose={() => setLockModal(null)} className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold flex items-center gap-2"><Lock className="w-5 h-5"/> Khóa tài liệu</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0"><form id="lock-form" onSubmit={handleLockDocument}><input type="password" placeholder="" value={lockPassword} onChange={(e) => setLockPassword(e.target.value)} className="apple-input w-full bg-white" required autoFocus/></form></ModalContent>
  <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3"><button onClick={() => setLockModal(null)} className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full">Hủy</button><button type="submit" form="lock-form" className="pill-button">Khóa</button></ModalFooter>
  </Modal>
 
- <Modal isOpen={!!shareModal} onClose={() => setShareModal(null)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 -2xl border-none">
+ <Modal isOpen={!!shareModal} onClose={() => setShareModal(null)} className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none">
  <ModalHeader className="p-6"><ModalTitle className="text-[20px] font-semibold flex items-center gap-2"><Share2 className="w-5 h-5"/> Chia sẻ tài liệu</ModalTitle></ModalHeader>
  <ModalContent className="p-6 pt-0 space-y-4">
  <form id="share-form" onSubmit={handleShareSubmit} className="space-y-4">
