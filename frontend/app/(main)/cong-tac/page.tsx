@@ -236,15 +236,15 @@ export default function StudioCollabPage() {
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
-        <div className="flex items-center gap-2">
-          <input type="text" placeholder="" value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value)} className="apple-input w-48" />
-          <button onClick={handleJoinWithCode} className="pill-button">Gia nhập</button>
-        </div>
-      </div>
-
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-4 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Gia nhập phiên</h2>
+            <div className="flex flex-col xl:flex-row items-center gap-2">
+              <input type="text" placeholder="Mã gia nhập..." value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value)} className="apple-input w-full" />
+              <button onClick={handleJoinWithCode} className="pill-button w-full xl:w-auto shrink-0">Gia nhập</button>
+            </div>
+          </div>
           <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tài liệu hoạt động</h2>
             <div className="relative">

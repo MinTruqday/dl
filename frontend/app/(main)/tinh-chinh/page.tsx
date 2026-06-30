@@ -81,14 +81,18 @@ export default function FineTuningPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-end gap-4">
-        <div className="flex items-center gap-3">
-          <button onClick={handleImportFeedback} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2"><Upload className="w-4 h-4" /> Nhập phản hồi</button>
-          <button onClick={() => setShowNewJob(true)} className="pill-button bg-[#0071E3] text-white hover:bg-[#0077ED] flex items-center gap-2"><Play className="w-4 h-4" /> Huấn luyện mới</button>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
+        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => setShowNewJob(true)} className="pill-button w-full justify-center flex items-center gap-2 bg-[#0071E3] text-white hover:bg-[#0077ED]"><Play className="w-4 h-4" /> Huấn luyện mới</button>
+              <button onClick={handleImportFeedback} className="pill-button w-full justify-center flex items-center gap-2 bg-white text-[#1D1D1F] border border-[#E8E8ED] hover:bg-[#F5F5F7]"><Upload className="w-4 h-4" /> Nhập phản hồi</button>
+            </div>
+          </div>
+        </aside>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+        <main className="lg:col-span-9 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
         <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex flex-col overflow-hidden min-h-0">
           <div className="p-5 border-b border-[#E8E8ED] flex justify-between items-center bg-[#F5F5F7]/30">
             <h2 className="text-[20px] font-medium text-[#1D1D1F] flex items-center gap-2"><Database className="w-5 h-5 text-[#6E6E73]" /> Tập dữ liệu <span className="px-2 py-0.5 bg-[#F5F5F7] text-[#6E6E73] rounded-full text-[12px]">{datasets.length}</span></h2>
@@ -145,7 +149,7 @@ export default function FineTuningPage() {
               </div>
             )}
           </div>
-        </div>
+        </main>
       </div>
 
       <Modal isOpen={showNewDataset} onClose={() => setShowNewDataset(false)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">

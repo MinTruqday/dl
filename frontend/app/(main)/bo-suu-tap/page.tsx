@@ -61,14 +61,14 @@ export default function CollectorPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
-        <button onClick={fetchData} disabled={isRefreshing} className="pill-button flex items-center gap-2 disabled:opacity-50 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED]">
-          {isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />} Đồng bộ
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-4 xl:col-span-3 flex flex-col gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+          <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
+            <button onClick={fetchData} disabled={isRefreshing} className="w-full py-2 rounded-[14px] bg-white border border-[#E8E8ED] text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+              {isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />} Đồng bộ
+            </button>
+          </div>
           <section className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] p-6 space-y-6">
             <h3 className="text-[17px] font-medium text-[#1D1D1F] flex items-center gap-2 border-b border-[#E8E8ED] "><Settings2 className="w-5 h-5 text-[#6E6E73]" /> Trạng thái hệ thống</h3>
             <div className="space-y-4">

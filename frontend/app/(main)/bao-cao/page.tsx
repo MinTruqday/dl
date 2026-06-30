@@ -46,13 +46,15 @@ export default function ReportsManagementPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
-        <div className="flex items-center gap-3">
+      <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
+        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
+            <button onClick={fetchData} disabled={isRefreshing} className="w-full py-2 rounded-[14px] bg-white border border-[#E8E8ED] text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />} Làm mới</button>
+          </div>
+        </aside>
 
-          <button onClick={fetchData} disabled={isRefreshing} className="w-10 h-10 flex items-center justify-center bg-[#F5F5F7] text-[#1D1D1F] rounded-[12px] hover:bg-[#E8E8ED] transition-colors">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}</button>
-        </div>
-      </div>
-
+        <main className="lg:col-span-9 flex flex-col min-h-0">
       <div className="bg-[#F5F5F7] rounded-[24px] flex-1 overflow-hidden flex flex-col min-h-0">
         <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
           <div className="flex items-center gap-3">
@@ -103,6 +105,8 @@ export default function ReportsManagementPage() {
             </tbody>
           </table>
         </div>
+      </div>
+      </main>
       </div>
 
       <Modal isOpen={!!confirmModal} onClose={() => !isProcessing && setConfirmModal(null)} className="max-w-md bg-[#F5F5F7] rounded-[24px] p-0 shadow-2xl border-none">

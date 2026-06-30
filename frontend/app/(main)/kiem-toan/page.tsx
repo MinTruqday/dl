@@ -67,13 +67,12 @@ export default function LogsPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
-
-        <div className="flex items-center gap-3">
+      <div className="bg-[#F5F5F7] rounded-[24px] overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
           <button
             onClick={fetchData}
             disabled={isRefreshing}
-            className="pill-button flex items-center gap-2 disabled:opacity-50 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED]"
+            className="pill-button flex items-center gap-2 disabled:opacity-50 bg-white border border-[#E8E8ED] text-[#1D1D1F] hover:bg-[#F5F5F7]"
           >
             {isRefreshing ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -82,15 +81,7 @@ export default function LogsPage() {
             )}
             Đồng bộ dữ liệu
           </button>
-        </div>
-      </div>
-
-      <div className="bg-[#F5F5F7] rounded-[24px] overflow-hidden flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
-          <h2 className="text-[20px] font-medium text-[#1D1D1F] flex items-center gap-2">
-            Bản ghi nhật ký
-          </h2>
-          <span className="px-3 py-1 bg-[#F5F5F7] text-[#6E6E73] text-[13px] font-medium rounded-full">
+          <span className="px-3 py-1 bg-white border border-[#E8E8ED] text-[#6E6E73] text-[13px] font-medium rounded-full">
             {activityLogs.length} bản ghi
           </span>
         </div>
@@ -157,7 +148,7 @@ export default function LogsPage() {
             </tbody>
           </table>
         </div>
+        </div>
       </div>
-    </div>
   );
 }

@@ -158,35 +158,45 @@ export default function StoragePage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
-        <div className="flex items-center gap-3">
+      <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
+        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+          
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Quản lý</h3>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="pill-button w-full justify-center flex items-center gap-2 disabled:opacity-50">
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Upload className="w-4 h-4"/>} Tải lên
+              </button>
+              <button onClick={() => setCreateFolderOpen(true)} className="pill-button bg-white text-[#1D1D1F] border border-[#E8E8ED] w-full justify-center flex items-center gap-2"><Plus className="w-4 h-4"/> Thư mục mới</button>
+            </div>
+            <input type="file" ref={fileInputRef} onChange={handleUpload} className="hidden" multiple />
+            <input type="file" ref={versionInputRef} onChange={handleUploadVersion} className="hidden" />
+          </div>
+
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Duyệt file</h3>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => setViewMode("files")} className={`w-full py-3 rounded-[14px] flex items-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "files" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] border border-[#E8E8ED] hover:bg-[#F5F5F7]"}`}><Home className={`w-4 h-4 ${viewMode === "files" ? "text-white" : "text-[#6E6E73]"}`}/> Lưu trữ gốc</button>
+              <button onClick={() => setViewMode("recent")} className={`w-full py-3 rounded-[14px] flex items-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "recent" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] border border-[#E8E8ED] hover:bg-[#F5F5F7]"}`}><Clock className={`w-4 h-4 ${viewMode === "recent" ? "text-white" : "text-[#6E6E73]"}`}/> Gần đây</button>
+              <button onClick={() => setViewMode("trash")} className={`w-full py-3 rounded-[14px] flex items-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "trash" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] border border-[#E8E8ED] hover:bg-[#F5F5F7]"}`}><Trash2 className={`w-4 h-4 ${viewMode === "trash" ? "text-white" : "text-[#6E6E73]"}`}/> Thùng rác</button>
+            </div>
+          </div>
+
           {quota && (
-            <div className="flex flex-col items-end mr-4">
-              <span className="text-[13px] font-medium text-[#6E6E73]">{formatSize(quota.used)} / {formatSize(quota.limit)}</span>
-              <div className="w-24 h-1.5 bg-[#E8E8ED] rounded-full mt-1 overflow-hidden">
-                <div className="h-full bg-[#0071E3] rounded-full" style={{ width: `${Math.min(100, (quota.used / quota.limit) * 100)}%` }} />
+            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-2">
+              <h3 className="text-[17px] font-medium text-[#1D1D1F]">Dung lượng</h3>
+              <div className="flex flex-col">
+                <span className="text-[13px] font-medium text-[#6E6E73] mb-1">{formatSize(quota.used)} / {formatSize(quota.limit)}</span>
+                <div className="w-full h-1.5 bg-[#E8E8ED] rounded-full mt-1 overflow-hidden">
+                  <div className="h-full bg-[#0071E3] rounded-full" style={{ width: `${Math.min(100, (quota.used / quota.limit) * 100)}%` }} />
+                </div>
               </div>
             </div>
           )}
-          {viewMode === "trash" || viewMode === "recent" ? (
-            <button onClick={() => setViewMode("files")} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED]">Trở về thư mục</button>
-          ) : (
-            <>
-              <button onClick={() => setViewMode("recent")} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2"><Clock className="w-4 h-4"/> Gần đây</button>
-              <button onClick={() => setViewMode("trash")} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2"><Trash2 className="w-4 h-4"/> Thùng rác</button>
-              <button onClick={() => setCreateFolderOpen(true)} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2"><Plus className="w-4 h-4"/> Thư mục mới</button>
-              <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="pill-button flex items-center gap-2 disabled:opacity-50">
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Upload className="w-4 h-4"/>} Tải lên
-              </button>
-            </>
-          )}
-          <input type="file" ref={fileInputRef} onChange={handleUpload} className="hidden" multiple />
-          <input type="file" ref={versionInputRef} onChange={handleUploadVersion} className="hidden" />
-        </div>
-      </div>
 
-      <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
-        <main className={`flex flex-col gap-6 h-full min-h-0 ${detailsItem ? "lg:col-span-8" : "lg:col-span-12"}`}>
+        </aside>
+
+        <main className={`flex flex-col gap-6 h-full min-h-0 ${detailsItem ? "lg:col-span-5" : "lg:col-span-9"}`}>
           <div className="bg-[#F5F5F7] rounded-[24px] p-4 flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 text-[15px] text-[#6E6E73] font-medium px-2">
               {viewMode === "trash" ? <span className="text-[#1D1D1F]">Thùng rác</span> : viewMode === "recent" ? <span className="text-[#1D1D1F]">Mở gần đây</span> : breadcrumbs.map((crumb, idx) => (

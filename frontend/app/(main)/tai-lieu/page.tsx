@@ -122,23 +122,30 @@ export default function DocumentsPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setCreateFolderModal(true)} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2"><FolderPlus className="w-4 h-4"/> Thư mục mới</button>
-          <button onClick={() => setCreateDocModal(true)} className="pill-button flex items-center gap-2"><Plus className="w-4 h-4"/> Thêm tài liệu</button>
-          <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
-            <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
-            <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
-          </div>
-          <button onClick={() => fetchData()} className="w-9 h-9 flex items-center justify-center rounded-[12px] bg-[#F5F5F7] text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin"/> : <RefreshCcw className="w-4 h-4"/>}</button>
-        </div>
-      </div>
-
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+          
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Quản lý</h3>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => setCreateDocModal(true)} className="pill-button w-full justify-center flex items-center gap-2"><Plus className="w-4 h-4"/> Thêm tài liệu</button>
+              <button onClick={() => setCreateFolderModal(true)} className="pill-button bg-white text-[#1D1D1F] border border-[#E8E8ED] w-full justify-center flex items-center gap-2"><FolderPlus className="w-4 h-4"/> Thư mục mới</button>
+            </div>
+          </div>
 
           <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
-            <h3 className="text-[17px] font-medium text-[#6E6E73] flex items-center gap-2">Lọc dữ liệu</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
+              <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
+                <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
+                <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
+              </div>
+            </div>
+            <button onClick={() => fetchData()} className="w-full py-2 rounded-[14px] bg-white border border-[#E8E8ED] text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin"/> : <RefreshCcw className="w-4 h-4"/>} Làm mới</button>
+          </div>
+
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#1D1D1F] flex items-center gap-2">Lọc dữ liệu</h3>
             <button onClick={() => setFilterStar(!filterStar)} className={`w-full py-3 rounded-[14px] flex items-center justify-center gap-2 font-medium text-[14px] transition-colors ${filterStar ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] border border-[#E8E8ED]"}`}><Star className={`w-4 h-4 ${filterStar ? "fill-white" : "text-[#6E6E73]"}`} /> Yêu thích</button>
             <div className="space-y-2 pt-2">
               <label className="text-[13px] font-medium text-[#6E6E73]">Định dạng</label>

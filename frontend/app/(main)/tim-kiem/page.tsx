@@ -43,19 +43,19 @@ function SearchResultsContent() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-8">
-        <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
-                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <aside className="lg:col-span-3 space-y-6">
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#1D1D1F]">Giao diện</h3>
+            <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
+              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors w-1/2 flex justify-center ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors w-1/2 flex justify-center ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
           <div className="bg-[#F5F5F7] rounded-[24px] p-6">
             <div className="flex items-center justify-between mb-6">
               <span className="text-[15px] font-semibold text-[#1D1D1F]">Bộ lọc nâng cao</span>
