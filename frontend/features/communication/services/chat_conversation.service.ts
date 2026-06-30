@@ -7,8 +7,7 @@ export const getConversationsAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách hội thoại");
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách hội thoại");
   return data;
 };
 

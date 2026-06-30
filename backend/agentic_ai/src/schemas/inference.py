@@ -52,3 +52,11 @@ class CoverGenerateRequest(BaseModel):
 
 class AISuggestionRequest(BaseModel):
     context: str
+
+class GlossaryRequest(BaseModel):
+    text: str
+
+class StyleImitationRequest(BaseModel):
+    text: str
+    style_sample: str
+    target_length: Optional[int] = None

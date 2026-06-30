@@ -17,7 +17,7 @@ from src.services.composition import CompositionService
 
 from src.core.infrastructure.configuration import settings
 from src.core.dependency import AuthenticatedUser, Depends, Header, HTTPException
-from src.core.dependency import get_current_user_from_header as get_current_user
+from src.core.dependency import get_current_user
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
     if (

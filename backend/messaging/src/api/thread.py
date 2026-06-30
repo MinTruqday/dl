@@ -9,7 +9,7 @@ from src.services.thread import ThreadService
 
 from src.core.infrastructure.database import database
 from src.core.dependency import AuthenticatedUser, Depends, Header, HTTPException
-from src.core.dependency import get_current_user_from_header as get_current_user
+from src.core.dependency import get_current_user
 from src.core.response import APIResponse
 from src.repositories.message import MessageRepository
 

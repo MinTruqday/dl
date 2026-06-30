@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
 
 export async function createDepositLinkAPI(amount: number) {
-  const res = await fetch(`${API_URL}/nap-tien/tao-lien-ket`, {
+  const res = await fetch(`${API_URL}/nap-tien`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ amount, method: "payos" }),

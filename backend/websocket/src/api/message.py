@@ -23,7 +23,8 @@ async def websocket_endpoint(
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        if payload.get("sub") != user_id:
+        token_user_id = payload.get("uid") or payload.get("sub")
+        if token_user_id != user_id:
             logger.warning("Thông tin xác thực không chính xác")
             await websocket.close(code=1008)
             return
