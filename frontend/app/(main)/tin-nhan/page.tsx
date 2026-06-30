@@ -514,7 +514,7 @@ export default function MessagesPage() {
  <input value={searchQuery} onChange={(e) => handleSearchUsers(e.target.value)} placeholder="" className="apple-input w-full" />
  <div className="max-h-[300px] overflow-y-auto space-y-2">
  {searching ? <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" /></div> : searchResults.length > 0 ? searchResults.map((u) => (
- <div key={u._id || u.id} onClick={() => startNewChat(u)} className="flex items-center justify-between p-4 bg-white rounded-[10px] cursor-pointer hover:shadow-sm">
+ <div key={u._id || u.id} onClick={() => startNewChat(u)} className="flex items-center justify-between p-4 bg-white rounded-[10px] cursor-pointer hover:">
  <div className="flex items-center gap-4">
  <div className="w-12 h-12 bg-[#F5F5F7] rounded-full overflow-hidden flex items-center justify-center">
  {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" alt="" /> : <User className="w-6 h-6 text-[#6E6E73]" />}
@@ -555,7 +555,7 @@ export default function MessagesPage() {
  </ModalHeader>
  <ModalContent className="p-6 pt-0 max-h-[350px] overflow-y-auto space-y-2">
  {loadingShareDocs ? <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" /></div> : myDocsForShare.length > 0 ? myDocsForShare.map((doc) => (
- <div key={doc._id || doc.id} onClick={() => handleShareDoc(doc._id || doc.id)} className="p-4 bg-white rounded-[10px] cursor-pointer hover:shadow-sm flex justify-between items-center">
+ <div key={doc._id || doc.id} onClick={() => handleShareDoc(doc._id || doc.id)} className="p-4 bg-white rounded-[10px] cursor-pointer hover:flex justify-between items-center">
  <div className="flex flex-col"><span className="text-[15px] font-medium text-[#1D1D1F]">{doc.title}</span><span className="text-[13px] text-[#6E6E73]">Định dạng: {doc.format || "TXT"}</span></div>
  <Share2 className="w-5 h-5 text-[#0071E3]" />
  </div>
@@ -638,7 +638,7 @@ export default function MessagesPage() {
  )}
  </div>
 
- <div className="p-4 bg-transparent border-t border-[#D2D2D7]">
+ <div className="p-4 bg-transparent">
  <div className="flex items-center gap-3">
  <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full transition-colors shrink-0"><ImageIcon className="w-6 h-6" /></button>
  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)} />

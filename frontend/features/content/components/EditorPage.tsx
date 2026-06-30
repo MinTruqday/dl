@@ -155,8 +155,8 @@ function StudioContent() {
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
-        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+      <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+        <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
           <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Chi tiết tác phẩm</p>
             <div className="flex flex-col gap-1">
@@ -185,7 +185,7 @@ function StudioContent() {
           </div>
         </aside>
 
-        <main className="lg:col-span-9 flex flex-col min-h-0 bg-[#F5F5F7] rounded-[18px] overflow-hidden">
+        <main className="flex-1 min-w-0 flex flex-col min-h-0 bg-[#F5F5F7] rounded-[18px] overflow-hidden">
           <div className="h-[48px] px-6 flex items-center gap-2 shrink-0">
             {(["edit", "preview", "raw"] as const).map((m) => (
               <button key={m} onClick={() => setEditorMode(m)} className={`h-full px-4 text-[14px] font-medium flex items-center transition-colors ${editorMode === m ? "text-[#1D1D1F] -2 border-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>

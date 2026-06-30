@@ -192,7 +192,7 @@ export default function DocumentDetailsPage() {
  {docData.description ? <div dangerouslySetInnerHTML={{ __html: docData.description.replace(/\n/g, "<br/>") }} /> : <p className="text-[#6E6E73]">Chưa có thông tin tóm tắt.</p>}
  </div>
  {docData.tags?.length > 0 && (
- <div className="pt-6 border-t border-[#E8E8ED] mt-6">
+ <div className="pt-6 mt-6">
  <h3 className="text-[17px] font-medium text-[#6E6E73] mb-4">Từ khóa</h3>
  <div className="flex flex-wrap gap-2">
  {docData.tags.map((tag: string, i: number) => (

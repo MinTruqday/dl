@@ -108,7 +108,7 @@ export default function ProfilePage() {
  if (!user) return null;
 
  return (
- <div className="w-full max-w-[1000px] mx-auto px-6 py-8 min-h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
 
 
  <div className={`grid md:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
@@ -158,12 +158,12 @@ export default function ProfilePage() {
 
  <main className="md:col-span-8 xl:col-span-8 space-y-6">
  <div className="bg-[#F5F5F7] rounded-[18px] p-8 space-y-6">
- <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-4">Thông tin cá nhân</p>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Thông tin cá nhân</h2>
 
  <div className="grid sm:grid-cols-2 gap-6">
  <div className="space-y-2">
  <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">Địa chỉ Email</label>
- <div className="w-full h-[48px] bg-[#E8E8ED] px-4 flex items-center text-[#6E6E73] text-[15px] cursor-not-allowed rounded-[10px]">
+ <div className="apple-input w-full h-[48px] bg-[#E8E8ED] border-transparent px-4 flex items-center text-[#6E6E73] text-[15px] cursor-not-allowed">
  {user.email}
  </div>
  </div>

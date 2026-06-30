@@ -46,15 +46,15 @@ export default function ReportsManagementPage() {
 
  return (
  <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
- <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
- <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+ <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+ <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
  <button onClick={fetchData} disabled={isRefreshing} className="w-full py-2 rounded-[10px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Làm mới</button>
  </div>
  </aside>
 
- <main className="lg:col-span-9 flex flex-col min-h-0">
+ <main className="flex-1 min-w-0 flex flex-col min-h-0">
  <div className="bg-[#F5F5F7] rounded-[18px] flex-1 overflow-hidden flex flex-col min-h-0">
  <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
  <div className="flex items-center gap-3">

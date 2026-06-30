@@ -129,7 +129,7 @@ export default function OperationDashboard() {
  </div>
  <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-4">
  <div>
- <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Sao lưu dữ liệu</p>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Sao lưu dữ liệu</h2>
  <p className="text-[13px] text-[#6E6E73] mt-1">Snapshot toàn bộ DB về kho lạnh.</p>
  </div>
  <button onClick={triggerBackup} disabled={isProcessing} className="w-full py-2.5 bg-white text-[#0071E3] font-medium rounded-full text-[13px] font-medium hover:bg-[#E8E8ED] ">Tiến hành sao lưu</button>

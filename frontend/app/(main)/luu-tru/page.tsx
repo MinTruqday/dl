@@ -158,8 +158,8 @@ export default function StoragePage() {
 
  return (
  <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
- <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
- <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+ <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+ <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quản lý</p>
@@ -175,11 +175,11 @@ export default function StoragePage() {
 
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Duyệt file</p>
- <div className="flex flex-col gap-2">
- <button onClick={() => setViewMode("files")} className={`w-full py-3 rounded-[10px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "files" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium  hover:bg-[#F5F5F7]"}`}>Lưu trữ gốc</button>
- <button onClick={() => setViewMode("recent")} className={`w-full py-3 rounded-[10px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "recent" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium  hover:bg-[#F5F5F7]"}`}>Gần đây</button>
- <button onClick={() => setViewMode("trash")} className={`w-full py-3 rounded-[10px] flex items-center justify-center gap-3 font-medium text-[14px] transition-colors px-4 ${viewMode === "trash" ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium  hover:bg-[#F5F5F7]"}`}>Thùng rác</button>
- </div>
+ <div className="flex flex-col gap-1.5">
+  <button onClick={() => setViewMode("files")} className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "files" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}><span className="truncate text-left">Lưu trữ gốc</span></button>
+  <button onClick={() => setViewMode("recent")} className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "recent" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}><span className="truncate text-left">Gần đây</span></button>
+  <button onClick={() => setViewMode("trash")} className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "trash" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}><span className="truncate text-left">Thùng rác</span></button>
+  </div>
  </div>
 
  {quota && (
@@ -202,7 +202,7 @@ export default function StoragePage() {
  {viewMode === "trash" ? <span className="text-[#1D1D1F]">Thùng rác</span> : viewMode === "recent" ? <span className="text-[#1D1D1F]">Mở gần đây</span> : breadcrumbs.map((crumb, idx) => (
  <div key={idx} className="flex items-center gap-2">
  <button onClick={() => handleNavigateBreadcrumb(idx)} className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "hover:text-[#1D1D1F]"}`}>
- {crumb.name === "Lưu trữ gốc" ? <Home className="w-4 h-4" /> : crumb.name}
+ crumb.name
  </button>
  {idx < breadcrumbs.length - 1 && <ChevronRight className="w-4 h-4 text-[#A1A1A6]" />}
  </div>
@@ -211,12 +211,12 @@ export default function StoragePage() {
  {viewMode === "files" && (
  <div className="flex items-center gap-2 mt-4 md:mt-0">
  {selectedIds.size > 0 && <button onClick={handleZipDownload} className="pill-button px-4 py-1.5 h-[36px] text-[13px] bg-[#1D1D1F] flex items-center gap-1"><Archive className="w-3.5 h-3.5"/> ZIP ({selectedIds.size})</button>}
- <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
-                    <button onClick={() => setLayoutMode("grid")} className={`p-2 rounded-full transition-colors ${setLayoutMode === "grid" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <LayoutGrid className="w-5 h-5" />
+ <div className="flex bg-[#E8E8ED] p-0.5 rounded-full shrink-0">
+                    <button onClick={() => setLayoutMode("grid")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setLayoutMode("list")} className={`p-2 rounded-full transition-colors ${setLayoutMode === "list" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <List className="w-5 h-5" />
+                    <button onClick={() => setLayoutMode("list")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-4 h-4" />
                     </button>
                   </div>
  </div>
@@ -286,7 +286,7 @@ export default function StoragePage() {
  ) : (
  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
  {items.map((item) => (
- <div key={item._id} onClick={() => setDetailsItem(item)} className="group relative bg-[#F5F5F7] border border-transparent hover:border-[#E8E8ED] hover:bg-white hover:shadow-sm rounded-[20px] p-4 flex flex-col items-center justify-between text-center transition-all cursor-pointer">
+ <div key={item._id} onClick={() => setDetailsItem(item)} className="group relative bg-[#F5F5F7] border border-transparent hover:border-[#E8E8ED] hover:bg-white hover:rounded-[20px] p-4 flex flex-col items-center justify-between text-center transition-all cursor-pointer">
  <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
  <input type="checkbox" checked={selectedIds.has(item._id)} onChange={() => toggleSelect(item._id)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 rounded-[4px] border-[#C7C7CC] accent-[#0071E3]" />
  </div>
@@ -306,9 +306,9 @@ export default function StoragePage() {
  </main>
 
  {detailsItem && (
- <aside className="lg:col-span-4 flex flex-col gap-6 h-full min-h-0 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] overflow-hidden relative">
+ <aside className="w-full md:w-[320px] shrink-0 flex flex-col gap-6 h-full min-h-0 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] overflow-hidden relative">
  <div className="p-6  flex justify-between items-center bg-white sticky top-0 z-10">
- <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Chi tiết</p>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Chi tiết</h2>
  <button onClick={() => setDetailsItem(null)} className="w-8 h-8 flex items-center justify-center bg-[#F5F5F7] rounded-full text-[#6E6E73] hover:text-[#1D1D1F]"><X className="w-4 h-4"/></button>
  </div>
  <div className="flex bg-[#F5F5F7] mx-6 mt-4 p-1 rounded-[10px]">
@@ -399,7 +399,7 @@ export default function StoragePage() {
  <div className="flex gap-2"><input type="email" value={shareEmail} onChange={(e) => setShareEmail(e.target.value)} placeholder="" className="apple-input flex-1 bg-white" /><select value={shareRole} onChange={(e) => setShareRole(e.target.value)} className="apple-input w-28 bg-white"><option value="viewer">Xem</option><option value="editor">Sửa</option></select></div>
  <button onClick={handleShareSubmit} className="mt-3 w-full pill-button">Chia sẻ ngay</button>
  </div>
- <div className="pt-4 border-t border-[#E8E8ED]">
+ <div className="pt-4">
  <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">Liên kết công khai</label>
  <button onClick={() => handleTogglePublic(shareItem!)} className="w-full py-3 bg-white rounded-[10px] text-[14px] font-medium text-[#1D1D1F]  flex items-center justify-center gap-2"><Share2 className="w-4 h-4"/>{shareItem?.is_public ? "Sao chép link public" : "Tạo link public"}</button>
  </div>

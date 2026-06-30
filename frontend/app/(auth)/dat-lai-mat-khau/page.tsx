@@ -74,7 +74,7 @@ function ResetPasswordContent() {
                     setNewPassword(e.target.value)
                   }
                   className="apple-input w-full pl-11 pr-12"
-                  placeholder="Tối thiểu 6 ký tự"
+                  placeholder=""
                 />
                 <button
                   type="button"

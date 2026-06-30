@@ -83,7 +83,7 @@ export default function RegisterPage() {
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       className="apple-input w-full pl-11"
-                      placeholder="Nguyễn Văn A"
+                      placeholder=""
                     />
                   </div>
                 </div>
@@ -105,7 +105,7 @@ export default function RegisterPage() {
                       value={slug}
                       onChange={(e) => setSlug(e.target.value)}
                       className="apple-input w-full pl-11"
-                      placeholder="nguyenvana"
+                      placeholder=""
                     />
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export default function RegisterPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="apple-input w-full pl-11"
-                    placeholder="nguyenvana@example.com"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="apple-input w-full pl-11 pr-12"
-                    placeholder="Tối thiểu 6 ký tự"
+                    placeholder=""
                   />
                   <button
                     type="button"

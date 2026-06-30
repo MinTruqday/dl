@@ -41,7 +41,7 @@ export default function TermsPage() {
  ))}
  </div>
 
- <div className="mt-20 pt-8 border-t border-[#E8E8ED] text-center">
+ <div className="mt-20 pt-8 text-center">
  <p className="text-[15px] text-[#6E6E73]">
  Nếu bạn có bất kỳ thắc mắc nào về các điều khoản này, vui lòng <a href="/tro-giup" className="text-[#0071E3] hover:underline font-medium">liên hệ với chúng tôi</a>.
  </p>

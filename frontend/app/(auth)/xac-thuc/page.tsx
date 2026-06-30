@@ -96,7 +96,7 @@ function VerifyCodeContent() {
                   setToken(e.target.value)
                 }
                 className="apple-input w-full text-center text-2xl tracking-[0.3em] font-bold text-[#1D1D1F] uppercase"
-                placeholder="------"
+                placeholder=""
                 maxLength={6}
               />
             </div>

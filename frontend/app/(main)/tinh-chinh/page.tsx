@@ -81,8 +81,8 @@ export default function FineTuningPage() {
 
  return (
  <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
- <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
- <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+ <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+ <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
  <div className="flex flex-col gap-2">
@@ -92,7 +92,7 @@ export default function FineTuningPage() {
  </div>
  </aside>
 
- <main className="lg:col-span-9 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
+ <main className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
  <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] flex flex-col overflow-hidden min-h-0">
  <div className="p-5  flex justify-between items-center bg-[#F5F5F7]/30">
  <h2 className="text-[20px] font-medium text-[#1D1D1F] flex items-center gap-2">Tập dữ liệu <span className="px-2 py-0.5 bg-[#F5F5F7] text-[#6E6E73] rounded-full text-[12px]">{datasets.length}</span></h2>

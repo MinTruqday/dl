@@ -120,11 +120,11 @@ export default function SettingsPage() {
  ].filter((s) => !user || s.roles.includes(user.role));
 
  return (
- <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
 
 
- <div className={`grid lg:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
- <aside className="lg:col-span-4 xl:col-span-4 space-y-6">
+ <div className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: "100ms" }}>
+ <aside className="w-full md:w-[320px] shrink-0 xl:col-span-4 space-y-6">
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <div className="text-[13px] font-medium text-[#6E6E73] mb-2 px-2">Danh mục</div>
  <nav className="flex flex-col gap-1">
@@ -150,12 +150,12 @@ export default function SettingsPage() {
  </div>
  </aside>
 
- <main className="lg:col-span-8 xl:col-span-8">
+ <main className="flex-1 min-w-0 xl:col-span-8">
  <div className="bg-[#F5F5F7] rounded-[18px] p-8 min-h-[600px]">
  {activeSection === "privacy" && (
  <div className="space-y-8">
  <div>
- <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quyền riêng tư</p>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-1">Quyền riêng tư</h2>
  <p className="text-[15px] text-[#6E6E73]">Thiết lập khả năng hiển thị cá nhân</p>
  </div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
@@ -180,7 +180,7 @@ export default function SettingsPage() {
 
  {activeSection === "author" && (
  <div className="space-y-8">
- <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Cấu hình Tác giả</p><p className="text-[15px] text-[#6E6E73]">Quản lý sáng tác</p></div>
+ <div><h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-1">Cấu hình Tác giả</h2><p className="text-[15px] text-[#6E6E73]">Quản lý sáng tác</p></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  <div className="p-5 flex items-center justify-between">
  <div><h4 className="text-[17px] font-medium text-[#1D1D1F]">Tự động sao lưu</h4><p className="text-[14px] text-[#6E6E73]">Sao lưu 30 giây.</p></div>
@@ -205,7 +205,7 @@ export default function SettingsPage() {
 
  {activeSection === "moderator" && (
  <div className="space-y-8">
- <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Kiểm duyệt viên</p></div>
+ <div><h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Kiểm duyệt viên</h2></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  <div className="p-5 flex items-center justify-between">
  <div><h4 className="text-[17px] font-medium text-[#1D1D1F]">Thông báo vi phạm</h4></div>
@@ -221,7 +221,7 @@ export default function SettingsPage() {
 
  {activeSection === "admin" && (
  <div className="space-y-8">
- <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quản trị viên</p></div>
+ <div><h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Quản trị viên</h2></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  <div className="p-5 flex items-center justify-between bg-[#FFF0F0] rounded-t-[18px]">
  <div><h4 className="text-[17px] font-medium text-[#FF3B30]">Bảo trì hệ thống</h4><p className="text-[14px] text-[#FF6961]">Khóa ghi dữ liệu.</p></div>
@@ -237,7 +237,7 @@ export default function SettingsPage() {
 
  {activeSection === "apply_author" && (
  <div className="space-y-8">
- <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Tác giả tiềm năng</p></div>
+ <div><h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Tác giả tiềm năng</h2></div>
  {user?.author_status === "pending" ? (
  <div className="py-12 text-center bg-white rounded-[18px]"><Clock className="w-12 h-12 text-[#6E6E73] mx-auto mb-4" /><p className="text-[15px] font-medium text-[#1D1D1F]">Đang xem xét</p></div>
  ) : (
@@ -254,7 +254,7 @@ export default function SettingsPage() {
 
  {activeSection === "notifications" && (
  <div className="space-y-8">
- <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Thông báo</p></div>
+ <div><h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Thông báo</h2></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  {[{ id: "notifyCommunity", label: "Cộng đồng" }, { id: "notifyFinance", label: "Tài chính" }, { id: "notifyUpdates", label: "Cập nhật" }].map((item, i) => (
  <div key={i} className="p-5 flex items-center justify-between">
@@ -271,7 +271,7 @@ export default function SettingsPage() {
 
  {activeSection === "account" && (
  <div className="space-y-8">
- <div><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Tài khoản</p></div>
+ <div><h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Tài khoản</h2></div>
  <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
  <div className="p-5 flex items-center justify-between">
  <div><h4 className="text-[15px] font-medium text-[#1D1D1F]">Email</h4><p className="text-[14px] text-[#6E6E73]">{user?.email}</p></div>

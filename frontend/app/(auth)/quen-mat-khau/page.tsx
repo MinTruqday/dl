@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
                       setEmail(e.target.value)
                     }
                     className="apple-input w-full pl-11"
-                    placeholder="name@example.com"
+                    placeholder=""
                   />
                 </div>
               </div>

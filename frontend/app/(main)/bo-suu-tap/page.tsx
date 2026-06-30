@@ -61,8 +61,8 @@ export default function CollectorPage() {
 
  return (
  <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
- <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 min-h-0">
- <aside className="lg:col-span-4 xl:col-span-3 flex flex-col gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+ <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+ <aside className="w-full md:w-[320px] shrink-0 xl:col-span-3 flex flex-col gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
  <button onClick={fetchData} disabled={isRefreshing} className="w-full py-2 rounded-[10px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
@@ -111,7 +111,7 @@ export default function CollectorPage() {
  </section>
  </aside>
 
- <main className="lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 bg-[#1D1D1F] rounded-[18px] overflow-hidden">
+ <main className="flex-1 min-w-0 xl:col-span-9 flex flex-col min-h-0 bg-[#1D1D1F] rounded-[18px] overflow-hidden">
  <div className="flex items-center justify-between px-6 py-4 border-b border-[#333336] bg-[#2A2A2D]">
  <div className="flex items-center gap-4">
  <div className="flex gap-2"><div className="w-3 h-3 rounded-full bg-[#FF3B30]"></div><div className="w-3 h-3 rounded-full bg-[#FF9500]"></div><div className="w-3 h-3 rounded-full bg-[#34C759]"></div></div>

@@ -184,7 +184,7 @@ export default function LoginPage() {
                       setEmail(e.target.value)
                     }
                     className="apple-input w-full pl-11"
-                    placeholder="Email hoặc tên tài khoản"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -208,7 +208,7 @@ export default function LoginPage() {
                       setPassword(e.target.value)
                     }
                     className="apple-input w-full pl-11 pr-12"
-                    placeholder="Nhập mật khẩu"
+                    placeholder=""
                   />
                   <button
                     type="button"

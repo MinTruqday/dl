@@ -96,19 +96,19 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
       isOpen={true}
       onClose={onClose}
       showCloseButton={!loading}
-      className="max-w-md rounded-2xl"
+      className="max-w-sm rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
     >
-      <ModalHeader>
-        <ModalTitle>Bảo mật bằng Passkey</ModalTitle>
+      <ModalHeader className="p-6 pb-2">
+        <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Bảo mật bằng Passkey</ModalTitle>
       </ModalHeader>
 
-      <ModalContent>
+      <ModalContent className="px-6 pb-6 pt-2">
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-[10px] font-semibold text-black uppercase tracking-widest leading-tight">
+            <label className="block text-[13px] font-medium text-[#6E6E73] mb-2">
               Xác thực sinh trắc học
             </label>
-            <p className="text-xs font-medium text-zinc-500 leading-relaxed">
+            <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed">
               Kích hoạt Passkey để đăng nhập nhanh chóng bằng vân tay hoặc khuôn
               mặt mà không cần mật khẩu.
             </p>
@@ -116,11 +116,11 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
         </div>
       </ModalContent>
 
-      <ModalFooter>
+      <ModalFooter className="flex flex-col sm:flex-row gap-3 p-6 pt-0 justify-end border-none">
         {!loading && (
           <button
             onClick={onClose}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center rounded-2xl hover:bg-zinc-50 transition-colors"
+            className="flex-1 py-3 bg-white text-[#1D1D1F] text-[15px] font-medium disabled:opacity-50 flex items-center justify-center rounded-full hover:bg-[#E8E8ED] transition-colors"
           >
             Để sau
           </button>
@@ -128,9 +128,9 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
         <button
           onClick={handleRegister}
           disabled={loading}
-          className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center rounded-2xl hover:bg-zinc-800 transition-colors"
+          className="flex-1 py-3 bg-[#0071E3] text-white text-[15px] font-medium disabled:opacity-50 flex items-center justify-center rounded-full hover:bg-[#0077ED] transition-colors"
         >
-          {loading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
+          {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
           {loading ? "Đang xử lý" : "Xác nhận kích hoạt"}
         </button>
       </ModalFooter>

@@ -96,9 +96,9 @@ export default function ExplorePage() {
  );
 
  return (
- <div className="w-full max-w-[1200px] mx-auto px-6 py-10 font-sans text-[#1D1D1F]">
- <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
- <aside className="lg:col-span-3 space-y-6 sticky top-0 h-fit">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
+ <div className="flex flex-col md:flex-row gap-6">
+ <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
  <div className="bg-[#F5F5F7] rounded-[18px] p-6">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Phân loại</p>
  <nav className="flex flex-col gap-1.5">
@@ -140,7 +140,7 @@ export default function ExplorePage() {
  <Link
  key={`trending-${document._id || i}`}
  href={`/document/${document.slug}`}
- className="flex gap-4 items-start px-3 py-3 rounded-[10px] transition-colors hover:bg-white hover:shadow-sm"
+ className="flex gap-4 items-start px-3 py-3 rounded-[10px] transition-colors hover:bg-white hover:"
  >
  <span className="text-[15px] font-semibold text-[#6E6E73] w-4 text-center shrink-0">
  {i + 1}
@@ -160,10 +160,10 @@ export default function ExplorePage() {
  )}
  </aside>
 
- <main className="lg:col-span-9 space-y-8">
+ <main className="flex-1 min-w-0 space-y-8">
  {recommendations.length > 0 && !searchQuery && (
  <section className="bg-[#F5F5F7] rounded-[18px] p-8">
- <h2 className="text-[28px] font-semibold text-[#1D1D1F] mb-6 tracking-tight">Gợi ý dành cho bạn</h2>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Gợi ý dành cho bạn</h2>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
  {recommendations.map((doc, i) => (
  <Link
@@ -201,16 +201,16 @@ export default function ExplorePage() {
 
  <section>
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
- <h2 className="text-[28px] font-semibold text-[#1D1D1F] tracking-tight">
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
  {searchQuery ? `Kết quả cho "${searchQuery}"` : "Kho nội dung"}
  </h2>
  <div className="flex items-center">
- <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
-                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-full transition-colors ${setViewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <LayoutGrid className="w-5 h-5" />
+ <div className="flex bg-[#E8E8ED] p-0.5 rounded-full shrink-0">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-full transition-colors ${setViewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <List className="w-5 h-5" />
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-4 h-4" />
                     </button>
                   </div>
  </div>
@@ -306,7 +306,7 @@ export default function ExplorePage() {
  <span>{document.chapters_count || 0} chương</span>
  </div>
 
- <div className="mt-4 pt-4 border-t border-[#D2D2D7] flex items-center justify-between">
+ <div className="mt-4 pt-4 flex items-center justify-between">
  <span className="text-[15px] font-medium text-[#1D1D1F]">
  {document.is_premium ? `${document.price || 0} dl` : "Miễn phí"}
  </span>

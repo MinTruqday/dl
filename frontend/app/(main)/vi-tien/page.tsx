@@ -129,7 +129,7 @@ export default function WalletPage() {
  }
 
  return (
- <div className="w-full max-w-[1200px] mx-auto px-6 py-8 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
  <Modal isOpen={showTopupModal} onClose={() => { setShowTopupModal(false); setCheckoutUrl(null); }} className={`rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl ${checkoutUrl ? "max-w-2xl" : "max-w-md"}`}>
  <ModalHeader className="p-6">
  <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">{checkoutUrl ? "Thanh toán giao dịch" : "Nạp tiền"}</ModalTitle>
@@ -182,11 +182,10 @@ export default function WalletPage() {
  </ModalFooter>
  </Modal>
 
- <div className={`grid lg:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
- <aside className="lg:col-span-4 xl:col-span-4 space-y-8">
+ <div className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
+ <aside className="w-full md:w-[320px] shrink-0 xl:col-span-4 space-y-8">
  <div className="bg-[#F5F5F7] rounded-[18px] p-8 text-center">
- <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4"><Wallet className="w-8 h-8 text-[#0071E3]" /></div>
- <p className="text-[14px] font-medium text-[#6E6E73] mb-1">Số dư khả dụng</p>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Số dư khả dụng</h2>
  <div className="flex items-baseline justify-center gap-1">
  <span className="text-[48px] font-bold tracking-tight text-[#1D1D1F]">{balance.toLocaleString()}</span>
  <span className="text-[20px] font-medium text-[#6E6E73]">dl</span>
@@ -198,10 +197,7 @@ export default function WalletPage() {
  </div>
 
  <div className="bg-[#F5F5F7] rounded-[18px] p-8">
- <div className="flex items-center gap-3 mb-6">
- <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center"><Ticket className="w-5 h-5 text-[#0071E3]" /></div>
- <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Voucher</p>
- </div>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Mã quà tặng</h2>
  <form onSubmit={handleRedeemVoucher} className="space-y-4">
  <input type="text" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} placeholder="" className="apple-input w-full text-center uppercase tracking-wider" />
  <button type="submit" disabled={isRedeeming || !voucherCode.trim()} className="pill-button w-full">{isRedeeming ? <Loader2 className="w-5 h-5 animate-spin" /> : "Kích hoạt"}</button>
@@ -209,10 +205,10 @@ export default function WalletPage() {
  </div>
  </aside>
 
- <main className="lg:col-span-8 xl:col-span-8">
+ <main className="flex-1 min-w-0 xl:col-span-8">
  <div className="bg-[#F5F5F7] rounded-[18px] p-8 min-h-[500px]">
  <div className="flex items-center justify-between mb-8">
- <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Lịch sử giao dịch</p>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Lịch sử giao dịch</h2>
  <span className="px-3 py-1 bg-[#E8E8ED] text-[#1D1D1F] text-[13px] font-medium rounded-full">{history.length} mục</span>
  </div>
 
@@ -223,7 +219,7 @@ export default function WalletPage() {
  ) : (
  <div className="space-y-3">
  {history.map((tx) => (
- <div key={tx._id} className="flex items-center justify-between p-4 bg-white rounded-[16px] hover:shadow-sm transition-">
+ <div key={tx._id} className="flex items-center justify-between p-4 bg-white rounded-[16px] hover:transition-">
  <div className="flex items-center gap-4">
  <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${tx.type === "TOPUP" ? "bg-[#E3F2E1] text-[#34C759]" : "bg-[#F5F5F7] text-[#1D1D1F]"}`}>
  {tx.type === "TOPUP" ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}

@@ -205,7 +205,7 @@ export default function ConfigPage() {
  </div>
 
  <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
- <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-[#1D1D1F]" /><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Cộng tác viên</p></div>
+ <div className="flex items-center gap-2 mb-4"><Users className="w-5 h-5 text-[#1D1D1F]" /><h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Cộng tác viên</h2></div>
  <div className="flex gap-2 mb-4">
  <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="" className="flex-1 h-[48px] pl-4 pr-4 text-[15px] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors" />
  <button onClick={handleInviteCollab} disabled={!inviteEmail.trim()} className="h-[48px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-[10px] disabled:opacity-50 flex items-center gap-2 hover:bg-[#0077ED] transition-colors">Mời <Send className="w-4 h-4" /></button>

@@ -43,16 +43,16 @@ function SearchResultsContent() {
 
  return (
  <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
- <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
- <aside className="lg:col-span-3 space-y-6">
+ <div className="flex flex-col md:flex-row gap-6">
+ <aside className="w-full md:w-[320px] shrink-0 space-y-6">
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
- <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
-                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-full transition-colors ${setViewMode === "grid" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <LayoutGrid className="w-5 h-5" />
+ <div className="flex bg-[#E8E8ED] p-0.5 rounded-full shrink-0">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-full transition-colors ${setViewMode === "list" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <List className="w-5 h-5" />
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-4 h-4" />
                     </button>
                   </div>
  </div>
@@ -115,7 +115,7 @@ function SearchResultsContent() {
  )}
  </aside>
 
- <main className="lg:col-span-9">
+ <main className="flex-1 min-w-0">
  {loading ? (
  <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"}`}>
  {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
@@ -153,7 +153,7 @@ function SearchResultsContent() {
  <div className="flex items-center gap-4 text-[13px] text-[#6E6E73] mt-1">
  <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {document.views_count?.toLocaleString("vi-VN") || document.views || 0}</span>
  </div>
- <div className="mt-4 pt-4 border-t border-[#D2D2D7] flex items-center justify-between">
+ <div className="mt-4 pt-4 flex items-center justify-between">
  <span className="text-[15px] font-medium text-[#1D1D1F]">{document.price_dl > 0 ? `${document.price_dl} dl` : "Miễn phí"}</span>
  <span className="text-[15px] text-[#0071E3] font-medium">Xem chi tiết</span>
  </div>

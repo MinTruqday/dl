@@ -16,7 +16,7 @@ export default function HelpPage() {
  const filteredFaqs = faqs.filter(f => f.q.toLowerCase().includes(searchQuery.toLowerCase()));
 
  return (
- <div className="w-full max-w-[1000px] mx-auto px-6 py-12 md:py-20 font-sans text-[#1D1D1F]">
+ <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
  <div className="text-center mb-16 space-y-6">
  <h1 className="text-[40px] md:text-[56px] font-semibold tracking-tight leading-tight">Trung tâm hỗ trợ</h1>
  <p className="text-[17px] text-[#6E6E73] max-w-xl mx-auto leading-relaxed">Giải đáp các thắc mắc về trải nghiệm sử dụng hệ thống DocLib.</p>
@@ -38,7 +38,7 @@ export default function HelpPage() {
  </div>
 
  <div className="space-y-6">
- <p className="text-[13px] font-medium text-[#6E6E73] mb-4  ">Câu hỏi thường gặp</p>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Câu hỏi thường gặp</h2>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  {filteredFaqs.map((faq, i) => (
  <div key={i} className="p-6 bg-[#F5F5F7] rounded-[18px] hover:bg-[#E8E8ED] transition-colors">

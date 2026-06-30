@@ -385,7 +385,7 @@ export default function DocumentViewer() {
  </div>
 
  {sidebarTab === "chat" && (
- <div className="p-6 border-t border-[#E8E8ED] bg-white shrink-0">
+ <div className="p-6 bg-white shrink-0">
  <div className="relative">
  <textarea value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleAskAI())} className="w-full min-h-[120px] p-4 pb-16 text-[15px] bg-[#F5F5F7] border border-transparent focus:bg-white focus:border-[#0071E3] resize-none rounded-[18px] text-[#1D1D1F] placeholder:text-[#6E6E73] outline-none" placeholder="" disabled={asking} />
  <div className="absolute bottom-4 left-4"><button className="w-10 h-10 flex items-center justify-center text-[#6E6E73] bg-white  hover:bg-[#F5F5F7] rounded-full"><Paperclip className="w-5 h-5" /></button></div>

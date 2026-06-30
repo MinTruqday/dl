@@ -122,8 +122,8 @@ export default function DocumentsPage() {
 
  return (
  <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
- <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
- <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+ <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+ <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Quản lý</p>
@@ -136,12 +136,12 @@ export default function DocumentsPage() {
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <div className="flex items-center justify-between">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Giao diện</p>
- <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
-                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-full transition-colors ${setViewMode === "grid" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <LayoutGrid className="w-5 h-5" />
+ <div className="flex bg-[#E8E8ED] p-0.5 rounded-full shrink-0">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <LayoutGrid className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-full transition-colors ${setViewMode === "list" ? "bg-white text-[#0071E3] font-medium shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
-                      <List className="w-5 h-5" />
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                      <List className="w-4 h-4" />
                     </button>
                   </div>
  </div>
@@ -150,7 +150,7 @@ export default function DocumentsPage() {
 
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4 flex items-center gap-2">Lọc dữ liệu</p>
- <button onClick={() => setFilterStar(!filterStar)} className={`w-full py-3 rounded-[10px] flex items-center justify-center gap-2 font-medium text-[14px] transition-colors ${filterStar ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium "}`}>Yêu thích</button>
+ <button onClick={() => setFilterStar(!filterStar)} className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${filterStar ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}><span className="truncate text-left">Yêu thích</span></button>
  <div className="space-y-2 pt-2">
  <label className="text-[13px] font-medium text-[#6E6E73]">Định dạng</label>
  <div className="relative">
@@ -163,7 +163,7 @@ export default function DocumentsPage() {
  </div>
  </aside>
 
- <main className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0 overflow-hidden">
+ <main className="flex-1 min-w-0 flex flex-col gap-6 h-full min-h-0 overflow-hidden">
  <div className="flex items-center gap-2 text-[15px] text-[#6E6E73] font-medium px-4 overflow-x-auto no-scrollbar">
  <button onClick={() => { setCurrentFolder(null); setBreadcrumbs([]); }} className={`flex items-center gap-1 transition-colors ${!currentFolder ? "text-[#1D1D1F]" : "hover:text-[#1D1D1F]"}`}>Gốc</button>
  {breadcrumbs.map((b, idx) => (
@@ -230,7 +230,7 @@ export default function DocumentsPage() {
  <p className="text-[12px] text-[#6E6E73] truncate w-full mt-1">{doc.category || "Tài liệu"}</p>
  </div>
  </div>
- <div className="mt-auto border-t border-[#F5F5F7] pt-4 flex justify-between gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+ <div className="mt-auto pt-4 flex justify-between gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button onClick={() => window.open(`/document/viewer/${doc._id || doc.id}`, "_blank")} className="flex-1 py-2 text-[#6E6E73] bg-[#F5F5F7] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[12px] flex justify-center transition-colors"><Eye className="w-4 h-4"/></button>
  <button onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-2 text-[#6E6E73] bg-[#F5F5F7] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[12px] flex justify-center transition-colors"><Lock className="w-4 h-4"/></button>
  <button onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-2 text-[#6E6E73] bg-[#F5F5F7] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[12px] flex justify-center transition-colors"><Share2 className="w-4 h-4"/></button>

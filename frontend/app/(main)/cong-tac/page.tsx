@@ -236,12 +236,12 @@ export default function StudioCollabPage() {
 
  return (
  <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
- <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
- <aside className="lg:col-span-4 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+ <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+ <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Gia nhập phiên</p>
  <div className="flex flex-col xl:flex-row items-center gap-2">
- <input type="text" placeholder="Mã gia nhập..." value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value)} className="apple-input w-full" />
+ <input type="text" placeholder="" value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value)} className="apple-input w-full" />
  <button onClick={handleJoinWithCode} className="pill-button w-full xl:w-auto shrink-0">Gia nhập</button>
  </div>
  </div>
@@ -256,7 +256,7 @@ export default function StudioCollabPage() {
  </div>
 
  {selectedDocumentId && isOwnerOfSelected() && (
- <div className="space-y-3 pt-4 border-t border-[#E8E8ED]">
+ <div className="space-y-3 pt-4">
  <label className="text-[13px] font-medium text-[#6E6E73]">Quyền truy cập</label>
  <div className="flex flex-col gap-2">
  <button onClick={() => handleUpdateAccessLevel("invite_only")} className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-[10px] transition-colors ${accessLevel === "invite_only" ? "bg-[#0071E3] text-white" : "bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED]"}`}>Chỉ người được mời</button>
@@ -321,7 +321,7 @@ export default function StudioCollabPage() {
 
  {selectedDocumentId && (
  <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
- <div className="flex justify-between items-center"><p className="text-[13px] font-medium text-[#6E6E73] mb-4">Cộng tác viên</p><span className="text-[13px] text-[#6E6E73]">{collaborators.length}</span></div>
+ <div className="flex justify-between items-center"><h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Cộng tác viên</h2><span className="text-[13px] text-[#6E6E73]">{collaborators.length}</span></div>
  {collaborators.length > 0 ? (
  <div className="space-y-3">
  {collaborators.map(c => {
@@ -340,7 +340,7 @@ export default function StudioCollabPage() {
  ) : <span className="bg-[#F5F5F7] text-[12px] px-2 py-1 rounded-[8px] text-[#6E6E73]">{c.role === "editor" ? "Biên tập" : "Xem"}</span>}
  </div>
  {isOwnerOfSelected() && (
- <div className="flex justify-end gap-3 mt-3 pt-3 border-t border-[#F5F5F7]">
+ <div className="flex justify-end gap-3 mt-3 pt-3">
  <button onClick={() => { setTransferId(c.user_id); setTransferName(c.full_name); }} className="text-[12px] font-medium text-[#0071E3]">Chuyển chủ</button>
  <button onClick={() => handleRemoveCollaborator(c.collaboration_id)} className="text-[12px] font-medium text-[#FF3B30]">Xóa</button>
  </div>
@@ -354,9 +354,9 @@ export default function StudioCollabPage() {
  )}
  </aside>
 
- <main className="lg:col-span-8 space-y-6 overflow-y-auto no-scrollbar pb-6">
+ <main className="flex-1 min-w-0 space-y-6 overflow-y-auto no-scrollbar pb-6">
  <div className="bg-[#F5F5F7] rounded-[18px] p-8 space-y-6">
- <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Thư mời cộng tác</p>
+ <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Thư mời cộng tác</h2>
  {filteredInvites.length > 0 ? (
  <div className="grid gap-4">
  {filteredInvites.map(inv => (
