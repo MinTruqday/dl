@@ -143,7 +143,7 @@ export default function LibraryPage() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id as any)}
-                  className={`flex items-center justify-between px-4 py-3 rounded-[12px] transition-colors ${activeTab === t.id ? "bg-white shadow-sm text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-white/50"}`}
+                  className={`flex items-center justify-between px-4 py-3 rounded-[12px] transition-colors ${activeTab === t.id ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-white/50"}`}
                 >
                   <span className="text-[15px]">{t.label}</span>
                   {activeTab === t.id && <ChevronRight className="w-4 h-4" />}
@@ -202,10 +202,10 @@ export default function LibraryPage() {
                 <div className="flex items-center gap-4">
                   {history.length > 0 && <button onClick={() => setIsClearModalOpen(true)} className="text-[13px] text-[#0071E3] hover:underline">Xóa tất cả</button>}
                   <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
-                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
                       <LayoutGrid className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
                       <List className="w-4 h-4" />
                     </button>
                   </div>
@@ -225,7 +225,7 @@ export default function LibraryPage() {
                       </Link>
                       <p className="text-[13px] text-[#6E6E73] mt-1">{item.progress_percentage || 0}% hoàn thành</p>
                     </div>
-                    <button onClick={() => handleDeleteHistoryItem(item.document_id)} className={`absolute ${viewMode === "grid" ? "top-2 right-2" : "right-4"} p-2 bg-white rounded-full text-[#6E6E73] hover:text-[#FF3B30] shadow-sm opacity-0 group-hover:opacity-100 transition-opacity`}><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => handleDeleteHistoryItem(item.document_id)} className={`absolute ${viewMode === "grid" ? "top-2 right-2" : "right-4"} p-2 bg-white rounded-full text-[#6E6E73] hover:text-[#FF3B30] opacity-0 group-hover:opacity-100 transition-opacity`}><Trash2 className="w-4 h-4" /></button>
                   </div>
                 )) : <EmptyState text="Chưa có lịch sử đọc" compact={true} />}
               </div>
@@ -368,7 +368,7 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: { isOp
               {loading ? (
                 <div className="h-full flex flex-col items-center justify-center"><Combine className="w-12 h-12 text-[#0071E3] animate-pulse mb-4" /><p className="text-[15px] text-[#6E6E73]">Đang phân tích {selectedIds.length} tài liệu...</p></div>
               ) : result ? (
-                <div className="bg-white p-8 rounded-[18px] shadow-sm"><ReactMarkdown className="prose prose-zinc max-w-none text-[15px] leading-relaxed">{result}</ReactMarkdown></div>
+                <div className="bg-white p-8 rounded-[18px]"><ReactMarkdown className="prose prose-zinc max-w-none text-[15px] leading-relaxed">{result}</ReactMarkdown></div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center"><Sparkles className="w-12 h-12 text-[#D2D2D7] mb-4" /><p className="text-[15px] text-[#6E6E73]">Chọn tài liệu và đặt câu hỏi để nhận tổng hợp từ AI.</p></div>
               )}

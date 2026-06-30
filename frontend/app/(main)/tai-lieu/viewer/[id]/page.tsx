@@ -288,7 +288,7 @@ export default function DocumentViewer() {
 
   return (
     <div className={`flex h-screen bg-[#F5F5F7] overflow-hidden font-sans ${document?.is_protected ? "select-none" : ""}`} onMouseUp={handleTextSelection}>
-      <div className="w-[72px] border-r border-[#E8E8ED] bg-white flex flex-col items-center py-6 gap-6 shrink-0 z-50 shadow-sm">
+      <div className="w-[72px] border-r border-[#E8E8ED] bg-white flex flex-col items-center py-6 gap-6 shrink-0 z-50">
         <button onClick={() => setSidebarTab("chat")} className={`p-3 rounded-xl transition-colors ${sidebarTab === "chat" ? "bg-[#0071E3] text-white shadow-md" : "text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"}`}><Bot className="w-6 h-6" /></button>
         <button onClick={() => setSidebarTab("highlights")} className={`p-3 rounded-xl transition-colors ${sidebarTab === "highlights" ? "bg-[#0071E3] text-white shadow-md" : "text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"}`}><Highlighter className="w-6 h-6" /></button>
         <button onClick={() => setSidebarTab("thumbnails")} className={`p-3 rounded-xl transition-colors ${sidebarTab === "thumbnails" ? "bg-[#0071E3] text-white shadow-md" : "text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"}`}><BookOpen className="w-6 h-6" /></button>
@@ -297,7 +297,7 @@ export default function DocumentViewer() {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-[60px] border-b border-[#E8E8ED] flex items-center justify-between px-6 bg-white/90 backdrop-blur-md shadow-sm shrink-0 z-40">
+        <header className="h-[60px] border-b border-[#E8E8ED] flex items-center justify-between px-6 bg-white/90 backdrop-blur-md shrink-0 z-40">
           <div className="flex items-center gap-4 flex-1">
             <button onClick={() => router.back()} className="p-2 text-[#6E6E73] rounded-full hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"><ArrowLeft className="w-5 h-5" /></button>
             <h1 className="text-[15px] font-semibold text-[#1D1D1F] truncate max-w-xs md:max-w-md">{document?.title}</h1>
@@ -311,8 +311,8 @@ export default function DocumentViewer() {
             </div>
             <div className="w-px h-6 bg-[#E8E8ED]" />
             <div className="flex items-center gap-1 bg-[#F5F5F7] p-1 rounded-full">
-              <button onClick={() => setReadingMode("single")} className={`p-1.5 rounded-full transition-colors ${readingMode === "single" ? "text-[#1D1D1F] bg-white shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><Square className="w-4 h-4" /></button>
-              <button onClick={() => setReadingMode("double")} className={`p-1.5 rounded-full transition-colors ${readingMode === "double" ? "text-[#1D1D1F] bg-white shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><Columns className="w-4 h-4" /></button>
+              <button onClick={() => setReadingMode("single")} className={`p-1.5 rounded-full transition-colors ${readingMode === "single" ? "text-[#1D1D1F] bg-white" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><Square className="w-4 h-4" /></button>
+              <button onClick={() => setReadingMode("double")} className={`p-1.5 rounded-full transition-colors ${readingMode === "double" ? "text-[#1D1D1F] bg-white" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><Columns className="w-4 h-4" /></button>
             </div>
             <div className="w-px h-6 bg-[#E8E8ED]" />
             <button onClick={toggleBookmark} className={`p-2 rounded-full transition-colors ${isBookmarked ? "text-[#0071E3]" : "text-[#6E6E73] hover:bg-[#F5F5F7] hover:text-[#1D1D1F]"}`}>{isBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}</button>
@@ -333,7 +333,7 @@ export default function DocumentViewer() {
         </main>
       </div>
 
-      <div className={`${isExpanded ? "w-[480px]" : "w-[360px]"} border-l border-[#E8E8ED] bg-white flex flex-col shrink-0 z-50 transition-all duration-300 shadow-sm`}>
+      <div className={`${isExpanded ? "w-[480px]" : "w-[360px]"} border-l border-[#E8E8ED] bg-white flex flex-col shrink-0 z-50 transition-all duration-300`}>
         <div className="h-[60px] border-b border-[#E8E8ED] flex items-center px-6 justify-between shrink-0">
           <span className="text-[15px] font-semibold text-[#1D1D1F]">{sidebarTab === "chat" ? "Cố vấn AI" : sidebarTab === "highlights" ? "Nêu bật" : sidebarTab === "history" ? "Lịch sử" : sidebarTab === "zip" ? "Mã nguồn ZIP" : "Mục lục"}</span>
           {sidebarTab === "chat" && <button onClick={() => setIsExpanded(!isExpanded)} className="p-2 text-[#6E6E73] rounded-full hover:bg-[#F5F5F7] transition-colors">{isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</button>}
@@ -344,9 +344,9 @@ export default function DocumentViewer() {
             <div className="space-y-6">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""} group`}>
-                  <div className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full shadow-sm ${msg.role === "user" ? "bg-[#F5F5F7] border border-[#E8E8ED]" : "bg-[#0071E3] text-white"}`}>{msg.role === "user" ? <User className="w-5 h-5 text-[#6E6E73]" /> : <Bot className="w-5 h-5" />}</div>
+                  <div className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full ${msg.role === "user" ? "bg-[#F5F5F7] border border-[#E8E8ED]" : "bg-[#0071E3] text-white"}`}>{msg.role === "user" ? <User className="w-5 h-5 text-[#6E6E73]" /> : <Bot className="w-5 h-5" />}</div>
                   <div className="flex flex-col gap-2 max-w-[80%]">
-                    <div className={`text-[15px] leading-relaxed p-4 rounded-[20px] shadow-sm relative ${msg.role === "user" ? "bg-[#0071E3] text-white rounded-tr-[4px]" : "bg-[#F5F5F7] text-[#1D1D1F] rounded-tl-[4px]"}`}>
+                    <div className={`text-[15px] leading-relaxed p-4 rounded-[20px] relative ${msg.role === "user" ? "bg-[#0071E3] text-white rounded-tr-[4px]" : "bg-[#F5F5F7] text-[#1D1D1F] rounded-tl-[4px]"}`}>
                       {msg.content}
                       {msg.role === "user" && !asking && <button onClick={() => setEditingMessageId(msg.id)} className="absolute -left-12 top-1 opacity-0 group-hover:opacity-100 p-2 text-[#6E6E73] rounded-full hover:bg-[#E8E8ED] transition-all"><Edit2 className="w-4 h-4" /></button>}
                     </div>
@@ -388,8 +388,8 @@ export default function DocumentViewer() {
           <div className="p-6 border-t border-[#E8E8ED] bg-white shrink-0">
             <div className="relative">
               <textarea value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleAskAI())} className="w-full min-h-[120px] p-4 pb-16 text-[15px] bg-[#F5F5F7] border border-transparent focus:bg-white focus:border-[#0071E3] resize-none rounded-[18px] text-[#1D1D1F] placeholder:text-[#6E6E73] outline-none" placeholder="" disabled={asking} />
-              <div className="absolute bottom-4 left-4"><button className="w-10 h-10 flex items-center justify-center text-[#6E6E73] bg-white border border-[#E8E8ED] hover:bg-[#F5F5F7] rounded-full shadow-sm"><Paperclip className="w-5 h-5" /></button></div>
-              <button onClick={() => handleAskAI()} disabled={asking || !question.trim()} className="absolute bottom-4 right-4 w-10 h-10 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 rounded-full shadow-sm hover:bg-[#0077ED]"><Send className="w-4 h-4" /></button>
+              <div className="absolute bottom-4 left-4"><button className="w-10 h-10 flex items-center justify-center text-[#6E6E73] bg-white border border-[#E8E8ED] hover:bg-[#F5F5F7] rounded-full"><Paperclip className="w-5 h-5" /></button></div>
+              <button onClick={() => handleAskAI()} disabled={asking || !question.trim()} className="absolute bottom-4 right-4 w-10 h-10 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 rounded-full hover:bg-[#0077ED]"><Send className="w-4 h-4" /></button>
             </div>
           </div>
         )}

@@ -185,7 +185,7 @@ export default function WalletPage() {
       <div className={`grid lg:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
         <aside className="lg:col-span-4 xl:col-span-4 space-y-8">
           <div className="bg-[#F5F5F7] rounded-[24px] p-8 text-center">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><Wallet className="w-8 h-8 text-[#0071E3]" /></div>
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4"><Wallet className="w-8 h-8 text-[#0071E3]" /></div>
             <p className="text-[14px] font-medium text-[#6E6E73] mb-1">Số dư khả dụng</p>
             <div className="flex items-baseline justify-center gap-1">
               <span className="text-[48px] font-bold tracking-tight text-[#1D1D1F]">{balance.toLocaleString()}</span>
@@ -199,7 +199,7 @@ export default function WalletPage() {
 
           <div className="bg-[#F5F5F7] rounded-[24px] p-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm"><Ticket className="w-5 h-5 text-[#0071E3]" /></div>
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center"><Ticket className="w-5 h-5 text-[#0071E3]" /></div>
               <h3 className="text-[17px] font-medium text-[#1D1D1F]">Voucher</h3>
             </div>
             <form onSubmit={handleRedeemVoucher} className="space-y-4">

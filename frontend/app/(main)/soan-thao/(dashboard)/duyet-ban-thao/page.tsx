@@ -62,7 +62,7 @@ export default function ApprovalPage() {
                     <h4 className="font-semibold text-[17px] text-[#1D1D1F] line-clamp-2 leading-relaxed">{doc.title || "Tác phẩm chưa có tiêu đề"}</h4>
                     <p className="text-[13px] text-[#6E6E73] truncate">Tác giả: <span className="font-medium text-[#1D1D1F]">{doc.author_name || "Ẩn danh"}</span></p>
                   </div>
-                  <button onClick={() => window.open(`/tai-lieu/viewer/${doc._id}`, "_blank")} className="w-10 h-10 bg-[#F5F5F7] hover:bg-[#0071E3] text-[#6E6E73] hover:text-white rounded-full flex items-center justify-center shrink-0 transition-colors shadow-sm" title="Xem chi tiết">
+                  <button onClick={() => window.open(`/tai-lieu/viewer/${doc._id}`, "_blank")} className="w-10 h-10 bg-[#F5F5F7] hover:bg-[#0071E3] text-[#6E6E73] hover:text-white rounded-full flex items-center justify-center shrink-0 transition-colors" title="Xem chi tiết">
                     <Eye className="w-5 h-5" />
                   </button>
                 </div>
@@ -73,7 +73,7 @@ export default function ApprovalPage() {
                   <button onClick={() => setConfirmModal({ type: "reject", data: doc })} className="flex-1 h-[44px] bg-white border border-[#FF3B30]/30 text-[#FF3B30] hover:bg-[#FFEBEB] text-[15px] font-medium rounded-full transition-colors flex items-center justify-center gap-2">
                     <XCircle className="w-4 h-4" /> Từ chối
                   </button>
-                  <button onClick={() => setConfirmModal({ type: "approve", data: doc })} className="flex-1 h-[44px] bg-[#0071E3] text-white hover:bg-[#0077ED] text-[15px] font-medium rounded-full transition-colors flex items-center justify-center gap-2 shadow-sm">
+                  <button onClick={() => setConfirmModal({ type: "approve", data: doc })} className="flex-1 h-[44px] bg-[#0071E3] text-white hover:bg-[#0077ED] text-[15px] font-medium rounded-full transition-colors flex items-center justify-center gap-2">
                     <CheckCircle className="w-4 h-4" /> Phê duyệt
                   </button>
                 </div>

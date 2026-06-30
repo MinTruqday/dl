@@ -131,7 +131,7 @@ export default function ConfigPage() {
           </div>
           <div className="relative w-full sm:w-[320px]">
             <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
-            <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-10 border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[14px] appearance-none transition-colors cursor-pointer shadow-sm">
+            <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-10 border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[14px] appearance-none transition-colors cursor-pointer">
               {documents.length === 0 && <option value="" disabled>Chưa có tác phẩm</option>}
               {documents.map((d) => <option key={d.id || d._id} value={d.id || d._id}>{d.title || "Chưa có tiêu đề"}</option>)}
             </select>
@@ -178,7 +178,7 @@ export default function ConfigPage() {
                   <label className="flex items-center justify-between cursor-pointer group">
                     <span className="text-[13px] font-medium text-[#1D1D1F]">Chống bôi đen & Copy</span>
                     <div className={`w-[48px] h-[28px] border rounded-full flex items-center p-1 transition-colors ${drmCopy ? "bg-[#34C759] border-[#34C759]" : "bg-[#E8E8ED] border-[#D2D2D7]"}`}>
-                      <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${drmCopy ? "translate-x-[20px]" : "translate-x-0"}`} />
+                      <div className={`w-5 h-5 bg-white rounded-full transition-transform ${drmCopy ? "translate-x-[20px]" : "translate-x-0"}`} />
                     </div>
                     <input type="checkbox" className="hidden" checked={drmCopy} onChange={(e) => setDrmCopy(e.target.checked)} />
                   </label>
@@ -186,7 +186,7 @@ export default function ConfigPage() {
                   <label className="flex items-center justify-between cursor-pointer group">
                     <span className="text-[13px] font-medium text-[#1D1D1F]">Ẩn khỏi tìm kiếm (SEO)</span>
                     <div className={`w-[48px] h-[28px] border rounded-full flex items-center p-1 transition-colors ${drmSearch ? "bg-[#34C759] border-[#34C759]" : "bg-[#E8E8ED] border-[#D2D2D7]"}`}>
-                      <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${drmSearch ? "translate-x-[20px]" : "translate-x-0"}`} />
+                      <div className={`w-5 h-5 bg-white rounded-full transition-transform ${drmSearch ? "translate-x-[20px]" : "translate-x-0"}`} />
                     </div>
                     <input type="checkbox" className="hidden" checked={drmSearch} onChange={(e) => setDrmSearch(e.target.checked)} />
                   </label>
@@ -214,7 +214,7 @@ export default function ConfigPage() {
                   {loadingCollabs ? <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-[#0071E3]" /></div> : collaborators.length > 0 ? (
                     <ul className="space-y-2">
                       {collaborators.map((c: any) => (
-                        <li key={c.id} className="flex justify-between items-center bg-white p-3 rounded-[14px] border border-[#E8E8ED] shadow-sm">
+                        <li key={c.id} className="flex justify-between items-center bg-white p-3 rounded-[14px] border border-[#E8E8ED]">
                           <div className="flex flex-col"><span className="text-[15px] font-semibold text-[#1D1D1F]">{c.email || c.user_id}</span><span className="text-[13px] text-[#6E6E73] capitalize">{c.role}</span></div>
                           <button onClick={() => handleRemoveCollab(c.id)} className="w-8 h-8 flex items-center justify-center text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FFEBEB] rounded-full transition-colors"><Trash2 className="w-4 h-4" /></button>
                         </li>
@@ -236,7 +236,7 @@ export default function ConfigPage() {
                   {coupons.length === 0 ? <EmptyState text="Chưa có mã ưu đãi" compact={true} /> : (
                     <div className="flex flex-col gap-2">
                       {coupons.map((c: any) => (
-                        <div key={c.id || c._id} className="bg-white border border-[#E8E8ED] p-3 rounded-[14px] shadow-sm flex items-center justify-between">
+                        <div key={c.id || c._id} className="bg-white border border-[#E8E8ED] p-3 rounded-[14px] flex items-center justify-between">
                           <div className="flex items-center gap-2"><span className="font-semibold text-[15px] text-[#1D1D1F] bg-[#F5F5F7] px-2.5 py-1 rounded-[10px]">{c.code}</span><span className="text-[12px] bg-[#FF9F0A]/10 text-[#FF9F0A] px-2 py-1 font-medium rounded-[8px]">-{c.discount_percent}%</span></div>
                           <span className="text-[13px] font-medium text-[#6E6E73]">Lượt: {c.used_count || 0}/{c.max_uses}</span>
                         </div>

@@ -53,8 +53,8 @@ export default function ReportsManagementPage() {
         </div>
       </div>
 
-      <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-hidden flex flex-col min-h-0">
-        <div className="flex items-center justify-between p-6 border-b border-[#E8E8ED] bg-[#F5F5F7]/30">
+      <div className="bg-[#F5F5F7] rounded-[24px] flex-1 overflow-hidden flex flex-col min-h-0">
+        <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
           <div className="flex items-center gap-3">
             <h2 className="text-[20px] font-medium text-[#1D1D1F]">Hàng đợi báo cáo</h2>
             {pendingCount > 0 && <span className="px-3 py-1 bg-[#FF3B30]/10 text-[#FF3B30] text-[13px] font-medium rounded-full flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#FF3B30] animate-pulse"></div>{pendingCount} chờ xử lý</span>}
@@ -63,10 +63,10 @@ export default function ReportsManagementPage() {
         </div>
         
         <div className="overflow-y-auto no-scrollbar flex-1 p-2">
-          <table className="w-full text-left text-[14px]">
-            <thead className="sticky top-0 bg-white z-10 border-b border-[#E8E8ED]">
+          <table className="w-full text-left text-[14px] border-collapse">
+            <thead>
               <tr className="text-[13px] text-[#6E6E73]">
-                <th className="px-6 py-4 font-medium w-[20%]">Đối tượng</th><th className="px-6 py-4 font-medium w-[30%]">Nội dung báo cáo</th><th className="px-6 py-4 font-medium w-[15%]">Người báo cáo</th><th className="px-6 py-4 font-medium w-[15%]">Trạng thái</th><th className="px-6 py-4 font-medium text-right w-[20%]">Thao tác</th>
+                <th className="py-3 px-6 font-medium w-[20%]">Đối tượng</th><th className="py-3 px-6 font-medium w-[30%]">Nội dung báo cáo</th><th className="py-3 px-6 font-medium w-[15%]">Người báo cáo</th><th className="py-3 px-6 font-medium w-[15%]">Trạng thái</th><th className="py-3 px-6 font-medium text-right w-[20%]">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -76,20 +76,20 @@ export default function ReportsManagementPage() {
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                       <div className="w-16 h-16 bg-[#F5F5F7] rounded-[16px] flex items-center justify-center mb-4"><FileWarning className="w-8 h-8 text-[#C7C7CC]" /></div>
                       <h2 className="text-[20px] font-medium text-[#1D1D1F] mb-1">{searchQuery ? "Không tìm thấy" : "Chưa có báo cáo"}</h2>
-                      <p className="text-[14px] text-[#6E6E73]">{searchQuery ? "Vui lòng thử từ khóa khác." : "Hệ thống hiện không có vi phạm nào."}</p>
+                      <p className="text-[17px] text-[#6E6E73]">{searchQuery ? "Vui lòng thử từ khóa khác." : "Hệ thống hiện không có vi phạm nào."}</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filteredReports.map(r => (
-                  <tr key={r.id} className="border-b border-[#F5F5F7] hover:bg-[#F5F5F7] transition-colors group">
-                    <td className="px-6 py-4"><div className="flex flex-col gap-1"><span className="text-[12px] bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-md w-fit font-medium">{r.target_type || "Nội dung"}</span><span className="text-[13px] text-[#6E6E73] font-mono truncate max-w-[150px]">{r.target_id}</span></div></td>
-                    <td className="px-6 py-4 max-w-sm"><div className="flex flex-col gap-1"><span className="font-medium text-[#1D1D1F]">{r.reason}</span><p className="text-[13px] text-[#6E6E73] line-clamp-2">"{r.description || "Không có mô tả chi tiết."}"</p></div></td>
-                    <td className="px-6 py-4"><span className="font-medium text-[#1D1D1F]">{r.reporter_name || "Ẩn danh"}</span><p className="text-[12px] text-[#6E6E73] mt-0.5">{r.created_at ? new Date(r.created_at).toLocaleDateString("vi-VN") : "--"}</p></td>
-                    <td className="px-6 py-4">
+                  <tr key={r.id} className="hover:bg-[#F5F5F7] transition-colors group">
+                    <td className="py-3 px-6"><div className="flex flex-col gap-1"><span className="text-[12px] bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-md w-fit font-medium">{r.target_type || "Nội dung"}</span><span className="text-[13px] text-[#6E6E73] font-mono truncate max-w-[150px]">{r.target_id}</span></div></td>
+                    <td className="py-3 px-6 max-w-sm"><div className="flex flex-col gap-1"><span className="font-medium text-[#1D1D1F]">{r.reason}</span><p className="text-[13px] text-[#6E6E73] line-clamp-2">"{r.description || "Không có mô tả chi tiết."}"</p></div></td>
+                    <td className="py-3 px-6"><span className="font-medium text-[#1D1D1F]">{r.reporter_name || "Ẩn danh"}</span><p className="text-[12px] text-[#6E6E73] mt-0.5">{r.created_at ? new Date(r.created_at).toLocaleDateString("vi-VN") : "--"}</p></td>
+                    <td className="py-3 px-6">
                       {r.status === "RESOLVED" ? <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#34C759] rounded-full text-[12px] font-medium"><CheckCircle2 className="w-3.5 h-3.5" /> Đã xử lý</div> : r.status === "DISMISSED" ? <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F5F7] text-[#6E6E73] rounded-full text-[12px] font-medium"><XCircle className="w-3.5 h-3.5" /> Đã bỏ qua</div> : <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF4E5] text-[#FF9500] rounded-full text-[12px] font-medium"><div className="w-2 h-2 rounded-full bg-[#FF9500] animate-pulse"></div> Đang chờ</div>}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="py-3 px-6 text-right">
                       {r.status !== "RESOLVED" && r.status !== "DISMISSED" ? (
                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => setConfirmModal({ reportId: r.id, action: "DISMISSED" })} className="px-3 py-1.5 text-[13px] font-medium text-[#6E6E73] bg-white border border-[#E8E8ED] hover:bg-[#F5F5F7] rounded-[10px] transition-colors">Bỏ qua</button>

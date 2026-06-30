@@ -106,7 +106,7 @@ export default function ExplorePage() {
                 onClick={() => setSelectedCategory(null)}
                 className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${
                   !selectedCategory
-                    ? "bg-white text-[#0071E3] font-medium shadow-sm"
+                    ? "bg-white text-[#0071E3] font-medium"
                     : "text-[#1D1D1F] hover:bg-[#E8E8ED]"
                 }`}
               >
@@ -121,7 +121,7 @@ export default function ExplorePage() {
                   }
                   className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${
                     selectedCategory === cat
-                      ? "bg-white text-[#0071E3] font-medium shadow-sm"
+                      ? "bg-white text-[#0071E3] font-medium"
                       : "text-[#1D1D1F] hover:bg-[#E8E8ED]"
                   }`}
                 >
@@ -169,7 +169,7 @@ export default function ExplorePage() {
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/document/${doc.slug}`}
-                    className="flex gap-4 p-4 bg-white rounded-[18px] transition-transform hover:scale-[1.02] shadow-sm"
+                    className="flex gap-4 p-4 bg-white rounded-[18px] transition-transform hover:scale-[1.02]"
                   >
                     <div className="w-[88px] h-[88px] shrink-0 bg-[#F5F5F7] rounded-[10px] overflow-hidden">
                       {doc.cover_url ? (
@@ -206,10 +206,10 @@ export default function ExplorePage() {
               </h2>
               <div className="flex items-center">
                 <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
-                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
                       <LayoutGrid className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>
                       <List className="w-4 h-4" />
                     </button>
                   </div>

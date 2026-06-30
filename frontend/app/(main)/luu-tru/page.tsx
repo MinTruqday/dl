@@ -187,7 +187,7 @@ export default function StoragePage() {
 
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <main className={`flex flex-col gap-6 h-full min-h-0 ${detailsItem ? "lg:col-span-8" : "lg:col-span-12"}`}>
-          <div className="bg-[#F5F5F7] rounded-[24px] p-4 flex flex-col md:flex-row justify-between items-center shadow-sm">
+          <div className="bg-[#F5F5F7] rounded-[24px] p-4 flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 text-[15px] text-[#6E6E73] font-medium px-2">
               {viewMode === "trash" ? <span className="text-[#1D1D1F]">Thùng rác</span> : viewMode === "recent" ? <span className="text-[#1D1D1F]">Mở gần đây</span> : breadcrumbs.map((crumb, idx) => (
                 <div key={idx} className="flex items-center gap-2">
@@ -202,8 +202,8 @@ export default function StoragePage() {
               <div className="flex items-center gap-2 mt-4 md:mt-0">
                 {selectedIds.size > 0 && <button onClick={handleZipDownload} className="pill-button px-4 py-1.5 h-[36px] text-[13px] bg-[#1D1D1F] flex items-center gap-1"><Archive className="w-3.5 h-3.5"/> ZIP ({selectedIds.size})</button>}
                 <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0 ml-2">
-                  <button onClick={() => setLayoutMode("grid")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
-                  <button onClick={() => setLayoutMode("list")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
+                  <button onClick={() => setLayoutMode("grid")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
+                  <button onClick={() => setLayoutMode("list")} className={`p-1.5 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
                 </div>
               </div>
             )}
@@ -215,7 +215,7 @@ export default function StoragePage() {
             ) : layoutMode === "list" ? (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#E8E8ED] text-[13px] text-[#6E6E73]">
+                  <tr className="text-[13px] text-[#6E6E73]">
                     <th className="py-3 px-6 font-medium w-12"></th>
                     <th className="py-3 px-6 font-medium">Tên</th>
                     <th className="py-3 px-6 font-medium">Kích thước</th>
@@ -227,7 +227,7 @@ export default function StoragePage() {
                   {items.length === 0 ? (
                     <tr><td colSpan={5} className="py-20 text-center text-[15px] text-[#6E6E73]">Thư mục trống</td></tr>
                   ) : items.map((item) => (
-                    <tr key={item._id} onClick={() => setDetailsItem(item)} className="border-b border-[#F5F5F7] hover:bg-[#F5F5F7] transition-colors cursor-pointer group">
+                    <tr key={item._id} onClick={() => setDetailsItem(item)} className="hover:bg-[#F5F5F7] transition-colors cursor-pointer group">
                       <td className="py-3 px-6" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-3">
                           <input type="checkbox" checked={selectedIds.has(item._id)} onChange={() => toggleSelect(item._id)} className="w-4 h-4 rounded-[4px] border-[#C7C7CC] accent-[#0071E3]" />
@@ -276,7 +276,7 @@ export default function StoragePage() {
                     <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                       <input type="checkbox" checked={selectedIds.has(item._id)} onChange={() => toggleSelect(item._id)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 rounded-[4px] border-[#C7C7CC] accent-[#0071E3]" />
                     </div>
-                    <div className="w-16 h-16 bg-white flex items-center justify-center mb-3 rounded-[14px] shadow-sm relative">
+                    <div className="w-16 h-16 bg-white flex items-center justify-center mb-3 rounded-[14px] relative">
                       {item.color && <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white" style={{ backgroundColor: item.color }} />}
                       {item.is_shortcut ? <LinkIcon className="w-8 h-8 text-[#0071E3]" /> : item.is_folder ? <Folder className="w-8 h-8 text-[#1D1D1F]" /> : item.mime_type?.startsWith("image/") ? <img src={item.url} alt={item.name} className="w-full h-full object-cover rounded-[14px]" /> : <File className="w-8 h-8 text-[#6E6E73]" />}
                     </div>
@@ -298,8 +298,8 @@ export default function StoragePage() {
               <button onClick={() => setDetailsItem(null)} className="w-8 h-8 flex items-center justify-center bg-[#F5F5F7] rounded-full text-[#6E6E73] hover:text-[#1D1D1F]"><X className="w-4 h-4"/></button>
             </div>
             <div className="flex bg-[#F5F5F7] mx-6 mt-4 p-1 rounded-[14px]">
-              <button className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "info" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73]"}`} onClick={() => setActiveSidebarTab("info")}>Thông tin</button>
-              <button className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "ai" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73]"}`} onClick={() => setActiveSidebarTab("ai")}>AI Trợ lý</button>
+              <button className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "info" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73]"}`} onClick={() => setActiveSidebarTab("info")}>Thông tin</button>
+              <button className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "ai" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73]"}`} onClick={() => setActiveSidebarTab("ai")}>AI Trợ lý</button>
             </div>
 
             {activeSidebarTab === "info" ? (

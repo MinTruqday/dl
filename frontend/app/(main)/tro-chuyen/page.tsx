@@ -456,7 +456,7 @@ export default function TroChuyenPage() {
               </div>
             ) : (
               sessions.map((s) => (
-                <div key={s._id} className={`p-3 mx-2 mt-2 rounded-[14px] cursor-pointer transition-colors ${currentSessionId === s._id ? "bg-white shadow-sm border border-transparent" : "border border-transparent hover:bg-[#E8E8ED]"}`}>
+                <div key={s._id} className={`p-3 mx-2 mt-2 rounded-[14px] cursor-pointer transition-colors ${currentSessionId === s._id ? "bg-white border border-transparent" : "border border-transparent hover:bg-[#E8E8ED]"}`}>
                   <div className="flex items-center justify-between gap-3">
                     <div
                       className="flex-1 min-w-0 cursor-pointer"
@@ -516,7 +516,7 @@ export default function TroChuyenPage() {
                         {openDropdownId === s._id && (
                           <>
                             <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
-                            <div className="absolute right-0 top-full mt-1 w-36 p-1.5 bg-white border border-[#E8E8ED] rounded-[14px] shadow-sm z-50">
+                            <div className="absolute right-0 top-full mt-1 w-36 p-1.5 bg-white border border-[#E8E8ED] rounded-[14px] z-50">
                               <button
                                 className="w-full text-left px-3 py-2 text-[13px] text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-[10px] transition-colors flex items-center gap-2"
                                 onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); setEditingTitleId(s._id); setEditingTitleValue(s.title); }}
@@ -645,7 +645,7 @@ export default function TroChuyenPage() {
               )}
 
               {showAttachments && (
-                <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-[14px] shadow-sm py-2 z-50">
+                <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-[14px] py-2 z-50">
                   <input type="file" ref={fileInputRef} className="hidden" accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.mobi,.zip,.csv" onChange={(e) => { handleFileUpload(e, "file"); setShowAttachments(false); }} />
                   <input type="file" ref={imageInputRef} className="hidden" accept="image/*" onChange={(e) => { handleFileUpload(e, "image"); setShowAttachments(false); }} />
                   <button onClick={() => { fileInputRef.current?.click(); setShowAttachments(false); }} className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3">
@@ -658,7 +658,7 @@ export default function TroChuyenPage() {
               )}
 
               <form onSubmit={handleSubmit} className="flex gap-3">
-                <div className="flex-1 min-h-[56px] bg-white flex items-center px-4 gap-3 focus-within:border-[#0071E3] border border-transparent rounded-[20px] transition-colors shadow-sm">
+                <div className="flex-1 min-h-[56px] bg-white flex items-center px-4 gap-3 focus-within:border-[#0071E3] border border-transparent rounded-[20px] transition-colors">
                   {useSmart && (
                     <button type="button" onClick={handleAttach} className="text-[#6E6E73] shrink-0 rounded-full p-2 hover:bg-[#E8E8ED] transition-colors">
                       <PlusIcon className="w-5 h-5" />
@@ -676,14 +676,14 @@ export default function TroChuyenPage() {
                     <span className="text-[13px] font-medium text-[#6E6E73] select-none">Suy nghĩ</span>
                     <div className="relative inline-flex items-center">
                       <input type="checkbox" checked={useSmart} onChange={handleToggleSmart} disabled={user?.ai_tier !== 'PREMIUM' && user?.role !== 'admin'} className="sr-only peer" />
-                      <div className="w-10 h-6 bg-[#D2D2D7] peer-focus:outline-none rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:rounded-full peer-checked:after:translate-x-4 peer-checked:bg-[#34C759] transition-colors shadow-sm"></div>
+                      <div className="w-10 h-6 bg-[#D2D2D7] peer-focus:outline-none rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:rounded-full peer-checked:after:translate-x-4 peer-checked:bg-[#34C759] transition-colors"></div>
                     </div>
                   </label>
                 </div>
                 <button
                   type="submit"
                   disabled={isSending || !input.trim() || (useSmart && (user?.wallet_balance || 0) < 20)}
-                  className="w-14 h-[56px] shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-[20px] transition-colors hover:bg-[#0077ED] shadow-sm"
+                  className="w-14 h-[56px] shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-[20px] transition-colors hover:bg-[#0077ED]"
                 >
                   {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
                 </button>

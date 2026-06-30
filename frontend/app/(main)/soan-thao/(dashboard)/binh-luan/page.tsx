@@ -69,7 +69,7 @@ export default function CommentsPage() {
           </div>
           <div className="relative w-full sm:w-[320px]">
             <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
-            <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[14px] appearance-none transition-colors cursor-pointer shadow-sm">
+            <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[14px] appearance-none transition-colors cursor-pointer">
               {documents.length === 0 && <option value="" disabled>Chưa có tác phẩm</option>}
               {documents.map((d) => <option key={d.id || d._id} value={d.id || d._id}>{d.title || "Chưa có tiêu đề"}</option>)}
             </select>
@@ -90,7 +90,7 @@ export default function CommentsPage() {
                 </div>
               ) : comments.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-12">
-                  <div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4"><MessageSquare className="w-8 h-8 text-[#C7C7CC]" /></div>
+                  <div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4"><MessageSquare className="w-8 h-8 text-[#C7C7CC]" /></div>
                   <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có bình luận</h3>
                   <p className="text-[15px] text-[#6E6E73] max-w-sm">Tác phẩm này hiện chưa nhận được phản hồi nào từ độc giả.</p>
                 </div>

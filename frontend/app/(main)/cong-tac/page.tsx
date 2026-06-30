@@ -245,7 +245,7 @@ export default function StudioCollabPage() {
 
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-4 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tài liệu hoạt động</h2>
             <div className="relative">
               <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[44px] bg-white border border-[#E8E8ED] px-4 text-[15px] focus:outline-none focus:border-[#0071E3] appearance-none rounded-[14px]">
@@ -267,19 +267,19 @@ export default function StudioCollabPage() {
           </div>
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
+            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><Key className="w-4 h-4" /> Khóa phiên</h2>
               {lockStatus.is_locked ? (
                 <div className="p-4 bg-[#FFF0F0] text-[#FF3B30] text-[14px] rounded-[14px]">
                   Khóa bởi: <strong className="font-semibold">{lockStatus.user_name}</strong>
-                  {lockStatus.user_id === (user._id || user.id) && <button onClick={handleReleaseLock} className="mt-3 w-full py-2 bg-white rounded-[10px] font-medium text-[#FF3B30] shadow-sm">Nhả khóa</button>}
+                  {lockStatus.user_id === (user._id || user.id) && <button onClick={handleReleaseLock} className="mt-3 w-full py-2 bg-white rounded-[10px] font-medium text-[#FF3B30]">Nhả khóa</button>}
                 </div>
               ) : <button onClick={handleAcquireLock} className="w-full py-3 bg-[#0071E3] text-white text-[14px] font-medium rounded-[14px] hover:bg-[#005bb5] transition-colors">Yêu cầu khóa độc quyền</button>}
             </div>
           )}
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
+            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Mời cộng tác</h2>
               <input type="email" placeholder="" value={collaboratorEmail} onChange={(e) => setCollaboratorEmail(e.target.value)} className="apple-input w-full" />
               <div className="flex gap-2">
@@ -291,7 +291,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && isOwnerOfSelected() && (
-            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
+            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center justify-between">Mã mời nhanh <QrCode className="w-4 h-4 text-[#6E6E73]" /></h2>
               {inviteCode ? (
                 <div className="flex items-center gap-2 bg-white p-3 rounded-[14px] border border-[#E8E8ED]">
@@ -303,7 +303,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && sentPendingInvites.length > 0 && (
-            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
+            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lời mời đã gửi (chờ)</h2>
               <div className="space-y-3">
                 {sentPendingInvites.map(sp => (
@@ -320,14 +320,14 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
+            <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
               <div className="flex justify-between items-center"><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Cộng tác viên</h2><span className="text-[13px] text-[#6E6E73]">{collaborators.length}</span></div>
               {collaborators.length > 0 ? (
                 <div className="space-y-3">
                   {collaborators.map(c => {
                     const status = getOnlineStatus(c.user_id);
                     return (
-                      <div key={c.collaboration_id} className="bg-white p-4 rounded-[16px] shadow-sm">
+                      <div key={c.collaboration_id} className="bg-white p-4 rounded-[16px]">
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${status === "online" ? "bg-[#34C759]" : "bg-[#E8E8ED]"}`} />
@@ -355,7 +355,7 @@ export default function StudioCollabPage() {
         </aside>
 
         <main className="lg:col-span-8 space-y-6 overflow-y-auto no-scrollbar pb-6">
-          <div className="bg-[#F5F5F7] rounded-[24px] p-8 shadow-sm space-y-6">
+          <div className="bg-[#F5F5F7] rounded-[24px] p-8 space-y-6">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Thư mời cộng tác</h2>
             {filteredInvites.length > 0 ? (
               <div className="grid gap-4">
@@ -379,7 +379,7 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && (
             <>
-              <div className="bg-[#F5F5F7] rounded-[24px] p-8 shadow-sm space-y-6">
+              <div className="bg-[#F5F5F7] rounded-[24px] p-8 space-y-6">
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><CheckSquare className="w-5 h-5" /> Nhiệm vụ & Checklist</h2>
                 <div className="flex gap-2">
                   <input type="text" placeholder="" value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} className="apple-input flex-1" />
@@ -402,7 +402,7 @@ export default function StudioCollabPage() {
                 </div>
               </div>
 
-              <div className="bg-[#F5F5F7] rounded-[24px] p-8 shadow-sm space-y-6">
+              <div className="bg-[#F5F5F7] rounded-[24px] p-8 space-y-6">
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Bảng ghim & Trao đổi</h2>
                 <div className="h-64 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
                   {memos.length > 0 ? memos.map(m => (

@@ -51,7 +51,7 @@ export default function HelpPage() {
       </div>
 
       <div className="mt-20 p-12 bg-[#F5F5F7] rounded-[32px] text-center border border-[#E8E8ED]">
-        <div className="w-16 h-16 bg-white rounded-[16px] shadow-sm flex items-center justify-center mx-auto mb-6"><MessageCircle className="w-8 h-8 text-[#1D1D1F]" /></div>
+        <div className="w-16 h-16 bg-white rounded-[16px] flex items-center justify-center mx-auto mb-6"><MessageCircle className="w-8 h-8 text-[#1D1D1F]" /></div>
         <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-2">Cần thêm thông tin?</h2>
         <p className="text-[15px] text-[#6E6E73] mb-8">Liên hệ với chúng tôi để được giải đáp thắc mắc trực tiếp.</p>
         <button className="pill-button bg-[#1D1D1F] text-white hover:bg-[#333336]">Gửi yêu cầu hỗ trợ</button>

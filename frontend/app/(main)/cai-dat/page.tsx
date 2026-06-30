@@ -103,7 +103,7 @@ export default function SettingsPage() {
 
   const CustomSwitch = ({ active, onToggle }: { active: boolean; onToggle: () => void }) => (
     <button onClick={onToggle} className={`w-[50px] h-[30px] rounded-full relative shrink-0 transition-colors duration-300 ${active ? "bg-[#34C759]" : "bg-[#E8E8ED]"}`}>
-      <div className={`absolute top-[2px] w-[26px] h-[26px] bg-white rounded-full shadow-sm transition-transform duration-300 ${active ? "translate-x-[22px]" : "translate-x-[2px]"}`} />
+      <div className={`absolute top-[2px] w-[26px] h-[26px] bg-white rounded-full transition-transform duration-300 ${active ? "translate-x-[22px]" : "translate-x-[2px]"}`} />
     </button>
   );
 
@@ -141,7 +141,7 @@ export default function SettingsPage() {
           <div className="bg-[#F5F5F7] rounded-[24px] p-6">
             <div className="text-[13px] font-medium text-[#6E6E73] mb-4">Định danh hiện tại</div>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-[14px] flex items-center justify-center text-[15px] font-semibold text-[#1D1D1F] shadow-sm uppercase">{user?.role?.slice(0, 3)}</div>
+              <div className="w-12 h-12 bg-white rounded-[14px] flex items-center justify-center text-[15px] font-semibold text-[#1D1D1F] uppercase">{user?.role?.slice(0, 3)}</div>
               <div>
                 <p className="text-[15px] font-medium text-[#1D1D1F]">{user?.role === "admin" ? "Quản trị viên" : user?.role === "author" ? "Tác giả" : user?.role === "moderator" ? "Kiểm duyệt viên" : user?.role === "potential_author" ? "Tác giả tiềm năng" : "Độc giả"}</p>
                 <p className="text-[13px] text-[#6E6E73] mt-0.5">{user?.email || "Chưa định danh"}</p>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                   <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Quyền riêng tư</h2>
                   <p className="text-[15px] text-[#6E6E73]">Thiết lập khả năng hiển thị cá nhân</p>
                 </div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED] shadow-sm">
+                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
                   <div className="p-5 flex items-center justify-between">
                     <div>
                       <h4 className="text-[17px] font-medium text-[#1D1D1F]">Chế độ đọc ẩn danh</h4>
@@ -181,7 +181,7 @@ export default function SettingsPage() {
             {activeSection === "author" && (
               <div className="space-y-8">
                 <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Cấu hình Tác giả</h2><p className="text-[15px] text-[#6E6E73]">Quản lý sáng tác</p></div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED] shadow-sm">
+                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
                   <div className="p-5 flex items-center justify-between">
                     <div><h4 className="text-[17px] font-medium text-[#1D1D1F]">Tự động sao lưu</h4><p className="text-[14px] text-[#6E6E73]">Sao lưu 30 giây.</p></div>
                     <CustomSwitch active={autoSave} onToggle={async () => { const s = await handleUpdateGeneral({ auto_save: !autoSave }); if(s) setAutoSave(!autoSave); }} />
@@ -206,7 +206,7 @@ export default function SettingsPage() {
             {activeSection === "moderator" && (
               <div className="space-y-8">
                 <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Kiểm duyệt viên</h2></div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED] shadow-sm">
+                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
                   <div className="p-5 flex items-center justify-between">
                     <div><h4 className="text-[17px] font-medium text-[#1D1D1F]">Thông báo vi phạm</h4></div>
                     <CustomSwitch active={modNotifs} onToggle={async () => { const s = await handleUpdateGeneral({ mod_notifs: !modNotifs }); if(s) setModNotifs(!modNotifs); }} />
@@ -222,7 +222,7 @@ export default function SettingsPage() {
             {activeSection === "admin" && (
               <div className="space-y-8">
                 <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Quản trị viên</h2></div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED] shadow-sm">
+                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
                   <div className="p-5 flex items-center justify-between bg-[#FFF0F0] rounded-t-[18px]">
                     <div><h4 className="text-[17px] font-medium text-[#FF3B30]">Bảo trì hệ thống</h4><p className="text-[14px] text-[#FF6961]">Khóa ghi dữ liệu.</p></div>
                     <CustomSwitch active={maintenanceMode} onToggle={() => setConfirmModal({ type: "maintenance", value: !maintenanceMode })} />
@@ -242,7 +242,7 @@ export default function SettingsPage() {
                   <div className="py-12 text-center bg-white rounded-[18px]"><Clock className="w-12 h-12 text-[#6E6E73] mx-auto mb-4" /><p className="text-[15px] font-medium text-[#1D1D1F]">Đang xem xét</p></div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-[18px] shadow-sm space-y-4">
+                    <div className="bg-white p-6 rounded-[18px] space-y-4">
                       <div className="space-y-2"><label className="text-[13px] font-medium text-[#6E6E73]">Lý do</label><textarea value={motivation} onChange={(e) => setMotivation(e.target.value)} className="apple-input w-full min-h-[100px] resize-none" /></div>
                       <div className="space-y-2"><label className="text-[13px] font-medium text-[#6E6E73]">Portfolio</label><input type="text" value={portfolio} onChange={(e) => setPortfolio(e.target.value)} className="apple-input w-full" /></div>
                     </div>
@@ -255,7 +255,7 @@ export default function SettingsPage() {
             {activeSection === "notifications" && (
               <div className="space-y-8">
                 <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Thông báo</h2></div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED] shadow-sm">
+                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
                   {[{ id: "notifyCommunity", label: "Cộng đồng" }, { id: "notifyFinance", label: "Tài chính" }, { id: "notifyUpdates", label: "Cập nhật" }].map((item, i) => (
                     <div key={i} className="p-5 flex items-center justify-between">
                       <div><h4 className="text-[17px] font-medium text-[#1D1D1F]">{item.label}</h4></div>
@@ -272,7 +272,7 @@ export default function SettingsPage() {
             {activeSection === "account" && (
               <div className="space-y-8">
                 <div><h2 className="text-[20px] font-semibold text-[#1D1D1F]">Tài khoản</h2></div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED] shadow-sm">
+                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
                   <div className="p-5 flex items-center justify-between">
                     <div><h4 className="text-[15px] font-medium text-[#1D1D1F]">Email</h4><p className="text-[14px] text-[#6E6E73]">{user?.email}</p></div>
                   </div>

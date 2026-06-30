@@ -577,7 +577,7 @@ export default function MessagesPage() {
               const isPinned = user?.pinned_conversations?.includes(conv.other_user_id);
               const active = selectedConv?.other_user_id === conv.other_user_id;
               return (
-                <div key={conv.other_user_id} onClick={() => selectConversation(conv)} className={`p-4 rounded-[14px] cursor-pointer flex items-center gap-4 transition-colors ${active ? "bg-white shadow-sm" : "hover:bg-white/50"}`}>
+                <div key={conv.other_user_id} onClick={() => selectConversation(conv)} className={`p-4 rounded-[14px] cursor-pointer flex items-center gap-4 transition-colors ${active ? "bg-white" : "hover:bg-white/50"}`}>
                   <div className="w-12 h-12 bg-[#D2D2D7] rounded-full overflow-hidden shrink-0">
                     {conv.other_user?.avatar_url ? <img src={conv.other_user.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex justify-center items-center"><User className="w-6 h-6 text-white" /></div>}
                   </div>

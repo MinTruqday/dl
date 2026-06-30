@@ -126,9 +126,9 @@ export default function DocumentsPage() {
         <div className="flex items-center gap-3">
           <button onClick={() => setCreateFolderModal(true)} className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2"><FolderPlus className="w-4 h-4"/> Thư mục mới</button>
           <button onClick={() => setCreateDocModal(true)} className="pill-button flex items-center gap-2"><Plus className="w-4 h-4"/> Thêm tài liệu</button>
-          <div className="flex bg-[#F5F5F7] rounded-[12px] p-0.5">
-            <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-[10px] transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
-            <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-[10px] transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
+          <div className="flex bg-[#E8E8ED] p-1 rounded-full shrink-0">
+            <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><LayoutGrid className="w-4 h-4" /></button>
+            <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><List className="w-4 h-4" /></button>
           </div>
           <button onClick={() => fetchData()} className="w-9 h-9 flex items-center justify-center rounded-[12px] bg-[#F5F5F7] text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">{isRefreshing ? <Loader2 className="w-4 h-4 animate-spin"/> : <RefreshCcw className="w-4 h-4"/>}</button>
         </div>
@@ -137,13 +137,13 @@ export default function DocumentsPage() {
       <div className="grid lg:grid-cols-12 gap-8 flex-1 min-h-0">
         <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
 
-          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4 shadow-sm">
-            <h3 className="text-[17px] font-medium text-[#6E6E73] flex items-center gap-2"><Database className="w-4 h-4" /> Lọc dữ liệu</h3>
+          <div className="bg-[#F5F5F7] rounded-[24px] p-6 space-y-4">
+            <h3 className="text-[17px] font-medium text-[#6E6E73] flex items-center gap-2">Lọc dữ liệu</h3>
             <button onClick={() => setFilterStar(!filterStar)} className={`w-full py-3 rounded-[14px] flex items-center justify-center gap-2 font-medium text-[14px] transition-colors ${filterStar ? "bg-[#1D1D1F] text-white" : "bg-white text-[#1D1D1F] border border-[#E8E8ED]"}`}><Star className={`w-4 h-4 ${filterStar ? "fill-white" : "text-[#6E6E73]"}`} /> Yêu thích</button>
             <div className="space-y-2 pt-2">
               <label className="text-[13px] font-medium text-[#6E6E73]">Định dạng</label>
               <div className="relative">
-                <select value={filterFormat} onChange={(e) => setFilterFormat(e.target.value)} className="w-full h-[44px] bg-white border border-[#E8E8ED] px-4 text-[14px] font-medium focus:outline-none focus:border-[#0071E3] appearance-none rounded-[14px] shadow-sm">
+                <select value={filterFormat} onChange={(e) => setFilterFormat(e.target.value)} className="w-full h-[44px] bg-white border border-[#E8E8ED] px-4 text-[14px] font-medium focus:outline-none focus:border-[#0071E3] appearance-none rounded-[14px]">
                   <option value="all">Mọi định dạng</option><option value="pdf">PDF</option><option value="docx">Word</option><option value="xlsx">Excel</option><option value="pptx">PowerPoint</option><option value="zip">ZIP</option>
                 </select>
                 <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-[#6E6E73]" />
@@ -153,39 +153,39 @@ export default function DocumentsPage() {
         </aside>
 
         <main className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0 overflow-hidden">
-          <div className="bg-[#F5F5F7] rounded-[24px] p-4 flex items-center gap-2 shadow-sm overflow-x-auto no-scrollbar">
-            <button onClick={() => { setCurrentFolder(null); setBreadcrumbs([]); }} className={`flex items-center gap-2 px-4 py-2 rounded-[14px] font-medium text-[14px] transition-colors ${!currentFolder ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}><Home className="w-4 h-4"/>Gốc</button>
+          <div className="flex items-center gap-2 text-[15px] text-[#6E6E73] font-medium px-4 overflow-x-auto no-scrollbar">
+            <button onClick={() => { setCurrentFolder(null); setBreadcrumbs([]); }} className={`flex items-center gap-1 transition-colors ${!currentFolder ? "text-[#1D1D1F]" : "hover:text-[#1D1D1F]"}`}>Gốc</button>
             {breadcrumbs.map((b, idx) => (
               <div key={b._id} className="flex items-center gap-2 shrink-0">
                 <ChevronRight className="w-4 h-4 text-[#A1A1A6]"/>
-                <button onClick={() => { const nb = breadcrumbs.slice(0, idx + 1); setBreadcrumbs(nb); setCurrentFolder(nb[nb.length - 1]); }} className={`px-4 py-2 rounded-[14px] font-medium text-[14px] transition-colors ${idx === breadcrumbs.length - 1 ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}>{b.name}</button>
+                <button onClick={() => { const nb = breadcrumbs.slice(0, idx + 1); setBreadcrumbs(nb); setCurrentFolder(nb[nb.length - 1]); }} className={`transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "hover:text-[#1D1D1F]"}`}>{b.name}</button>
               </div>
             ))}
           </div>
 
           {viewMode === "list" ? (
-            <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-y-auto no-scrollbar">
-              <table className="w-full text-left">
-                <thead className="sticky top-0 bg-white z-10 border-b border-[#E8E8ED]">
+            <div className="bg-[#F5F5F7] rounded-[24px] flex-1 overflow-y-auto no-scrollbar">
+              <table className="w-full text-left border-collapse">
+                <thead>
                   <tr className="text-[13px] text-[#6E6E73]">
-                    <th className="px-6 py-4 font-medium">Tên</th><th className="px-6 py-4 font-medium">Loại</th><th className="px-6 py-4 font-medium">Bảo mật</th><th className="px-6 py-4 font-medium text-right">Thao tác</th>
+                    <th className="py-3 px-6 font-medium">Tên</th><th className="py-3 px-6 font-medium">Loại</th><th className="py-3 px-6 font-medium">Bảo mật</th><th className="py-3 px-6 font-medium text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {folders.map(folder => (
-                    <tr key={folder._id} onClick={() => { setCurrentFolder(folder); setBreadcrumbs([...breadcrumbs, folder]); }} className="border-b border-[#F5F5F7] hover:bg-[#F5F5F7] cursor-pointer transition-colors group">
-                      <td className="px-6 py-4"><div className="flex items-center gap-4"><div className="w-10 h-10 bg-white border border-[#E8E8ED] flex items-center justify-center rounded-[12px] text-[#1D1D1F]"><Folder className="w-5 h-5"/></div><span className="font-medium text-[#1D1D1F]">{folder.name}</span></div></td>
-                      <td className="px-6 py-4"><span className="text-[12px] bg-[#F5F5F7] text-[#6E6E73] px-3 py-1 rounded-full font-medium">Thư mục</span></td>
-                      <td className="px-6 py-4 text-[#6E6E73]">--</td>
-                      <td className="px-6 py-4 text-right"><button onClick={(e) => { e.stopPropagation(); setConfirmModal({ show: true, title: "Xóa thư mục?", docId: folder._id, type: "folder" }); }} className="p-2 text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-4 h-4"/></button></td>
+                    <tr key={folder._id} onClick={() => { setCurrentFolder(folder); setBreadcrumbs([...breadcrumbs, folder]); }} className="hover:bg-[#F5F5F7] cursor-pointer transition-colors group">
+                      <td className="py-3 px-6"><div className="flex items-center gap-4"><div className="w-10 h-10 bg-white border border-[#E8E8ED] flex items-center justify-center rounded-[12px] text-[#1D1D1F]"><Folder className="w-5 h-5"/></div><span className="font-medium text-[#1D1D1F]">{folder.name}</span></div></td>
+                      <td className="py-3 px-6"><span className="text-[12px] bg-[#F5F5F7] text-[#6E6E73] px-3 py-1 rounded-full font-medium">Thư mục</span></td>
+                      <td className="py-3 px-6 text-[#6E6E73]">--</td>
+                      <td className="py-3 px-6 text-right"><button onClick={(e) => { e.stopPropagation(); setConfirmModal({ show: true, title: "Xóa thư mục?", docId: folder._id, type: "folder" }); }} className="p-2 text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-4 h-4"/></button></td>
                     </tr>
                   ))}
                   {documents.map(doc => (
-                    <tr key={doc._id || doc.id} className="border-b border-[#F5F5F7] hover:bg-[#F5F5F7] transition-colors group">
-                      <td className="px-6 py-4"><div className="flex items-center gap-4"><div className="w-10 h-12 bg-white border border-[#E8E8ED] flex items-center justify-center rounded-[12px] text-[#6E6E73]"><FileText className="w-5 h-5"/></div><div><p className="font-medium text-[#1D1D1F] max-w-sm truncate">{doc.title}</p><p className="text-[12px] text-[#6E6E73] mt-0.5">{doc.publisher_name || "DocLib"} • {doc.category || "Tài liệu"}</p></div></div></td>
-                      <td className="px-6 py-4"><span className={`text-[12px] px-3 py-1 rounded-full font-medium ${doc.status === "published" ? "bg-[#E8F3FF] text-[#0071E3]" : "bg-[#F5F5F7] text-[#6E6E73]"}`}>{doc.status === "published" ? "Đã đăng" : "Bản nháp"}</span></td>
-                      <td className="px-6 py-4">{doc.is_protected ? <span className="flex items-center gap-1 text-[13px] text-[#1D1D1F]"><Lock className="w-4 h-4"/> Đã khóa</span> : <span className="text-[13px] text-[#6E6E73]">Không</span>}</td>
-                      <td className="px-6 py-4 text-right">
+                    <tr key={doc._id || doc.id} className="hover:bg-[#F5F5F7] transition-colors group">
+                      <td className="py-3 px-6"><div className="flex items-center gap-4"><div className="w-10 h-12 bg-white border border-[#E8E8ED] flex items-center justify-center rounded-[12px] text-[#6E6E73]"><FileText className="w-5 h-5"/></div><div><p className="font-medium text-[#1D1D1F] max-w-sm truncate">{doc.title}</p><p className="text-[12px] text-[#6E6E73] mt-0.5">{doc.publisher_name || "DocLib"} • {doc.category || "Tài liệu"}</p></div></div></td>
+                      <td className="py-3 px-6"><span className={`text-[12px] px-3 py-1 rounded-full font-medium ${doc.status === "published" ? "bg-[#E8F3FF] text-[#0071E3]" : "bg-[#F5F5F7] text-[#6E6E73]"}`}>{doc.status === "published" ? "Đã đăng" : "Bản nháp"}</span></td>
+                      <td className="py-3 px-6">{doc.is_protected ? <span className="flex items-center gap-1 text-[13px] text-[#1D1D1F]"><Lock className="w-4 h-4"/> Đã khóa</span> : <span className="text-[13px] text-[#6E6E73]">Không</span>}</td>
+                      <td className="py-3 px-6 text-right">
                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => toggleStar(doc._id || doc.id)} className={`p-2 rounded-[10px] transition-colors ${doc.is_starred ? "text-[#FF9500] bg-[#FF9500]/10" : "text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F]"}`}><Star className={`w-4 h-4 ${doc.is_starred ? "fill-[#FF9500]" : ""}`}/></button>
                           <button onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })} className="p-2 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[10px] transition-colors"><Lock className="w-4 h-4"/></button>
@@ -202,14 +202,14 @@ export default function DocumentsPage() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
               {folders.map(folder => (
-                <div key={folder._id} onClick={() => { setCurrentFolder(folder); setBreadcrumbs([...breadcrumbs, folder]); }} className="bg-[#F5F5F7] border-[#E8E8ED] p-6 flex flex-col items-center justify-center gap-3 cursor-pointer rounded-[24px] hover: transition-shadow group">
+                <div key={folder._id} onClick={() => { setCurrentFolder(folder); setBreadcrumbs([...breadcrumbs, folder]); }} className="bg-[#F5F5F7] p-6 flex flex-col items-center justify-center gap-3 cursor-pointer rounded-[24px] hover: transition-shadow group">
                   <div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[16px] text-[#1D1D1F]"><Folder className="w-8 h-8"/></div>
                   <span className="text-[15px] font-medium text-[#1D1D1F] text-center">{folder.name}</span>
                 </div>
               ))}
               {documents.map(doc => (
-                <div key={doc._id || doc.id} className="bg-[#F5F5F7] border-[#E8E8ED] p-5 flex flex-col rounded-[24px] hover: transition-shadow group relative">
-                  <button onClick={() => toggleStar(doc._id || doc.id)} className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"><Star className={`w-4 h-4 ${doc.is_starred ? "text-[#FF9500] fill-[#FF9500]" : "text-[#6E6E73]"}`}/></button>
+                <div key={doc._id || doc.id} className="bg-[#F5F5F7] p-5 flex flex-col rounded-[24px] hover: transition-shadow group relative">
+                  <button onClick={() => toggleStar(doc._id || doc.id)} className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Star className={`w-4 h-4 ${doc.is_starred ? "text-[#FF9500] fill-[#FF9500]" : "text-[#6E6E73]"}`}/></button>
                   <div className="flex flex-col items-center gap-4 mb-4 mt-2">
                     <div className="w-24 h-32 bg-[#F5F5F7] flex items-center justify-center rounded-[14px] text-[#A1A1A6] overflow-hidden border border-[#E8E8ED]">
                       {doc.cover_url ? <img src={doc.cover_url} className="w-full h-full object-cover" alt="" /> : <FileText className="w-10 h-10"/>}
@@ -231,10 +231,10 @@ export default function DocumentsPage() {
           )}
 
           {documents.length === 0 && folders.length === 0 && !isLoading && (
-            <div className="flex-1 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED]">
+            <div className="flex-1 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[24px]">
               <Search className="w-12 h-12 text-[#C7C7CC] mb-4"/>
               <h2 className="text-[20px] font-medium text-[#1D1D1F]">Không có tài liệu</h2>
-              <p className="text-[14px] text-[#6E6E73] mt-2">Thư mục hiện đang trống.</p>
+              <p className="text-[17px] text-[#6E6E73] mt-2">Thư mục hiện đang trống.</p>
             </div>
           )}
 
@@ -302,7 +302,7 @@ export default function DocumentsPage() {
             {publicUrl && (
               <div className="bg-[#F5F5F7] p-6 rounded-[18px] border-[#E8E8ED] flex flex-col items-center gap-4 mt-4">
                 <input type="text" readOnly value={publicUrl} className="apple-input w-full text-center bg-[#F5F5F7] text-[#0071E3]" onFocus={e=>e.target.select()} />
-                <div className="p-2 bg-white rounded-xl shadow-sm border border-[#E8E8ED]"><QRCodeSVG value={publicUrl} size={100} /></div>
+                <div className="p-2 bg-white rounded-xl border border-[#E8E8ED]"><QRCodeSVG value={publicUrl} size={100} /></div>
               </div>
             )}
           </form>

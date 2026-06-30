@@ -48,7 +48,7 @@ export default function DraftsPage() {
             </div>
             <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có bản nháp nào</h3>
             <p className="text-[15px] text-[#6E6E73] max-w-sm mb-6">Bạn chưa có tác phẩm nào đang trong quá trình soạn thảo. Bắt đầu sáng tác ngay.</p>
-            <button onClick={() => router.push("/cung-cap")} className="h-[44px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ED] transition-colors flex items-center gap-2 shadow-sm">
+            <button onClick={() => router.push("/cung-cap")} className="h-[44px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ED] transition-colors flex items-center gap-2">
               <PenTool className="w-4 h-4" /> Tạo tác phẩm mới
             </button>
           </div>
@@ -64,7 +64,7 @@ export default function DraftsPage() {
                       <FileText className="w-12 h-12 text-[#C7C7CC]" />
                     </div>
                   )}
-                  <div className="absolute top-4 left-4 px-3 py-1.5 bg-white/90 backdrop-blur-md border border-[#E8E8ED] rounded-[10px] shadow-sm">
+                  <div className="absolute top-4 left-4 px-3 py-1.5 bg-white/90 backdrop-blur-md border border-[#E8E8ED] rounded-[10px]">
                     <span className="text-[12px] font-medium text-[#6E6E73] flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-[#0071E3] animate-pulse" /> Bản nháp
                     </span>

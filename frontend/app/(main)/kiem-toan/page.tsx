@@ -85,10 +85,10 @@ export default function LogsPage() {
         </div>
       </div>
 
-      <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] overflow-hidden flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between p-6 border-b border-[#E8E8ED] bg-[#F5F5F7]/30">
+      <div className="bg-[#F5F5F7] rounded-[24px] overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
           <h2 className="text-[20px] font-medium text-[#1D1D1F] flex items-center gap-2">
-            <Database className="w-5 h-5 text-[#6E6E73]" /> Bản ghi nhật ký
+            Bản ghi nhật ký
           </h2>
           <span className="px-3 py-1 bg-[#F5F5F7] text-[#6E6E73] text-[13px] font-medium rounded-full">
             {activityLogs.length} bản ghi
@@ -96,13 +96,13 @@ export default function LogsPage() {
         </div>
         
         <div className="overflow-y-auto no-scrollbar flex-1 p-2">
-          <table className="w-full text-left text-[14px]">
-            <thead className="sticky top-0 bg-white z-10">
-              <tr className="border-b border-[#E8E8ED] text-[13px] text-[#6E6E73]">
-                <th className="px-6 py-4 font-medium w-[25%]">Thao tác</th>
-                <th className="px-6 py-4 font-medium w-[35%]">Đối tượng</th>
-                <th className="px-6 py-4 font-medium w-[25%]">Thời gian</th>
-                <th className="px-6 py-4 font-medium text-right w-[15%]">Trạng thái</th>
+          <table className="w-full text-left text-[14px] border-collapse">
+            <thead>
+              <tr className="text-[13px] text-[#6E6E73]">
+                <th className="py-3 px-6 font-medium w-[25%]">Thao tác</th>
+                <th className="py-3 px-6 font-medium w-[35%]">Đối tượng</th>
+                <th className="py-3 px-6 font-medium w-[25%]">Thời gian</th>
+                <th className="py-3 px-6 font-medium text-right w-[15%]">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -114,7 +114,7 @@ export default function LogsPage() {
                         <FileText className="w-8 h-8 text-[#C7C7CC]" />
                       </div>
                       <h2 className="text-[20px] font-medium text-[#1D1D1F] mb-1">Nhật ký trống</h2>
-                      <p className="text-[14px] text-[#6E6E73]">
+                      <p className="text-[17px] text-[#6E6E73]">
                         Chưa có hoạt động quản trị nào được ghi nhận.
                       </p>
                     </div>
@@ -124,14 +124,14 @@ export default function LogsPage() {
                 activityLogs.map((log: any, idx: number) => (
                   <tr
                     key={idx}
-                    className="border-b border-[#F5F5F7] hover:bg-[#F5F5F7] transition-colors"
+                    className="hover:bg-[#F5F5F7] transition-colors"
                   >
-                    <td className="px-6 py-4">
+                    <td className="py-3 px-6">
                       <span className="font-medium text-[#1D1D1F]">
                         {log.action || "Thao tác điều hành"}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="py-3 px-6">
                       <div className="flex flex-col gap-1">
                         <span className="text-[12px] bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-md w-fit font-medium">
                           {log.target_type}
@@ -141,12 +141,12 @@ export default function LogsPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="py-3 px-6">
                       <span className="text-[#6E6E73]">
                         {new Date(log.created_at).toLocaleString("vi-VN")}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="py-3 px-6 text-right">
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#34C759] rounded-full text-[13px] font-medium">
                         <CheckCircle2 className="w-4 h-4" /> Hoàn tất
                       </div>

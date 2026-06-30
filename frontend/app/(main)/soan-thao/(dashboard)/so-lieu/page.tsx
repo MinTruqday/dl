@@ -102,21 +102,21 @@ export default function StatsPage() {
           <div className="flex-1 overflow-auto custom-scrollbar">
             {(stats?.documents || []).length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center p-12 text-center">
-                <div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4"><BookOpen className="w-8 h-8 text-[#C7C7CC]" /></div>
+                <div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4"><BookOpen className="w-8 h-8 text-[#C7C7CC]" /></div>
                 <h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có dữ liệu</h3>
                 <p className="text-[15px] text-[#6E6E73] max-w-sm">Bạn chưa có tác phẩm nào phát sinh số liệu. Hãy xuất bản thêm nội dung.</p>
               </div>
             ) : (
               <table className="w-full text-left text-[15px] border-collapse min-w-[600px]">
-                <thead className="sticky top-0 bg-white z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-                  <tr className="border-b border-[#E8E8ED] text-[13px] font-medium text-[#6E6E73]">
+                <thead className="sticky top-0 bg-white z-10">
+                  <tr className="text-[13px] font-medium text-[#6E6E73]">
                     <th className="px-6 py-4 w-1/2">Tiêu đề tác phẩm</th>
                     <th className="px-6 py-4 text-center">Lượt xem</th>
                     <th className="px-6 py-4 text-center">Xếp hạng</th>
                     <th className="px-6 py-4 text-right">Chi tiết</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E8E8ED]">
+                <tbody className="">
                   {(stats?.documents || []).map((doc: any, idx: number) => (
                     <tr key={doc.id || idx} onClick={(e) => handleViewDeepAnalytics(doc.id, e)} className="cursor-pointer hover:bg-[#F5F5F7] transition-colors group">
                       <td className="px-6 py-4"><div className="font-semibold text-[#1D1D1F] line-clamp-1">{doc.title}</div></td>

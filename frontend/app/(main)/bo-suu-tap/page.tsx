@@ -111,7 +111,7 @@ export default function CollectorPage() {
           </section>
         </aside>
 
-        <main className="lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 bg-[#1D1D1F] rounded-[24px] shadow-sm overflow-hidden">
+        <main className="lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 bg-[#1D1D1F] rounded-[24px] overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#333336] bg-[#2A2A2D]">
             <div className="flex items-center gap-4">
               <div className="flex gap-2"><div className="w-3 h-3 rounded-full bg-[#FF3B30]"></div><div className="w-3 h-3 rounded-full bg-[#FF9500]"></div><div className="w-3 h-3 rounded-full bg-[#34C759]"></div></div>

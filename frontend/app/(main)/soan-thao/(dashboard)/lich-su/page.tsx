@@ -112,7 +112,7 @@ export default function HistoryPage() {
           </div>
           <div className="relative w-full sm:w-[320px]">
             <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
-            <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[14px] appearance-none transition-colors cursor-pointer shadow-sm">
+            <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full h-[48px] pl-12 pr-4 border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[14px] appearance-none transition-colors cursor-pointer">
               {documents.length === 0 && <option value="" disabled>Chưa có tác phẩm</option>}
               {documents.map((d) => <option key={d.id || d._id} value={d.id || d._id}>{d.title || "Chưa có tiêu đề"}</option>)}
             </select>
@@ -126,7 +126,7 @@ export default function HistoryPage() {
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2 mb-1"><History className="w-5 h-5" /> Danh sách phiên bản</h2>
                 <p className="text-[13px] text-[#6E6E73]">{selectedVersions.length === 2 ? "Đã chọn đủ 2 phiên bản để so sánh" : "Bạn có thể chọn 2 phiên bản bất kỳ để xem sự khác biệt"}</p>
               </div>
-              <button onClick={handleCompareVersions} disabled={selectedVersions.length !== 2 || isComparing} className={`h-[44px] px-6 text-[15px] font-medium rounded-full flex items-center justify-center gap-2 transition-colors ${selectedVersions.length === 2 ? "bg-[#0071E3] text-white hover:bg-[#0077ED] shadow-sm" : "bg-[#F5F5F7] text-[#C7C7CC] cursor-not-allowed border border-[#E8E8ED]"}`}>
+              <button onClick={handleCompareVersions} disabled={selectedVersions.length !== 2 || isComparing} className={`h-[44px] px-6 text-[15px] font-medium rounded-full flex items-center justify-center gap-2 transition-colors ${selectedVersions.length === 2 ? "bg-[#0071E3] text-white hover:bg-[#0077ED]" : "bg-[#F5F5F7] text-[#C7C7CC] cursor-not-allowed border border-[#E8E8ED]"}`}>
                 {isComparing ? <Loader2 className="w-5 h-5 animate-spin" /> : <GitCompare className="w-5 h-5" />} So sánh
               </button>
             </div>
@@ -135,7 +135,7 @@ export default function HistoryPage() {
               {loadingVersions ? (
                 <div className="h-full flex flex-col items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" /><p className="text-[13px] font-medium text-[#6E6E73]">Đang tải dữ liệu...</p></div>
               ) : versions.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-12"><div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] shadow-sm flex items-center justify-center rounded-[18px] mb-4"><History className="w-8 h-8 text-[#C7C7CC]" /></div><h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có phiên bản</h3><p className="text-[15px] text-[#6E6E73] max-w-sm">Tác phẩm này chưa có phiên bản nào được lưu lại trong lịch sử.</p></div>
+                <div className="h-full flex flex-col items-center justify-center text-center p-12"><div className="w-16 h-16 bg-[#F5F5F7] border border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4"><History className="w-8 h-8 text-[#C7C7CC]" /></div><h3 className="text-[17px] font-medium text-[#1D1D1F] mb-2">Chưa có phiên bản</h3><p className="text-[15px] text-[#6E6E73] max-w-sm">Tác phẩm này chưa có phiên bản nào được lưu lại trong lịch sử.</p></div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {versions.map((v) => {
@@ -152,7 +152,7 @@ export default function HistoryPage() {
                             <p className="text-[13px] text-[#6E6E73] flex items-center gap-1.5"><span>Tác giả:</span><span className="font-medium text-[#1D1D1F]">{v.author_name || "Hệ thống"}</span></p>
                           </div>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); setConfirmRestore(v.id); }} className="h-[44px] px-6 bg-white border border-[#E8E8ED] text-[13px] font-medium text-[#1D1D1F] rounded-full hover:bg-[#F5F5F7] transition-all flex items-center justify-center gap-2 sm:opacity-0 sm:group-hover:opacity-100 shadow-sm">
+                        <button onClick={(e) => { e.stopPropagation(); setConfirmRestore(v.id); }} className="h-[44px] px-6 bg-white border border-[#E8E8ED] text-[13px] font-medium text-[#1D1D1F] rounded-full hover:bg-[#F5F5F7] transition-all flex items-center justify-center gap-2 sm:opacity-0 sm:group-hover:opacity-100">
                           <RotateCcw className="w-4 h-4" /> Khôi phục
                         </button>
                       </div>
@@ -183,7 +183,7 @@ export default function HistoryPage() {
         </ModalContent>
         <ModalFooter className="flex gap-3 border-t border-[#E8E8ED] p-6 bg-[#F5F5F7]">
           <button onClick={() => setConfirmRestore(null)} className="flex-1 h-[44px] bg-white border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] rounded-full transition-colors hover:bg-[#E8E8ED]">Hủy bỏ</button>
-          <button onClick={executeRestore} className="flex-1 h-[44px] bg-[#FF9F0A] text-white text-[15px] font-medium rounded-full flex items-center justify-center transition-colors hover:bg-[#E08D00] shadow-sm">Xác nhận</button>
+          <button onClick={executeRestore} className="flex-1 h-[44px] bg-[#FF9F0A] text-white text-[15px] font-medium rounded-full flex items-center justify-center transition-colors hover:bg-[#E08D00]">Xác nhận</button>
         </ModalFooter>
       </Modal>
 

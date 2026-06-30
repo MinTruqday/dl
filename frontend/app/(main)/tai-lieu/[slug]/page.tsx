@@ -123,7 +123,7 @@ export default function DocumentDetailsPage() {
       
       <div className="flex flex-col md:flex-row gap-12 mb-12">
         <div className="w-full md:w-[320px] shrink-0">
-          <div className="aspect-[3/4] w-full rounded-[24px] overflow-hidden bg-[#F5F5F7] border border-[#E8E8ED] shadow-sm">
+          <div className="aspect-[3/4] w-full rounded-[24px] overflow-hidden bg-[#F5F5F7] border border-[#E8E8ED]">
             {docData.cover_url || docData.cover_image ? <img src={docData.cover_url || docData.cover_image} className="w-full h-full object-cover" alt={docData.title} /> : <div className="w-full h-full flex items-center justify-center"><BookOpen className="w-12 h-12 text-[#C7C7CC]" /></div>}
           </div>
         </div>

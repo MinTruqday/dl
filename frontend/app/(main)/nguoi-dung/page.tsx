@@ -62,21 +62,21 @@ export default function UsersManagementPage() {
         </div>
       </div>
 
-      <div className="bg-[#F5F5F7] rounded-[24px] border-[#E8E8ED] flex-1 overflow-y-auto no-scrollbar">
-        <table className="w-full text-left text-[14px]">
-          <thead className="sticky top-0 bg-white z-10">
-            <tr className="border-b border-[#E8E8ED] text-[13px] text-[#6E6E73]">
-              <th className="px-6 py-4 font-medium w-[35%]">Thành viên</th>
-              <th className="px-6 py-4 font-medium w-[20%]">Quyền hạn</th>
-              <th className="px-6 py-4 font-medium w-[20%]">Tham gia</th>
-              <th className="px-6 py-4 font-medium w-[15%]">Trạng thái</th>
-              <th className="px-6 py-4 font-medium text-right w-[10%]">Thao tác</th>
+      <div className="bg-[#F5F5F7] rounded-[24px] flex-1 overflow-y-auto no-scrollbar">
+        <table className="w-full text-left text-[14px] border-collapse">
+          <thead>
+            <tr className="text-[13px] text-[#6E6E73]">
+              <th className="py-3 px-6 font-medium w-[35%]">Thành viên</th>
+              <th className="py-3 px-6 font-medium w-[20%]">Quyền hạn</th>
+              <th className="py-3 px-6 font-medium w-[20%]">Tham gia</th>
+              <th className="py-3 px-6 font-medium w-[15%]">Trạng thái</th>
+              <th className="py-3 px-6 font-medium text-right w-[10%]">Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.map(u => (
-              <tr key={u._id} className="border-b border-[#F5F5F7] hover:bg-[#F5F5F7] transition-colors group">
-                <td className="px-6 py-4">
+              <tr key={u._id} className="hover:bg-[#F5F5F7] transition-colors group">
+                <td className="py-3 px-6">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-[#F5F5F7] text-[#1D1D1F] flex items-center justify-center font-semibold rounded-full overflow-hidden shrink-0 border border-[#E8E8ED]">
                       {u.avatar_url ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover" /> : (u.full_name || u.email || "?")[0].toUpperCase()}
@@ -87,7 +87,7 @@ export default function UsersManagementPage() {
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="py-3 px-6">
                   <div className="relative inline-block w-full max-w-[150px]">
                     <select value={u.role} onChange={(e) => setConfirmModal({ type: "role", user: u, value: e.target.value })} className={`w-full bg-[#F5F5F7] h-[32px] px-3 text-[13px] font-medium rounded-full focus:outline-none appearance-none transition-colors border border-transparent hover:border-[#E8E8ED] ${u.role === "admin" ? "text-[#0071E3] bg-[#E8F3FF]" : "text-[#1D1D1F]"}`}>
                       <option value="reader">Độc giả</option><option value="potential_author">Tác giả tiềm năng</option><option value="author">Tác giả</option><option value="moderator">Điều hành</option><option value="admin">Quản trị</option>
@@ -95,14 +95,14 @@ export default function UsersManagementPage() {
                     <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6E6E73] pointer-events-none" />
                   </div>
                 </td>
-                <td className="px-6 py-4 text-[#6E6E73]">{u.created_at ? new Date(u.created_at).toLocaleDateString("vi-VN") : "---"}</td>
-                <td className="px-6 py-4">
+                <td className="py-3 px-6 text-[#6E6E73]">{u.created_at ? new Date(u.created_at).toLocaleDateString("vi-VN") : "---"}</td>
+                <td className="py-3 px-6">
                   <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium ${u.is_active ? "bg-[#E8F5E9] text-[#34C759]" : "bg-[#FF3B30]/10 text-[#FF3B30]"}`}>
                     <div className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-[#34C759]" : "bg-[#FF3B30]"}`}></div>
                     {u.is_active ? "Hoạt động" : "Tạm khóa"}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-right relative">
+                <td className="py-3 px-6 text-right relative">
                   <button onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === u._id ? null : u._id); }} className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors opacity-0 group-hover:opacity-100"><MoreVertical className="w-4 h-4" /></button>
                   {openDropdownId === u._id && (
                     <>
@@ -124,7 +124,7 @@ export default function UsersManagementPage() {
                   <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                     <div className="w-16 h-16 bg-[#F5F5F7] rounded-[16px] flex items-center justify-center mb-4"><Search className="w-8 h-8 text-[#C7C7CC]" /></div>
                     <h2 className="text-[20px] font-medium text-[#1D1D1F] mb-1">Không tìm thấy</h2>
-                    <p className="text-[14px] text-[#6E6E73]">Thử với một từ khóa khác.</p>
+                    <p className="text-[17px] text-[#6E6E73]">Thử với một từ khóa khác.</p>
                   </div>
                 </td>
               </tr>

@@ -59,7 +59,7 @@ export default function TrashPage() {
                     </p>
                   </div>
                 </div>
-                <button onClick={() => handleRestoreDocument(doc._id || doc.id)} className="w-full sm:w-auto h-[44px] px-6 bg-white border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] rounded-full flex items-center justify-center gap-2 hover:bg-[#F5F5F7] hover:text-[#0071E3] transition-colors shadow-sm sm:opacity-0 sm:group-hover:opacity-100">
+                <button onClick={() => handleRestoreDocument(doc._id || doc.id)} className="w-full sm:w-auto h-[44px] px-6 bg-white border border-[#E8E8ED] text-[15px] font-medium text-[#1D1D1F] rounded-full flex items-center justify-center gap-2 hover:bg-[#F5F5F7] hover:text-[#0071E3] transition-colors sm:opacity-0 sm:group-hover:opacity-100">
                   <RotateCcw className="w-4 h-4" /> Khôi phục
                 </button>
               </div>
