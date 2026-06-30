@@ -7,24 +7,24 @@ import ProvisionLayout from "@/features/content/components/ProvisionLayout";
 import { Suspense } from "react";
 
 function SoanThaoContent() {
-  const searchParams = useSearchParams();
-  const documentId = searchParams.get("tai-lieu");
+ const searchParams = useSearchParams();
+ const documentId = searchParams.get("tai-lieu");
 
-  if (documentId) {
-    return <EditorPage />;
-  }
+ if (documentId) {
+ return <EditorPage />;
+ }
 
-  return (
-    <ProvisionLayout>
-      <CreateDocumentPage />
-    </ProvisionLayout>
-  );
+ return (
+ <ProvisionLayout>
+ <CreateDocumentPage />
+ </ProvisionLayout>
+ );
 }
 
 export default function Page() {
-  return (
-    <Suspense>
-      <SoanThaoContent />
-    </Suspense>
-  );
+ return (
+ <Suspense>
+ <SoanThaoContent />
+ </Suspense>
+ );
 }
