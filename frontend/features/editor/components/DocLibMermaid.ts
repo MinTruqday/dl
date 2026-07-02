@@ -17,7 +17,15 @@ export default class DocLibMermaid implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -53,14 +61,22 @@ export default class DocLibMermaid implements BlockTool {
         return;
       }
       if (document.getElementById("mermaid-script")) {
-        window.addEventListener("mermaid-loaded", () => resolve((window as any).mermaid), { once: true });
+        window.addEventListener(
+          "mermaid-loaded",
+          () => resolve((window as any).mermaid),
+          { once: true },
+        );
         return;
       }
       const script = document.createElement("script");
       script.id = "mermaid-script";
-      script.src = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
+      script.src =
+        "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
       script.onload = () => {
-        (window as any).mermaid.initialize({ startOnLoad: false, theme: "default" });
+        (window as any).mermaid.initialize({
+          startOnLoad: false,
+          theme: "default",
+        });
         window.dispatchEvent(new Event("mermaid-loaded"));
         resolve((window as any).mermaid);
       };
@@ -105,7 +121,10 @@ export default class DocLibMermaid implements BlockTool {
     textarea.addEventListener("input", () => {
       this.data.code = textarea.value;
       clearTimeout(timeout);
-      timeout = setTimeout(() => this.renderPreview(this.data.code, preview), 600);
+      timeout = setTimeout(
+        () => this.renderPreview(this.data.code, preview),
+        600,
+      );
     });
 
     this.wrapper.appendChild(textarea);

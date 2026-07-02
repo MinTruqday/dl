@@ -17,7 +17,15 @@ export default class DocLibCouponCode implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibCouponCode implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-coupon { border: 2px dashed #f59e0b; border-radius: 12px; padding: 24px; background: #fffbeb; text-align: center; max-width: 400px; margin: 24px auto; position: relative; font-family: sans-serif; }
@@ -63,9 +71,13 @@ export default class DocLibCouponCode implements BlockTool {
 
     if (!this.readOnly) {
       titleEl.contentEditable = "true";
-      titleEl.addEventListener("input", () => { this.data.title = titleEl.innerText; });
+      titleEl.addEventListener("input", () => {
+        this.data.title = titleEl.innerText;
+      });
       discEl.contentEditable = "true";
-      discEl.addEventListener("input", () => { this.data.discount = discEl.innerText; });
+      discEl.addEventListener("input", () => {
+        this.data.discount = discEl.innerText;
+      });
     }
 
     const wrap = document.createElement("div");
@@ -78,7 +90,9 @@ export default class DocLibCouponCode implements BlockTool {
 
     if (!this.readOnly) {
       codeEl.contentEditable = "true";
-      codeEl.addEventListener("input", () => { this.data.code = codeEl.innerText; });
+      codeEl.addEventListener("input", () => {
+        this.data.code = codeEl.innerText;
+      });
     }
 
     const btn = document.createElement("button");
@@ -87,7 +101,9 @@ export default class DocLibCouponCode implements BlockTool {
     btn.addEventListener("click", () => {
       navigator.clipboard.writeText(this.data.code || "DOCLIBCODE").then(() => {
         btn.innerText = "Copied";
-        setTimeout(() => { btn.innerText = "Copy"; }, 1500);
+        setTimeout(() => {
+          btn.innerText = "Copy";
+        }, 1500);
       });
     });
 

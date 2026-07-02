@@ -17,12 +17,23 @@ export default class DocLibFormListBox implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       label: data?.label || "",
-      options: data?.options && data.options.length > 0 ? data.options : ["DocLib Item 1", "DocLib Item 2", "DocLib Item 3"],
+      options:
+        data?.options && data.options.length > 0
+          ? data.options
+          : ["DocLib Item 1", "DocLib Item 2", "DocLib Item 3"],
       selected: data?.selected || [],
     };
   }
@@ -30,7 +41,7 @@ export default class DocLibFormListBox implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-listbox { font-family: sans-serif; display: flex; flex-direction: column; gap: 8px; margin: 16px 0; max-width: 400px; }
@@ -57,7 +68,9 @@ export default class DocLibFormListBox implements BlockTool {
     label.innerText = this.data.label;
     if (!this.readOnly) {
       label.contentEditable = "true";
-      label.addEventListener("input", () => { this.data.label = label.innerText; });
+      label.addEventListener("input", () => {
+        this.data.label = label.innerText;
+      });
     }
     container.appendChild(label);
 
@@ -74,7 +87,9 @@ export default class DocLibFormListBox implements BlockTool {
 
         item.addEventListener("click", () => {
           if (this.data.selected.includes(i)) {
-            this.data.selected = this.data.selected.filter((idx: number) => idx !== i);
+            this.data.selected = this.data.selected.filter(
+              (idx: number) => idx !== i,
+            );
           } else {
             this.data.selected.push(i);
           }
@@ -84,7 +99,7 @@ export default class DocLibFormListBox implements BlockTool {
         const text = document.createElement("div");
         text.classList.add("doclib-lb-text");
         text.innerText = opt;
-        
+
         if (!this.readOnly) {
           text.contentEditable = "true";
           text.addEventListener("input", (e) => {
@@ -99,7 +114,9 @@ export default class DocLibFormListBox implements BlockTool {
           del.addEventListener("click", (e) => {
             e.stopPropagation();
             this.data.options.splice(i, 1);
-            this.data.selected = this.data.selected.filter((idx: number) => idx !== i).map((idx: number) => idx > i ? idx - 1 : idx);
+            this.data.selected = this.data.selected
+              .filter((idx: number) => idx !== i)
+              .map((idx: number) => (idx > i ? idx - 1 : idx));
             renderList();
           });
           item.appendChild(text);

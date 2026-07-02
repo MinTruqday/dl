@@ -17,7 +17,15 @@ export default class DocLibTranslation implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -31,7 +39,7 @@ export default class DocLibTranslation implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-trans { display: flex; flex-direction: column; gap: 16px; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; margin: 16px 0; font-family: sans-serif; }
@@ -53,11 +61,11 @@ export default class DocLibTranslation implements BlockTool {
 
     const col1 = document.createElement("div");
     col1.classList.add("doclib-trans-col");
-    
+
     const lang1 = document.createElement("div");
     lang1.classList.add("doclib-trans-lang");
     lang1.innerText = this.data.langOrig;
-    
+
     const text1 = document.createElement("div");
     text1.classList.add("doclib-trans-text");
     text1.innerText = this.data.original;
@@ -65,9 +73,13 @@ export default class DocLibTranslation implements BlockTool {
 
     if (!this.readOnly) {
       lang1.contentEditable = "true";
-      lang1.addEventListener("input", () => { this.data.langOrig = lang1.innerText; });
+      lang1.addEventListener("input", () => {
+        this.data.langOrig = lang1.innerText;
+      });
       text1.contentEditable = "true";
-      text1.addEventListener("input", () => { this.data.original = text1.innerText; });
+      text1.addEventListener("input", () => {
+        this.data.original = text1.innerText;
+      });
     }
 
     col1.appendChild(lang1);
@@ -79,11 +91,11 @@ export default class DocLibTranslation implements BlockTool {
 
     const col2 = document.createElement("div");
     col2.classList.add("doclib-trans-col");
-    
+
     const lang2 = document.createElement("div");
     lang2.classList.add("doclib-trans-lang");
     lang2.innerText = this.data.langTrans;
-    
+
     const text2 = document.createElement("div");
     text2.classList.add("doclib-trans-text");
     text2.innerText = this.data.translated;
@@ -91,9 +103,13 @@ export default class DocLibTranslation implements BlockTool {
 
     if (!this.readOnly) {
       lang2.contentEditable = "true";
-      lang2.addEventListener("input", () => { this.data.langTrans = lang2.innerText; });
+      lang2.addEventListener("input", () => {
+        this.data.langTrans = lang2.innerText;
+      });
       text2.contentEditable = "true";
-      text2.addEventListener("input", () => { this.data.translated = text2.innerText; });
+      text2.addEventListener("input", () => {
+        this.data.translated = text2.innerText;
+      });
     }
 
     col2.appendChild(lang2);

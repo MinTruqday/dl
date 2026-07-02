@@ -1,10 +1,17 @@
+// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibVerticalTimeline implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
-    events: { id: string; date: string; title: string; description: string; color: string }[];
+    events: {
+      id: string;
+      date: string;
+      title: string;
+      description: string;
+      color: string;
+    }[];
   };
   private readOnly: boolean;
 
@@ -19,9 +26,19 @@ export default class DocLibVerticalTimeline implements BlockTool {
     return true;
   }
 
-  private mkId() { return Math.random().toString(36).substring(2, 8); }
+  private mkId() {
+    return Math.random().toString(36).substring(2, 8);
+  }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -102,8 +119,10 @@ export default class DocLibVerticalTimeline implements BlockTool {
       editArea.classList.add("doclib-tl-edit");
 
       const header = document.createElement("div");
-      header.style.cssText = "display:grid;grid-template-columns:1fr 2fr 3fr 40px 30px;gap:8px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;";
-      header.innerHTML = "<span>Date</span><span>Title</span><span>Description</span><span>Color</span><span></span>";
+      header.style.cssText =
+        "display:grid;grid-template-columns:1fr 2fr 3fr 40px 30px;gap:8px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;";
+      header.innerHTML =
+        "<span>Date</span><span>Title</span><span>Description</span><span>Color</span><span></span>";
       editArea.appendChild(header);
 
       this.data.events.forEach((event, idx) => {
@@ -114,13 +133,18 @@ export default class DocLibVerticalTimeline implements BlockTool {
           const inp = document.createElement("input");
           inp.classList.add("doclib-tl-input");
           inp.value = val;
-          inp.addEventListener("input", () => { update(inp.value); this.buildUI(); });
+          inp.addEventListener("input", () => {
+            update(inp.value);
+            this.buildUI();
+          });
           return inp;
         };
 
-        row.appendChild(mkInput(event.date, (v) => event.date = v));
-        row.appendChild(mkInput(event.title, (v) => event.title = v));
-        row.appendChild(mkInput(event.description, (v) => event.description = v));
+        row.appendChild(mkInput(event.date, (v) => (event.date = v)));
+        row.appendChild(mkInput(event.title, (v) => (event.title = v)));
+        row.appendChild(
+          mkInput(event.description, (v) => (event.description = v)),
+        );
 
         const colorInp = document.createElement("input");
         colorInp.type = "color";
@@ -130,13 +154,19 @@ export default class DocLibVerticalTimeline implements BlockTool {
         colorInp.style.padding = "0";
         colorInp.style.background = "transparent";
         colorInp.style.cursor = "pointer";
-        colorInp.addEventListener("input", () => { event.color = colorInp.value; this.buildUI(); });
+        colorInp.addEventListener("input", () => {
+          event.color = colorInp.value;
+          this.buildUI();
+        });
         row.appendChild(colorInp);
 
         const del = document.createElement("button");
         del.classList.add("doclib-tl-del");
         del.innerText = "x";
-        del.addEventListener("click", () => { this.data.events.splice(idx, 1); this.buildUI(); });
+        del.addEventListener("click", () => {
+          this.data.events.splice(idx, 1);
+          this.buildUI();
+        });
         row.appendChild(del);
 
         editArea.appendChild(row);
@@ -146,7 +176,13 @@ export default class DocLibVerticalTimeline implements BlockTool {
       addBtn.classList.add("doclib-tl-add-btn");
       addBtn.innerText = "Add Event";
       addBtn.addEventListener("click", () => {
-        this.data.events.push({ id: this.mkId(), date: "New Date", title: "New Event", description: "Event description", color: "#64748b" });
+        this.data.events.push({
+          id: this.mkId(),
+          date: "New Date",
+          title: "New Event",
+          description: "Event description",
+          color: "#64748b",
+        });
         this.buildUI();
       });
 

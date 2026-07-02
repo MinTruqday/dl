@@ -1,4 +1,7 @@
-import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function getPasskeyRegistrationOptionsAPI() {
   const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-ky/bat-dau`, {
@@ -37,11 +40,14 @@ export async function getPasskeyLoginOptionsAPI(email: string) {
 }
 
 export async function verifyPasskeyLoginAPI(assertionResponse: any) {
-  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/hoan-tat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(assertionResponse),
-  });
+  const res = await fetch(
+    `${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/hoan-tat`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(assertionResponse),
+    },
+  );
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Đăng nhập bằng khóa truy cập thất bại");

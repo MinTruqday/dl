@@ -23,7 +23,7 @@ export default class DocLibSubscript implements InlineTool {
 
   render() {
     this.button = document.createElement("button");
-    this.button.type = "button";
+    (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
       '<svg width="20" height="20" viewBox="0 0 24 24"><text x="2" y="16" font-size="16" font-family="sans-serif" font-weight="bold" fill="currentColor">X</text><text x="14" y="22" font-size="11" font-family="sans-serif" font-weight="bold" fill="currentColor">2</text></svg>';

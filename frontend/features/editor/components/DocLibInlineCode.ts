@@ -23,7 +23,7 @@ export default class DocLibInlineCode implements InlineTool {
 
   render() {
     this.button = document.createElement("button");
-    this.button.type = "button";
+    (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
       '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 18l-6-6 6-6"/><path d="M14 6l6 6-6 6"/></svg>';

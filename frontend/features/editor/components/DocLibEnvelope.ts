@@ -17,7 +17,15 @@ export default class DocLibEnvelope implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibEnvelope implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-env { width: 100%; max-width: 600px; height: 300px; background: #fdfdfd; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin: 24px auto; position: relative; font-family: Arial, sans-serif; }
@@ -49,7 +57,9 @@ export default class DocLibEnvelope implements BlockTool {
     ret.innerText = this.data.returnAddr;
     if (!this.readOnly) {
       ret.contentEditable = "true";
-      ret.addEventListener("input", () => { this.data.returnAddr = ret.innerText; });
+      ret.addEventListener("input", () => {
+        this.data.returnAddr = ret.innerText;
+      });
     }
     container.appendChild(ret);
 
@@ -58,7 +68,9 @@ export default class DocLibEnvelope implements BlockTool {
     del.innerText = this.data.deliveryAddr;
     if (!this.readOnly) {
       del.contentEditable = "true";
-      del.addEventListener("input", () => { this.data.deliveryAddr = del.innerText; });
+      del.addEventListener("input", () => {
+        this.data.deliveryAddr = del.innerText;
+      });
     }
     container.appendChild(del);
 

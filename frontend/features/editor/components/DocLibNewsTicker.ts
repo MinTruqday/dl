@@ -17,7 +17,15 @@ export default class DocLibNewsTicker implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -31,7 +39,7 @@ export default class DocLibNewsTicker implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-nt { display: flex; background: var(--nt-bg); color: var(--nt-col); padding: 8px 16px; border-radius: 4px; overflow: hidden; font-family: sans-serif; align-items: center; margin: 16px 0; }

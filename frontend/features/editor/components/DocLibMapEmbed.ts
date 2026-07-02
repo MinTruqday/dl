@@ -17,7 +17,15 @@ export default class DocLibMapEmbed implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -92,7 +100,9 @@ export default class DocLibMapEmbed implements BlockTool {
       if (!q) return;
       searchBtn.innerText = "Searching";
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`);
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+        );
         const results = await res.json();
         if (results && results.length > 0) {
           this.data.lat = parseFloat(results[0].lat);
@@ -111,7 +121,9 @@ export default class DocLibMapEmbed implements BlockTool {
     };
 
     searchBtn.addEventListener("click", search);
-    input.addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") search();
+    });
 
     controls.appendChild(input);
     controls.appendChild(searchBtn);

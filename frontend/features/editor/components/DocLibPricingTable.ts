@@ -4,7 +4,17 @@ export default class DocLibPricingTable implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
-    tiers: { id: string; name: string; price: string; period: string; features: { text: string; included: boolean }[]; recommended: boolean; btnText: string; btnUrl: string; color: string }[];
+    tiers: {
+      id: string;
+      name: string;
+      price: string;
+      period: string;
+      features: { text: string; included: boolean }[];
+      recommended: boolean;
+      btnText: string;
+      btnUrl: string;
+      color: string;
+    }[];
   };
   private readOnly: boolean;
 
@@ -19,9 +29,19 @@ export default class DocLibPricingTable implements BlockTool {
     return true;
   }
 
-  private mkId() { return Math.random().toString(36).substring(2, 8); }
+  private mkId() {
+    return Math.random().toString(36).substring(2, 8);
+  }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -110,7 +130,7 @@ export default class DocLibPricingTable implements BlockTool {
         const fEl = document.createElement("div");
         fEl.classList.add("doclib-pr-feat");
         if (!feat.included) fEl.classList.add("excluded");
-        fEl.innerHTML = `<span class="${feat.included ? 'doclib-pr-icon-yes' : 'doclib-pr-icon-no'}">${feat.included ? 'v' : 'x'}</span><span>${feat.text}</span>`;
+        fEl.innerHTML = `<span class="${feat.included ? "doclib-pr-icon-yes" : "doclib-pr-icon-no"}">${feat.included ? "v" : "x"}</span><span>${feat.text}</span>`;
         features.appendChild(fEl);
       });
 
@@ -146,11 +166,14 @@ export default class DocLibPricingTable implements BlockTool {
 
         const title = document.createElement("strong");
         title.innerText = `Tier ${tIdx + 1}`;
-        
+
         const removeTier = document.createElement("button");
         removeTier.classList.add("doclib-pr-del");
         removeTier.innerText = "Delete Tier";
-        removeTier.addEventListener("click", () => { this.data.tiers.splice(tIdx, 1); this.buildUI(); });
+        removeTier.addEventListener("click", () => {
+          this.data.tiers.splice(tIdx, 1);
+          this.buildUI();
+        });
 
         headerRow.appendChild(title);
         headerRow.appendChild(removeTier);
@@ -159,28 +182,41 @@ export default class DocLibPricingTable implements BlockTool {
         const grid = document.createElement("div");
         grid.classList.add("doclib-pr-edit-grid");
 
-        const mkInp = (label: string, val: string, update: (v: string) => void) => {
+        const mkInp = (
+          label: string,
+          val: string,
+          update: (v: string) => void,
+        ) => {
           const wrap = document.createElement("div");
           const l = document.createElement("label");
-          l.style.cssText = "font-size:11px;color:#64748b;margin-bottom:4px;display:block;";
+          l.style.cssText =
+            "font-size:11px;color:#64748b;margin-bottom:4px;display:block;";
           l.innerText = label;
           const i = document.createElement("input");
           i.classList.add("doclib-pr-input");
           i.value = val;
-          i.addEventListener("input", () => { update(i.value); this.buildUI(); });
+          i.addEventListener("input", () => {
+            update(i.value);
+            this.buildUI();
+          });
           wrap.appendChild(l);
           wrap.appendChild(i);
           return wrap;
         };
 
-        grid.appendChild(mkInp("Name", tier.name, (v) => tier.name = v));
-        grid.appendChild(mkInp("Price", tier.price, (v) => tier.price = v));
-        grid.appendChild(mkInp("Period", tier.period, (v) => tier.period = v));
-        grid.appendChild(mkInp("Button Text", tier.btnText, (v) => tier.btnText = v));
+        grid.appendChild(mkInp("Name", tier.name, (v) => (tier.name = v)));
+        grid.appendChild(mkInp("Price", tier.price, (v) => (tier.price = v)));
+        grid.appendChild(
+          mkInp("Period", tier.period, (v) => (tier.period = v)),
+        );
+        grid.appendChild(
+          mkInp("Button Text", tier.btnText, (v) => (tier.btnText = v)),
+        );
 
         const colorWrap = document.createElement("div");
         const cLabel = document.createElement("label");
-        cLabel.style.cssText = "font-size:11px;color:#64748b;margin-bottom:4px;display:block;";
+        cLabel.style.cssText =
+          "font-size:11px;color:#64748b;margin-bottom:4px;display:block;";
         cLabel.innerText = "Color";
         const cInp = document.createElement("input");
         cInp.type = "color";
@@ -188,7 +224,10 @@ export default class DocLibPricingTable implements BlockTool {
         cInp.style.width = "100%";
         cInp.style.height = "34px";
         cInp.style.padding = "0";
-        cInp.addEventListener("input", () => { tier.color = cInp.value; this.buildUI(); });
+        cInp.addEventListener("input", () => {
+          tier.color = cInp.value;
+          this.buildUI();
+        });
         colorWrap.appendChild(cLabel);
         colorWrap.appendChild(cInp);
         grid.appendChild(colorWrap);
@@ -200,7 +239,10 @@ export default class DocLibPricingTable implements BlockTool {
         const recCb = document.createElement("input");
         recCb.type = "checkbox";
         recCb.checked = tier.recommended;
-        recCb.addEventListener("change", () => { tier.recommended = recCb.checked; this.buildUI(); });
+        recCb.addEventListener("change", () => {
+          tier.recommended = recCb.checked;
+          this.buildUI();
+        });
         const recLabel = document.createElement("span");
         recLabel.style.fontSize = "13px";
         recLabel.innerText = "Recommended";
@@ -212,7 +254,7 @@ export default class DocLibPricingTable implements BlockTool {
 
         const featList = document.createElement("div");
         featList.style.marginTop = "16px";
-        
+
         tier.features.forEach((feat, fIdx) => {
           const fRow = document.createElement("div");
           fRow.classList.add("doclib-pr-feat-edit");
@@ -220,17 +262,26 @@ export default class DocLibPricingTable implements BlockTool {
           const cb = document.createElement("input");
           cb.type = "checkbox";
           cb.checked = feat.included;
-          cb.addEventListener("change", () => { feat.included = cb.checked; this.buildUI(); });
+          cb.addEventListener("change", () => {
+            feat.included = cb.checked;
+            this.buildUI();
+          });
 
           const inpt = document.createElement("input");
           inpt.classList.add("doclib-pr-input");
           inpt.value = feat.text;
-          inpt.addEventListener("input", () => { feat.text = inpt.value; this.buildUI(); });
+          inpt.addEventListener("input", () => {
+            feat.text = inpt.value;
+            this.buildUI();
+          });
 
           const delF = document.createElement("button");
           delF.classList.add("doclib-pr-del");
           delF.innerText = "x";
-          delF.addEventListener("click", () => { tier.features.splice(fIdx, 1); this.buildUI(); });
+          delF.addEventListener("click", () => {
+            tier.features.splice(fIdx, 1);
+            this.buildUI();
+          });
 
           fRow.appendChild(cb);
           fRow.appendChild(inpt);
@@ -256,9 +307,15 @@ export default class DocLibPricingTable implements BlockTool {
       addTierBtn.innerText = "Add Pricing Tier";
       addTierBtn.addEventListener("click", () => {
         this.data.tiers.push({
-          id: this.mkId(), name: "New Tier", price: "$99", period: "/mo",
+          id: this.mkId(),
+          name: "New Tier",
+          price: "$99",
+          period: "/mo",
           features: [{ text: "Feature 1", included: true }],
-          recommended: false, btnText: "Select", btnUrl: "#", color: "#64748b"
+          recommended: false,
+          btnText: "Select",
+          btnUrl: "#",
+          color: "#64748b",
         });
         this.buildUI();
       });

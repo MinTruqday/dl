@@ -17,7 +17,15 @@ export default class DocLibOutlineLevel implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibOutlineLevel implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-outline { display: flex; align-items: stretch; gap: 12px; margin: 8px 0; font-family: sans-serif; }
@@ -57,7 +65,7 @@ export default class DocLibOutlineLevel implements BlockTool {
     if (!this.readOnly) {
       const ctrl = document.createElement("div");
       ctrl.classList.add("doclib-outline-ctrl");
-      
+
       const leftBtn = document.createElement("button");
       leftBtn.classList.add("doclib-outline-btn");
       leftBtn.innerText = "◄";
@@ -92,10 +100,12 @@ export default class DocLibOutlineLevel implements BlockTool {
     const text = document.createElement("div");
     text.classList.add("doclib-outline-text");
     text.innerText = this.data.text;
-    
+
     if (!this.readOnly) {
       text.contentEditable = "true";
-      text.addEventListener("input", () => { this.data.text = text.innerText; });
+      text.addEventListener("input", () => {
+        this.data.text = text.innerText;
+      });
     }
     container.appendChild(text);
 

@@ -17,13 +17,21 @@ export default class DocLibDigitalSignature implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       signer: data?.signer || "",
       issuer: data?.issuer || "DocLib CA",
-      date: data?.date || new Date().toISOString().split('T')[0],
+      date: data?.date || new Date().toISOString().split("T")[0],
       valid: data?.valid !== undefined ? data.valid : true,
     };
   }
@@ -31,7 +39,7 @@ export default class DocLibDigitalSignature implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-cert { font-family: sans-serif; display: flex; align-items: flex-start; gap: 16px; padding: 16px; border: 2px solid #16a34a; border-radius: 8px; background: #f0fdf4; margin: 16px 0; max-width: 450px; position: relative; }
@@ -55,19 +63,21 @@ export default class DocLibDigitalSignature implements BlockTool {
 
     const renderContent = () => {
       container.innerHTML = "";
-      
-      const iconStr = this.data.valid 
+
+      const iconStr = this.data.valid
         ? '<svg class="doclib-cert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>'
         : '<svg class="doclib-cert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
-      
+
       container.innerHTML = iconStr;
 
       const info = document.createElement("div");
       info.classList.add("doclib-cert-info");
-      
+
       const title = document.createElement("div");
       title.classList.add("doclib-cert-title");
-      title.innerText = this.data.valid ? "Valid Digital Signature" : "Invalid Digital Signature";
+      title.innerText = this.data.valid
+        ? "Valid Digital Signature"
+        : "Invalid Digital Signature";
       info.appendChild(title);
 
       const createRow = (label: string, key: string) => {
@@ -79,7 +89,9 @@ export default class DocLibDigitalSignature implements BlockTool {
         val.innerText = this.data[key];
         if (!this.readOnly) {
           val.contentEditable = "true";
-          val.addEventListener("input", () => { this.data[key] = val.innerText; });
+          val.addEventListener("input", () => {
+            this.data[key] = val.innerText;
+          });
         }
         row.appendChild(val);
         return row;

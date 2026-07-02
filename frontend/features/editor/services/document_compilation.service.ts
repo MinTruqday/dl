@@ -1,4 +1,7 @@
-import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function compileDocumentAPI(documentId: string) {
   const res = await fetch(`${API_URL}/tai-lieu/${documentId}/bien-dich`, {

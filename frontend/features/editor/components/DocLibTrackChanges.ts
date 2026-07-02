@@ -17,7 +17,15 @@ export default class DocLibTrackChanges implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -31,7 +39,7 @@ export default class DocLibTrackChanges implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-tc { font-family: "Times New Roman", serif; font-size: 16px; padding: 4px 8px; margin: 8px 0; border-left: 2px solid transparent; display: inline-block; position: relative; }
@@ -53,14 +61,17 @@ export default class DocLibTrackChanges implements BlockTool {
       cfg.classList.add("doclib-tc-cfg");
       const sel = document.createElement("select");
       sel.classList.add("doclib-tc-select");
-      ["Addition", "Deletion"].forEach(opt => {
-        const o = document.createElement("option"); o.value = opt; o.innerText = opt;
+      ["Addition", "Deletion"].forEach((opt) => {
+        const o = document.createElement("option");
+        o.value = opt;
+        o.innerText = opt;
         if (this.data.type === opt) o.selected = true;
         sel.appendChild(o);
       });
       sel.addEventListener("change", () => {
         this.data.type = sel.value;
-        tc.className = "doclib-tc " + (this.data.type === "Addition" ? "add" : "del");
+        tc.className =
+          "doclib-tc " + (this.data.type === "Addition" ? "add" : "del");
         meta.innerHTML = `<b>${this.data.author}</b>: ${this.data.type} - ${this.data.time}`;
       });
       cfg.appendChild(sel);
@@ -68,14 +79,17 @@ export default class DocLibTrackChanges implements BlockTool {
     }
 
     const tc = document.createElement("div");
-    tc.className = "doclib-tc " + (this.data.type === "Addition" ? "add" : "del");
+    tc.className =
+      "doclib-tc " + (this.data.type === "Addition" ? "add" : "del");
 
     const text = document.createElement("span");
     text.classList.add("doclib-tc-text");
     text.innerText = this.data.text;
     if (!this.readOnly) {
       text.contentEditable = "true";
-      text.addEventListener("input", () => { this.data.text = text.innerText; });
+      text.addEventListener("input", () => {
+        this.data.text = text.innerText;
+      });
     }
     tc.appendChild(text);
 

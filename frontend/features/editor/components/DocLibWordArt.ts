@@ -17,7 +17,15 @@ export default class DocLibWordArt implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibWordArt implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-wordart-wrap { text-align: center; margin: 32px 0; }
@@ -55,9 +63,11 @@ export default class DocLibWordArt implements BlockTool {
 
     if (!this.readOnly) {
       textEl.contentEditable = "true";
-      textEl.addEventListener("input", () => { this.data.text = textEl.innerText; });
+      textEl.addEventListener("input", () => {
+        this.data.text = textEl.innerText;
+      });
     }
-    
+
     container.appendChild(textEl);
 
     if (!this.readOnly) {
@@ -71,7 +81,7 @@ export default class DocLibWordArt implements BlockTool {
         { id: "style2", label: "Gradient" },
         { id: "style3", label: "Retro 3D" },
         { id: "style4", label: "Skewed Block" },
-      ].forEach(s => {
+      ].forEach((s) => {
         const opt = document.createElement("option");
         opt.value = s.id;
         opt.text = s.label;

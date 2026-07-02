@@ -18,7 +18,7 @@ export default class DocLibChangeCase implements InlineTool {
 
   render() {
     this.button = document.createElement("button");
-    this.button.type = "button";
+    (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
       '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4M12 20h8M6.9 15h6.2M10 4l-5 16M21 20l-5-16M16 4l-1 3"></path></svg>';

@@ -17,18 +17,29 @@ export default class DocLibBreadcrumb implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      items: data?.items && data.items.length > 0 ? data.items : ["Home", "Category", "Current Page"],
+      items:
+        data?.items && data.items.length > 0
+          ? data.items
+          : ["Home", "Category", "Current Page"],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-bc { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-family: sans-serif; font-size: 14px; color: #64748b; padding: 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
@@ -63,7 +74,9 @@ export default class DocLibBreadcrumb implements BlockTool {
 
         if (!this.readOnly) {
           text.contentEditable = "true";
-          text.addEventListener("input", () => { this.data.items[i] = text.innerText; });
+          text.addEventListener("input", () => {
+            this.data.items[i] = text.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-bc-del");
@@ -72,7 +85,7 @@ export default class DocLibBreadcrumb implements BlockTool {
             this.data.items.splice(i, 1);
             renderUI();
           });
-          
+
           itemEl.appendChild(text);
           itemEl.appendChild(del);
         } else {

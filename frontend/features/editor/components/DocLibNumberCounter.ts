@@ -3,7 +3,15 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibNumberCounter implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private data: { stats: { value: string; label: string; prefix: string; suffix: string; color: string }[] };
+  private data: {
+    stats: {
+      value: string;
+      label: string;
+      prefix: string;
+      suffix: string;
+      color: string;
+    }[];
+  };
   private readOnly: boolean;
   private observer: IntersectionObserver | null = null;
 
@@ -18,7 +26,15 @@ export default class DocLibNumberCounter implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -65,7 +81,10 @@ export default class DocLibNumberCounter implements BlockTool {
   }
 
   private buildUI() {
-    if (this.observer) { this.observer.disconnect(); this.observer = null; }
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
     if (!this.wrapper) return;
     this.wrapper.innerHTML = "";
     this.wrapper.classList.add("doclib-counter-wrapper");
@@ -117,17 +136,21 @@ export default class DocLibNumberCounter implements BlockTool {
 
     this.wrapper.appendChild(grid);
 
-    this.observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          this.data.stats.forEach((stat, i) => {
-            const target = parseFloat(stat.value.replace(/[^0-9.]/g, "")) || 0;
-            this.animateNumber(numberEls[i], target, 1200);
-          });
-          this.observer?.disconnect();
-        }
-      });
-    }, { threshold: 0.3 });
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            this.data.stats.forEach((stat, i) => {
+              const target =
+                parseFloat(stat.value.replace(/[^0-9.]/g, "")) || 0;
+              this.animateNumber(numberEls[i], target, 1200);
+            });
+            this.observer?.disconnect();
+          }
+        });
+      },
+      { threshold: 0.3 },
+    );
 
     this.observer.observe(this.wrapper);
 
@@ -136,8 +159,10 @@ export default class DocLibNumberCounter implements BlockTool {
       edit.classList.add("doclib-counter-edit");
 
       const header = document.createElement("div");
-      header.style.cssText = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 28px;gap:6px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;";
-      header.innerHTML = "<span>Label</span><span>Value</span><span>Prefix</span><span>Suffix</span><span></span>";
+      header.style.cssText =
+        "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 28px;gap:6px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;";
+      header.innerHTML =
+        "<span>Label</span><span>Value</span><span>Prefix</span><span>Suffix</span><span></span>";
       edit.appendChild(header);
 
       const rows = document.createElement("div");
@@ -152,19 +177,41 @@ export default class DocLibNumberCounter implements BlockTool {
             const inp = document.createElement("input");
             inp.classList.add("doclib-counter-input");
             inp.value = value;
-            inp.addEventListener("input", () => { onChange(inp.value); this.buildUI(); });
+            inp.addEventListener("input", () => {
+              onChange(inp.value);
+              this.buildUI();
+            });
             return inp;
           };
 
-          row.appendChild(mkInput(stat.label, (v) => { stat.label = v; }));
-          row.appendChild(mkInput(stat.value, (v) => { stat.value = v; }));
-          row.appendChild(mkInput(stat.prefix, (v) => { stat.prefix = v; }));
-          row.appendChild(mkInput(stat.suffix, (v) => { stat.suffix = v; }));
+          row.appendChild(
+            mkInput(stat.label, (v) => {
+              stat.label = v;
+            }),
+          );
+          row.appendChild(
+            mkInput(stat.value, (v) => {
+              stat.value = v;
+            }),
+          );
+          row.appendChild(
+            mkInput(stat.prefix, (v) => {
+              stat.prefix = v;
+            }),
+          );
+          row.appendChild(
+            mkInput(stat.suffix, (v) => {
+              stat.suffix = v;
+            }),
+          );
 
           const del = document.createElement("button");
           del.classList.add("doclib-counter-del");
           del.innerText = "x";
-          del.addEventListener("click", () => { this.data.stats.splice(i, 1); this.buildUI(); });
+          del.addEventListener("click", () => {
+            this.data.stats.splice(i, 1);
+            this.buildUI();
+          });
           row.appendChild(del);
           rows.appendChild(row);
         });
@@ -178,7 +225,13 @@ export default class DocLibNumberCounter implements BlockTool {
       addBtn.innerText = "Add metric";
       const colors = ["#0284c7", "#059669", "#7c3aed", "#d97706", "#dc2626"];
       addBtn.addEventListener("click", () => {
-        this.data.stats.push({ value: "100", label: "New metric", prefix: "", suffix: "+", color: colors[this.data.stats.length % colors.length] });
+        this.data.stats.push({
+          value: "100",
+          label: "New metric",
+          prefix: "",
+          suffix: "+",
+          color: colors[this.data.stats.length % colors.length],
+        });
         this.buildUI();
       });
       edit.appendChild(addBtn);

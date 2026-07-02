@@ -17,7 +17,15 @@ export default class DocLibReviewSummary implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -34,7 +42,7 @@ export default class DocLibReviewSummary implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-rs { display: flex; gap: 24px; padding: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; font-family: sans-serif; max-width: 500px; margin: 16px auto; }
@@ -63,7 +71,9 @@ export default class DocLibReviewSummary implements BlockTool {
     avgEl.innerText = this.data.average;
     if (!this.readOnly) {
       avgEl.contentEditable = "true";
-      avgEl.addEventListener("input", () => { this.data.average = avgEl.innerText; });
+      avgEl.addEventListener("input", () => {
+        this.data.average = avgEl.innerText;
+      });
     }
 
     const starsEl = document.createElement("div");
@@ -75,7 +85,9 @@ export default class DocLibReviewSummary implements BlockTool {
     totalEl.innerText = this.data.total;
     if (!this.readOnly) {
       totalEl.contentEditable = "true";
-      totalEl.addEventListener("input", () => { this.data.total = totalEl.innerText; });
+      totalEl.addEventListener("input", () => {
+        this.data.total = totalEl.innerText;
+      });
     }
 
     left.appendChild(avgEl);

@@ -17,7 +17,15 @@ export default class DocLibLetterhead implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -31,7 +39,7 @@ export default class DocLibLetterhead implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-letterhead { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 0; border-bottom: 3px double #cbd5e1; margin-bottom: 32px; }
@@ -89,10 +97,16 @@ export default class DocLibLetterhead implements BlockTool {
       company.contentEditable = "true";
       address.contentEditable = "true";
       contact.contentEditable = "true";
-      
-      company.addEventListener("input", () => { this.data.companyName = company.innerText; });
-      address.addEventListener("input", () => { this.data.address = address.innerText; });
-      contact.addEventListener("input", () => { this.data.contact = contact.innerText; });
+
+      company.addEventListener("input", () => {
+        this.data.companyName = company.innerText;
+      });
+      address.addEventListener("input", () => {
+        this.data.address = address.innerText;
+      });
+      contact.addEventListener("input", () => {
+        this.data.contact = contact.innerText;
+      });
     }
 
     container.appendChild(left);
@@ -102,7 +116,7 @@ export default class DocLibLetterhead implements BlockTool {
     if (!this.readOnly) {
       const edit = document.createElement("div");
       edit.classList.add("doclib-letterhead-edit");
-      
+
       const logoInput = document.createElement("input");
       logoInput.classList.add("doclib-letterhead-input");
       logoInput.placeholder = "DocLib URL";

@@ -22,9 +22,7 @@ export default class DocLibChecklist implements BlockTool {
   constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
     this.data = {
-      items: Array.isArray(data?.items)
-        ? data.items
-        : [],
+      items: Array.isArray(data?.items) ? data.items : [],
     };
   }
 

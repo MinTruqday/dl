@@ -17,7 +17,15 @@ export default class DocLibJobListing implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -33,7 +41,7 @@ export default class DocLibJobListing implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-job { font-family: sans-serif; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; max-width: 600px; margin: 16px auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -57,7 +65,7 @@ export default class DocLibJobListing implements BlockTool {
     top.classList.add("doclib-job-top");
 
     const info = document.createElement("div");
-    
+
     const roleEl = document.createElement("div");
     roleEl.classList.add("doclib-job-role");
     roleEl.innerText = this.data.role;
@@ -70,21 +78,27 @@ export default class DocLibJobListing implements BlockTool {
 
     if (!this.readOnly) {
       roleEl.contentEditable = "true";
-      roleEl.addEventListener("input", () => { this.data.role = roleEl.innerText; });
+      roleEl.addEventListener("input", () => {
+        this.data.role = roleEl.innerText;
+      });
       compEl.contentEditable = "true";
-      compEl.addEventListener("input", () => { this.data.company = compEl.innerText; });
+      compEl.addEventListener("input", () => {
+        this.data.company = compEl.innerText;
+      });
     }
 
     info.appendChild(roleEl);
     info.appendChild(compEl);
-    
+
     const btn = document.createElement("button");
     btn.classList.add("doclib-job-btn");
     btn.innerText = this.data.btnText;
     btn.dataset.placeholder = "Apply Now";
     if (!this.readOnly) {
       btn.contentEditable = "true";
-      btn.addEventListener("input", () => { this.data.btnText = btn.innerText; });
+      btn.addEventListener("input", () => {
+        this.data.btnText = btn.innerText;
+      });
     }
 
     top.appendChild(info);
@@ -101,7 +115,9 @@ export default class DocLibJobListing implements BlockTool {
       const textNode = tag.querySelector(".doclib-job-tag-text") as HTMLElement;
       if (!this.readOnly) {
         textNode.contentEditable = "true";
-        textNode.addEventListener("input", () => { this.data[key] = textNode.innerText; });
+        textNode.addEventListener("input", () => {
+          this.data[key] = textNode.innerText;
+        });
       }
       return tag;
     };

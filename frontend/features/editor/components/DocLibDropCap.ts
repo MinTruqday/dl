@@ -17,7 +17,15 @@ export default class DocLibDropCap implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibDropCap implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-dropcap { display: flex; gap: 8px; margin: 16px 0; }
@@ -44,15 +52,15 @@ export default class DocLibDropCap implements BlockTool {
     if (this.readOnly) {
       const container = document.createElement("div");
       container.classList.add("doclib-dropcap");
-      
+
       const letter = document.createElement("div");
       letter.classList.add("doclib-dropcap-letter");
       letter.innerText = this.data.letter;
-      
+
       const text = document.createElement("div");
       text.classList.add("doclib-dropcap-text");
       text.innerText = this.data.text;
-      
+
       container.appendChild(letter);
       container.appendChild(text);
       this.wrapper.appendChild(container);
@@ -67,13 +75,17 @@ export default class DocLibDropCap implements BlockTool {
     inputLetter.maxLength = 1;
     inputLetter.placeholder = "DocLib Input";
     inputLetter.value = this.data.letter;
-    inputLetter.addEventListener("input", () => { this.data.letter = inputLetter.value.charAt(0); });
+    inputLetter.addEventListener("input", () => {
+      this.data.letter = inputLetter.value.charAt(0);
+    });
 
     const inputText = document.createElement("textarea");
     inputText.classList.add("doclib-dropcap-input-text");
     inputText.placeholder = "DocLib Text";
     inputText.value = this.data.text;
-    inputText.addEventListener("input", () => { this.data.text = inputText.value; });
+    inputText.addEventListener("input", () => {
+      this.data.text = inputText.value;
+    });
 
     edit.appendChild(inputLetter);
     edit.appendChild(inputText);

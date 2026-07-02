@@ -17,21 +17,32 @@ export default class DocLibVersionHistory implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      versions: data?.versions && data.versions.length > 0 ? data.versions : [
-        { v: "v1.0", desc: "DocLib Initial release", date: "2024-01-01" },
-        { v: "v1.1", desc: "DocLib Minor update", date: "2024-01-15" }
-      ],
+      versions:
+        data?.versions && data.versions.length > 0
+          ? data.versions
+          : [
+              { v: "v1.0", desc: "DocLib Initial release", date: "2024-01-01" },
+              { v: "v1.1", desc: "DocLib Minor update", date: "2024-01-15" },
+            ],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-vh { font-family: sans-serif; display: flex; flex-direction: column; gap: 0; margin: 16px 0; max-width: 500px; border-left: 2px solid #cbd5e1; padding-left: 16px; margin-left: 8px; }
@@ -82,13 +93,19 @@ export default class DocLibVersionHistory implements BlockTool {
 
         if (!this.readOnly) {
           v.contentEditable = "true";
-          v.addEventListener("input", () => { this.data.versions[i].v = v.innerText; });
-          
+          v.addEventListener("input", () => {
+            this.data.versions[i].v = v.innerText;
+          });
+
           date.contentEditable = "true";
-          date.addEventListener("input", () => { this.data.versions[i].date = date.innerText; });
+          date.addEventListener("input", () => {
+            this.data.versions[i].date = date.innerText;
+          });
 
           desc.contentEditable = "true";
-          desc.addEventListener("input", () => { this.data.versions[i].desc = desc.innerText; });
+          desc.addEventListener("input", () => {
+            this.data.versions[i].desc = desc.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-vh-del");
@@ -108,7 +125,11 @@ export default class DocLibVersionHistory implements BlockTool {
         add.classList.add("doclib-vh-add");
         add.innerText = "+ Add Version";
         add.addEventListener("click", () => {
-          this.data.versions.push({ v: "v1.x", desc: "DocLib Detail", date: "2024-12-31" });
+          this.data.versions.push({
+            v: "v1.x",
+            desc: "DocLib Detail",
+            date: "2024-12-31",
+          });
           renderList();
         });
         container.appendChild(add);

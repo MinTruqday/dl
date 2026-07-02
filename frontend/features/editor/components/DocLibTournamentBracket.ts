@@ -17,13 +17,24 @@ export default class DocLibTournamentBracket implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      t1: data?.t1 || "", t2: data?.t2 || "",
-      t3: data?.t3 || "", t4: data?.t4 || "",
-      s1: data?.s1 || "", s2: data?.s2 || "",
+      t1: data?.t1 || "",
+      t2: data?.t2 || "",
+      t3: data?.t3 || "",
+      t4: data?.t4 || "",
+      s1: data?.s1 || "",
+      s2: data?.s2 || "",
       w: data?.w || "",
     };
   }
@@ -31,7 +42,7 @@ export default class DocLibTournamentBracket implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-bracket { display: flex; font-family: sans-serif; background: #f8fafc; padding: 24px; border-radius: 8px; overflow-x: auto; min-width: 600px; justify-content: center; }
@@ -55,14 +66,16 @@ export default class DocLibTournamentBracket implements BlockTool {
       el.dataset.placeholder = "DocLib Team";
       if (!this.readOnly) {
         el.contentEditable = "true";
-        el.addEventListener("input", () => { this.data[key] = el.innerText; });
+        el.addEventListener("input", () => {
+          this.data[key] = el.innerText;
+        });
       }
       return el;
     };
 
     const col1 = document.createElement("div");
     col1.classList.add("doclib-b-col");
-    
+
     const m1 = document.createElement("div");
     m1.classList.add("doclib-b-match");
     m1.style.marginBottom = "40px";
@@ -82,7 +95,8 @@ export default class DocLibTournamentBracket implements BlockTool {
 
     const cv = document.createElement("div");
     cv.classList.add("doclib-b-connector-v");
-    cv.style.top = "20%"; cv.style.bottom = "20%";
+    cv.style.top = "20%";
+    cv.style.bottom = "20%";
     col1.appendChild(cv);
     col1.appendChild(m1);
     col1.appendChild(m2);
@@ -90,7 +104,7 @@ export default class DocLibTournamentBracket implements BlockTool {
     const col2 = document.createElement("div");
     col2.classList.add("doclib-b-col");
     col2.style.marginLeft = "40px";
-    
+
     const m3 = document.createElement("div");
     m3.classList.add("doclib-b-match");
     m3.appendChild(createTeam("s1"));
@@ -107,7 +121,7 @@ export default class DocLibTournamentBracket implements BlockTool {
     const col3 = document.createElement("div");
     col3.classList.add("doclib-b-col");
     col3.style.marginLeft = "40px";
-    
+
     const m4 = document.createElement("div");
     m4.classList.add("doclib-b-match");
     const winner = createTeam("w");

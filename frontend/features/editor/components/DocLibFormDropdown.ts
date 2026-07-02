@@ -17,12 +17,23 @@ export default class DocLibFormDropdown implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       label: data?.label || "DocLib Button",
-      options: data?.options && data.options.length > 0 ? data.options : ["DocLib Text", "DocLib Text"],
+      options:
+        data?.options && data.options.length > 0
+          ? data.options
+          : ["DocLib Text", "DocLib Text"],
       selected: data?.selected || 0,
     };
   }
@@ -30,7 +41,7 @@ export default class DocLibFormDropdown implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-form-dd { display: flex; align-items: center; gap: 12px; margin: 16px 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; }
@@ -54,7 +65,9 @@ export default class DocLibFormDropdown implements BlockTool {
 
     if (!this.readOnly) {
       label.contentEditable = "true";
-      label.addEventListener("input", () => { this.data.label = label.innerText; });
+      label.addEventListener("input", () => {
+        this.data.label = label.innerText;
+      });
     }
 
     const select = document.createElement("select");
@@ -89,7 +102,7 @@ export default class DocLibFormDropdown implements BlockTool {
         this.data.options.forEach((optStr: string, i: number) => {
           const row = document.createElement("div");
           row.classList.add("doclib-form-dd-row");
-          
+
           const input = document.createElement("input");
           input.classList.add("doclib-form-dd-input");
           input.value = optStr;
@@ -98,13 +111,14 @@ export default class DocLibFormDropdown implements BlockTool {
             this.data.options[i] = input.value;
             renderSelect();
           });
-          
+
           const del = document.createElement("button");
           del.classList.add("doclib-form-dd-btn");
           del.innerText = "X";
           del.addEventListener("click", () => {
             this.data.options.splice(i, 1);
-            if (this.data.selected >= this.data.options.length) this.data.selected = Math.max(0, this.data.options.length - 1);
+            if (this.data.selected >= this.data.options.length)
+              this.data.selected = Math.max(0, this.data.options.length - 1);
             renderSelect();
             renderEdit();
           });

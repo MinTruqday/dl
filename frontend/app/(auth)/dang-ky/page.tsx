@@ -35,10 +35,7 @@ export default function RegisterPage() {
 
     try {
       await register(email, password, displayName, slug, agreedToTerms);
-      showToast(
-        "Đăng ký thành công",
-        "success",
-      );
+      showToast("Đăng ký thành công", "success");
       router.push("/dang-nhap");
     } catch (err: any) {
       showToast(
@@ -158,7 +155,11 @@ export default function RegisterPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6E73]"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -222,7 +223,9 @@ export default function RegisterPage() {
         className="max-w-2xl bg-[#F5F5F7] rounded-[24px] border-none shadow-2xl p-0"
       >
         <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Điều khoản và quy định</ModalTitle>
+          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+            Điều khoản và quy định
+          </ModalTitle>
         </ModalHeader>
         <ModalContent className="max-h-[60vh] overflow-y-auto px-6 py-0 space-y-6 text-[15px] text-[#6E6E73]">
           <section>

@@ -17,7 +17,15 @@ export default class DocLibColorPalette implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -129,7 +137,9 @@ export default class DocLibColorPalette implements BlockTool {
           nameInput.classList.add("doclib-pal-name-input");
           nameInput.value = color.name;
           nameInput.placeholder = "DocLib Name";
-          nameInput.addEventListener("input", () => { color.name = nameInput.value; });
+          nameInput.addEventListener("input", () => {
+            color.name = nameInput.value;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-pal-del");

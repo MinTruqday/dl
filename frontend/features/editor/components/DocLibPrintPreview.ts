@@ -17,7 +17,15 @@ export default class DocLibPrintPreview implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibPrintPreview implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-print { display: flex; gap: 24px; padding: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; margin: 16px 0; max-width: 600px; font-family: sans-serif; }
@@ -59,16 +67,16 @@ export default class DocLibPrintPreview implements BlockTool {
     const createField = (label: string, key: string, options: string[]) => {
       const field = document.createElement("div");
       field.classList.add("doclib-print-field");
-      
+
       const lbl = document.createElement("div");
       lbl.classList.add("doclib-print-label");
       lbl.innerText = label;
-      
+
       const sel = document.createElement("select");
       sel.classList.add("doclib-print-select");
       if (this.readOnly) sel.disabled = true;
 
-      options.forEach(opt => {
+      options.forEach((opt) => {
         const option = document.createElement("option");
         option.value = opt;
         option.innerText = opt;
@@ -88,14 +96,30 @@ export default class DocLibPrintPreview implements BlockTool {
       return field;
     };
 
-    settings.appendChild(createField("Orientation", "orientation", ["Portrait", "Landscape"]));
-    settings.appendChild(createField("Paper Size", "paperSize", ["A4", "Letter", "Legal", "Executive"]));
-    settings.appendChild(createField("Margins", "margins", ["Normal", "Narrow", "Moderate", "Wide"]));
+    settings.appendChild(
+      createField("Orientation", "orientation", ["Portrait", "Landscape"]),
+    );
+    settings.appendChild(
+      createField("Paper Size", "paperSize", [
+        "A4",
+        "Letter",
+        "Legal",
+        "Executive",
+      ]),
+    );
+    settings.appendChild(
+      createField("Margins", "margins", [
+        "Normal",
+        "Narrow",
+        "Moderate",
+        "Wide",
+      ]),
+    );
     container.appendChild(settings);
 
     const previewCont = document.createElement("div");
     previewCont.classList.add("doclib-print-preview");
-    
+
     const paper = document.createElement("div");
     paper.classList.add("doclib-print-paper");
     previewCont.appendChild(paper);
@@ -104,9 +128,12 @@ export default class DocLibPrintPreview implements BlockTool {
     const updatePreview = () => {
       let width = 80;
       let height = 113; // A4 approx ratio
-      
-      if (this.data.paperSize === "Letter") { height = 104; }
-      else if (this.data.paperSize === "Legal") { height = 138; }
+
+      if (this.data.paperSize === "Letter") {
+        height = 104;
+      } else if (this.data.paperSize === "Legal") {
+        height = 138;
+      }
 
       if (this.data.orientation === "Landscape") {
         const temp = width;
@@ -120,7 +147,7 @@ export default class DocLibPrintPreview implements BlockTool {
       let padding = "10px";
       if (this.data.margins === "Narrow") padding = "5px";
       if (this.data.margins === "Wide") padding = "20px";
-      
+
       // Simulate margin lines via border-image or box-shadow? Just padding.
       paper.style.boxSizing = "border-box";
       paper.style.borderWidth = padding;
@@ -128,7 +155,8 @@ export default class DocLibPrintPreview implements BlockTool {
       paper.style.borderColor = "transparent";
       paper.style.backgroundClip = "content-box";
       paper.style.backgroundColor = "#e2e8f0"; // Simulate text area
-      paper.style.boxShadow = "0 0 0 1px #94a3b8 inset, 0 4px 6px -1px rgba(0,0,0,0.1)";
+      paper.style.boxShadow =
+        "0 0 0 1px #94a3b8 inset, 0 4px 6px -1px rgba(0,0,0,0.1)";
     };
 
     updatePreview();

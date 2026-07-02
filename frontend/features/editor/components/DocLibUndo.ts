@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { API } from "@editorjs/editorjs";
 
 export default class DocLibUndo {

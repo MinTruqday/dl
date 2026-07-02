@@ -17,7 +17,15 @@ export default class DocLibQuickParts implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibQuickParts implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-quickp { font-family: sans-serif; padding: 16px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; margin: 16px 0; position: relative; }
@@ -44,10 +52,12 @@ export default class DocLibQuickParts implements BlockTool {
     const text = document.createElement("div");
     text.classList.add("doclib-quickp-text");
     text.innerText = this.data.content;
-    
+
     if (!this.readOnly) {
       text.contentEditable = "true";
-      text.addEventListener("input", () => { this.data.content = text.innerText; });
+      text.addEventListener("input", () => {
+        this.data.content = text.innerText;
+      });
     }
 
     container.appendChild(text);

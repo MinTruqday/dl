@@ -17,7 +17,15 @@ export default class DocLibMarkdownBlock implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibMarkdownBlock implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-md { display: flex; flex-direction: column; gap: 8px; font-family: sans-serif; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; }
@@ -57,7 +65,7 @@ export default class DocLibMarkdownBlock implements BlockTool {
     const editTab = document.createElement("div");
     editTab.classList.add("doclib-md-tab");
     editTab.innerText = "Edit";
-    
+
     const prevTab = document.createElement("div");
     prevTab.classList.add("doclib-md-tab");
     prevTab.innerText = "Preview";
@@ -77,7 +85,7 @@ export default class DocLibMarkdownBlock implements BlockTool {
       if (isEditMode) {
         editTab.classList.add("active");
         prevTab.classList.remove("active");
-        
+
         const textarea = document.createElement("textarea");
         textarea.classList.add("doclib-md-textarea");
         textarea.value = this.data.md;
@@ -93,20 +101,26 @@ export default class DocLibMarkdownBlock implements BlockTool {
         preview.classList.add("doclib-md-preview");
         // Very basic simple markdown parsing for demo purposes
         let html = this.data.md
-          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-          .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-          .replace(/\n$/gim, '<br />');
-        
+          .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+          .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+          .replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
+          .replace(/\*(.*?)\*/gim, "<em>$1</em>")
+          .replace(/\n$/gim, "<br />");
+
         preview.innerHTML = html;
         contentArea.appendChild(preview);
       }
     };
 
     if (!this.readOnly) {
-      editTab.addEventListener("click", () => { isEditMode = true; renderUI(); });
-      prevTab.addEventListener("click", () => { isEditMode = false; renderUI(); });
+      editTab.addEventListener("click", () => {
+        isEditMode = true;
+        renderUI();
+      });
+      prevTab.addEventListener("click", () => {
+        isEditMode = false;
+        renderUI();
+      });
     }
 
     renderUI();

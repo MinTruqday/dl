@@ -1,4 +1,7 @@
-import { API_URL, getToken } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getToken,
+} from "@/features/auth/services/user_authentication.service";
 
 export const getConversationsAPI = async () => {
   const token = getToken();
@@ -7,7 +10,8 @@ export const getConversationsAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách hội thoại");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách hội thoại");
   return data;
 };
 
@@ -149,14 +153,17 @@ export const shareDocumentAPI = async (
 ) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tin-nhan/${receiverId}/tai-lieu/chia-se`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    `${API_URL}/tin-nhan/${receiverId}/tai-lieu/chia-se`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ document_id: documentId }),
     },
-    body: JSON.stringify({ document_id: documentId }),
-  });
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Chia sẻ tài liệu thất bại");
   return data;
@@ -203,9 +210,12 @@ export const unblockUserAPI = async (otherUserId: string) => {
 export const getBlockedStatusAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/trang-thai-chan`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/tin-nhan/${otherUserId}/trang-thai-chan`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi tải trạng thái chặn");
   return data;
@@ -214,10 +224,13 @@ export const getBlockedStatusAPI = async (otherUserId: string) => {
 export const togglePinConversationAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tin-nhan/cuoc-tro-chuyen/${otherUserId}/ghim`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/tin-nhan/cuoc-tro-chuyen/${otherUserId}/ghim`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể ghim hội thoại");
   return data;
@@ -333,10 +346,13 @@ export const getConversationSettingsAPI = async (otherUserId: string) => {
 export const deleteConversationAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tin-nhan/cuoc-tro-chuyen/${otherUserId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/tin-nhan/cuoc-tro-chuyen/${otherUserId}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Xóa cuộc hội thoại thất bại");
   return data;

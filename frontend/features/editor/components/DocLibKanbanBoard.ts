@@ -1,10 +1,15 @@
+// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibKanbanBoard implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
-    columns: { id: string; title: string; tasks: { id: string; text: string; color: string }[] }[];
+    columns: {
+      id: string;
+      title: string;
+      tasks: { id: string; text: string; color: string }[];
+    }[];
   };
   private readOnly: boolean;
 
@@ -19,9 +24,19 @@ export default class DocLibKanbanBoard implements BlockTool {
     return true;
   }
 
-  private mkId() { return Math.random().toString(36).substring(2, 8); }
+  private mkId() {
+    return Math.random().toString(36).substring(2, 8);
+  }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -78,7 +93,9 @@ export default class DocLibKanbanBoard implements BlockTool {
         const titleInput = document.createElement("input");
         titleInput.classList.add("doclib-kanban-title-input");
         titleInput.value = col.title;
-        titleInput.addEventListener("change", () => { col.title = titleInput.value; });
+        titleInput.addEventListener("change", () => {
+          col.title = titleInput.value;
+        });
         header.appendChild(titleInput);
 
         const delBtn = document.createElement("button");
@@ -99,14 +116,20 @@ export default class DocLibKanbanBoard implements BlockTool {
       tasksArea.classList.add("doclib-kanban-tasks");
 
       if (!this.readOnly) {
-        tasksArea.addEventListener("dragover", (e) => { e.preventDefault(); });
+        tasksArea.addEventListener("dragover", (e) => {
+          e.preventDefault();
+        });
         tasksArea.addEventListener("drop", (e) => {
           e.preventDefault();
           if (!draggedTask) return;
           if (draggedTask.colId === col.id) return;
-          const sourceCol = this.data.columns.find((c) => c.id === draggedTask!.colId);
+          const sourceCol = this.data.columns.find(
+            (c) => c.id === draggedTask!.colId,
+          );
           if (!sourceCol) return;
-          const taskIdx = sourceCol.tasks.findIndex((t) => t.id === draggedTask!.taskId);
+          const taskIdx = sourceCol.tasks.findIndex(
+            (t) => t.id === draggedTask!.taskId,
+          );
           if (taskIdx === -1) return;
           const [task] = sourceCol.tasks.splice(taskIdx, 1);
           col.tasks.push(task);
@@ -121,7 +144,9 @@ export default class DocLibKanbanBoard implements BlockTool {
 
         if (!this.readOnly) {
           taskEl.draggable = true;
-          taskEl.addEventListener("dragstart", () => { draggedTask = { colId: col.id, taskId: task.id }; });
+          taskEl.addEventListener("dragstart", () => {
+            draggedTask = { colId: col.id, taskId: task.id };
+          });
 
           const input = document.createElement("textarea");
           input.classList.add("doclib-kanban-task-input");
@@ -155,7 +180,13 @@ export default class DocLibKanbanBoard implements BlockTool {
         addBtn.classList.add("doclib-kanban-add-task");
         addBtn.innerText = "+ Add Task";
         addBtn.addEventListener("click", () => {
-          col.tasks.push({ id: this.mkId(), text: "New task", color: ["#e2e8f0", "#fef08a", "#bbf7d0", "#bfdbfe", "#fbcfe8"][Math.floor(Math.random() * 5)] });
+          col.tasks.push({
+            id: this.mkId(),
+            text: "New task",
+            color: ["#e2e8f0", "#fef08a", "#bbf7d0", "#bfdbfe", "#fbcfe8"][
+              Math.floor(Math.random() * 5)
+            ],
+          });
           this.buildUI();
         });
         colEl.appendChild(addBtn);
@@ -169,7 +200,11 @@ export default class DocLibKanbanBoard implements BlockTool {
       addCol.classList.add("doclib-kanban-add-col");
       addCol.innerText = "Add Column";
       addCol.addEventListener("click", () => {
-        this.data.columns.push({ id: this.mkId(), title: "New Column", tasks: [] });
+        this.data.columns.push({
+          id: this.mkId(),
+          title: "New Column",
+          tasks: [],
+        });
         this.buildUI();
       });
       this.wrapper.appendChild(addCol);

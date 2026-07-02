@@ -29,10 +29,7 @@ export default class DocLibSteps implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      steps:
-        data.steps && data.steps.length > 0
-          ? data.steps
-          : [],
+      steps: data.steps && data.steps.length > 0 ? data.steps : [],
     };
   }
 

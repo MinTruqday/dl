@@ -17,7 +17,15 @@ export default class DocLibDatePicker implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibDatePicker implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-dp { font-family: sans-serif; display: flex; flex-direction: column; gap: 8px; margin: 16px 0; max-width: 300px; }
@@ -48,7 +56,9 @@ export default class DocLibDatePicker implements BlockTool {
     label.innerText = this.data.label;
     if (!this.readOnly) {
       label.contentEditable = "true";
-      label.addEventListener("input", () => { this.data.label = label.innerText; });
+      label.addEventListener("input", () => {
+        this.data.label = label.innerText;
+      });
     }
     container.appendChild(label);
 
@@ -57,7 +67,7 @@ export default class DocLibDatePicker implements BlockTool {
     input.classList.add("doclib-dp-input");
     input.value = this.data.date;
     if (this.readOnly) input.disabled = true;
-    
+
     if (!this.readOnly) {
       input.addEventListener("change", () => {
         this.data.date = input.value;

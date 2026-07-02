@@ -1,4 +1,8 @@
-import { API_URL, getToken, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getToken,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function saveDocumentDraftAPI(
   documentId: string,
@@ -427,4 +431,3 @@ export async function updateChapterPaywallAPI(
   if (!res.ok) throw new Error(data.detail || "Cập nhật trả phí thất bại");
   return data;
 }
-

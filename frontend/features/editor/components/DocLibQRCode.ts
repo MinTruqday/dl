@@ -17,7 +17,15 @@ export default class DocLibQRCode implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -53,20 +61,32 @@ export default class DocLibQRCode implements BlockTool {
 
   private loadQRLib(): Promise<void> {
     return new Promise((resolve) => {
-      if ((window as any).QRCode) { resolve(); return; }
+      if ((window as any).QRCode) {
+        resolve();
+        return;
+      }
       if (document.getElementById("qrcode-script")) {
-        window.addEventListener("qrcode-loaded", () => resolve(), { once: true });
+        window.addEventListener("qrcode-loaded", () => resolve(), {
+          once: true,
+        });
         return;
       }
       const script = document.createElement("script");
       script.id = "qrcode-script";
       script.src = "https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js";
-      script.onload = () => { window.dispatchEvent(new Event("qrcode-loaded")); resolve(); };
+      script.onload = () => {
+        window.dispatchEvent(new Event("qrcode-loaded"));
+        resolve();
+      };
       document.head.appendChild(script);
     });
   }
 
-  private async renderQR(content: string, size: number, container: HTMLElement) {
+  private async renderQR(
+    content: string,
+    size: number,
+    container: HTMLElement,
+  ) {
     container.innerHTML = "";
     await this.loadQRLib();
     new (window as any).QRCode(container, {
@@ -122,7 +142,10 @@ export default class DocLibQRCode implements BlockTool {
     input.addEventListener("input", () => {
       this.data.content = input.value;
       clearTimeout(timeout);
-      timeout = setTimeout(() => this.renderQR(this.data.content, this.data.size, canvas), 500);
+      timeout = setTimeout(
+        () => this.renderQR(this.data.content, this.data.size, canvas),
+        500,
+      );
     });
 
     const sizeCtrlLabel = document.createElement("label");
@@ -142,7 +165,10 @@ export default class DocLibQRCode implements BlockTool {
       canvas.style.width = `${this.data.size}px`;
       canvas.style.height = `${this.data.size}px`;
       clearTimeout(timeout);
-      timeout = setTimeout(() => this.renderQR(this.data.content, this.data.size, canvas), 300);
+      timeout = setTimeout(
+        () => this.renderQR(this.data.content, this.data.size, canvas),
+        300,
+      );
     });
 
     const downloadBtn = document.createElement("button");

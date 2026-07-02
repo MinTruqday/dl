@@ -3,7 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createDocumentAPI } from "@/features/content/services/document_metadata.service";
-import { Loader2, BookOpen, PenTool, Globe, Lock, Code, FileText, ArrowRight } from "lucide-react";
+import {
+  Loader2,
+  BookOpen,
+  PenTool,
+  Globe,
+  Lock,
+  Code,
+  FileText,
+  ArrowRight,
+} from "lucide-react";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 
@@ -11,7 +20,7 @@ export default function CreateDocumentPage() {
   const router = useRouter();
   const { user } = useAuth() as any;
   const { showToast } = useToast();
-  
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [publisherName, setPublisherName] = useState("");
@@ -66,9 +75,10 @@ export default function CreateDocumentPage() {
   };
 
   return (
-    <form onSubmit={handleCreate} className="flex flex-col h-full font-sans text-[#1D1D1F]">
-
-
+    <form
+      onSubmit={handleCreate}
+      className="flex flex-col h-full font-sans text-[#1D1D1F]"
+    >
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-8">
         <div className="space-y-6">
           <div className="space-y-2">
@@ -145,11 +155,15 @@ export default function CreateDocumentPage() {
                   onClick={() => setVisibility(opt.id)}
                   className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
                 >
-                  <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border-[#E8E8ED] text-[#6E6E73]"}`}>
+                  <div
+                    className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border-[#E8E8ED] text-[#6E6E73]"}`}
+                  >
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
-                    <p className={`text-[17px] font-semibold ${isSelected ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}>
+                    <p
+                      className={`text-[17px] font-semibold ${isSelected ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}
+                    >
                       {opt.label}
                     </p>
                     <p className="text-[13px] text-[#6E6E73] leading-relaxed">
@@ -190,11 +204,15 @@ export default function CreateDocumentPage() {
                   onClick={() => setContentFormat(opt.id)}
                   className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
                 >
-                  <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border-[#E8E8ED] text-[#6E6E73]"}`}>
+                  <div
+                    className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border-[#E8E8ED] text-[#6E6E73]"}`}
+                  >
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
-                    <p className={`text-[17px] font-semibold ${isSelected ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}>
+                    <p
+                      className={`text-[17px] font-semibold ${isSelected ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}
+                    >
                       {opt.label}
                     </p>
                     <p className="text-[13px] text-[#6E6E73] leading-relaxed">
@@ -212,8 +230,12 @@ export default function CreateDocumentPage() {
         <div className="flex items-center gap-3 px-4 py-3 bg-[#F5F5F7] rounded-[14px]">
           <div className="w-2.5 h-2.5 bg-[#34C759] rounded-full animate-pulse shadow-[0_0_8px_rgba(52,199,89,0.4)]" />
           <div className="flex flex-col">
-            <span className="text-[12px] text-[#6E6E73] font-medium">Trạng thái hệ thống</span>
-            <span className="text-[13px] font-semibold text-[#1D1D1F]">Sẵn sàng thiết lập không gian</span>
+            <span className="text-[12px] text-[#6E6E73] font-medium">
+              Trạng thái hệ thống
+            </span>
+            <span className="text-[13px] font-semibold text-[#1D1D1F]">
+              Sẵn sàng thiết lập không gian
+            </span>
           </div>
         </div>
         <button
@@ -224,7 +246,9 @@ export default function CreateDocumentPage() {
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <>Bắt đầu soạn thảo <ArrowRight className="w-5 h-5" /></>
+            <>
+              Bắt đầu soạn thảo <ArrowRight className="w-5 h-5" />
+            </>
           )}
         </button>
       </div>

@@ -17,7 +17,15 @@ export default class DocLibBordersAndShading implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -32,7 +40,7 @@ export default class DocLibBordersAndShading implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-bns { padding: 16px; margin: 16px 0; border-radius: 4px; font-size: 16px; line-height: 1.6; color: #1e293b; outline: none; transition: all 0.2s; }
@@ -45,7 +53,7 @@ export default class DocLibBordersAndShading implements BlockTool {
     const container = document.createElement("div");
     container.classList.add("doclib-bns");
     container.innerText = this.data.text;
-    
+
     const applyStyles = () => {
       container.style.border = `${this.data.borderWidth} ${this.data.borderStyle} ${this.data.borderColor}`;
       container.style.backgroundColor = this.data.bgColor;
@@ -54,8 +62,10 @@ export default class DocLibBordersAndShading implements BlockTool {
 
     if (!this.readOnly) {
       container.contentEditable = "true";
-      container.addEventListener("input", () => { this.data.text = container.innerText; });
-      
+      container.addEventListener("input", () => {
+        this.data.text = container.innerText;
+      });
+
       const controls = document.createElement("div");
       controls.classList.add("doclib-bns-controls");
 
@@ -63,32 +73,44 @@ export default class DocLibBordersAndShading implements BlockTool {
       widthInput.classList.add("doclib-bns-input");
       widthInput.value = this.data.borderWidth;
       widthInput.placeholder = "DocLib Input";
-      widthInput.addEventListener("input", () => { this.data.borderWidth = widthInput.value || "0px"; applyStyles(); });
+      widthInput.addEventListener("input", () => {
+        this.data.borderWidth = widthInput.value || "0px";
+        applyStyles();
+      });
 
       const styleSelect = document.createElement("select");
       styleSelect.classList.add("doclib-bns-input");
-      ["solid", "dashed", "dotted", "double"].forEach(s => {
+      ["solid", "dashed", "dotted", "double"].forEach((s) => {
         const opt = document.createElement("option");
         opt.value = s;
         opt.text = s.charAt(0).toUpperCase() + s.slice(1);
         opt.selected = this.data.borderStyle === s;
         styleSelect.appendChild(opt);
       });
-      styleSelect.addEventListener("change", () => { this.data.borderStyle = styleSelect.value; applyStyles(); });
+      styleSelect.addEventListener("change", () => {
+        this.data.borderStyle = styleSelect.value;
+        applyStyles();
+      });
 
       const borderColorInput = document.createElement("input");
       borderColorInput.type = "color";
       borderColorInput.classList.add("doclib-bns-input");
       borderColorInput.value = this.data.borderColor;
       borderColorInput.title = "Border Color";
-      borderColorInput.addEventListener("input", () => { this.data.borderColor = borderColorInput.value; applyStyles(); });
+      borderColorInput.addEventListener("input", () => {
+        this.data.borderColor = borderColorInput.value;
+        applyStyles();
+      });
 
       const bgColorInput = document.createElement("input");
       bgColorInput.type = "color";
       bgColorInput.classList.add("doclib-bns-input");
       bgColorInput.value = this.data.bgColor;
       bgColorInput.title = "Background Color";
-      bgColorInput.addEventListener("input", () => { this.data.bgColor = bgColorInput.value; applyStyles(); });
+      bgColorInput.addEventListener("input", () => {
+        this.data.bgColor = bgColorInput.value;
+        applyStyles();
+      });
 
       controls.appendChild(widthInput);
       controls.appendChild(styleSelect);

@@ -35,7 +35,10 @@ export default class DocLibReadingTime implements BlockTool {
           text += " " + (block.holder.innerText || "");
         }
       }
-      return text.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
+      return text
+        .trim()
+        .split(/\s+/)
+        .filter((w: string) => w.length > 0).length;
     } catch (e) {
       return 0;
     }
@@ -75,7 +78,8 @@ export default class DocLibReadingTime implements BlockTool {
     speeds.forEach((s) => {
       const btn = document.createElement("div");
       btn.classList.add(this.api.styles.settingsButton);
-      if (this.data.avgReadingSpeed === s) btn.classList.add(this.api.styles.settingsButtonActive);
+      if (this.data.avgReadingSpeed === s)
+        btn.classList.add(this.api.styles.settingsButtonActive);
       btn.innerText = `${s}`;
       btn.addEventListener("click", () => {
         this.data.avgReadingSpeed = s;
@@ -94,7 +98,10 @@ export default class DocLibReadingTime implements BlockTool {
     this.wrapper.classList.add("doclib-rt-wrapper");
 
     const wordCount = this.countWords();
-    const minutes = wordCount > 0 ? Math.max(1, Math.round(wordCount / this.data.avgReadingSpeed)) : 0;
+    const minutes =
+      wordCount > 0
+        ? Math.max(1, Math.round(wordCount / this.data.avgReadingSpeed))
+        : 0;
 
     const icon = document.createElement("div");
     icon.classList.add("doclib-rt-icon");

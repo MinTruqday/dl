@@ -17,7 +17,15 @@ export default class DocLibFooterBlock implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibFooterBlock implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-footer-block { padding: 16px 24px; border-top: 2px solid #cbd5e1; margin-top: 32px; color: #475569; font-size: 14px; font-weight: 500; font-style: italic; outline: none; display: flex; align-items: center; justify-content: space-between; position: relative; }

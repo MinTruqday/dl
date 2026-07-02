@@ -17,7 +17,15 @@ export default class DocLibPageColor implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibPageColor implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-pagecolor { border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin: 16px 0; background: #f8fafc; display: flex; align-items: center; justify-content: space-between; }
@@ -43,22 +51,22 @@ export default class DocLibPageColor implements BlockTool {
 
     const label = document.createElement("div");
     label.classList.add("doclib-pagecolor-label");
-    
+
     const swatch = document.createElement("div");
     swatch.classList.add("doclib-pagecolor-swatch");
-    
+
     const updateColor = () => {
       swatch.style.backgroundColor = this.data.color;
       label.innerText = `PAGE COLOR`;
       label.prepend(swatch);
-      
+
       const editorRoot = document.querySelector(".codex-editor") as HTMLElement;
       if (editorRoot) {
         editorRoot.style.backgroundColor = this.data.color;
         editorRoot.style.transition = "background-color 0.3s";
       }
     };
-    
+
     updateColor();
     container.appendChild(label);
 

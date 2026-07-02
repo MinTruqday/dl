@@ -17,7 +17,15 @@ export default class DocLibShape implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -31,7 +39,7 @@ export default class DocLibShape implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-shape-wrap { display: flex; flex-direction: column; align-items: center; margin: 24px 0; }
@@ -57,17 +65,26 @@ export default class DocLibShape implements BlockTool {
 
     if (!this.readOnly) {
       textEl.contentEditable = "true";
-      textEl.addEventListener("input", () => { this.data.text = textEl.innerText; });
+      textEl.addEventListener("input", () => {
+        this.data.text = textEl.innerText;
+      });
     }
 
     const renderShape = () => {
       let path = "";
-      if (this.data.shape === "rectangle") path = '<rect x="10" y="10" width="80" height="80" rx="8" />';
-      else if (this.data.shape === "circle") path = '<circle cx="50" cy="50" r="40" />';
-      else if (this.data.shape === "triangle") path = '<polygon points="50,10 90,90 10,90" />';
-      else if (this.data.shape === "diamond") path = '<polygon points="50,10 90,50 50,90 10,50" />';
-      else if (this.data.shape === "star") path = '<polygon points="50,10 61,35 88,35 66,51 74,76 50,60 26,76 34,51 12,35 39,35" />';
-      else if (this.data.shape === "arrow") path = '<polygon points="10,40 50,40 50,20 90,50 50,80 50,60 10,60" />';
+      if (this.data.shape === "rectangle")
+        path = '<rect x="10" y="10" width="80" height="80" rx="8" />';
+      else if (this.data.shape === "circle")
+        path = '<circle cx="50" cy="50" r="40" />';
+      else if (this.data.shape === "triangle")
+        path = '<polygon points="50,10 90,90 10,90" />';
+      else if (this.data.shape === "diamond")
+        path = '<polygon points="50,10 90,50 50,90 10,50" />';
+      else if (this.data.shape === "star")
+        path =
+          '<polygon points="50,10 61,35 88,35 66,51 74,76 50,60 26,76 34,51 12,35 39,35" />';
+      else if (this.data.shape === "arrow")
+        path = '<polygon points="10,40 50,40 50,20 90,50 50,80 50,60 10,60" />';
 
       svgWrap.innerHTML = `<svg viewBox="0 0 100 100" fill="${this.data.fill}" stroke="${this.data.stroke}" stroke-width="2">${path}</svg>`;
       svgWrap.appendChild(textEl);
@@ -82,20 +99,28 @@ export default class DocLibShape implements BlockTool {
 
       const select = document.createElement("select");
       select.classList.add("doclib-shape-select");
-      ["rectangle", "circle", "triangle", "diamond", "star", "arrow"].forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s;
-        opt.text = s.charAt(0).toUpperCase() + s.slice(1);
-        opt.selected = this.data.shape === s;
-        select.appendChild(opt);
+      ["rectangle", "circle", "triangle", "diamond", "star", "arrow"].forEach(
+        (s) => {
+          const opt = document.createElement("option");
+          opt.value = s;
+          opt.text = s.charAt(0).toUpperCase() + s.slice(1);
+          opt.selected = this.data.shape === s;
+          select.appendChild(opt);
+        },
+      );
+      select.addEventListener("change", () => {
+        this.data.shape = select.value;
+        renderShape();
       });
-      select.addEventListener("change", () => { this.data.shape = select.value; renderShape(); });
 
       const fillInput = document.createElement("input");
       fillInput.type = "color";
       fillInput.classList.add("doclib-shape-color");
       fillInput.value = this.data.fill;
-      fillInput.addEventListener("input", () => { this.data.fill = fillInput.value; renderShape(); });
+      fillInput.addEventListener("input", () => {
+        this.data.fill = fillInput.value;
+        renderShape();
+      });
 
       controls.appendChild(select);
       controls.appendChild(fillInput);

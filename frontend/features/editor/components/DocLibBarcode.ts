@@ -17,7 +17,15 @@ export default class DocLibBarcode implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibBarcode implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-barcode { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px auto; max-width: 400px; font-family: monospace; }
@@ -57,7 +65,7 @@ export default class DocLibBarcode implements BlockTool {
         this.data.code = text.innerText;
         // Generate pseudo random pattern based on length
         const len = this.data.code.length || 5;
-        img.style.background = `repeating-linear-gradient(90deg, #000, #000 ${len%3+1}px, #fff ${len%3+1}px, #fff ${len%4+2}px, #000 ${len%4+2}px, #000 ${len%5+4}px, #fff ${len%5+4}px, #fff ${len%2+6}px)`;
+        img.style.background = `repeating-linear-gradient(90deg, #000, #000 ${(len % 3) + 1}px, #fff ${(len % 3) + 1}px, #fff ${(len % 4) + 2}px, #000 ${(len % 4) + 2}px, #000 ${(len % 5) + 4}px, #fff ${(len % 5) + 4}px, #fff ${(len % 2) + 6}px)`;
       });
     }
     container.appendChild(text);

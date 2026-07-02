@@ -139,11 +139,14 @@ export const verifyCodeAPI = async (token: string): Promise<any> => {
 };
 
 export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/bat-dau`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
+  const res = await fetch(
+    `${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/bat-dau`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    },
+  );
   const data = await res.json();
   if (!res.ok)
     throw new Error(
@@ -156,11 +159,14 @@ export const passkeyLoginFinishAPI = async (
   email: string,
   credential: any,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/hoan-tat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, credential }),
-  });
+  const res = await fetch(
+    `${API_URL}/xac-thuc/khoa-bao-mat/dang-nhap/hoan-tat`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, credential }),
+    },
+  );
   const data = await res.json();
   if (!res.ok)
     throw new Error(

@@ -24,7 +24,7 @@ export default class DocLibStrikethrough implements InlineTool {
 
   render() {
     this.button = document.createElement("button");
-    this.button.type = "button";
+    (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML = IconStrikethrough;
 

@@ -17,19 +17,30 @@ export default class DocLibEventAgenda implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       title: data?.title || "",
-      events: data?.events && data.events.length > 0 ? data.events : [{ time: "09:00 AM", title: "", speaker: "" }],
+      events:
+        data?.events && data.events.length > 0
+          ? data.events
+          : [{ time: "09:00 AM", title: "", speaker: "" }],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-ea { font-family: sans-serif; max-width: 600px; margin: 16px auto; }
@@ -60,7 +71,9 @@ export default class DocLibEventAgenda implements BlockTool {
     titleEl.dataset.placeholder = "DocLib Event Agenda";
     if (!this.readOnly) {
       titleEl.contentEditable = "true";
-      titleEl.addEventListener("input", () => { this.data.title = titleEl.innerText; });
+      titleEl.addEventListener("input", () => {
+        this.data.title = titleEl.innerText;
+      });
     }
     container.appendChild(titleEl);
 
@@ -94,11 +107,17 @@ export default class DocLibEventAgenda implements BlockTool {
 
         if (!this.readOnly) {
           time.contentEditable = "true";
-          time.addEventListener("input", () => { this.data.events[i].time = time.innerText; });
+          time.addEventListener("input", () => {
+            this.data.events[i].time = time.innerText;
+          });
           eTitle.contentEditable = "true";
-          eTitle.addEventListener("input", () => { this.data.events[i].title = eTitle.innerText; });
+          eTitle.addEventListener("input", () => {
+            this.data.events[i].title = eTitle.innerText;
+          });
           eSpeaker.contentEditable = "true";
-          eSpeaker.addEventListener("input", () => { this.data.events[i].speaker = eSpeaker.innerText; });
+          eSpeaker.addEventListener("input", () => {
+            this.data.events[i].speaker = eSpeaker.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-ea-del");

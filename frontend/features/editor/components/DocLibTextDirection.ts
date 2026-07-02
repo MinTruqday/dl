@@ -17,7 +17,15 @@ export default class DocLibTextDirection implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibTextDirection implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-vertical { writing-mode: vertical-rl; text-orientation: mixed; padding: 24px; min-height: 200px; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 16px; line-height: 2; margin: 16px 0; background: #fff; outline: none; display: flex; align-items: flex-start; justify-content: flex-start; }

@@ -17,7 +17,15 @@ export default class DocLibHyphenation implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibHyphenation implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-hyph { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 4px; background: #fff; margin: 16px 0; max-width: 300px; font-family: sans-serif; }
@@ -50,7 +58,7 @@ export default class DocLibHyphenation implements BlockTool {
     select.classList.add("doclib-hyph-select");
     if (this.readOnly) select.disabled = true;
 
-    ["None", "Automatic", "Manual"].forEach(opt => {
+    ["None", "Automatic", "Manual"].forEach((opt) => {
       const option = document.createElement("option");
       option.value = opt;
       option.innerText = opt;

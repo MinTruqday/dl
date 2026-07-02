@@ -9,7 +9,7 @@ export default class DocLibPageBreak implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Page Break",
-      icon: "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><path d=\"M14 2v6h6\"/><path d=\"M9 14h6\"/></svg>",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 14h6"/></svg>',
     };
   }
 
@@ -17,7 +17,15 @@ export default class DocLibPageBreak implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = data || {};
@@ -26,7 +34,7 @@ export default class DocLibPageBreak implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-page-break {
@@ -64,7 +72,7 @@ export default class DocLibPageBreak implements BlockTool {
     const text = document.createElement("div");
     text.classList.add("doclib-page-break-text");
     text.innerText = "Page Break";
-    
+
     container.appendChild(text);
     this.wrapper.appendChild(container);
 

@@ -17,24 +17,36 @@ export default class DocLibTableOfAuthorities implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      cases: data?.cases && data.cases.length > 0 ? data.cases : [
-        { name: "DocLib Case 1", page: "12" },
-        { name: "DocLib Case 2", page: "45" }
-      ],
-      statutes: data?.statutes && data.statutes.length > 0 ? data.statutes : [
-        { name: "DocLib Statute A", page: "3" }
-      ],
+      cases:
+        data?.cases && data.cases.length > 0
+          ? data.cases
+          : [
+              { name: "DocLib Case 1", page: "12" },
+              { name: "DocLib Case 2", page: "45" },
+            ],
+      statutes:
+        data?.statutes && data.statutes.length > 0
+          ? data.statutes
+          : [{ name: "DocLib Statute A", page: "3" }],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-toa { font-family: "Times New Roman", serif; padding: 16px; margin: 16px 0; max-width: 600px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
@@ -62,7 +74,7 @@ export default class DocLibTableOfAuthorities implements BlockTool {
     const renderSection = (title: string, listKey: "cases" | "statutes") => {
       const section = document.createElement("div");
       section.classList.add("doclib-toa-section");
-      
+
       const stitle = document.createElement("div");
       stitle.classList.add("doclib-toa-stitle");
       stitle.innerText = title;
@@ -75,20 +87,24 @@ export default class DocLibTableOfAuthorities implements BlockTool {
         const name = document.createElement("div");
         name.classList.add("doclib-toa-name");
         name.innerText = item.name;
-        
+
         const dots = document.createElement("div");
         dots.classList.add("doclib-toa-dots");
-        
+
         const page = document.createElement("div");
         page.classList.add("doclib-toa-page");
         page.innerText = item.page;
 
         if (!this.readOnly) {
           name.contentEditable = "true";
-          name.addEventListener("input", () => { this.data[listKey][i].name = name.innerText; });
+          name.addEventListener("input", () => {
+            this.data[listKey][i].name = name.innerText;
+          });
           page.contentEditable = "true";
-          page.addEventListener("input", () => { this.data[listKey][i].page = page.innerText; });
-          
+          page.addEventListener("input", () => {
+            this.data[listKey][i].page = page.innerText;
+          });
+
           const del = document.createElement("button");
           del.classList.add("doclib-toa-del");
           del.innerText = "✕";

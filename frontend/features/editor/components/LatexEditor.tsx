@@ -12,7 +12,11 @@ interface LatexEditorProps {
   setLastKeystroke?: (time: number) => void;
 }
 
-import { cloudAutoSaveAPI, cleanTempFilesAPI, getLatexDraftAPI } from "@/features/editor/services/latex_compilation.service";
+import {
+  cloudAutoSaveAPI,
+  cleanTempFilesAPI,
+  getLatexDraftAPI,
+} from "@/features/editor/services/latex_compilation.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 
 export default function LatexEditor({
@@ -34,7 +38,10 @@ export default function LatexEditor({
         const draftRes = await getLatexDraftAPI();
         const draftContent = draftRes?.data?.content;
         const targetContent = draftContent || initialContent || "";
-        if (editorRef.current && editorRef.current.getValue() !== targetContent) {
+        if (
+          editorRef.current &&
+          editorRef.current.getValue() !== targetContent
+        ) {
           editorRef.current.setValue(targetContent);
         }
       } catch (err) {
@@ -46,7 +53,7 @@ export default function LatexEditor({
       }
     };
     if (editorRef.current) {
-        initContent();
+      initContent();
     }
   }, [initialContent]);
 
@@ -67,7 +74,7 @@ export default function LatexEditor({
         editor.setValue(targetContent);
       }
     } catch (err) {
-        // fallback to initialContent
+      // fallback to initialContent
     }
   };
 

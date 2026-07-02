@@ -17,7 +17,15 @@ export default class DocLibSmartArtPyramid implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibSmartArtPyramid implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-pyramid { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; margin: 16px 0; max-width: 400px; height: 300px; font-family: sans-serif; position: relative; margin-left: auto; margin-right: auto; }
@@ -48,19 +56,21 @@ export default class DocLibSmartArtPyramid implements BlockTool {
     const levels = [
       { key: "top", cls: "doclib-pyr-top", placeholder: "DocLib Top" },
       { key: "middle", cls: "doclib-pyr-mid", placeholder: "DocLib Middle" },
-      { key: "bottom", cls: "doclib-pyr-bot", placeholder: "DocLib Bottom" }
+      { key: "bottom", cls: "doclib-pyr-bot", placeholder: "DocLib Bottom" },
     ];
 
-    levels.forEach(lvl => {
+    levels.forEach((lvl) => {
       const el = document.createElement("div");
       el.classList.add("doclib-pyr-level", lvl.cls);
       el.dataset.placeholder = lvl.placeholder;
-      
+
       const span = document.createElement("span");
       span.innerText = this.data[lvl.key];
       if (!this.readOnly) {
         span.contentEditable = "true";
-        span.addEventListener("input", () => { this.data[lvl.key] = span.innerText; });
+        span.addEventListener("input", () => {
+          this.data[lvl.key] = span.innerText;
+        });
       }
       el.appendChild(span);
       container.appendChild(el);

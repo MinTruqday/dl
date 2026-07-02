@@ -17,7 +17,15 @@ export default class DocLibDocumentProperty implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibDocumentProperty implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-prop { display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; font-family: sans-serif; font-size: 14px; margin: 4px 0; }
@@ -46,7 +54,7 @@ export default class DocLibDocumentProperty implements BlockTool {
     if (!this.readOnly) {
       const select = document.createElement("select");
       select.classList.add("doclib-prop-select");
-      ["Author", "Title", "Subject", "Company", "Keywords"].forEach(opt => {
+      ["Author", "Title", "Subject", "Company", "Keywords"].forEach((opt) => {
         const o = document.createElement("option");
         o.value = opt;
         o.innerText = opt;
@@ -69,7 +77,9 @@ export default class DocLibDocumentProperty implements BlockTool {
     val.innerText = this.data.value;
     if (!this.readOnly) {
       val.contentEditable = "true";
-      val.addEventListener("input", () => { this.data.value = val.innerText; });
+      val.addEventListener("input", () => {
+        this.data.value = val.innerText;
+      });
     }
     container.appendChild(val);
 

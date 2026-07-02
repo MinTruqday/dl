@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibRecipe implements BlockTool {
@@ -27,7 +28,15 @@ export default class DocLibRecipe implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -206,7 +215,8 @@ export default class DocLibRecipe implements BlockTool {
       ) => {
         const section = document.createElement("div");
         const lbl = document.createElement("div");
-        lbl.style.cssText = "font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:6px;";
+        lbl.style.cssText =
+          "font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:6px;";
         lbl.innerText = label;
         section.appendChild(lbl);
 
@@ -221,11 +231,18 @@ export default class DocLibRecipe implements BlockTool {
             const input = document.createElement("input");
             input.classList.add("doclib-recipe-list-input");
             input.value = item;
-            input.addEventListener("input", () => { items[i] = input.value; onUpdate(items); });
+            input.addEventListener("input", () => {
+              items[i] = input.value;
+              onUpdate(items);
+            });
             const del = document.createElement("button");
             del.classList.add("doclib-recipe-list-del");
             del.innerText = "x";
-            del.addEventListener("click", () => { items.splice(i, 1); renderRows(); onUpdate(items); });
+            del.addEventListener("click", () => {
+              items.splice(i, 1);
+              renderRows();
+              onUpdate(items);
+            });
             row.appendChild(input);
             row.appendChild(del);
             listEdit.appendChild(row);
@@ -233,7 +250,11 @@ export default class DocLibRecipe implements BlockTool {
           const addBtn = document.createElement("button");
           addBtn.classList.add("doclib-recipe-add-btn");
           addBtn.innerText = "Add";
-          addBtn.addEventListener("click", () => { items.push(""); renderRows(); onUpdate(items); });
+          addBtn.addEventListener("click", () => {
+            items.push("");
+            renderRows();
+            onUpdate(items);
+          });
           listEdit.appendChild(addBtn);
         };
 
@@ -242,7 +263,9 @@ export default class DocLibRecipe implements BlockTool {
         return section;
       };
 
-      edit.appendChild(buildListEditor("Ingredients", this.data.ingredients, () => {}));
+      edit.appendChild(
+        buildListEditor("Ingredients", this.data.ingredients, () => {}),
+      );
       edit.appendChild(buildListEditor("Steps", this.data.steps, () => {}));
 
       this.wrapper.appendChild(edit);

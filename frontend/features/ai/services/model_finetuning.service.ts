@@ -1,4 +1,7 @@
-import { API_URL, getToken } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getToken,
+} from "@/features/auth/services/user_authentication.service";
 
 const authHeaders = () => {
   const token = getToken();
@@ -53,11 +56,14 @@ export const deleteDatasetAPI = async (datasetId: string) => {
 };
 
 export const addSamplesAPI = async (datasetId: string, samples: any[]) => {
-  const res = await fetch(`${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/sample`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({ samples }),
-  });
+  const res = await fetch(
+    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/sample`,
+    {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ samples }),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message);
   return data;
@@ -168,11 +174,14 @@ export const deployModelAPI = async (jobId: string) => {
 };
 
 export const evaluateModelAPI = async (jobId: string, testSamples: any[]) => {
-  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/danh-gia`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({ test_samples: testSamples }),
-  });
+  const res = await fetch(
+    `${API_URL}/tinh-chinh/tien-trinh/${jobId}/danh-gia`,
+    {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ test_samples: testSamples }),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message);
   return data;

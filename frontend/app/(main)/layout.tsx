@@ -4,24 +4,24 @@ import Workspace from "@/features/content/components/Workspace";
 import { usePathname } from "next/navigation";
 
 export default function MainLayout({
- children,
+  children,
 }: {
- children: React.ReactNode;
+  children: React.ReactNode;
 }) {
- const pathname = usePathname();
+  const pathname = usePathname();
 
- const isPublic = () => {
- if (pathname === "/") return true;
+  const isPublic = () => {
+    if (pathname === "/") return true;
 
- if (pathname.startsWith("/author")) return true;
- if (pathname.startsWith("/search")) return true;
+    if (pathname.startsWith("/author")) return true;
+    if (pathname.startsWith("/search")) return true;
 
- if (pathname.startsWith("/document/")) {
- return true;
- }
+    if (pathname.startsWith("/document/")) {
+      return true;
+    }
 
- return false;
- };
+    return false;
+  };
 
- return <Workspace requireAuth={!isPublic()}>{children}</Workspace>;
+  return <Workspace requireAuth={!isPublic()}>{children}</Workspace>;
 }

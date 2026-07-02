@@ -17,7 +17,15 @@ export default class DocLibGreetingLine implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibGreetingLine implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-gl { font-family: "Times New Roman", serif; font-size: 16px; margin: 16px 0; }
@@ -41,31 +49,42 @@ export default class DocLibGreetingLine implements BlockTool {
     this.wrapper.appendChild(style);
 
     const container = document.createElement("div");
-    
+
     if (!this.readOnly) {
       const editor = document.createElement("div");
       editor.classList.add("doclib-gl-editor");
-      
+
       const gSel = document.createElement("select");
       gSel.classList.add("doclib-gl-select");
-      ["Dear", "To", "None"].forEach(v => {
-        const o = document.createElement("option"); o.value = v; o.innerText = v;
+      ["Dear", "To", "None"].forEach((v) => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.innerText = v;
         if (this.data.greeting === v) o.selected = true;
         gSel.appendChild(o);
       });
 
       const fSel = document.createElement("select");
       fSel.classList.add("doclib-gl-select");
-      ["Mr. Randall", "Joshua", "Joshua Randall Jr.", "Mr. Joshua Randall Jr."].forEach(v => {
-        const o = document.createElement("option"); o.value = v; o.innerText = v;
+      [
+        "Mr. Randall",
+        "Joshua",
+        "Joshua Randall Jr.",
+        "Mr. Joshua Randall Jr.",
+      ].forEach((v) => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.innerText = v;
         if (this.data.format === v) o.selected = true;
         fSel.appendChild(o);
       });
 
       const pSel = document.createElement("select");
       pSel.classList.add("doclib-gl-select");
-      [",", ":", "None"].forEach(v => {
-        const o = document.createElement("option"); o.value = v; o.innerText = v;
+      [",", ":", "None"].forEach((v) => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.innerText = v;
         if (this.data.punctuation === v) o.selected = true;
         pSel.appendChild(o);
       });

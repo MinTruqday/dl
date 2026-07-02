@@ -8,7 +8,7 @@ export default class DocLibTableOfContents implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Table of Contents",
-      icon: "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"8\" y1=\"6\" x2=\"21\" y2=\"6\"/><line x1=\"8\" y1=\"12\" x2=\"21\" y2=\"12\"/><line x1=\"8\" y1=\"18\" x2=\"21\" y2=\"18\"/><line x1=\"3\" y1=\"6\" x2=\"3.01\" y2=\"6\"/><line x1=\"3\" y1=\"12\" x2=\"3.01\" y2=\"12\"/><line x1=\"3\" y1=\"18\" x2=\"3.01\" y2=\"18\"/></svg>",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
     };
   }
 
@@ -16,7 +16,15 @@ export default class DocLibTableOfContents implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
   }
@@ -24,7 +32,7 @@ export default class DocLibTableOfContents implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-toc {
@@ -83,12 +91,11 @@ export default class DocLibTableOfContents implements BlockTool {
     container.appendChild(list);
     this.wrapper.appendChild(container);
 
-    
     setTimeout(() => {
-      
-      
-      const headers = document.querySelectorAll("h1, h2, h3, h4, h5, h6, .ce-header");
-      
+      const headers = document.querySelectorAll(
+        "h1, h2, h3, h4, h5, h6, .ce-header",
+      );
+
       if (headers.length === 0) {
         const empty = document.createElement("div");
         empty.classList.add("doclib-toc-empty");
@@ -102,7 +109,6 @@ export default class DocLibTableOfContents implements BlockTool {
         if (h.tagName.toLowerCase().startsWith("h")) {
           level = parseInt(h.tagName.substring(1), 10);
         } else if (h.classList.contains("ce-header")) {
-          
           const hTag = h.querySelector("h1, h2, h3, h4, h5, h6");
           if (hTag) level = parseInt(hTag.tagName.substring(1), 10);
         }
@@ -110,7 +116,6 @@ export default class DocLibTableOfContents implements BlockTool {
         const text = (h as HTMLElement).innerText.trim();
         if (!text) return;
 
-        
         if (!h.id) {
           h.id = "heading-" + index;
         }
@@ -122,8 +127,7 @@ export default class DocLibTableOfContents implements BlockTool {
         link.classList.add("doclib-toc-link");
         link.href = "#" + h.id;
         link.innerText = text;
-        
-        
+
         link.addEventListener("click", (e) => {
           e.preventDefault();
           h.scrollIntoView({ behavior: "smooth", block: "start" });

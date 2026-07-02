@@ -35,7 +35,11 @@ function bytesToB64url(bytes: ArrayBuffer): string {
 
 function GoogleIcon() {
   return (
-    <svg className="w-5 h-5 text-[#1D1D1F]" viewBox="0 0 24 24" fill="currentColor">
+    <svg
+      className="w-5 h-5 text-[#1D1D1F]"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -124,10 +128,7 @@ export default function LoginPage() {
 
       if (!data.user?.has_passkey) {
         setPendingPasskeyEmail(data.user?.email || email);
-        showToast(
-          "Đăng nhập thành công",
-          "success",
-        );
+        showToast("Đăng nhập thành công", "success");
         setIsSubmitting(false);
       } else {
         showToast("Đăng nhập thành công", "success");
@@ -215,7 +216,11 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6E73]"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -249,9 +254,7 @@ export default function LoginPage() {
                   disabled={isSubmitting}
                   className="pill-button w-full flex justify-center items-center gap-2 disabled:opacity-50"
                 >
-                  {isSubmitting && (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  )}
+                  {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
                   {isSubmitting ? "Đang xử lý" : "Đăng nhập"}
                 </button>
               </div>
@@ -259,9 +262,7 @@ export default function LoginPage() {
 
             <div className="mt-7 flex items-center justify-center gap-3">
               <div className="h-px bg-[#D2D2D7] flex-1" />
-              <span className="text-[13px] text-[#6E6E73]">
-                Hoặc
-              </span>
+              <span className="text-[13px] text-[#6E6E73]">Hoặc</span>
               <div className="h-px bg-[#D2D2D7] flex-1" />
             </div>
 

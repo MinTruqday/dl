@@ -17,7 +17,15 @@ export default class DocLibLabelConfig implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibLabelConfig implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-labelcfg { font-family: sans-serif; padding: 16px; border: 1px dashed #cbd5e1; border-radius: 4px; background: #fafafa; margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 8px; }
@@ -47,7 +55,7 @@ export default class DocLibLabelConfig implements BlockTool {
 
     const head = document.createElement("div");
     head.classList.add("doclib-labelcfg-head");
-    
+
     const title = document.createElement("div");
     title.classList.add("doclib-labelcfg-title");
     title.innerText = "Labels";
@@ -58,7 +66,9 @@ export default class DocLibLabelConfig implements BlockTool {
     prod.innerText = this.data.productNum;
     if (!this.readOnly) {
       prod.contentEditable = "true";
-      prod.addEventListener("input", () => { this.data.productNum = prod.innerText; });
+      prod.addEventListener("input", () => {
+        this.data.productNum = prod.innerText;
+      });
     }
     head.appendChild(prod);
     container.appendChild(head);
@@ -68,7 +78,9 @@ export default class DocLibLabelConfig implements BlockTool {
     content.innerText = this.data.content;
     if (!this.readOnly) {
       content.contentEditable = "true";
-      content.addEventListener("input", () => { this.data.content = content.innerText; });
+      content.addEventListener("input", () => {
+        this.data.content = content.innerText;
+      });
     }
     container.appendChild(content);
 

@@ -17,7 +17,15 @@ export default class DocLibAddressBlock implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -32,7 +40,7 @@ export default class DocLibAddressBlock implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-address { font-family: "Times New Roman", serif; font-size: 16px; line-height: 1.5; padding: 24px; border: 1px dashed #cbd5e1; border-radius: 4px; background: #fafafa; margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 4px; }
@@ -48,11 +56,31 @@ export default class DocLibAddressBlock implements BlockTool {
     if (this.readOnly) container.classList.add("readonly");
 
     const fields = [
-      { key: "name", cls: "doclib-address-name", placeholder: "«DocLib First Last»" },
-      { key: "company", cls: "doclib-address-line", placeholder: "«DocLib Company Name»" },
-      { key: "street", cls: "doclib-address-line", placeholder: "«DocLib Street Address»" },
-      { key: "city", cls: "doclib-address-line", placeholder: "«DocLib City, State ZIP»" },
-      { key: "country", cls: "doclib-address-line", placeholder: "«DocLib Country»" },
+      {
+        key: "name",
+        cls: "doclib-address-name",
+        placeholder: "«DocLib First Last»",
+      },
+      {
+        key: "company",
+        cls: "doclib-address-line",
+        placeholder: "«DocLib Company Name»",
+      },
+      {
+        key: "street",
+        cls: "doclib-address-line",
+        placeholder: "«DocLib Street Address»",
+      },
+      {
+        key: "city",
+        cls: "doclib-address-line",
+        placeholder: "«DocLib City, State ZIP»",
+      },
+      {
+        key: "country",
+        cls: "doclib-address-line",
+        placeholder: "«DocLib Country»",
+      },
     ];
 
     fields.forEach((f) => {
@@ -60,14 +88,16 @@ export default class DocLibAddressBlock implements BlockTool {
       el.classList.add(f.cls);
       el.innerText = this.data[f.key];
       el.dataset.placeholder = f.placeholder;
-      
+
       if (!this.readOnly) {
         el.contentEditable = "true";
-        el.addEventListener("input", () => { this.data[f.key] = el.innerText; });
+        el.addEventListener("input", () => {
+          this.data[f.key] = el.innerText;
+        });
       } else {
         if (!this.data[f.key]) el.style.display = "none";
       }
-      
+
       container.appendChild(el);
     });
 

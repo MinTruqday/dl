@@ -17,18 +17,29 @@ export default class DocLibCompatibilityChecker implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      issues: data?.issues && data.issues.length > 0 ? data.issues : ["DocLib Issue: Text effects will be removed in older versions."],
+      issues:
+        data?.issues && data.issues.length > 0
+          ? data.issues
+          : ["DocLib Issue: Text effects will be removed in older versions."],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-compat { font-family: sans-serif; padding: 16px; border: 1px solid #fcd34d; border-radius: 8px; background: #fffbeb; margin: 16px 0; max-width: 500px; display: flex; flex-direction: column; gap: 8px; }
@@ -63,15 +74,17 @@ export default class DocLibCompatibilityChecker implements BlockTool {
       this.data.issues.forEach((issue: string, i: number) => {
         const item = document.createElement("div");
         item.classList.add("doclib-compat-item");
-        
+
         const text = document.createElement("div");
         text.classList.add("doclib-compat-text");
         text.innerText = issue;
-        
+
         if (!this.readOnly) {
           text.contentEditable = "true";
-          text.addEventListener("input", () => { this.data.issues[i] = text.innerText; });
-          
+          text.addEventListener("input", () => {
+            this.data.issues[i] = text.innerText;
+          });
+
           const del = document.createElement("button");
           del.classList.add("doclib-compat-del");
           del.innerText = "✕";

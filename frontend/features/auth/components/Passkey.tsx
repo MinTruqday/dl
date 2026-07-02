@@ -99,7 +99,9 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
       className="max-w-sm rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
     >
       <ModalHeader className="p-6 pb-2">
-        <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">Bảo mật bằng Passkey</ModalTitle>
+        <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+          Bảo mật bằng Passkey
+        </ModalTitle>
       </ModalHeader>
 
       <ModalContent className="px-6 pb-6 pt-2">

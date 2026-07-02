@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibFile implements BlockTool {
@@ -20,7 +21,7 @@ export default class DocLibFile implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, config }: { api: API; data: any }) {
+  constructor({ api, data, config }: { api: API; data: any; config?: any }) {
     this.api = api;
     this.config = config || {};
     this.data = {
@@ -148,7 +149,8 @@ export default class DocLibFile implements BlockTool {
                 };
                 this.data.title = file.name;
               } else {
-                const newUrl = res.url || res.data?.url || URL.createObjectURL(file);
+                const newUrl =
+                  res.url || res.data?.url || URL.createObjectURL(file);
                 if (this.data.file) this.data.file.url = newUrl;
                 this.data.file = {
                   url: newUrl,

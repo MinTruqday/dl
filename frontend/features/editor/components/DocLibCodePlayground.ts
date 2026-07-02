@@ -17,7 +17,15 @@ export default class DocLibCodePlayground implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -62,7 +70,9 @@ export default class DocLibCodePlayground implements BlockTool {
     const doc = iframe.contentDocument || iframe.contentWindow?.document;
     if (!doc) return;
     doc.open();
-    doc.write(`<!DOCTYPE html><html><head><style>${this.data.css}</style></head><body>${this.data.html}<script>${this.data.js}<\/script></body></html>`);
+    doc.write(
+      `<!DOCTYPE html><html><head><style>${this.data.css}</style></head><body>${this.data.html}<script>${this.data.js}<\/script></body></html>`,
+    );
     doc.close();
   }
 
@@ -90,7 +100,9 @@ export default class DocLibCodePlayground implements BlockTool {
       tab.innerText = label;
       tab.addEventListener("click", () => {
         this.data.activeTab = id;
-        tabs.querySelectorAll(".doclib-cp-tab").forEach((t) => t.classList.remove("active"));
+        tabs
+          .querySelectorAll(".doclib-cp-tab")
+          .forEach((t) => t.classList.remove("active"));
         tab.classList.add("active");
         Object.values(editors).forEach((e) => e.classList.remove("active"));
         editors[id].classList.add("active");
@@ -113,7 +125,10 @@ export default class DocLibCodePlayground implements BlockTool {
           e.preventDefault();
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
-          textarea.value = textarea.value.substring(0, start) + "  " + textarea.value.substring(end);
+          textarea.value =
+            textarea.value.substring(0, start) +
+            "  " +
+            textarea.value.substring(end);
           textarea.selectionStart = textarea.selectionEnd = start + 2;
           (this.data as any)[id] = textarea.value;
         }

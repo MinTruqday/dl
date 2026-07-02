@@ -17,7 +17,15 @@ export default class DocLibDocumentStats implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -32,7 +40,7 @@ export default class DocLibDocumentStats implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-stats { font-family: sans-serif; padding: 20px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; max-width: 350px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -62,7 +70,9 @@ export default class DocLibDocumentStats implements BlockTool {
       val.innerText = this.data[key];
       if (!this.readOnly) {
         val.contentEditable = "true";
-        val.addEventListener("input", () => { this.data[key] = Number(val.innerText) || 0; });
+        val.addEventListener("input", () => {
+          this.data[key] = Number(val.innerText) || 0;
+        });
       }
       row.appendChild(lbl);
       row.appendChild(val);
@@ -82,11 +92,12 @@ export default class DocLibDocumentStats implements BlockTool {
       btn.addEventListener("click", () => {
         // Simulation only
         this.data.words = Math.floor(Math.random() * 500) + 100;
-        this.data.characters = this.data.words * 5 + Math.floor(Math.random() * 100);
+        this.data.characters =
+          this.data.words * 5 + Math.floor(Math.random() * 100);
         this.data.paragraphs = Math.floor(this.data.words / 50) + 1;
         this.data.lines = this.data.paragraphs * 3;
         this.data.pages = Math.floor(this.data.words / 300) + 1;
-        
+
         const vals = container.querySelectorAll(".doclib-stats-val");
         vals[0].innerHTML = this.data.pages;
         vals[1].innerHTML = this.data.words;

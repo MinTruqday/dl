@@ -17,20 +17,31 @@ export default class DocLibChangelog implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       version: data?.version || "",
       date: data?.date || "",
-      items: data?.items && data.items.length > 0 ? data.items : [{ type: "Added", text: "" }],
+      items:
+        data?.items && data.items.length > 0
+          ? data.items
+          : [{ type: "Added", text: "" }],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-clog { font-family: sans-serif; border-left: 2px solid #e2e8f0; margin-left: 12px; padding-left: 24px; position: relative; margin-bottom: 24px; }
@@ -66,7 +77,9 @@ export default class DocLibChangelog implements BlockTool {
     verEl.dataset.placeholder = "v1.0.0";
     if (!this.readOnly) {
       verEl.contentEditable = "true";
-      verEl.addEventListener("input", () => { this.data.version = verEl.innerText; });
+      verEl.addEventListener("input", () => {
+        this.data.version = verEl.innerText;
+      });
     }
 
     const dateEl = document.createElement("div");
@@ -75,7 +88,9 @@ export default class DocLibChangelog implements BlockTool {
     dateEl.dataset.placeholder = "DocLib Release Date";
     if (!this.readOnly) {
       dateEl.contentEditable = "true";
-      dateEl.addEventListener("input", () => { this.data.date = dateEl.innerText; });
+      dateEl.addEventListener("input", () => {
+        this.data.date = dateEl.innerText;
+      });
     }
 
     header.appendChild(verEl);
@@ -112,7 +127,9 @@ export default class DocLibChangelog implements BlockTool {
         textEl.dataset.placeholder = "DocLib Changelog description";
         if (!this.readOnly) {
           textEl.contentEditable = "true";
-          textEl.addEventListener("input", () => { this.data.items[i].text = textEl.innerText; });
+          textEl.addEventListener("input", () => {
+            this.data.items[i].text = textEl.innerText;
+          });
 
           const delBtn = document.createElement("button");
           delBtn.classList.add("doclib-clog-del");
@@ -121,7 +138,7 @@ export default class DocLibChangelog implements BlockTool {
             this.data.items.splice(i, 1);
             renderItems();
           });
-          
+
           itemEl.appendChild(badge);
           itemEl.appendChild(textEl);
           itemEl.appendChild(delBtn);

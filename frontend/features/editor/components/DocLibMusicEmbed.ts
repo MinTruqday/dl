@@ -17,7 +17,15 @@ export default class DocLibMusicEmbed implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -27,23 +35,47 @@ export default class DocLibMusicEmbed implements BlockTool {
     };
   }
 
-  private detectPlatform(url: string): { platform: string; embedUrl: string } | null {
+  private detectPlatform(
+    url: string,
+  ): { platform: string; embedUrl: string } | null {
     if (!url) return null;
 
     const spotifyTrack = url.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
-    if (spotifyTrack) return { platform: "Spotify", embedUrl: `https://open.spotify.com/embed/track/${spotifyTrack[1]}?utm_source=generator` };
+    if (spotifyTrack)
+      return {
+        platform: "Spotify",
+        embedUrl: `https://open.spotify.com/embed/track/${spotifyTrack[1]}?utm_source=generator`,
+      };
 
     const spotifyPlaylist = url.match(/spotify\.com\/playlist\/([a-zA-Z0-9]+)/);
-    if (spotifyPlaylist) return { platform: "Spotify", embedUrl: `https://open.spotify.com/embed/playlist/${spotifyPlaylist[1]}?utm_source=generator` };
+    if (spotifyPlaylist)
+      return {
+        platform: "Spotify",
+        embedUrl: `https://open.spotify.com/embed/playlist/${spotifyPlaylist[1]}?utm_source=generator`,
+      };
 
     const spotifyAlbum = url.match(/spotify\.com\/album\/([a-zA-Z0-9]+)/);
-    if (spotifyAlbum) return { platform: "Spotify", embedUrl: `https://open.spotify.com/embed/album/${spotifyAlbum[1]}?utm_source=generator` };
+    if (spotifyAlbum)
+      return {
+        platform: "Spotify",
+        embedUrl: `https://open.spotify.com/embed/album/${spotifyAlbum[1]}?utm_source=generator`,
+      };
 
     const soundcloud = url.match(/soundcloud\.com\//);
-    if (soundcloud) return { platform: "SoundCloud", embedUrl: `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%230284c7&auto_play=false&show_artwork=true` };
+    if (soundcloud)
+      return {
+        platform: "SoundCloud",
+        embedUrl: `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%230284c7&auto_play=false&show_artwork=true`,
+      };
 
-    const youtube = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-    if (youtube) return { platform: "YouTube Music", embedUrl: `https://www.youtube.com/embed/${youtube[1]}` };
+    const youtube = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/,
+    );
+    if (youtube)
+      return {
+        platform: "YouTube Music",
+        embedUrl: `https://www.youtube.com/embed/${youtube[1]}`,
+      };
 
     return null;
   }
@@ -97,7 +129,9 @@ export default class DocLibMusicEmbed implements BlockTool {
         this.buildUI();
       });
 
-      urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") embedBtn.click(); });
+      urlInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") embedBtn.click();
+      });
 
       inputArea.appendChild(urlInput);
       inputArea.appendChild(embedBtn);
@@ -105,18 +139,25 @@ export default class DocLibMusicEmbed implements BlockTool {
 
       const hint = document.createElement("div");
       hint.classList.add("doclib-music-hint");
-      hint.innerText = "Support: Spotify (track/playlist/album)  SoundCloud  YouTube";
+      hint.innerText =
+        "Support: Spotify (track/playlist/album)  SoundCloud  YouTube";
       this.wrapper.appendChild(hint);
     }
 
     if (detected) {
-      const iframeHeight = detected.platform === "Spotify" ? "152" : detected.platform === "SoundCloud" ? "166" : "315";
+      const iframeHeight =
+        detected.platform === "Spotify"
+          ? "152"
+          : detected.platform === "SoundCloud"
+            ? "166"
+            : "315";
       const iframe = document.createElement("iframe");
       iframe.classList.add("doclib-music-iframe");
       iframe.height = iframeHeight;
       iframe.src = detected.embedUrl;
       iframe.allowFullscreen = true;
-      iframe.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+      iframe.allow =
+        "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
 
       const badge = document.createElement("div");
       badge.classList.add("doclib-music-platform-badge");

@@ -17,19 +17,30 @@ export default class DocLibSmartArtRelationship implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       center: data?.center || "DocLib Core",
-      satellites: data?.satellites && data.satellites.length > 0 ? data.satellites : ["DocLib A", "DocLib B", "DocLib C", "DocLib D"],
+      satellites:
+        data?.satellites && data.satellites.length > 0
+          ? data.satellites
+          : ["DocLib A", "DocLib B", "DocLib C", "DocLib D"],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-rel { width: 100%; max-width: 400px; aspect-ratio: 1/1; position: relative; margin: 24px auto; font-family: sans-serif; display: flex; align-items: center; justify-content: center; }
@@ -53,13 +64,15 @@ export default class DocLibSmartArtRelationship implements BlockTool {
     center.innerText = this.data.center;
     if (!this.readOnly) {
       center.contentEditable = "true";
-      center.addEventListener("input", () => { this.data.center = center.innerText; });
+      center.addEventListener("input", () => {
+        this.data.center = center.innerText;
+      });
     }
     container.appendChild(center);
 
     const renderSatellites = () => {
       // Clear old satellites and lines
-      Array.from(container.children).forEach(child => {
+      Array.from(container.children).forEach((child) => {
         if (child !== center && !child.classList.contains("doclib-rel-add")) {
           child.remove();
         }
@@ -91,8 +104,10 @@ export default class DocLibSmartArtRelationship implements BlockTool {
 
         if (!this.readOnly) {
           satEl.contentEditable = "true";
-          satEl.addEventListener("input", () => { this.data.satellites[i] = satEl.innerText; });
-          
+          satEl.addEventListener("input", () => {
+            this.data.satellites[i] = satEl.innerText;
+          });
+
           const del = document.createElement("button");
           del.classList.add("doclib-rel-del");
           del.innerText = "✕";
@@ -103,7 +118,7 @@ export default class DocLibSmartArtRelationship implements BlockTool {
           });
           satEl.appendChild(del);
         }
-        
+
         container.appendChild(satEl);
       });
     };

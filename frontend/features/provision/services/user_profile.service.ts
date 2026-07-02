@@ -1,11 +1,18 @@
-import { API_URL, getToken, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getToken,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function getAdminUsersAPI(limit: number = 50, offset: number = 0) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/nguoi-dung?limit=${limit}&offset=${offset}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/nguoi-dung?limit=${limit}&offset=${offset}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể tải danh sách người dùng");

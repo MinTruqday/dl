@@ -17,7 +17,15 @@ export default class DocLibPageNumber implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibPageNumber implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-pagenum { border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin: 16px 0; background: #f8fafc; font-family: monospace; display: flex; justify-content: space-between; align-items: center; }
@@ -44,13 +52,13 @@ export default class DocLibPageNumber implements BlockTool {
 
     const preview = document.createElement("div");
     preview.classList.add("doclib-pagenum-preview");
-    
+
     const updatePreview = () => {
       let sample = "1";
       if (this.data.format === "i, ii, iii") sample = "i";
       else if (this.data.format === "A, B, C") sample = "A";
       else if (this.data.format === "Page X of Y") sample = "Page 1 of 10";
-      
+
       const pos = this.data.position.replace("-", " ").toUpperCase();
       preview.innerText = `[${pos}] - Format: ${sample}`;
     };
@@ -64,25 +72,38 @@ export default class DocLibPageNumber implements BlockTool {
 
       const posSelect = document.createElement("select");
       posSelect.classList.add("doclib-pagenum-select");
-      ["bottom-right", "bottom-center", "bottom-left", "top-right", "top-center", "top-left"].forEach(p => {
+      [
+        "bottom-right",
+        "bottom-center",
+        "bottom-left",
+        "top-right",
+        "top-center",
+        "top-left",
+      ].forEach((p) => {
         const opt = document.createElement("option");
         opt.value = p;
         opt.text = p;
         opt.selected = this.data.position === p;
         posSelect.appendChild(opt);
       });
-      posSelect.addEventListener("change", () => { this.data.position = posSelect.value; updatePreview(); });
+      posSelect.addEventListener("change", () => {
+        this.data.position = posSelect.value;
+        updatePreview();
+      });
 
       const fmtSelect = document.createElement("select");
       fmtSelect.classList.add("doclib-pagenum-select");
-      ["1, 2, 3", "i, ii, iii", "A, B, C", "Page X of Y"].forEach(f => {
+      ["1, 2, 3", "i, ii, iii", "A, B, C", "Page X of Y"].forEach((f) => {
         const opt = document.createElement("option");
         opt.value = f;
         opt.text = f;
         opt.selected = this.data.format === f;
         fmtSelect.appendChild(opt);
       });
-      fmtSelect.addEventListener("change", () => { this.data.format = fmtSelect.value; updatePreview(); });
+      fmtSelect.addEventListener("change", () => {
+        this.data.format = fmtSelect.value;
+        updatePreview();
+      });
 
       controls.appendChild(posSelect);
       controls.appendChild(fmtSelect);

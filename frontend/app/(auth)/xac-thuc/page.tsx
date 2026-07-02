@@ -73,7 +73,8 @@ function VerifyCodeContent() {
               Xác thực mã
             </h1>
             <p className="mt-2 text-[15px] text-[#6E6E73]">
-              Mã xác nhận 6 số đã được gửi tới email<br />
+              Mã xác nhận 6 số đã được gửi tới email
+              <br />
               <strong className="text-[#1D1D1F] font-medium">{email}</strong>
             </p>
           </div>
@@ -116,7 +117,10 @@ function VerifyCodeContent() {
           <div className="mt-8 text-center border-t border-[#D2D2D7] pt-6 flex flex-col gap-4">
             {countdown > 0 ? (
               <p className="text-[13px] text-[#6E6E73]">
-                Gửi lại mã xác thực sau <span className="font-semibold text-[#1D1D1F]">{countdown}s</span>
+                Gửi lại mã xác thực sau{" "}
+                <span className="font-semibold text-[#1D1D1F]">
+                  {countdown}s
+                </span>
               </p>
             ) : (
               <button

@@ -17,19 +17,30 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       root: data?.root || "DocLib Title",
-      children: data?.children && data.children.length > 0 ? data.children : ["DocLib Name", "DocLib Name"],
+      children:
+        data?.children && data.children.length > 0
+          ? data.children
+          : ["DocLib Name", "DocLib Name"],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-hier { display: flex; flex-direction: column; align-items: center; margin: 32px 0; font-family: sans-serif; }
@@ -58,7 +69,9 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
 
     if (!this.readOnly) {
       rootEl.contentEditable = "true";
-      rootEl.addEventListener("input", () => { this.data.root = rootEl.innerText; });
+      rootEl.addEventListener("input", () => {
+        this.data.root = rootEl.innerText;
+      });
     }
 
     container.appendChild(rootEl);
@@ -69,10 +82,10 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
 
     const childrenWrap = document.createElement("div");
     childrenWrap.classList.add("doclib-hier-children-wrap");
-    
+
     const lineH = document.createElement("div");
     lineH.classList.add("doclib-hier-line-h");
-    
+
     const childrenCont = document.createElement("div");
     childrenCont.classList.add("doclib-hier-children");
 
@@ -103,7 +116,9 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
 
         if (!this.readOnly) {
           childEl.contentEditable = "true";
-          childEl.addEventListener("input", () => { this.data.children[i] = childEl.innerText; });
+          childEl.addEventListener("input", () => {
+            this.data.children[i] = childEl.innerText;
+          });
         }
 
         col.appendChild(lineV2);
@@ -128,12 +143,19 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
           input.classList.add("doclib-hier-input");
           input.value = text;
           input.placeholder = "DocLib Name";
-          input.addEventListener("input", () => { this.data.children[i] = input.value; renderChildren(); });
+          input.addEventListener("input", () => {
+            this.data.children[i] = input.value;
+            renderChildren();
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-hier-btn");
           del.innerText = "X";
-          del.addEventListener("click", () => { this.data.children.splice(i, 1); renderChildren(); renderEdit(); });
+          del.addEventListener("click", () => {
+            this.data.children.splice(i, 1);
+            renderChildren();
+            renderEdit();
+          });
 
           row.appendChild(input);
           row.appendChild(del);
@@ -144,7 +166,11 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
           const add = document.createElement("button");
           add.classList.add("doclib-hier-add");
           add.innerText = "+";
-          add.addEventListener("click", () => { this.data.children.push("DocLib Name"); renderChildren(); renderEdit(); });
+          add.addEventListener("click", () => {
+            this.data.children.push("DocLib Name");
+            renderChildren();
+            renderEdit();
+          });
           edit.appendChild(add);
         }
       };

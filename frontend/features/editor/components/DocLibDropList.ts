@@ -17,12 +17,23 @@ export default class DocLibDropList implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       label: data?.label || "",
-      options: data?.options && data.options.length > 0 ? data.options : ["DocLib Option 1", "DocLib Option 2"],
+      options:
+        data?.options && data.options.length > 0
+          ? data.options
+          : ["DocLib Option 1", "DocLib Option 2"],
       selected: data?.selected || "",
     };
   }
@@ -30,7 +41,7 @@ export default class DocLibDropList implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-droplist { font-family: sans-serif; display: flex; flex-direction: column; gap: 8px; margin: 16px 0; max-width: 400px; }
@@ -54,7 +65,9 @@ export default class DocLibDropList implements BlockTool {
     label.innerText = this.data.label;
     if (!this.readOnly) {
       label.contentEditable = "true";
-      label.addEventListener("input", () => { this.data.label = label.innerText; });
+      label.addEventListener("input", () => {
+        this.data.label = label.innerText;
+      });
     }
     container.appendChild(label);
 
@@ -92,7 +105,7 @@ export default class DocLibDropList implements BlockTool {
     if (!this.readOnly) {
       const config = document.createElement("div");
       config.classList.add("doclib-dl-config");
-      
+
       const renderConfig = () => {
         config.innerHTML = "";
         const title = document.createElement("div");
@@ -105,7 +118,7 @@ export default class DocLibDropList implements BlockTool {
         this.data.options.forEach((opt: string, i: number) => {
           const row = document.createElement("div");
           row.classList.add("doclib-dl-opt-row");
-          
+
           const inp = document.createElement("input");
           inp.classList.add("doclib-dl-opt-input");
           inp.value = opt;
@@ -113,12 +126,13 @@ export default class DocLibDropList implements BlockTool {
             this.data.options[i] = inp.value;
             buildOptions();
           });
-          
+
           const del = document.createElement("button");
           del.classList.add("doclib-dl-del");
           del.innerText = "✕";
           del.addEventListener("click", () => {
-            if (this.data.selected === this.data.options[i]) this.data.selected = "";
+            if (this.data.selected === this.data.options[i])
+              this.data.selected = "";
             this.data.options.splice(i, 1);
             renderConfig();
             buildOptions();

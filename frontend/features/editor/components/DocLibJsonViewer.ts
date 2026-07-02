@@ -17,11 +17,21 @@ export default class DocLibJsonViewer implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      jsonStr: data?.jsonStr || `{
+      jsonStr:
+        data?.jsonStr ||
+        `{
   "doclib": "awesome",
   "version": 1
 }`,
@@ -31,7 +41,7 @@ export default class DocLibJsonViewer implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-json { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; color: #0f172a; position: relative; }

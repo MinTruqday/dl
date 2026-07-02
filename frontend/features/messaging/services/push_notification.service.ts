@@ -1,4 +1,8 @@
-import { API_URL, getToken, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getToken,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export const getNotificationsAPI = async () => {
   const token = getToken();
@@ -6,9 +10,9 @@ export const getNotificationsAPI = async () => {
   const res = await fetch(`${API_URL}/thong-bao`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thông báo");
-  return data;
+  const resultData = await res.json();
+  if (!res.ok) throw new Error(resultData.message || "Không thể tải thông báo");
+  return resultData;
 };
 
 export const markNotificationReadAPI = async (id: string) => {
@@ -16,9 +20,10 @@ export const markNotificationReadAPI = async (id: string) => {
     method: "PATCH",
     headers: getAuthHeaders(),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể đánh dấu thông báo");
-  return data;
+  const resultData = await res.json();
+  if (!res.ok)
+    throw new Error(resultData.message || "Không thể đánh dấu thông báo");
+  return resultData;
 };
 
 export const markAllNotificationsReadAPI = async () => {
@@ -26,17 +31,18 @@ export const markAllNotificationsReadAPI = async () => {
     method: "PATCH",
     headers: getAuthHeaders(),
   });
-  const data = await res.json();
-  const data = await res.json();
+  const resultData = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể đánh dấu tất cả thông báo");
-  return data;
+    throw new Error(
+      resultData.message || "Không thể đánh dấu tất cả thông báo",
+    );
+  return resultData;
 };
 
 export const getNotificationSettingsAPI = async () => {
   const token = getToken();
   const res = await fetch(`${API_URL}/thong-bao/cai-dat`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải cấu hình thông báo.");
   return await res.json();
@@ -46,11 +52,11 @@ export const updateNotificationSettingsAPI = async (settings: any) => {
   const token = getToken();
   const res = await fetch(`${API_URL}/thong-bao/cai-dat`, {
     method: "POST",
-    headers: { 
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json"
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(settings)
+    body: JSON.stringify(settings),
   });
   if (!res.ok) throw new Error("Không thể cập nhật cấu hình thông báo.");
   return await res.json();

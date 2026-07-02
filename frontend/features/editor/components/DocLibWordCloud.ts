@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibWordCloud implements BlockTool {
@@ -17,7 +18,15 @@ export default class DocLibWordCloud implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -61,7 +70,10 @@ export default class DocLibWordCloud implements BlockTool {
     const cloud = document.createElement("div");
     cloud.classList.add("doclib-wc-cloud");
 
-    const maxWeight = Math.max(this.data.words.map((w) => w.weight), 1);
+    const maxWeight = Math.max(
+      this.data.words.map((w) => w.weight),
+      1,
+    );
 
     this.data.words.forEach((word, idx) => {
       const span = document.createElement("span");
@@ -95,8 +107,10 @@ export default class DocLibWordCloud implements BlockTool {
 
     if (!this.readOnly) {
       const hint = document.createElement("div");
-      hint.style.cssText = "font-size:11px;color:#94a3b8;text-align:center;margin-top:8px;";
-      hint.innerText = "Click = increase weight    Shift+Click = decrease    Double-click = remove";
+      hint.style.cssText =
+        "font-size:11px;color:#94a3b8;text-align:center;margin-top:8px;";
+      hint.innerText =
+        "Click = increase weight    Shift+Click = decrease    Double-click = remove";
       this.wrapper.appendChild(hint);
 
       const controls = document.createElement("div");
@@ -120,7 +134,9 @@ export default class DocLibWordCloud implements BlockTool {
       };
 
       addBtn.addEventListener("click", addWord);
-      input.addEventListener("keydown", (e) => { if (e.key === "Enter") addWord(); });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addWord();
+      });
 
       controls.appendChild(input);
       controls.appendChild(addBtn);

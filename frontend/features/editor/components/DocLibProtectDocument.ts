@@ -17,7 +17,15 @@ export default class DocLibProtectDocument implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibProtectDocument implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-protect { font-family: sans-serif; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
@@ -54,17 +62,26 @@ export default class DocLibProtectDocument implements BlockTool {
     const row1 = document.createElement("div");
     row1.classList.add("doclib-protect-row");
     row1.innerHTML = `<span>Editing Restriction:</span>`;
-    
+
     const sel = document.createElement("select");
     sel.classList.add("doclib-protect-select");
     if (this.readOnly) sel.disabled = true;
-    ["Unrestricted", "Tracked Changes Only", "Comments Only", "Read Only"].forEach(opt => {
-      const o = document.createElement("option"); o.value = opt; o.innerText = opt;
+    [
+      "Unrestricted",
+      "Tracked Changes Only",
+      "Comments Only",
+      "Read Only",
+    ].forEach((opt) => {
+      const o = document.createElement("option");
+      o.value = opt;
+      o.innerText = opt;
       if (this.data.level === opt) o.selected = true;
       sel.appendChild(o);
     });
     if (!this.readOnly) {
-      sel.addEventListener("change", () => { this.data.level = sel.value; });
+      sel.addEventListener("change", () => {
+        this.data.level = sel.value;
+      });
     }
     row1.appendChild(sel);
     container.appendChild(row1);
@@ -72,7 +89,7 @@ export default class DocLibProtectDocument implements BlockTool {
     const row2 = document.createElement("div");
     row2.classList.add("doclib-protect-row");
     row2.innerHTML = `<span>Password Protection:</span>`;
-    
+
     const btn = document.createElement("button");
     btn.classList.add("doclib-protect-btn");
     if (this.data.pwdSet) {
@@ -81,7 +98,7 @@ export default class DocLibProtectDocument implements BlockTool {
     } else {
       btn.innerText = "Set Password";
     }
-    
+
     if (!this.readOnly) {
       btn.addEventListener("click", () => {
         this.data.pwdSet = !this.data.pwdSet;

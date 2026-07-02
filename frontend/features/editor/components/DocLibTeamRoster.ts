@@ -17,19 +17,34 @@ export default class DocLibTeamRoster implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       title: data?.title || "",
-      members: data?.members && data.members.length > 0 ? data.members : [{ name: "", role: "", avatar: "" }, { name: "", role: "", avatar: "" }, { name: "", role: "", avatar: "" }],
+      members:
+        data?.members && data.members.length > 0
+          ? data.members
+          : [
+              { name: "", role: "", avatar: "" },
+              { name: "", role: "", avatar: "" },
+              { name: "", role: "", avatar: "" },
+            ],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-tr { font-family: sans-serif; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px 0; }
@@ -60,7 +75,9 @@ export default class DocLibTeamRoster implements BlockTool {
     titleEl.dataset.placeholder = "DocLib Meet the Team";
     if (!this.readOnly) {
       titleEl.contentEditable = "true";
-      titleEl.addEventListener("input", () => { this.data.title = titleEl.innerText; });
+      titleEl.addEventListener("input", () => {
+        this.data.title = titleEl.innerText;
+      });
     }
     container.appendChild(titleEl);
 
@@ -108,9 +125,13 @@ export default class DocLibTeamRoster implements BlockTool {
 
         if (!this.readOnly) {
           nameEl.contentEditable = "true";
-          nameEl.addEventListener("input", () => { this.data.members[i].name = nameEl.innerText; });
+          nameEl.addEventListener("input", () => {
+            this.data.members[i].name = nameEl.innerText;
+          });
           roleEl.contentEditable = "true";
-          roleEl.addEventListener("input", () => { this.data.members[i].role = roleEl.innerText; });
+          roleEl.addEventListener("input", () => {
+            this.data.members[i].role = roleEl.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-tr-del");

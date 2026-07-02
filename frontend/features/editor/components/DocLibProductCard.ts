@@ -17,7 +17,15 @@ export default class DocLibProductCard implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -32,7 +40,7 @@ export default class DocLibProductCard implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-prod-card { display: flex; flex-direction: column; max-width: 350px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; font-family: sans-serif; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin: 16px auto; }
@@ -99,7 +107,9 @@ export default class DocLibProductCard implements BlockTool {
     titleEl.dataset.placeholder = "DocLib Product Name";
     if (!this.readOnly) {
       titleEl.contentEditable = "true";
-      titleEl.addEventListener("input", () => { this.data.title = titleEl.innerText; });
+      titleEl.addEventListener("input", () => {
+        this.data.title = titleEl.innerText;
+      });
     }
 
     const priceEl = document.createElement("div");
@@ -108,7 +118,9 @@ export default class DocLibProductCard implements BlockTool {
     priceEl.dataset.placeholder = "DocLib Price";
     if (!this.readOnly) {
       priceEl.contentEditable = "true";
-      priceEl.addEventListener("input", () => { this.data.price = priceEl.innerText; });
+      priceEl.addEventListener("input", () => {
+        this.data.price = priceEl.innerText;
+      });
     }
 
     const descEl = document.createElement("div");
@@ -117,7 +129,9 @@ export default class DocLibProductCard implements BlockTool {
     descEl.dataset.placeholder = "DocLib Description";
     if (!this.readOnly) {
       descEl.contentEditable = "true";
-      descEl.addEventListener("input", () => { this.data.desc = descEl.innerText; });
+      descEl.addEventListener("input", () => {
+        this.data.desc = descEl.innerText;
+      });
     }
 
     const btnEl = document.createElement("div");
@@ -126,14 +140,16 @@ export default class DocLibProductCard implements BlockTool {
     btnEl.dataset.placeholder = "DocLib Button Text";
     if (!this.readOnly) {
       btnEl.contentEditable = "true";
-      btnEl.addEventListener("input", () => { this.data.btnText = btnEl.innerText; });
+      btnEl.addEventListener("input", () => {
+        this.data.btnText = btnEl.innerText;
+      });
     }
 
     content.appendChild(titleEl);
     content.appendChild(priceEl);
     content.appendChild(descEl);
     content.appendChild(btnEl);
-    
+
     card.appendChild(content);
     this.wrapper.appendChild(card);
     return this.wrapper;

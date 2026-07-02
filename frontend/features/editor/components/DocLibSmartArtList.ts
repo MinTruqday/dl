@@ -17,21 +17,32 @@ export default class DocLibSmartArtList implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      items: data?.items && data.items.length > 0 ? data.items : [
-        { title: "DocLib Main Point 1", desc: "DocLib Detail 1" },
-        { title: "DocLib Main Point 2", desc: "DocLib Detail 2" }
-      ],
+      items:
+        data?.items && data.items.length > 0
+          ? data.items
+          : [
+              { title: "DocLib Main Point 1", desc: "DocLib Detail 1" },
+              { title: "DocLib Main Point 2", desc: "DocLib Detail 2" },
+            ],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-sal { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; max-width: 600px; font-family: sans-serif; }
@@ -59,17 +70,21 @@ export default class DocLibSmartArtList implements BlockTool {
         const tEl = document.createElement("div");
         tEl.classList.add("doclib-sal-title");
         tEl.innerText = item.title;
-        
+
         const dEl = document.createElement("div");
         dEl.classList.add("doclib-sal-desc");
         dEl.innerText = item.desc;
 
         if (!this.readOnly) {
           tEl.contentEditable = "true";
-          tEl.addEventListener("input", () => { this.data.items[i].title = tEl.innerText; });
-          
+          tEl.addEventListener("input", () => {
+            this.data.items[i].title = tEl.innerText;
+          });
+
           dEl.contentEditable = "true";
-          dEl.addEventListener("input", () => { this.data.items[i].desc = dEl.innerText; });
+          dEl.addEventListener("input", () => {
+            this.data.items[i].desc = dEl.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-sal-del");
@@ -91,7 +106,10 @@ export default class DocLibSmartArtList implements BlockTool {
         addBtn.classList.add("doclib-sal-add");
         addBtn.innerText = "+ Add List Item";
         addBtn.addEventListener("click", () => {
-          this.data.items.push({ title: "DocLib Title", desc: "DocLib Description" });
+          this.data.items.push({
+            title: "DocLib Title",
+            desc: "DocLib Description",
+          });
           renderList();
         });
         container.appendChild(addBtn);

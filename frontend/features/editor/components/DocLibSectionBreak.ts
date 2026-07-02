@@ -17,7 +17,15 @@ export default class DocLibSectionBreak implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibSectionBreak implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-sbreak { border-top: 2px dashed #94a3b8; margin: 32px 0; position: relative; text-align: center; }
@@ -39,10 +47,10 @@ export default class DocLibSectionBreak implements BlockTool {
 
     const container = document.createElement("div");
     container.classList.add("doclib-sbreak");
-    
+
     const label = document.createElement("div");
     label.classList.add("doclib-sbreak-label");
-    
+
     const updateLabel = () => {
       label.innerText = `SECTION BREAK (${this.data.type.toUpperCase()})`;
       if (this.data.type === "next-page") {
@@ -52,13 +60,13 @@ export default class DocLibSectionBreak implements BlockTool {
       }
     };
     updateLabel();
-    
+
     container.appendChild(label);
 
     if (!this.readOnly) {
       const select = document.createElement("select");
       select.classList.add("doclib-sbreak-select");
-      ["continuous", "next-page", "even-page", "odd-page"].forEach(t => {
+      ["continuous", "next-page", "even-page", "odd-page"].forEach((t) => {
         const opt = document.createElement("option");
         opt.value = t;
         opt.text = t;

@@ -81,16 +81,20 @@ function ResetPasswordContent() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6E73]"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
 
             <div className="pt-2">
               <button
-                 type="submit"
-                 disabled={loading}
-                 className="pill-button w-full flex justify-center items-center gap-2 disabled:opacity-50"
+                type="submit"
+                disabled={loading}
+                className="pill-button w-full flex justify-center items-center gap-2 disabled:opacity-50"
               >
                 {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                 {loading ? "Đang xử lý" : "Cập nhật mật khẩu"}

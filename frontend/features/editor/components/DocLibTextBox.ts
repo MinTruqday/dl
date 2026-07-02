@@ -17,7 +17,15 @@ export default class DocLibTextBox implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibTextBox implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-textbox-wrapper { clear: both; margin: 16px 0; }
@@ -47,12 +55,13 @@ export default class DocLibTextBox implements BlockTool {
     const box = document.createElement("div");
     box.classList.add("doclib-textbox");
     box.innerText = this.data.text;
-    
+
     const applyStyle = () => {
       box.style.float = this.data.float;
       box.style.width = this.data.width;
       if (this.data.float !== "none") {
-        box.style.margin = this.data.float === "left" ? "0 16px 16px 0" : "0 0 16px 16px";
+        box.style.margin =
+          this.data.float === "left" ? "0 16px 16px 0" : "0 0 16px 16px";
       } else {
         box.style.margin = "0";
       }
@@ -61,7 +70,9 @@ export default class DocLibTextBox implements BlockTool {
 
     if (!this.readOnly) {
       box.contentEditable = "true";
-      box.addEventListener("input", () => { this.data.text = box.innerText; });
+      box.addEventListener("input", () => {
+        this.data.text = box.innerText;
+      });
     }
 
     container.appendChild(box);
@@ -73,25 +84,31 @@ export default class DocLibTextBox implements BlockTool {
 
       const floatSelect = document.createElement("select");
       floatSelect.classList.add("doclib-textbox-select");
-      ["none", "left", "right"].forEach(f => {
+      ["none", "left", "right"].forEach((f) => {
         const opt = document.createElement("option");
         opt.value = f;
         opt.text = `Float ${f}`;
         opt.selected = this.data.float === f;
         floatSelect.appendChild(opt);
       });
-      floatSelect.addEventListener("change", () => { this.data.float = floatSelect.value; applyStyle(); });
+      floatSelect.addEventListener("change", () => {
+        this.data.float = floatSelect.value;
+        applyStyle();
+      });
 
       const widthSelect = document.createElement("select");
       widthSelect.classList.add("doclib-textbox-select");
-      ["100%", "75%", "50%", "33%", "25%"].forEach(w => {
+      ["100%", "75%", "50%", "33%", "25%"].forEach((w) => {
         const opt = document.createElement("option");
         opt.value = w;
         opt.text = `Width ${w}`;
         opt.selected = this.data.width === w;
         widthSelect.appendChild(opt);
       });
-      widthSelect.addEventListener("change", () => { this.data.width = widthSelect.value; applyStyle(); });
+      widthSelect.addEventListener("change", () => {
+        this.data.width = widthSelect.value;
+        applyStyle();
+      });
 
       controls.appendChild(floatSelect);
       controls.appendChild(widthSelect);

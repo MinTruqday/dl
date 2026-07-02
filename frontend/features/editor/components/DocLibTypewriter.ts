@@ -18,7 +18,15 @@ export default class DocLibTypewriter implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -103,7 +111,10 @@ export default class DocLibTypewriter implements BlockTool {
   }
 
   private buildUI() {
-    if (this.animInterval) { clearInterval(this.animInterval); this.animInterval = null; }
+    if (this.animInterval) {
+      clearInterval(this.animInterval);
+      this.animInterval = null;
+    }
     if (!this.wrapper) return;
     this.wrapper.innerHTML = "";
     this.wrapper.classList.add("doclib-tw-wrapper");
@@ -137,7 +148,10 @@ export default class DocLibTypewriter implements BlockTool {
 
       let timeout: ReturnType<typeof setTimeout>;
       textarea.addEventListener("input", () => {
-        this.data.phrases = textarea.value.split("\n").map((p) => p.trim()).filter((p) => p);
+        this.data.phrases = textarea.value
+          .split("\n")
+          .map((p) => p.trim())
+          .filter((p) => p);
         clearTimeout(timeout);
         timeout = setTimeout(() => this.startTypewriter(text, cursor), 600);
       });

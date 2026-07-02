@@ -20,7 +20,15 @@ export default class DocLibSignature implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -54,15 +62,24 @@ export default class DocLibSignature implements BlockTool {
     return this.wrapper;
   }
 
-  private getPos(canvas: HTMLCanvasElement, e: MouseEvent | TouchEvent): { x: number; y: number } {
+  private getPos(
+    canvas: HTMLCanvasElement,
+    e: MouseEvent | TouchEvent,
+  ): { x: number; y: number } {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     if (e instanceof TouchEvent) {
       const touch = e.touches[0];
-      return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY,
+      };
     }
-    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
   }
 
   private buildUI() {
@@ -153,7 +170,8 @@ export default class DocLibSignature implements BlockTool {
       });
 
       const labelInput = document.createElement("input");
-      labelInput.style.cssText = "padding:4px 8px;border:1px solid #e2e8f0;border-radius:5px;font-size:12px;outline:none;color:#475569;";
+      labelInput.style.cssText =
+        "padding:4px 8px;border:1px solid #e2e8f0;border-radius:5px;font-size:12px;outline:none;color:#475569;";
       labelInput.value = this.data.label;
       labelInput.placeholder = "DocLib Input";
       labelInput.addEventListener("input", () => {
@@ -172,7 +190,9 @@ export default class DocLibSignature implements BlockTool {
 
     const footer = document.createElement("div");
     footer.classList.add("doclib-sig-footer");
-    footer.innerText = this.readOnly ? `${this.data.label}` : "Sign with mouse or touch";
+    footer.innerText = this.readOnly
+      ? `${this.data.label}`
+      : "Sign with mouse or touch";
 
     this.wrapper.appendChild(header);
     this.wrapper.appendChild(canvas);

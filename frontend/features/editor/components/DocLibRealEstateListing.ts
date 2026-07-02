@@ -17,7 +17,15 @@ export default class DocLibRealEstateListing implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -34,7 +42,7 @@ export default class DocLibRealEstateListing implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-re-card { display: flex; flex-direction: column; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; font-family: sans-serif; background: #fff; max-width: 400px; margin: 16px auto; }
@@ -93,20 +101,30 @@ export default class DocLibRealEstateListing implements BlockTool {
     const content = document.createElement("div");
     content.classList.add("doclib-re-content");
 
-    const createField = (key: string, className: string, placeholder: string) => {
+    const createField = (
+      key: string,
+      className: string,
+      placeholder: string,
+    ) => {
       const el = document.createElement("div");
       el.classList.add(className);
       el.innerText = this.data[key];
       el.dataset.placeholder = placeholder;
       if (!this.readOnly) {
         el.contentEditable = "true";
-        el.addEventListener("input", () => { this.data[key] = el.innerText; });
+        el.addEventListener("input", () => {
+          this.data[key] = el.innerText;
+        });
       }
       return el;
     };
 
-    content.appendChild(createField("price", "doclib-re-price", "DocLib Price"));
-    content.appendChild(createField("address", "doclib-re-addr", "DocLib Address"));
+    content.appendChild(
+      createField("price", "doclib-re-price", "DocLib Price"),
+    );
+    content.appendChild(
+      createField("address", "doclib-re-addr", "DocLib Address"),
+    );
 
     const stats = document.createElement("div");
     stats.classList.add("doclib-re-stats");
@@ -128,7 +146,9 @@ export default class DocLibRealEstateListing implements BlockTool {
     stats.appendChild(createStat("sqft", "Sq. Ft."));
     content.appendChild(stats);
 
-    content.appendChild(createField("contact", "doclib-re-contact", "DocLib Contact Agent"));
+    content.appendChild(
+      createField("contact", "doclib-re-contact", "DocLib Contact Agent"),
+    );
 
     card.appendChild(content);
     this.wrapper.appendChild(card);

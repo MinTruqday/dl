@@ -1,4 +1,7 @@
-import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function purchaseDocumentAPI(documentId: string) {
   const res = await fetch(`${API_URL}/kiem-tien/mua/tai-lieu`, {
@@ -13,7 +16,6 @@ export async function purchaseDocumentAPI(documentId: string) {
   return data;
 }
 
-
 export async function buyMembershipAPI(tier: "PRO" | "PREMIUM") {
   const res = await fetch(`${API_URL}/kiem-tien/thanh-vien`, {
     method: "POST",
@@ -22,7 +24,9 @@ export async function buyMembershipAPI(tier: "PRO" | "PREMIUM") {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Failed to upgrade membership plan");
+    throw new Error(
+      data.detail || data.message || "Failed to upgrade membership plan",
+    );
   }
   return data;
 }
@@ -39,11 +43,19 @@ export async function getAuthorRevenueAPI() {
   return data;
 }
 
-export async function setDocumentPricingAPI(documentId: string, priceDl: number, isDrmProtected: boolean = true) {
+export async function setDocumentPricingAPI(
+  documentId: string,
+  priceDl: number,
+  isDrmProtected: boolean = true,
+) {
   const res = await fetch(`${API_URL}/kiem-tien/thiet-lap-gia`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId, price_dl: priceDl, is_drm_protected: isDrmProtected }),
+    body: JSON.stringify({
+      document_id: documentId,
+      price_dl: priceDl,
+      is_drm_protected: isDrmProtected,
+    }),
   });
   const data = await res.json();
   if (!res.ok) {

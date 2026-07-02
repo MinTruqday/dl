@@ -1,4 +1,7 @@
-import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function inviteCollaboratorAPI(
   documentId: string,
@@ -84,13 +87,10 @@ export async function transferOwnershipAPI(documentId: string, userId: string) {
 }
 
 export async function pingCollaborationStatusAPI(documentId: string) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/ping`,
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-    },
-  );
+  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/ping`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Ping trạng thái thất bại");
   return data;
@@ -113,14 +113,11 @@ export async function updateCollaboratorRoleAPI(
   collaborationId: string,
   role: string,
 ) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/${collaborationId}/vai-tro`,
-    {
-      method: "PATCH",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ role }),
-    },
-  );
+  const res = await fetch(`${API_URL}/cong-tac/${collaborationId}/vai-tro`, {
+    method: "PATCH",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  });
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Cập nhật vai trò cộng tác viên thất bại");
@@ -159,14 +156,11 @@ export async function updateCollabAccessAPI(
   documentId: string,
   accessLevel: string,
 ) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/access`,
-    {
-      method: "PATCH",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ access_level: accessLevel }),
-    },
-  );
+  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/access`, {
+    method: "PATCH",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ access_level: accessLevel }),
+  });
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể cài đặt quyền cộng tác");
@@ -242,13 +236,10 @@ export async function getSnapshotsAPI(documentId: string) {
 }
 
 export async function acquireLockAPI(documentId: string) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/khoa`,
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-    },
-  );
+  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/khoa`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lấy khóa biên tập thất bại");
   return data;
@@ -280,13 +271,10 @@ export async function getLockStatusAPI(documentId: string) {
 }
 
 export async function generateInviteCodeAPI(documentId: string) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/ma-moi`,
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-    },
-  );
+  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/ma-moi`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tạo mã mời cộng tác");
   return data;
@@ -347,14 +335,11 @@ export async function updateCollabTaskAPI(taskId: string, isDone: boolean) {
 }
 
 export async function addTaskCommentAPI(taskId: string, commentText: string) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/nhiem-vu/${taskId}/binh-luan`,
-    {
-      method: "POST",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ comment_text: commentText }),
-    },
-  );
+  const res = await fetch(`${API_URL}/cong-tac/nhiem-vu/${taskId}/binh-luan`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ comment_text: commentText }),
+  });
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể thảo luận trong nhiệm vụ");
@@ -362,12 +347,9 @@ export async function addTaskCommentAPI(taskId: string, commentText: string) {
 }
 
 export async function getTaskCommentsAPI(taskId: string) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/nhiem-vu/${taskId}/binh-luan`,
-    {
-      headers: getAuthHeaders(),
-    },
-  );
+  const res = await fetch(`${API_URL}/cong-tac/nhiem-vu/${taskId}/binh-luan`, {
+    headers: getAuthHeaders(),
+  });
   const data = await res.json();
   if (!res.ok)
     throw new Error(

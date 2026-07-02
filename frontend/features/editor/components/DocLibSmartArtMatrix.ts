@@ -17,7 +17,15 @@ export default class DocLibSmartArtMatrix implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -31,7 +39,7 @@ export default class DocLibSmartArtMatrix implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; max-width: 400px; margin: 16px auto; font-family: sans-serif; position: relative; }
@@ -53,16 +61,18 @@ export default class DocLibSmartArtMatrix implements BlockTool {
       { key: "tl", cls: "doclib-matrix-tl" },
       { key: "tr", cls: "doclib-matrix-tr" },
       { key: "bl", cls: "doclib-matrix-bl" },
-      { key: "br", cls: "doclib-matrix-br" }
+      { key: "br", cls: "doclib-matrix-br" },
     ];
 
-    cells.forEach(c => {
+    cells.forEach((c) => {
       const el = document.createElement("div");
       el.classList.add("doclib-matrix-cell", c.cls);
       el.innerText = this.data[c.key];
       if (!this.readOnly) {
         el.contentEditable = "true";
-        el.addEventListener("input", () => { this.data[c.key] = el.innerText; });
+        el.addEventListener("input", () => {
+          this.data[c.key] = el.innerText;
+        });
       }
       container.appendChild(el);
     });

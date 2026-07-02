@@ -1,4 +1,7 @@
-import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function translateTextAPI(
   text: string,
@@ -13,7 +16,6 @@ export async function translateTextAPI(
   if (!res.ok) throw new Error(data.message || "Dịch thuật thất bại");
   return data;
 }
-
 
 export async function grammarCheckAPI(text: string) {
   const res = await fetch(`${API_URL}/suy-luan/kiem-tra-ngu-phap`, {

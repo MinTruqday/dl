@@ -17,7 +17,15 @@ export default class DocLibPageBorder implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibPageBorder implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-page-border-container { position: relative; margin: 32px 0; min-height: 400px; padding: 32px; display: flex; align-items: center; justify-content: center; background: #fff; }
@@ -47,7 +55,7 @@ export default class DocLibPageBorder implements BlockTool {
 
     const borderInner = document.createElement("div");
     borderInner.classList.add("doclib-page-border-inner");
-    
+
     const applyBorder = () => {
       borderInner.style.border = `${this.data.width} ${this.data.style} ${this.data.color}`;
     };
@@ -59,7 +67,9 @@ export default class DocLibPageBorder implements BlockTool {
 
     if (!this.readOnly) {
       textEl.contentEditable = "true";
-      textEl.addEventListener("input", () => { this.data.text = textEl.innerText; });
+      textEl.addEventListener("input", () => {
+        this.data.text = textEl.innerText;
+      });
     }
 
     container.appendChild(borderInner);
@@ -72,26 +82,37 @@ export default class DocLibPageBorder implements BlockTool {
 
       const styleSelect = document.createElement("select");
       styleSelect.classList.add("doclib-page-border-input");
-      ["solid", "dashed", "dotted", "double", "groove", "ridge"].forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s;
-        opt.text = s.charAt(0).toUpperCase() + s.slice(1);
-        opt.selected = this.data.style === s;
-        styleSelect.appendChild(opt);
+      ["solid", "dashed", "dotted", "double", "groove", "ridge"].forEach(
+        (s) => {
+          const opt = document.createElement("option");
+          opt.value = s;
+          opt.text = s.charAt(0).toUpperCase() + s.slice(1);
+          opt.selected = this.data.style === s;
+          styleSelect.appendChild(opt);
+        },
+      );
+      styleSelect.addEventListener("change", () => {
+        this.data.style = styleSelect.value;
+        applyBorder();
       });
-      styleSelect.addEventListener("change", () => { this.data.style = styleSelect.value; applyBorder(); });
 
       const widthInput = document.createElement("input");
       widthInput.classList.add("doclib-page-border-input");
       widthInput.value = this.data.width;
       widthInput.placeholder = "DocLib Input";
-      widthInput.addEventListener("input", () => { this.data.width = widthInput.value || "1px"; applyBorder(); });
+      widthInput.addEventListener("input", () => {
+        this.data.width = widthInput.value || "1px";
+        applyBorder();
+      });
 
       const colorInput = document.createElement("input");
       colorInput.type = "color";
       colorInput.classList.add("doclib-page-border-input");
       colorInput.value = this.data.color;
-      colorInput.addEventListener("input", () => { this.data.color = colorInput.value; applyBorder(); });
+      colorInput.addEventListener("input", () => {
+        this.data.color = colorInput.value;
+        applyBorder();
+      });
 
       controls.appendChild(styleSelect);
       controls.appendChild(widthInput);

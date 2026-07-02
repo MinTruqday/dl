@@ -17,19 +17,30 @@ export default class DocLibRestaurantMenu implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       category: data?.category || "",
-      items: data?.items && data.items.length > 0 ? data.items : [{ name: "", price: "", desc: "" }],
+      items:
+        data?.items && data.items.length > 0
+          ? data.items
+          : [{ name: "", price: "", desc: "" }],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-menu { font-family: serif; max-width: 600px; margin: 24px auto; padding: 16px; border: 2px solid #1e293b; border-radius: 4px; background: #fafaf9; }
@@ -58,7 +69,9 @@ export default class DocLibRestaurantMenu implements BlockTool {
     catEl.dataset.placeholder = "DocLib Category";
     if (!this.readOnly) {
       catEl.contentEditable = "true";
-      catEl.addEventListener("input", () => { this.data.category = catEl.innerText; });
+      catEl.addEventListener("input", () => {
+        this.data.category = catEl.innerText;
+      });
     }
     container.appendChild(catEl);
 
@@ -94,11 +107,17 @@ export default class DocLibRestaurantMenu implements BlockTool {
 
         if (!this.readOnly) {
           nameEl.contentEditable = "true";
-          nameEl.addEventListener("input", () => { this.data.items[i].name = nameEl.innerText; });
+          nameEl.addEventListener("input", () => {
+            this.data.items[i].name = nameEl.innerText;
+          });
           priceEl.contentEditable = "true";
-          priceEl.addEventListener("input", () => { this.data.items[i].price = priceEl.innerText; });
+          priceEl.addEventListener("input", () => {
+            this.data.items[i].price = priceEl.innerText;
+          });
           descEl.contentEditable = "true";
-          descEl.addEventListener("input", () => { this.data.items[i].desc = descEl.innerText; });
+          descEl.addEventListener("input", () => {
+            this.data.items[i].desc = descEl.innerText;
+          });
 
           const delBtn = document.createElement("button");
           delBtn.classList.add("doclib-menu-del");

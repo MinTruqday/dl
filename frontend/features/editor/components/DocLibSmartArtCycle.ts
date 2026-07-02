@@ -17,18 +17,29 @@ export default class DocLibSmartArtCycle implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      items: data?.items && data.items.length > 0 ? data.items : ["DocLib Text", "DocLib Text", "DocLib Text"],
+      items:
+        data?.items && data.items.length > 0
+          ? data.items
+          : ["DocLib Text", "DocLib Text", "DocLib Text"],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-cycle { display: flex; flex-direction: column; align-items: center; margin: 32px 0; }
@@ -49,22 +60,22 @@ export default class DocLibSmartArtCycle implements BlockTool {
 
     const chart = document.createElement("div");
     chart.classList.add("doclib-cycle-chart");
-    
+
     const center = document.createElement("div");
     center.classList.add("doclib-cycle-center");
     center.innerText = "CYCLE";
     chart.appendChild(center);
 
     const renderChart = () => {
-      chart.querySelectorAll(".doclib-cycle-node").forEach(n => n.remove());
+      chart.querySelectorAll(".doclib-cycle-node").forEach((n) => n.remove());
       const n = this.data.items.length;
       const radius = 150;
       this.data.items.forEach((text: string, i: number) => {
-        const angle = (i * (360 / n)) - 90;
+        const angle = i * (360 / n) - 90;
         const rad = angle * (Math.PI / 180);
         const x = Math.cos(rad) * radius;
         const y = Math.sin(rad) * radius;
-        
+
         const node = document.createElement("div");
         node.classList.add("doclib-cycle-node");
         node.innerText = text;
@@ -72,7 +83,7 @@ export default class DocLibSmartArtCycle implements BlockTool {
         chart.appendChild(node);
       });
     };
-    
+
     renderChart();
     container.appendChild(chart);
 
@@ -85,7 +96,7 @@ export default class DocLibSmartArtCycle implements BlockTool {
         this.data.items.forEach((text: string, i: number) => {
           const row = document.createElement("div");
           row.classList.add("doclib-cycle-row");
-          
+
           const input = document.createElement("input");
           input.classList.add("doclib-cycle-input");
           input.value = text;
@@ -94,7 +105,7 @@ export default class DocLibSmartArtCycle implements BlockTool {
             this.data.items[i] = input.value;
             renderChart();
           });
-          
+
           const del = document.createElement("button");
           del.classList.add("doclib-cycle-btn");
           del.innerText = "X";
@@ -121,7 +132,7 @@ export default class DocLibSmartArtCycle implements BlockTool {
           edit.appendChild(add);
         }
       };
-      
+
       renderEdit();
       container.appendChild(edit);
     }

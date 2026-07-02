@@ -1,4 +1,7 @@
-import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function cleanTempFilesAPI() {
   const res = await fetch(`${API_URL}/don-dep`, {
@@ -72,8 +75,6 @@ export async function exportLatexAPI(content: string, format: string = "docx") {
   }
   return res.blob();
 }
-
-
 
 export async function exportProjectZipAPI(content: string) {
   const res = await fetch(`${API_URL}/ket-xuat-zip`, {

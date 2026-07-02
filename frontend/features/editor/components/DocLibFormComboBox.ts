@@ -17,12 +17,23 @@ export default class DocLibFormComboBox implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       label: data?.label || "",
-      options: data?.options && data.options.length > 0 ? data.options : ["DocLib Option A", "DocLib Option B"],
+      options:
+        data?.options && data.options.length > 0
+          ? data.options
+          : ["DocLib Option A", "DocLib Option B"],
       value: data?.value || "",
     };
   }
@@ -30,7 +41,7 @@ export default class DocLibFormComboBox implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-combo { font-family: sans-serif; display: flex; flex-direction: column; gap: 8px; margin: 16px 0; max-width: 400px; }
@@ -60,7 +71,9 @@ export default class DocLibFormComboBox implements BlockTool {
     labelEl.innerText = this.data.label;
     if (!this.readOnly) {
       labelEl.contentEditable = "true";
-      labelEl.addEventListener("input", () => { this.data.label = labelEl.innerText; });
+      labelEl.addEventListener("input", () => {
+        this.data.label = labelEl.innerText;
+      });
     }
     container.appendChild(labelEl);
 
@@ -71,7 +84,9 @@ export default class DocLibFormComboBox implements BlockTool {
     input.classList.add("doclib-combo-input");
     input.placeholder = "DocLib Select or Type";
     input.value = this.data.value;
-    input.addEventListener("input", () => { this.data.value = input.value; });
+    input.addEventListener("input", () => {
+      this.data.value = input.value;
+    });
     if (this.readOnly) input.disabled = true;
 
     const toggle = document.createElement("div");
@@ -86,11 +101,11 @@ export default class DocLibFormComboBox implements BlockTool {
       this.data.options.forEach((opt: string, i: number) => {
         const item = document.createElement("div");
         item.classList.add("doclib-combo-item");
-        
+
         const text = document.createElement("div");
         text.classList.add("doclib-combo-item-text");
         text.innerText = opt;
-        
+
         if (!this.readOnly) {
           text.contentEditable = "true";
           text.addEventListener("input", (e) => {
@@ -138,7 +153,9 @@ export default class DocLibFormComboBox implements BlockTool {
     renderList();
 
     if (!this.readOnly) {
-      toggle.addEventListener("click", () => { list.classList.toggle("open"); });
+      toggle.addEventListener("click", () => {
+        list.classList.toggle("open");
+      });
       document.addEventListener("click", (e) => {
         if (!wrap.contains(e.target as Node)) list.classList.remove("open");
       });

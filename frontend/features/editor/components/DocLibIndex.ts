@@ -17,7 +17,15 @@ export default class DocLibIndex implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibIndex implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-index { margin: 24px 0; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
@@ -60,19 +68,21 @@ export default class DocLibIndex implements BlockTool {
 
     const renderGrid = () => {
       grid.innerHTML = "";
-      const sorted = [...this.data.entries].sort((a, b) => a.term.localeCompare(b.term));
+      const sorted = [...this.data.entries].sort((a, b) =>
+        a.term.localeCompare(b.term),
+      );
       sorted.forEach((e: any) => {
         const item = document.createElement("div");
         item.classList.add("doclib-index-item");
-        
+
         const term = document.createElement("span");
         term.classList.add("doclib-index-term");
         term.innerText = e.term;
-        
+
         const page = document.createElement("span");
         page.classList.add("doclib-index-page");
         page.innerText = e.page;
-        
+
         item.appendChild(term);
         item.appendChild(page);
         grid.appendChild(item);
@@ -90,24 +100,34 @@ export default class DocLibIndex implements BlockTool {
         this.data.entries.forEach((e: any, i: number) => {
           const row = document.createElement("div");
           row.classList.add("doclib-index-row");
-          
+
           const inputTerm = document.createElement("input");
           inputTerm.classList.add("doclib-index-input");
           inputTerm.placeholder = "DocLib Input";
           inputTerm.value = e.term;
-          inputTerm.addEventListener("input", () => { this.data.entries[i].term = inputTerm.value; renderGrid(); });
-          
+          inputTerm.addEventListener("input", () => {
+            this.data.entries[i].term = inputTerm.value;
+            renderGrid();
+          });
+
           const inputPage = document.createElement("input");
           inputPage.classList.add("doclib-index-page-input");
           inputPage.placeholder = "DocLib Input";
           inputPage.value = e.page;
-          inputPage.addEventListener("input", () => { this.data.entries[i].page = inputPage.value; renderGrid(); });
-          
+          inputPage.addEventListener("input", () => {
+            this.data.entries[i].page = inputPage.value;
+            renderGrid();
+          });
+
           const del = document.createElement("button");
           del.classList.add("doclib-index-btn");
           del.innerText = "X";
-          del.addEventListener("click", () => { this.data.entries.splice(i, 1); renderGrid(); renderEdit(); });
-          
+          del.addEventListener("click", () => {
+            this.data.entries.splice(i, 1);
+            renderGrid();
+            renderEdit();
+          });
+
           row.appendChild(inputTerm);
           row.appendChild(inputPage);
           row.appendChild(del);
@@ -124,7 +144,7 @@ export default class DocLibIndex implements BlockTool {
         });
         edit.appendChild(add);
       };
-      
+
       renderEdit();
       container.appendChild(edit);
     }

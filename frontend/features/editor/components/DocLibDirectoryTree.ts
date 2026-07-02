@@ -17,11 +17,21 @@ export default class DocLibDirectoryTree implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      tree: data?.tree || `src/
+      tree:
+        data?.tree ||
+        `src/
   components/
     Button.tsx
   index.ts
@@ -32,7 +42,7 @@ package.json`,
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-dirtree { background: #1e293b; border-radius: 8px; padding: 16px; font-family: monospace; color: #cbd5e1; font-size: 14px; position: relative; }

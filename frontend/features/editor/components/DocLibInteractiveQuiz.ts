@@ -21,7 +21,15 @@ export default class DocLibInteractiveQuiz implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -92,21 +100,21 @@ export default class DocLibInteractiveQuiz implements BlockTool {
     this.data.options.forEach((opt, idx) => {
       const el = document.createElement("div");
       el.classList.add("doclib-qz-opt");
-      
+
       const text = document.createElement("span");
       text.innerText = opt.text;
-      
+
       const icon = document.createElement("span");
       icon.classList.add("doclib-qz-opt-icon");
       icon.innerText = opt.isCorrect ? "v" : "x";
 
       el.appendChild(text);
       el.appendChild(icon);
-      
+
       el.addEventListener("click", () => {
         if (answered || this.readOnly === false) return; // Only interactive in readonly/view mode
         answered = true;
-        
+
         optElements.forEach((oEl, i) => {
           oEl.style.cursor = "default";
           if (this.data.options[i].isCorrect) {
@@ -143,7 +151,10 @@ export default class DocLibInteractiveQuiz implements BlockTool {
       const qInput = document.createElement("input");
       qInput.classList.add("doclib-qz-input");
       qInput.value = this.data.question;
-      qInput.addEventListener("input", () => { this.data.question = qInput.value; qTitle.innerText = this.data.question; });
+      qInput.addEventListener("input", () => {
+        this.data.question = qInput.value;
+        qTitle.innerText = this.data.question;
+      });
       editArea.appendChild(qInput);
 
       const optLabel = document.createElement("label");
@@ -153,7 +164,7 @@ export default class DocLibInteractiveQuiz implements BlockTool {
       editArea.appendChild(optLabel);
 
       const optsEditArea = document.createElement("div");
-      
+
       const renderOptsEdit = () => {
         optsEditArea.innerHTML = "";
         this.data.options.forEach((opt, idx) => {
@@ -166,7 +177,7 @@ export default class DocLibInteractiveQuiz implements BlockTool {
           cb.classList.add("doclib-qz-edit-cb");
           cb.checked = opt.isCorrect;
           cb.addEventListener("change", () => {
-            this.data.options.forEach(o => o.isCorrect = false);
+            this.data.options.forEach((o) => (o.isCorrect = false));
             opt.isCorrect = true;
           });
 
@@ -174,7 +185,7 @@ export default class DocLibInteractiveQuiz implements BlockTool {
           inp.classList.add("doclib-qz-input");
           inp.style.marginBottom = "0";
           inp.value = opt.text;
-          inp.addEventListener("input", () => opt.text = inp.value);
+          inp.addEventListener("input", () => (opt.text = inp.value));
 
           const del = document.createElement("button");
           del.classList.add("doclib-qz-del");
@@ -197,7 +208,10 @@ export default class DocLibInteractiveQuiz implements BlockTool {
         addBtn.classList.add("doclib-qz-add");
         addBtn.innerText = "Add Option";
         addBtn.addEventListener("click", () => {
-          this.data.options.push({ text: "New Option", isCorrect: this.data.options.length === 0 });
+          this.data.options.push({
+            text: "New Option",
+            isCorrect: this.data.options.length === 0,
+          });
           this.buildUI();
         });
         optsEditArea.appendChild(addBtn);
@@ -217,7 +231,10 @@ export default class DocLibInteractiveQuiz implements BlockTool {
       expInput.style.resize = "vertical";
       expInput.style.minHeight = "60px";
       expInput.value = this.data.explanation;
-      expInput.addEventListener("input", () => this.data.explanation = expInput.value);
+      expInput.addEventListener(
+        "input",
+        () => (this.data.explanation = expInput.value),
+      );
       editArea.appendChild(expInput);
 
       this.wrapper.appendChild(editArea);

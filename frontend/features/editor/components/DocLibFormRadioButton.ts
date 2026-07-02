@@ -17,12 +17,23 @@ export default class DocLibFormRadioButton implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       question: data?.question || "",
-      options: data?.options && data.options.length > 0 ? data.options : ["DocLib Option 1", "DocLib Option 2"],
+      options:
+        data?.options && data.options.length > 0
+          ? data.options
+          : ["DocLib Option 1", "DocLib Option 2"],
       selectedIdx: data?.selectedIdx !== undefined ? data.selectedIdx : -1,
     };
   }
@@ -30,7 +41,7 @@ export default class DocLibFormRadioButton implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-radio { font-family: sans-serif; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 500px; }
@@ -57,7 +68,9 @@ export default class DocLibFormRadioButton implements BlockTool {
     qEl.innerText = this.data.question;
     if (!this.readOnly) {
       qEl.contentEditable = "true";
-      qEl.addEventListener("input", () => { this.data.question = qEl.innerText; });
+      qEl.addEventListener("input", () => {
+        this.data.question = qEl.innerText;
+      });
     }
     container.appendChild(qEl);
 
@@ -85,7 +98,9 @@ export default class DocLibFormRadioButton implements BlockTool {
         text.dataset.placeholder = "DocLib Option";
         if (!this.readOnly) {
           text.contentEditable = "true";
-          text.addEventListener("input", () => { this.data.options[i] = text.innerText; });
+          text.addEventListener("input", () => {
+            this.data.options[i] = text.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-radio-del");
@@ -96,7 +111,7 @@ export default class DocLibFormRadioButton implements BlockTool {
             else if (this.data.selectedIdx > i) this.data.selectedIdx--;
             renderOpts();
           });
-          
+
           optEl.appendChild(circle);
           optEl.appendChild(text);
           optEl.appendChild(del);

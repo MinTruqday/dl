@@ -17,13 +17,24 @@ export default class DocLibDonationBox implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       title: data?.title || "",
       desc: data?.desc || "",
-      amounts: data?.amounts && data.amounts.length > 0 ? data.amounts : ["$5", "$10", "$50"],
+      amounts:
+        data?.amounts && data.amounts.length > 0
+          ? data.amounts
+          : ["$5", "$10", "$50"],
       customLabel: data?.customLabel || "",
     };
   }
@@ -31,7 +42,7 @@ export default class DocLibDonationBox implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-don-box { max-width: 400px; padding: 24px; border-radius: 12px; background: #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin: 16px auto; font-family: sans-serif; }
@@ -63,9 +74,13 @@ export default class DocLibDonationBox implements BlockTool {
 
     if (!this.readOnly) {
       titleEl.contentEditable = "true";
-      titleEl.addEventListener("input", () => { this.data.title = titleEl.innerText; });
+      titleEl.addEventListener("input", () => {
+        this.data.title = titleEl.innerText;
+      });
       descEl.contentEditable = "true";
-      descEl.addEventListener("input", () => { this.data.desc = descEl.innerText; });
+      descEl.addEventListener("input", () => {
+        this.data.desc = descEl.innerText;
+      });
     }
 
     const grid = document.createElement("div");
@@ -77,7 +92,9 @@ export default class DocLibDonationBox implements BlockTool {
       amtEl.innerText = amt;
       if (!this.readOnly) {
         amtEl.contentEditable = "true";
-        amtEl.addEventListener("input", () => { this.data.amounts[i] = amtEl.innerText; });
+        amtEl.addEventListener("input", () => {
+          this.data.amounts[i] = amtEl.innerText;
+        });
       }
       grid.appendChild(amtEl);
     });
@@ -88,7 +105,9 @@ export default class DocLibDonationBox implements BlockTool {
     custom.dataset.placeholder = "DocLib Custom Amount";
     if (!this.readOnly) {
       custom.contentEditable = "true";
-      custom.addEventListener("input", () => { this.data.customLabel = custom.innerText; });
+      custom.addEventListener("input", () => {
+        this.data.customLabel = custom.innerText;
+      });
     }
 
     const btn = document.createElement("button");

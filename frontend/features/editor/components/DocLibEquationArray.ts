@@ -17,21 +17,29 @@ export default class DocLibEquationArray implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      equations: data?.equations && data.equations.length > 0 ? data.equations : [
-        "x + y = z",
-        "a^2 + b^2 = c^2"
-      ],
+      equations:
+        data?.equations && data.equations.length > 0
+          ? data.equations
+          : ["x + y = z", "a^2 + b^2 = c^2"],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-eqarray { font-family: "Cambria Math", "Times New Roman", serif; font-size: 18px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fdfdfd; margin: 16px auto; max-width: 500px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
@@ -73,14 +81,16 @@ export default class DocLibEquationArray implements BlockTool {
       this.data.equations.forEach((eq: string, i: number) => {
         const row = document.createElement("div");
         row.classList.add("doclib-eqarray-row");
-        
+
         const text = document.createElement("div");
         text.classList.add("doclib-eqarray-text");
         text.innerText = eq;
-        
+
         if (!this.readOnly) {
           text.contentEditable = "true";
-          text.addEventListener("input", () => { this.data.equations[i] = text.innerText; });
+          text.addEventListener("input", () => {
+            this.data.equations[i] = text.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-eqarray-del");

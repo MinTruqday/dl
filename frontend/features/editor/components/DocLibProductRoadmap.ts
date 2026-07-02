@@ -17,7 +17,15 @@ export default class DocLibProductRoadmap implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -31,7 +39,7 @@ export default class DocLibProductRoadmap implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-roadmap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; font-family: sans-serif; overflow-x: auto; padding-bottom: 8px; }
@@ -73,7 +81,9 @@ export default class DocLibProductRoadmap implements BlockTool {
           text.innerText = task;
           if (!this.readOnly) {
             text.contentEditable = "true";
-            text.addEventListener("input", () => { this.data[q][tIdx] = text.innerText; });
+            text.addEventListener("input", () => {
+              this.data[q][tIdx] = text.innerText;
+            });
 
             const delBtn = document.createElement("button");
             delBtn.classList.add("doclib-rm-del");

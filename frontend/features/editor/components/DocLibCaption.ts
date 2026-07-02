@@ -17,7 +17,15 @@ export default class DocLibCaption implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibCaption implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-caption { font-family: "Times New Roman", serif; font-size: 14px; color: #475569; text-align: center; margin: 8px 0 16px 0; font-style: italic; }
@@ -46,7 +54,7 @@ export default class DocLibCaption implements BlockTool {
     const label = document.createElement("span");
     label.classList.add("doclib-caption-label");
     label.innerText = `${this.data.label} ${this.data.number}: `;
-    
+
     const text = document.createElement("span");
     text.classList.add("doclib-caption-text");
     text.innerText = this.data.text;
@@ -54,7 +62,9 @@ export default class DocLibCaption implements BlockTool {
     if (!this.readOnly) {
       // In a real scenario, you'd have a config menu for label/number. For now, editable.
       text.contentEditable = "true";
-      text.addEventListener("input", () => { this.data.text = text.innerText; });
+      text.addEventListener("input", () => {
+        this.data.text = text.innerText;
+      });
     }
 
     container.appendChild(label);

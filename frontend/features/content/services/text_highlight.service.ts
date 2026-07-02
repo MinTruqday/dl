@@ -1,4 +1,7 @@
-import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function createHighlightAPI(
   documentId: string,
@@ -108,12 +111,9 @@ export async function updateReadingPreferencesAPI(data: {
 }
 
 export async function exportHighlightsMarkdownAPI(documentId: string) {
-  const res = await fetch(
-    `${API_URL}/danh-dau/tai-lieu/${documentId}/xuat`,
-    {
-      headers: getAuthHeaders(),
-    },
-  );
+  const res = await fetch(`${API_URL}/danh-dau/tai-lieu/${documentId}/xuat`, {
+    headers: getAuthHeaders(),
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Xuất dữ liệu nêu bật thất bại");
   return data;

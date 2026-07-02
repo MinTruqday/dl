@@ -17,7 +17,15 @@ export default class DocLibMasterDocument implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -28,7 +36,7 @@ export default class DocLibMasterDocument implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-master { padding: 24px; border: 2px solid #1e293b; border-radius: 8px; background: #f8fafc; margin: 16px 0; font-family: sans-serif; position: relative; }
@@ -45,10 +53,12 @@ export default class DocLibMasterDocument implements BlockTool {
     const title = document.createElement("div");
     title.classList.add("doclib-master-title");
     title.innerText = this.data.title;
-    
+
     if (!this.readOnly) {
       title.contentEditable = "true";
-      title.addEventListener("input", () => { this.data.title = title.innerText; });
+      title.addEventListener("input", () => {
+        this.data.title = title.innerText;
+      });
     }
     container.appendChild(title);
 

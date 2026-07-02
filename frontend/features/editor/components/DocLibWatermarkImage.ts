@@ -17,7 +17,15 @@ export default class DocLibWatermarkImage implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibWatermarkImage implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-wmi { position: relative; margin: 16px 0; min-height: 100px; border: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; background: #f8fafc; overflow: hidden; border-radius: 8px; }
@@ -46,22 +54,24 @@ export default class DocLibWatermarkImage implements BlockTool {
 
     const img = document.createElement("img");
     img.classList.add("doclib-wmi-img");
-    
+
     const applyImage = () => {
       if (this.data.url) {
         img.src = this.data.url;
         img.style.opacity = this.data.opacity;
         img.style.width = this.data.scale;
         img.style.display = "block";
-        
-        const editorRoot = document.querySelector(".codex-editor") as HTMLElement;
+
+        const editorRoot = document.querySelector(
+          ".codex-editor",
+        ) as HTMLElement;
         if (editorRoot) {
           editorRoot.style.backgroundImage = `url(${this.data.url})`;
           editorRoot.style.backgroundPosition = "center";
           editorRoot.style.backgroundRepeat = "no-repeat";
           editorRoot.style.backgroundSize = "contain";
           editorRoot.style.backgroundAttachment = "fixed";
-          editorRoot.style.opacity = "1"; 
+          editorRoot.style.opacity = "1";
         }
       } else {
         img.style.display = "none";
@@ -78,29 +88,38 @@ export default class DocLibWatermarkImage implements BlockTool {
       urlInput.classList.add("doclib-wmi-input");
       urlInput.placeholder = "DocLib URL";
       urlInput.value = this.data.url;
-      urlInput.addEventListener("input", () => { this.data.url = urlInput.value; applyImage(); });
+      urlInput.addEventListener("input", () => {
+        this.data.url = urlInput.value;
+        applyImage();
+      });
 
       const opSelect = document.createElement("select");
       opSelect.classList.add("doclib-wmi-select");
-      ["0.1", "0.2", "0.3", "0.5", "0.8", "1.0"].forEach(v => {
+      ["0.1", "0.2", "0.3", "0.5", "0.8", "1.0"].forEach((v) => {
         const opt = document.createElement("option");
         opt.value = v;
         opt.text = `Opacity ${v}`;
         opt.selected = this.data.opacity === v;
         opSelect.appendChild(opt);
       });
-      opSelect.addEventListener("change", () => { this.data.opacity = opSelect.value; applyImage(); });
+      opSelect.addEventListener("change", () => {
+        this.data.opacity = opSelect.value;
+        applyImage();
+      });
 
       const scSelect = document.createElement("select");
       scSelect.classList.add("doclib-wmi-select");
-      ["50%", "100%", "150%", "200%"].forEach(v => {
+      ["50%", "100%", "150%", "200%"].forEach((v) => {
         const opt = document.createElement("option");
         opt.value = v;
         opt.text = `Scale ${v}`;
         opt.selected = this.data.scale === v;
         scSelect.appendChild(opt);
       });
-      scSelect.addEventListener("change", () => { this.data.scale = scSelect.value; applyImage(); });
+      scSelect.addEventListener("change", () => {
+        this.data.scale = scSelect.value;
+        applyImage();
+      });
 
       edit.appendChild(urlInput);
       edit.appendChild(opSelect);

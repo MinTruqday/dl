@@ -23,7 +23,7 @@ export default class DocLibImage implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, config }: { api: API; data: any }) {
+  constructor({ api, data, config }: { api: API; data: any; config?: any }) {
     this.api = api;
     this.config = config || {};
     this.data = {
@@ -165,14 +165,16 @@ export default class DocLibImage implements BlockTool {
                 if (this.data.file) this.data.file.url = res.file.url;
               } else {
                 // Fallback if backend doesn't match EditorJS format
-                if (this.data.file) this.data.file.url =
-                  res.url || res.data?.url || URL.createObjectURL(file);
+                if (this.data.file)
+                  this.data.file.url =
+                    res.url || res.data?.url || URL.createObjectURL(file);
               }
               this.buildUI();
             })
             .catch((err) => {
               console.error("Upload failed", err);
-              if (this.data.file) this.data.file.url = URL.createObjectURL(file);
+              if (this.data.file)
+                this.data.file.url = URL.createObjectURL(file);
               this.buildUI();
             });
         }

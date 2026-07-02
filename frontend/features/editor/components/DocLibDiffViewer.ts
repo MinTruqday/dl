@@ -17,7 +17,15 @@ export default class DocLibDiffViewer implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -27,7 +35,10 @@ export default class DocLibDiffViewer implements BlockTool {
     };
   }
 
-  private computeDiff(oldText: string, newText: string): { type: "del" | "add" | "eq"; text: string }[] {
+  private computeDiff(
+    oldText: string,
+    newText: string,
+  ): { type: "del" | "add" | "eq"; text: string }[] {
     const oldLines = oldText.split("\n");
     const newLines = newText.split("\n");
     const result: { type: "del" | "add" | "eq"; text: string }[] = [];
@@ -108,9 +119,21 @@ export default class DocLibDiffViewer implements BlockTool {
     header.appendChild(langLabel);
 
     if (!this.readOnly) {
-      const langs = ["javascript", "typescript", "python", "go", "java", "rust", "css", "html", "sql", "bash"];
+      const langs = [
+        "javascript",
+        "typescript",
+        "python",
+        "go",
+        "java",
+        "rust",
+        "css",
+        "html",
+        "sql",
+        "bash",
+      ];
       const sel = document.createElement("select");
-      sel.style.cssText = "font-size:12px;border:1px solid #e2e8f0;border-radius:4px;padding:4px 8px;outline:none;background:#fff;";
+      sel.style.cssText =
+        "font-size:12px;border:1px solid #e2e8f0;border-radius:4px;padding:4px 8px;outline:none;background:#fff;";
       langs.forEach((l) => {
         const opt = document.createElement("option");
         opt.value = l;

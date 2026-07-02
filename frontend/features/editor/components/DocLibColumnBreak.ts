@@ -17,7 +17,15 @@ export default class DocLibColumnBreak implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = data || {};
@@ -26,7 +34,7 @@ export default class DocLibColumnBreak implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-colbreak { position: relative; width: 100%; text-align: center; margin: 16px 0; border-top: 1px dotted #94a3b8; }

@@ -19,10 +19,7 @@ export default class DocLibNestedChecklist implements BlockTool {
   constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
     this.data = {
-      items:
-        data.items && data.items.length > 0
-          ? data.items
-          : [],
+      items: data.items && data.items.length > 0 ? data.items : [],
     };
   }
 

@@ -27,7 +27,15 @@ export default class DocLibMindMap implements BlockTool {
     return Math.random().toString(36).slice(2, 8);
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -36,15 +44,17 @@ export default class DocLibMindMap implements BlockTool {
         text: "Main idea",
         children: [
           {
-            id: this.mkId(), text: "Branch 1", children: [
+            id: this.mkId(),
+            text: "Branch 1",
+            children: [
               { id: this.mkId(), text: "Idea 1.1", children: [] },
               { id: this.mkId(), text: "Idea 1.2", children: [] },
             ],
           },
           {
-            id: this.mkId(), text: "Branch 2", children: [
-              { id: this.mkId(), text: "Idea 2.1", children: [] },
-            ],
+            id: this.mkId(),
+            text: "Branch 2",
+            children: [{ id: this.mkId(), text: "Idea 2.1", children: [] }],
           },
           { id: this.mkId(), text: "Branch 3", children: [] },
         ],
@@ -105,7 +115,9 @@ export default class DocLibMindMap implements BlockTool {
           nodeEl.innerText = node.text;
         };
         input.addEventListener("blur", finish);
-        input.addEventListener("keydown", (e) => { if (e.key === "Enter") finish(); });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") finish();
+        });
       });
 
       const actions = document.createElement("div");
@@ -117,7 +129,11 @@ export default class DocLibMindMap implements BlockTool {
       addBtn.title = "Add child branch";
       addBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        node.children.push({ id: this.mkId(), text: "New branch", children: [] });
+        node.children.push({
+          id: this.mkId(),
+          text: "New branch",
+          children: [],
+        });
         this.buildUI();
       });
       actions.appendChild(addBtn);
@@ -164,8 +180,10 @@ export default class DocLibMindMap implements BlockTool {
         const lastRow = childElements[node.children.length - 1];
         requestAnimationFrame(() => {
           const parentTop = childrenWrap.getBoundingClientRect().top;
-          const firstTop = firstRow.getBoundingClientRect().top + firstRow.offsetHeight / 2;
-          const lastTop = lastRow.getBoundingClientRect().top + lastRow.offsetHeight / 2;
+          const firstTop =
+            firstRow.getBoundingClientRect().top + firstRow.offsetHeight / 2;
+          const lastTop =
+            lastRow.getBoundingClientRect().top + lastRow.offsetHeight / 2;
           const line = document.createElement("div");
           line.classList.add("doclib-mm-connector-v");
           line.style.top = `${firstTop - parentTop}px`;
@@ -182,7 +200,10 @@ export default class DocLibMindMap implements BlockTool {
 
   private deleteNode(parent: MindNode, targetId: string): boolean {
     const idx = parent.children.findIndex((c) => c.id === targetId);
-    if (idx !== -1) { parent.children.splice(idx, 1); return true; }
+    if (idx !== -1) {
+      parent.children.splice(idx, 1);
+      return true;
+    }
     return parent.children.some((c) => this.deleteNode(c, targetId));
   }
 

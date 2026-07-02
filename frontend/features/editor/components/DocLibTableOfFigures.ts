@@ -16,7 +16,15 @@ export default class DocLibTableOfFigures implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
   }
@@ -24,7 +32,7 @@ export default class DocLibTableOfFigures implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-tof { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin: 16px 0; }
@@ -51,8 +59,10 @@ export default class DocLibTableOfFigures implements BlockTool {
     this.wrapper.appendChild(container);
 
     setTimeout(() => {
-      const figures = document.querySelectorAll(".cdx-simple-image__caption, figcaption, .image-tool__caption");
-      
+      const figures = document.querySelectorAll(
+        ".cdx-simple-image__caption, figcaption, .image-tool__caption",
+      );
+
       if (figures.length === 0) {
         const empty = document.createElement("div");
         empty.classList.add("doclib-tof-empty");
@@ -62,8 +72,9 @@ export default class DocLibTableOfFigures implements BlockTool {
       }
 
       figures.forEach((fig, index) => {
-        const text = (fig as HTMLElement).innerText.trim() || `Figure ${index + 1}`;
-        
+        const text =
+          (fig as HTMLElement).innerText.trim() || `Figure ${index + 1}`;
+
         const parent = fig.closest(".ce-block") || fig.parentElement;
         if (parent && !parent.id) {
           parent.id = "figure-" + index;
@@ -76,10 +87,11 @@ export default class DocLibTableOfFigures implements BlockTool {
         link.classList.add("doclib-tof-link");
         link.href = "#" + (parent ? parent.id : "");
         link.innerText = text;
-        
+
         link.addEventListener("click", (e) => {
           e.preventDefault();
-          if (parent) parent.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (parent)
+            parent.scrollIntoView({ behavior: "smooth", block: "center" });
         });
 
         item.appendChild(link);

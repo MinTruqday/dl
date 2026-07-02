@@ -303,14 +303,17 @@ export const translateStorageDocumentAPI = async (
   target_lang: string = "vi",
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/suy-luan/phan-tich-tai-lieu/${id}/dich-thuat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    `${API_URL}/suy-luan/phan-tich-tai-lieu/${id}/dich-thuat`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ target_lang }),
     },
-    body: JSON.stringify({ target_lang }),
-  });
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to translate document");
   return data.data;
@@ -318,12 +321,15 @@ export const translateStorageDocumentAPI = async (
 
 export const getRelatedStorageItemsAPI = async (id: string) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/suy-luan/phan-tich-tai-lieu/${id}/lien-quan`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    `${API_URL}/suy-luan/phan-tich-tai-lieu/${id}/lien-quan`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Failed to get related documents");

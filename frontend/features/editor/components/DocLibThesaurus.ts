@@ -17,19 +17,30 @@ export default class DocLibThesaurus implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       word: data?.word || "Important",
-      synonyms: data?.synonyms && data.synonyms.length > 0 ? data.synonyms : ["DocLib Crucial", "DocLib Significant", "DocLib Vital"],
+      synonyms:
+        data?.synonyms && data.synonyms.length > 0
+          ? data.synonyms
+          : ["DocLib Crucial", "DocLib Significant", "DocLib Vital"],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-thes { font-family: sans-serif; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
@@ -53,13 +64,15 @@ export default class DocLibThesaurus implements BlockTool {
     const head = document.createElement("div");
     head.classList.add("doclib-thes-head");
     head.innerHTML = `<span>Thesaurus:</span>`;
-    
+
     const word = document.createElement("span");
     word.classList.add("doclib-thes-word");
     word.innerText = this.data.word;
     if (!this.readOnly) {
       word.contentEditable = "true";
-      word.addEventListener("input", () => { this.data.word = word.innerText; });
+      word.addEventListener("input", () => {
+        this.data.word = word.innerText;
+      });
     }
     head.appendChild(word);
     container.appendChild(head);
@@ -73,14 +86,16 @@ export default class DocLibThesaurus implements BlockTool {
       this.data.synonyms.forEach((syn: string, i: number) => {
         const item = document.createElement("div");
         item.classList.add("doclib-thes-item");
-        
+
         const text = document.createElement("span");
         text.classList.add("doclib-thes-text");
         text.innerText = syn;
-        
+
         if (!this.readOnly) {
           text.contentEditable = "true";
-          text.addEventListener("input", () => { this.data.synonyms[i] = text.innerText; });
+          text.addEventListener("input", () => {
+            this.data.synonyms[i] = text.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-thes-del");

@@ -4,13 +4,26 @@ export default class DocLibChart implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
-    type: "bar" | "line" | "pie" | "radar" | "doughnut" | "polarArea" | "scatter" | "bubble";
+    type:
+      | "bar"
+      | "line"
+      | "pie"
+      | "radar"
+      | "doughnut"
+      | "polarArea"
+      | "scatter"
+      | "bubble";
     title: string;
     showLegend: boolean;
     stacked: boolean;
     tension: number;
     labels: string[];
-    datasets: { label: string; data: number[]; backgroundColor?: string; borderColor?: string }[];
+    datasets: {
+      label: string;
+      data: number[];
+      backgroundColor?: string;
+      borderColor?: string;
+    }[];
   };
   private readOnly: boolean;
 
@@ -128,27 +141,27 @@ export default class DocLibChart implements BlockTool {
       const loadAndRender = () => {
         try {
           const ctx = canvas.getContext("2d");
-          
+
           const options: any = {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
               legend: {
                 display: this.data.showLegend,
-                position: 'bottom'
+                position: "bottom",
               },
               title: {
                 display: !!this.data.title,
                 text: this.data.title,
-                font: { size: 16 }
-              }
-            }
+                font: { size: 16 },
+              },
+            },
           };
 
-          if (this.data.type === 'bar' && this.data.stacked) {
+          if (this.data.type === "bar" && this.data.stacked) {
             options.scales = {
               x: { stacked: true },
-              y: { stacked: true }
+              y: { stacked: true },
             };
           }
 
@@ -170,8 +183,11 @@ export default class DocLibChart implements BlockTool {
                   "rgba(239, 68, 68, 1)",
                 ];
 
-                let bg: any = ds.backgroundColor || defaultColors[i % defaultColors.length];
-                let border: any = ds.borderColor || defaultBorderColors[i % defaultBorderColors.length];
+                let bg: any =
+                  ds.backgroundColor || defaultColors[i % defaultColors.length];
+                let border: any =
+                  ds.borderColor ||
+                  defaultBorderColors[i % defaultBorderColors.length];
 
                 if (["pie", "doughnut", "polarArea"].includes(this.data.type)) {
                   bg = defaultColors;
@@ -184,7 +200,7 @@ export default class DocLibChart implements BlockTool {
                   backgroundColor: bg,
                   borderColor: border,
                   borderWidth: 1,
-                  tension: this.data.tension
+                  tension: this.data.tension,
                 };
               }),
             },
@@ -244,7 +260,7 @@ export default class DocLibChart implements BlockTool {
       configPanel.appendChild(legendLabel);
 
       // Stacked Toggle
-      if (this.data.type === 'bar') {
+      if (this.data.type === "bar") {
         const stackedLabel = document.createElement("label");
         stackedLabel.classList.add("doclib-chart-config-check");
         const stackedCheck = document.createElement("input");
@@ -260,7 +276,7 @@ export default class DocLibChart implements BlockTool {
       }
 
       // Tension Slider
-      if (['line', 'radar'].includes(this.data.type)) {
+      if (["line", "radar"].includes(this.data.type)) {
         const tensionItem = document.createElement("div");
         tensionItem.classList.add("doclib-chart-config-item");
         const tensionLabel = document.createElement("div");
@@ -301,7 +317,7 @@ export default class DocLibChart implements BlockTool {
       this.data.datasets.forEach((ds, dsIndex) => {
         const cell = document.createElement("div");
         cell.classList.add("doclib-chart-cell", "header");
-        
+
         const input = document.createElement("input");
         input.classList.add("doclib-chart-input");
         input.value = ds.label;
@@ -316,7 +332,9 @@ export default class DocLibChart implements BlockTool {
         const colorPicker = document.createElement("input");
         colorPicker.type = "color";
         colorPicker.classList.add("doclib-chart-color-picker");
-        colorPicker.value = ds.backgroundColor ? ds.backgroundColor.slice(0, 7) : "#3b82f6";
+        colorPicker.value = ds.backgroundColor
+          ? ds.backgroundColor.slice(0, 7)
+          : "#3b82f6";
         colorPicker.title = "Pick dataset color";
         colorPicker.addEventListener("input", () => {
           ds.backgroundColor = colorPicker.value + "99"; // Add alpha

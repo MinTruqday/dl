@@ -17,7 +17,15 @@ export default class DocLibGithubRepo implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -33,7 +41,7 @@ export default class DocLibGithubRepo implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-gh { border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; background: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; max-width: 450px; margin: 16px auto; }
@@ -67,10 +75,11 @@ export default class DocLibGithubRepo implements BlockTool {
 
     const header = document.createElement("div");
     header.classList.add("doclib-gh-header");
-    
+
     const icon = document.createElement("div");
     icon.classList.add("doclib-gh-icon");
-    icon.innerHTML = '<svg height="16" viewBox="0 0 16 16" version="1.1" width="16" aria-hidden="true" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1v7.5h-8a2.5 2.5 0 0 1-2.5-2.5v-4a2.5 2.5 0 0 1 2.5-2.5Z"></path></svg>';
+    icon.innerHTML =
+      '<svg height="16" viewBox="0 0 16 16" version="1.1" width="16" aria-hidden="true" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1v7.5h-8a2.5 2.5 0 0 1-2.5-2.5v-4a2.5 2.5 0 0 1 2.5-2.5Z"></path></svg>';
 
     const nameEl = document.createElement("a");
     nameEl.classList.add("doclib-gh-name");
@@ -82,7 +91,9 @@ export default class DocLibGithubRepo implements BlockTool {
     }
     if (!this.readOnly) {
       nameEl.contentEditable = "true";
-      nameEl.addEventListener("input", () => { this.data.repoName = nameEl.innerText; });
+      nameEl.addEventListener("input", () => {
+        this.data.repoName = nameEl.innerText;
+      });
     }
 
     header.appendChild(icon);
@@ -95,7 +106,9 @@ export default class DocLibGithubRepo implements BlockTool {
     descEl.dataset.placeholder = "DocLib Repo Description";
     if (!this.readOnly) {
       descEl.contentEditable = "true";
-      descEl.addEventListener("input", () => { this.data.desc = descEl.innerText; });
+      descEl.addEventListener("input", () => {
+        this.data.desc = descEl.innerText;
+      });
     }
     card.appendChild(descEl);
 
@@ -114,7 +127,9 @@ export default class DocLibGithubRepo implements BlockTool {
     langEl.dataset.placeholder = "Language";
     if (!this.readOnly) {
       langEl.contentEditable = "true";
-      langEl.addEventListener("input", () => { this.data.language = langEl.innerText; });
+      langEl.addEventListener("input", () => {
+        this.data.language = langEl.innerText;
+      });
     }
     langWrap.appendChild(langColor);
     langWrap.appendChild(langEl);
@@ -124,14 +139,17 @@ export default class DocLibGithubRepo implements BlockTool {
     starWrap.style.display = "flex";
     starWrap.style.alignItems = "center";
     starWrap.style.gap = "4px";
-    starWrap.innerHTML = '<svg height="16" viewBox="0 0 16 16" width="16" fill="currentColor"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path></svg>';
+    starWrap.innerHTML =
+      '<svg height="16" viewBox="0 0 16 16" width="16" fill="currentColor"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path></svg>';
     const starEl = document.createElement("div");
     starEl.classList.add("doclib-gh-stat");
     starEl.innerText = this.data.stars;
     starEl.dataset.placeholder = "0";
     if (!this.readOnly) {
       starEl.contentEditable = "true";
-      starEl.addEventListener("input", () => { this.data.stars = starEl.innerText; });
+      starEl.addEventListener("input", () => {
+        this.data.stars = starEl.innerText;
+      });
     }
     starWrap.appendChild(starEl);
     stats.appendChild(starWrap);
@@ -140,14 +158,17 @@ export default class DocLibGithubRepo implements BlockTool {
     forkWrap.style.display = "flex";
     forkWrap.style.alignItems = "center";
     forkWrap.style.gap = "4px";
-    forkWrap.innerHTML = '<svg height="16" viewBox="0 0 16 16" width="16" fill="currentColor"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z"></path></svg>';
+    forkWrap.innerHTML =
+      '<svg height="16" viewBox="0 0 16 16" width="16" fill="currentColor"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z"></path></svg>';
     const forkEl = document.createElement("div");
     forkEl.classList.add("doclib-gh-stat");
     forkEl.innerText = this.data.forks;
     forkEl.dataset.placeholder = "0";
     if (!this.readOnly) {
       forkEl.contentEditable = "true";
-      forkEl.addEventListener("input", () => { this.data.forks = forkEl.innerText; });
+      forkEl.addEventListener("input", () => {
+        this.data.forks = forkEl.innerText;
+      });
     }
     forkWrap.appendChild(forkEl);
     stats.appendChild(forkWrap);

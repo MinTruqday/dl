@@ -17,18 +17,29 @@ export default class DocLibSmartArtProcess implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      steps: data?.steps && data.steps.length > 0 ? data.steps : ["DocLib Step 1", "DocLib Step 2", "DocLib Step 3"],
+      steps:
+        data?.steps && data.steps.length > 0
+          ? data.steps
+          : ["DocLib Step 1", "DocLib Step 2", "DocLib Step 3"],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-sap { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; padding: 24px; background: #f8fafc; border-radius: 8px; margin: 16px 0; }
@@ -58,8 +69,10 @@ export default class DocLibSmartArtProcess implements BlockTool {
 
         if (!this.readOnly) {
           box.contentEditable = "true";
-          box.addEventListener("input", () => { this.data.steps[i] = box.innerText; });
-          
+          box.addEventListener("input", () => {
+            this.data.steps[i] = box.innerText;
+          });
+
           const del = document.createElement("button");
           del.classList.add("doclib-sap-del");
           del.innerText = "✕";

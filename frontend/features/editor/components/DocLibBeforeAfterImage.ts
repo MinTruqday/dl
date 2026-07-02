@@ -17,7 +17,15 @@ export default class DocLibBeforeAfterImage implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibBeforeAfterImage implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-ba { position: relative; width: 100%; max-width: 600px; height: 350px; margin: 16px auto; overflow: hidden; border-radius: 8px; background: #e2e8f0; border: 1px solid #cbd5e1; }
@@ -52,7 +60,7 @@ export default class DocLibBeforeAfterImage implements BlockTool {
       bInput.classList.add("doclib-ba-input");
       bInput.placeholder = "DocLib Before Image URL";
       bInput.value = this.data.beforeUrl;
-      
+
       const aInput = document.createElement("input");
       aInput.classList.add("doclib-ba-input");
       aInput.placeholder = "DocLib After Image URL";
@@ -120,8 +128,12 @@ export default class DocLibBeforeAfterImage implements BlockTool {
       beforeImg.style.clipPath = `inset(0 ${100 - this.data.position}% 0 0)`;
     };
 
-    slider.addEventListener("mousedown", () => { isDragging = true; });
-    document.addEventListener("mouseup", () => { isDragging = false; });
+    slider.addEventListener("mousedown", () => {
+      isDragging = true;
+    });
+    document.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
     document.addEventListener("mousemove", onMove);
   }
 

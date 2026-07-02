@@ -89,7 +89,10 @@ export default function ForgotPasswordPage() {
             <div className="mt-8 text-center border-t border-[#D2D2D7] pt-6 flex flex-col gap-3">
               <span className="text-[15px] text-[#6E6E73]">
                 Đã có mã xác thực?{" "}
-                <a href="/xac-thuc" className="font-medium text-[#0071E3] hover:text-[#0055C6]">
+                <a
+                  href="/xac-thuc"
+                  className="font-medium text-[#0071E3] hover:text-[#0055C6]"
+                >
                   Nhập mã ngay
                 </a>
               </span>

@@ -3,7 +3,10 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibFeedback implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private data: { question: string; reactions: { emoji: string; label: string; count: number }[] };
+  private data: {
+    question: string;
+    reactions: { emoji: string; label: string; count: number }[];
+  };
   private readOnly: boolean;
 
   static get toolbox() {
@@ -17,7 +20,15 @@ export default class DocLibFeedback implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -120,7 +131,10 @@ export default class DocLibFeedback implements BlockTool {
       qInput.classList.add("doclib-fb-q-input");
       qInput.value = this.data.question;
       qInput.placeholder = "DocLib Question";
-      qInput.addEventListener("input", () => { this.data.question = qInput.value; question.innerText = qInput.value; });
+      qInput.addEventListener("input", () => {
+        this.data.question = qInput.value;
+        question.innerText = qInput.value;
+      });
 
       edit.appendChild(qInput);
 
@@ -137,18 +151,26 @@ export default class DocLibFeedback implements BlockTool {
           emojiIn.style.width = "48px";
           emojiIn.style.textAlign = "center";
           emojiIn.value = r.emoji;
-          emojiIn.addEventListener("input", () => { r.emoji = emojiIn.value; this.buildUI(); });
+          emojiIn.addEventListener("input", () => {
+            r.emoji = emojiIn.value;
+            this.buildUI();
+          });
 
           const labelIn = document.createElement("input");
           labelIn.classList.add("doclib-fb-react-input");
           labelIn.style.flex = "1";
           labelIn.value = r.label;
-          labelIn.addEventListener("input", () => { r.label = labelIn.value; });
+          labelIn.addEventListener("input", () => {
+            r.label = labelIn.value;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-fb-del");
           del.innerText = "x";
-          del.addEventListener("click", () => { this.data.reactions.splice(i, 1); this.buildUI(); });
+          del.addEventListener("click", () => {
+            this.data.reactions.splice(i, 1);
+            this.buildUI();
+          });
 
           row.appendChild(emojiIn);
           row.appendChild(labelIn);

@@ -1,4 +1,7 @@
-import { API_URL, getAuthHeaders } from "@/features/auth/services/user_authentication.service";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/auth/services/user_authentication.service";
 
 export async function createCommentAPI(payload: {
   item_id: string;
@@ -38,10 +41,13 @@ export async function editCommentAPI(commentId: string, content: string) {
 }
 
 export async function deleteCommentAPI(commentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/binh-luan/muc-tieu/${commentId}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/cong-tac/binh-luan/muc-tieu/${commentId}`,
+    {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Xóa bình luận thất bại");
   return data;

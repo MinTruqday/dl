@@ -92,8 +92,7 @@ export default class DocLibGist implements BlockTool {
 
       const urlInput = document.createElement("input");
       urlInput.classList.add(this.api.styles.input, "doclib-gist-input");
-      urlInput.placeholder =
-        "DocLib URL";
+      urlInput.placeholder = "DocLib URL";
       urlInput.value = this.data.url;
 
       const fileInput = document.createElement("input");

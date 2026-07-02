@@ -17,7 +17,15 @@ export default class DocLibCombineDocuments implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -30,7 +38,7 @@ export default class DocLibCombineDocuments implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-combine { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; margin: 16px 0; font-family: sans-serif; }
@@ -50,7 +58,7 @@ export default class DocLibCombineDocuments implements BlockTool {
       const doc = document.createElement("div");
       doc.classList.add("doclib-combine-doc");
       doc.innerHTML = `<div class="doclib-combine-icon">${icon}</div>`;
-      
+
       const title = document.createElement("div");
       title.classList.add("doclib-combine-title");
       title.innerText = this.data[key];
@@ -58,14 +66,16 @@ export default class DocLibCombineDocuments implements BlockTool {
 
       if (!this.readOnly) {
         title.contentEditable = "true";
-        title.addEventListener("input", () => { this.data[key] = title.innerText; });
+        title.addEventListener("input", () => {
+          this.data[key] = title.innerText;
+        });
       }
       doc.appendChild(title);
       return doc;
     };
 
     container.appendChild(createDoc("doc1", "📄", "DocLib Doc 1"));
-    
+
     const plus = document.createElement("div");
     plus.classList.add("doclib-combine-arrow");
     plus.innerText = "+";
@@ -87,7 +97,9 @@ export default class DocLibCombineDocuments implements BlockTool {
     mTitle.dataset.placeholder = "DocLib Merged Doc";
     if (!this.readOnly) {
       mTitle.contentEditable = "true";
-      mTitle.addEventListener("input", () => { this.data.mergedTitle = mTitle.innerText; });
+      mTitle.addEventListener("input", () => {
+        this.data.mergedTitle = mTitle.innerText;
+      });
     }
     merged.appendChild(mTitle);
     container.appendChild(merged);

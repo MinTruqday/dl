@@ -37,7 +37,7 @@ export default function Report({ itemId, itemType, onClose }: ReportProps) {
         item_id: itemId,
         item_type: itemType,
         reason: reason,
-        detail: detail,
+        description: detail,
       });
 
       showToast("Báo cáo đã được gửi tới hội đồng điều hành", "success");

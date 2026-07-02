@@ -17,7 +17,15 @@ export default class DocLibCoverPage implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -31,7 +39,7 @@ export default class DocLibCoverPage implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 800px; padding: 48px; border: 1px solid #e2e8f0; background: #fff; margin: 32px 0; page-break-after: always; position: relative; }
@@ -73,11 +81,19 @@ export default class DocLibCoverPage implements BlockTool {
       subtitleEl.contentEditable = "true";
       authorEl.contentEditable = "true";
       dateEl.contentEditable = "true";
-      
-      titleEl.addEventListener("input", () => { this.data.title = titleEl.innerText; });
-      subtitleEl.addEventListener("input", () => { this.data.subtitle = subtitleEl.innerText; });
-      authorEl.addEventListener("input", () => { this.data.author = authorEl.innerText; });
-      dateEl.addEventListener("input", () => { this.data.date = dateEl.innerText; });
+
+      titleEl.addEventListener("input", () => {
+        this.data.title = titleEl.innerText;
+      });
+      subtitleEl.addEventListener("input", () => {
+        this.data.subtitle = subtitleEl.innerText;
+      });
+      authorEl.addEventListener("input", () => {
+        this.data.author = authorEl.innerText;
+      });
+      dateEl.addEventListener("input", () => {
+        this.data.date = dateEl.innerText;
+      });
     }
 
     container.appendChild(titleEl);

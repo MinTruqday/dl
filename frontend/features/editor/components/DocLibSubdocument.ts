@@ -17,7 +17,15 @@ export default class DocLibSubdocument implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -29,7 +37,7 @@ export default class DocLibSubdocument implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-subdoc { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #94a3b8; border-radius: 4px; background: #fff; margin: 8px 0; font-family: sans-serif; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -54,10 +62,12 @@ export default class DocLibSubdocument implements BlockTool {
     const name = document.createElement("div");
     name.classList.add("doclib-subdoc-name");
     name.innerText = this.data.filename;
-    
+
     if (!this.readOnly) {
       name.contentEditable = "true";
-      name.addEventListener("input", () => { this.data.filename = name.innerText; });
+      name.addEventListener("input", () => {
+        this.data.filename = name.innerText;
+      });
     }
     info.appendChild(name);
     container.appendChild(info);
@@ -65,7 +75,7 @@ export default class DocLibSubdocument implements BlockTool {
     const status = document.createElement("div");
     status.className = `doclib-subdoc-status ${this.data.status === "Linked" ? "linked" : "locked"}`;
     status.innerText = this.data.status;
-    
+
     if (!this.readOnly) {
       status.style.cursor = "pointer";
       status.addEventListener("click", () => {

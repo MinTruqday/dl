@@ -24,7 +24,15 @@ export default class DocLibGantt implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -127,7 +135,8 @@ export default class DocLibGantt implements BlockTool {
       edit.classList.add("doclib-gantt-edit");
 
       const totalLabel = document.createElement("div");
-      totalLabel.style.cssText = "font-size:12px;color:#64748b;margin-bottom:8px;";
+      totalLabel.style.cssText =
+        "font-size:12px;color:#64748b;margin-bottom:8px;";
       totalLabel.innerText = `Total days: ${this.data.totalDays}`;
 
       const totalInput = document.createElement("input");
@@ -147,8 +156,10 @@ export default class DocLibGantt implements BlockTool {
       edit.appendChild(totalInput);
 
       const colHeader = document.createElement("div");
-      colHeader.style.cssText = "display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:6px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;margin-top:12px;margin-bottom:4px;";
-      colHeader.innerHTML = "<span>Task name</span><span>Start</span><span>End</span><span></span>";
+      colHeader.style.cssText =
+        "display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:6px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;margin-top:12px;margin-bottom:4px;";
+      colHeader.innerHTML =
+        "<span>Task name</span><span>Start</span><span>End</span><span></span>";
       edit.appendChild(colHeader);
 
       const taskRows = document.createElement("div");
@@ -183,7 +194,10 @@ export default class DocLibGantt implements BlockTool {
           endIn.min = "1";
           endIn.value = `${task.end}`;
           endIn.addEventListener("change", () => {
-            task.end = Math.max(task.start + 1, parseInt(endIn.value) || task.start + 1);
+            task.end = Math.max(
+              task.start + 1,
+              parseInt(endIn.value) || task.start + 1,
+            );
             this.buildChart(chartArea);
           });
 
@@ -210,7 +224,15 @@ export default class DocLibGantt implements BlockTool {
       const addBtn = document.createElement("button");
       addBtn.classList.add("doclib-gantt-add-btn");
       addBtn.innerText = "Add task";
-      const colors = ["#0284c7", "#7c3aed", "#059669", "#d97706", "#dc2626", "#0891b2", "#db2777"];
+      const colors = [
+        "#0284c7",
+        "#7c3aed",
+        "#059669",
+        "#d97706",
+        "#dc2626",
+        "#0891b2",
+        "#db2777",
+      ];
       addBtn.addEventListener("click", () => {
         const last = this.data.tasks[this.data.tasks.length - 1];
         const start = last ? last.end : 0;

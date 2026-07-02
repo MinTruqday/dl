@@ -17,19 +17,33 @@ export default class DocLibLeaderboard implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       title: data?.title || "",
-      players: data?.players && data.players.length > 0 ? data.players : [{ name: "", score: "" }, { name: "", score: "" }],
+      players:
+        data?.players && data.players.length > 0
+          ? data.players
+          : [
+              { name: "", score: "" },
+              { name: "", score: "" },
+            ],
     };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-lb { font-family: sans-serif; max-width: 500px; margin: 16px auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
@@ -62,7 +76,9 @@ export default class DocLibLeaderboard implements BlockTool {
     titleEl.dataset.placeholder = "DocLib Leaderboard";
     if (!this.readOnly) {
       titleEl.contentEditable = "true";
-      titleEl.addEventListener("input", () => { this.data.title = titleEl.innerText; });
+      titleEl.addEventListener("input", () => {
+        this.data.title = titleEl.innerText;
+      });
     }
     container.appendChild(titleEl);
 
@@ -92,9 +108,13 @@ export default class DocLibLeaderboard implements BlockTool {
 
         if (!this.readOnly) {
           name.contentEditable = "true";
-          name.addEventListener("input", () => { this.data.players[i].name = name.innerText; });
+          name.addEventListener("input", () => {
+            this.data.players[i].name = name.innerText;
+          });
           score.contentEditable = "true";
-          score.addEventListener("input", () => { this.data.players[i].score = score.innerText; });
+          score.addEventListener("input", () => {
+            this.data.players[i].score = score.innerText;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-lb-del");

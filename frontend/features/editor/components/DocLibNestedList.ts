@@ -33,10 +33,7 @@ export default class DocLibNestedList implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       style: data.style || "",
-      items:
-        data.items && data.items.length > 0
-          ? data.items
-          : [],
+      items: data.items && data.items.length > 0 ? data.items : [],
     };
   }
 

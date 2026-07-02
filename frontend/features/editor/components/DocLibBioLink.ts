@@ -22,7 +22,15 @@ export default class DocLibBioLink implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -118,11 +126,12 @@ export default class DocLibBioLink implements BlockTool {
       const edit = document.createElement("div");
       edit.classList.add("doclib-bl-edit");
 
-      const profileFields: { key: "name" | "bio" | "avatar"; label: string }[] = [
-        { key: "name", label: "Name" },
-        { key: "bio", label: "Description" },
-        { key: "avatar", label: "Avatar URL" },
-      ];
+      const profileFields: { key: "name" | "bio" | "avatar"; label: string }[] =
+        [
+          { key: "name", label: "Name" },
+          { key: "bio", label: "Description" },
+          { key: "avatar", label: "Avatar URL" },
+        ];
 
       profileFields.forEach(({ key, label }) => {
         const field = document.createElement("div");
@@ -143,7 +152,8 @@ export default class DocLibBioLink implements BlockTool {
       });
 
       const linkHeader = document.createElement("div");
-      linkHeader.style.cssText = "font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;";
+      linkHeader.style.cssText =
+        "font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;";
       linkHeader.innerText = "Links";
       edit.appendChild(linkHeader);
 
@@ -159,24 +169,36 @@ export default class DocLibBioLink implements BlockTool {
           iconInput.classList.add("doclib-bl-link-input");
           iconInput.value = link.icon;
           iconInput.style.textAlign = "center";
-          iconInput.addEventListener("input", () => { link.icon = iconInput.value; this.buildUI(); });
+          iconInput.addEventListener("input", () => {
+            link.icon = iconInput.value;
+            this.buildUI();
+          });
 
           const labelInput = document.createElement("input");
           labelInput.classList.add("doclib-bl-link-input");
           labelInput.value = link.label;
           labelInput.placeholder = "DocLib URL";
-          labelInput.addEventListener("input", () => { link.label = labelInput.value; this.buildUI(); });
+          labelInput.addEventListener("input", () => {
+            link.label = labelInput.value;
+            this.buildUI();
+          });
 
           const urlInput = document.createElement("input");
           urlInput.classList.add("doclib-bl-link-input");
           urlInput.value = link.url;
           urlInput.placeholder = "DocLib URL";
-          urlInput.addEventListener("input", () => { link.url = urlInput.value; });
+          urlInput.addEventListener("input", () => {
+            link.url = urlInput.value;
+          });
 
           const del = document.createElement("button");
           del.classList.add("doclib-bl-del");
           del.innerText = "x";
-          del.addEventListener("click", () => { this.data.links.splice(i, 1); renderLinkRows(); this.buildUI(); });
+          del.addEventListener("click", () => {
+            this.data.links.splice(i, 1);
+            renderLinkRows();
+            this.buildUI();
+          });
 
           row.appendChild(iconInput);
           row.appendChild(labelInput);
@@ -189,7 +211,12 @@ export default class DocLibBioLink implements BlockTool {
         addBtn.classList.add("doclib-bl-add-btn");
         addBtn.innerText = "Add link";
         addBtn.addEventListener("click", () => {
-          this.data.links.push({ label: "New link", url: "https://", icon: "", color: "#475569" });
+          this.data.links.push({
+            label: "New link",
+            url: "https://",
+            icon: "",
+            color: "#475569",
+          });
           renderLinkRows();
           this.buildUI();
         });

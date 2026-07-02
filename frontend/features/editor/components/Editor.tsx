@@ -278,8 +278,6 @@ ${latexCode}
     }
   };
 
-
-
   const fetchSidebarData = useCallback(async () => {
     if (!documentId || activeSidebar === "none") return;
     setLoadingSidebar(true);
@@ -290,9 +288,12 @@ ${latexCode}
         const data = await getDocumentVersionsAPI(documentId);
         setSidebarData(data || []);
       } else if (activeSidebar === "comments") {
-        const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
-          headers: getAuthHeaders(),
-        });
+        const res = await fetch(
+          `${API_URL}/soan-thao/${documentId}/binh-luan`,
+          {
+            headers: getAuthHeaders(),
+          },
+        );
         if (!res.ok)
           throw new Error("Lỗi xác thực hoặc không thể tải nhận xét");
         const data = await res.json();
@@ -338,8 +339,6 @@ ${latexCode}
       setIsSuggesting(false);
     }
   };
-
-
 
   const handleTranslate = async () => {
     if (!checkPremiumAI()) return;
@@ -465,7 +464,6 @@ ${latexCode}
 
             <div className="w-px h-6 bg-zinc-200 mx-1 shrink-0" />
 
-
             <button
               onClick={() =>
                 originalContentForUndo
@@ -482,7 +480,6 @@ ${latexCode}
               )}
               {originalContentForUndo ? "Nguyên bản" : "Dịch tài liệu"}
             </button>
-
           </div>
           <div className="flex gap-2 shrink-0">
             <button
@@ -654,7 +651,7 @@ ${latexCode}
                 setLastKeystroke={setLastKeystroke}
                 setTocData={setTocData}
                 setSaveStatus={setSaveStatus}
-                showToast={showToast}
+                showToast={showToast as any}
                 editorRef={editorRef}
               />
             </div>
@@ -818,34 +815,26 @@ ${latexCode}
       <div className="h-10 border-t border-[#D2D2D7] bg-white px-6 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">
-              Tốc độ
-            </span>
+            <span className="text-[13px] text-[#6E6E73]">Tốc độ</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {stats.wpm} WPM
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">
-              Số ký tự
-            </span>
+            <span className="text-[13px] text-[#6E6E73]">Số ký tự</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {stats.charCount}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">
-              Thời gian đọc
-            </span>
+            <span className="text-[13px] text-[#6E6E73]">Thời gian đọc</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {readingTime} phút
             </span>
           </div>
           {tags.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-[13px] text-[#6E6E73]">
-                Thẻ
-              </span>
+              <span className="text-[13px] text-[#6E6E73]">Thẻ</span>
               <div className="flex gap-1.5">
                 {tags.map((t, idx) => (
                   <span
@@ -862,9 +851,7 @@ ${latexCode}
         <div className="flex items-center gap-4">
           {plagiarismScore !== null && (
             <div className="flex items-center gap-2 px-3 py-1 bg-[#F5F5F7] rounded-full">
-              <span className="text-[13px] text-[#6E6E73]">
-                Bản quyền
-              </span>
+              <span className="text-[13px] text-[#6E6E73]">Bản quyền</span>
               <span
                 className={`text-[13px] font-medium ${plagiarismScore > 20 ? "text-[#FF3B30]" : "text-[#34C759]"}`}
               >
@@ -876,9 +863,7 @@ ${latexCode}
             <span
               className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-[#34C759]" : "bg-[#D2D2D7]"}`}
             ></span>
-            <span className="text-[13px] text-[#6E6E73]">
-              Cộng tác
-            </span>
+            <span className="text-[13px] text-[#6E6E73]">Cộng tác</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {onlineUsers > 1
                 ? `${onlineUsers} trực tuyến`
@@ -886,9 +871,7 @@ ${latexCode}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">
-              Trạng thái
-            </span>
+            <span className="text-[13px] text-[#6E6E73]">Trạng thái</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {saveStatus}
             </span>
@@ -901,9 +884,7 @@ ${latexCode}
               }}
             />
           </div>
-          <span className="text-[13px] text-[#6E6E73]">
-            Mục tiêu ngày
-          </span>
+          <span className="text-[13px] text-[#6E6E73]">Mục tiêu ngày</span>
         </div>
       </div>
     </div>

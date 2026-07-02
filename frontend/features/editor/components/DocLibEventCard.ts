@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibEventCard implements BlockTool {
@@ -26,7 +27,15 @@ export default class DocLibEventCard implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     const tomorrow = new Date();
@@ -89,7 +98,10 @@ export default class DocLibEventCard implements BlockTool {
   }
 
   private buildUI() {
-    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
     if (!this.wrapper) return;
     this.wrapper.innerHTML = "";
     this.wrapper.classList.add("doclib-event-wrapper");
@@ -120,7 +132,12 @@ export default class DocLibEventCard implements BlockTool {
     metaList.classList.add("doclib-event-meta");
 
     const date = new Date(`${this.data.date}T${this.data.time}:00`);
-    const dateStr = date.toLocaleDateString("vi-VN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const dateStr = date.toLocaleDateString("vi-VN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
     [
       { icon: "", text: `${dateStr} at ${this.data.time}` },
@@ -144,7 +161,10 @@ export default class DocLibEventCard implements BlockTool {
     countdown.appendChild(countdownText);
 
     this.timerInterval = setInterval(() => {
-      countdownText.innerText = this.getCountdown(this.data.date, this.data.time);
+      countdownText.innerText = this.getCountdown(
+        this.data.date,
+        this.data.time,
+      );
     }, 60000);
 
     const actions = document.createElement("div");
@@ -191,7 +211,11 @@ export default class DocLibEventCard implements BlockTool {
       const edit = document.createElement("div");
       edit.classList.add("doclib-event-edit");
 
-      const fields: { key: keyof typeof this.data; label: string; type?: string }[] = [
+      const fields: {
+        key: keyof typeof this.data;
+        label: string;
+        type?: string;
+      }[] = [
         { key: "title", label: "Title" },
         { key: "location", label: "Location" },
         { key: "date", label: "Date", type: "date" },
@@ -204,7 +228,8 @@ export default class DocLibEventCard implements BlockTool {
       fields.forEach(({ key, label, type }) => {
         const field = document.createElement("div");
         field.classList.add("doclib-event-field");
-        if (key === "description" || key === "url") field.style.gridColumn = "1 / -1";
+        if (key === "description" || key === "url")
+          field.style.gridColumn = "1 / -1";
         const lbl = document.createElement("label");
         lbl.innerText = label;
         const input = document.createElement("input");

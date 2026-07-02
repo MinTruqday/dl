@@ -17,7 +17,15 @@ export default class DocLibFormSpinButton implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, readOnly }: { api: API; data: any; readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
@@ -32,7 +40,7 @@ export default class DocLibFormSpinButton implements BlockTool {
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
+
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-spin { font-family: sans-serif; display: flex; align-items: center; gap: 16px; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 400px; }
@@ -54,7 +62,9 @@ export default class DocLibFormSpinButton implements BlockTool {
     label.innerText = this.data.label;
     if (!this.readOnly) {
       label.contentEditable = "true";
-      label.addEventListener("input", () => { this.data.label = label.innerText; });
+      label.addEventListener("input", () => {
+        this.data.label = label.innerText;
+      });
     }
     container.appendChild(label);
 
@@ -85,8 +95,12 @@ export default class DocLibFormSpinButton implements BlockTool {
         this.data.value = newVal;
         input.value = this.data.value.toString();
       };
-      decBtn.addEventListener("click", () => updateVal(Number(this.data.value) - Number(this.data.step)));
-      incBtn.addEventListener("click", () => updateVal(Number(this.data.value) + Number(this.data.step)));
+      decBtn.addEventListener("click", () =>
+        updateVal(Number(this.data.value) - Number(this.data.step)),
+      );
+      incBtn.addEventListener("click", () =>
+        updateVal(Number(this.data.value) + Number(this.data.step)),
+      );
       input.addEventListener("change", () => updateVal(Number(input.value)));
     }
 

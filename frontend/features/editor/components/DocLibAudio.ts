@@ -17,7 +17,7 @@ export default class DocLibAudio implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, config }: { api: API; data: any }) {
+  constructor({ api, data, config }: { api: API; data: any; config?: any }) {
     this.api = api;
     this.config = config || {};
     this.data = {
