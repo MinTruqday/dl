@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from "react";
 import { getDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getTagsCategoriesAPI,
-  getTrendingDocumentsAPI,
   getAIRecommendationsAPI,
   smartSearchAPI,
 } from "@/features/content/services/discovery.service";
@@ -15,7 +14,6 @@ import { LayoutGrid, List as ListIcon, List, ChevronRight } from "lucide-react";
 export default function ExplorePage() {
   const { showToast } = useToast();
   const [documents, setDocuments] = useState<any[]>([]);
-  const [trending, setTrending] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -28,13 +26,11 @@ export default function ExplorePage() {
 
   const loadInitialData = useCallback(async () => {
     try {
-      const [catData, trendData, recData] = await Promise.all([
+      const [catData, recData] = await Promise.all([
         getTagsCategoriesAPI(),
-        getTrendingDocumentsAPI(5),
         getAIRecommendationsAPI(4),
       ]);
       setCategories(catData.data?.categories || catData.categories || []);
-      setTrending(trendData.data || trendData || []);
       setRecommendations(recData.data || recData || []);
     } catch (err) {
       showToast("Lỗi tải dữ liệu khám phá", "error");
@@ -80,7 +76,7 @@ export default function ExplorePage() {
       }`}
     >
       <div
-        className={`bg-[#D2D2D7] ${mode === "grid" ? "aspect-[4/3] w-full" : "w-24 h-32 shrink-0 rounded-[10px]"}`}
+        className={`bg-[#D2D2D7] ${mode === "grid" ? "aspect-[4/3] w-full" : "w-6 h-6 shrink-0 rounded-[10px]"}`}
       />
       {mode === "grid" && (
         <div className="p-4 space-y-3">
@@ -110,7 +106,7 @@ export default function ExplorePage() {
                 }`}
               >
                 <span>Tất cả tài liệu</span>
-                {!selectedCategory && <ChevronRight className="w-4 h-4" />}
+                {!selectedCategory && <ChevronRight className="w-6 h-6" />}
               </button>
               {categories.map((cat) => (
                 <button
@@ -126,42 +122,14 @@ export default function ExplorePage() {
                 >
                   <span className="truncate text-left">{cat}</span>
                   {selectedCategory === cat && (
-                    <ChevronRight className="w-4 h-4 shrink-0" />
+                    <ChevronRight className="w-6 h-6 shrink-0" />
                   )}
                 </button>
               ))}
             </nav>
           </div>
 
-          {trending.length > 0 && (
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-                Xu hướng
-              </p>
-              <div className="flex flex-col gap-2">
-                {trending.map((document, i) => (
-                  <Link
-                    key={`trending-${document._id || i}`}
-                    href={`/document/${document.slug}`}
-                    className="flex gap-4 items-start px-3 py-3 rounded-[10px] transition-colors hover:bg-white hover:"
-                  >
-                    <span className="text-[15px] font-semibold text-[#6E6E73] w-4 text-center shrink-0">
-                      {i + 1}
-                    </span>
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <h4 className="text-[15px] font-medium text-[#1D1D1F] line-clamp-2 leading-snug">
-                        {document.title}
-                      </h4>
-                      <div className="text-[13px] text-[#6E6E73]">
-                        {document.views_count?.toLocaleString("vi-VN") || 0}{" "}
-                        lượt xem
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+          
         </aside>
 
         <main className="flex-1 min-w-0 space-y-8 pt-6">
@@ -213,18 +181,18 @@ export default function ExplorePage() {
                 {searchQuery ? `Kết quả cho "${searchQuery}"` : "Kho nội dung"}
               </h2>
               <div className="flex items-center">
-                <div className="flex bg-[#E8E8ED] p-0.5 rounded-full shrink-0">
+                <div className="flex bg-[#E8E8ED] p-[2px] rounded-full shrink-0">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                    className={`p-1 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
                   >
-                    <LayoutGrid className="w-4 h-4" />
+                    <LayoutGrid className="w-6 h-6" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                    className={`p-1 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
                   >
-                    <List className="w-4 h-4" />
+                    <List className="w-6 h-6" />
                   </button>
                 </div>
               </div>
@@ -349,7 +317,7 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
+              <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center">
                 <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
               </div>
             )}

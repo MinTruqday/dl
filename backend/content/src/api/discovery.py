@@ -12,17 +12,6 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/kham-pha")
 
-@router.get("/thinh-hanh", response_model=APIResponse[Any])
-async def get_trending_documents(
-    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
-    db=Depends(get_db),
-):
-    return APIResponse(
-        data=await DocumentService.get_trending_documents(limit),
-        message="Lấy danh sách tài liệu thịnh hành thành công",
-        status=status.HTTP_200_OK,
-    )
-
 @router.get("/the-loai", response_model=APIResponse[Any])
 async def get_tags_categories(db=Depends(get_db)):
     return APIResponse(
@@ -90,13 +79,4 @@ async def get_ai_recommendations(
         message="Lấy đề xuất tài liệu thành công",
     )
 
-@router.get("/tu-khoa-thinh-hanh", response_model=APIResponse[Any])
-async def get_trending_tags(
-    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
-    db=Depends(get_db),
-):
-    return APIResponse(
-        data=await DocumentService.get_trending_tags(limit),
-        message="Lấy danh sách hashtag thịnh hành thành công",
-        status=status.HTTP_200_OK,
-    )
+

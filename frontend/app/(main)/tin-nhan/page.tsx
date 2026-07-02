@@ -115,7 +115,7 @@ const CustomAudioPlayer = ({
     <div className="flex items-center gap-3 w-full py-1 min-w-[200px]">
       <button
         onClick={togglePlay}
-        className={`flex shrink-0 items-center justify-center w-8 h-8 rounded-full ${isSender ? "bg-white text-[#0071E3]" : "bg-[#0071E3] text-white"}`}
+        className={`flex shrink-0 items-center justify-center w-6 h-6 rounded-full ${isSender ? "bg-white text-[#0071E3]" : "bg-[#0071E3] text-white"}`}
       >
         {isPlaying ? (
           <Pause size={14} className="fill-current" />
@@ -862,7 +862,7 @@ export default function MessagesPage() {
                   className="flex items-center justify-between p-4 bg-white rounded-[10px] cursor-pointer hover:"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#F5F5F7] rounded-full overflow-hidden flex items-center justify-center">
+                    <div className="w-6 h-6 bg-[#F5F5F7] rounded-full overflow-hidden flex items-center justify-center">
                       {u.avatar_url ? (
                         <img
                           src={u.avatar_url}
@@ -882,7 +882,7 @@ export default function MessagesPage() {
                       </span>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
+                  <ChevronRight className="w-6 h-6 text-[#6E6E73]" />
                 </div>
               ))
             ) : (
@@ -915,7 +915,7 @@ export default function MessagesPage() {
           <div className="max-h-48 overflow-y-auto space-y-2 bg-white rounded-[10px] p-2 border border-[#D2D2D7]">
             {loadingGroupUsers ? (
               <div className="py-6 flex justify-center">
-                <Loader2 className="w-5 h-5 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" />
               </div>
             ) : (
               allUsersForGroup.map((u) => (
@@ -936,7 +936,7 @@ export default function MessagesPage() {
                           ),
                         );
                     }}
-                    className="w-4 h-4 rounded text-[#0071E3] focus:ring-[#0071E3]"
+                    className="w-6 h-6 rounded text-[#0071E3] focus:ring-[#0071E3]"
                   />
                   <span className="text-[15px] text-[#1D1D1F]">
                     {u.full_name || u.username}
@@ -981,7 +981,7 @@ export default function MessagesPage() {
                     Định dạng: {doc.format || "TXT"}
                   </span>
                 </div>
-                <Share2 className="w-5 h-5 text-[#0071E3]" />
+                <Share2 className="w-6 h-6 text-[#0071E3]" />
               </div>
             ))
           ) : (
@@ -998,20 +998,20 @@ export default function MessagesPage() {
         >
           <div className="p-6 pb-4 flex items-center justify-between">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
-              Hộp thư
+              Tất cả tin nhắn
             </h2>
             <div className="flex gap-2">
               <button
                 onClick={openGroupModal}
                 className="p-2 bg-white rounded-full text-[#0071E3] hover:opacity-80 transition-opacity"
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-6 h-6" />
               </button>
               <button
                 onClick={() => setShowNewChatModal(true)}
                 className="p-2 bg-[#0071E3] rounded-full text-white hover:bg-[#0055C6] transition-colors"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-6 h-6" />
               </button>
             </div>
           </div>
@@ -1033,7 +1033,7 @@ export default function MessagesPage() {
                     onClick={() => selectConversation(conv)}
                     className={`p-4 rounded-[14px] cursor-pointer flex items-center gap-4 transition-colors ${active ? "bg-white" : "hover:bg-white/50"}`}
                   >
-                    <div className="w-12 h-12 bg-[#D2D2D7] rounded-full overflow-hidden shrink-0">
+                    <div className="w-6 h-6 bg-[#D2D2D7] rounded-full overflow-hidden shrink-0">
                       {conv.other_user?.avatar_url ? (
                         <img
                           src={conv.other_user.avatar_url}
@@ -1079,7 +1079,7 @@ export default function MessagesPage() {
               })
             ) : (
               <div className="py-24 text-center">
-                <p className="text-[15px] text-[#6E6E73]">Hộp thư trống</p>
+                <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
               </div>
             )}
           </div>
@@ -1098,7 +1098,7 @@ export default function MessagesPage() {
                   >
                     <ArrowLeft className="w-6 h-6" />
                   </button>
-                  <div className="w-10 h-10 rounded-full bg-[#D2D2D7] overflow-hidden">
+                  <div className="w-6 h-6 rounded-full bg-[#D2D2D7] overflow-hidden">
                     {selectedConv.other_user?.avatar_url ? (
                       <img
                         src={selectedConv.other_user.avatar_url}
@@ -1106,7 +1106,7 @@ export default function MessagesPage() {
                         alt=""
                       />
                     ) : (
-                      <User className="w-5 h-5 text-white m-auto mt-2.5" />
+                      <User className="w-6 h-6 text-white m-auto mt-2.5" />
                     )}
                   </div>
                   <div>
@@ -1123,14 +1123,14 @@ export default function MessagesPage() {
                   onClick={() => setShowConvMenu(!showConvMenu)}
                   className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full"
                 >
-                  <MoreVertical className="w-5 h-5" />
+                  <MoreVertical className="w-6 h-6" />
                 </button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 bg-transparent hide-scrollbar relative">
                 {loadingMsgs ? (
                   <div className="flex h-full items-center justify-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#0071E3]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-[#0071E3]" />
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1224,7 +1224,7 @@ export default function MessagesPage() {
                       onClick={handleStartRecording}
                       className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-white rounded-full"
                     >
-                      <Mic className="w-5 h-5" />
+                      <Mic className="w-6 h-6" />
                     </button>
                   </div>
                   <button
@@ -1232,14 +1232,14 @@ export default function MessagesPage() {
                     disabled={!newMessage.trim() && !imageFile}
                     className="p-3 bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors shrink-0"
                   >
-                    <Send className="w-5 h-5 ml-0.5" />
+                    <Send className="w-6 h-6 ml-0.5" />
                   </button>
                 </div>
               </div>
             </>
           ) : (
             <div className="text-center">
-              <MessageSquare className="w-12 h-12 text-[#D2D2D7] mx-auto mb-4" />
+              <MessageSquare className="w-6 h-6 text-[#D2D2D7] mx-auto mb-4" />
               <p className="text-[17px] text-[#6E6E73]">
                 Chọn một hội thoại để bắt đầu
               </p>

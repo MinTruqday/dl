@@ -3,16 +3,6 @@ import {
   getAuthHeaders,
 } from "@/features/authentication/services/session.service";
 
-export const getTrendingDocumentsAPI = async (limit: number = 5) => {
-  const res = await fetch(`${API_URL}/kham-pha/thinh-hanh?limit=${limit}`);
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể tải danh sách tài liệu xu hướng",
-    );
-  return data;
-};
-
 export const getTagsCategoriesAPI = async () => {
   const res = await fetch(`${API_URL}/kham-pha/the-loai`);
   const data = await res.json();
@@ -40,12 +30,3 @@ export const getAIRecommendationsAPI = async (limit: number = 10) => {
   return data;
 };
 
-export const getTrendingTagsAPI = async (limit: number = 10) => {
-  const res = await fetch(
-    `${API_URL}/kham-pha/xu-huong-hashtag?limit=${limit}`,
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách hashtag xu hướng");
-  return data;
-};
