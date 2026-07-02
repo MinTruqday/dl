@@ -13,8 +13,8 @@ import {
   deleteFolderAPI,
   lockDocumentAPI,
   toggleStarDocumentAPI,
-} from "@/features/content/services/document_metadata.service";
-import { uploadDocumentAPI } from "@/features/content/services/file_upload.service";
+} from "@/features/content/services/document.service";
+import { uploadDocumentAPI } from "@/features/cloud/services/upload.service";
 import { QRCodeSVG } from "qrcode.react";
 import {
   AlertTriangle,
@@ -41,7 +41,7 @@ import {
   Star,
   Home,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,

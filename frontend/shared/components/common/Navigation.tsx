@@ -1,20 +1,20 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
-import { smartSearchAPI } from "@/features/content/services/content_discovery.service";
+import { smartSearchAPI } from "@/features/content/services/discovery.service";
 import { useRouter } from "next/navigation";
 import {
   Bell,
   Search,
   X,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { useNotifications } from "@/shared/contexts/NotificationContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
+import { useAnnouncements } from "@/shared/contexts/AnnouncementContext";
 
 export default function Navigation() {
   const { user, logoutState } = useAuth() as any;
-  const { notifications, unreadCount, markAsRead } = useNotifications();
-  const [showNotifications, setShowNotifications] = useState(false);
+  const { announcements, unreadCount, markAsRead } = useAnnouncements();
+  const [showAnnouncements, setShowAnnouncements] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,7 @@ export default function Navigation() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
-        setShowNotifications(false);
+        setShowAnnouncements(false);
       }
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
@@ -91,9 +91,9 @@ export default function Navigation() {
             <>
               <div className="relative" ref={notifRef}>
                 <button
-                  onClick={() => setShowNotifications(!showNotifications)}
+                  onClick={() => setShowAnnouncements(!showAnnouncements)}
                   className={`relative flex items-center justify-center transition-opacity hover:opacity-80 ${
-                    showNotifications ? "text-[#0071E3]" : "text-[#1D1D1F]"
+                    showAnnouncements ? "text-[#0071E3]" : "text-[#1D1D1F]"
                   }`}
                   aria-label="Thông báo"
                 >
@@ -103,7 +103,7 @@ export default function Navigation() {
                   )}
                 </button>
 
-                {showNotifications && (
+                {showAnnouncements && (
                   <div className="absolute right-0 mt-4 w-[360px] bg-white border border-[#D2D2D7] z-[200] rounded-[18px] shadow-2xl p-4">
                     <div className="flex items-center justify-between mb-4 px-2">
                       <span className="text-[13px] font-semibold text-[#1D1D1F]">Thông báo</span>
@@ -114,9 +114,9 @@ export default function Navigation() {
                       )}
                     </div>
                     <div className="max-h-[360px] overflow-y-auto">
-                      {notifications.length > 0 ? (
+                      {announcements.length > 0 ? (
                         <div className="space-y-1">
-                          {notifications.slice(0, 8).map((notif: any) => (
+                          {announcements.slice(0, 8).map((notif: any) => (
                             <div
                               key={notif._id}
                               className={`px-3 py-3 rounded-[10px] cursor-pointer transition-colors hover:bg-[#F5F5F7] ${
@@ -125,7 +125,7 @@ export default function Navigation() {
                               onClick={() => {
                                 if (!notif.is_read) markAsRead(notif._id);
                                 if (notif.link) router.push(notif.link);
-                                setShowNotifications(false);
+                                setShowAnnouncements(false);
                               }}
                             >
                               <div className="flex gap-3 items-start">
@@ -154,7 +154,7 @@ export default function Navigation() {
                     <div className="pt-3 mt-2 border-t border-[#D2D2D7]">
                       <Link
                         href="/thong-bao"
-                        onClick={() => setShowNotifications(false)}
+                        onClick={() => setShowAnnouncements(false)}
                         className="block text-center text-[13px] text-[#0071E3] hover:underline"
                       >
                         Xem tất cả

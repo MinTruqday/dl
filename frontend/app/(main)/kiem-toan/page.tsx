@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getModeratorActivityAPI } from "@/features/provision/services/audit_logs.service";
+import { getModeratorActivityAPI } from "@/features/management/services/audit.service";
 import {
   Loader2,
   RefreshCcw,
@@ -11,7 +11,7 @@ import {
   ShieldAlert,
   CheckCircle2,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { useRouter } from "next/navigation";
 

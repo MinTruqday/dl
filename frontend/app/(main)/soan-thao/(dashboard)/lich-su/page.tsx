@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getDocumentVersionsAPI,
   restoreVersionAPI,
-} from "@/features/content/services/version_history.service";
+} from "@/features/content/services/version.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Loader2,
@@ -149,7 +149,7 @@ export default function HistoryPage() {
     setIsComparing(true);
     try {
       const { getVersionDiffAPI } =
-        await import("@/features/editor/services/document_editing.service");
+        await import("@/features/compilation/services/editorjs.service");
       setDiffData(
         await getVersionDiffAPI(
           selectedDocumentId,

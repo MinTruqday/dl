@@ -12,7 +12,7 @@ logger.add(
     filter=trace_id_filter,
     level="INFO",
 )
-from src.api.announcement import router as notification
+from src.api.announcement import router as announcement
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
 app = FastAPI(title="DocLib Notification", version=settings.VERSION)
@@ -35,7 +35,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(notification)
+app.include_router(announcement)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi tạo thông báo thành công")

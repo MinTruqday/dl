@@ -7,14 +7,14 @@ import {
   getMyDocumentsAPI,
   saveDocumentDraftAPI,
   updateDocumentAPI,
-} from "@/features/content/services/document_metadata.service";
-import { compileDocumentAPI } from "@/features/editor/services/document_compilation.service";
-import { publishDocumentAPI } from "@/features/content/services/publication_process.service";
+} from "@/features/content/services/document.service";
+import { compileDocumentAPI } from "@/features/compilation/services/composition.service";
+import { publishDocumentAPI } from "@/features/content/services/publication.service";
 import {
   exportDocumentPdfAPI,
   exportDocumentDocxAPI,
-} from "@/features/provision/services/data_export.service";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+} from "@/features/management/services/export.service";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   FileText,
@@ -25,11 +25,11 @@ import {
   StickyNote,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-const Editor = dynamic(() => import("@/features/editor/components/Editor"), {
+const Editor = dynamic(() => import("@/features/compilation/components/Editor"), {
   ssr: false,
 });
 import edjsHTML from "editorjs-html";
-import { compileLatexPreviewAPI } from "@/features/editor/services/latex_compilation.service";
+import { compileLatexPreviewAPI } from "@/features/compilation/services/latex.service";
 
 const customParsers = {
   alert: (block: any) =>

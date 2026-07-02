@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createDocumentAPI } from "@/features/content/services/document_metadata.service";
+import { createDocumentAPI } from "@/features/content/services/document.service";
 import {
   Loader2,
   BookOpen,
@@ -14,7 +14,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useToast } from "@/shared/contexts/ToastContext";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 
 export default function CreateDocumentPage() {
   const router = useRouter();

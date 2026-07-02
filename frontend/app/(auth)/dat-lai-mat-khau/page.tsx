@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState, useEffect, Suspense } from "react";
-import { resetPasswordAPI } from "@/features/auth/services/user_authentication.service";
+import { resetPasswordAPI } from "@/features/authentication/services/session.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2, Eye, EyeOff, Lock } from "lucide-react";

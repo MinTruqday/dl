@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState } from "react";
-import { forgotPasswordAPI } from "@/features/auth/services/user_authentication.service";
+import { forgotPasswordAPI } from "@/features/authentication/services/session.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2, Mail } from "lucide-react";
 

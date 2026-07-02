@@ -8,13 +8,13 @@ import {
   updateDocumentAPI,
   getFoldersAPI,
   transferDocumentAPI,
-} from "@/features/content/services/document_metadata.service";
+} from "@/features/content/services/document.service";
 import {
   getCollaboratorsAPI,
   inviteCollaboratorAPI,
   removeCollaboratorAPI,
-} from "@/features/content/services/collaboration_sync.service";
-import { ingestDocumentAPI } from "@/features/ai/services/rag_pipeline.service";
+} from "@/features/content/services/collaboration.service";
+import { ingestDocumentAPI } from "@/features/agentic_ai/services/ingestion.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Loader2,

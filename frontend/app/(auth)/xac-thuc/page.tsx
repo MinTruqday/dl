@@ -4,7 +4,7 @@ import { ChangeEvent, FormEvent, useState, useEffect, Suspense } from "react";
 import {
   verifyCodeAPI,
   forgotPasswordAPI,
-} from "@/features/auth/services/user_authentication.service";
+} from "@/features/authentication/services/session.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { Loader2 } from "lucide-react";

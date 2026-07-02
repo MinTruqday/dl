@@ -14,14 +14,14 @@ import {
   ShieldCheck,
   Flag,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
-import { getDocumentBySlugAPI } from "@/features/content/services/document_metadata.service";
-import { toggleBookmarkAPI } from "@/features/content/services/document_bookmark.service";
-import { purchaseDocumentAPI } from "@/features/finance/services/content_monetization.service";
-import Comment from "@/features/communication/components/Comment";
-import Report from "@/features/provision/components/Report";
-import { getToken } from "@/features/auth/services/user_authentication.service";
+import { getDocumentBySlugAPI } from "@/features/content/services/document.service";
+import { toggleBookmarkAPI } from "@/features/content/services/bookmark.service";
+import { purchaseDocumentAPI } from "@/features/payment/services/monetization.service";
+import Comment from "@/features/content/components/Comment";
+import Report from "@/features/management/components/Report";
+import { getToken } from "@/features/authentication/services/session.service";
 import PageLoader from "@/shared/components/common/PageLoader";
 
 const API_URL =

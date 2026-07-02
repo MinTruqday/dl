@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import Passkey from "@/features/auth/components/Passkey";
+import Passkey from "@/features/authentication/components/Passkey";
 
 function GoogleCallbackContent() {
   const router = useRouter();

@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { API_URL } from "@/features/auth/services/user_authentication.service";
-import { updateProfileAPI } from "@/features/provision/services/system_setting.service";
-import { uploadAssetAPI } from "@/features/content/services/file_upload.service";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
+import { API_URL } from "@/features/authentication/services/session.service";
+import { updateProfileAPI } from "@/features/management/services/setting.service";
+import { uploadAssetAPI } from "@/features/cloud/services/upload.service";
 import {
   User,
   Camera,

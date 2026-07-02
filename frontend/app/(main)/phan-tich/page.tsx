@@ -12,7 +12,7 @@ import {
   Award,
   BookOpen,
 } from "lucide-react";
-import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 
 export default function AuthorAnalyticsPage() {

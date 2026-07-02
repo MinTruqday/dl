@@ -12,10 +12,10 @@ export const metadata: Metadata = {
   description: "Hệ thống quản lý tài liệu thông minh",
 };
 
-import { AuthProvider } from "@/features/auth/contexts/AuthContext";
+import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
 import { Theme } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/shared/contexts/ToastContext";
-import { NotificationProvider } from "@/shared/contexts/NotificationContext";
+import { AnnouncementProvider } from "@/shared/contexts/AnnouncementContext";
 
 export default function RootLayout({
   children,
@@ -33,7 +33,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ToastProvider>
-              <NotificationProvider>{children}</NotificationProvider>
+              <AnnouncementProvider>{children}</AnnouncementProvider>
             </ToastProvider>
           </Theme>
         </AuthProvider>

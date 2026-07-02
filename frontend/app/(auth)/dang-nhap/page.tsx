@@ -8,10 +8,10 @@ import {
   passkeyLoginBeginAPI,
   passkeyLoginFinishAPI,
   getGoogleLoginUrlAPI,
-} from "@/features/auth/services/user_authentication.service";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+} from "@/features/authentication/services/session.service";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
-import Passkey from "@/features/auth/components/Passkey";
+import Passkey from "@/features/authentication/components/Passkey";
 
 function b64urlToBuffer(b64url: string): ArrayBuffer {
   const pad = "=".repeat((4 - (b64url.length % 4)) % 4);

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { register } from "@/features/auth/services/user_authentication.service";
+import { register } from "@/features/authentication/services/session.service";
 import { Loader2, Eye, EyeOff, User, AtSign, Mail, Lock } from "lucide-react";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {

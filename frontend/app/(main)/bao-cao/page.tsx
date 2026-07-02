@@ -11,7 +11,7 @@ import {
   FileWarning,
   ShieldAlert,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { useRouter } from "next/navigation";
 import {

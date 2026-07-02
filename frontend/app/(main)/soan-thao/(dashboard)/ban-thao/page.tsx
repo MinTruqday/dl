@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   Loader2,
   FileText,

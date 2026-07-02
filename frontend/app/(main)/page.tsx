@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { getDocumentsAPI } from "@/features/content/services/document_metadata.service";
+import { getDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getTagsCategoriesAPI,
   getTrendingDocumentsAPI,
   getAIRecommendationsAPI,
   smartSearchAPI,
-} from "@/features/content/services/content_discovery.service";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+} from "@/features/content/services/discovery.service";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import Link from "next/link";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { LayoutGrid, List as ListIcon, List, ChevronRight } from "lucide-react";

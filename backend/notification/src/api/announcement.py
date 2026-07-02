@@ -8,19 +8,19 @@ from src.services.announcement import AnnouncementService
 from src.core.dependency import get_current_user, get_db
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
-from src.repositories.notification import NotificationRepository
+from src.repositories.announcement import AnnouncementRepository
 
 router = APIRouter(route_class=LoggingRoute, prefix="/thong-bao")
 
 @router.get("", response_model=APIResponse[Any])
-async def get_notifications(
+async def get_announcements(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await AnnouncementService.get_notifications(
+        data=await AnnouncementService.get_announcements(
             str(current_user.id), skip, limit, db
         ),
         message="Lấy thông báo thành công",
@@ -47,22 +47,22 @@ async def mark_all_as_read(
     )
 
 @router.delete("/{notif_id}", response_model=APIResponse[Any])
-async def delete_notification(
+async def delete_announcement(
     notif_id: str,
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await AnnouncementService.delete_notification(
+        data=await AnnouncementService.delete_announcement(
             notif_id, str(current_user.id), db
         ),
         message="Xóa thông báo vĩnh viễn thành công",
     )
 
 @router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False)
-async def create_notification(data: AnnouncementCreate, db=Depends(get_db)):
+async def create_announcement(data: AnnouncementCreate, db=Depends(get_db)):
     return APIResponse(
-        data=await AnnouncementService.create_notification(data, db),
+        data=await AnnouncementService.create_announcement(data, db),
         message="Gửi thông báo thành công",
         status=201,
     )
@@ -73,10 +73,10 @@ async def update_settings(
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    from src.repositories.notification import NotificationRepository
-    await NotificationRepository.update_user_announcement_status(
+    from src.repositories.announcement import AnnouncementRepository
+    await AnnouncementRepository.update_user_announcement_status(
         {"_id": current_user.id}, 
-        {"$set": {"notification_settings": settings}}
+        {"$set": {"announcement_settings": settings}}
     )
     return APIResponse(
         data=settings,

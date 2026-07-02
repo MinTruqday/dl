@@ -5,8 +5,8 @@ import { useToast } from "@/shared/contexts/ToastContext";
 import {
   getDocumentAnalyticsAPI,
   getAcademicMetricsAPI,
-} from "@/features/content/services/document_metadata.service";
-import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawal.service";
+} from "@/features/content/services/document.service";
+import { requestWithdrawalAPI } from "@/features/payment/services/withdrawal.service";
 import {
   Eye,
   Database,
@@ -33,7 +33,7 @@ import {
 import {
   getAuthorRevenueAPI,
   setDocumentPricingAPI,
-} from "@/features/finance/services/content_monetization.service";
+} from "@/features/payment/services/monetization.service";
 import PageLoader from "@/shared/components/common/PageLoader";
 
 export default function StatsPage() {

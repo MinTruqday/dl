@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getCollaborationInvitesAPI,
   inviteCollaboratorAPI,
@@ -32,7 +32,7 @@ import {
   updateCollabTaskAPI,
   addTaskCommentAPI,
   getTaskCommentsAPI,
-} from "@/features/content/services/collaboration_sync.service";
+} from "@/features/content/services/collaboration.service";
 import {
   Users,
   Mail,

@@ -1,23 +1,23 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   getBookmarkFoldersAPI,
   createBookmarkFolderAPI,
-} from "@/features/content/services/document_bookmark.service";
+} from "@/features/content/services/bookmark.service";
 import {
   createReadingListAPI,
   getMyReadingListsAPI as getReadingListsAPI,
-} from "@/features/content/services/personal_library.service";
+} from "@/features/content/services/library.service";
 import {
   getPinnedDocumentsAPI,
   getReadingHistoryAPI,
   clearReadingHistoryAPI,
   deleteReadingHistoryItemAPI,
-} from "@/features/content/services/reading_progress.service";
-import { API_URL } from "@/features/auth/services/user_authentication.service";
-import { multiDocSynthesisAPI } from "@/features/ai/services/agentic_ai.service";
+} from "@/features/content/services/reading.service";
+import { API_URL } from "@/features/authentication/services/session.service";
+import { multiDocSynthesisAPI } from "@/features/agentic_ai/services/interaction.service";
 import {
   LayoutGrid,
   List as ListIcon,

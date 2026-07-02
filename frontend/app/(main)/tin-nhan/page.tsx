@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   getConversationsAPI,
   getMessagesAPI,
@@ -25,14 +25,14 @@ import {
   toggleMuteAPI,
   getConversationSettingsAPI,
   deleteConversationAPI,
-} from "@/features/communication/services/chat_conversation.service";
-import { searchUsersAPI } from "@/features/provision/services/user_profile.service";
-import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
+} from "@/features/messaging/services/thread.service";
+import { searchUsersAPI } from "@/features/management/services/profile.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   API_URL,
   WS_URL,
   getToken,
-} from "@/features/auth/services/user_authentication.service";
+} from "@/features/authentication/services/session.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,

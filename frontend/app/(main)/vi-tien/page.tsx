@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -16,9 +16,9 @@ import {
   getWalletBalanceAPI,
   getWalletHistoryAPI,
   redeemVoucherAPI,
-} from "@/features/finance/services/account_ledger.service";
-import { createDepositLinkAPI } from "@/features/finance/services/fiat_deposit.service";
-import { requestWithdrawalAPI } from "@/features/finance/services/fiat_withdrawal.service";
+} from "@/features/payment/services/wallet.service";
+import { createDepositLinkAPI } from "@/features/payment/services/deposit.service";
+import { requestWithdrawalAPI } from "@/features/payment/services/withdrawal.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,

@@ -6,7 +6,7 @@ import {
   triggerCollectionAPI,
   getCollectorLogsAPI,
   stopCollectionAPI,
-} from "@/features/provision/services/data_collection.service";
+} from "@/features/management/services/collection.service";
 import {
   Loader2,
   RefreshCcw,
@@ -17,7 +17,7 @@ import {
   Settings2,
   ShieldAlert,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import { useRouter } from "next/navigation";
 import {

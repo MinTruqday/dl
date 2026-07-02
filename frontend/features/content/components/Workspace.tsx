@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/shared/components/common/Navigation";
 import Dock from "@/shared/components/common/Dock";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 

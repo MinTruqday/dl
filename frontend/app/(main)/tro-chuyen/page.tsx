@@ -1,12 +1,12 @@
 "use client";
-import { streamAiChatAPI } from "@/features/ai/services/agentic_ai.service";
+import { streamAiChatAPI } from "@/features/agentic_ai/services/interaction.service";
 import {
   getToken,
   API_URL,
-} from "@/features/auth/services/user_authentication.service";
+} from "@/features/authentication/services/session.service";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -37,7 +37,7 @@ import { usePayOS } from "@payos/payos-checkout";
 import {
   getMyQuotaAPI,
   QuotaUsage,
-} from "@/features/provision/services/usage_quota.service";
+} from "@/features/management/services/quota.service";
 
 function PayOSEmbedded({ checkoutUrl }: { checkoutUrl: string }) {
   const elementId = useRef("payos-" + Math.random().toString(36).substring(7));

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
-import { getWalletBalanceAPI } from "@/features/finance/services/account_ledger.service";
+import { getWalletBalanceAPI } from "@/features/payment/services/wallet.service";
 import { Check, Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 

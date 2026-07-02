@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
@@ -14,17 +14,17 @@ import {
   getPrivacySettingsAPI,
   updatePrivacySettingsAPI,
   updateGeneralSettingsAPI,
-} from "@/features/provision/services/system_setting.service";
+} from "@/features/management/services/setting.service";
 import {
-  getNotificationSettingsAPI,
-  updateNotificationSettingsAPI,
-} from "@/features/communication/services/push_notification.service";
+  getAnnouncementSettingsAPI,
+  updateAnnouncementSettingsAPI,
+} from "@/features/notification/services/announcement.service";
 import {
   getMaintenanceModeAPI,
   getAdminConfigAPI,
   toggleMaintenanceModeAPI,
   updateAdminConfigAPI,
-} from "@/features/provision/services/system_operation.service";
+} from "@/features/management/services/health.service";
 import {
   Shield,
   Bell,
@@ -46,7 +46,7 @@ import PageLoader from "@/shared/components/common/PageLoader";
 
 type TabKey =
   | "privacy"
-  | "notifications"
+  | "announcements"
   | "account"
   | "apply_author"
   | "author"
@@ -87,7 +87,7 @@ export default function SettingsPage() {
       setHideLibrary(privacyRes.data?.hide_library || false);
 
       try {
-        const notifRes = await getNotificationSettingsAPI();
+        const notifRes = await getAnnouncementSettingsAPI();
         setNotifSettings(notifRes.data || {});
       } catch (e) {}
 
@@ -223,7 +223,7 @@ export default function SettingsPage() {
       roles: ["reader", "potential_author", "author", "moderator", "admin"],
     },
     {
-      id: "notifications",
+      id: "announcements",
       label: "Thông báo",
       icon: Bell,
       roles: ["reader", "potential_author", "author", "moderator", "admin"],
@@ -598,7 +598,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeSection === "notifications" && (
+            {activeSection === "announcements" && (
               <div className="space-y-8">
                 <div>
                   <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">

@@ -7,11 +7,11 @@ import {
   toggleMaintenanceModeAPI,
   triggerBackupAPI,
   getMinioStatsAPI,
-} from "@/features/provision/services/system_operation.service";
+} from "@/features/management/services/health.service";
 import {
   getGlobalQuotaConfigAPI,
   updateRoleQuotaAPI,
-} from "@/features/provision/services/usage_quota.service";
+} from "@/features/management/services/quota.service";
 import {
   Loader2,
   Save,
@@ -26,7 +26,7 @@ import {
   Zap,
   Shield,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import PageLoader from "@/shared/components/common/PageLoader";
 

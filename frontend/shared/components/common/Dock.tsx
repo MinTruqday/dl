@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   Search,
   Library,
@@ -46,7 +46,7 @@ export const MENU_ITEMS = [
   { id: "analytics", label: "Phân tích", href: "/phan-tich", icon: BarChart, roles: ["admin", "author"] },
   { id: "finetune", label: "Tinh chỉnh", href: "/tinh-chinh", icon: Brain, roles: ["admin"] },
   { id: "help", label: "Trợ giúp", href: "/tro-giup", icon: HelpCircle, requireAuth: true },
-  { id: "notification", label: "Thông báo", href: "/thong-bao", icon: Bell, requireAuth: true },
+  { id: "announcement", label: "Thông báo", href: "/thong-bao", icon: Bell, requireAuth: true },
   { id: "upgrade", label: "Nâng cấp", href: "/nang-cap", icon: ArrowUpCircle, requireAuth: true },
 ];
 

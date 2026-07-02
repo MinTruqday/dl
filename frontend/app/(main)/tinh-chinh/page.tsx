@@ -13,7 +13,7 @@ import {
   BrainCircuit,
   Activity,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   listDatasetsAPI,
@@ -22,7 +22,7 @@ import {
   createJobAPI,
   startTrainingAPI,
   importFromFeedbackAPI,
-} from "@/features/ai/services/model_finetuning.service";
+} from "@/features/agentic_ai/services/finetuning.service";
 import {
   Modal,
   ModalHeader,

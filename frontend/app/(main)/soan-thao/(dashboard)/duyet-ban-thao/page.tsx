@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   getApprovalQueueAPI,
   moderateDocumentAPI,
-} from "@/features/content/services/document_drafts.service";
+} from "@/features/content/services/draft.service";
 import {
   Loader2,
   ShieldCheck,

@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  getNotificationsAPI,
-  markNotificationReadAPI,
-  markAllNotificationsReadAPI,
-} from "@/features/communication/services/push_notification.service";
+  getAnnouncementsAPI,
+  markAnnouncementReadAPI,
+  markAllAnnouncementsReadAPI,
+} from "@/features/notification/services/announcement.service";
 import {
   Bell,
   Check,
@@ -23,9 +23,9 @@ import {
 import { useToast } from "@/shared/contexts/ToastContext";
 import Link from "next/link";
 
-export default function NotificationsPage() {
+export default function AnnouncementsPage() {
   const { showToast } = useToast();
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
@@ -33,8 +33,8 @@ export default function NotificationsPage() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await getNotificationsAPI();
-      setNotifications(res.data || res || []);
+      const res = await getAnnouncementsAPI();
+      setAnnouncements(res.data || res || []);
     } catch (err: any) {
       showToast("Lỗi tải thông báo", "error");
     } finally {
@@ -48,8 +48,8 @@ export default function NotificationsPage() {
 
   const handleMarkRead = async (id: string) => {
     try {
-      await markNotificationReadAPI(id);
-      setNotifications((p) =>
+      await markAnnouncementReadAPI(id);
+      setAnnouncements((p) =>
         p.map((n) =>
           n._id === id || n.id === id ? { ...n, is_read: true } : n,
         ),
@@ -62,8 +62,8 @@ export default function NotificationsPage() {
   const handleMarkAllRead = async () => {
     setIsProcessing(true);
     try {
-      await markAllNotificationsReadAPI();
-      setNotifications((p) => p.map((n) => ({ ...n, is_read: true })));
+      await markAllAnnouncementsReadAPI();
+      setAnnouncements((p) => p.map((n) => ({ ...n, is_read: true })));
       showToast("Đã đánh dấu tất cả đã đọc", "success");
     } catch (err: any) {
       showToast("Lỗi xử lý", "error");
@@ -72,10 +72,10 @@ export default function NotificationsPage() {
     }
   };
 
-  const filteredNotifications =
+  const filteredAnnouncements =
     activeTab === "unread"
-      ? notifications.filter((n) => !n.is_read)
-      : notifications;
+      ? announcements.filter((n) => !n.is_read)
+      : announcements;
 
   const getIcon = (type: string, is_read: boolean) => {
     const cls = `w-5 h-5 ${is_read ? "text-[#6E6E73]" : "text-[#0071E3]"}`;
@@ -102,7 +102,7 @@ export default function NotificationsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-end gap-4">
         <button
           onClick={handleMarkAllRead}
-          disabled={isProcessing || !notifications.some((n) => !n.is_read)}
+          disabled={isProcessing || !announcements.some((n) => !n.is_read)}
           className="pill-button bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] flex items-center gap-2 disabled:opacity-50"
         >
           {isProcessing ? (
@@ -128,7 +128,7 @@ export default function NotificationsPage() {
               className={`pb-3 text-[14px] font-medium border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === "unread" ? "border-[#1D1D1F] text-[#1D1D1F]" : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}
             >
               Chưa đọc{" "}
-              {notifications.filter((n) => !n.is_read).length > 0 && (
+              {announcements.filter((n) => !n.is_read).length > 0 && (
                 <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3] inline-block"></span>
               )}
             </button>
@@ -139,9 +139,9 @@ export default function NotificationsPage() {
               <div className="h-full flex flex-col items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
               </div>
-            ) : filteredNotifications.length > 0 ? (
+            ) : filteredAnnouncements.length > 0 ? (
               <div className="flex flex-col">
-                {filteredNotifications.map((n) => (
+                {filteredAnnouncements.map((n) => (
                   <div
                     key={n._id || n.id}
                     className={`p-6 flex gap-4 transition-colors hover:bg-[#F5F5F7] border-b border-[#F5F5F7] group relative ${n.is_read ? "" : "bg-[#0071E3]/5"}`}

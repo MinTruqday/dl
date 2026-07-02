@@ -6,20 +6,20 @@ import { useParams, useRouter } from "next/navigation";
 import {
   getToken,
   API_URL,
-} from "@/features/auth/services/user_authentication.service";
+} from "@/features/authentication/services/session.service";
 import {
   queryRagAPI,
   translateTextAPI,
-} from "@/features/ai/services/agentic_ai.service";
+} from "@/features/agentic_ai/services/interaction.service";
 import {
   createHighlightAPI,
   getHighlightsAPI,
   deleteHighlightAPI,
-} from "@/features/content/services/text_highlight.service";
+} from "@/features/content/services/highlight.service";
 import {
   toggleBookmarkAPI,
   getBookmarksAPI,
-} from "@/features/content/services/document_bookmark.service";
+} from "@/features/content/services/bookmark.service";
 import {
   Lock,
   AlertTriangle,

@@ -6,7 +6,7 @@ import {
   updateUserRoleAPI,
   updateUserStatusAPI,
   deleteUserAPI,
-} from "@/features/provision/services/user_profile.service";
+} from "@/features/management/services/profile.service";
 import {
   Loader2,
   Search,
@@ -21,7 +21,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,

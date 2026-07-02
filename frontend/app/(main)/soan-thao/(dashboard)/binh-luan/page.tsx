@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyDocumentsAPI } from "@/features/content/services/document_metadata.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getCommentsByItemAPI,
   createCommentAPI,
   deleteCommentAPI,
-} from "@/features/communication/services/inline_comment.service";
+} from "@/features/content/services/collaboration.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Loader2,

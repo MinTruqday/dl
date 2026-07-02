@@ -10,25 +10,25 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.repositories.notification import NotificationRepository
+from src.repositories.announcement import AnnouncementRepository
 
 class AnnouncementService:
 
     @staticmethod
     @log_logic_execution
-    async def get_notifications(user_id: str, skip: int, limit: int, db):
+    async def get_announcements(user_id: str, skip: int, limit: int, db):
         cursor = (
-            NotificationRepository
+            AnnouncementRepository
             .find({"target_user_id": user_id})
             .sort("created_at", -1)
             .skip(skip)
             .limit(limit)
         )
         docs = await cursor 
-        total = await NotificationRepository.count_documents(
+        total = await AnnouncementRepository.count_documents(
             {"target_user_id": user_id}
         )
-        unread = await NotificationRepository.count_documents(
+        unread = await AnnouncementRepository.count_documents(
             {"target_user_id": user_id, "is_read": False}
         )
         for doc in docs:
@@ -38,7 +38,7 @@ class AnnouncementService:
     @staticmethod
     @log_logic_execution
     async def mark_as_read(notif_id: str, user_id: str, db):
-        result = await NotificationRepository.update_one(
+        result = await AnnouncementRepository.update_one(
             {"_id": notif_id, "target_user_id": user_id}, {"$set": {"is_read": True}}
         )
         if result.matched_count == 0:
@@ -51,15 +51,15 @@ class AnnouncementService:
     @staticmethod
     @log_logic_execution
     async def mark_all_as_read(user_id: str, db):
-        await NotificationRepository.update_many(
+        await AnnouncementRepository.update_many(
             {"target_user_id": user_id, "is_read": False}, {"$set": {"is_read": True}}
         )
         return {"success": True}
 
     @staticmethod
     @log_logic_execution
-    async def delete_notification(notif_id: str, user_id: str, db):
-        result = await NotificationRepository.delete_one(
+    async def delete_announcement(notif_id: str, user_id: str, db):
+        result = await AnnouncementRepository.delete_one(
             {"_id": notif_id, "target_user_id": user_id}
         )
         if result.deleted_count == 0:
@@ -71,7 +71,7 @@ class AnnouncementService:
 
     @staticmethod
     @log_logic_execution
-    async def create_notification(data: AnnouncementCreate, db):
+    async def create_announcement(data: AnnouncementCreate, db):
         notif_id = str(uuid7())
         doc = {
             "_id": notif_id,
@@ -82,11 +82,11 @@ class AnnouncementService:
             "type": data.type,
             "created_at": datetime.now(timezone.utc),
         }
-        await NotificationRepository.insert_one(doc)
+        await AnnouncementRepository.insert_one(doc)
         try:
             import json
             await redis.publish(
-                f"user_notifications:{data.target_user_id}",
+                f"user_announcements:{data.target_user_id}",
                 json.dumps({"title": data.title, "body": data.body}),
             )
         except Exception as e:
