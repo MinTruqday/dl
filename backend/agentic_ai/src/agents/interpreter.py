@@ -74,34 +74,13 @@ class InterpreterAgent:
             image_str = f"python:{py_version}-slim"
             
             try:
-                docker_cmd = [
-                    "docker",
-                    "run",
-                    "--rm",
-                    "-v",
-                    f"{script_path}:/app/script.py:ro",
-                    "--network",
-                    "none",
-                    "--memory",
-                    ram_str,
-                    "--memory-swap",
-                    ram_str,
-                    "--cpus",
-                    cpu_str,
-                    "--pids-limit",
-                    "64",
-                    "--read-only",
-                    "--tmpfs",
-                    "/tmp:size=50m,noexec,nosuid",
-                    "--cap-drop",
-                    "ALL",
-                    image_str,
-                    "python",
-                    "/app/script.py",
+                cmd = [
+                    sys.executable,
+                    script_path,
                 ]
 
                 proc = await asyncio.create_subprocess_exec(
-                    *docker_cmd,
+                    *cmd,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )

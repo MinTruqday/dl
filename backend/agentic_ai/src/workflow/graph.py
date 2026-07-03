@@ -44,9 +44,9 @@ try:
     langchain.llm_cache = RedisSemanticCache(
         redis_url=redis_url, embedding=embedder
     )
-    logger.info("Khởi tạo bộ nhớ đệm ngữ nghĩa thành công")
+    logger.info("Khởi tạo Redis thành công")
 except Exception as e:
-    logger.exception("Lỗi khởi tạo bộ nhớ đệm")
+    logger.exception("Lỗi khởi tạo Redis")
 
 from huggingface_hub import AsyncInferenceClient
 from src.utils.huggingface import HFInferenceChat

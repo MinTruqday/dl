@@ -14,6 +14,8 @@ from src.core.infrastructure.database import database
 from src.repositories.system import SystemRepository
 from src.repositories.moderation import ModerationRepository
 
+from src.core.dependency import CurrentUser
+
 class TelemetryService:
 
     @staticmethod
@@ -21,7 +23,7 @@ class TelemetryService:
     async def track_event(
         event_name: str,
         properties: Dict[str, Any],
-        current_user: Optional[UserInDB] = None,
+        current_user: Optional[CurrentUser] = None,
     ):
         telemetry_event = {
             "_id": str(uuid7()),
@@ -48,8 +50,8 @@ class TelemetryService:
 
     @staticmethod
     @log_logic_execution
-    async def log_performance_metric(
-        metric_name: str, value: float, current_user: Optional[UserInDB] = None
+    async def record_metric(
+        metric_name: str, value: float, current_user: Optional[CurrentUser] = None
     ):
         return await TelemetryService.track_event(
             "performance_metric", {"metric": metric_name, "value": value}, current_user

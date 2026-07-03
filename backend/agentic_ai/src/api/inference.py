@@ -87,7 +87,12 @@ async def _chat_direct(
             max_tokens=max_tokens,
             temperature=temperature,
         )
-        return response.choices[0].message.content
+        msg = response.choices[0].message
+        content = msg.content or ""
+        reasoning = getattr(msg, "reasoning", None)
+        if reasoning:
+            return f"<think>\n{reasoning}\n</think>\n{content}"
+        return content
     except Exception as e:
         logger.exception("Quá trình AI tạo văn bản bị gián đoạn")
         raise Exception("Đã xảy ra lỗi hệ thống, vui lòng thử lại sau")

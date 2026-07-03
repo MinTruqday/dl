@@ -120,6 +120,8 @@ class SessionService:
             raise HTTPException(status_code=403, detail="Tài khoản đang bị khóa hoặc không hoạt động")
 
         session_id = str(uuid7())
+        from src.core.infrastructure.redis import redis
+        await redis.sadd(f"user_sessions:{user_id_str}", session_id)
         await IdentityRepository.register_session(user_id_str, session_id, client_ip)
         access_token = create_access_token(
             data={
@@ -144,7 +146,7 @@ class SessionService:
             "access_token": access_token,
             "token_type": "bearer",
             "user": {
-                "email": user_doc["email"],
+                "email": auth_cred["email"],
                 "has_passkey": len(auth_cred.get("passkeys", [])) > 0,
             },
         }
