@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: doclib-payment
+  name: doclib-finance
   labels:
-    app: doclib-payment
+    app: doclib-finance
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: doclib-payment
+      app: doclib-finance
   template:
     metadata:
       labels:
-        app: doclib-payment
+        app: doclib-finance
     spec:
       containers:
-      - name: payment
-        image: doclib_payment:latest
+      - name: finance
+        image: doclib_finance:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8006
@@ -27,10 +27,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: doclib-payment
+  name: doclib-finance
 spec:
   selector:
-    app: doclib-payment
+    app: doclib-finance
   ports:
     - protocol: TCP
       port: 8006

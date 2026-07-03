@@ -14,35 +14,35 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: payment
+            name: finance
             port:
               number: 80
       - path: /ma-qua-tang(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: payment
+            name: finance
             port:
               number: 80
       - path: /nap-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: payment
+            name: finance
             port:
               number: 80
       - path: /rut-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: payment
+            name: finance
             port:
               number: 80
       - path: /vi-tien(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
-            name: payment
+            name: finance
             port:
               number: 80
       - path: /lich-su(/|$)(.*)

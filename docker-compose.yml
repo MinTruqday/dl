@@ -124,7 +124,7 @@ services:
       - PAYOS_RETURN_URL=${PAYOS_RETURN_URL}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - CONTENT_URL=${CONTENT_URL}
-      - PAYMENT_URL=${PAYMENT_URL}
+      - FINANCE_URL=${FINANCE_URL}
       - MANAGEMENT_URL=${MANAGEMENT_URL}
       - AGENTIC_AI_URL=${AGENTIC_AI_URL}
       - NOTIFICATION_URL=${NOTIFICATION_URL}
@@ -142,11 +142,11 @@ services:
     networks:
       - doclib_network
 
-  payment:
+  finance:
     build:
       context: ./backend
-      dockerfile: ./payment/Dockerfile
-    container_name: doclib_payment
+      dockerfile: ./finance/Dockerfile
+    container_name: doclib_finance
     restart: always
     ports:
       - 8006:8006
@@ -158,12 +158,12 @@ services:
     env_file:
       - .env
     environment:
-      - SERVICE_DB_NAME=doclib_payment
+      - SERVICE_DB_NAME=doclib_finance
     depends_on:
       - mongodb
       - redis
     volumes:
-      - ./backend/payment/src:/app/src
+      - ./backend/finance/src:/app/src
       - ./backend/logs/finance:/app/logs
     networks:
       - doclib_network

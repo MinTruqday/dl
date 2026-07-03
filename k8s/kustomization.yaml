@@ -17,7 +17,7 @@ resources:
   - apps/compilation.yaml
   - apps/messaging.yaml
   - apps/content.yaml
-  - apps/payment.yaml
+  - apps/finance.yaml
   - apps/management.yaml
   - apps/notification.yaml
   - apps/websocket.yaml

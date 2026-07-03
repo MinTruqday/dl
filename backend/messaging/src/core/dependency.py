@@ -42,7 +42,8 @@ class CurrentUser(BaseModel):
         populate_by_name = True
         extra = "ignore"
 
-from src.core.security.access import ALGORITHM, SECRET_KEY
+ALGORITHM = "HS256"
+SECRET_KEY = settings.SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 

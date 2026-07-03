@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payment-deployment
+  name: finance-deployment
   namespace: doclib-production
   labels:
-    app: payment
+    app: finance
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: payment
+      app: finance
   template:
     metadata:
       labels:
-        app: payment
+        app: finance
     spec:
       containers:
-        - name: payment
-          image: doclib-registry/payment:latest
+        - name: finance
+          image: doclib-registry/finance:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: payment
+  name: finance
   namespace: doclib-production
 spec:
   selector:
-    app: payment
+    app: finance
   ports:
     - protocol: TCP
       port: 80

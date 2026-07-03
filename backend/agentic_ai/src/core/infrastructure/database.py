@@ -45,7 +45,6 @@ async def init_db():
 async def setup_indexes():
     try:
         db = database.mongodb[settings.SERVICE_DB_NAME]
-
         logger.info("Hoàn tất tạo chỉ mục Database")
     except Exception as e:
         logger.exception("Lỗi khởi tạo chỉ mục cho Database")

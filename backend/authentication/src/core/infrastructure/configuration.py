@@ -13,8 +13,6 @@ class Settings(BaseModel):
     REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     MONGODB_URI: str = os.getenv("MONGODB_URI")
-    MONGODB_DB_NAME: str = os.getenv("MONGODB_DB_NAME")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME", os.getenv("MONGODB_DB_NAME"))
     REDIS_URI: str = os.getenv("REDIS_URI")
     GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -31,5 +29,6 @@ class Settings(BaseModel):
     SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
     SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")
     SENDER_NAME: Optional[str] = os.getenv("SENDER_NAME")
+    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
 
 settings = Settings()
