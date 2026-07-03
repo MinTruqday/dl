@@ -96,3 +96,37 @@ class HFInferenceChat(BaseChatModel):
     @property
     def _llm_type(self) -> str:
         return "hf_inference_chat"
+
+    def with_structured_output(self, schema, **kwargs):
+        from langchain_core.runnables import RunnableLambda
+        import json
+        
+        def extract_and_parse(text: str):
+            try:
+                start = text.find('{')
+                end = text.rfind('}')
+                if start != -1 and end != -1:
+                    json_str = text[start:end+1]
+                    data = json.loads(json_str)
+                    return schema(**data)
+                return schema()
+            except Exception:
+                return schema()
+                
+        async def _ainvoke(messages, **kwargs_inner):
+            schema_json = schema.schema_json()
+            sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")
+            msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
+            res = await self.ainvoke(msgs, **kwargs_inner)
+            return extract_and_parse(res.content)
+            
+        def _invoke(messages, **kwargs_inner):
+            schema_json = schema.schema_json()
+            sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")
+            msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
+            res = self.invoke(msgs, **kwargs_inner)
+            return extract_and_parse(res.content)
+            
+        runnable = RunnableLambda(_invoke)
+        runnable.ainvoke = _ainvoke
+        return runnable

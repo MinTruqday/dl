@@ -16,7 +16,7 @@ async def init_db():
     mongo_uri = settings.MONGODB_URI
 
     if not mongo_uri :
-        logger.error("Lỗi khởi tạo do thiếu kết nối Database")
+        logger.error("Lỗi khởi tạo do thiếu kết nối MongoDB")
         import sys
 
         sys.exit(1)
@@ -37,9 +37,9 @@ async def setup_indexes():
         await db["storage_items"].create_index([("target_id", 1)], background=True)
         await db["storage_items"].create_index([("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True)
 
-        logger.info("Hoàn tất tạo chỉ mục Database")
+        logger.info("Hoàn tất tạo chỉ mục MongoDB")
     except Exception as e:
-        logger.exception("Lỗi khởi tạo chỉ mục cho Database")
+        logger.exception("Lỗi khởi tạo chỉ mục cho MongoDB")
 
 async def close_db():
     if database.mongodb:

@@ -191,7 +191,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
             return res
         return "Gặp khó khăn trong việc tải danh sách tài liệu từ cơ sở dữ liệu"
     except Exception as e:
-        logger.exception("Gặp khó khăn trong việc tải danh sách tài liệu từ Database")
+        logger.exception("Gặp khó khăn trong việc tải danh sách tài liệu từ MongoDB")
         raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
 
 @tool

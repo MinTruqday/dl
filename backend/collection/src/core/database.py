@@ -17,7 +17,7 @@ class Database:
             logger.info("Tạo bản ghi tài liệu thành công")
             return str(res.inserted_id)
         except Exception as e:
-            logger.exception("Lỗi lưu tài liệu vào Database")
+            logger.exception("Lỗi lưu tài liệu vào MongoDB")
             return None
 
     async def update_document(self, document_id: str, update_data: dict):

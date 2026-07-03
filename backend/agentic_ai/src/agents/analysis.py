@@ -6,7 +6,7 @@ class AnalysisAgent:
         pass
 
     async def execute(self, req) -> str:
-        logger.info("Đang truy vấn Database")
+        logger.info("Đang truy vấn MongoDB")
         try:
             if isinstance(req, dict):
                 query = req.get("query", "")

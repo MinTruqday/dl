@@ -86,9 +86,11 @@ async def startup_event():
     except Exception as e:
         logger.exception("Lỗi khởi tạo cấu trúc Qdrant")
     try:
+        from src.core.infrastructure.database import init_db
+        await init_db()
         if settings.MONGODB_URI:
-            client = AsyncIOMotorClient(settings.MONGODB_URI)
-            db = client.get_default_database()
+            from src.core.infrastructure.database import database
+            db = database.mongodb[settings.SERVICE_DB_NAME]
             await db["finetune_datasets"].create_index(
                 [("user_id", 1), ("created_at", -1)], background=True
             )
@@ -102,9 +104,9 @@ async def startup_event():
                 [("dataset_id", 1), ("status", 1)], background=True
             )
             client.close()
-            logger.info("Khởi tạo chỉ mục Database thành công")
+            logger.info("Khởi tạo chỉ mục MongoDB thành công")
     except Exception as e:
-        logger.exception("Lỗi khởi tạo chỉ mục Database")
+        logger.exception("Lỗi khởi tạo chỉ mục MongoDB")
 @app.on_event("shutdown")
 async def shutdown_event():
     try:

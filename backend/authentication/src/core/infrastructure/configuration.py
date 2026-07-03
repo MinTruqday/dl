@@ -25,6 +25,8 @@ class Settings(BaseModel):
     PASSKEY_ALLOWED_ORIGINS: str = os.getenv("PASSKEY_ALLOWED_ORIGINS")
     SMTP_HOST: str = os.getenv("SMTP_HOST")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
+    DEFAULT_PAGE_LIMIT: int = int(os.getenv("DEFAULT_PAGE_LIMIT"))
+    MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
     SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
     SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
     SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")

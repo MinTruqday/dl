@@ -14,5 +14,5 @@ COPY websocket/src/ ./src/
 
 EXPOSE 8010
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8010"]]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8010"]
 

@@ -52,7 +52,7 @@ class AgentopsHarness:
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
             except Exception as e:
-                logger.exception("Lỗi kết nối Database")
+                logger.exception("Lỗi kết nối MongoDB")
         return self._db_client
 
     def record_session_start(
