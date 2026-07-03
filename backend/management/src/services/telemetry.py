@@ -9,8 +9,8 @@ from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.database import database
-from src.schemas.account import UserInDB
-from src.repositories.user import UserRepository
+
+
 from src.repositories.system import SystemRepository
 from src.repositories.moderation import ModerationRepository
 

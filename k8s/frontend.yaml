@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doclib-frontend
+  labels:
+    app: doclib-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doclib-frontend
+  template:
+    metadata:
+      labels:
+        app: doclib-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: doclib_frontend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: doclib-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doclib-frontend
+spec:
+  selector:
+    app: doclib-frontend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000

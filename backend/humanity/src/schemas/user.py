@@ -1,12 +1,14 @@
-import uuid
-from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, EmailStr, Field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
-
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from datetime import datetime, timezone
 from uuid6 import uuid7
 
-from src.core.infrastructure.configuration import settings
+class Role(str, Enum):
+    GUEST = "guest"
+    READER = "reader"
+    AUTHOR = "author"
+    ADMIN = "admin"
 
 class KYC(str, Enum):
     NONE = "NONE"
@@ -20,12 +22,6 @@ class Creator(str, Enum):
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
     SUSPENDED = "SUSPENDED"
-
-class Role(str, Enum):
-    GUEST = "guest"
-    READER = "reader"
-    AUTHOR = "author"
-    ADMIN = "admin"
 
 class Tier(str, Enum):
     BASIC = "BASIC"
@@ -51,19 +47,8 @@ class UserBase(BaseModel):
     kyc_status: KYC = KYC.NONE
     creator_status: Creator = Creator.NONE
     is_verified: bool = False
-    storage_limit: int = Field(
-        default=settings.DEFAULT_PAGE_LIMIT * 1024 * 1024 * 1024,
-        le=settings.MAX_PAGE_LIMIT * 1024 * 1024 * 1024,
-    )
+    storage_limit: int = 50 * 1024 * 1024 * 1024
     ai_tier: Tier = Tier.BASIC
-
-    @field_validator("kyc_status", "creator_status", mode="before")
-    @classmethod
-    def validate_enum_case(cls, v: Any):
-        if isinstance(v, str):
-            return v.upper()
-        return v
-
     tos_accepted_at: Optional[datetime] = None
     welcome_message: Optional[str] = None
     blocked_users: List[str] = []
@@ -74,29 +59,11 @@ class UserBase(BaseModel):
         "default_visibility": "public",
     }
 
-class UserCreate(UserBase):
-    password: str
-    agreed_to_terms: bool = False
-
 class UserInDB(UserBase):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
-    last_read_date: Optional[datetime] = None
-    password_hash: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True
-    is_kyc_verified: bool = False
-    passkeys: List[Dict[str, Any]] = []
-    last_password_change: Optional[datetime] = None
-    last_bank_update: Optional[datetime] = None
-
-class UserResponse(UserBase):
-    id: str = Field(alias="_id")
-    created_at: datetime
-    has_passkey: bool = False
-
-    class Config:
-        populate_by_name = True
 
 class ProfileUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -106,26 +73,11 @@ class ProfileUpdate(BaseModel):
     location: Optional[str] = None
     website: Optional[str] = None
 
-class SettingsUpdate(BaseModel):
-    theme: Optional[str] = None
-    notifications_enabled: Optional[bool] = None
-    privacy_mode: Optional[bool] = None
-
-class ForgotPasswordRequest(BaseModel):
+class CreateUserRequest(BaseModel):
     email: EmailStr
-
-class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str
-
-class VerifyCodeRequest(BaseModel):
-    token: str
-
-class NotificationSettingsUpdate(BaseModel):
-    enable_comment_notifications: bool = True
-    enable_mention_notifications: bool = True
-    enable_system_notifications: bool = True
-    enable_email_digest: bool = False
+    full_name: str
+    slug: str
+    role: Role = Role.READER
 
 class UpdateRoleRequest(BaseModel):
     role: Role
@@ -139,17 +91,3 @@ class ModerationActionRequest(BaseModel):
 
 class NoteRequest(BaseModel):
     note: str
-
-class PasskeyRequest(BaseModel):
-    email: str
-
-class PasskeyFinishRequest(BaseModel):
-    email: str
-    credential: dict
-
-class InternalCreateUserRequest(BaseModel):
-    email: str
-    password_hash: Optional[str] = None
-    full_name: str
-    role: str = "READER"
-    slug: str

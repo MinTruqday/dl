@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from src.schemas.account import Tier
+
 
 class QuotaLimit(BaseModel):
     daily_requests: Union[int, float] = 0
@@ -33,3 +33,9 @@ class ConsumeQuotaRequest(BaseModel):
     feature: str = "chat"
     req_reset_hours: int = 24
     tokens: int = 0
+
+from enum import Enum
+class Tier(str, Enum):
+    BASIC = "BASIC"
+    PRO = "PRO"
+    PREMIUM = "PREMIUM"

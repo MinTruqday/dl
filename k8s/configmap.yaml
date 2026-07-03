@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: doclib-config
+data:
+  MONGODB_URL: "mongodb://doclib-mongodb:27017"
+  REDIS_URL: "redis://doclib-redis:6379"
+  # Add other environment variables here

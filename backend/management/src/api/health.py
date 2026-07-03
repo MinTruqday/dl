@@ -7,10 +7,9 @@ from src.api.dependency import get_current_user, get_db, require_role
 from src.schemas.health import CampaignRequest
 from src.services.health import HealthService
 from src.services.telemetry import TelemetryService
-from src.services.account import AccountService
 
 from src.core.response import APIResponse
-from src.schemas.account import Role, UserInDB
+from src.core.dependency import Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/van-hanh")
 

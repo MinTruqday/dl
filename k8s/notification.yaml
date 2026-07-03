@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doclib-notification
+  labels:
+    app: doclib-notification
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doclib-notification
+  template:
+    metadata:
+      labels:
+        app: doclib-notification
+    spec:
+      containers:
+      - name: notification
+        image: doclib_notification:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8007
+        envFrom:
+        - configMapRef:
+            name: doclib-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doclib-notification
+spec:
+  selector:
+    app: doclib-notification
+  ports:
+    - protocol: TCP
+      port: 8007
+      targetPort: 8007

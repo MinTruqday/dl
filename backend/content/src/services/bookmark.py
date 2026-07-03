@@ -9,7 +9,7 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.repositories.profile import ContentProfileRepository
+from src.repositories.profile import ProfileRepository
 from src.repositories.document import DocumentRepository
 from src.repositories.bookmark import BookmarkRepository
 
@@ -19,33 +19,27 @@ class BookmarkService:
     @log_logic_execution
     async def toggle_bookmark(document_id: str, current_user) -> dict:
         user_id = str(current_user.id)
-        profile = await ContentProfileRepository.find_content_profile(
-            {"_id": user_id}, projection={"bookmarks": 1}
-        )
+        profile = await ProfileRepository.get_profile(user_id)
         bookmarks = profile.get("bookmarks", []) if profile else []
         if document_id in bookmarks:
             bookmarks.remove(document_id)
             message = "The specified document has been successfully removed from your personal archive collection"
             is_bookmarked = False
-            await ContentProfileRepository.update_content_profile(
-                {"_id": user_id},
-                {
+            await ProfileRepository.update_profile(
+                user_id, {
                     "$pull": {"bookmarks": document_id},
-                    "$set": {"updated_at": datetime.now(timezone.utc)},
-                },
-                upsert=True,
+                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                }
             )
         else:
             bookmarks.append(document_id)
             message = "The specified document has been successfully added to your personal archive collection"
             is_bookmarked = True
-            await ContentProfileRepository.update_content_profile(
-                {"_id": user_id},
-                {
+            await ProfileRepository.update_profile(
+                user_id, {
                     "$addToSet": {"bookmarks": document_id},
-                    "$set": {"updated_at": datetime.now(timezone.utc)},
-                },
-                upsert=True,
+                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                }
             )
         return {"status": "success", "message": message, "is_bookmarked": is_bookmarked}
 
@@ -57,9 +51,7 @@ class BookmarkService:
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
         ),
     ) -> list:
-        profile = await ContentProfileRepository.find_content_profile(
-            {"_id": str(current_user.id)}, projection={"bookmarks": 1}
-        )
+        profile = await ProfileRepository.get_profile(str(current_user.id))
         bookmark_ids = profile.get("bookmarks", []) if profile else []
         if not bookmark_ids:
             return []

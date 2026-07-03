@@ -3,11 +3,11 @@ from typing import Any
 
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
-from src.services.account import AccountService
+from src.services.audit import AuditService
 
 from src.core.dependency import get_current_user, get_db, require_role
 from src.core.response import APIResponse
-from src.schemas.account import Role, UserInDB
+from src.core.dependency import Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/kiem-toan")
 
@@ -20,6 +20,6 @@ async def get_activity(
     current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await AccountService.get_moderator_activity_log(str(current_user.id)),
+        data=await AuditService.get_moderator_activity_log(str(current_user.id)),
         message="Lấy nhật ký hoạt động thành công",
     )

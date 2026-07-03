@@ -8,7 +8,8 @@ from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.database import database
-from src.schemas.account import Creator, KYC, Role
+from src.schemas.verification import Creator, KYC
+from src.core.dependency import Role
 from src.core.storage import upload_file
 
 class VerificationService:

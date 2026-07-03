@@ -12,7 +12,7 @@ from src.core.infrastructure.database import database
 from src.repositories.message import MessageRepository
 from src.repositories.conversation import ConversationRepository
 from src.repositories.message import MessageRepository
-from src.repositories.profile import ContactProfileRepository
+from src.repositories.profile import ProfileRepository
 from src.repositories.message import MessageRepository
 
 class ThreadService:
@@ -75,9 +75,7 @@ class ThreadService:
             if existing:
                 existing["_id"] = str(existing["_id"])
                 return existing
-        user_doc = await ContactProfileRepository.find_contact_profile(
-            {"_id": receiver_id}
-        )
+        user_doc = await ProfileRepository.get_profile(receiver_id)
         if user_doc and sender_id in user_doc.get("blocked_users", []):
             raise Exception("Tài khoản này không nhận tin nhắn từ bạn")
         self_destruct_at = None
@@ -653,30 +651,20 @@ class ThreadService:
     @staticmethod
     @log_logic_execution
     async def block_user(other_user_id: str, current_user) -> dict:
-        await ContactProfileRepository.update_contact_profile(
-            {"_id": str(current_user.id)},
-            {"$addToSet": {"blocked_users": other_user_id}},
-            upsert=True,
-        )
+        await ProfileRepository.update_profile(str(current_user.id), {"$addToSet": {"blocked_users": other_user_id}})
         return {"status": "blocked", "other_user_id": other_user_id}
 
     @staticmethod
     @log_logic_execution
     async def unblock_user(other_user_id: str, current_user) -> dict:
-        await ContactProfileRepository.update_contact_profile(
-            {"_id": str(current_user.id)}, {"$pull": {"blocked_users": other_user_id}}
-        )
+        await ProfileRepository.update_profile(str(current_user.id), {"$pull": {"blocked_users": other_user_id}})
         return {"status": "unblocked", "other_user_id": other_user_id}
 
     @staticmethod
     @log_logic_execution
     async def check_blocked_status(user_id: str, other_user_id: str) -> bool:
-        user_doc = await ContactProfileRepository.find_contact_profile(
-            {"_id": user_id}
-        )
-        other_user_doc = await ContactProfileRepository.find_contact_profile(
-            {"_id": other_user_id}
-        )
+        user_doc = await ProfileRepository.get_profile(user_id)
+        other_user_doc = await ProfileRepository.get_profile(other_user_id)
         user_blocked_other = (
             other_user_id in user_doc.get("blocked_users", []) if user_doc else False
         )

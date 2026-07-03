@@ -11,8 +11,8 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.schemas.account import Role
-from src.repositories.user import UserRepository
+from src.core.dependency import Role
+
 from src.repositories.system import SystemRepository
 
 

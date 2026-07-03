@@ -32,7 +32,7 @@ COPY --chown=appuser:appuser agentic_ai/src/ ./src/
 
 USER appuser
 
-EXPOSE 8400
+EXPOSE 8008
 
-CMD ["bash", "-c", "gunicorn src.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8400 --timeout 1200"]
+CMD ["bash", "-c", "gunicorn src.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8008 --timeout 1200"]
 

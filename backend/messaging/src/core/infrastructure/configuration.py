@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 class Settings(BaseModel):
+    HUMANITY_URL: str = os.getenv("HUMANITY_URL")
     PROJECT_NAME: str = os.getenv("PROJECT_NAME")
     VERSION: str = os.getenv("VERSION")
     SECRET_KEY: str = os.getenv("SECRET_KEY")

@@ -8,7 +8,7 @@ from src.services.telemetry import TelemetryService
 
 from src.core.infrastructure.configuration import settings
 from src.core.response import APIResponse
-from src.schemas.account import Role, UserInDB
+from src.core.dependency import Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/giam-sat")
 

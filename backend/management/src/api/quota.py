@@ -8,7 +8,7 @@ from src.services.quota import QuotaService
 
 from src.core.response import APIResponse
 from src.schemas.quota import QuotaLimit, ConsumeQuotaRequest
-from src.schemas.account import Role, UserInDB
+from src.core.dependency import Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/han-muc")
 

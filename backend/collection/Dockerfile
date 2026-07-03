@@ -14,7 +14,7 @@ RUN playwright install chromium
 
 COPY collection/src/ ./src/
 
-EXPOSE 8250
+EXPOSE 8005
 
-CMD ["xvfb-run", "-a", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8250"]
+CMD ["xvfb-run", "-a", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8005"]]
 

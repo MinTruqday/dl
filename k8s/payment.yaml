@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doclib-payment
+  labels:
+    app: doclib-payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doclib-payment
+  template:
+    metadata:
+      labels:
+        app: doclib-payment
+    spec:
+      containers:
+      - name: payment
+        image: doclib_payment:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8006
+        envFrom:
+        - configMapRef:
+            name: doclib-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doclib-payment
+spec:
+  selector:
+    app: doclib-payment
+  ports:
+    - protocol: TCP
+      port: 8006
+      targetPort: 8006

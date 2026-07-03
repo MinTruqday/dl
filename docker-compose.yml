@@ -149,12 +149,12 @@ services:
     container_name: doclib_payment
     restart: always
     ports:
-      - 8350:8350
+      - 8006:8006
     labels:
       - traefik.enable=true
       - traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`)
         || PathPrefix(`/kiem-tien`) || PathPrefix(`/ma-qua-tang`) || PathPrefix(`/vi-tien`)
-      - traefik.http.services.finance.loadbalancer.server.port=8350
+      - traefik.http.services.finance.loadbalancer.server.port=8006
     env_file:
       - .env
     environment:
@@ -175,11 +175,11 @@ services:
     container_name: doclib_notification
     restart: always
     ports:
-      - 8150:8150
+      - 8007:8007
     labels:
       - traefik.enable=true
       - traefik.http.routers.notification.rule=PathPrefix(`/thong-bao`)
-      - traefik.http.services.notification.loadbalancer.server.port=8150
+      - traefik.http.services.notification.loadbalancer.server.port=8007
     env_file:
       - .env
     environment:
@@ -200,14 +200,14 @@ services:
     container_name: doclib_agentic_ai
     restart: always
     ports:
-      - 8400:8400
+      - 8008:8008
     labels:
       - traefik.enable=true
       - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`)
         || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`)
         || PathPrefix(`/tro-chuyen`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`)
         || PathPrefix(`/lich-su`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nhap-lieu`)
-      - traefik.http.services.ai.loadbalancer.server.port=8400
+      - traefik.http.services.ai.loadbalancer.server.port=8008
     env_file:
       - .env
     environment:
@@ -278,11 +278,11 @@ services:
     container_name: doclib_collection
     restart: always
     ports:
-      - 8250:8250
+      - 8005:8005
     labels:
       - traefik.enable=true
       - traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)
-      - traefik.http.services.collector.loadbalancer.server.port=8250
+      - traefik.http.services.collector.loadbalancer.server.port=8005
     env_file:
       - .env
     environment:
@@ -304,11 +304,11 @@ services:
     container_name: doclib_compilation
     restart: always
     ports:
-      - 8300:8300
+      - 8011:8011
     labels:
       - traefik.enable=true
       - traefik.http.routers.editor.rule=PathPrefix(`/trinh-soan-thao`)
-      - traefik.http.services.editor.loadbalancer.server.port=8300
+      - traefik.http.services.editor.loadbalancer.server.port=8011
     env_file:
       - .env
     environment:
@@ -329,11 +329,11 @@ services:
     container_name: doclib_authentication
     restart: always
     ports:
-      - 8500:8500
+      - 8001:8001
     labels:
       - traefik.enable=true
       - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`)
-      - traefik.http.services.authentication.loadbalancer.server.port=8500
+      - traefik.http.services.authentication.loadbalancer.server.port=8001
     env_file:
       - .env
     environment:
@@ -346,6 +346,31 @@ services:
       - ./backend/logs/authentication:/app/logs
     networks:
       - doclib_network
+  humanity:
+    build:
+      context: ./backend
+      dockerfile: ./humanity/Dockerfile
+    container_name: doclib_humanity
+    restart: always
+    ports:
+      - 8002:8002
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.humanity.rule=PathPrefix(`/ho-so`) || PathPrefix(`/nguoi-dung`)
+      - traefik.http.services.humanity.loadbalancer.server.port=8002
+    env_file:
+      - .env
+    environment:
+      - SERVICE_DB_NAME=doclib_humanity
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/humanity/src:/app/src
+      - ./backend/logs/humanity:/app/logs
+    networks:
+      - doclib_network
+
   management:
     build:
       context: ./backend
@@ -353,7 +378,7 @@ services:
     container_name: doclib_management
     restart: always
     ports:
-      - 8050:8050
+      - 8003:8003
     labels:
       - traefik.enable=true
       - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/han-muc`)
@@ -361,7 +386,7 @@ services:
         || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/kiem-toan`)
         || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`)
         || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)
-      - traefik.http.services.management.loadbalancer.server.port=8050
+      - traefik.http.services.management.loadbalancer.server.port=8003
     env_file:
       - .env
     environment:
@@ -382,11 +407,11 @@ services:
     container_name: doclib_websocket
     restart: always
     ports:
-      - 8200:8200
+      - 8010:8010
     labels:
       - traefik.enable=true
       - traefik.http.routers.realtime.rule=PathPrefix(`/ws`)
-      - traefik.http.services.realtime.loadbalancer.server.port=8200
+      - traefik.http.services.realtime.loadbalancer.server.port=8010
     env_file:
       - .env
     environment:
@@ -406,11 +431,11 @@ services:
     container_name: doclib_messaging
     restart: always
     ports:
-      - 8100:8100
+      - 8009:8009
     labels:
       - traefik.enable=true
       - traefik.http.routers.messaging.rule=PathPrefix(`/tin-nhan`)
-      - traefik.http.services.messaging.loadbalancer.server.port=8100
+      - traefik.http.services.messaging.loadbalancer.server.port=8009
     env_file:
       - .env
     environment:
@@ -431,7 +456,7 @@ services:
     container_name: doclib_content
     restart: always
     ports:
-      - 8450:8450
+      - 8004:8004
     labels:
       - traefik.enable=true
       - traefik.http.routers.content.rule=PathPrefix(`/ban-nhap`) || PathPrefix(`/cong-tac`)
@@ -443,7 +468,7 @@ services:
         || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`)
         || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`)
         || PathPrefix(`/tai-lieu-hieu`)
-      - traefik.http.services.content.loadbalancer.server.port=8450
+      - traefik.http.services.content.loadbalancer.server.port=8004
     env_file:
       - .env
     environment:
@@ -465,11 +490,11 @@ services:
     container_name: doclib_cloud
     restart: always
     ports:
-      - 8700:8700
+      - 8012:8012
     labels:
       - traefik.enable=true
       - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`)
-      - traefik.http.services.cloud.loadbalancer.server.port=8700
+      - traefik.http.services.cloud.loadbalancer.server.port=8012
     env_file:
       - .env
     environment:
@@ -491,11 +516,11 @@ services:
     container_name: doclib_drm
     restart: always
     ports:
-      - 8600:8600
+      - 8013:8013
     labels:
       - traefik.enable=true
       - traefik.http.routers.drm.rule=PathPrefix(`/drm`)
-      - traefik.http.services.drm.loadbalancer.server.port=8600
+      - traefik.http.services.drm.loadbalancer.server.port=8013
     env_file:
       - .env
     environment:

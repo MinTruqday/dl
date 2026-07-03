@@ -12,6 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY messaging/src/ ./src/
 
-EXPOSE 8100
+EXPOSE 8009
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8100"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8009"]]

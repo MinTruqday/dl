@@ -11,7 +11,7 @@ from src.core.dependency import (
     require_permissions,
     require_role,
 )
-from src.schemas.account import UserInDB
+
 
 async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
     from src.services.quota import QuotaService
