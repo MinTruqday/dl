@@ -24,22 +24,6 @@ async def init_db():
     from motor.motor_asyncio import AsyncIOMotorClient
     database.mongodb = AsyncIOMotorClient(mongo_uri)
 
-    from src.core.infrastructure.mq import mq
-    max_retries = 5
-    for i in range(max_retries):
-        try:
-            if await mq.health_check():
-                logger.info("Kết nối RabbitMQ ổn định")
-                break
-            else:
-                raise Exception("MQ health check failed")
-        except Exception as e:
-            if i == max_retries - 1:
-                logger.exception("Lỗi kết nối RabbitMQ")
-                raise e
-            logger.exception("Đang thử kết nối lại RabbitMQ")
-            await asyncio.sleep(5)
-
     await setup_indexes()
 
 async def setup_indexes():

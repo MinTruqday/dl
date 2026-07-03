@@ -187,6 +187,7 @@ services:
     depends_on:
       - mongodb
       - redis
+      - rabbitmq
     volumes:
       - ./backend/notification/src:/app/src
       - ./backend/logs/notification:/app/logs
@@ -213,7 +214,10 @@ services:
     environment:
       - SERVICE_DB_NAME=doclib_agentic_ai
     depends_on:
+      - mongodb
       - redis
+      - rabbitmq
+      - minio
       - qdrant
     volumes:
       - ./backend/agentic_ai/src:/app/src
@@ -290,6 +294,7 @@ services:
     depends_on:
       - mongodb
       - redis
+      - rabbitmq
       - minio
     volumes:
       - ./backend/collection/src:/app/src
@@ -316,6 +321,7 @@ services:
     depends_on:
       - mongodb
       - redis
+      - minio
     volumes:
       - ./backend/compilation/src:/app/src
       - tectonic_cache:/home/doclibuser/.cache/Tectonic
