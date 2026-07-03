@@ -29,32 +29,43 @@ class SessionService:
                 detail="Tạo tài khoản tạm thời bị vô hiệu hóa",
             )
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                resp = await client.post(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/",
-                    json={
-                        "email": user_in.email,
-                        "full_name": user_in.full_name,
-                        "slug": user_in.slug,
-                        "role": "READER",
-                    },
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            if await AuthenticationRepository.get_user_by_email(user_in.email):
+                raise HTTPException(
+                    status_code=400, detail="Tài khoản với email này đã tồn tại"
                 )
-                if resp.status_code == 400:
-
-                    detail = (
-                        resp.json().get("detail").replace(".", "")
-                        if resp.json()
-                        else "An unexpected system error occurred while attempting to process the registration request"
-                    )
-                    raise HTTPException(status_code=400, detail=detail)
-                elif resp.status_code not in (200, 201):
-                    raise HTTPException(status_code=500, detail="Lỗi kết nối tài khoản")
-                user_id = resp.json().get("data", {}).get("user_id")
-        except httpx.RequestError as e:
-            raise HTTPException(
-                status_code=500, detail=f"Lỗi kết nối quản lý người dùng: {e}"
-            )
+            if await AuthenticationRepository.get_user_by_slug(user_in.slug):
+                raise HTTPException(
+                    status_code=400, detail="Tên người dùng đã được sử dụng"
+                )
+                
+            user_id = str(uuid7())
+            new_user = {
+                "_id": user_id,
+                "email": user_in.email,
+                "full_name": user_in.full_name,
+                "slug": user_in.slug,
+                "role": "READER",
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+                "is_active": True,
+                "is_verified": False,
+                "wallet_balance": 0,
+                "is_premium": False,
+                "storage_limit": 10737418240,
+                "settings": {
+                    "mod_notifs": True,
+                    "auto_refresh": False,
+                    "auto_save": True,
+                    "default_visibility": "public"
+                }
+            }
+            await AuthenticationRepository.create_user(new_user)
+            
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            logger.exception("Lỗi tạo người dùng")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tạo người dùng")
 
         auth_cred = {
             "_id": user_id,
@@ -87,19 +98,10 @@ class SessionService:
         is_email = "@" in username
         user_doc = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                if is_email:
-                    resp = await client.get(
-                        f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{username}",
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
-                    )
-                else:
-                    resp = await client.get(
-                        f"{settings.MANAGEMENT_URL}/nguoi-dung/ten-mien/{username}",
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
-                    )
-                if resp.status_code == 200:
-                    user_doc = resp.json().get("data")
+            if is_email:
+                user_doc = await AuthenticationRepository.get_user_by_email(username)
+            else:
+                user_doc = await AuthenticationRepository.get_user_by_slug(username)
         except Exception:
             pass
 
@@ -165,12 +167,7 @@ class SessionService:
     @log_logic_execution
     async def forgot_password(email: str, client_ip: str):
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
-                resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
-                )
-                user = resp.json().get("data") if resp.status_code == 200 else None
+            user = await AuthenticationRepository.get_user_by_email(email)
         except Exception:
             user = None
         if user:

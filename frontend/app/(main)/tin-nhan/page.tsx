@@ -852,7 +852,7 @@ export default function MessagesPage() {
           <div className="max-h-[300px] overflow-y-auto space-y-2">
             {searching ? (
               <div className="py-12 flex justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
               </div>
             ) : searchResults.length > 0 ? (
               searchResults.map((u) => (
@@ -870,7 +870,7 @@ export default function MessagesPage() {
                           alt=""
                         />
                       ) : (
-                        <User className="w-6 h-6 text-[#6E6E73]" />
+                        <User className="w-4 h-4 text-[#6E6E73]" />
                       )}
                     </div>
                     <div className="flex flex-col">
@@ -882,7 +882,7 @@ export default function MessagesPage() {
                       </span>
                     </div>
                   </div>
-                  <ChevronRight className="w-6 h-6 text-[#6E6E73]" />
+                  <ChevronRight className="w-4 h-4 text-[#6E6E73]" />
                 </div>
               ))
             ) : (
@@ -915,7 +915,7 @@ export default function MessagesPage() {
           <div className="max-h-48 overflow-y-auto space-y-2 bg-white rounded-[10px] p-2 border border-[#D2D2D7]">
             {loadingGroupUsers ? (
               <div className="py-6 flex justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
               </div>
             ) : (
               allUsersForGroup.map((u) => (
@@ -964,7 +964,7 @@ export default function MessagesPage() {
         <ModalContent className="p-6 pt-0 max-h-[350px] overflow-y-auto space-y-2">
           {loadingShareDocs ? (
             <div className="py-12 flex justify-center">
-              <Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
             </div>
           ) : myDocsForShare.length > 0 ? (
             myDocsForShare.map((doc) => (
@@ -981,7 +981,7 @@ export default function MessagesPage() {
                     Định dạng: {doc.format || "TXT"}
                   </span>
                 </div>
-                <Share2 className="w-6 h-6 text-[#0071E3]" />
+                <Share2 className="w-4 h-4 text-[#0071E3]" />
               </div>
             ))
           ) : (
@@ -1005,20 +1005,20 @@ export default function MessagesPage() {
                 onClick={openGroupModal}
                 className="p-2 bg-white rounded-full text-[#0071E3] hover:opacity-80 transition-opacity"
               >
-                <Users className="w-6 h-6" />
+                <Users className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setShowNewChatModal(true)}
                 className="p-2 bg-[#0071E3] rounded-full text-white hover:bg-[#0055C6] transition-colors"
               >
-                <Plus className="w-6 h-6" />
+                <Plus className="w-4 h-4" />
               </button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 hide-scrollbar">
             {loadingConv ? (
               <div className="p-12 flex justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
               </div>
             ) : sortedConversations.length > 0 ? (
               sortedConversations.map((conv) => {
@@ -1042,7 +1042,7 @@ export default function MessagesPage() {
                         />
                       ) : (
                         <div className="w-full h-full flex justify-center items-center">
-                          <User className="w-6 h-6 text-white" />
+                          <User className="w-4 h-4 text-white" />
                         </div>
                       )}
                     </div>
@@ -1096,7 +1096,7 @@ export default function MessagesPage() {
                     onClick={() => setSelectedConv(null)}
                     className="md:hidden text-[#0071E3]"
                   >
-                    <ArrowLeft className="w-6 h-6" />
+                    <ArrowLeft className="w-4 h-4" />
                   </button>
                   <div className="w-6 h-6 rounded-full bg-[#D2D2D7] overflow-hidden">
                     {selectedConv.other_user?.avatar_url ? (
@@ -1106,7 +1106,7 @@ export default function MessagesPage() {
                         alt=""
                       />
                     ) : (
-                      <User className="w-6 h-6 text-white m-auto mt-2.5" />
+                      <User className="w-4 h-4 text-white m-auto mt-2.5" />
                     )}
                   </div>
                   <div>
@@ -1123,14 +1123,14 @@ export default function MessagesPage() {
                   onClick={() => setShowConvMenu(!showConvMenu)}
                   className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full"
                 >
-                  <MoreVertical className="w-6 h-6" />
+                  <MoreVertical className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 bg-transparent hide-scrollbar relative">
                 {loadingMsgs ? (
                   <div className="flex h-full items-center justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#0071E3]" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#0071E3]" />
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1198,7 +1198,7 @@ export default function MessagesPage() {
                     onClick={() => fileInputRef.current?.click()}
                     className="p-2 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full transition-colors shrink-0"
                   >
-                    <ImageIcon className="w-6 h-6" />
+                    <ImageIcon className="w-4 h-4" />
                   </button>
                   <input
                     type="file"
@@ -1224,7 +1224,7 @@ export default function MessagesPage() {
                       onClick={handleStartRecording}
                       className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-white rounded-full"
                     >
-                      <Mic className="w-6 h-6" />
+                      <Mic className="w-4 h-4" />
                     </button>
                   </div>
                   <button
@@ -1232,14 +1232,14 @@ export default function MessagesPage() {
                     disabled={!newMessage.trim() && !imageFile}
                     className="p-3 bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors shrink-0"
                   >
-                    <Send className="w-6 h-6 ml-0.5" />
+                    <Send className="w-4 h-4 ml-0.5" />
                   </button>
                 </div>
               </div>
             </>
           ) : (
             <div className="text-center">
-              <MessageSquare className="w-6 h-6 text-[#D2D2D7] mx-auto mb-4" />
+              <MessageSquare className="w-4 h-4 text-[#D2D2D7] mx-auto mb-4" />
               <p className="text-[17px] text-[#6E6E73]">
                 Chọn một hội thoại để bắt đầu
               </p>

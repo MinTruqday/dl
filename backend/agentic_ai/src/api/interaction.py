@@ -60,7 +60,11 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                     }
 
         route_data = await semantic_router.execute(req.query)
-        route = route_data["route"]
+        if req.useSmart:
+            route = "supervisor"
+        else:
+            route = "chat"
+            
         final_answer = ""
 
         if route == "chat":
@@ -172,12 +176,14 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             req.conversation_history = ctx.chat_history
 
             route_data = await semantic_router.execute(req.query)
-            route = route_data["route"]
+            if req.useSmart:
+                route = "supervisor"
+            else:
+                route = "chat"
+                
             final_answer = ""
 
             if route == "chat":
-                yield f"event: status\ndata: {json.dumps({'node': 'Hệ thống đang trả lời trực tiếp truy vấn của bạn'})}\n\n"
-
                 fast_answer = route_data.get("answer", "")
                 if fast_answer:
                     yield f"event: message\ndata: {json.dumps({'chunk': fast_answer})}\n\n"
@@ -274,6 +280,21 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             if session_id and final_answer:
                 await context.save_turn(session_id, "user", req.query)
                 await context.save_turn(session_id, "assistant", final_answer)
+                
+                try:
+                    from src.services.history import HistoryService
+                    await HistoryService.add_message(session_id, {
+                        "user_id": user_id,
+                        "role": "user",
+                        "content": req.query
+                    })
+                    await HistoryService.add_message(session_id, {
+                        "user_id": user_id,
+                        "role": "assistant",
+                        "content": final_answer
+                    })
+                except Exception as e:
+                    logger.exception("Lỗi lưu tin nhắn vào database")
 
             agentops.record_session_end(session_id, "done")
 

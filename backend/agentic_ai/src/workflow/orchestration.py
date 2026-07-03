@@ -154,7 +154,7 @@ async def reasoner_agent_node(state: ActingState):
 async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])
     if not results:
-        return {"next_node": "trimmer"}
+        return {"next_node": "aggregator"}
 
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
@@ -171,9 +171,9 @@ async def trimmer_node(state: ActingState):
         except Exception as e:
             logger.exception("Lỗi rút gọn tóm tắt")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
-        return {"consolidated_results": [trimmed], "next_node": "trimmer"}
+        return {"consolidated_results": [trimmed], "next_node": "aggregator"}
 
-    return {"next_node": "trimmer"}
+    return {"next_node": "aggregator"}
 
 def trimmer_router(state: ActingState):
     return state.get("next_node", "aggregator")
@@ -259,9 +259,7 @@ class OrchestrationWorkflow:
                     "knowledge",
                     "reasoning",
                 ]:
-                    if state_update.get("error"):
-                        yield {"type": "error", "message": "Đã xảy ra một lỗi bất thường trong quá trình xử lý luồng dữ liệu"}
-                    else:
+                    if not state_update.get("error"):
                         yield {
                             "type": "tool_result",
                             "agent": node_name,

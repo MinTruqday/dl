@@ -19,6 +19,18 @@ class IdentityRepository:
         return await mongo.find_one(collection="settings", query={"_id": "system_config"})
 
     @staticmethod
+    async def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+        return await mongo.find_one(collection="users", query={"email": email})
+
+    @staticmethod
+    async def get_user_by_slug(slug: str) -> Optional[Dict[str, Any]]:
+        return await mongo.find_one(collection="users", query={"slug": slug})
+
+    @staticmethod
+    async def create_user(user_doc: dict):
+        return await mongo.insert_one(collection="users", document=user_doc)
+
+    @staticmethod
     async def create_auth_credential(auth_cred: dict):
         return await mongo.insert_one(collection="auth_credentials", document=auth_cred)
 

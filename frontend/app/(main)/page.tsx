@@ -106,7 +106,7 @@ export default function ExplorePage() {
                 }`}
               >
                 <span>Tất cả tài liệu</span>
-                {!selectedCategory && <ChevronRight className="w-6 h-6" />}
+                {!selectedCategory && <ChevronRight className="w-4 h-4" />}
               </button>
               {categories.map((cat) => (
                 <button
@@ -122,7 +122,7 @@ export default function ExplorePage() {
                 >
                   <span className="truncate text-left">{cat}</span>
                   {selectedCategory === cat && (
-                    <ChevronRight className="w-6 h-6 shrink-0" />
+                    <ChevronRight className="w-4 h-4 shrink-0" />
                   )}
                 </button>
               ))}
@@ -186,13 +186,13 @@ export default function ExplorePage() {
                     onClick={() => setViewMode("grid")}
                     className={`p-1 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
                   >
-                    <LayoutGrid className="w-6 h-6" />
+                    <LayoutGrid className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
                     className={`p-1 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
                   >
-                    <List className="w-6 h-6" />
+                    <List className="w-4 h-4" />
                   </button>
                 </div>
               </div>

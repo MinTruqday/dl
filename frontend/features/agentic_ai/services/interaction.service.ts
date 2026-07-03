@@ -87,7 +87,7 @@ export async function deleteAiSessionAPI(sessionId: string) {
 }
 export async function streamAiChatAPI(payload: any) {
   const token = getToken();
-  return await fetch(`${API_URL}/tro-chuyen/tro-chuyen`, {
+  return await fetch(`${API_URL}/tro-chuyen/phat-truc-tiep`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -103,7 +103,7 @@ export async function queryRagAPI(
   useSmart: boolean = false,
   sessionId?: string,
 ) {
-  const res = await fetch(`${API_URL}/tro-chuyen/tro-chuyen`, {
+  const res = await fetch(`${API_URL}/tro-chuyen`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({

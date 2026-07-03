@@ -98,7 +98,7 @@ function QuotaIndicator() {
   return (
     <div className="flex flex-col gap-3 p-4 bg-[#F5F5F7]  rounded-[18px]">
       <div className="flex items-center gap-2">
-        <Activity className="w-6 h-6 text-[#0071E3]" />
+        <Activity className="w-4 h-4 text-[#0071E3]" />
         <span className="text-[12px] font-semibold text-[#1D1D1F]">
           Hạn mức sử dụng ngày
         </span>
@@ -269,11 +269,6 @@ export default function TroChuyenPage() {
     if (e) e.preventDefault();
     const userMessage = retryText || input.trim();
     if (!userMessage || isSending) return;
-
-    if (useSmart && (user?.wallet_balance || 0) < 20) {
-      showToast("Cần tối thiểu 20 dl để duy trì Chế độ Suy nghĩ", "error");
-      return;
-    }
 
     let sessionId = currentSessionId;
     if (!sessionId) {
@@ -531,7 +526,7 @@ export default function TroChuyenPage() {
               }}
               className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
             >
-              <PlusIcon className="w-6 h-6" />
+              <PlusIcon className="w-4 h-4" />
             </button>
           </div>
           <div className="px-6 pb-4 shrink-0">
@@ -539,7 +534,7 @@ export default function TroChuyenPage() {
               onClick={() => (window.location.href = "/nang-cap")}
               className="w-full flex items-center justify-center gap-2 py-3 bg-[#0071E3] text-white text-[13px] font-semibold rounded-[14px] hover:bg-[#0077ED] transition-colors"
             >
-              <Sparkles className="w-6 h-6 text-white" /> Nâng cấp Gói AI
+              <Sparkles className="w-4 h-4 text-white" /> Nâng cấp Gói AI
             </button>
           </div>
           <div className="overflow-y-auto px-6 pb-6 flex flex-col gap-2 shrink custom-scrollbar">
@@ -640,7 +635,7 @@ export default function TroChuyenPage() {
                           }}
                           className="p-1.5 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors"
                         >
-                          <MoreVertical className="w-6 h-6" />
+                          <MoreVertical className="w-4 h-4" />
                         </button>
                         {openDropdownId === s._id && (
                           <>
@@ -742,28 +737,16 @@ export default function TroChuyenPage() {
                     <div key={idx} className="flex justify-start">
                       <div className="w-full max-w-[85%]">
                         <div className="py-2 w-full relative group">
-                          {msg.thoughts && msg.thoughts.length > 0 && (
-                            <div className="mb-3 flex flex-wrap gap-2">
-                              {msg.thoughts.map((t, i) => (
-                                <span
-                                  key={i}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F5F5F7]  text-[12px] font-medium text-[#6E6E73] whitespace-nowrap"
-                                >
-                                  <Zap className="w-3.5 h-3.5 text-[#0071E3]" />{" "}
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+
                           {!cleanText && (
                             <div className="flex gap-1.5 h-6 items-center">
-                              <div className="w-6 h-6 rounded-full bg-[#C7C7CC] animate-pulse" />
+                              <div className="w-2 h-2 rounded-full bg-[#C7C7CC] animate-pulse" />
                               <div
-                                className="w-6 h-6 rounded-full bg-[#C7C7CC] animate-pulse"
+                                className="w-2 h-2 rounded-full bg-[#C7C7CC] animate-pulse"
                                 style={{ animationDelay: "0.2s" }}
                               />
                               <div
-                                className="w-6 h-6 rounded-full bg-[#C7C7CC] animate-pulse"
+                                className="w-2 h-2 rounded-full bg-[#C7C7CC] animate-pulse"
                                 style={{ animationDelay: "0.4s" }}
                               />
                             </div>
@@ -824,13 +807,13 @@ export default function TroChuyenPage() {
                         onClick={() => setSelectedImage(null)}
                         className="absolute -top-2 -right-2 w-6 h-6 bg-[#1D1D1F] text-white flex items-center justify-center rounded-full"
                       >
-                        <X className="w-6 h-6" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   )}
                   {selectedFile && (
                     <div className="relative group shrink-0 h-16 px-4 bg-white  flex items-center gap-3 rounded-[14px]">
-                      <FileText className="w-6 h-6 text-[#0071E3] shrink-0" />
+                      <FileText className="w-4 h-4 text-[#0071E3] shrink-0" />
                       <span className="text-[13px] font-medium text-[#1D1D1F] truncate max-w-[150px]">
                         {selectedFile.name}
                       </span>
@@ -838,7 +821,7 @@ export default function TroChuyenPage() {
                         onClick={() => setSelectedFile(null)}
                         className="absolute -top-2 -right-2 w-6 h-6 bg-[#1D1D1F] text-white flex items-center justify-center rounded-full"
                       >
-                        <X className="w-6 h-6" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   )}
@@ -874,7 +857,7 @@ export default function TroChuyenPage() {
                     }}
                     className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
                   >
-                    <FileText className="w-6 h-6 text-[#0071E3]" /> Tài liệu
+                    <FileText className="w-4 h-4 text-[#0071E3]" /> Tài liệu
                   </button>
                   <button
                     onClick={() => {
@@ -883,7 +866,7 @@ export default function TroChuyenPage() {
                     }}
                     className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
                   >
-                    <ImageIcon className="w-6 h-6 text-[#34C759]" /> Hình ảnh
+                    <ImageIcon className="w-4 h-4 text-[#34C759]" /> Hình ảnh
                   </button>
                 </div>
               )}
@@ -896,7 +879,7 @@ export default function TroChuyenPage() {
                       onClick={handleAttach}
                       className="text-[#6E6E73] shrink-0 rounded-full p-2 hover:bg-[#E8E8ED] transition-colors"
                     >
-                      <PlusIcon className="w-6 h-6" />
+                      <PlusIcon className="w-4 h-4" />
                     </button>
                   )}
                   <input
@@ -908,7 +891,7 @@ export default function TroChuyenPage() {
                     className="flex-1 min-w-0 h-full py-4 text-[15px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73]"
                   />
                   <label
-                    className={`flex items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-4 border-l border-[#E8E8ED]`}
+                    className={`flex items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-4 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}
                   >
                     <span className="text-[13px] font-medium text-[#6E6E73] select-none">
                       Suy nghĩ
@@ -921,9 +904,19 @@ export default function TroChuyenPage() {
                         disabled={
                           user?.ai_tier !== "PREMIUM" && user?.role !== "admin"
                         }
-                        className="sr-only peer"
+                        className="sr-only"
                       />
-                      <div className="w-6 h-6 bg-[#D2D2D7] peer-focus:outline-none rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:rounded-full peer-checked:after:translate-x-4 peer-checked:bg-[#34C759] transition-colors"></div>
+                      <div 
+                        className={`w-11 h-6 rounded-full transition-colors duration-200 flex items-center px-[2px] shrink-0 outline-none select-none ${
+                          useSmart ? "bg-[#34C759]" : "bg-[#D2D2D7]"
+                        }`}
+                      >
+                        <div 
+                          className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                            useSmart ? "translate-x-5" : "translate-x-0"
+                          }`} 
+                        />
+                      </div>
                     </div>
                   </label>
                 </div>
@@ -931,15 +924,14 @@ export default function TroChuyenPage() {
                   type="submit"
                   disabled={
                     isSending ||
-                    !input.trim() ||
-                    (useSmart && (user?.wallet_balance || 0) < 20)
+                    !input.trim()
                   }
                   className="w-14 h-[56px] shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-[20px] transition-colors hover:bg-[#0077ED]"
                 >
                   {isSending ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <ArrowRight className="w-6 h-6" />
+                    <ArrowRight className="w-4 h-4" />
                   )}
                 </button>
               </form>

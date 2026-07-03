@@ -138,7 +138,7 @@ class AgentopsHarness:
         if not metrics:
             return
         db = self._get_db()
-        if not db:
+        if db is None:
             return
         try:
             doc = {
