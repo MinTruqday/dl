@@ -15,7 +15,6 @@ import {
 import {
   getWalletBalanceAPI,
   getWalletHistoryAPI,
-  redeemVoucherAPI,
 } from "@/features/payment/services/wallet.service";
 import { createDepositLinkAPI } from "@/features/payment/services/deposit.service";
 import { requestWithdrawalAPI } from "@/features/payment/services/withdrawal.service";
@@ -83,8 +82,6 @@ export default function WalletPage() {
   const [balance, setBalance] = useState<number>(0);
   const [history, setHistory] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [voucherCode, setVoucherCode] = useState("");
-  const [isRedeeming, setIsRedeeming] = useState(false);
   const [visible, setVisible] = useState(false);
 
   const [showTopupModal, setShowTopupModal] = useState(false);
@@ -118,23 +115,6 @@ export default function WalletPage() {
     if (user) fetchWalletData();
   }, [user, fetchWalletData]);
 
-  const handleRedeemVoucher = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!voucherCode.trim() || isRedeeming) return;
-    setIsRedeeming(true);
-    try {
-      const res = await redeemVoucherAPI(voucherCode.trim());
-      if (res) {
-        showToast("Kích hoạt voucher thành công.", "success");
-        setVoucherCode("");
-        fetchWalletData();
-      }
-    } catch (error: any) {
-      showToast(error.message || "Voucher không hợp lệ", "error");
-    } finally {
-      setIsRedeeming(false);
-    }
-  };
 
   const handleTopup = async () => {
     if (topupAmount < 10000)
@@ -383,31 +363,7 @@ export default function WalletPage() {
             </div>
           </div>
 
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
-            <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">
-              Mã quà tặng
-            </h2>
-            <form onSubmit={handleRedeemVoucher} className="space-y-4">
-              <input
-                type="text"
-                value={voucherCode}
-                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                placeholder=""
-                className="apple-input w-full text-center uppercase tracking-wider"
-              />
-              <button
-                type="submit"
-                disabled={isRedeeming || !voucherCode.trim()}
-                className="pill-button w-full"
-              >
-                {isRedeeming ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  "Kích hoạt"
-                )}
-              </button>
-            </form>
-          </div>
+
         </aside>
 
         <main className="flex-1 min-w-0 xl:col-span-8">

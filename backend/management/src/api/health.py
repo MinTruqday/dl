@@ -4,7 +4,6 @@ from typing import Any, List, Optional
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, status
 from src.api.dependency import get_current_user, get_db, require_role
-from src.schemas.health import CampaignRequest
 from src.services.health import HealthService
 from src.services.telemetry import TelemetryService
 
@@ -57,19 +56,6 @@ async def trigger_backup(db=Depends(get_db)):
         message="Bắt đầu sao lưu dữ liệu",
     )
 
-@router.post(
-    "/tiep-thi/chien-dich",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
-async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)):
-    return APIResponse(
-        data=await HealthService.create_marketing_campaign(
-            payload.model_dump()
-        ),
-        message="Thiết lập chiến dịch quảng cáo thành công",
-        status=201,
-    )
 
 @router.get(
     "/cai-dat",

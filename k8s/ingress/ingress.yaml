@@ -17,7 +17,6 @@ spec:
             name: finance
             port:
               number: 80
-      - path: /ma-qua-tang(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:

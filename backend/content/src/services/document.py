@@ -798,46 +798,6 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def moderate_document(
-        document_id: str, action: str, reason: str, current_user
-    ) -> dict:
-        
-        status_val = "PUBLISHED" if action == "approve" else "REJECTED"
-
-        await DocumentRepository.update_one(
-            {"_id": document_id},
-            {
-                "$set": {
-                    "status": status_val,
-                    "moderation_reason": reason,
-                    "moderated_by": str(current_user.id),
-                    "moderated_at": datetime.now(timezone.utc),
-                }
-            },
-        )
-
-        if action == "approve":
-            doc = await DocumentRepository.find_one(
-                {"_id": document_id}
-            )
-            if doc:
-                await trigger_document_publish_job(document_id, doc.get("creator_id"))
-                logger.info("Đã bắt đầu quy trình xuất bản")
-
-        await DocumentRepository.insert_audit_log(
-            {
-                "action": f"DOCUMENT_{status_val}",
-                "actor_id": str(current_user.id),
-                "document_id": document_id,
-                "reason": reason,
-                "timestamp": datetime.now(timezone.utc),
-            }
-        )
-        logger.info("Ghi nhận quyết định kiểm duyệt tài liệu thành công")
-        return {"message": "Cập nhật trạng thái kiểm duyệt tài liệu thành công"}
-
-    @staticmethod
-    @log_logic_execution
     async def get_trending_tags(
         limit: int = Query(
             default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT

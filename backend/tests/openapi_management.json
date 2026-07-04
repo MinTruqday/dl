@@ -735,49 +735,7 @@
           }
         ]
       }
-    },
-    "/van-hanh/tiep-thi/chien-dich": {
-      "post": {
-        "summary": "Create Marketing Campaign",
-        "operationId": "create_marketing_campaign_van_hanh_tiep_thi_chien_dich_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CampaignRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponse_Any_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
+
     },
     "/van-hanh/cai-dat": {
       "get": {
@@ -1701,30 +1659,6 @@
         },
         "type": "object",
         "title": "BrandPageUpdate"
-      },
-      "CampaignRequest": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "target": {
-            "type": "string",
-            "title": "Target",
-            "default": "ALL"
-          },
-          "discount": {
-            "type": "integer",
-            "title": "Discount",
-            "default": 0
-          }
-        },
-        "type": "object",
-        "required": [
-          "title"
-        ],
-        "title": "CampaignRequest"
-      },
       "HTTPValidationError": {
         "properties": {
           "detail": {

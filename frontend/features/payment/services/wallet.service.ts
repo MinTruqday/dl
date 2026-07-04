@@ -34,14 +34,3 @@ export async function getDetailedHistoryAPI(
     throw new Error(data.message || "Không thể tải lịch sử chi tiết");
   return data;
 }
-
-export async function redeemVoucherAPI(code: string) {
-  const res = await fetch(`${API_URL}/vi-tien/doi-ma-qua-tang`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ code }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể đổi mã quà tặng");
-  return data;
-}

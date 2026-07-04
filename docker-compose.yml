@@ -153,7 +153,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`)
-        || PathPrefix(`/kiem-tien`) || PathPrefix(`/ma-qua-tang`) || PathPrefix(`/vi-tien`)
+        || PathPrefix(`/kiem-tien`) || PathPrefix(`/vi-tien`)
       - traefik.http.services.finance.loadbalancer.server.port=8006
     env_file:
       - .env

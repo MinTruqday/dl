@@ -18,10 +18,7 @@ class DocumentContentFormat(str, Enum):
     LATEX = "latex"
     MARKDOWN = "markdown"
     CUSTOM = "custom"
-    COMIC = "comic"
     PDF = "pdf"
-    EPUB = "epub"
-    MOBI = "mobi"
     ZIP = "zip"
     HTML = "html"
     JSON = "json"
@@ -45,12 +42,10 @@ class DocumentBase(BaseModel):
     coauthors: List[str] = []
     is_deleted: bool = False
     deleted_at: Optional[datetime] = None
-    flash_sale: Optional[dict] = None
     publisher_name: Optional[str] = None
     folder_id: Optional[str] = None
     drm_settings: Optional[dict] = None
     publish_at: Optional[datetime] = None
-    is_nsfw: Optional[bool] = None
     draft_content: Optional[Any] = None
     toc: List[dict] = []
     reading_time_minutes: int = 0
@@ -72,7 +67,6 @@ class DocumentUpdate(BaseModel):
     drm_settings: Optional[dict] = None
     publish_at: Optional[datetime] = None
     scheduled_publish_at: Optional[datetime] = None
-    is_nsfw: Optional[bool] = None
     expected_version: Optional[datetime] = None
 
 class DocumentCreate(DocumentBase):
@@ -118,9 +112,6 @@ class CoauthorInviteRequest(BaseModel):
 class CollaborationResponse(BaseModel):
     status: str
 
-class ModerateDocumentRequest(BaseModel):
-    action: str
-    reason: str
 
 class TransferOwnershipRequest(BaseModel):
     user_id: str

@@ -40,16 +40,6 @@ export default function ProvisionLayout({
     { id: "step5", label: "Lịch sử", href: "/soan-thao/lich-su" },
     { id: "step6", label: "Bình luận", href: "/soan-thao/binh-luan" },
     { id: "step7", label: "Thùng rác", href: "/soan-thao/thung-rac" },
-    ...(isAdminOrMod
-      ? [
-          {
-            id: "step8",
-            label: "Duyệt bản thảo",
-            href: "/soan-thao/duyet-ban-thao",
-            highlight: true,
-          },
-        ]
-      : []),
   ];
 
   const isActive = (href: string) => {

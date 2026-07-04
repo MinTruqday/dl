@@ -116,11 +116,6 @@ async def test_auto_trigger_backup_van_hanh_sao_luu_post(management_client):
 
     assert response.status_code < 500
 
-async def test_auto_create_marketing_campaign_van_hanh_tiep_thi_chien_dich_post(management_client):
-    """Test for POST /van-hanh/tiep-thi/chien-dich"""
-    response = await management_client.post('/van-hanh/tiep-thi/chien-dich', json={'title': 'string', 'target': 'string', 'discount': 1})
-
-    assert response.status_code < 500
 
 async def test_auto_get_system_config_van_hanh_cai_dat_get(management_client):
     """Test for GET /van-hanh/cai-dat"""

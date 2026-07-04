@@ -10,7 +10,7 @@ pytestmark = pytest.mark.asyncio(loop_scope='session')
 
 async def test_auto_create_document_tai_lieu_post(content_client):
     """Test for POST /tai-lieu"""
-    response = await content_client.post('/tai-lieu', json={'title': 'string', 'slug': 'string', 'description': {}, 'cover_url': {}, 'file_url': {}, 'tags': ['string'], 'content': {}, 'content_format': {}, 'price_dl': 1, 'visibility': 'string', 'password': {}, 'category': {}, 'pages_count': {}, 'preview_pages': 1, 'scheduled_publish_at': {}, 'coauthors': ['string'], 'is_deleted': True, 'deleted_at': {}, 'flash_sale': {}, 'publisher_name': {}, 'folder_id': {}, 'drm_settings': {}, 'publish_at': {}, 'is_nsfw': {}, 'draft_content': {}, 'toc': [{}], 'reading_time_minutes': 1})
+    response = await content_client.post('/tai-lieu', json={'title': 'string', 'slug': 'string', 'description': {}, 'cover_url': {}, 'file_url': {}, 'tags': ['string'], 'content': {}, 'content_format': {}, 'price_dl': 1, 'visibility': 'string', 'password': {}, 'category': {}, 'pages_count': {}, 'preview_pages': 1, 'scheduled_publish_at': {}, 'coauthors': ['string'], 'is_deleted': True, 'deleted_at': {}, 'publisher_name': {}, 'folder_id': {}, 'drm_settings': {}, 'publish_at': {}, 'draft_content': {}, 'toc': [{}], 'reading_time_minutes': 1})
 
     assert response.status_code < 500
 
@@ -28,7 +28,7 @@ async def test_auto_update_document_content_tai_lieu__document_id__noi_dung_put(
 
 async def test_auto_update_document_tai_lieu__document_id__put(content_client):
     """Test for PUT /tai-lieu/{document_id}"""
-    response = await content_client.put('/tai-lieu/test_id', json={'title': {}, 'slug': {}, 'description': {}, 'cover_url': {}, 'tags': {}, 'category': {}, 'price_dl': {}, 'folder_id': {}, 'drm_settings': {}, 'publish_at': {}, 'scheduled_publish_at': {}, 'is_nsfw': {}, 'expected_version': {}})
+    response = await content_client.put('/tai-lieu/test_id', json={'title': {}, 'slug': {}, 'description': {}, 'cover_url': {}, 'tags': {}, 'category': {}, 'price_dl': {}, 'folder_id': {}, 'drm_settings': {}, 'publish_at': {}, 'scheduled_publish_at': {}, 'expected_version': {}})
 
     assert response.status_code < 500
 
@@ -536,17 +536,6 @@ async def test_auto_export_highlights_markdown_danh_dau_tai_lieu__document_id__k
 
     assert response.status_code < 500
 
-async def test_auto_get_approval_queue_ban_nhap_hang_doi_get(content_client):
-    """Test for GET /ban-nhap/hang-doi"""
-    response = await content_client.get('/ban-nhap/hang-doi')
-
-    assert response.status_code < 500
-
-async def test_auto_moderate_document_ban_nhap__document_id__kiem_duyet_post(content_client):
-    """Test for POST /ban-nhap/{document_id}/kiem-duyet"""
-    response = await content_client.post('/ban-nhap/test_id/kiem-duyet', json={'action': 'string', 'reason': 'string'})
-
-    assert response.status_code < 500
 
 async def test_auto_get_pinned_documents_ghim_get(content_client):
     """Test for GET /ghim"""

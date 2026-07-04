@@ -6,7 +6,6 @@ from src.api.bookmark import router as bookmark
 from src.api.collaboration import router as collaboration
 from src.api.discovery import router as discovery
 from src.api.document import router as document
-from src.api.draft import router as draft
 from src.api.highlight import router as highlight
 from src.api.library import router as library
 from src.api.pin import router as pin
@@ -49,7 +48,6 @@ app.include_router(discovery)
 app.include_router(collaboration)
 app.include_router(publication)
 app.include_router(highlight)
-app.include_router(draft)
 app.include_router(pin)
 @app.on_event("startup")
 async def startup_event():

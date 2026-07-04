@@ -4117,115 +4117,6 @@
         }
       }
     },
-    "/ban-nhap/hang-doi": {
-      "get": {
-        "summary": "Get Approval Queue",
-        "operationId": "get_approval_queue_ban_nhap_hang_doi_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Cursor"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "default": 20,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponse_Any_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ban-nhap/{document_id}/kiem-duyet": {
-      "post": {
-        "summary": "Moderate Document",
-        "operationId": "moderate_document_ban_nhap__document_id__kiem_duyet_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "document_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Document Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ModerateDocumentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponse_Any_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/ghim": {
       "get": {
         "summary": "Get Pinned Documents",
@@ -4639,10 +4530,7 @@
           "latex",
           "markdown",
           "custom",
-          "comic",
           "pdf",
-          "epub",
-          "mobi",
           "zip",
           "html",
           "json"
@@ -4836,17 +4724,6 @@
             ],
             "title": "Deleted At"
           },
-          "flash_sale": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Flash Sale"
-          },
           "publisher_name": {
             "anyOf": [
               {
@@ -4891,17 +4768,6 @@
               }
             ],
             "title": "Publish At"
-          },
-          "is_nsfw": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Nsfw"
           },
           "draft_content": {
             "anyOf": [
@@ -5104,17 +4970,6 @@
             ],
             "title": "Deleted At"
           },
-          "flash_sale": {
-            "anyOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Flash Sale"
-          },
           "publisher_name": {
             "anyOf": [
               {
@@ -5159,17 +5014,6 @@
               }
             ],
             "title": "Publish At"
-          },
-          "is_nsfw": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Nsfw"
           },
           "draft_content": {
             "anyOf": [
@@ -5371,17 +5215,6 @@
             ],
             "title": "Scheduled Publish At"
           },
-          "is_nsfw": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Nsfw"
-          },
           "expected_version": {
             "anyOf": [
               {
@@ -5480,24 +5313,6 @@
           "note"
         ],
         "title": "HighlightNoteUpdateRequest"
-      },
-      "ModerateDocumentRequest": {
-        "properties": {
-          "action": {
-            "type": "string",
-            "title": "Action"
-          },
-          "reason": {
-            "type": "string",
-            "title": "Reason"
-          }
-        },
-        "type": "object",
-        "required": [
-          "action",
-          "reason"
-        ],
-        "title": "ModerateDocumentRequest"
       },
       "PinnedDocumentRequest": {
         "properties": {

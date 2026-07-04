@@ -309,11 +309,7 @@ class HealthService:
         )
         logger.info("Đã gửi đề xuất chính sách")
 
-    @staticmethod
-    @log_logic_execution
-    async def create_marketing_campaign(data: dict) -> dict:
-        return {}
-        
+
     @staticmethod
     @log_logic_execution
     async def bulk_update_shadowban(user_ids, status, current_user) -> dict:

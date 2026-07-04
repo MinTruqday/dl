@@ -834,7 +834,7 @@ export default function TroChuyenPage() {
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
-                    accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.mobi,.zip,.csv"
+                    accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.zip,.csv"
                     onChange={(e) => {
                       handleFileUpload(e, "file");
                       setShowAttachments(false);
