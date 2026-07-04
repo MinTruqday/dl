@@ -28,7 +28,6 @@ import {
   Edit2,
   Trash2,
   Plus as PlusIcon,
-  Sparkles,
   MoreVertical,
   ArrowRight,
   Activity,
@@ -168,7 +167,7 @@ export default function TroChuyenPage() {
   const [view, setView] = useState<"chat" | "history">("chat");
   const [useSmart, setUseSmart] = useState(false);
   const [messages, setMessages] = useState<
-    { id?: string; role: string; content: string; thoughts?: string[] }[]
+    { id?: string; role: string; content: string; thoughts?: string[]; attachments?: { image?: string; file?: string } }[]
   >([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -268,7 +267,7 @@ export default function TroChuyenPage() {
   const handleSubmit = async (e?: React.FormEvent, retryText?: string) => {
     if (e) e.preventDefault();
     const userMessage = retryText || input.trim();
-    if (!userMessage || isSending) return;
+    if ((!userMessage && !selectedImage && !selectedFile) || isSending) return;
 
     let sessionId = currentSessionId;
     if (!sessionId) {
@@ -299,10 +298,19 @@ export default function TroChuyenPage() {
       });
     }
 
+    const attachments: { image?: string; file?: string } = {};
+    if (selectedImage) attachments.image = selectedImage.data;
+    if (selectedFile) attachments.file = selectedFile.name;
+
     const msgId = Date.now().toString();
     setMessages((prev) => [
       ...prev,
-      { id: msgId, role: "user", content: userMessage },
+      { 
+        id: msgId, 
+        role: "user", 
+        content: userMessage,
+        ...(Object.keys(attachments).length > 0 ? { attachments } : {})
+      },
     ]);
     setInput("");
     setIsSending(true);
@@ -515,7 +523,15 @@ export default function TroChuyenPage() {
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
       <div className="flex flex-1 min-h-0 gap-6">
         <aside className="w-full lg:w-[320px] bg-[#F5F5F7] rounded-[18px] flex flex-col overflow-hidden shrink-0 hidden lg:flex">
-          <div className="p-6 flex items-center justify-between shrink-0">
+          <div className="p-6 pb-4 shrink-0">
+            <button
+              onClick={() => (window.location.href = "/nang-cap")}
+              className="pill-button w-full"
+            >
+              Nâng cấp gói DocLib AI
+            </button>
+          </div>
+          <div className="px-6 pb-4 flex items-center justify-between shrink-0">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
               Lịch sử
             </h2>
@@ -527,14 +543,6 @@ export default function TroChuyenPage() {
               className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
             >
               <PlusIcon className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="px-6 pb-4 shrink-0">
-            <button
-              onClick={() => (window.location.href = "/nang-cap")}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-[#0071E3] text-white text-[13px] font-semibold rounded-[14px] hover:bg-[#0077ED] transition-colors"
-            >
-              <Sparkles className="w-4 h-4 text-white" /> Nâng cấp Gói AI
             </button>
           </div>
           <div className="overflow-y-auto px-6 pb-6 flex flex-col gap-2 shrink custom-scrollbar">
@@ -719,10 +727,29 @@ export default function TroChuyenPage() {
                   if (msg.role === "user") {
                     return (
                       <div key={idx} className="flex justify-end">
-                        <div className="max-w-[85%] bg-[#0071E3] text-white px-5 py-3.5 rounded-[20px] rounded-tr-[4px]">
-                          <p className="text-[15px] whitespace-pre-wrap leading-relaxed min-w-0">
-                            {msg.content}
-                          </p>
+                        <div className="max-w-[85%] flex flex-col gap-2 items-end">
+                          {msg.attachments?.image && (
+                            <img
+                              src={msg.attachments.image}
+                              alt="Attachment"
+                              className="max-w-[240px] max-h-[240px] object-cover rounded-[16px] border border-[#E8E8ED]"
+                            />
+                          )}
+                          {msg.attachments?.file && (
+                            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-[14px] border border-[#E8E8ED] shadow-sm">
+                              <FileText className="w-5 h-5 text-[#0071E3]" />
+                              <span className="text-[14px] font-medium text-[#1D1D1F]">
+                                {msg.attachments.file}
+                              </span>
+                            </div>
+                          )}
+                          {msg.content && (
+                            <div className="bg-[#0071E3] text-white px-5 py-3.5 rounded-[20px] rounded-tr-[4px]">
+                              <p className="text-[15px] whitespace-pre-wrap leading-relaxed min-w-0">
+                                {msg.content}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -793,93 +820,94 @@ export default function TroChuyenPage() {
           </div>
 
           <div className="shrink-0 p-6 pt-2">
-            <div className="w-full relative">
-              {(selectedFile || selectedImage) && (
-                <div className="flex gap-4 mb-4 overflow-x-auto pb-2 scrollbar-none">
-                  {selectedImage && (
-                    <div className="relative group shrink-0">
-                      <img
-                        src={selectedImage.data}
-                        alt=""
-                        className="h-16 w-16 object-cover  rounded-[14px]"
-                      />
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-[#1D1D1F] text-white flex items-center justify-center rounded-full"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  {selectedFile && (
-                    <div className="relative group shrink-0 h-16 px-4 bg-white  flex items-center gap-3 rounded-[14px]">
-                      <FileText className="w-4 h-4 text-[#0071E3] shrink-0" />
-                      <span className="text-[13px] font-medium text-[#1D1D1F] truncate max-w-[150px]">
-                        {selectedFile.name}
-                      </span>
-                      <button
-                        onClick={() => setSelectedFile(null)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-[#1D1D1F] text-white flex items-center justify-center rounded-full"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+            <div className="w-full relative bg-white border border-[#D2D2D7] focus-within:border-[#0071E3] transition-colors rounded-[24px] p-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.zip,.csv"
+                onChange={(e) => {
+                  handleFileUpload(e, "file");
+                  setShowAttachments(false);
+                }}
+              />
+              <input
+                type="file"
+                ref={imageInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  handleFileUpload(e, "image");
+                  setShowAttachments(false);
+                }}
+              />
 
               {showAttachments && (
-                <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-[14px] py-2 z-50">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.zip,.csv"
-                    onChange={(e) => {
-                      handleFileUpload(e, "file");
-                      setShowAttachments(false);
-                    }}
-                  />
-                  <input
-                    type="file"
-                    ref={imageInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => {
-                      handleFileUpload(e, "image");
-                      setShowAttachments(false);
-                    }}
-                  />
+                <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-[14px] py-2 z-50 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#E8E8ED]">
                   <button
                     onClick={() => {
                       fileInputRef.current?.click();
                       setShowAttachments(false);
                     }}
-                    className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
+                    className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
                   >
-                    <FileText className="w-4 h-4 text-[#0071E3]" /> Tài liệu
+                    <FileText className="w-5 h-5 text-[#0071E3]" /> Tài liệu
                   </button>
                   <button
                     onClick={() => {
                       imageInputRef.current?.click();
                       setShowAttachments(false);
                     }}
-                    className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
+                    className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
                   >
-                    <ImageIcon className="w-4 h-4 text-[#34C759]" /> Hình ảnh
+                    <ImageIcon className="w-5 h-5 text-[#34C759]" /> Hình ảnh
                   </button>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="flex gap-3">
-                <div className="flex-1 min-h-[56px] bg-white flex items-center px-4 gap-3 focus-within:border-[#0071E3] border border-transparent rounded-[20px] transition-colors">
+              {(selectedFile || selectedImage) && (
+                <div className="flex gap-4 px-2 pt-2 pb-3 overflow-x-auto scrollbar-none">
+                  {selectedImage && (
+                    <div className="relative group shrink-0">
+                      <img
+                        src={selectedImage.data}
+                        alt=""
+                        className="h-16 w-16 object-cover rounded-[14px] border border-[#E8E8ED]"
+                      />
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-[#F5F5F7] text-[#6E6E73] hover:text-[#1D1D1F] flex items-center justify-center rounded-full shadow-sm"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  {selectedFile && (
+                    <div className="relative group shrink-0 h-16 px-4 bg-[#F5F5F7] border border-[#E8E8ED] flex items-center gap-3 rounded-[14px]">
+                      <FileText className="w-5 h-5 text-[#0071E3] shrink-0" />
+                      <span className="text-[13px] font-medium text-[#1D1D1F] truncate max-w-[150px]">
+                        {selectedFile.name}
+                      </span>
+                      <button
+                        onClick={() => setSelectedFile(null)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-[#F5F5F7] text-[#6E6E73] hover:text-[#1D1D1F] flex items-center justify-center rounded-full shadow-sm border border-[#E8E8ED]"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="flex gap-2">
+                <div className="flex-1 min-h-[48px] bg-transparent flex items-center px-2 gap-2">
                   {useSmart && (
                     <button
                       type="button"
                       onClick={handleAttach}
-                      className="text-[#6E6E73] shrink-0 rounded-full p-2 hover:bg-[#E8E8ED] transition-colors"
+                      className="text-[#6E6E73] shrink-0 rounded-full p-2 hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
                     >
-                      <PlusIcon className="w-4 h-4" />
+                      <PlusIcon className="w-5 h-5" />
                     </button>
                   )}
                   <input
@@ -888,12 +916,12 @@ export default function TroChuyenPage() {
                     onChange={(e) => setInput(e.target.value)}
                     placeholder=""
                     disabled={isSending}
-                    className="flex-1 min-w-0 h-full py-4 text-[15px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73]"
+                    className="flex-1 min-w-0 h-full py-3 text-[17px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73]"
                   />
                   <label
-                    className={`flex items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-4 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}
+                    className={`flex items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-3 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}
                   >
-                    <span className="text-[13px] font-medium text-[#6E6E73] select-none">
+                    <span className="text-[14px] font-medium text-[#6E6E73] select-none">
                       Suy nghĩ
                     </span>
                     <div className="relative inline-flex items-center">
@@ -924,14 +952,14 @@ export default function TroChuyenPage() {
                   type="submit"
                   disabled={
                     isSending ||
-                    !input.trim()
+                    (!input.trim() && !selectedImage && !selectedFile)
                   }
-                  className="w-14 h-[56px] shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-[20px] transition-colors hover:bg-[#0077ED]"
+                  className="w-12 h-[48px] shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-[#0077ED]"
                 >
                   {isSending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                   )}
                 </button>
               </form>

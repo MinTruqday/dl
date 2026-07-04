@@ -40,21 +40,3 @@ export async function getUserProfileAPI(slug: string) {
   return data;
 }
 
-export async function getReadingStreaksAPI() {
-  const res = await fetch(`${API_URL}/ho-so/chuoi-ngay`, {
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải chuỗi ngày đọc");
-  return data;
-}
-
-export async function getBadgesAPI() {
-  const res = await fetch(`${API_URL}/ho-so/huy-hieu`, {
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách huy hiệu");
-  return data;
-}

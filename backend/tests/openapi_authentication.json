@@ -746,14 +746,6 @@
             "title": "Bookmarks",
             "default": []
           },
-          "badges": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Badges",
-            "default": []
-          },
           "is_premium": {
             "type": "boolean",
             "title": "Is Premium",
@@ -941,14 +933,6 @@
             },
             "type": "array",
             "title": "Bookmarks",
-            "default": []
-          },
-          "badges": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Badges",
             "default": []
           },
           "is_premium": {

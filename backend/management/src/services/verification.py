@@ -154,7 +154,6 @@ class VerificationService:
             "followers_count": 0,
             "following_count": 0,
             "social_links": author.get("social_links", {}),
-            "badges": author.get("badges", []),
             "wallet_address": author.get("wallet_address", ""),
             "recent_documents": [
                 {

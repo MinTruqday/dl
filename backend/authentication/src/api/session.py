@@ -30,14 +30,18 @@ async def read_users_me(
         import httpx
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
             resp = await client.get(
-                f"{settings.MANAGEMENT_URL}/nguoi-dung/{current_user.id}",
+                f"{settings.HUMANITY_URL}/nguoi-dung/{current_user.id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:
                 user_doc = resp.json().get("data")
             else:
+                import logging
+                logging.error(f"Failed to fetch profile: {resp.status_code} {resp.text}")
                 user_doc = None
     except Exception as e:
+        import logging
+        logging.error(f"Exception fetching profile: {e}")
         user_doc = None
 
     if not user_doc:

@@ -32,5 +32,6 @@ class Settings(BaseModel):
     SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")
     SENDER_NAME: Optional[str] = os.getenv("SENDER_NAME")
     SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT", "10.0"))
 
 settings = Settings()

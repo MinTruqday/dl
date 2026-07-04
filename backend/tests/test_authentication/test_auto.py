@@ -16,7 +16,7 @@ async def test_auto_read_users_me_xac_thuc_ca_nhan_get(authentication_client):
 
 async def test_auto_register_user_xac_thuc_dang_ky_post(authentication_client):
     """Test for POST /xac-thuc/dang-ky"""
-    response = await authentication_client.post('/xac-thuc/dang-ky', json={'email': 'string', 'full_name': 'string', 'slug': 'string', 'role': 'string', 'bio': {}, 'avatar_url': {}, 'social_links': {}, 'pinned_documents': ['string'], 'bookmarks': ['string'], 'badges': ['string'], 'is_premium': True, 'wallet_balance': 1, 'is_shadowbanned': True, 'permissions': ['string'], 'donation_link': {}, 'kyc_status': 'string', 'creator_status': 'string', 'is_verified': True, 'storage_limit': 1, 'ai_tier': 'string', 'tos_accepted_at': {}, 'welcome_message': {}, 'blocked_users': ['string'], 'settings': {}, 'password': 'string', 'agreed_to_terms': True})
+    response = await authentication_client.post('/xac-thuc/dang-ky', json={'email': 'string', 'full_name': 'string', 'slug': 'string', 'role': 'string', 'bio': {}, 'avatar_url': {}, 'social_links': {}, 'pinned_documents': ['string'], 'bookmarks': ['string'], 'is_premium': True, 'wallet_balance': 1, 'is_shadowbanned': True, 'permissions': ['string'], 'donation_link': {}, 'kyc_status': 'string', 'creator_status': 'string', 'is_verified': True, 'storage_limit': 1, 'ai_tier': 'string', 'tos_accepted_at': {}, 'welcome_message': {}, 'blocked_users': ['string'], 'settings': {}, 'password': 'string', 'agreed_to_terms': True})
 
     assert response.status_code < 500
 

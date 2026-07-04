@@ -34,6 +34,14 @@ class ChatRepository:
         return await mongo.find_one("ai_sessions", *args, **kwargs)
 
     @classmethod
+    def find_ai_sessions(cls, *args, **kwargs):
+        return mongo.find("ai_sessions", *args, **kwargs)
+
+    @classmethod
+    def find_ai_messages(cls, *args, **kwargs):
+        return mongo.find("ai_messages", *args, **kwargs)
+
+    @classmethod
     async def insert_one(cls, *args, **kwargs):
         return await mongo.insert_one("ai_messages", *args, **kwargs)
 

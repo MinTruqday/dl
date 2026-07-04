@@ -40,8 +40,8 @@ class HistoryService:
         if document_id:
             query["document_id"] = document_id
         cursor = (
-            AiSessionRepository
-            .find(query, {"messages": 0})
+            ChatRepository
+            .find_ai_sessions(query, {"messages": 0})
             .sort("updated_at", -1)
         )
         return await cursor 
@@ -55,8 +55,8 @@ class HistoryService:
         if not session:
             raise HTTPException(status_code=404, detail="Không tìm thấy cuộc trò chuyện")
         messages = (
-            await AiMessageRepository
-            .find({"session_id": session_id})
+            await ChatRepository
+            .find_ai_messages({"session_id": session_id})
             .sort("created_at", 1)
             .execute()
         )

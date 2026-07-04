@@ -42,7 +42,6 @@ class UserBase(BaseModel):
     social_links: Optional[Dict[str, str]] = {}
     pinned_documents: List[str] = []
     bookmarks: List[str] = []
-    badges: List[str] = []
     is_premium: bool = False
     wallet_balance: int = 0
     is_shadowbanned: bool = False

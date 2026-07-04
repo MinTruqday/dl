@@ -19,6 +19,10 @@ async def get_user_sessions(
 ):
     return await HistoryService.get_user_sessions(user_id, document_id)
 
+@router.post("", response_model=Dict[str, Any])
+async def create_session(data: dict):
+    return await HistoryService.create_session(data)
+
 @router.get("/{session_id}", response_model=Dict[str, Any])
 async def get_session_detail(session_id: str, user_id: str):
     return await HistoryService.get_session_detail(session_id, user_id)
