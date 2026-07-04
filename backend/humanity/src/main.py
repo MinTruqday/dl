@@ -20,6 +20,18 @@ async def internal_token_middleware(request: Request, call_next):
             return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
     return await call_next(request)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=(
+        settings.CORS_ALLOWED_ORIGINS.split(",")
+        if settings.CORS_ALLOWED_ORIGINS
+        else ["*"]
+    ),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Khởi động dịch vụ Humanity")

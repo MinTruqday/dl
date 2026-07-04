@@ -12,6 +12,8 @@ class Settings(BaseModel):
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     REDIS_URI: str = os.getenv("REDIS_URI")
     INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
+    COMPILATION_URL: str = os.getenv("COMPILATION_URL")
+    CONTENT_URL: str = os.getenv("CONTENT_URL")
     MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
     DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT"))
     LONG_PROCESS_TIMEOUT: float = float(os.getenv("LONG_PROCESS_TIMEOUT"))

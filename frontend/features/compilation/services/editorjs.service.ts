@@ -7,7 +7,7 @@ export async function compilePreviewAPI(
   content: string,
   isFragment: boolean = false,
 ) {
-  const res = await fetch(`${API_URL}/ket-xuat/bien-dich-xem-truoc`, {
+  const res = await fetch(`${API_URL}/soan-thao/editorjs/bien-dich`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, is_fragment: isFragment }),
@@ -42,7 +42,7 @@ export async function exportToWordAPI(documentId: string) {
 }
 
 export async function syncKeystrokeBufferAPI(documentId: string, payload: any) {
-  const res = await fetch(`${API_URL}/trinh-soan-thao/${documentId}/dong-bo`, {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/dong-bo`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -53,7 +53,7 @@ export async function syncKeystrokeBufferAPI(documentId: string, payload: any) {
 }
 
 export async function addInlineSuggestionAPI(documentId: string, payload: any) {
-  const res = await fetch(`${API_URL}/trinh-soan-thao/${documentId}/goi-y`, {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/goi-y`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -68,7 +68,7 @@ export async function resolveSuggestionAPI(
   action: string,
 ) {
   const res = await fetch(
-    `${API_URL}/trinh-soan-thao/goi-y/${suggestionId}/giai-quyet`,
+    `${API_URL}/soan-thao/goi-y/${suggestionId}/giai-quyet`,
     {
       method: "PUT",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -81,7 +81,7 @@ export async function resolveSuggestionAPI(
 }
 
 export async function syncPomodoroSessionAPI(payload: any) {
-  const res = await fetch(`${API_URL}/trinh-soan-thao/dong-ho-pomodoro`, {
+  const res = await fetch(`${API_URL}/soan-thao/dong-ho-pomodoro`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -94,7 +94,7 @@ export async function syncPomodoroSessionAPI(payload: any) {
 
 export async function autoSaveDraftAPI(documentId: string, content: any) {
   const res = await fetch(
-    `${API_URL}/trinh-soan-thao/${documentId}/tu-dong-luu`,
+    `${API_URL}/soan-thao/${documentId}/tu-dong-luu`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -108,7 +108,7 @@ export async function autoSaveDraftAPI(documentId: string, content: any) {
 
 export async function submitForReviewAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/trinh-soan-thao/${documentId}/gui-danh-gia`,
+    `${API_URL}/soan-thao/${documentId}/gui-danh-gia`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -126,7 +126,7 @@ export async function globalFindReplaceAPI(
   matchCase: boolean = false,
 ) {
   const res = await fetch(
-    `${API_URL}/trinh-soan-thao/${documentId}/tim-va-thay-the`,
+    `${API_URL}/soan-thao/${documentId}/tim-va-thay-the`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -143,7 +143,7 @@ export async function addInlineCommentAPI(
   payload: { block_id: string; text: string; selected_text?: string },
 ) {
   const res = await fetch(
-    `${API_URL}/trinh-soan-thao/${documentId}/binh-luan`,
+    `${API_URL}/soan-thao/${documentId}/binh-luan`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -157,7 +157,7 @@ export async function addInlineCommentAPI(
 
 export async function resolveCommentAPI(commentId: string) {
   const res = await fetch(
-    `${API_URL}/trinh-soan-thao/binh-luan/${commentId}/giai-quyet`,
+    `${API_URL}/soan-thao/binh-luan/${commentId}/giai-quyet`,
     {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -174,7 +174,7 @@ export async function getVersionDiffAPI(
   versionIdB: string,
 ) {
   const res = await fetch(
-    `${API_URL}/trinh-soan-thao/${documentId}/so-sanh-phien-ban`,
+    `${API_URL}/soan-thao/${documentId}/so-sanh-phien-ban`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },

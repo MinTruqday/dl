@@ -12,7 +12,6 @@ export default function TrashPage() {
   const { showToast } = useToast();
   const [trash, setTrash] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     fetchTrash();
@@ -27,7 +26,6 @@ export default function TrashPage() {
       showToast("Không thể tải danh sách thùng rác", "error");
     } finally {
       setLoading(false);
-      requestAnimationFrame(() => setVisible(true));
     }
   };
 
@@ -42,65 +40,71 @@ export default function TrashPage() {
   };
 
   return (
-    <div className="flex flex-col h-full font-sans">
-      <div
-        className={`flex-1 overflow-y-auto custom-scrollbar pr-2 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
-        style={{ transitionDelay: "100ms" }}
-      >
-        {loading ? (
-          <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
-            <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
-            <p className="text-[13px] font-medium text-[#6E6E73]">
-              Đang tải dữ liệu...
-            </p>
-          </div>
-        ) : !Array.isArray(trash) || trash.length === 0 ? (
-          <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] p-12 text-center">
-            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-4">
-              <Trash2 className="w-8 h-8 text-[#C7C7CC]" />
-            </div>
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
-              Thùng rác trống
-            </p>
-            <p className="text-[15px] text-[#6E6E73] max-w-sm">
-              Không có tài liệu nào bị xóa gần đây. Các tài liệu trong thùng rác
-              có thể được khôi phục.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 pb-6">
-            {trash.map((doc: any) => (
-              <div
-                key={doc._id}
-                className="bg-[#F5F5F7] border-[#E8E8ED] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[18px] hover: transition-all duration-300 group hover:-translate-y-0.5"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-[#F5F5F7] flex items-center justify-center rounded-[10px] shrink-0 group-hover:bg-white group-hover:border-[#0071E3] transition-all">
-                    <FileText className="w-6 h-6 text-[#6E6E73] group-hover:text-[#0071E3] transition-colors" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-[15px] font-semibold text-[#1D1D1F] line-clamp-1">
-                      {doc.title || "Tác phẩm chưa có tiêu đề"}
-                    </h4>
-                    <p className="text-[13px] text-[#6E6E73] flex items-center gap-1.5">
-                      <span>Ngày xóa:</span>
-                      <span className="font-medium text-[#1D1D1F]">
-                        {new Date(doc.updated_at).toLocaleString("vi-VN")}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleRestoreDocument(doc._id || doc.id)}
-                  className="w-full sm:w-auto h-[44px] px-6 bg-white text-[15px] font-medium text-[#1D1D1F] rounded-full flex items-center justify-center gap-2 hover:bg-[#F5F5F7] hover:text-[#0071E3] transition-colors sm:opacity-0 sm:group-hover:opacity-100"
-                >
-                  <RotateCcw className="w-4 h-4" /> Khôi phục
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6 font-sans text-[#1D1D1F]">
+      <div className="flex items-center justify-between">
+        <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
+          Thùng rác
+        </h2>
       </div>
+
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="flex flex-col bg-white rounded-[18px] overflow-hidden animate-pulse border border-[#E8E8ED]">
+              <div className="bg-[#D2D2D7] aspect-[4/3] w-full" />
+              <div className="p-5 space-y-3">
+                <div className="h-3 w-1/3 bg-[#D2D2D7] rounded-full" />
+                <div className="h-4 w-full bg-[#D2D2D7] rounded-full" />
+                <div className="h-4 w-2/3 bg-[#D2D2D7] rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : !Array.isArray(trash) || trash.length === 0 ? (
+        <div className="py-24 flex flex-col items-center justify-center w-full text-center">
+          <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+          {trash.map((doc: any, idx: number) => (
+            <div
+              key={doc._id || doc.id || idx}
+              className="group relative flex flex-col bg-white rounded-[18px] overflow-hidden transition-transform hover:scale-[1.02] border border-[#E8E8ED]"
+            >
+              <div className="aspect-[4/3] w-full bg-[#F5F5F7] relative overflow-hidden">
+                {doc.cover_url ? (
+                  <img
+                    src={doc.cover_url.startsWith("http") ? doc.cover_url : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/storage/${doc.cover_url}`}
+                    alt={doc.title || "Tác phẩm chưa có tiêu đề"}
+                    className="w-full h-full object-cover opacity-60"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-[#F5F5F7] flex items-center justify-center">
+                    <FileText className="w-12 h-12 text-[#E8E8ED]" />
+                  </div>
+                )}
+              </div>
+
+              <div className="p-5 flex flex-col gap-2">
+                <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-2 leading-snug">
+                  {doc.title || "Tác phẩm chưa có tiêu đề"}
+                </h3>
+                <p className="text-[13px] text-[#FF3B30]">
+                  Đã xóa {new Date(doc.updated_at).toLocaleString("vi-VN")}
+                </p>
+              </div>
+
+              <button
+                onClick={() => handleRestoreDocument(doc._id || doc.id)}
+                title="Khôi phục"
+                className="absolute top-2 right-2 p-2 bg-white rounded-full text-[#6E6E73] hover:text-[#34C759] opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm border border-[#E8E8ED]"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

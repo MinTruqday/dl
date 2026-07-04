@@ -24,6 +24,12 @@ import {
   CalendarClock,
   StickyNote,
 } from "lucide-react";
+import {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalContent,
+} from "@/shared/components/ui/Modal";
 import dynamic from "next/dynamic";
 const Editor = dynamic(() => import("@/features/compilation/components/Editor"), {
   ssr: false,
@@ -106,6 +112,7 @@ function StudioContent() {
   const [scheduleDate, setScheduleDate] = useState("");
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [isPreviewCompiling, setIsPreviewCompiling] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const selectedDocument = useMemo(
     () =>
@@ -282,73 +289,58 @@ function StudioContent() {
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-              Chi tiết tác phẩm
-            </p>
-            <div className="flex flex-col gap-1">
-              <span
-                className="text-[15px] font-semibold text-[#1D1D1F] truncate"
-                title={selectedDocument?.title || "Bản thảo chưa đặt tên"}
-              >
-                {selectedDocument?.title || "Bản thảo chưa đặt tên"}
-              </span>
-              <span className="text-[13px] text-[#6E6E73]">{statusMsg}</span>
+        <main className="flex-1 min-w-0 flex flex-col min-h-0 bg-[#F5F5F7] rounded-[18px] overflow-hidden">
+          <div className="h-[60px] px-6 flex items-center justify-between shrink-0 border-b border-[#E8E8ED]">
+            <div className="flex items-center gap-6 h-full">
+              <div className="flex flex-col max-w-[240px] border-r border-[#E8E8ED] pr-6 justify-center h-full">
+                <span
+                  className="text-[14px] font-semibold text-[#1D1D1F] truncate"
+                  title={selectedDocument?.title || "Bản thảo chưa đặt tên"}
+                >
+                  {selectedDocument?.title || "Bản thảo chưa đặt tên"}
+                </span>
+                <span className="text-[12px] text-[#6E6E73] truncate">{statusMsg}</span>
+              </div>
+              <div className="flex items-center gap-2 h-full">
+                {(["edit", "preview", "raw"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setEditorMode(m)}
+                    className={`h-full px-4 text-[14px] font-medium flex items-center transition-colors ${editorMode === m ? "text-[#1D1D1F] border-b-2 border-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                  >
+                    {m === "edit"
+                      ? "Soạn thảo"
+                      : m === "preview"
+                        ? "Xem trước"
+                        : "Mã nguồn"}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-              Hành động
-            </p>
-            <div className="flex flex-col gap-2">
+            
+            <div className="flex items-center gap-2">
               <button
+                onClick={() => setShowExportModal(true)}
                 disabled={!selectedDocumentId || isExporting}
-                onClick={handleExportPDF}
-                className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[10px] bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED] transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
-                Xuất PDF
-              </button>
-              <button
-                disabled={!selectedDocumentId || isExporting}
-                onClick={handleExportDOCX}
-                className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[10px] bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED] transition-colors disabled:opacity-50"
-              >
-                Xuất DOCX
+                <Download className="w-3.5 h-3.5" /> Xuất
               </button>
               <button
                 onClick={handleSave}
                 disabled={!selectedDocumentId || isSaving}
-                className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[10px] bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED] transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-white text-[#0071E3] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
-                {isSaving ? "Đang lưu..." : "Lưu nháp"}
+                <Save className="w-3.5 h-3.5" /> {isSaving ? "Đang lưu" : "Lưu nháp"}
               </button>
               <button
                 onClick={handlePublish}
                 disabled={!selectedDocumentId}
-                className="w-full text-left px-4 py-3 text-[14px] font-medium rounded-[10px] bg-[#0071E3] text-white hover:bg-[#0077ED] transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-[#0071E3] text-white hover:bg-[#0077ED] transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 Phát hành
               </button>
             </div>
-          </div>
-        </aside>
-
-        <main className="flex-1 min-w-0 flex flex-col min-h-0 bg-[#F5F5F7] rounded-[18px] overflow-hidden">
-          <div className="h-[48px] px-6 flex items-center gap-2 shrink-0">
-            {(["edit", "preview", "raw"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setEditorMode(m)}
-                className={`h-full px-4 text-[14px] font-medium flex items-center transition-colors ${editorMode === m ? "text-[#1D1D1F] -2 border-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
-              >
-                {m === "edit"
-                  ? "Soạn thảo"
-                  : m === "preview"
-                    ? "Xem trước"
-                    : "Mã nguồn"}
-              </button>
-            ))}
           </div>
 
           <div className="flex-1 overflow-y-auto bg-white p-8">
@@ -407,6 +399,32 @@ function StudioContent() {
           </div>
         </main>
       </div>
+
+      <Modal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        className="max-w-sm rounded-[18px] bg-[#F5F5F7] p-0 border-none"
+      >
+        <ModalHeader className="p-6">
+          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+            Xuất tài liệu
+          </ModalTitle>
+        </ModalHeader>
+        <ModalContent className="px-6 pb-6 space-y-3">
+          <button
+            onClick={() => { setShowExportModal(false); handleExportPDF(); }}
+            className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"
+          >
+            Định dạng PDF (.pdf)
+          </button>
+          <button
+            onClick={() => { setShowExportModal(false); handleExportDOCX(); }}
+            className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"
+          >
+            Định dạng Word (.docx)
+          </button>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

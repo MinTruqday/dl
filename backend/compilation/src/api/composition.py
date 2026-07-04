@@ -29,7 +29,7 @@ def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_use
         )
     return current_user
 
-router = APIRouter(route_class=LoggingRoute, prefix="/trinh-soan-thao")
+router = APIRouter(route_class=LoggingRoute, prefix="/soan-thao")
 
 @router.post("/{document_id}/dong-bo")
 async def sync_keystroke_buffer(

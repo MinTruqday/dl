@@ -4,7 +4,7 @@ import {
 } from "@/features/authentication/services/session.service";
 
 export async function cleanTempFilesAPI() {
-  const res = await fetch(`${API_URL}/don-dep`, {
+  const res = await fetch(`${API_URL}/soan-thao/latex/don-dep`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -15,7 +15,7 @@ export async function cleanTempFilesAPI() {
 }
 
 export async function cloudAutoSaveAPI(documentId: string, content: string) {
-  const res = await fetch(`${API_URL}/tu-dong-luu`, {
+  const res = await fetch(`${API_URL}/soan-thao/latex/tu-dong-luu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, content }),
@@ -26,7 +26,7 @@ export async function cloudAutoSaveAPI(documentId: string, content: string) {
 }
 
 export async function getLatexDraftAPI() {
-  const res = await fetch(`${API_URL}/ban-nhap`, {
+  const res = await fetch(`${API_URL}/soan-thao/latex/ban-nhap`, {
     method: "GET",
     headers: getAuthHeaders(),
   });
@@ -39,7 +39,7 @@ export async function compileLatexPreviewAPI(
   content: string,
   isFragment: boolean = false,
 ) {
-  const res = await fetch(`${API_URL}/bien-dich`, {
+  const res = await fetch(`${API_URL}/soan-thao/latex/bien-dich`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, is_fragment: isFragment }),
@@ -52,7 +52,7 @@ export async function compileLatexPreviewAPI(
 }
 
 export async function formatLatexAPI(content: string) {
-  const res = await fetch(`${API_URL}/dinh-dang`, {
+  const res = await fetch(`${API_URL}/soan-thao/latex/dinh-dang`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
@@ -64,7 +64,7 @@ export async function formatLatexAPI(content: string) {
 }
 
 export async function exportLatexAPI(content: string, format: string = "docx") {
-  const res = await fetch(`${API_URL}/ket-xuat/${format}`, {
+  const res = await fetch(`${API_URL}/soan-thao/latex/ket-xuat/${format}`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, format }),
@@ -77,7 +77,7 @@ export async function exportLatexAPI(content: string, format: string = "docx") {
 }
 
 export async function exportProjectZipAPI(content: string) {
-  const res = await fetch(`${API_URL}/ket-xuat-zip`, {
+  const res = await fetch(`${API_URL}/soan-thao/latex/ket-xuat-zip`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),

@@ -16,7 +16,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
-import { useState, useEffect } from "react";
 
 export default function ProvisionLayout({
   children,
@@ -26,19 +25,11 @@ export default function ProvisionLayout({
   const pathname = usePathname();
   const { user } = useAuth() as any;
   const isAdminOrMod = user?.role === "admin" || user?.role === "moderator";
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
 
   const navItems = [
-    { id: "step1", label: "Thông tin sơ bộ", href: "/soan-thao" },
-    { id: "step2", label: "Kho lưu trữ nháp", href: "/soan-thao/ban-thao" },
-    { id: "step3", label: "Số liệu", href: "/soan-thao/so-lieu" },
-    { id: "step4", label: "Cấu hình", href: "/soan-thao/cau-hinh" },
+    { id: "step1", label: "Khởi tạo", href: "/soan-thao" },
+    { id: "step2", label: "Bản nháp", href: "/soan-thao/ban-thao" },
     { id: "step5", label: "Lịch sử", href: "/soan-thao/lich-su" },
-    { id: "step6", label: "Bình luận", href: "/soan-thao/binh-luan" },
     { id: "step7", label: "Thùng rác", href: "/soan-thao/thung-rac" },
   ];
 
@@ -48,29 +39,28 @@ export default function ProvisionLayout({
   };
 
   return (
-    <div
-      className={`w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
-    >
-      <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
+      <div className="grid md:grid-cols-12 gap-8">
+        <aside className="md:col-span-4 xl:col-span-4 space-y-6">
+          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-              Sáng tác
+              Soạn thảo
             </p>
-            <div className="flex flex-col gap-2">
+            <nav className="flex flex-col gap-1.5">
               {navItems.map((item) => {
                 const active = isActive(item.href);
                 return (
                   <Link
                     key={item.id}
                     href={item.href}
-                    className={`flex items-center justify-between px-4 py-3 rounded-[10px] transition-colors ${active ? (item.highlight ? "bg-[#1D1D1F] text-white" : "bg-white text-[#0071E3] font-medium") : "bg-transparent text-[#6E6E73] hover:bg-white hover:text-[#1D1D1F]"}`}
+                    className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${active ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
                   >
-                    <span className="text-[14px]">{item.label}</span>
+                    <span className="truncate text-left">{item.label}</span>
+                    {active && <ChevronRight className="w-4 h-4 shrink-0" />}
                   </Link>
                 );
               })}
-            </div>
+            </nav>
           </div>
 
           <div className="bg-[#F5F5F7] rounded-[18px] p-6">
@@ -104,7 +94,7 @@ export default function ProvisionLayout({
           </div>
         </aside>
 
-        <main className="flex-1 min-w-0 flex flex-col min-h-0">
+        <main className="md:col-span-8 xl:col-span-8 space-y-6">
           <div className="flex-1 overflow-y-auto no-scrollbar">{children}</div>
         </main>
       </div>

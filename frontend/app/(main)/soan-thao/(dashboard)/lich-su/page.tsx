@@ -15,6 +15,7 @@ import {
   GitCompare,
   History,
   CheckCircle2,
+  Plus,
 } from "lucide-react";
 import {
   Modal,
@@ -87,7 +88,7 @@ export default function HistoryPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [selectedDocumentId, setSelectedDocumentId] = useState("");
   const [loadingDocs, setLoadingDocs] = useState(true);
-  const [visible, setVisible] = useState(false);
+  const [showSelectModal, setShowSelectModal] = useState(false);
 
   const [versions, setVersions] = useState<any[]>([]);
   const [loadingVersions, setLoadingVersions] = useState(false);
@@ -112,7 +113,6 @@ export default function HistoryPage() {
       showToast("Lỗi tải danh sách tác phẩm", "error");
     } finally {
       setLoadingDocs(false);
-      requestAnimationFrame(() => setVisible(true));
     }
   };
 
@@ -179,158 +179,153 @@ export default function HistoryPage() {
   if (loadingDocs) return <PageLoader />;
 
   return (
-    <div className="flex flex-col h-full font-sans">
-      <div
-        className={`flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
-        style={{ transitionDelay: "100ms" }}
-      >
-        <div className="bg-[#F5F5F7] p-6 rounded-[18px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-[10px] flex items-center justify-center shrink-0">
-              <BookOpen className="w-6 h-6 text-[#1D1D1F]" />
-            </div>
+    <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6 font-sans text-[#1D1D1F] flex flex-col h-full">
+      <div className="flex items-center justify-between shrink-0">
+        <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
+          Lịch sử
+        </h2>
+        <button
+          onClick={() => setShowSelectModal(true)}
+          className="p-2 bg-[#0071E3] rounded-full text-white hover:bg-[#0055C6] transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+
+      {selectedDocumentId && versions.length > 0 ? (
+        <div className="flex-1 min-h-[400px] flex flex-col bg-white rounded-[18px] overflow-hidden pb-6 border border-[#E8E8ED]">
+          <div className="p-6 border-b border-[#E8E8ED] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
             <div>
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-                Chọn tác phẩm
-              </p>
+              <h2 className="text-[17px] font-semibold text-[#1D1D1F] flex items-center gap-2 mb-1">
+                <History className="w-5 h-5" /> Danh sách phiên bản
+              </h2>
               <p className="text-[13px] text-[#6E6E73]">
-                Xem lịch sử của tài liệu cụ thể
+                {selectedVersions.length === 2
+                  ? "Đã chọn đủ 2 phiên bản để so sánh"
+                  : "Bạn có thể chọn 2 phiên bản bất kỳ để xem sự khác biệt"}
               </p>
             </div>
-          </div>
-          <div className="relative w-full sm:w-[320px]">
-            <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
-            <select
-              value={selectedDocumentId}
-              onChange={(e) => setSelectedDocumentId(e.target.value)}
-              className="w-full h-[48px] pl-12 pr-4 text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[10px] appearance-none transition-colors cursor-pointer"
+            <button
+              onClick={handleCompareVersions}
+              disabled={selectedVersions.length !== 2 || isComparing}
+              className={`h-[44px] px-6 text-[15px] font-medium rounded-full flex items-center justify-center gap-2 transition-colors ${selectedVersions.length === 2 ? "bg-[#0071E3] text-white hover:bg-[#0077ED]" : "bg-[#F5F5F7] text-[#C7C7CC] cursor-not-allowed "}`}
             >
-              {documents.length === 0 && (
-                <option value="" disabled>
-                  Chưa có tác phẩm
-                </option>
-              )}
-              {documents.map((d) => (
-                <option key={d.id || d._id} value={d.id || d._id}>
-                  {d.title || "Chưa có tiêu đề"}
-                </option>
-              ))}
-            </select>
+              {isComparing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <GitCompare className="w-5 h-5" />
+              )}{" "}
+              So sánh
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+            {loadingVersions ? (
+              <div className="grid grid-cols-1 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-4 p-6 rounded-[18px] bg-white border border-[#E8E8ED] animate-pulse">
+                    <div className="w-12 h-12 bg-[#D2D2D7] rounded-[10px] shrink-0" />
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-[#D2D2D7] rounded-full w-48" />
+                      <div className="h-3 bg-[#D2D2D7] rounded-full w-32" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {versions.map((v) => {
+                  const isSelected = selectedVersions.includes(v.id);
+                  return (
+                    <div
+                      key={v.id}
+                      onClick={() => toggleVersionSelection(v.id)}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-[18px] transition-all cursor-pointer relative overflow-hidden group ${isSelected ? "bg-[#F5F5F7] border-[#0071E3] ring-1 ring-[#0071E3]" : "bg-[#F5F5F7] border border-transparent hover:ring-1 hover:ring-[#E8E8ED]"}`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0071E3]" />
+                      )}
+                      <div className="flex items-center gap-4 mb-4 sm:mb-0 ml-2">
+                        <div
+                          className={`w-12 h-12 flex items-center justify-center rounded-[10px] shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white text-[#6E6E73] border border-[#E8E8ED]"}`}
+                        >
+                          {isSelected ? (
+                            <CheckCircle2 className="w-6 h-6" />
+                          ) : (
+                            <Clock className="w-6 h-6" />
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <h4
+                            className={`text-[15px] font-semibold ${isSelected ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}
+                          >
+                            {new Date(v.created_at).toLocaleString("vi-VN")}
+                          </h4>
+                          <p className="text-[13px] text-[#6E6E73] flex items-center gap-1.5">
+                            <span>Tác giả:</span>
+                            <span className="font-medium text-[#1D1D1F]">
+                              {v.author_name || "Hệ thống"}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmRestore(v.id);
+                        }}
+                        className="h-[44px] px-6 bg-white text-[13px] font-medium text-[#1D1D1F] rounded-full border border-[#E8E8ED] hover:bg-[#F5F5F7] transition-all flex items-center justify-center gap-2 sm:opacity-0 sm:group-hover:opacity-100"
+                      >
+                        <RotateCcw className="w-4 h-4" /> Khôi phục
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
+      ) : (
+        <div className="py-24 flex flex-col items-center justify-center w-full text-center">
+          <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+        </div>
+      )}
 
-        {selectedDocumentId ? (
-          <div className="flex-1 min-h-0 flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] overflow-hidden pb-6">
-            <div className="p-6 bg-[#F5F5F7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-              <div>
-                <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2 mb-1">
-                  <History className="w-5 h-5" /> Danh sách phiên bản
-                </h2>
-                <p className="text-[13px] text-[#6E6E73]">
-                  {selectedVersions.length === 2
-                    ? "Đã chọn đủ 2 phiên bản để so sánh"
-                    : "Bạn có thể chọn 2 phiên bản bất kỳ để xem sự khác biệt"}
-                </p>
-              </div>
-              <button
-                onClick={handleCompareVersions}
-                disabled={selectedVersions.length !== 2 || isComparing}
-                className={`h-[44px] px-6 text-[15px] font-medium rounded-full flex items-center justify-center gap-2 transition-colors ${selectedVersions.length === 2 ? "bg-[#0071E3] text-white hover:bg-[#0077ED]" : "bg-[#F5F5F7] text-[#C7C7CC] cursor-not-allowed "}`}
-              >
-                {isComparing ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <GitCompare className="w-5 h-5" />
-                )}{" "}
-                So sánh
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-              {loadingVersions ? (
-                <div className="h-full flex flex-col items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
-                  <p className="text-[13px] font-medium text-[#6E6E73]">
-                    Đang tải dữ liệu...
-                  </p>
+      <Modal
+        isOpen={showSelectModal}
+        onClose={() => setShowSelectModal(false)}
+        className="max-w-md rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
+      >
+        <ModalHeader className="p-6">
+          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+            Chọn tác phẩm
+          </ModalTitle>
+        </ModalHeader>
+        <ModalContent className="p-6 pt-0 space-y-4">
+          <div className="max-h-[300px] overflow-y-auto space-y-2">
+            {documents.length === 0 ? (
+              <p className="text-center text-[13px] text-[#6E6E73] py-6">
+                Chưa có tác phẩm
+              </p>
+            ) : (
+              documents.map((d) => (
+                <div
+                  key={d.id || d._id}
+                  onClick={() => {
+                    setSelectedDocumentId(d.id || d._id);
+                    setShowSelectModal(false);
+                  }}
+                  className={`p-4 bg-white rounded-[10px] cursor-pointer transition-colors ${selectedDocumentId === (d.id || d._id) ? "border-[#0071E3] border" : "hover:"}`}
+                >
+                  <span className="text-[15px] font-medium text-[#1D1D1F]">
+                    {d.title || "Chưa có tiêu đề"}
+                  </span>
                 </div>
-              ) : versions.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-12">
-                  <div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[18px] mb-4">
-                    <History className="w-8 h-8 text-[#C7C7CC]" />
-                  </div>
-                  <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
-                    Chưa có phiên bản
-                  </p>
-                  <p className="text-[15px] text-[#6E6E73] max-w-sm">
-                    Tác phẩm này chưa có phiên bản nào được lưu lại trong lịch
-                    sử.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {versions.map((v) => {
-                    const isSelected = selectedVersions.includes(v.id);
-                    return (
-                      <div
-                        key={v.id}
-                        onClick={() => toggleVersionSelection(v.id)}
-                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-[18px] transition-all cursor-pointer relative overflow-hidden group ${isSelected ? "bg-[#0071E3]/5 border-[#0071E3]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:"}`}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0071E3]" />
-                        )}
-                        <div className="flex items-center gap-4 mb-4 sm:mb-0 ml-2">
-                          <div
-                            className={`w-12 h-12 flex items-center justify-center rounded-[10px] shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#6E6E73] "}`}
-                          >
-                            {isSelected ? (
-                              <CheckCircle2 className="w-6 h-6" />
-                            ) : (
-                              <Clock className="w-6 h-6" />
-                            )}
-                          </div>
-                          <div className="space-y-1">
-                            <h4
-                              className={`text-[15px] font-semibold ${isSelected ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}
-                            >
-                              {new Date(v.created_at).toLocaleString("vi-VN")}
-                            </h4>
-                            <p className="text-[13px] text-[#6E6E73] flex items-center gap-1.5">
-                              <span>Tác giả:</span>
-                              <span className="font-medium text-[#1D1D1F]">
-                                {v.author_name || "Hệ thống"}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConfirmRestore(v.id);
-                          }}
-                          className="h-[44px] px-6 bg-white text-[13px] font-medium text-[#1D1D1F] rounded-full hover:bg-[#F5F5F7] transition-all flex items-center justify-center gap-2 sm:opacity-0 sm:group-hover:opacity-100"
-                        >
-                          <RotateCcw className="w-4 h-4" /> Khôi phục
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+              ))
+            )}
           </div>
-        ) : (
-          <div className="flex-1 bg-[#F5F5F7] rounded-[18px] p-12 flex flex-col items-center justify-center gap-4 text-center">
-            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-2">
-              <History className="w-8 h-8 text-[#C7C7CC]" />
-            </div>
-            <p className="text-[15px] text-[#6E6E73] max-w-sm">
-              Vui lòng chọn một tác phẩm từ danh sách để xem lịch sử phiên bản
-            </p>
-          </div>
-        )}
-      </div>
+        </ModalContent>
+      </Modal>
 
       <Modal
         isOpen={!!confirmRestore}

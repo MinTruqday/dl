@@ -220,10 +220,10 @@ export default function ConfigPage() {
   return (
     <div className="flex flex-col h-full font-sans">
       <div
-        className={`flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
+        className={`bg-[#F5F5F7] rounded-[18px] p-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
-        <div className="bg-[#F5F5F7] p-6 rounded-[18px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+        <div className="bg-white p-6 rounded-[18px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white rounded-[10px] flex items-center justify-center shrink-0">
               <Settings className="w-6 h-6 text-[#1D1D1F]" />
@@ -262,7 +262,7 @@ export default function ConfigPage() {
         {selectedDocumentId ? (
           <div className="flex-1 min-h-0 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
-              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
+              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px]">
                 <div className="flex items-center gap-2 mb-4">
                   <Hash className="w-5 h-5 text-[#1D1D1F]" />
                   <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
@@ -306,7 +306,7 @@ export default function ConfigPage() {
                 </div>
               </div>
 
-              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
+              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px]">
                 <div className="flex items-center gap-2 mb-4">
                   <Folder className="w-5 h-5 text-[#1D1D1F]" />
                   <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
@@ -344,7 +344,7 @@ export default function ConfigPage() {
                 </div>
               </div>
 
-              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
+              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px]">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Shield className="w-5 h-5 text-[#1D1D1F]" />
@@ -407,7 +407,7 @@ export default function ConfigPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px] relative overflow-hidden">
+              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px] relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                   <Brain className="w-24 h-24" />
                 </div>
@@ -434,7 +434,7 @@ export default function ConfigPage() {
                 </button>
               </div>
 
-              <div className="bg-[#F5F5F7] border-[#E8E8ED] p-6 rounded-[18px]">
+              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px]">
                 <div className="flex items-center gap-2 mb-4">
                   <Users className="w-5 h-5 text-[#1D1D1F]" />
                   <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
@@ -524,7 +524,7 @@ export default function ConfigPage() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 bg-[#F5F5F7] rounded-[18px] p-12 flex flex-col items-center justify-center gap-4 text-center">
+          <div className="flex-1 bg-white rounded-[18px] p-12 flex flex-col items-center justify-center gap-4 text-center">
             <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-2">
               <Settings className="w-8 h-8 text-[#C7C7CC]" />
             </div>

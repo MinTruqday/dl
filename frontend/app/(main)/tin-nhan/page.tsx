@@ -1017,8 +1017,16 @@ export default function MessagesPage() {
           </div>
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 hide-scrollbar">
             {loadingConv ? (
-              <div className="p-12 flex justify-center">
-                <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="p-4 rounded-[14px] flex items-center gap-4 animate-pulse bg-white/50">
+                    <div className="w-6 h-6 bg-[#D2D2D7] rounded-full shrink-0" />
+                    <div className="flex-1 space-y-2.5">
+                      <div className="h-3 bg-[#D2D2D7] rounded-full w-24" />
+                      <div className="h-2 bg-[#D2D2D7] rounded-full w-32" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : sortedConversations.length > 0 ? (
               sortedConversations.map((conv) => {
@@ -1129,8 +1137,12 @@ export default function MessagesPage() {
 
               <div className="flex-1 overflow-y-auto p-6 bg-transparent hide-scrollbar relative">
                 {loadingMsgs ? (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#0071E3]" />
+                  <div className="space-y-4 flex flex-col h-full justify-end pb-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"} animate-pulse`}>
+                        <div className={`w-48 h-10 rounded-[18px] ${i % 2 === 0 ? "bg-[#D2D2D7]" : "bg-[#E8E8ED]"}`} />
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="space-y-4">

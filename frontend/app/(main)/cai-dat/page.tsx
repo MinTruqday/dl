@@ -149,6 +149,16 @@ export default function SettingsPage() {
     if (!motivation) return showToast("Nhập lý do", "error");
     setLoading(true);
     try {
+      const { API_URL, getToken } = await import("@/features/authentication/services/session.service");
+      const res = await fetch(`${API_URL}/ho-so/tac-gia/ung-tuyen`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ motivation, portfolio })
+      });
+      if (!res.ok) throw new Error("Lỗi gửi đơn");
       showToast("Gửi thành công", "success");
       setMotivation("");
       setPortfolio("");
@@ -254,11 +264,11 @@ export default function SettingsPage() {
     },
     {
       id: "moderator",
-      label: "Kiểm duyệt viên",
+      label: "Công cụ kiểm duyệt",
       icon: ShieldCheck,
       roles: ["moderator", "admin"],
     },
-    { id: "admin", label: "Quản trị viên", icon: Zap, roles: ["admin"] },
+    { id: "admin", label: "Cấu hình hệ thống", icon: Zap, roles: ["admin"] },
   ].filter((s) => !user || s.roles.includes(user.role));
 
   return (
@@ -267,23 +277,22 @@ export default function SettingsPage() {
         className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
-        <aside className="w-full md:w-[320px] shrink-0 xl:col-span-4 space-y-6">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
-            <div className="text-[13px] font-medium text-[#6E6E73] mb-2 px-2">
+        <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
+          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Danh mục
-            </div>
-            <nav className="flex flex-col gap-1">
+            </p>
+            <nav className="flex flex-col gap-1.5">
               {sections.map((section) => {
-                const Icon = section.icon;
+                const active = activeSection === section.id;
                 return (
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id as TabKey)}
-                    className={`flex items-center justify-between px-4 py-3 rounded-[10px] transition-colors ${activeSection === section.id ? "bg-[#0071E3] text-white" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                    className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${active ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
                   >
-                    <div className="flex items-center gap-3 font-medium text-[15px]">
-                      <Icon className="w-5 h-5" /> {section.label}
-                    </div>
+                    <span className="truncate text-left">{section.label}</span>
+                    {active && <ChevronRight className="w-4 h-4 shrink-0" />}
                   </button>
                 );
               })}
@@ -456,7 +465,7 @@ export default function SettingsPage() {
               <div className="space-y-8">
                 <div>
                   <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
-                    Kiểm duyệt viên
+                    Công cụ kiểm duyệt
                   </h2>
                 </div>
                 <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
@@ -500,7 +509,7 @@ export default function SettingsPage() {
               <div className="space-y-8">
                 <div>
                   <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
-                    Quản trị viên
+                    Cấu hình hệ thống
                   </h2>
                 </div>
                 <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
@@ -627,7 +636,13 @@ export default function SettingsPage() {
                           </span>
                           <CustomSwitch
                             active={notifSettings[item.id]?.email ?? false}
-                            onToggle={() => {}}
+                            onToggle={async () => {
+                              const newSettings = { ...notifSettings, [item.id]: { ...notifSettings[item.id], email: !(notifSettings[item.id]?.email ?? false) } };
+                              setNotifSettings(newSettings);
+                              try {
+                                await updateAnnouncementSettingsAPI(newSettings);
+                              } catch(e) {}
+                            }}
                           />
                         </div>
                         <div className="flex items-center gap-2">
@@ -636,7 +651,13 @@ export default function SettingsPage() {
                           </span>
                           <CustomSwitch
                             active={notifSettings[item.id]?.inapp ?? false}
-                            onToggle={() => {}}
+                            onToggle={async () => {
+                              const newSettings = { ...notifSettings, [item.id]: { ...notifSettings[item.id], inapp: !(notifSettings[item.id]?.inapp ?? false) } };
+                              setNotifSettings(newSettings);
+                              try {
+                                await updateAnnouncementSettingsAPI(newSettings);
+                              } catch(e) {}
+                            }}
                           />
                         </div>
                       </div>
@@ -669,7 +690,20 @@ export default function SettingsPage() {
                   <h3 className="text-[17px] font-medium text-[#FF3B30] mb-4">
                     Vùng nguy hiểm
                   </h3>
-                  <button className="py-2 px-4 bg-[#FF3B30] text-white rounded-[10px] text-[15px] font-medium">
+                  <button 
+                    onClick={async () => {
+                      if (!confirm("Bạn có chắc chắn muốn xóa tài khoản vĩnh viễn?")) return;
+                      const { API_URL, getToken, removeToken } = await import("@/features/authentication/services/session.service");
+                      try {
+                        const res = await fetch(`${API_URL}/ho-so/xoa-tai-khoan`, { method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` } });
+                        if (res.ok) {
+                          removeToken();
+                          window.location.href = "/dang-nhap";
+                        }
+                      } catch(e) {}
+                    }}
+                    className="py-2 px-4 bg-[#FF3B30] text-white rounded-[10px] text-[15px] font-medium"
+                  >
                     Xóa tài khoản
                   </button>
                 </div>

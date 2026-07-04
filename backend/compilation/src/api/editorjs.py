@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from src.schemas.composition import CompileRequest
 from src.services.composition import EditorjsEngine
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter(route_class=LoggingRoute, prefix="/soan-thao/editorjs")
 
 @router.post("/bien-dich")
 async def compile_editorjs(req: CompileRequest):

@@ -23,6 +23,7 @@ export default function CreateDocumentPage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [authorName, setAuthorName] = useState("");
   const [publisherName, setPublisherName] = useState("");
   const [visibility, setVisibility] = useState("public");
   const [contentFormat, setContentFormat] = useState("json");
@@ -30,6 +31,7 @@ export default function CreateDocumentPage() {
 
   useEffect(() => {
     if (user) {
+      setAuthorName(user.full_name || user.name || "Ẩn danh");
       setPublisherName(user.role === "admin" ? "DocLib" : user.full_name || "");
     }
   }, [user]);
@@ -58,6 +60,7 @@ export default function CreateDocumentPage() {
         visibility,
         content_format: contentFormat,
         status: "draft",
+        author_name: authorName,
       });
       if (res) {
         showToast("Khởi tạo tác phẩm thành công.", "success");
@@ -77,178 +80,103 @@ export default function CreateDocumentPage() {
   return (
     <form
       onSubmit={handleCreate}
-      className="flex flex-col h-full font-sans text-[#1D1D1F]"
+      className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6 font-sans text-[#1D1D1F]"
     >
-      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-8">
-        <div className="space-y-6">
+      <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Khởi tạo</h2>
+      <div className="space-y-6">
           <div className="space-y-2">
             <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
               Tiêu đề tác phẩm <span className="text-[#FF3B30]">*</span>
             </label>
-            <div className="relative">
-              <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#C7C7CC]" />
-              <input
-                required
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder=""
-                className="w-full h-[52px] pl-12 pr-4 bg-white border-transparent focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
-              Người đăng / Nhà xuất bản
-            </label>
-            <div className="relative">
-              <PenTool className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#C7C7CC]" />
-              <input
-                readOnly={user?.role === "admin"}
-                type="text"
-                value={publisherName}
-                onChange={(e) => setPublisherName(e.target.value)}
-                className={`w-full h-[52px] pl-12 pr-4 bg-white border-transparent focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none ${user?.role === "admin" ? "opacity-60 cursor-not-allowed" : ""}`}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
-              Tóm tắt nội dung (Tùy chọn)
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+            <input
+              required
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder=""
-              className="w-full min-h-[140px] p-4 bg-white border-transparent focus:border-[#0071E3] text-[15px] text-[#1D1D1F] rounded-[14px] transition-all duration-200 outline-none resize-none shadow-sm"
+              className="apple-input w-full h-[48px]"
             />
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <label className="text-[15px] font-semibold text-[#1D1D1F] ml-1 block pb-3">
-            Cấu hình quyền truy cập
-          </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              {
-                id: "public",
-                label: "Công khai",
-                desc: "Mọi độc giả đều có thể tiếp cận tác phẩm của bạn.",
-                icon: Globe,
-              },
-              {
-                id: "private",
-                label: "Riêng tư",
-                desc: "Chỉ bạn hoặc cộng tác viên được mời mới có thể xem.",
-                icon: Lock,
-              },
-            ].map((opt) => {
-              const Icon = opt.icon;
-              const isSelected = visibility === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setVisibility(opt.id)}
-                  className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
-                >
-                  <div
-                    className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border-[#E8E8ED] text-[#6E6E73]"}`}
-                  >
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <p
-                      className={`text-[17px] font-semibold ${isSelected ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}
-                    >
-                      {opt.label}
-                    </p>
-                    <p className="text-[13px] text-[#6E6E73] leading-relaxed">
-                      {opt.desc}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
+            <div className="space-y-2">
+              <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+                Người đăng
+              </label>
+              <input
+                type="text"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                className="apple-input w-full h-[48px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+                Nhà xuất bản
+              </label>
+              {user?.role === "admin" ? (
+                <div className="apple-input w-full h-[48px] bg-[#E8E8ED] border-transparent px-4 flex items-center text-[#6E6E73] text-[15px] cursor-not-allowed">
+                  {publisherName}
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={publisherName}
+                  onChange={(e) => setPublisherName(e.target.value)}
+                  className="apple-input w-full h-[48px]"
+                />
+              )}
+            </div>
           </div>
+
+            <div className="space-y-2">
+              <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+                Tóm tắt nội dung (Tùy chọn)
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder=""
+                className="apple-input w-full min-h-[100px] resize-none py-3"
+              />
+            </div>
         </div>
 
         <div className="space-y-4">
-          <label className="text-[15px] font-semibold text-[#1D1D1F] ml-1 block pb-3">
+          <label className="text-[15px] font-semibold text-[#1D1D1F] ml-1 block pb-1">
             Môi trường soạn thảo
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              {
-                id: "json",
-                label: "Soạn thảo chuẩn",
-                desc: "Soạn thảo dạng Block hiện đại, trực quan, dễ dùng.",
-                icon: FileText,
-              },
-              {
-                id: "latex",
-                label: "Soạn thảo LaTeX",
-                desc: "Soạn thảo mã nguồn LaTeX chuyên nghiệp dành cho tài liệu học thuật.",
-                icon: Code,
-              },
+              { id: "json", label: "Soạn thảo chuẩn" },
+              { id: "latex", label: "Soạn thảo LaTeX" },
             ].map((opt) => {
-              const Icon = opt.icon;
               const isSelected = contentFormat === opt.id;
               return (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => setContentFormat(opt.id)}
-                  className={`p-6 text-left flex items-start gap-4 rounded-[18px] transition-all duration-200 group ${isSelected ? "border-[#0071E3] bg-[#EBF4FF]" : "bg-[#F5F5F7] border-[#E8E8ED] hover:border-[#D2D2D7]"}`}
+                  className={`h-[48px] rounded-full text-[15px] font-medium transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
                 >
-                  <div
-                    className={`w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white border-[#E8E8ED] text-[#6E6E73]"}`}
-                  >
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <p
-                      className={`text-[17px] font-semibold ${isSelected ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}
-                    >
-                      {opt.label}
-                    </p>
-                    <p className="text-[13px] text-[#6E6E73] leading-relaxed">
-                      {opt.desc}
-                    </p>
-                  </div>
+                  {opt.label}
                 </button>
               );
             })}
           </div>
         </div>
-      </div>
 
-      <div className="mt-8 pt-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 px-4 py-3 bg-[#F5F5F7] rounded-[14px]">
-          <div className="w-2.5 h-2.5 bg-[#34C759] rounded-full animate-pulse shadow-[0_0_8px_rgba(52,199,89,0.4)]" />
-          <div className="flex flex-col">
-            <span className="text-[12px] text-[#6E6E73] font-medium">
-              Trạng thái hệ thống
-            </span>
-            <span className="text-[13px] font-semibold text-[#1D1D1F]">
-              Sẵn sàng thiết lập không gian
-            </span>
-          </div>
-        </div>
+      <div className="flex justify-end pt-4">
         <button
           type="submit"
           disabled={loading || !title.trim()}
-          className="h-[52px] px-8 bg-[#0071E3] text-white text-[15px] font-medium flex items-center justify-center gap-2 rounded-full disabled:opacity-50 transition-colors hover:bg-[#0077ED] w-full sm:w-auto"
+          className="pill-button"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <>
-              Bắt đầu soạn thảo <ArrowRight className="w-5 h-5" />
-            </>
+            "Bắt đầu soạn thảo"
           )}
         </button>
       </div>

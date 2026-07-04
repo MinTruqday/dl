@@ -187,7 +187,7 @@ export default function WalletPage() {
           setShowTopupModal(false);
           setCheckoutUrl(null);
         }}
-        className={`rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl ${checkoutUrl ? "max-w-2xl" : "max-w-md"}`}
+        className={`rounded-[18px] bg-[#F5F5F7] p-0 border-none ${checkoutUrl ? "max-w-2xl" : "max-w-md"}`}
       >
         <ModalHeader className="p-6">
           <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
@@ -199,7 +199,7 @@ export default function WalletPage() {
             </p>
           )}
         </ModalHeader>
-        <ModalContent className="p-6 pt-0">
+        <ModalContent className="p-6">
           {checkoutUrl ? (
             <PayOSEmbedded
               checkoutUrl={checkoutUrl}
@@ -274,7 +274,7 @@ export default function WalletPage() {
       <Modal
         isOpen={showWithdrawModal}
         onClose={() => setShowWithdrawModal(false)}
-        className="max-w-md rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
+        className="max-w-md rounded-[18px] bg-[#F5F5F7] p-0 border-none"
       >
         <ModalHeader className="p-6">
           <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
@@ -284,7 +284,7 @@ export default function WalletPage() {
             1 dl = 1.000 VNĐ (Phí 2%)
           </p>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0 space-y-4">
+        <ModalContent className="p-6 space-y-4">
           <input
             type="number"
             value={withdrawalAmount}
@@ -355,7 +355,7 @@ export default function WalletPage() {
               {(user?.role === "author" || user?.role === "admin") && (
                 <button
                   onClick={() => setShowWithdrawModal(true)}
-                  className="py-3 bg-white text-[#0071E3] font-medium font-medium rounded-full hover:bg-[#E8E8ED] transition-colors"
+                  className="py-3 bg-white text-[#0071E3] font-medium rounded-full hover:bg-[#E8E8ED] transition-colors"
                 >
                   Rút tiền
                 </button>
@@ -382,7 +382,9 @@ export default function WalletPage() {
                 <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
               </div>
             ) : history.length === 0 ? (
-              <EmptyState text="Chưa có giao dịch" />
+              <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center">
+                <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {history.map((tx) => (

@@ -9,7 +9,7 @@ from src.engines.latex import LatexEngine
 from src.core.dependency import get_current_user, get_current_user_optional, CurrentUser
 from src.core.infrastructure.database import database
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter(route_class=LoggingRoute, prefix="/soan-thao/latex")
 
 @router.post("/bien-dich")
 async def compile_latex(req: CompileRequest):

@@ -312,7 +312,7 @@ services:
       - 8011:8011
     labels:
       - traefik.enable=true
-      - traefik.http.routers.editor.rule=PathPrefix(`/trinh-soan-thao`)
+      - traefik.http.routers.editor.rule=PathPrefix(`/soan-thao`)
       - traefik.http.services.editor.loadbalancer.server.port=8011
     env_file:
       - .env
@@ -387,11 +387,7 @@ services:
       - 8003:8003
     labels:
       - traefik.enable=true
-      - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/han-muc`)
-        || PathPrefix(`/ho-so`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/nguoi-dung`)
-        || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/kiem-toan`)
-        || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`)
-        || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)
+      - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/han-muc`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`)
       - traefik.http.services.management.loadbalancer.server.port=8003
     env_file:
       - .env
@@ -465,12 +461,12 @@ services:
       - 8004:8004
     labels:
       - traefik.enable=true
-      - traefik.http.routers.content.rule=PathPrefix(`/ban-nhap`) || PathPrefix(`/cong-tac`)
+      - traefik.http.routers.content.rule=PathPrefix(`/cong-tac`)
         || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`)
-        || PathPrefix(`/ghim`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/kham-pha`)
+        || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`)
         || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`)
         || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`)
-        || PathPrefix(`/danh-gia`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/cam-quyen-nhap-lieu`)
+        || PathPrefix(`/danh-gia`) || PathPrefix(`/cam-quyen-nhap-lieu`)
         || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`)
         || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`)
         || PathPrefix(`/tai-lieu-hieu`)

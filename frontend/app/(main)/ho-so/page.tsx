@@ -157,9 +157,9 @@ export default function ProfilePage() {
 
             <div className="w-full mb-8">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <p className="text-[13px] font-medium text-[#6E6E73] mb-4 truncate px-2">
+                <h1 className="text-[20px] font-semibold text-[#1D1D1F] truncate px-2">
                   {user.full_name || "Ẩn danh"}
-                </p>
+                </h1>
                 {user.role === "admin" && (
                   <ShieldCheck className="w-5 h-5 text-[#8E8D91]" />
                 )}
@@ -268,8 +268,7 @@ export default function ProfilePage() {
                   <BadgeCheck className="w-5 h-5" /> Trở thành Tác giả
                 </h3>
                 <p className="text-[14px] text-[#0055C6]">
-                  Nâng cấp tài khoản để xuất bản nội dung và xây dựng cộng đồng
-                  của riêng bạn.
+                  Nâng cấp tài khoản để xuất bản nội dung và xây dựng cộng đồng của riêng bạn
                 </p>
               </div>
               <button
@@ -293,8 +292,7 @@ export default function ProfilePage() {
                   <Crown className="w-5 h-5" /> Ứng tuyển Tác giả Tiềm năng
                 </h3>
                 <p className="text-[14px] text-[#CC7700]">
-                  Trở thành Tác giả Tiềm năng để nhận ưu đãi hiển thị và thu
-                  nhập đặc biệt.
+                  Trở thành Tác giả Tiềm năng để nhận ưu đãi hiển thị và thu nhập đặc biệt
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
