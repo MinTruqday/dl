@@ -521,7 +521,8 @@ services:
       - 8013:8013
     labels:
       - traefik.enable=true
-      - traefik.http.routers.drm.rule=PathPrefix(`/drm`)
+      - traefik.http.routers.drm.rule=PathPrefix(`/drm`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/ban-quyen`) || PathPrefix(`/giay-phep`)
+      - traefik.http.routers.drm.priority=2
       - traefik.http.services.drm.loadbalancer.server.port=8013
     env_file:
       - .env

@@ -434,8 +434,9 @@ class DocumentService:
             pass
 
         if document.get("content"):
-            document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
-            del document["content"]
+            if user_id != document.get("creator_id"):
+                document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
+                del document["content"]
 
         return document
 
@@ -653,8 +654,9 @@ class DocumentService:
             pass
         
         if document.get("content"):
-            document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
-            del document["content"]
+            if user_id != document.get("creator_id"):
+                document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
+                del document["content"]
             
         return document
 

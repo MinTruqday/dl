@@ -40,11 +40,33 @@ class WatermarkService:
             if hasattr(current_user, "email") and current_user.email
             else str(current_user.id)
         )
+        import urllib.request
+        import json
+        from src.core.infrastructure.configuration import settings
+        
         user_id = str(current_user.id)
+        
+        user_tier = current_user.tier
+        try:
+            url = f"{settings.INTERNAL_API_URL}/nguoi-dung/{current_user.id}"
+            req = urllib.request.Request(url, method="GET")
+            with urllib.request.urlopen(req, timeout=settings.DEFAULT_HTTP_TIMEOUT) as response:
+                if response.status == 200:
+                    data = json.loads(response.read().decode())
+                    user_tier = data.get("data", {}).get("ai_tier", "BASIC")
+        except Exception as e:
+            logger.warning(f"Không thể lấy thông tin tier: {e}")
+
+        if user_tier == "BASIC" and (not hasattr(current_user, "role") or current_user.role != "admin"):
+            raise HTTPException(
+                status_code=403,
+                detail="Gói cước Basic không hỗ trợ tính năng xuất bảo mật. Vui lòng nâng cấp",
+            )
+
         if (
             document.get("is_premium")
             and document.get("creator_id") != user_id
-            and (not hasattr(current_user, "role") or current_user.role != "ADMIN")
+            and (not hasattr(current_user, "role") or current_user.role != "admin")
         ):
             purchase = await LicenseRepository.get_purchase(user_id, str(document["_id"]))
             if not purchase:
@@ -56,7 +78,7 @@ class WatermarkService:
         if (
             document.get("is_premium")
             and document.get("creator_id") != user_id
-            and hasattr(current_user, "role") and current_user.role == "ADMIN"
+            and hasattr(current_user, "role") and current_user.role == "admin"
         ):
             import datetime
             await LicenseRepository.record_audit_log({
@@ -97,6 +119,14 @@ class WatermarkService:
                     document.get("content", "Creative content pending review")
                 )
                 
+                c.saveState()
+                c.setFont(font_name, 60)
+                c.setFillColorRGB(0.9, 0.9, 0.9, alpha=0.3)
+                c.translate(A4[0]/2, A4[1]/2)
+                c.rotate(45)
+                c.drawCentredString(0, 0, user_email)
+                c.restoreState()
+
                 zw_watermark = encode_watermark(user_id)
                 lines = content.split("\n")
                 for para in lines:
@@ -109,6 +139,13 @@ class WatermarkService:
                         y_pos -= 18
                         if y_pos < 50:
                             c.showPage()
+                            c.saveState()
+                            c.setFont(font_name, 60)
+                            c.setFillColorRGB(0.9, 0.9, 0.9, alpha=0.3)
+                            c.translate(A4[0]/2, A4[1]/2)
+                            c.rotate(45)
+                            c.drawCentredString(0, 0, user_email)
+                            c.restoreState()
                             c.setFont(font_name_regular, 12)
                             y_pos = 800
                 c.save()
@@ -137,6 +174,10 @@ class WatermarkService:
                 status_code=500, detail="Lỗi xuất tài liệu bảo vệ bản quyền"
             )
             
+        if user_tier == "PRO" and (not hasattr(current_user, "role") or current_user.role != "admin"):
+            logger.info("Xuất tài liệu thành công")
+            return pdf_data, "pdf", "application/pdf"
+            
         import os
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         from src.services.license import LicenseService
@@ -160,7 +201,7 @@ class WatermarkService:
             raise HTTPException(status_code=500, detail=f"Lỗi mã hóa tài liệu: {e}")
 
         logger.info(f"Xuất tài liệu E-DRM thành công, file_id={file_id}")
-        return final_doclib_data
+        return final_doclib_data, "doclib", "application/octet-stream"
 
     @staticmethod
     @log_logic_execution

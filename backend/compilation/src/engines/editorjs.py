@@ -460,3 +460,69 @@ class EditorjsEngine:
                     os.remove(filepath)
                 except Exception as e:
                     logger.exception("Lỗi dọn dẹp tệp tạm thời")
+
+    @staticmethod
+    async def export_to_format(content: str, target_format: str) -> bytes:
+        try:
+            parsed_content = json.loads(content)
+            blocks = (
+                parsed_content.get("blocks", [])
+                if isinstance(parsed_content, dict)
+                else []
+            )
+        except json.JSONDecodeError as e:
+            raise Exception(f"Định dạng nội dung tài liệu không hợp lệ: {e}")
+
+        if not blocks:
+            raise Exception("Tài liệu không có nội dung hợp lệ")
+
+        html_content = EditorjsEngine._convert_blocks_to_html(blocks)
+
+        job_id = str(uuid7())
+        temp_dir = tempfile.gettempdir()
+        html_path = os.path.join(temp_dir, f"{job_id}.html")
+        out_path = os.path.join(temp_dir, f"{job_id}.{target_format}")
+
+        with open(html_path, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+        process = None
+        try:
+            process = await asyncio.create_subprocess_exec(
+                "timeout",
+                "-k",
+                "35",
+                "30",
+                "pandoc",
+                html_path,
+                "-o",
+                out_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                limit=1024 * 1024 * 2,
+            )
+            await asyncio.wait_for(
+                process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT
+            )
+
+            if not os.path.exists(out_path):
+                logger.error("Lỗi xuất tài liệu")
+                raise Exception("Lỗi xuất tài liệu")
+
+            with open(out_path, "rb") as f:
+                return f.read()
+
+        except asyncio.TimeoutError as e:
+            if process:
+                try:
+                    process.kill()
+                except Exception as e:
+                    logger.exception("Lỗi dừng tác vụ biên dịch")
+            raise Exception("Hết thời gian chờ quá trình xuất tài liệu")
+
+        finally:
+            for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
+                try:
+                    os.remove(filepath)
+                except Exception as e:
+                    logger.exception("Lỗi dọn dẹp tệp tạm thời")

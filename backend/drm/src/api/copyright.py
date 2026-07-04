@@ -1,7 +1,7 @@
 from typing import Any
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
-from src.core.infrastructure.dependency import get_current_user
+from src.core.dependency import get_current_user
 from src.core.response import APIResponse
 from src.services.copyright import CopyrightService
 from pydantic import BaseModel

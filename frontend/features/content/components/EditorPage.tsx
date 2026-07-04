@@ -8,12 +8,11 @@ import {
   saveDocumentDraftAPI,
   updateDocumentAPI,
 } from "@/features/content/services/document.service";
-import { compileDocumentAPI } from "@/features/compilation/services/composition.service";
-import { publishDocumentAPI } from "@/features/content/services/publication.service";
 import {
-  exportDocumentPdfAPI,
-  exportDocumentDocxAPI,
-} from "@/features/management/services/export.service";
+  exportToWordAPI,
+  compilePreviewAPI
+} from "@/features/compilation/services/editorjs.service";
+import { API_URL, getAuthHeaders } from "@/features/authentication/services/session.service";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
@@ -35,7 +34,7 @@ const Editor = dynamic(() => import("@/features/compilation/components/Editor"),
   ssr: false,
 });
 import edjsHTML from "editorjs-html";
-import { compileLatexPreviewAPI } from "@/features/compilation/services/latex.service";
+import { compileLatexPreviewAPI, exportLatexAPI } from "@/features/compilation/services/latex.service";
 
 const customParsers = {
   alert: (block: any) =>
@@ -234,11 +233,17 @@ function StudioContent() {
   };
 
   const handleExportPDF = async () => {
-    if (!selectedDocumentId) return;
+    if (!selectedDocumentId || !content) return;
     setIsExporting(true);
     setStatusMsg("Đang tạo PDF...");
     try {
-      const blob = await exportDocumentPdfAPI(selectedDocumentId);
+      let blob;
+      if (selectedDocument?.content_format === "latex") {
+        blob = await exportLatexAPI(content, "pdf");
+      } else {
+        blob = await compilePreviewAPI(content, false);
+      }
+      
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -257,11 +262,16 @@ function StudioContent() {
   };
 
   const handleExportDOCX = async () => {
-    if (!selectedDocumentId) return;
+    if (!selectedDocumentId || !content) return;
     setIsExporting(true);
     setStatusMsg("Đang tạo DOCX...");
     try {
-      const blob = await exportDocumentDocxAPI(selectedDocumentId);
+      let blob;
+      if (selectedDocument?.content_format === "latex") {
+        blob = await exportLatexAPI(content, "docx");
+      } else {
+        blob = await exportToWordAPI(content);
+      }
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -273,6 +283,40 @@ function StudioContent() {
       showToast("Tải DOCX thành công", "success");
     } catch (e: any) {
       showToast("Lỗi tạo DOCX", "error");
+    } finally {
+      setIsExporting(false);
+      setStatusMsg("Sẵn sàng");
+    }
+  };
+
+  const handleExportDRM = async () => {
+    if (!selectedDocumentId) return;
+    setIsExporting(true);
+    setStatusMsg("Đang tạo tệp bảo mật...");
+    try {
+      const res = await fetch(`${API_URL}/ket-xuat/${selectedDocumentId}/drm`, {
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Xuất DRM thất bại");
+      
+      const contentDisposition = res.headers.get('content-disposition');
+      let filename = `${selectedDocument?.title || "ban-thao"}.doclib`;
+      if (contentDisposition && contentDisposition.includes('filename="TaiLieuBaoMat.pdf"')) {
+        filename = `${selectedDocument?.title || "ban-thao"}.pdf`;
+      }
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      showToast("Tải tệp bảo mật thành công", "success");
+    } catch (e: any) {
+      showToast("Lỗi tạo tệp bảo mật", "error");
     } finally {
       setIsExporting(false);
       setStatusMsg("Sẵn sàng");
@@ -417,11 +461,19 @@ function StudioContent() {
           >
             Định dạng PDF (.pdf)
           </button>
+          {selectedDocument?.content_format !== "latex" && (
+            <button
+              onClick={() => { setShowExportModal(false); handleExportDOCX(); }}
+              className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"
+            >
+              Định dạng Word (.docx)
+            </button>
+          )}
           <button
-            onClick={() => { setShowExportModal(false); handleExportDOCX(); }}
+            onClick={() => { setShowExportModal(false); handleExportDRM(); }}
             className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"
           >
-            Định dạng Word (.docx)
+            Định dạng Bảo mật (.doclib)
           </button>
         </ModalContent>
       </Modal>

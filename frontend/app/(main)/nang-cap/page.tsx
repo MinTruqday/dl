@@ -138,6 +138,7 @@ export default function UpgradePage() {
                 "25 lượt trò chuyện / ngày",
                 "Tối đa 7.500 token / ngày",
                 "Phân tích tối đa 5 tài liệu",
+                "Bảo mật tài liệu cấp 1",
               ].map((f, i) => (
                 <li
                   key={i}
@@ -194,6 +195,7 @@ export default function UpgradePage() {
                 "100 lượt trò chuyện / ngày",
                 "Tối đa 30.000 token / ngày",
                 "Không giới hạn số lượng tài liệu",
+                "Bảo mật tài liệu toàn diện: Thuỷ ấn & Mã hoá file E-DRM (Bước 1 & 2)",
               ].map((f, i) => (
                 <li
                   key={i}

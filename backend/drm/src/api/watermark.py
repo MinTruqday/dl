@@ -17,14 +17,14 @@ async def export_document_pdf(
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    pdf_content = await WatermarkService.export_document_pdf_watermarked(
+    file_content, ext, mime_type = await WatermarkService.export_document_pdf_watermarked(
         document_id, current_user
     )
     headers = {
-        "Content-Disposition": 'attachment; filename="TaiLieuBaoMat.doclib"'
+        "Content-Disposition": f'attachment; filename="TaiLieuBaoMat.{ext}"'
     }
     return Response(
-        content=pdf_content, media_type="application/octet-stream", headers=headers
+        content=file_content, media_type=mime_type, headers=headers
     )
 
 from src.schemas.watermark import TextPayload

@@ -23,7 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY compilation/src/ ./src/
 
-RUN useradd -m doclibuser && chown -R doclibuser:doclibuser /app
+RUN useradd -m doclibuser && \
+    mkdir -p /home/doclibuser/.cache/Tectonic && \
+    chown -R doclibuser:doclibuser /home/doclibuser /app
 USER doclibuser
 
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8011"]

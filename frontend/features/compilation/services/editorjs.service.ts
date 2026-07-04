@@ -25,10 +25,11 @@ export async function compilePreviewAPI(
   return await res.blob();
 }
 
-export async function exportToWordAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/ket-xuat/${documentId}/docx`, {
-    method: "GET",
-    headers: getAuthHeaders(),
+export async function exportToWordAPI(content: string) {
+  const res = await fetch(`${API_URL}/soan-thao/editorjs/ket-xuat/docx`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
   });
   if (!res.ok) {
     let errMsg = "Xuất file Word thất bại";

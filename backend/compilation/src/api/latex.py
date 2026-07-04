@@ -24,10 +24,14 @@ async def compile_latex(req: CompileRequest):
 
 @router.post("/ket-xuat/{format}")
 async def export_document(format: str, req: CompileRequest):
-    if format not in ["docx", "html"]:
+    if format not in ["docx", "html", "pdf"]:
         raise HTTPException(status_code=400, detail="Không hỗ trợ định dạng xuất này")
 
     try:
+        if format == "pdf":
+            pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
+            return Response(content=pdf_bytes, media_type="application/pdf")
+            
         file_bytes = await LatexEngine.export_to_format(req.content, format)
 
         media_type = (
