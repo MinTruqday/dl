@@ -23,11 +23,6 @@ class Creator(str, Enum):
     REJECTED = "REJECTED"
     SUSPENDED = "SUSPENDED"
 
-class Tier(str, Enum):
-    BASIC = "BASIC"
-    PRO = "PRO"
-    PREMIUM = "PREMIUM"
-
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str
@@ -38,7 +33,6 @@ class UserBase(BaseModel):
     social_links: Optional[Dict[str, str]] = {}
     pinned_documents: List[str] = []
     bookmarks: List[str] = []
-    is_premium: bool = False
     wallet_balance: int = 0
     is_shadowbanned: bool = False
     permissions: List[str] = []
@@ -47,7 +41,6 @@ class UserBase(BaseModel):
     creator_status: Creator = Creator.NONE
     is_verified: bool = False
     storage_limit: int = 50 * 1024 * 1024 * 1024
-    ai_tier: Tier = Tier.BASIC
     tos_accepted_at: Optional[datetime] = None
     welcome_message: Optional[str] = None
     blocked_users: List[str] = []

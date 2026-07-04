@@ -12,29 +12,31 @@ MONGO_URI = os.environ.get("MONGODB_URI", "mongodb://doclib_mongodb:27017/?authS
 async def main():
     client = AsyncIOMotorClient(MONGO_URI)
     
-    # 1. Tạo User PRO
+    # 1. Tạo User PRO trong doclib_humanity
     pro_uid = str(uuid.uuid4())
     pro_sid = str(uuid.uuid4())
-    await client["doclib_humanity"]["users"].insert_one({
-        "_id": pro_uid,
-        "email": "pro@doclib.com",
-        "ai_tier": "PRO"
-    })
     
+    await client["doclib_usage"]["subscriptions"].insert_one({
+        "user_id": pro_uid,
+        "ai_tier": "PRO",
+        "is_premium": False
+    })
+
     # 2. Tạo User PREMIUM
-    prem_uid = str(uuid.uuid4())
-    prem_sid = str(uuid.uuid4())
-    await client["doclib_humanity"]["users"].insert_one({
-        "_id": prem_uid,
-        "email": "premium@doclib.com",
-        "ai_tier": "PREMIUM"
+    premium_uid = str(uuid.uuid4())
+    premium_sid = str(uuid.uuid4())
+    
+    await client["doclib_usage"]["subscriptions"].insert_one({
+        "user_id": premium_uid,
+        "ai_tier": "PREMIUM",
+        "is_premium": True
     })
     
     # Add session to Redis
     import redis.asyncio as redis
     r = redis.from_url("redis://doclib_redis:6379/0")
     await r.sadd(f"user_sessions:{pro_uid}", pro_sid)
-    await r.sadd(f"user_sessions:{prem_uid}", prem_sid)
+    await r.sadd(f"user_sessions:{premium_uid}", premium_sid)
 
     # 3. Tạo 2 tài liệu giả
     doc_pro_id = str(uuid.uuid4())
@@ -54,7 +56,7 @@ async def main():
         "title": "Tài liệu PREMIUM",
         "slug": f"tai-lieu-prem-{doc_prem_id}",
         "content": "Nội dung cho gói PREMIUM. Sẽ có E-DRM AESGCM.",
-        "creator_id": prem_uid,
+        "creator_id": premium_uid,
         "is_premium": True
     })
 
@@ -68,8 +70,8 @@ async def main():
     
     prem_token = jwt.encode({
         "sub": "premium@doclib.com",
-        "sid": prem_sid,
-        "uid": prem_uid,
+        "sid": premium_sid,
+        "uid": premium_uid,
         "role": "reader"
     }, SECRET_KEY, algorithm="HS256")
     
@@ -105,13 +107,13 @@ async def main():
             else:
                 print(">> THẤT BẠI: Dữ liệu vẫn là file thô PDF.")
                 
-    # Dọn dẹp Database
-    await client["doclib_humanity"]["users"].delete_one({"_id": pro_uid})
-    await client["doclib_humanity"]["users"].delete_one({"_id": prem_uid})
-    await client["doclib_content"]["documents"].delete_one({"_id": doc_pro_id})
-    await client["doclib_content"]["documents"].delete_one({"_id": doc_prem_id})
+    print("Xóa dữ liệu test...")
+    await client["doclib_usage"]["subscriptions"].delete_one({"user_id": pro_uid})
+    await client["doclib_usage"]["subscriptions"].delete_one({"user_id": premium_uid})
+    await client["doclib_drm"]["documents"].delete_one({"_id": doc_pro_id})
+    await client["doclib_drm"]["documents"].delete_one({"_id": doc_prem_id})
     await r.srem(f"user_sessions:{pro_uid}", pro_sid)
-    await r.srem(f"user_sessions:{prem_uid}", prem_sid)
+    await r.srem(f"user_sessions:{premium_uid}", premium_sid)
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -48,12 +48,13 @@ class WatermarkService:
         
         user_tier = current_user.tier
         try:
-            url = f"{settings.INTERNAL_API_URL}/nguoi-dung/{current_user.id}"
+            url = f"{settings.INTERNAL_API_URL}/su-dung/goi-cuoc/{current_user.id}"
             req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=settings.DEFAULT_HTTP_TIMEOUT) as response:
                 if response.status == 200:
                     data = json.loads(response.read().decode())
-                    user_tier = data.get("data", {}).get("ai_tier", "BASIC")
+                    tier_data = data.get("data") or {}
+                    user_tier = tier_data.get("ai_tier", "BASIC")
         except Exception as e:
             logger.warning(f"Không thể lấy thông tin tier: {e}")
 

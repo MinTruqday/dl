@@ -44,6 +44,23 @@ async def read_users_me(
         logging.error(f"Exception fetching profile: {e}")
         user_doc = None
 
+    try:
+        from src.core.infrastructure.configuration import settings
+        import httpx
+        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            resp_usage = await client.get(
+                f"http://doclib_traefik:8000/su-dung/goi-cuoc/{current_user.id}",
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            )
+            if resp_usage.status_code == 200:
+                usage_doc = resp_usage.json().get("data", {})
+                if user_doc:
+                    user_doc["ai_tier"] = usage_doc.get("ai_tier", "BASIC")
+                    user_doc["is_premium"] = usage_doc.get("is_premium", False)
+    except Exception as e:
+        import logging
+        logging.error(f"Exception fetching usage tier: {e}")
+
     if not user_doc:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")

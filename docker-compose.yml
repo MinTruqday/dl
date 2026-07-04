@@ -377,6 +377,31 @@ services:
     networks:
       - doclib_network
 
+  usage:
+    build:
+      context: ./backend
+      dockerfile: ./usage/Dockerfile
+    container_name: doclib_usage
+    restart: always
+    ports:
+      - 8014:8014
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.usage.rule=PathPrefix(`/su-dung`) || PathPrefix(`/dinh-muc`)
+      - traefik.http.services.usage.loadbalancer.server.port=8014
+    env_file:
+      - .env
+    environment:
+      - SERVICE_DB_NAME=doclib_usage
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/usage/src:/app/src
+      - ./backend/logs/usage:/app/logs
+    networks:
+      - doclib_network
+
   management:
     build:
       context: ./backend

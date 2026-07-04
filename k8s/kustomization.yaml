@@ -24,6 +24,7 @@ resources:
   - apps/worker.yaml
   - apps/cloud.yaml
   - apps/frontend.yaml
+  - apps/usage.yaml
   - ingress/ingress.yaml
 
 secretGenerator:
