@@ -67,6 +67,20 @@ async def create_announcement(data: AnnouncementCreate, db=Depends(get_db)):
         status=201,
     )
 
+@router.get("/cai-dat", response_model=APIResponse[Any])
+async def get_settings(
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    user_doc = await AnnouncementRepository.find_one(
+        {"_id": str(current_user.id)}, {"announcement_settings": 1}
+    )
+    settings = (user_doc or {}).get("announcement_settings", {})
+    return APIResponse(
+        data=settings,
+        message="Lấy cài đặt thông báo thành công",
+    )
+
 @router.post("/cai-dat", response_model=APIResponse[Any])
 async def update_settings(
     settings: dict,

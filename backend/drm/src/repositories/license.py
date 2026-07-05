@@ -21,7 +21,8 @@ class LicenseRepository:
 
     @classmethod
     async def get_document(cls, document_id: str) -> Optional[Dict[str, Any]]:
-        return await mongo.find_one("documents", {"_id": document_id})
+        content_db = database.mongodb["doclib_content"]
+        return await content_db["documents"].find_one({"_id": document_id})
 
     @classmethod
     async def get_purchase(cls, user_id: str, item_id: str) -> Optional[Dict[str, Any]]:
