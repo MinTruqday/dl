@@ -20,6 +20,7 @@ class Settings(BaseModel):
     MIN_FILE_SIZE_BYTES: int = int(os.getenv("MIN_FILE_SIZE_BYTES"))
     INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
     MANAGEMENT_URL: str = os.getenv("MANAGEMENT_URL")
+    USAGE_URL: str = os.getenv("USAGE_URL", "http://usage:8000")
     DEFAULT_PAGE_LIMIT: int = int(os.getenv("DEFAULT_PAGE_LIMIT"))
     MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
     DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT"))

@@ -37,7 +37,7 @@ import { usePayOS } from "@payos/payos-checkout";
 import {
   getMyQuotaAPI,
   QuotaUsage,
-} from "@/features/management/services/quota.service";
+} from "@/features/usage/services/quota.service";
 
 function PayOSEmbedded({ checkoutUrl }: { checkoutUrl: string }) {
   const elementId = useRef("payos-" + Math.random().toString(36).substring(7));

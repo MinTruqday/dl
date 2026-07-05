@@ -128,7 +128,7 @@ async def _check_upload_quota(req: ChatRequest):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
             resp = await c.get(
-                f"{settings.MANAGEMENT_URL}/han-muc/tai-len/xac-minh",
+                f"{settings.USAGE_URL}/han-muc/tai-len/xac-minh",
                 params={"item_type": item_type},
                 headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
             )
@@ -155,7 +155,7 @@ async def _consume_upload_quota(req: ChatRequest):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
             await c.post(
-                f"{settings.MANAGEMENT_URL}/han-muc/tai-len/tieu-thu",
+                f"{settings.USAGE_URL}/han-muc/tai-len/tieu-thu",
                 json={"user_id": req.user_id, "item_type": item_type, "req_reset_hours": 24},
                 headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
             )

@@ -45,9 +45,6 @@ async def create_file(
     
     data.is_folder = False
     item = await StorageService.create_item(data, current_user.id)
-    background_tasks.add_task(
-        
-    )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
         message="Tải lên tệp tin cá nhân thành công",
@@ -139,7 +136,7 @@ async def create_shortcut(
         status=201,
     )
 
-@router.get("/tai-ve-luu-tru")
+@router.get("/tai-xuong-zip")
 async def download_zip(
     ids: str,
     current_user: CurrentUser = Depends(
@@ -150,7 +147,7 @@ async def download_zip(
     import io
     import zipfile
 
-    from fastapi.response import StreamingResponse
+    from fastapi.responses import StreamingResponse
 
     from src.core.infrastructure.configuration import settings
     from src.core.storage import get_storage_client
@@ -161,9 +158,9 @@ async def download_zip(
             status_code=400, detail="Lỗi tạo tệp nén do không có tệp nào được chọn"
         )
     zip_buffer = io.BytesIO()
-    async with await get_storage_client() as storage_client:
-        with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
-            for i_id in item_ids:
+    storage_client = await get_storage_client()
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+        for i_id in item_ids:
                 item = await StorageService.get_item(i_id, current_user.id)
                 if item and (not item.is_folder) and item.url:
                     try:

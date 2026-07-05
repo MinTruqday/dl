@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.audit import router as audit
 from src.api.health import router as operation
-from src.api.quota import router as quota
 from src.api.telemetry import router as telemetry
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
@@ -34,7 +33,6 @@ app.add_middleware(
 app.include_router(audit)
 app.include_router(telemetry)
 app.include_router(operation)
-app.include_router(quota)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng cung cấp đã sẵn sàng")

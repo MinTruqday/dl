@@ -8,6 +8,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from src.api.tier import router as tier_router
+from src.api.quota import router as quota_router
 
 app = FastAPI(title="DocLib Usage", version=settings.VERSION)
 
@@ -38,3 +39,4 @@ async def shutdown_event():
     await close_db()
 
 app.include_router(tier_router)
+app.include_router(quota_router)

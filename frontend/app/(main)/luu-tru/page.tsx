@@ -66,7 +66,7 @@ export default function StoragePage() {
   );
   const [breadcrumbs, setBreadcrumbs] = useState<
     { id?: string; name: string }[]
-  >([{ name: "Lưu trữ gốc" }]);
+  >([{ name: "Tất cả" }]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
@@ -86,7 +86,7 @@ export default function StoragePage() {
   );
   const [moveBreadcrumbs, setMoveBreadcrumbs] = useState<
     { id?: string; name: string }[]
-  >([{ name: "Lưu trữ gốc" }]);
+  >([{ name: "Tất cả" }]);
   const [moveFolders, setMoveFolders] = useState<StorageItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState<"" | "folder" | "file">("");
@@ -160,13 +160,6 @@ export default function StoragePage() {
   }, [currentFolderId, viewMode]);
 
   useEffect(() => {
-    if (detailsItem && activeSidebarTab === "info") {
-      import("@/features/cloud/services/storage.service").then((m) => {
-        m.getRelatedStorageItemsAPI(detailsItem._id)
-          .then((data) => setRelatedItems(data))
-          .catch(() => {});
-      });
-    }
   }, [detailsItem, activeSidebarTab]);
 
   useEffect(() => {
@@ -274,7 +267,7 @@ export default function StoragePage() {
       showToast("Đã chuyển", "success");
       setMoveItem(null);
       setMoveTargetId(undefined);
-      setMoveBreadcrumbs([{ name: "Lưu trữ gốc" }]);
+      setMoveBreadcrumbs([{ id: "root", name: "Tất cả" }]);
       fetchItems(currentFolderId);
     } catch (e: any) {
       showToast(e.message, "error");
@@ -472,21 +465,21 @@ export default function StoragePage() {
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleUpload}
+        className="hidden"
+        multiple
+      />
+      <input
+        type="file"
+        ref={versionInputRef}
+        onChange={handleUploadVersion}
+        className="hidden"
+      />
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
         <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleUpload}
-            className="hidden"
-            multiple
-          />
-          <input
-            type="file"
-            ref={versionInputRef}
-            onChange={handleUploadVersion}
-            className="hidden"
-          />
 
           <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
@@ -497,7 +490,7 @@ export default function StoragePage() {
                 onClick={() => setViewMode("files")}
                 className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "files" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
               >
-                <span className="truncate text-left">Lưu trữ gốc</span>
+                <span className="truncate text-left">Tất cả</span>
                 {viewMode === "files" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
@@ -542,41 +535,41 @@ export default function StoragePage() {
         <main
           className="flex-1 min-w-0 flex flex-col gap-6 h-full min-h-0"
         >
-          <div className="bg-[#F5F5F7] rounded-[18px] p-4 flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-2 text-[15px] text-[#6E6E73] font-medium px-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6">
+            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-[#1D1D1F]">
               {viewMode === "trash" ? (
-                <span className="text-[#1D1D1F]">Thùng rác</span>
+                <span>Thùng rác</span>
               ) : viewMode === "recent" ? (
-                <span className="text-[#1D1D1F]">Mở gần đây</span>
+                <span>Mở gần đây</span>
               ) : (
                 breadcrumbs.map((crumb, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <button
                       onClick={() => handleNavigateBreadcrumb(idx)}
-                      className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "hover:text-[#1D1D1F]"}`}
+                      className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
                     >
                       {crumb.name}
                     </button>
                     {idx < breadcrumbs.length - 1 && (
-                      <ChevronRight className="w-4 h-4 text-[#A1A1A6]" />
+                      <ChevronRight className="w-5 h-5 text-[#A1A1A6]" />
                     )}
                   </div>
                 ))
               )}
-            </div>
+            </h2>
             {viewMode === "files" && (
-              <div className="flex items-center gap-2 mt-4 md:mt-0">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="w-[36px] h-[36px] flex items-center justify-center rounded-full bg-white text-[#0071E3] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50"
+                  className="p-2 rounded-full text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] transition-colors disabled:opacity-50"
                   title="Tải lên"
                 >
                   {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 </button>
                 <button
                   onClick={() => setCreateFolderOpen(true)}
-                  className="w-[36px] h-[36px] flex items-center justify-center rounded-full bg-[#0071E3] text-white hover:bg-[#0055C6] transition-colors"
+                  className="p-2 rounded-full text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] transition-colors"
                   title="Thư mục mới"
                 >
                   <Plus className="w-4 h-4" />
@@ -589,16 +582,16 @@ export default function StoragePage() {
                     <Archive className="w-3.5 h-3.5" /> ZIP ({selectedIds.size})
                   </button>
                 )}
-                <div className="flex bg-[#E8E8ED] p-0.5 rounded-full shrink-0">
+                <div className="flex bg-[#E8E8ED] p-[2px] rounded-full shrink-0 ml-2">
                   <button
                     onClick={() => setLayoutMode("grid")}
-                    className={`p-1.5 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                    className={`p-1 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#0071E3]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setLayoutMode("list")}
-                    className={`p-1.5 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                    className={`p-1 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#0071E3]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
                   >
                     <List className="w-4 h-4" />
                   </button>
@@ -788,7 +781,7 @@ export default function StoragePage() {
                                     setMoveItem(item);
                                     setMoveTargetId(undefined);
                                     setMoveBreadcrumbs([
-                                      { name: "Lưu trữ gốc" },
+                                      { name: "Tất cả" },
                                     ]);
                                   }}
                                   className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
@@ -892,9 +885,15 @@ export default function StoragePage() {
           </div>
         </main>
 
-        {detailsItem && (
-          <aside className="w-full md:w-[320px] shrink-0 flex flex-col gap-6 h-full min-h-0 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] overflow-hidden relative">
-            <div className="p-6  flex justify-between items-center bg-white sticky top-0 z-10">
+        <div
+          className={`shrink-0 transition-all duration-300 ease-in-out ${
+            detailsItem
+              ? "w-full md:w-[320px] opacity-100"
+              : "w-0 opacity-0 overflow-hidden"
+          }`}
+        >
+          <aside className="w-full h-full min-h-0 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] flex flex-col gap-6 overflow-hidden relative">
+            <div className="p-6 flex justify-between items-center bg-white sticky top-0 z-10">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
                 Chi tiết
               </h2>
@@ -906,40 +905,40 @@ export default function StoragePage() {
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6 w-full md:w-[320px]">
                 <div className="flex flex-col items-center">
                   <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[20px] mb-4">
-                    {detailsItem.is_folder ? (
+                    {detailsItem?.is_folder ? (
                       <Folder className="w-12 h-12 text-[#1D1D1F]" />
                     ) : (
                       <File className="w-12 h-12 text-[#6E6E73]" />
                     )}
                   </div>
                   <p className="text-[13px] font-medium text-[#6E6E73] mb-4 text-center max-w-full break-words">
-                    {detailsItem.name}
+                    {detailsItem?.name}
                   </p>
                 </div>
                 <div className="bg-[#F5F5F7] rounded-[18px] p-5 space-y-3">
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-[#6E6E73]">Loại</span>
                     <span className="font-medium">
-                      {detailsItem.is_folder
+                      {detailsItem?.is_folder
                         ? "Thư mục"
-                        : detailsItem.mime_type || "Tệp tin"}
+                        : detailsItem?.mime_type || "Tệp tin"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-[#6E6E73]">Kích thước</span>
                     <span className="font-medium">
-                      {detailsItem.is_folder
+                      {detailsItem?.is_folder
                         ? "--"
-                        : formatSize(detailsItem.size)}
+                        : formatSize(detailsItem?.size || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-[#6E6E73]">Tạo lúc</span>
                     <span className="font-medium">
-                      {new Date(detailsItem.created_at).toLocaleDateString(
+                      {detailsItem?.created_at && new Date(detailsItem.created_at).toLocaleDateString(
                         "vi-VN",
                       )}
                     </span>
@@ -947,13 +946,13 @@ export default function StoragePage() {
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-[#6E6E73]">Sửa đổi</span>
                     <span className="font-medium">
-                      {new Date(detailsItem.updated_at).toLocaleDateString(
+                      {detailsItem?.updated_at && new Date(detailsItem.updated_at).toLocaleDateString(
                         "vi-VN",
                       )}
                     </span>
                   </div>
                 </div>
-                {detailsItem.description && (
+                {detailsItem?.description && (
                   <div>
                     <h4 className="text-[14px] font-medium text-[#6E6E73] mb-2">
                       Ghi chú AI
@@ -963,7 +962,7 @@ export default function StoragePage() {
                     </div>
                   </div>
                 )}
-                {detailsItem.tags && detailsItem.tags.length > 0 && (
+                {detailsItem?.tags && detailsItem.tags.length > 0 && (
                   <div>
                     <h4 className="text-[14px] font-medium text-[#6E6E73] mb-2">
                       Nhãn
@@ -980,31 +979,9 @@ export default function StoragePage() {
                     </div>
                   </div>
                 )}
-                {relatedItems.length > 0 && (
-                  <div>
-                    <h4 className="text-[14px] font-medium text-[#6E6E73] mb-2">
-                      Liên quan
-                    </h4>
-                    <div className="space-y-2">
-                      {relatedItems.map((item) => (
-                        <div
-                          key={item._id}
-                          onClick={() => setDetailsItem(item)}
-                          className="flex items-center gap-3 p-3 bg-[#F5F5F7] hover:bg-[#E8E8ED] rounded-[10px] cursor-pointer transition-colors"
-                        >
-                          <File className="w-4 h-4 text-[#6E6E73]" />
-                          <span className="text-[14px] font-medium flex-1 truncate">
-                            {item.name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
           </aside>
-        )}
+        </div>
       </div>
 
       <Modal

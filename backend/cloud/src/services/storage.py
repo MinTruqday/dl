@@ -18,11 +18,11 @@ class StorageService:
         item: StorageItemCreate, owner_id: str
     ) -> StorageItemInDB:
         db_item = StorageItemInDB(**item.dict(), owner_id=owner_id)
-        await database.mongodb.get_default_database().storage_items.insert_one(
+        await database.mongodb[settings.SERVICE_DB_NAME].storage_items.insert_one(
             db_item.dict(by_alias=True)
         )
         if db_item.size and db_item.size > 0:
-            await database.mongodb.get_default_database().users.update_one(
+            await database.mongodb[settings.SERVICE_DB_NAME].users.update_one(
                 {"_id": owner_id}, {"$inc": {"used_storage": db_item.size}}
             )
         return db_item
@@ -30,7 +30,7 @@ class StorageService:
     @staticmethod
     @log_logic_execution
     async def get_storage_quota(owner_id: str) -> dict:
-        user = await database.mongodb.get_default_database().users.find_one(
+        user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one(
             {"_id": owner_id}
         )
         limit = (
@@ -38,7 +38,16 @@ class StorageService:
             if user
             else 1 * 1024 * 1024 * 1024
         )
-        used = user.get("used_storage", 0) if user else 0
+        
+        # Calculate actual used storage using MongoDB aggregation
+        pipeline = [
+            {"$match": {"owner_id": owner_id, "is_folder": False, "is_shortcut": False}},
+            {"$group": {"_id": None, "total_used": {"$sum": "$size"}}}
+        ]
+        cursor = database.mongodb[settings.SERVICE_DB_NAME].storage_items.aggregate(pipeline)
+        result = await cursor.to_list(length=1)
+        used = result[0]["total_used"] if result else 0
+        
         return {"used": used, "limit": limit}
 
     @staticmethod
@@ -57,7 +66,7 @@ class StorageService:
             is_shortcut=True,
             target_id=item_id,
         )
-        await database.mongodb.get_default_database().storage_items.insert_one(
+        await database.mongodb[settings.SERVICE_DB_NAME].storage_items.insert_one(
             shortcut.dict(by_alias=True)
         )
         return shortcut
@@ -78,7 +87,7 @@ class StorageService:
         if is_starred is not None:
             query["is_starred"] = is_starred
         cursor = (
-            database.mongodb.get_default_database()
+            database.mongodb[settings.SERVICE_DB_NAME]
             .storage_items.find(query)
             .sort([("is_folder", -1), ("name", 1)])
         )
@@ -100,7 +109,7 @@ class StorageService:
         elif type_filter == "file":
             query["is_folder"] = False
         cursor = (
-            database.mongodb.get_default_database()
+            database.mongodb[settings.SERVICE_DB_NAME]
             .storage_items.find(query)
             .sort([("created_at", -1)])
         )
@@ -115,7 +124,7 @@ class StorageService:
         query = {"_id": item_id}
         if owner_id:
             query["owner_id"] = owner_id
-        item = await database.mongodb.get_default_database().storage_items.find_one(
+        item = await database.mongodb[settings.SERVICE_DB_NAME].storage_items.find_one(
             query
         )
         if item:
@@ -131,7 +140,7 @@ class StorageService:
         if not update_dict:
             return await StorageService.get_item(item_id, owner_id)
         update_dict["updated_at"] = datetime.now(timezone.utc)
-        result = await database.mongodb.get_default_database().storage_items.find_one_and_update(
+        result = await database.mongodb[settings.SERVICE_DB_NAME].storage_items.find_one_and_update(
             {"_id": item_id, "owner_id": owner_id},
             {"$set": update_dict},
             return_document=True,
@@ -150,7 +159,7 @@ class StorageService:
         should_delete_physical = False
         old_version_urls = []
         if not item.is_folder and (not item.is_shortcut) and item.url:
-            ref_count = await database.mongodb.get_default_database().storage_items.count_documents(
+            ref_count = await database.mongodb[settings.SERVICE_DB_NAME].storage_items.count_documents(
                 {"url": item.url}
             )
             if ref_count <= 1:
@@ -163,7 +172,7 @@ class StorageService:
                     ]
 
         result = (
-            await database.mongodb.get_default_database().storage_items.delete_one(
+            await database.mongodb[settings.SERVICE_DB_NAME].storage_items.delete_one(
                 {"_id": item_id, "owner_id": owner_id}
             )
         )
@@ -171,11 +180,11 @@ class StorageService:
             return False
 
         if item.size and item.size > 0:
-            await database.mongodb.get_default_database().users.update_one(
+            await database.mongodb[settings.SERVICE_DB_NAME].users.update_one(
                 {"_id": owner_id}, {"$inc": {"used_storage": -item.size}}
             )
 
-        await database.mongodb.get_default_database().storage_items.delete_many(
+        await database.mongodb[settings.SERVICE_DB_NAME].storage_items.delete_many(
             {"target_id": item_id}
         )
 
@@ -203,7 +212,7 @@ class StorageService:
     @staticmethod
     @log_logic_execution
     async def _copy_children(source_parent_id: str, new_parent_id: str, owner_id: str):
-        cursor = database.mongodb.get_default_database().storage_items.find(
+        cursor = database.mongodb[settings.SERVICE_DB_NAME].storage_items.find(
             {"owner_id": owner_id, "parent_id": source_parent_id, "is_trashed": False}
         )
         children = await cursor 
@@ -212,7 +221,7 @@ class StorageService:
             child_id_old = child_dict.pop("id", None)
             child_dict["parent_id"] = new_parent_id
             new_child = StorageItemInDB(**child_dict)
-            await database.mongodb.get_default_database().storage_items.insert_one(
+            await database.mongodb[settings.SERVICE_DB_NAME].storage_items.insert_one(
                 new_child.dict(by_alias=True)
             )
             if new_child.is_folder:
@@ -234,7 +243,7 @@ class StorageService:
             new_item_dict["parent_id"] = target_parent_id
         new_item_dict.pop("id", None)
         new_item = StorageItemInDB(**new_item_dict)
-        await database.mongodb.get_default_database().storage_items.insert_one(
+        await database.mongodb[settings.SERVICE_DB_NAME].storage_items.insert_one(
             new_item.dict(by_alias=True)
         )
         if item.is_folder:
@@ -266,11 +275,11 @@ class StorageService:
             }
 
         size_diff = size - (item.size or 0)
-        await database.mongodb.get_default_database().storage_items.update_one(
+        await database.mongodb[settings.SERVICE_DB_NAME].storage_items.update_one(
             {"_id": item_id, "owner_id": owner_id}, update_op
         )
         if size_diff != 0:
-            await database.mongodb.get_default_database().users.update_one(
+            await database.mongodb[settings.SERVICE_DB_NAME].users.update_one(
                 {"_id": owner_id}, {"$inc": {"used_storage": size_diff}}
             )
 
@@ -279,7 +288,7 @@ class StorageService:
     @staticmethod
     @log_logic_execution
     async def get_public_item(share_token: str) -> Optional[StorageItemInDB]:
-        item = await database.mongodb.get_default_database().storage_items.find_one(
+        item = await database.mongodb[settings.SERVICE_DB_NAME].storage_items.find_one(
             {"share_token": share_token, "is_public": True}
         )
         if item:
@@ -291,7 +300,7 @@ class StorageService:
     async def share_item(
         item_id: str, email: str, role: str, owner_id: str
     ) -> dict:
-        target_user = await database.mongodb.get_default_database().users.find_one(
+        target_user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one(
             {"email": email}
         )
         if not target_user:
@@ -307,7 +316,7 @@ class StorageService:
             raise HTTPException(
                 status_code=400, detail="Không thể chia sẻ tài liệu với chính mình"
             )
-        item = await database.mongodb.get_default_database().storage_items.find_one(
+        item = await database.mongodb[settings.SERVICE_DB_NAME].storage_items.find_one(
             {"_id": item_id, "owner_id": owner_id}
         )
         if not item:
@@ -317,7 +326,7 @@ class StorageService:
                 status_code=404, detail="Không tìm thấy tệp hoặc không có quyền chia sẻ"
             )
         result = (
-            await database.mongodb.get_default_database().storage_items.update_one(
+            await database.mongodb[settings.SERVICE_DB_NAME].storage_items.update_one(
                 {"_id": item_id, "shared_with.user_id": {"$ne": target_user_id}},
                 {
                     "$addToSet": {
@@ -344,7 +353,7 @@ class StorageService:
             "is_folder": False,
         }
         cursor = (
-            database.mongodb.get_default_database()
+            database.mongodb[settings.SERVICE_DB_NAME]
             .storage_items.find(query)
             .sort([("updated_at", -1)])
             .limit(limit)

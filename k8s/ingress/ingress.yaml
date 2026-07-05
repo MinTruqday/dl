@@ -97,9 +97,17 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: management
+            name: usage
             port:
               number: 80
+      - path: /su-dung(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: usage
+            port:
+              number: 80
+
       - path: /ho-so(/|$)(.*)
         pathType: ImplementationSpecific
         backend:

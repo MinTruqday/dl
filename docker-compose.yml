@@ -213,6 +213,7 @@ services:
       - .env
     environment:
       - SERVICE_DB_NAME=doclib_agentic_ai
+      - USAGE_URL=http://usage:8014
     depends_on:
       - mongodb
       - redis
@@ -266,6 +267,7 @@ services:
       - 3001:3000
     environment:
       - SERVICE_DB_NAME=doclib_agentic_ai
+      - USAGE_URL=http://usage:8014
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
@@ -387,7 +389,7 @@ services:
       - 8014:8014
     labels:
       - traefik.enable=true
-      - traefik.http.routers.usage.rule=PathPrefix(`/su-dung`) || PathPrefix(`/dinh-muc`)
+      - traefik.http.routers.usage.rule=PathPrefix(`/su-dung`) || PathPrefix(`/han-muc`)
       - traefik.http.services.usage.loadbalancer.server.port=8014
     env_file:
       - .env
@@ -412,7 +414,7 @@ services:
       - 8003:8003
     labels:
       - traefik.enable=true
-      - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/han-muc`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`)
+      - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`)
       - traefik.http.services.management.loadbalancer.server.port=8003
     env_file:
       - .env
@@ -500,6 +502,7 @@ services:
       - .env
     environment:
       - SERVICE_DB_NAME=doclib_content
+      - USAGE_URL=http://usage:8014
     depends_on:
       - mongodb
       - redis
@@ -526,6 +529,7 @@ services:
       - .env
     environment:
       - SERVICE_DB_NAME=doclib_cloud
+      - USAGE_URL=http://usage:8014
     depends_on:
       - mongodb
       - redis

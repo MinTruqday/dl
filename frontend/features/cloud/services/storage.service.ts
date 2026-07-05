@@ -280,7 +280,7 @@ export const createShortcutAPI = async (
 export const downloadZipAPI = async (ids: string[]) => {
   const token = getAuthToken();
   const query = ids.join(",");
-  const url = `${API_URL}/luu-tru/tai-zip?ids=${query}`;
+  const url = `${API_URL}/luu-tru/tai-xuong-zip?ids=${query}`;
 
   const res = await fetch(url, {
     method: "GET",

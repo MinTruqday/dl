@@ -37,6 +37,8 @@ app.include_router(upload)
 async def startup_event():
     logger.info("Khởi tạo Cloud thành công")
     await init_db()
+    from src.core.storage import initialize_bucket
+    await initialize_bucket()
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_db()

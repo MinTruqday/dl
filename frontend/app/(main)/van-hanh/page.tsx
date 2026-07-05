@@ -11,7 +11,7 @@ import {
 import {
   getGlobalQuotaConfigAPI,
   updateRoleQuotaAPI,
-} from "@/features/management/services/quota.service";
+} from "@/features/usage/services/quota.service";
 import {
   Loader2,
   Save,
