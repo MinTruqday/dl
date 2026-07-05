@@ -694,6 +694,15 @@ export default function StoragePage() {
                               >
                                 {item.name}
                               </button>
+                            ) : item.name.endsWith('.doclib') ? (
+                              <a
+                                href={`/soan-thao?tai-lieu=${item._id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                target="_blank"
+                                className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate max-w-[200px]"
+                              >
+                                {item.name}
+                              </a>
                             ) : item.url ? (
                               <a
                                 href={item.url}
@@ -850,10 +859,27 @@ export default function StoragePage() {
                             e.stopPropagation();
                             handleNavigate(item);
                           }}
-                          className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block"
+                          className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block hover:text-[#0071E3]"
                         >
                           {item.name}
                         </button>
+                      ) : item.name.endsWith('.doclib') ? (
+                        <a
+                          href={`/soan-thao?tai-lieu=${item._id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          target="_blank"
+                          className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block hover:text-[#0071E3]"
+                        >
+                          {item.name}
+                        </a>
+                      ) : item.url ? (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block hover:text-[#0071E3]"
+                        >
+                          {item.name}
+                        </a>
                       ) : (
                         <span className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block">
                           {item.name}

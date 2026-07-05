@@ -35,6 +35,11 @@ export interface StorageItem {
   updated_at: string;
 }
 
+const mapItem = (item: any) => {
+  if (!item) return item;
+  return { ...item, _id: item._id || item.id };
+};
+
 export const createFolderAPI = async (name: string, parent_id?: string) => {
   const token = getAuthToken();
   const res = await fetch(`${API_URL}/luu-tru/thu-muc`, {
@@ -47,7 +52,7 @@ export const createFolderAPI = async (name: string, parent_id?: string) => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to create folder");
-  return data.data;
+  return mapItem(data.data);
 };
 
 export const listStorageItemsAPI = async (
@@ -67,7 +72,7 @@ export const listStorageItemsAPI = async (
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to fetch storage items");
-  return data.data as StorageItem[];
+  return data.data.map(mapItem) as StorageItem[];
 };
 
 export const updateStorageItemAPI = async (
@@ -75,7 +80,7 @@ export const updateStorageItemAPI = async (
   updates: Partial<StorageItem>,
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/file/${id}`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -85,7 +90,7 @@ export const updateStorageItemAPI = async (
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to update item");
-  return data.data;
+  return mapItem(data.data);
 };
 
 export const deleteStorageItemAPI = async (
@@ -94,7 +99,7 @@ export const deleteStorageItemAPI = async (
 ) => {
   const token = getAuthToken();
   const res = await fetch(
-    `${API_URL}/luu-tru/file/${id}?hard_delete=${hard_delete}`,
+    `${API_URL}/luu-tru/tap-tin/${id}?hard_delete=${hard_delete}`,
     {
       method: "DELETE",
       headers: {
@@ -112,7 +117,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_URL}/tai-len/file`, {
+  const res = await fetch(`${API_URL}/tai-len/tap-tin`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -125,7 +130,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
 
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
 
-  const registerRes = await fetch(`${API_URL}/luu-tru/file`, {
+  const registerRes = await fetch(`${API_URL}/luu-tru/tap-tin`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -159,7 +164,7 @@ export const searchStorageItemsAPI = async (q: string, type?: string) => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to search items");
-  return data.data as StorageItem[];
+  return data.data.map(mapItem) as StorageItem[];
 };
 
 export const getRecentStorageItemsAPI = async (limit: number = 20) => {
@@ -170,7 +175,7 @@ export const getRecentStorageItemsAPI = async (limit: number = 20) => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to fetch recent items");
-  return data.data as StorageItem[];
+  return data.data.map(mapItem) as StorageItem[];
 };
 
 export const copyStorageItemAPI = async (
@@ -178,7 +183,7 @@ export const copyStorageItemAPI = async (
   target_parent_id?: string,
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/file/${id}/sao-chep`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}/sao-chep`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -188,7 +193,7 @@ export const copyStorageItemAPI = async (
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to copy item");
-  return data.data;
+  return mapItem(data.data);
 };
 
 export const uploadFileVersionAPI = async (id: string, file: File) => {
@@ -196,7 +201,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_URL}/tai-len/file`, {
+  const res = await fetch(`${API_URL}/tai-len/tap-tin`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
@@ -206,7 +211,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
 
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
 
-  const versionRes = await fetch(`${API_URL}/luu-tru/file/${id}/phien-ban`, {
+  const versionRes = await fetch(`${API_URL}/luu-tru/tap-tin/${id}/phien-ban`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -230,7 +235,7 @@ export const shareStorageItemAPI = async (
   role: string = "viewer",
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/file/${id}/chia-se`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}/chia-se`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -259,7 +264,7 @@ export const createShortcutAPI = async (
   target_parent_id?: string,
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/file/${id}/loi-tat`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}/loi-tat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -269,7 +274,7 @@ export const createShortcutAPI = async (
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to create shortcut");
-  return data.data as StorageItem;
+  return mapItem(data.data) as StorageItem;
 };
 
 export const downloadZipAPI = async (ids: string[]) => {
@@ -333,5 +338,5 @@ export const getRelatedStorageItemsAPI = async (id: string) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Failed to get related documents");
-  return data.data as StorageItem[];
+  return data.data.map(mapItem) as StorageItem[];
 };
