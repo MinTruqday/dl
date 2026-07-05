@@ -55,7 +55,7 @@ class FileVersion(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class StorageItemInDB(StorageItemBase):
-    id: str = Field(default_factory=lambda: str(uuid7()))
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     owner_id: str
     is_folder: bool = False
     size: int = 0
@@ -70,7 +70,7 @@ class StorageItemInDB(StorageItemBase):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class StorageItemResponse(StorageItemBase):
-    id: str = Field()
+    id: str = Field(alias="_id")
     owner_id: str
     is_folder: bool
     size: int

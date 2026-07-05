@@ -22,6 +22,8 @@ import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Folder,
   File,
+  FilePlus,
+  FolderPlus,
   Upload,
   Plus,
   ChevronRight,
@@ -40,6 +42,7 @@ import {
   Grid,
   List,
   LayoutGrid,
+  RotateCcw,
   Clock,
   Info,
   Link as LinkIcon,
@@ -47,6 +50,8 @@ import {
   Archive,
   Home,
   X,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import {
   Modal,
@@ -77,7 +82,7 @@ export default function StoragePage() {
   const [descValue, setDescValue] = useState("");
   const [tagsItem, setTagsItem] = useState<StorageItem | null>(null);
   const [tagsValue, setTagsValue] = useState("");
-  const [viewMode, setViewMode] = useState<"files" | "trash" | "recent">(
+  const [viewMode, setViewMode] = useState<"files" | "trash" | "recent" | "documents" | "folders">(
     "files",
   );
   const [moveItem, setMoveItem] = useState<StorageItem | null>(null);
@@ -113,6 +118,7 @@ export default function StoragePage() {
   const [relatedItems, setRelatedItems] = useState<StorageItem[]>([]);
   const [colorItem, setColorItem] = useState<StorageItem | null>(null);
   const [colorValue, setColorValue] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const fetchQuota = async () => {
     try {
@@ -131,6 +137,10 @@ export default function StoragePage() {
     try {
       if (mode === "recent") {
         setItems(await getRecentStorageItemsAPI(20));
+      } else if (mode === "documents") {
+        setItems(await searchStorageItemsAPI("", "file"));
+      } else if (mode === "folders") {
+        setItems(await searchStorageItemsAPI("", "folder"));
       } else {
         setItems(await listStorageItemsAPI(folderId, mode === "trash"));
       }
@@ -152,7 +162,7 @@ export default function StoragePage() {
 
   useEffect(() => {
     fetchItems(
-      viewMode === "trash" || viewMode === "recent"
+      viewMode === "trash" || viewMode === "recent" || viewMode === "documents" || viewMode === "folders"
         ? undefined
         : currentFolderId,
       viewMode,
@@ -244,6 +254,19 @@ export default function StoragePage() {
       );
       fetchItems(viewMode === "trash" ? undefined : currentFolderId, viewMode);
       if (viewMode === "trash") fetchQuota();
+    } catch (e: any) {
+      showToast(e.message, "error");
+    }
+  };
+
+  const handleToggleLock = async (item: StorageItem) => {
+    try {
+      await updateStorageItemAPI(item._id, { is_public: !item.is_public });
+      fetchItems(currentFolderId);
+      showToast(
+        !item.is_public ? "Đã đặt thành công khai" : "Đã đặt thành riêng tư",
+        "success",
+      );
     } catch (e: any) {
       showToast(e.message, "error");
     }
@@ -464,7 +487,7 @@ export default function StoragePage() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
       <input
         type="file"
         ref={fileInputRef}
@@ -478,10 +501,10 @@ export default function StoragePage() {
         onChange={handleUploadVersion}
         className="hidden"
       />
-      <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
+      <div className="flex flex-col md:flex-row gap-6">
+        <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
 
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Phân loại
             </p>
@@ -499,6 +522,20 @@ export default function StoragePage() {
               >
                 <span className="truncate text-left">Gần đây</span>
                 {viewMode === "recent" && <ChevronRight className="w-4 h-4 shrink-0" />}
+              </button>
+              <button
+                onClick={() => setViewMode("documents")}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "documents" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+              >
+                <span className="truncate text-left">Tài liệu</span>
+                {viewMode === "documents" && <ChevronRight className="w-4 h-4 shrink-0" />}
+              </button>
+              <button
+                onClick={() => setViewMode("folders")}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "folders" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+              >
+                <span className="truncate text-left">Thư mục</span>
+                {viewMode === "folders" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
                 onClick={() => setViewMode("trash")}
@@ -532,15 +569,17 @@ export default function StoragePage() {
           )}
         </aside>
 
-        <main
-          className="flex-1 min-w-0 flex flex-col gap-6 h-full min-h-0"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6">
+        <main className="flex-1 min-w-0 space-y-8 pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="flex items-center gap-2 text-[20px] font-semibold text-[#1D1D1F]">
               {viewMode === "trash" ? (
                 <span>Thùng rác</span>
               ) : viewMode === "recent" ? (
                 <span>Mở gần đây</span>
+              ) : viewMode === "documents" ? (
+                <span>Tài liệu</span>
+              ) : viewMode === "folders" ? (
+                <span>Thư mục</span>
               ) : (
                 breadcrumbs.map((crumb, idx) => (
                   <div key={idx} className="flex items-center gap-2">
@@ -557,67 +596,67 @@ export default function StoragePage() {
                 ))
               )}
             </h2>
-            {viewMode === "files" && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="p-2 rounded-full text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] transition-colors disabled:opacity-50"
-                  title="Tải lên"
-                >
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                </button>
-                <button
-                  onClick={() => setCreateFolderOpen(true)}
-                  className="p-2 rounded-full text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] transition-colors"
-                  title="Thư mục mới"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+            {["files", "documents", "folders"].includes(viewMode) && (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {["files", "folders"].includes(viewMode) && (
+                    <button
+                      onClick={() => setCreateFolderOpen(true)}
+                      className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                      title="Thêm thư mục mới"
+                    >
+                      <FolderPlus className="w-4 h-4" />
+                    </button>
+                  )}
+                  {["files", "documents"].includes(viewMode) && (
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors disabled:opacity-50"
+                      title="Tải tệp lên"
+                    >
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FilePlus className="w-4 h-4" />}
+                    </button>
+                  )}
+                </div>
                 {selectedIds.size > 0 && (
                   <button
                     onClick={handleZipDownload}
-                    className="pill-button px-4 py-1.5 h-[36px] text-[13px] bg-[#0071E3] text-white flex items-center gap-1"
+                    className="px-4 py-2 rounded-full text-[13px] font-medium bg-[#E8E8ED] text-[#1D1D1F] hover:bg-[#D2D2D7] transition-colors flex items-center gap-2"
                   >
-                    <Archive className="w-3.5 h-3.5" /> ZIP ({selectedIds.size})
+                    <Archive className="w-4 h-4" /> ZIP ({selectedIds.size})
                   </button>
                 )}
-                <div className="flex bg-[#E8E8ED] p-[2px] rounded-full shrink-0 ml-2">
-                  <button
-                    onClick={() => setLayoutMode("grid")}
-                    className={`p-1 rounded-full transition-colors ${layoutMode === "grid" ? "bg-white text-[#0071E3]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setLayoutMode("list")}
-                    className={`p-1 rounded-full transition-colors ${layoutMode === "list" ? "bg-white text-[#0071E3]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
             )}
           </div>
+
+          {viewMode === "trash" && (
+            <div className="bg-[#F5F5F7] text-[#6E6E73] text-[13px] p-3 rounded-[12px] flex items-center justify-center mb-4">
+              <Info className="w-4 h-4 mr-2" /> Các mục trong Thùng rác sẽ bị xóa vĩnh viễn sau 30 ngày.
+            </div>
+          )}
 
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] flex-1 overflow-y-auto no-scrollbar p-2 ${isDraggingOver ? "border-[#0071E3] bg-[#F5F5F7]/50" : ""}`}
+            className={`w-full overflow-x-auto min-h-[400px] transition-colors ${isDraggingOver ? "border border-[#0071E3] bg-[#F5F5F7]/80 rounded-[18px]" : ""}`}
           >
             {loading ? (
-              <div className="flex justify-center items-center h-full">
+              <div className="flex justify-center items-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
               </div>
-            ) : layoutMode === "list" ? (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="text-[13px] text-[#6E6E73]">
-                    <th className="py-3 px-6 font-medium w-12"></th>
-                    <th className="py-3 px-6 font-medium">Tên</th>
-                    <th className="py-3 px-6 font-medium">Kích thước</th>
-                    <th className="py-3 px-6 font-medium">Cập nhật</th>
+            ) : (
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                  <tr className="text-[13px] text-[#6E6E73] border-b border-[#E8E8ED]">
+                    <th className="py-3 px-6 font-medium w-12 text-center"></th>
+                    <th className="py-3 px-6 font-medium text-left">Tên</th>
+                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Loại</th>
+                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Kích thước</th>
+                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Cập nhật</th>
+                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Bảo mật</th>
                     <th className="py-3 px-6 font-medium text-right">
                       Thao tác
                     </th>
@@ -627,10 +666,11 @@ export default function StoragePage() {
                   {items.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
-                        className="py-20 text-center text-[15px] text-[#6E6E73]"
+                        colSpan={7}
                       >
-                        Thư mục trống
+                        <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center my-4">
+                          <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -638,163 +678,223 @@ export default function StoragePage() {
                       <tr
                         key={item._id}
                         onClick={() => setDetailsItem(item)}
-                        className="hover:bg-[#F5F5F7] transition-colors cursor-pointer group"
+                        className="hover:bg-[#E8E8ED]/60 transition-colors cursor-pointer group"
                       >
                         <td
-                          className="py-3 px-6"
+                          className="py-3 px-6 text-center"
                           onClick={(e) => e.stopPropagation()}
                         >
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(item._id)}
+                            onChange={() => toggleSelect(item._id)}
+                            className="w-4 h-4 rounded-[4px] border-[#C7C7CC] accent-[#0071E3]"
+                          />
+                        </td>
+                        <td className="py-3 px-6 max-w-[300px]">
                           <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.has(item._id)}
-                              onChange={() => toggleSelect(item._id)}
-                              className="w-4 h-4 rounded-[4px] border-[#C7C7CC] accent-[#0071E3]"
-                            />
-                            <div className="w-9 h-9 bg-[#F5F5F7] rounded-[10px] flex items-center justify-center relative">
-                              {item.color && (
-                                <div
-                                  className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"
-                                  style={{ backgroundColor: item.color }}
-                                />
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              {item.is_starred && (
+                                <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500] shrink-0" />
                               )}
-                              {item.is_shortcut ? (
-                                <LinkIcon className="w-4 h-4 text-[#0071E3]" />
-                              ) : item.is_folder ? (
-                                <Folder className="w-4 h-4 text-[#1D1D1F]" />
+                              {item.is_folder ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleNavigate(item);
+                                  }}
+                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
+                                >
+                                  {item.name}
+                                </button>
+                              ) : item.name.endsWith('.doclib') ? (
+                                <a
+                                  href={`/soan-thao?tai-lieu=${item._id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  target="_blank"
+                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
+                                >
+                                  {item.name}
+                                </a>
+                              ) : item.url ? (
+                                <a
+                                  href={item.url}
+                                  target="_blank"
+                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
+                                >
+                                  {item.name}
+                                </a>
                               ) : (
-                                <File className="w-4 h-4 text-[#6E6E73]" />
+                                <span className="text-[14px] font-medium text-[#1D1D1F] truncate">
+                                  {item.name}
+                                </span>
+                              )}
+                              {item.versions && item.versions.length > 0 && (
+                                <span className="text-[10px] font-medium bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-full shrink-0">
+                                  v{item.versions.length + 1}
+                                </span>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-6">
-                          <div className="flex items-center gap-2">
-                            {item.is_starred && (
-                              <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500]" />
-                            )}
-                            {item.is_folder ? (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleNavigate(item);
-                                }}
-                                className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate max-w-[200px]"
-                              >
-                                {item.name}
-                              </button>
-                            ) : item.name.endsWith('.doclib') ? (
-                              <a
-                                href={`/soan-thao?tai-lieu=${item._id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                target="_blank"
-                                className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate max-w-[200px]"
-                              >
-                                {item.name}
-                              </a>
-                            ) : item.url ? (
-                              <a
-                                href={item.url}
-                                target="_blank"
-                                className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate max-w-[200px]"
-                              >
-                                {item.name}
-                              </a>
-                            ) : (
-                              <span className="text-[14px] font-medium text-[#1D1D1F] truncate max-w-[200px]">
-                                {item.name}
-                              </span>
-                            )}
-                            {item.versions && item.versions.length > 0 && (
-                              <span className="text-[10px] font-medium bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-full">
-                                v{item.versions.length + 1}
-                              </span>
-                            )}
-                          </div>
+                        <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                          {item.is_folder ? "Thư mục" : "Tài liệu"}
                         </td>
-                        <td className="py-3 px-6 text-[13px] text-[#6E6E73]">
+                        <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
                           {item.is_folder ? "--" : formatSize(item.size)}
                         </td>
-                        <td className="py-3 px-6 text-[13px] text-[#6E6E73]">
+                        <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
                           {new Date(item.updated_at).toLocaleDateString(
                             "vi-VN",
                           )}
                         </td>
+                        <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                          {item.is_public ? "Công khai" : "Riêng tư"}
+                        </td>
                         <td className="py-3 px-6 text-right">
-                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex justify-end gap-1 transition-opacity">
                             {viewMode === "trash" ? (
-                              <>
-                                <button
-                                  onClick={() => handleRestore(item)}
-                                  className="p-1.5 text-[#0071E3] hover:bg-[#0071E3]/10 rounded-[8px]"
-                                >
-                                  Khôi phục
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(item)}
-                                  className="p-1.5 text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-[8px]"
-                                >
-                                  Xóa
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() => handleToggleStar(item)}
-                                  className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
-                                >
-                                  <Star
-                                    className={`w-4 h-4 ${item.is_starred ? "text-[#FF9500] fill-[#FF9500]" : ""}`}
-                                  />
-                                </button>
-                                <button
-                                  onClick={() => setShareItem(item)}
-                                  className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
-                                >
-                                  <Share2
-                                    className={`w-4 h-4 ${item.is_public ? "text-[#0071E3]" : ""}`}
-                                  />
-                                </button>
-                                {!item.is_folder && (
-                                  <button
-                                    onClick={() => {
-                                      setVersionItem(item);
-                                      versionInputRef.current?.click();
-                                    }}
-                                    className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
-                                  >
-                                    <History className="w-4 h-4" />
-                                  </button>
-                                )}
+                              <div className="relative">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setRenameItem(item);
-                                    setNewName(item.name);
-                                  }}
-                                  className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setMoveItem(item);
-                                    setMoveTargetId(undefined);
-                                    setMoveBreadcrumbs([
-                                      { name: "Tất cả" },
-                                    ]);
+                                    setOpenMenuId(openMenuId === item._id ? null : item._id);
                                   }}
                                   className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
                                 >
                                   <MoreVertical className="w-4 h-4" />
                                 </button>
+                                
+                                {openMenuId === item._id && (
+                                  <>
+                                    <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
+                                    <div 
+                                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[12px] shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#E8E8ED] py-2 z-50 flex flex-col"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRestore(item);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#0071E3] hover:bg-[#0071E3]/10 text-left"
+                                      >
+                                        <RotateCcw className="w-4 h-4" /> Khôi phục
+                                      </button>
+                                      <div className="h-[1px] bg-[#E8E8ED] my-1" />
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDelete(item);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#FF3B30] hover:bg-[#FF3B30]/10 text-left"
+                                      >
+                                        <Trash2 className="w-4 h-4" /> Xóa vĩnh viễn
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="relative">
                                 <button
-                                  onClick={() => handleDelete(item)}
-                                  className="p-1.5 text-[#6E6E73] hover:bg-[#FF3B30]/10 hover:text-[#FF3B30] rounded-[8px]"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenMenuId(openMenuId === item._id ? null : item._id);
+                                  }}
+                                  className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <MoreVertical className="w-4 h-4" />
                                 </button>
-                              </>
+                                
+                                {openMenuId === item._id && (
+                                  <>
+                                    <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
+                                    <div 
+                                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[12px] shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#E8E8ED] py-2 z-50 flex flex-col"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleToggleStar(item);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                      >
+                                        <Star className={`w-4 h-4 ${item.is_starred ? "text-[#FF9500] fill-[#FF9500]" : ""}`} />
+                                        {item.is_starred ? "Bỏ gắn sao" : "Gắn sao"}
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleToggleLock(item);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                      >
+                                        {item.is_public ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                        {item.is_public ? "Khóa" : "Mở khóa"}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setShareItem(item);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                      >
+                                        <Share2 className="w-4 h-4" /> Chia sẻ
+                                      </button>
+                                      {!item.is_folder && (
+                                        <button
+                                          onClick={() => {
+                                            setVersionItem(item);
+                                            versionInputRef.current?.click();
+                                            setOpenMenuId(null);
+                                          }}
+                                          className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                        >
+                                          <History className="w-4 h-4" /> Cập nhật bản mới
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setRenameItem(item);
+                                          setNewName(item.name);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                      >
+                                        <Edit2 className="w-4 h-4" /> Đổi tên
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setMoveItem(item);
+                                          setMoveTargetId(undefined);
+                                          setMoveBreadcrumbs([{ name: "Tất cả" }]);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                      >
+                                        <Archive className="w-4 h-4" /> Di chuyển
+                                      </button>
+                                      <div className="h-[1px] bg-[#E8E8ED] my-1" />
+                                      <button
+                                        onClick={() => {
+                                          handleDelete(item);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#FF3B30] hover:bg-[#FF3B30]/10 text-left"
+                                      >
+                                        <Trash2 className="w-4 h-4" /> Xóa
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
                         </td>
@@ -803,84 +903,6 @@ export default function StoragePage() {
                   )}
                 </tbody>
               </table>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
-                {items.map((item) => (
-                  <div
-                    key={item._id}
-                    onClick={() => setDetailsItem(item)}
-                    className="group relative bg-[#F5F5F7] border border-transparent hover:border-[#E8E8ED] hover:bg-white hover:rounded-[20px] p-4 flex flex-col items-center justify-between text-center transition-all cursor-pointer"
-                  >
-                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(item._id)}
-                        onChange={() => toggleSelect(item._id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-4 h-4 rounded-[4px] border-[#C7C7CC] accent-[#0071E3]"
-                      />
-                    </div>
-                    <div className="w-16 h-16 bg-white flex items-center justify-center mb-3 rounded-[10px] relative">
-                      {item.color && (
-                        <div
-                          className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"
-                          style={{ backgroundColor: item.color }}
-                        />
-                      )}
-                      {item.is_shortcut ? (
-                        <LinkIcon className="w-8 h-8 text-[#0071E3]" />
-                      ) : item.is_folder ? (
-                        <Folder className="w-8 h-8 text-[#1D1D1F]" />
-                      ) : item.mime_type?.startsWith("image/") ? (
-                        <img
-                          src={item.url}
-                          alt={item.name}
-                          className="w-full h-full object-cover rounded-[10px]"
-                        />
-                      ) : (
-                        <File className="w-8 h-8 text-[#6E6E73]" />
-                      )}
-                    </div>
-                    <div className="w-full">
-                      {item.is_folder ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleNavigate(item);
-                          }}
-                          className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block hover:text-[#0071E3]"
-                        >
-                          {item.name}
-                        </button>
-                      ) : item.name.endsWith('.doclib') ? (
-                        <a
-                          href={`/soan-thao?tai-lieu=${item._id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          target="_blank"
-                          className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block hover:text-[#0071E3]"
-                        >
-                          {item.name}
-                        </a>
-                      ) : item.url ? (
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block hover:text-[#0071E3]"
-                        >
-                          {item.name}
-                        </a>
-                      ) : (
-                        <span className="text-[14px] font-medium text-[#1D1D1F] truncate w-full block">
-                          {item.name}
-                        </span>
-                      )}
-                      <span className="text-[12px] text-[#6E6E73] mt-1">
-                        {item.is_folder ? "--" : formatSize(item.size)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
           </div>
         </main>

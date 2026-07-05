@@ -39,15 +39,12 @@ class StorageService:
             else 1 * 1024 * 1024 * 1024
         )
         
-        # Calculate actual used storage using MongoDB aggregation
         pipeline = [
             {"$match": {"owner_id": owner_id, "is_folder": False, "is_shortcut": False}},
             {"$group": {"_id": None, "total_used": {"$sum": "$size"}}}
         ]
-        cursor = database.mongodb[settings.SERVICE_DB_NAME].storage_items.aggregate(pipeline)
-        result = await cursor.to_list(length=1)
-        used = result[0]["total_used"] if result else 0
-        
+        result = await database.mongodb[settings.SERVICE_DB_NAME].storage_items.aggregate(pipeline).to_list(1)
+        used = (result[0].get("total_used") or 0) if result else 0
         return {"used": used, "limit": limit}
 
     @staticmethod

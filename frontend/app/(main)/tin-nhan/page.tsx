@@ -1003,13 +1003,15 @@ export default function MessagesPage() {
             <div className="flex gap-2">
               <button
                 onClick={openGroupModal}
-                className="p-2 bg-white rounded-full text-[#0071E3] hover:opacity-80 transition-opacity"
+                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                title="Tạo nhóm"
               >
                 <Users className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setShowNewChatModal(true)}
-                className="p-2 bg-[#0071E3] rounded-full text-white hover:bg-[#0055C6] transition-colors"
+                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                title="Tin nhắn mới"
               >
                 <Plus className="w-4 h-4" />
               </button>
