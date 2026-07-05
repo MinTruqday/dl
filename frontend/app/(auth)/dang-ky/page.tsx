@@ -220,14 +220,14 @@ export default function RegisterPage() {
       <Modal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
-        className="max-w-2xl bg-[#F5F5F7] rounded-[24px] border-none shadow-2xl p-0"
+        className="max-w-2xl"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Điều khoản và quy định
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="max-h-[60vh] overflow-y-auto px-6 py-0 space-y-6 text-[15px] text-[#6E6E73]">
+        <ModalContent className="max-h-[60vh] overflow-y-auto text-[15px] text-[#6E6E73]">
           <section>
             <h4 className="font-semibold text-[#1D1D1F] mb-2 text-[17px]">
               1. Quyền và trách nhiệm
@@ -268,7 +268,7 @@ export default function RegisterPage() {
             </p>
           </section>
         </ModalContent>
-        <ModalFooter className="p-4 flex justify-end bg-white rounded-b-[24px]">
+        <ModalFooter>
           <button
             onClick={() => {
               setAgreedToTerms(true);

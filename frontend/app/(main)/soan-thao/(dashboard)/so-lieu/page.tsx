@@ -285,17 +285,17 @@ export default function StatsPage() {
       <Modal
         isOpen={showAnalyticsModal}
         onClose={() => setShowAnalyticsModal(false)}
-        className="max-w-3xl rounded-[18px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden"
+        className="max-w-3xl"
       >
-        <ModalHeader className="p-6 bg-[#F5F5F7]">
-          <ModalTitle className="text-[17px] font-semibold text-[#1D1D1F] flex items-center gap-2">
+        <ModalHeader>
+          <ModalTitle className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5" /> Phân tích & Chỉ số học thuật
           </ModalTitle>
-          <ModalDescription className="text-[13px] text-[#6E6E73] mt-2 ml-7">
+          <ModalDescription className="ml-7">
             Báo cáo chi tiết hiệu suất tác phẩm
           </ModalDescription>
         </ModalHeader>
-        <ModalContent className="p-0">
+        <ModalContent>
           <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
             {loadingAnalytics ? (
               <div className="flex flex-col items-center justify-center py-24">
@@ -403,7 +403,7 @@ export default function StatsPage() {
             )}
           </div>
         </ModalContent>
-        <ModalFooter className="border-[#E8E8ED] p-6 bg-[#F5F5F7] flex justify-end">
+        <ModalFooter>
           <button
             onClick={() => setShowAnalyticsModal(false)}
             className="h-[44px] px-8 bg-[#0071E3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ED] transition-colors"
@@ -416,17 +416,16 @@ export default function StatsPage() {
       <Modal
         isOpen={showWithdrawalModal}
         onClose={() => !requestingWithdrawal && setShowWithdrawalModal(false)}
-        className="max-w-md rounded-[18px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden"
       >
-        <ModalHeader className="p-6 bg-[#34C759]/10">
-          <ModalTitle className="text-[17px] font-semibold text-[#1D1D1F] flex items-center gap-2">
+        <ModalHeader className="bg-[#34C759]/10">
+          <ModalTitle className="flex items-center gap-2">
             <Banknote className="w-5 h-5 text-[#34C759]" /> Yêu cầu rút tiền
           </ModalTitle>
-          <ModalDescription className="text-[13px] text-[#6E6E73] mt-2 ml-7">
+          <ModalDescription className="ml-7">
             Chuyển doanh thu về tài khoản ngân hàng
           </ModalDescription>
         </ModalHeader>
-        <ModalContent className="p-6">
+        <ModalContent>
           <div className="space-y-6">
             <div className="bg-[#34C759]/10 p-4 rounded-[10px] flex items-center justify-between border-[#34C759]/20">
               <span className="text-[13px] font-medium text-[#1D1D1F]">
@@ -496,7 +495,7 @@ export default function StatsPage() {
             </div>
           </div>
         </ModalContent>
-        <ModalFooter className="flex gap-3 border-[#E8E8ED] p-6 bg-[#F5F5F7]">
+        <ModalFooter>
           <button
             onClick={() => setShowWithdrawalModal(false)}
             disabled={requestingWithdrawal}
@@ -521,20 +520,19 @@ export default function StatsPage() {
       <Modal
         isOpen={showPricingModal}
         onClose={() => setShowPricingModal(false)}
-        className="max-w-md rounded-[18px] border-[#E8E8ED] bg-[#F5F5F7] p-6"
       >
         <ModalHeader>
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+          <ModalTitle>
             Thiết lập giá bán
           </ModalTitle>
-          <ModalDescription className="text-[15px] text-[#6E6E73] mt-2">
+          <ModalDescription>
             Thay đổi giá bán (dl) cho tác phẩm{" "}
             <span className="font-semibold text-[#1D1D1F]">
               {pricingDocTitle}
             </span>
           </ModalDescription>
         </ModalHeader>
-        <ModalContent className="my-6">
+        <ModalContent>
           <div className="space-y-2">
             <label className="text-[13px] font-medium text-[#1D1D1F]">
               Giá bán mới (dl)
@@ -557,7 +555,7 @@ export default function StatsPage() {
             </p>
           </div>
         </ModalContent>
-        <ModalFooter className="flex gap-3 justify-end">
+        <ModalFooter>
           <button
             onClick={() => setShowPricingModal(false)}
             className="px-6 py-3 rounded-full text-[15px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"

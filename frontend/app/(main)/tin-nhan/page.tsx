@@ -835,14 +835,14 @@ export default function MessagesPage() {
       <Modal
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
-        className="max-w-xl rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
+        className="max-w-xl"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Bắt đầu hội thoại mới
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0 space-y-6">
+        <ModalContent>
           <input
             value={searchQuery}
             onChange={(e) => handleSearchUsers(e.target.value)}
@@ -897,14 +897,13 @@ export default function MessagesPage() {
       <Modal
         isOpen={showGroupModal}
         onClose={() => setShowGroupModal(false)}
-        className="max-w-md rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Tạo nhóm
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0 space-y-4">
+        <ModalContent>
           <input
             type="text"
             placeholder=""
@@ -954,14 +953,14 @@ export default function MessagesPage() {
       <Modal
         isOpen={showShareDocModal}
         onClose={() => setShowShareDocModal(false)}
-        className="max-w-xl rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
+        className="max-w-xl"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Chia sẻ tài liệu
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0 max-h-[350px] overflow-y-auto space-y-2">
+        <ModalContent className="max-h-[350px] overflow-y-auto">
           {loadingShareDocs ? (
             <div className="py-12 flex justify-center">
               <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />

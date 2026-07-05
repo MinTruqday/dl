@@ -897,21 +897,20 @@ export default function StudioCollabPage() {
       <Modal
         isOpen={!!transferId}
         onClose={() => setTransferId(null)}
-        className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold">
+        <ModalHeader>
+          <ModalTitle>
             Chuyển nhượng quyền sở hữu
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0">
+        <ModalContent>
           <p className="text-[15px] text-[#6E6E73]">
             Bạn muốn chuyển quyền sở hữu tài liệu cho{" "}
             <strong className="text-[#1D1D1F]">{transferName}</strong>? Sau khi
             chuyển, bạn sẽ chỉ còn quyền cộng tác viên.
           </p>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setTransferId(null)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -927,14 +926,14 @@ export default function StudioCollabPage() {
       <Modal
         isOpen={!!activeTaskId}
         onClose={() => setActiveTaskId(null)}
-        className="max-w-xl bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
+        className="max-w-xl"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold">
+        <ModalHeader>
+          <ModalTitle>
             Thảo luận nhiệm vụ
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0 space-y-4">
+        <ModalContent>
           <div className="h-64 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
             {activeTaskComments.length > 0 ? (
               activeTaskComments.map((c) => (

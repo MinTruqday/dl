@@ -345,21 +345,20 @@ export default function UsersManagementPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => !isUpdating && setConfirmModal(null)}
-        className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
       >
-        <ModalHeader className="p-6 pb-2">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Xác nhận thay đổi
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-2">
+        <ModalContent>
           <p className="text-[15px] text-[#6E6E73] leading-relaxed">
             {confirmModal?.type === "role"
               ? `Thay đổi quyền hạn của "${confirmModal.user.full_name || confirmModal.user.email}" thành "${confirmModal.value === "reader" ? "Độc giả" : confirmModal.value === "potential_author" ? "Tác giả tiềm năng" : confirmModal.value === "author" ? "Tác giả" : confirmModal.value === "moderator" ? "Điều hành viên" : "Quản trị viên"}"?`
               : `Bạn có chắc chắn muốn ${confirmModal?.value ? "kích hoạt" : "vô hiệu hóa"} tài khoản của "${confirmModal?.user.full_name || confirmModal?.user.email}"?`}
           </p>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setConfirmModal(null)}
             disabled={isUpdating}

@@ -538,17 +538,16 @@ export default function ConfigPage() {
       <Modal
         isOpen={confirmTransfer}
         onClose={() => setConfirmTransfer(false)}
-        className="max-w-md rounded-[18px] border-[#E8E8ED] bg-[#F5F5F7] p-0 overflow-hidden"
       >
-        <ModalHeader className="p-6 bg-[#FF3B30]/10">
-          <ModalTitle className="text-[17px] font-semibold text-[#FF3B30] flex items-center gap-2">
+        <ModalHeader className="bg-[#FF3B30]/10">
+          <ModalTitle className="text-[#FF3B30] flex items-center gap-2">
             <ArrowRightLeft className="w-5 h-5" /> Xác nhận chuyển nhượng
           </ModalTitle>
-          <ModalDescription className="text-[13px] text-[#FF3B30] mt-2 ml-7">
+          <ModalDescription className="text-[#FF3B30] ml-7">
             Hành động nguy hiểm
           </ModalDescription>
         </ModalHeader>
-        <ModalContent className="p-6">
+        <ModalContent>
           <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed bg-[#F5F5F7] p-4 rounded-[10px]">
             Bạn có chắc chắn muốn chuyển nhượng tác phẩm này cho ID{" "}
             <span className="font-semibold">{transferUserId}</span>? <br />
@@ -559,7 +558,7 @@ export default function ConfigPage() {
             </span>
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-3 border-[#E8E8ED] p-6 bg-[#F5F5F7]">
+        <ModalFooter>
           <button
             onClick={() => setConfirmTransfer(false)}
             className="flex-1 h-[44px] bg-white text-[15px] font-medium text-[#1D1D1F] rounded-full hover:bg-[#E8E8ED] transition-colors"

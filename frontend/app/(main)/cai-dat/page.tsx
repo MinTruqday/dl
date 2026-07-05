@@ -716,19 +716,19 @@ export default function SettingsPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => !loading && setConfirmModal(null)}
-        className="max-w-sm rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
+        className="max-w-sm"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Xác nhận
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0">
+        <ModalContent>
           <p className="text-[15px] text-[#6E6E73]">
             Bạn chắc chắn thay đổi hệ thống?
           </p>
         </ModalContent>
-        <ModalFooter className="p-4 flex justify-end gap-3 bg-white rounded-b-[24px]">
+        <ModalFooter>
           <button
             onClick={() => setConfirmModal(null)}
             disabled={loading}

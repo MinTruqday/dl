@@ -41,16 +41,16 @@ export function Modal({
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 animate-in fade-in backdrop-blur-sm bg-black/40">
       <div
         className={cn(
-          "bg-white w-full max-w-lg border border-[#D2D2D7] animate-in zoom-in-95 rounded-[24px] relative p-0 shadow-2xl",
+          "bg-[#F5F5F7] w-full max-w-md animate-in zoom-in-95 rounded-[18px] relative p-0 shadow-2xl border-none overflow-hidden",
           className,
         )}
       >
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 text-[#6E6E73] hover:text-[#1D1D1F] transition-colors"
+            className="absolute top-6 right-6 p-1 text-[#6E6E73] hover:text-[#1D1D1F] transition-colors rounded-full hover:bg-[#E8E8ED]"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         )}
         {children}
@@ -113,7 +113,7 @@ export function ModalContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("p-5 space-y-4", className)}>{children}</div>;
+  return <div className={cn("p-6 space-y-4 bg-white", className)}>{children}</div>;
 }
 
 export function ModalFooter({
@@ -126,7 +126,7 @@ export function ModalFooter({
   return (
     <div
       className={cn(
-        "flex gap-3 border-t border-[#E8E8ED] p-6 bg-[#F5F5F7] rounded-b-[24px] mt-0 space-y-0",
+        "p-6 flex justify-end gap-3 border-t border-[#E8E8ED] rounded-b-[18px]",
         className,
       )}
     >

@@ -96,15 +96,15 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
       isOpen={true}
       onClose={onClose}
       showCloseButton={!loading}
-      className="max-w-sm rounded-[18px] bg-[#F5F5F7] p-0 border-none -2xl"
+      className="max-w-sm"
     >
-      <ModalHeader className="p-6 pb-2">
-        <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+      <ModalHeader>
+        <ModalTitle>
           Bảo mật bằng Passkey
         </ModalTitle>
       </ModalHeader>
 
-      <ModalContent className="px-6 pb-6 pt-2">
+      <ModalContent>
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="block text-[13px] font-medium text-[#6E6E73] mb-2">
@@ -118,7 +118,7 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
         </div>
       </ModalContent>
 
-      <ModalFooter className="flex flex-col sm:flex-row gap-3 p-6 pt-0 justify-end border-none">
+      <ModalFooter className="flex-col sm:flex-row">
         {!loading && (
           <button
             onClick={onClose}

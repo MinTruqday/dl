@@ -328,14 +328,13 @@ export default function CollectorPage() {
       <Modal
         isOpen={confirmModal}
         onClose={() => !isProcessing && setConfirmModal(false)}
-        className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
       >
-        <ModalHeader className="p-6 pb-2">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Xác nhận thu thập
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-2">
+        <ModalContent>
           <div className="bg-[#F5F5F7] p-4 rounded-[16px] border-[#E8E8ED] mb-4">
             <span className="text-[13px] text-[#6E6E73]">Nguồn thu thập: </span>
             <strong className="text-[#1D1D1F]">{collectionForm.source}</strong>
@@ -345,7 +344,7 @@ export default function CollectorPage() {
             tốn một khoảng thời gian.
           </p>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => !isProcessing && setConfirmModal(false)}
             disabled={isProcessing}

@@ -187,10 +187,10 @@ export default function WalletPage() {
           setShowTopupModal(false);
           setCheckoutUrl(null);
         }}
-        className={`rounded-[18px] bg-[#F5F5F7] p-0 border-none ${checkoutUrl ? "max-w-2xl" : "max-w-md"}`}
+        className={checkoutUrl ? "max-w-2xl" : "max-w-md"}
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             {checkoutUrl ? "Thanh toán giao dịch" : "Nạp tiền"}
           </ModalTitle>
           {!checkoutUrl && (
@@ -199,7 +199,7 @@ export default function WalletPage() {
             </p>
           )}
         </ModalHeader>
-        <ModalContent className="p-6">
+        <ModalContent>
           {checkoutUrl ? (
             <PayOSEmbedded
               checkoutUrl={checkoutUrl}
@@ -248,7 +248,7 @@ export default function WalletPage() {
           )}
         </ModalContent>
         {!checkoutUrl && (
-          <ModalFooter className="p-4 flex justify-end gap-3 bg-white rounded-b-[24px]">
+          <ModalFooter>
             <button
               onClick={() => setShowTopupModal(false)}
               disabled={topupLoading}
@@ -274,17 +274,16 @@ export default function WalletPage() {
       <Modal
         isOpen={showWithdrawModal}
         onClose={() => setShowWithdrawModal(false)}
-        className="max-w-md rounded-[18px] bg-[#F5F5F7] p-0 border-none"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Rút thu nhập
           </ModalTitle>
           <p className="text-[13px] text-[#6E6E73] mt-1">
             1 dl = 1.000 VNĐ (Phí 2%)
           </p>
         </ModalHeader>
-        <ModalContent className="p-6 space-y-4">
+        <ModalContent>
           <input
             type="number"
             value={withdrawalAmount}
@@ -309,7 +308,7 @@ export default function WalletPage() {
             </ul>
           </div>
         </ModalContent>
-        <ModalFooter className="p-4 flex justify-end gap-3 bg-white rounded-b-[24px]">
+        <ModalFooter>
           <button
             onClick={() => setShowWithdrawModal(false)}
             disabled={withdrawLoading}

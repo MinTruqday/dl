@@ -447,14 +447,14 @@ function StudioContent() {
       <Modal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        className="max-w-sm rounded-[18px] bg-[#F5F5F7] p-0 border-none"
+        className="max-w-sm"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Xuất tài liệu
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="px-6 pb-6 space-y-3">
+        <ModalContent className="space-y-3">
           <button
             onClick={() => { setShowExportModal(false); handleExportPDF(); }}
             className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"

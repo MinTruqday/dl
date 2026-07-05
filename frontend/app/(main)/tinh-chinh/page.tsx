@@ -342,14 +342,13 @@ export default function FineTuningPage() {
       <Modal
         isOpen={showNewDataset}
         onClose={() => setShowNewDataset(false)}
-        className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
       >
-        <ModalHeader className="p-6 pb-2">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Tạo Tập Dữ Liệu
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-2 space-y-4">
+        <ModalContent>
           <div>
             <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
               Tên tập dữ liệu
@@ -374,7 +373,7 @@ export default function FineTuningPage() {
             />
           </div>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setShowNewDataset(false)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -390,14 +389,13 @@ export default function FineTuningPage() {
       <Modal
         isOpen={showNewJob}
         onClose={() => setShowNewJob(false)}
-        className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
       >
-        <ModalHeader className="p-6 pb-2">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Bắt đầu Huấn luyện
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-2 space-y-4">
+        <ModalContent>
           <div>
             <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
               Chọn tập dữ liệu
@@ -490,7 +488,7 @@ export default function FineTuningPage() {
             </div>
           </div>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setShowNewJob(false)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"

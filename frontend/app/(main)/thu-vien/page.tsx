@@ -546,17 +546,16 @@ export default function LibraryPage() {
       <Modal
         isOpen={isClearModalOpen}
         onClose={() => !isClearing && setIsClearModalOpen(false)}
-        className="max-w-sm rounded-[18px] bg-[#F5F5F7] p-0 border-none"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             Xóa lịch sử
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="px-6 pb-6 text-[15px] text-[#6E6E73]">
+        <ModalContent className="text-[15px] text-[#6E6E73]">
           Bạn có chắc chắn muốn xóa toàn bộ lịch sử đọc Hành động này không thể hoàn tác
         </ModalContent>
-        <ModalFooter className="px-6 py-4 flex justify-end gap-3 bg-white rounded-b-[18px]">
+        <ModalFooter>
           <button
             onClick={() => setIsClearModalOpen(false)}
             disabled={isClearing}
@@ -577,14 +576,13 @@ export default function LibraryPage() {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => !isCreating && setIsCreateModalOpen(false)}
-        className="max-w-md rounded-[18px] bg-[#F5F5F7] p-0 border-none"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold text-[#1D1D1F]">
+        <ModalHeader>
+          <ModalTitle>
             {createType === "folder" ? "Tạo thư mục" : "Tạo danh sách đọc"}
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="px-6 space-y-4">
+        <ModalContent>
           <input
             type="text"
             value={
@@ -612,7 +610,7 @@ export default function LibraryPage() {
             />
           )}
         </ModalContent>
-        <ModalFooter className="px-6 py-4 flex justify-end gap-3 bg-white rounded-b-[18px]">
+        <ModalFooter>
           <button
             onClick={() => setIsCreateModalOpen(false)}
             disabled={isCreating}

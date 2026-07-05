@@ -737,21 +737,20 @@ export default function DocumentsPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => setConfirmModal(null)}
-        className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
       >
-        <ModalHeader className="p-6 pb-2">
-          <ModalTitle className="text-[20px] font-semibold text-[#FF3B30] flex items-center gap-2">
+        <ModalHeader>
+          <ModalTitle className="text-[#FF3B30] flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" /> Cảnh báo xóa
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-2">
+        <ModalContent>
           <p className="text-[15px] text-[#6E6E73]">
             Bạn có chắc chắn muốn xóa{" "}
             <strong className="text-[#1D1D1F]">{confirmModal?.title}</strong>?
             Hành động này không thể hoàn tác.
           </p>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setConfirmModal(null)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -770,14 +769,14 @@ export default function DocumentsPage() {
       <Modal
         isOpen={createDocModal}
         onClose={() => setCreateDocModal(false)}
-        className="max-w-3xl bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
+        className="max-w-3xl"
       >
-        <ModalHeader className="p-6  bg-white rounded-t-[24px]">
-          <ModalTitle className="text-[20px] font-semibold">
+        <ModalHeader>
+          <ModalTitle>
             Khởi tạo tài liệu
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 grid md:grid-cols-2 gap-8">
+        <ModalContent className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <div>
               <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
@@ -902,7 +901,7 @@ export default function DocumentsPage() {
             </div>
           </div>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setCreateDocModal(false)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -926,14 +925,14 @@ export default function DocumentsPage() {
       <Modal
         isOpen={createFolderModal}
         onClose={() => setCreateFolderModal(false)}
-        className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
+        className="max-w-sm"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold">
+        <ModalHeader>
+          <ModalTitle>
             Tạo thư mục
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0">
+        <ModalContent>
           <input
             type="text"
             value={folderName}
@@ -943,7 +942,7 @@ export default function DocumentsPage() {
             autoFocus
           />
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setCreateFolderModal(false)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -963,14 +962,14 @@ export default function DocumentsPage() {
       <Modal
         isOpen={!!lockModal}
         onClose={() => setLockModal(null)}
-        className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
+        className="max-w-sm"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold flex items-center gap-2">
+        <ModalHeader>
+          <ModalTitle className="flex items-center gap-2">
             <Lock className="w-5 h-5" /> Khóa tài liệu
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0">
+        <ModalContent>
           <form id="lock-form" onSubmit={handleLockDocument}>
             <input
               type="password"
@@ -983,7 +982,7 @@ export default function DocumentsPage() {
             />
           </form>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setLockModal(null)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -999,14 +998,13 @@ export default function DocumentsPage() {
       <Modal
         isOpen={!!shareModal}
         onClose={() => setShareModal(null)}
-        className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold flex items-center gap-2">
+        <ModalHeader>
+          <ModalTitle className="flex items-center gap-2">
             <Share2 className="w-5 h-5" /> Chia sẻ tài liệu
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0 space-y-4">
+        <ModalContent>
           <form
             id="share-form"
             onSubmit={handleShareSubmit}
@@ -1066,7 +1064,7 @@ export default function DocumentsPage() {
             )}
           </form>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => {
               setShareModal(null);

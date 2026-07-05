@@ -18,6 +18,12 @@ import {
   createShortcutAPI,
   downloadZipAPI,
 } from "@/features/cloud/services/storage.service";
+import {
+  getMyDocumentsAPI,
+  deleteAuthorDocumentAPI,
+  lockDocumentAPI,
+} from "@/features/content/services/document.service";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Folder,
@@ -62,8 +68,9 @@ import {
 } from "@/shared/components/ui/Modal";
 
 export default function StoragePage() {
+  const { user } = useAuth() as any;
   const { showToast } = useToast();
-  const [items, setItems] = useState<StorageItem[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(
@@ -80,12 +87,12 @@ export default function StoragePage() {
   const [newName, setNewName] = useState("");
   const [descItem, setDescItem] = useState<StorageItem | null>(null);
   const [descValue, setDescValue] = useState("");
-  const [tagsItem, setTagsItem] = useState<StorageItem | null>(null);
+  const [tagsItem, setTagsItem] = useState<any>(null);
   const [tagsValue, setTagsValue] = useState("");
-  const [viewMode, setViewMode] = useState<"files" | "trash" | "recent" | "documents" | "folders">(
+  const [viewMode, setViewMode] = useState<"files" | "trash" | "recent" | "documents" | "folders" | "published">(
     "files",
   );
-  const [moveItem, setMoveItem] = useState<StorageItem | null>(null);
+  const [moveItem, setMoveItem] = useState<any>(null);
   const [moveTargetId, setMoveTargetId] = useState<string | undefined>(
     undefined,
   );
@@ -114,11 +121,13 @@ export default function StoragePage() {
     null,
   );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [detailsItem, setDetailsItem] = useState<StorageItem | null>(null);
-  const [relatedItems, setRelatedItems] = useState<StorageItem[]>([]);
-  const [colorItem, setColorItem] = useState<StorageItem | null>(null);
+  const [detailsItem, setDetailsItem] = useState<any>(null);
+  const [relatedItems, setRelatedItems] = useState<any[]>([]);
+  const [colorItem, setColorItem] = useState<any>(null);
   const [colorValue, setColorValue] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [hasMorePublished, setHasMorePublished] = useState(true);
+  const [publishedCursor, setPublishedCursor] = useState<string | null>(null);
 
   const fetchQuota = async () => {
     try {
@@ -132,10 +141,25 @@ export default function StoragePage() {
   const fetchItems = async (
     folderId?: string,
     mode: typeof viewMode = viewMode,
+    isLoadMore = false
   ) => {
-    setLoading(true);
+    if (!isLoadMore) setLoading(true);
     try {
-      if (mode === "recent") {
+      if (mode === "published") {
+        const currentCursor = isLoadMore ? publishedCursor : undefined;
+        const res = await getMyDocumentsAPI("", currentCursor || "", 20);
+        let docs = res.data || res || [];
+        // Map document structure to generic structure so table can render it or handle it separately
+        setHasMorePublished(docs.length >= 20);
+        if (docs.length > 0) {
+          setPublishedCursor(docs[docs.length - 1].id || docs[docs.length - 1]._id);
+        }
+        if (isLoadMore) {
+          setItems((prev) => [...prev, ...docs]);
+        } else {
+          setItems(docs);
+        }
+      } else if (mode === "recent") {
         setItems(await getRecentStorageItemsAPI(20));
       } else if (mode === "documents") {
         setItems(await searchStorageItemsAPI("", "file"));
@@ -162,7 +186,7 @@ export default function StoragePage() {
 
   useEffect(() => {
     fetchItems(
-      viewMode === "trash" || viewMode === "recent" || viewMode === "documents" || viewMode === "folders"
+      viewMode === "trash" || viewMode === "recent" || viewMode === "documents" || viewMode === "folders" || viewMode === "published"
         ? undefined
         : currentFolderId,
       viewMode,
@@ -501,8 +525,8 @@ export default function StoragePage() {
         onChange={handleUploadVersion}
         className="hidden"
       />
-      <div className="flex flex-col md:flex-row gap-6">
-        <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
+      <div className="flex flex-col md:flex-row">
+        <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit mb-6 md:mb-0 md:mr-6">
 
           <div className="bg-[#F5F5F7] rounded-[18px] p-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
@@ -527,8 +551,15 @@ export default function StoragePage() {
                 onClick={() => setViewMode("documents")}
                 className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "documents" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
               >
-                <span className="truncate text-left">Tài liệu</span>
+                <span className="truncate text-left">Tệp tin</span>
                 {viewMode === "documents" && <ChevronRight className="w-4 h-4 shrink-0" />}
+              </button>
+              <button
+                onClick={() => setViewMode("published")}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "published" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+              >
+                <span className="truncate text-left">Tài liệu</span>
+                {viewMode === "published" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
                 onClick={() => setViewMode("folders")}
@@ -577,6 +608,8 @@ export default function StoragePage() {
               ) : viewMode === "recent" ? (
                 <span>Mở gần đây</span>
               ) : viewMode === "documents" ? (
+                <span>Tệp tin</span>
+              ) : viewMode === "published" ? (
                 <span>Tài liệu</span>
               ) : viewMode === "folders" ? (
                 <span>Thư mục</span>
@@ -653,10 +686,21 @@ export default function StoragePage() {
                   <tr className="text-[13px] text-[#6E6E73] border-b border-[#E8E8ED]">
                     <th className="py-3 px-6 font-medium w-12 text-center"></th>
                     <th className="py-3 px-6 font-medium text-left">Tên</th>
-                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Loại</th>
-                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Kích thước</th>
+                    {viewMode === "published" ? (
+                      <>
+                        <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Thể loại</th>
+                        <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Giá bán</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Loại</th>
+                        <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Kích thước</th>
+                      </>
+                    )}
                     <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Cập nhật</th>
-                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Bảo mật</th>
+                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">
+                      {viewMode === "published" ? "Trạng thái" : "Bảo mật"}
+                    </th>
                     <th className="py-3 px-6 font-medium text-right">
                       Thao tác
                     </th>
@@ -705,16 +749,16 @@ export default function StoragePage() {
                                   }}
                                   className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
                                 >
-                                  {item.name}
+                                  {item.name || item.title}
                                 </button>
-                              ) : item.name.endsWith('.doclib') ? (
+                              ) : (item.name || item.title)?.endsWith('.doclib') || viewMode === "published" ? (
                                 <a
-                                  href={`/soan-thao?tai-lieu=${item._id}`}
+                                  href={`/soan-thao?tai-lieu=${item._id || item.id}`}
                                   onClick={(e) => e.stopPropagation()}
                                   target="_blank"
                                   className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
                                 >
-                                  {item.name}
+                                  {item.name || item.title}
                                 </a>
                               ) : item.url ? (
                                 <a
@@ -722,11 +766,11 @@ export default function StoragePage() {
                                   target="_blank"
                                   className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
                                 >
-                                  {item.name}
+                                  {item.name || item.title}
                                 </a>
                               ) : (
                                 <span className="text-[14px] font-medium text-[#1D1D1F] truncate">
-                                  {item.name}
+                                  {item.name || item.title}
                                 </span>
                               )}
                               {item.versions && item.versions.length > 0 && (
@@ -737,20 +781,61 @@ export default function StoragePage() {
                             </div>
                           </div>
                         </td>
+                        {viewMode === "published" ? (
+                          <>
+                            <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                              {item.category || "Chưa phân loại"}
+                            </td>
+                            <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell font-mono">
+                              {item.price_dl || 0} dl
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                              {item.is_folder ? "Thư mục" : "Tài liệu"}
+                            </td>
+                            <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                              {item.is_folder ? "--" : formatSize(item.size)}
+                            </td>
+                          </>
+                        )}
                         <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
-                          {item.is_folder ? "Thư mục" : "Tài liệu"}
-                        </td>
-                        <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
-                          {item.is_folder ? "--" : formatSize(item.size)}
-                        </td>
-                        <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
-                          {new Date(item.updated_at).toLocaleDateString(
+                          {new Date(item.updated_at || item.created_at || Date.now()).toLocaleDateString(
                             "vi-VN",
                           )}
                         </td>
-                        <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
-                          {item.is_public ? "Công khai" : "Riêng tư"}
-                        </td>
+                        {viewMode === "published" ? (
+                          <td className="py-3 px-6 text-[13px] text-center hidden md:table-cell">
+                            <span
+                              className={`px-2 py-1 rounded-full font-medium ${
+                                item.status === "published"
+                                  ? "bg-[#34C759]/10 text-[#34C759]"
+                                  : "bg-[#FF9F0A]/10 text-[#FF9F0A]"
+                              }`}
+                            >
+                              {item.status === "published" ? "Đã đăng" : "Bản nháp"}
+                            </span>
+                          </td>
+                        ) : (
+                          <td 
+                            className="py-3 px-6 text-[13px] text-center hidden md:table-cell"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <select
+                              value={item.is_public ? "public" : "private"}
+                              onChange={(e) => {
+                                if ((e.target.value === "public") !== item.is_public) {
+                                  handleToggleLock(item);
+                                }
+                              }}
+                              className="bg-transparent text-[#6E6E73] font-medium outline-none cursor-pointer text-center appearance-none"
+                            >
+                              <option value="public">Công khai</option>
+                              <option value="private">Riêng tư</option>
+                            </select>
+                          </td>
+                        )}
                         <td className="py-3 px-6 text-right">
                           <div className="flex justify-end gap-1 transition-opacity">
                             {viewMode === "trash" ? (
@@ -816,28 +901,67 @@ export default function StoragePage() {
                                       className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[12px] shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#E8E8ED] py-2 z-50 flex flex-col"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleToggleStar(item);
-                                          setOpenMenuId(null);
-                                        }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
-                                      >
-                                        <Star className={`w-4 h-4 ${item.is_starred ? "text-[#FF9500] fill-[#FF9500]" : ""}`} />
-                                        {item.is_starred ? "Bỏ gắn sao" : "Gắn sao"}
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleToggleLock(item);
-                                          setOpenMenuId(null);
-                                        }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
-                                      >
-                                        {item.is_public ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                                        {item.is_public ? "Khóa" : "Mở khóa"}
-                                      </button>
+                                      {viewMode === "published" ? (
+                                        <>
+                                          <button
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              try {
+                                                await lockDocumentAPI(item._id || item.id);
+                                                showToast("Đã thay đổi trạng thái bảo vệ", "success");
+                                                fetchItems(undefined, "published");
+                                              } catch (err: any) {
+                                                showToast(err.message, "error");
+                                              }
+                                              setOpenMenuId(null);
+                                            }}
+                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                          >
+                                            {item.is_protected ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                            {item.is_protected ? "Mở khoá" : "Khóa bảo vệ"}
+                                          </button>
+                                          <div className="h-[1px] bg-[#E8E8ED] my-1" />
+                                          <button
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              try {
+                                                await deleteAuthorDocumentAPI(item._id || item.id);
+                                                showToast("Đã xóa tác phẩm", "success");
+                                                fetchItems(undefined, "published");
+                                              } catch (err: any) {
+                                                showToast(err.message, "error");
+                                              }
+                                              setOpenMenuId(null);
+                                            }}
+                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#FF3B30] hover:bg-[#FF3B30]/10 text-left"
+                                          >
+                                            <Trash2 className="w-4 h-4" /> Xóa tác phẩm
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleToggleStar(item);
+                                              setOpenMenuId(null);
+                                            }}
+                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                          >
+                                            <Star className={`w-4 h-4 ${item.is_starred ? "text-[#FF9500] fill-[#FF9500]" : ""}`} />
+                                            {item.is_starred ? "Bỏ gắn sao" : "Gắn sao"}
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleToggleLock(item);
+                                              setOpenMenuId(null);
+                                            }}
+                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                          >
+                                            {item.is_public ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                            {item.is_public ? "Khóa" : "Mở khóa"}
+                                          </button>
                                       <button
                                         onClick={() => {
                                           setShareItem(item);
@@ -891,18 +1015,31 @@ export default function StoragePage() {
                                       >
                                         <Trash2 className="w-4 h-4" /> Xóa
                                       </button>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
+                                    </>
+                                  )}
+                                </div>
+                              </>
                             )}
                           </div>
-                        </td>
+                        )}
+                      </div>
+                    </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
+            )}
+            {viewMode === "published" && hasMorePublished && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={() => fetchItems(undefined, "published", true)}
+                  disabled={loading}
+                  className="px-6 py-2 bg-[#0071E3] text-white rounded-full text-[14px] font-medium hover:bg-[#0077ED] transition-colors disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Tải thêm"}
+                </button>
+              </div>
             )}
           </div>
         </main>
@@ -910,7 +1047,7 @@ export default function StoragePage() {
         <div
           className={`shrink-0 transition-all duration-300 ease-in-out ${
             detailsItem
-              ? "w-full md:w-[320px] opacity-100"
+              ? "w-full md:w-[320px] opacity-100 md:ml-6 mt-6 md:mt-0"
               : "w-0 opacity-0 overflow-hidden"
           }`}
         >
@@ -937,30 +1074,55 @@ export default function StoragePage() {
                     )}
                   </div>
                   <p className="text-[13px] font-medium text-[#6E6E73] mb-4 text-center max-w-full break-words">
-                    {detailsItem?.name}
+                    {detailsItem?.name || detailsItem?.title}
                   </p>
                 </div>
                 <div className="bg-[#F5F5F7] rounded-[18px] p-5 space-y-3">
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-[#6E6E73]">Loại</span>
                     <span className="font-medium">
-                      {detailsItem?.is_folder
+                      {viewMode === "published"
+                        ? "Tác phẩm"
+                        : detailsItem?.is_folder
                         ? "Thư mục"
                         : detailsItem?.mime_type || "Tệp tin"}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-[14px]">
-                    <span className="text-[#6E6E73]">Kích thước</span>
-                    <span className="font-medium">
-                      {detailsItem?.is_folder
-                        ? "--"
-                        : formatSize(detailsItem?.size || 0)}
-                    </span>
-                  </div>
+                  {viewMode === "published" ? (
+                    <>
+                      <div className="flex justify-between items-center text-[14px]">
+                        <span className="text-[#6E6E73]">Thể loại</span>
+                        <span className="font-medium">
+                          {detailsItem?.category || "Chưa phân loại"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[14px]">
+                        <span className="text-[#6E6E73]">Giá bán</span>
+                        <span className="font-medium font-mono">
+                          {detailsItem?.price_dl || 0} dl
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[14px]">
+                        <span className="text-[#6E6E73]">Trạng thái</span>
+                        <span className={`font-medium ${detailsItem?.status === "published" ? "text-[#34C759]" : "text-[#FF9F0A]"}`}>
+                          {detailsItem?.status === "published" ? "Đã đăng" : "Bản nháp"}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between items-center text-[14px]">
+                      <span className="text-[#6E6E73]">Kích thước</span>
+                      <span className="font-medium">
+                        {detailsItem?.is_folder
+                          ? "--"
+                          : formatSize(detailsItem?.size || 0)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center text-[14px]">
                     <span className="text-[#6E6E73]">Tạo lúc</span>
                     <span className="font-medium">
-                      {detailsItem?.created_at && new Date(detailsItem.created_at).toLocaleDateString(
+                      {(detailsItem?.created_at || detailsItem?.updated_at) && new Date(detailsItem.created_at || detailsItem.updated_at).toLocaleDateString(
                         "vi-VN",
                       )}
                     </span>
@@ -1009,14 +1171,14 @@ export default function StoragePage() {
       <Modal
         isOpen={createFolderOpen}
         onClose={() => setCreateFolderOpen(false)}
-        className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
+        className="max-w-sm"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold">
+        <ModalHeader>
+          <ModalTitle>
             Tạo thư mục mới
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0">
+        <ModalContent>
           <input
             type="text"
             value={newFolderName}
@@ -1026,7 +1188,7 @@ export default function StoragePage() {
             autoFocus
           />
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setCreateFolderOpen(false)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -1042,12 +1204,12 @@ export default function StoragePage() {
       <Modal
         isOpen={!!renameItem}
         onClose={() => setRenameItem(null)}
-        className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
+        className="max-w-sm"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold">Đổi tên</ModalTitle>
+        <ModalHeader>
+          <ModalTitle>Đổi tên</ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0">
+        <ModalContent>
           <input
             type="text"
             value={newName}
@@ -1057,7 +1219,7 @@ export default function StoragePage() {
             autoFocus
           />
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setRenameItem(null)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -1073,14 +1235,13 @@ export default function StoragePage() {
       <Modal
         isOpen={!!shareItem}
         onClose={() => setShareItem(null)}
-        className="max-w-md bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold">
+        <ModalHeader>
+          <ModalTitle>
             Chia sẻ {shareItem?.name}
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0 space-y-6">
+        <ModalContent>
           <div>
             <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
               Mời người dùng
@@ -1124,7 +1285,7 @@ export default function StoragePage() {
             </button>
           </div>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end">
+        <ModalFooter>
           <button
             onClick={() => setShareItem(null)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
@@ -1137,14 +1298,14 @@ export default function StoragePage() {
       <Modal
         isOpen={!!moveItem}
         onClose={() => setMoveItem(null)}
-        className="max-w-sm bg-[#F5F5F7] rounded-[18px] p-0 -2xl border-none"
+        className="max-w-sm"
       >
-        <ModalHeader className="p-6">
-          <ModalTitle className="text-[20px] font-semibold">
+        <ModalHeader>
+          <ModalTitle>
             Chuyển đến
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 pt-0 max-h-[300px] overflow-y-auto no-scrollbar">
+        <ModalContent className="max-h-[300px] overflow-y-auto no-scrollbar">
           <div className="flex gap-1 text-[13px] text-[#0071E3] mb-4 overflow-x-auto no-scrollbar whitespace-nowrap">
             {moveBreadcrumbs.map((c, i) => (
               <button
@@ -1186,7 +1347,7 @@ export default function StoragePage() {
             )}
           </div>
         </ModalContent>
-        <ModalFooter className="p-4 bg-white rounded-b-[24px] flex justify-end gap-3">
+        <ModalFooter>
           <button
             onClick={() => setMoveItem(null)}
             className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
