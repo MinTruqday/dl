@@ -39,3 +39,13 @@ class Tier(str, Enum):
     BASIC = "BASIC"
     PRO = "PRO"
     PREMIUM = "PREMIUM"
+
+class UploadType(str, Enum):
+    IMAGE = "image"
+    DOCUMENT = "document"
+    FOLDER = "folder"
+
+class ConsumeUploadQuotaRequest(BaseModel):
+    user_id: str
+    item_type: UploadType
+    req_reset_hours: int = 24

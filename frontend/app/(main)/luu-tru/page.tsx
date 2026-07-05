@@ -462,6 +462,7 @@ export default function StoragePage() {
   };
 
   const formatSize = (bytes: number) => {
+    if (bytes === 0) return "0 B";
     if (!bytes) return "--";
     const k = 1024;
     const sizes = ["B", "KB", "MB", "GB"];
@@ -473,67 +474,47 @@ export default function StoragePage() {
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
         <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-              Quản lý
-            </p>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="pill-button w-full justify-center flex items-center gap-2 disabled:opacity-50"
-              >
-                {uploading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : null}{" "}
-                Tải lên
-              </button>
-              <button
-                onClick={() => setCreateFolderOpen(true)}
-                className="pill-button bg-white text-[#0071E3] font-medium  w-full justify-center flex items-center gap-2"
-              >
-                Thư mục mới
-              </button>
-            </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleUpload}
-              className="hidden"
-              multiple
-            />
-            <input
-              type="file"
-              ref={versionInputRef}
-              onChange={handleUploadVersion}
-              className="hidden"
-            />
-          </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleUpload}
+            className="hidden"
+            multiple
+          />
+          <input
+            type="file"
+            ref={versionInputRef}
+            onChange={handleUploadVersion}
+            className="hidden"
+          />
 
           <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-              Duyệt file
+              Phân loại
             </p>
-            <div className="flex flex-col gap-1.5">
+            <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => setViewMode("files")}
                 className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "files" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
               >
                 <span className="truncate text-left">Lưu trữ gốc</span>
+                {viewMode === "files" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
                 onClick={() => setViewMode("recent")}
                 className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "recent" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
               >
                 <span className="truncate text-left">Gần đây</span>
+                {viewMode === "recent" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
                 onClick={() => setViewMode("trash")}
                 className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "trash" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
               >
                 <span className="truncate text-left">Thùng rác</span>
+                {viewMode === "trash" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
-            </div>
+            </nav>
           </div>
 
           {quota && (
@@ -559,7 +540,7 @@ export default function StoragePage() {
         </aside>
 
         <main
-          className={`flex flex-col gap-6 h-full min-h-0 ${detailsItem ? "lg:col-span-5" : "lg:col-span-9"}`}
+          className="flex-1 min-w-0 flex flex-col gap-6 h-full min-h-0"
         >
           <div className="bg-[#F5F5F7] rounded-[18px] p-4 flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 text-[15px] text-[#6E6E73] font-medium px-2">
@@ -574,7 +555,7 @@ export default function StoragePage() {
                       onClick={() => handleNavigateBreadcrumb(idx)}
                       className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "hover:text-[#1D1D1F]"}`}
                     >
-                      crumb.name
+                      {crumb.name}
                     </button>
                     {idx < breadcrumbs.length - 1 && (
                       <ChevronRight className="w-4 h-4 text-[#A1A1A6]" />
@@ -585,10 +566,25 @@ export default function StoragePage() {
             </div>
             {viewMode === "files" && (
               <div className="flex items-center gap-2 mt-4 md:mt-0">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-[36px] h-[36px] flex items-center justify-center rounded-full bg-white text-[#0071E3] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50"
+                  title="Tải lên"
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => setCreateFolderOpen(true)}
+                  className="w-[36px] h-[36px] flex items-center justify-center rounded-full bg-[#0071E3] text-white hover:bg-[#0055C6] transition-colors"
+                  title="Thư mục mới"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
                 {selectedIds.size > 0 && (
                   <button
                     onClick={handleZipDownload}
-                    className="pill-button px-4 py-1.5 h-[36px] text-[13px] bg-[#1D1D1F] flex items-center gap-1"
+                    className="pill-button px-4 py-1.5 h-[36px] text-[13px] bg-[#0071E3] text-white flex items-center gap-1"
                   >
                     <Archive className="w-3.5 h-3.5" /> ZIP ({selectedIds.size})
                   </button>
@@ -909,23 +905,8 @@ export default function StoragePage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex bg-[#F5F5F7] mx-6 mt-4 p-1 rounded-[10px]">
-              <button
-                className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "info" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73]"}`}
-                onClick={() => setActiveSidebarTab("info")}
-              >
-                Thông tin
-              </button>
-              <button
-                className={`flex-1 py-2 text-[14px] font-medium rounded-[10px] transition-colors ${activeSidebarTab === "ai" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73]"}`}
-                onClick={() => setActiveSidebarTab("ai")}
-              >
-                AI Trợ lý
-              </button>
-            </div>
-
-            {activeSidebarTab === "info" ? (
-              <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
+            
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
                 <div className="flex flex-col items-center">
                   <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[20px] mb-4">
                     {detailsItem.is_folder ? (
@@ -1020,93 +1001,6 @@ export default function StoragePage() {
                     </div>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="flex flex-col flex-1 overflow-hidden p-6 pb-4">
-                <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 mb-4">
-                  {chatHistory.length === 0 ? (
-                    <p className="text-center text-[#6E6E73] text-[14px] mt-10">
-                      Tôi có thể giúp bạn tìm kiếm nội dung hoặc tóm tắt tài
-                      liệu này.
-                    </p>
-                  ) : (
-                    chatHistory.map((msg, i) => (
-                      <div
-                        key={i}
-                        className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`p-3 max-w-[85%] rounded-[18px] text-[14px] leading-relaxed ${msg.role === "user" ? "bg-[#0071E3] text-white rounded-tr-[4px]" : "bg-[#F5F5F7] text-[#1D1D1F] rounded-tl-[4px]"}`}
-                        >
-                          {msg.content}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    if (!chatInput.trim()) return;
-                    const newMsg = { role: "user", content: chatInput.trim() };
-                    setChatHistory((p) => [...p, newMsg]);
-                    setChatInput("");
-                    try {
-                      const res = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/chat/chat`,
-                        {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${getAuthToken()}`,
-                          },
-                          body: JSON.stringify({
-                            query: newMsg.content,
-                            document_id: detailsItem._id,
-                          }),
-                        },
-                      );
-                      if (res.ok && res.body) {
-                        const reader = res.body.getReader();
-                        const decoder = new TextDecoder("utf-8");
-                        let botMsg = "";
-                        setChatHistory((p) => [
-                          ...p,
-                          { role: "bot", content: "" },
-                        ]);
-                        while (true) {
-                          const { done, value } = await reader.read();
-                          if (done) break;
-                          botMsg += decoder.decode(value, { stream: true });
-                          setChatHistory((p) => {
-                            const next = [...p];
-                            next[next.length - 1].content = botMsg
-                              .replace(/data: /g, "")
-                              .replace(/\n\n/g, "");
-                            return next;
-                          });
-                        }
-                      }
-                    } catch (e) {
-                      setChatHistory((p) => [
-                        ...p,
-                        { role: "bot", content: "Lỗi kết nối AI." },
-                      ]);
-                    }
-                  }}
-                  className="flex gap-2"
-                >
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder=""
-                    className="apple-input flex-1 bg-[#F5F5F7] border-transparent"
-                  />
-                  <button type="submit" className="pill-button">
-                    Gửi
-                  </button>
-                </form>
               </div>
             )}
           </aside>

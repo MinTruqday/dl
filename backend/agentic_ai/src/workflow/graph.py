@@ -109,12 +109,20 @@ def decide_initial_route(state: AgentState):
     return "generate_direct" if state.get("route") == "direct" else "preprocess_file"
 
 def preprocess_file(state: AgentState):
+    updates = {}
     file_data = state.get("file_data")
     if file_data and file_data.startswith("data:"):
         text = extract_text_from_base64(file_data)
         if text:
-            return {"file_data": text}
-    return {}
+            updates["file_data"] = text
+
+    folder_data = state.get("folder_data")
+    if folder_data and folder_data.startswith("data:"):
+        text = extract_text_from_base64(folder_data)
+        if text:
+            updates["folder_data"] = text
+
+    return updates
 
 def _mask_pii(text: str) -> str:
     import re
@@ -297,6 +305,8 @@ async def generate(state: AgentState):
     user_context = await memory_manager.get_user_preferences(user_id)
     if state.get("file_data"):
         documents.append(f"[Attached Personal Documents]\n{state['file_data'][:6000]}")
+    if state.get("folder_data"):
+        documents.append(f"[Attached Folder Context]\n{state['folder_data'][:6000]}")
 
     citation_instruction = (
         "- Use inline source citations when referencing documents"

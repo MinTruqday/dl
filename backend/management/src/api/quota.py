@@ -77,3 +77,36 @@ async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
     return APIResponse(
         data=None, message="Sử dụng dung lượng tài nguyên thành công", status=200
     )
+
+from src.schemas.quota import ConsumeUploadQuotaRequest
+
+@router.get("/tai-len/xac-minh", response_model=APIResponse[Any], include_in_schema=False)
+async def check_upload_quota_internal(
+    item_type: str,
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    role = getattr(current_user.role, "value", current_user.role)
+    ai_tier = getattr(current_user, "ai_tier", "BASIC")
+    if hasattr(ai_tier, "value"):
+        ai_tier = ai_tier.value
+        
+    await QuotaService.check_upload_quota(str(current_user.id), role, ai_tier, item_type)
+    return APIResponse(
+        data=None,
+        message="Dung lượng tải lên hợp lệ",
+        status=200,
+    )
+
+@router.post("/tai-len/tieu-thu", response_model=APIResponse[Any], include_in_schema=False)
+async def consume_upload_quota_internal(
+    req: ConsumeUploadQuotaRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db)
+):
+    await QuotaService.consume_upload_quota(
+        str(current_user.id), req.item_type, req.req_reset_hours
+    )
+    return APIResponse(
+        data=None, message="Sử dụng dung lượng tải lên thành công", status=200
+    )

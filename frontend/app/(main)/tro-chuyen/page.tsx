@@ -31,6 +31,7 @@ import {
   MoreVertical,
   ArrowRight,
   Activity,
+  Folder,
 } from "lucide-react";
 import { usePayOS } from "@payos/payos-checkout";
 import {
@@ -167,7 +168,7 @@ export default function TroChuyenPage() {
   const [view, setView] = useState<"chat" | "history">("chat");
   const [useSmart, setUseSmart] = useState(false);
   const [messages, setMessages] = useState<
-    { id?: string; role: string; content: string; thoughts?: string[]; attachments?: { image?: string; file?: string } }[]
+    { id?: string; role: string; content: string; thoughts?: string[]; attachments?: { image?: string; file?: string; folder?: string } }[]
   >([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -191,10 +192,15 @@ export default function TroChuyenPage() {
     name: string;
     data: string;
   } | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<{
+    name: string;
+    data: string;
+  } | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth() as any;
 
   const fetchHistory = async () => {
@@ -226,13 +232,6 @@ export default function TroChuyenPage() {
   if (!user) return null;
 
   const handleAttach = () => {
-    if (!useSmart) {
-      showToast(
-        "Vui lòng bật Chế độ Suy nghĩ để phân tích tài liệu đính kèm",
-        "info",
-      );
-      return;
-    }
     setShowAttachments(!showAttachments);
   };
 
@@ -245,10 +244,38 @@ export default function TroChuyenPage() {
     }
   };
 
-  const handleFileUpload = (
+  const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: "image" | "file",
+    type: "image" | "file" | "folder",
   ) => {
+    if (type === "folder") {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      let combinedText = "";
+      for (const file of files) {
+        if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+          try {
+            const text = await file.text();
+            combinedText += `\n\n--- ${file.webkitRelativePath || file.name} ---\n${text}`;
+          } catch (err) {}
+        }
+      }
+      
+      const blob = new Blob([combinedText], { type: "text/plain" });
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const folderName = files[0].webkitRelativePath ? files[0].webkitRelativePath.split('/')[0] : "Thư mục";
+          setSelectedFolder({ name: folderName, data: event.target.result as string });
+          setShowAttachments(false);
+        }
+      };
+      reader.readAsDataURL(blob);
+      e.target.value = "";
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -267,7 +294,7 @@ export default function TroChuyenPage() {
   const handleSubmit = async (e?: React.FormEvent, retryText?: string) => {
     if (e) e.preventDefault();
     const userMessage = retryText || input.trim();
-    if ((!userMessage && !selectedImage && !selectedFile) || isSending) return;
+    if ((!userMessage && !selectedImage && !selectedFile && !selectedFolder) || isSending) return;
 
     let sessionId = currentSessionId;
     if (!sessionId) {
@@ -298,9 +325,10 @@ export default function TroChuyenPage() {
       });
     }
 
-    const attachments: { image?: string; file?: string } = {};
+    const attachments: { image?: string; file?: string; folder?: string } = {};
     if (selectedImage) attachments.image = selectedImage.data;
     if (selectedFile) attachments.file = selectedFile.name;
+    if (selectedFolder) attachments.folder = selectedFolder.name;
 
     const msgId = Date.now().toString();
     setMessages((prev) => [
@@ -331,10 +359,12 @@ export default function TroChuyenPage() {
         document_ids: documentId ? [documentId] : [],
         image_data: selectedImage?.data,
         file_data: selectedFile?.data,
+        folder_data: selectedFolder?.data,
       });
 
       setSelectedFile(null);
       setSelectedImage(null);
+      setSelectedFolder(null);
 
       if (!res.ok) {
         let errorText = "Hệ thống hiện không phản hồi, vui lòng thử lại sau";
@@ -743,6 +773,14 @@ export default function TroChuyenPage() {
                               </span>
                             </div>
                           )}
+                          {msg.attachments?.folder && (
+                            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-[14px] border border-[#E8E8ED] shadow-sm">
+                              <Folder className="w-5 h-5 text-[#FF9500]" />
+                              <span className="text-[14px] font-medium text-[#1D1D1F]">
+                                {msg.attachments.folder}
+                              </span>
+                            </div>
+                          )}
                           {msg.content && (
                             <div className="bg-[#0071E3] text-white px-5 py-3.5 rounded-[20px] rounded-tr-[4px]">
                               <p className="text-[15px] whitespace-pre-wrap leading-relaxed min-w-0">
@@ -842,6 +880,20 @@ export default function TroChuyenPage() {
                 }}
               />
 
+              <input
+                type="file"
+                ref={folderInputRef}
+                className="hidden"
+                // @ts-ignore
+                webkitdirectory=""
+                directory=""
+                multiple
+                onChange={(e) => {
+                  handleFileUpload(e, "folder");
+                  setShowAttachments(false);
+                }}
+              />
+
               {showAttachments && (
                 <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-[14px] py-2 z-50 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#E8E8ED]">
                   <button
@@ -862,10 +914,21 @@ export default function TroChuyenPage() {
                   >
                     <ImageIcon className="w-5 h-5 text-[#34C759]" /> Hình ảnh
                   </button>
+                  {user?.ai_tier === "PREMIUM" && (
+                    <button
+                      onClick={() => {
+                        folderInputRef.current?.click();
+                        setShowAttachments(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
+                    >
+                      <Folder className="w-5 h-5 text-[#FF9500]" /> Thư mục
+                    </button>
+                  )}
                 </div>
               )}
 
-              {(selectedFile || selectedImage) && (
+              {(selectedFile || selectedImage || selectedFolder) && (
                 <div className="flex gap-4 px-2 pt-2 pb-3 overflow-x-auto scrollbar-none">
                   {selectedImage && (
                     <div className="relative group shrink-0">
@@ -896,20 +959,35 @@ export default function TroChuyenPage() {
                       </button>
                     </div>
                   )}
+
+                  {selectedFolder && (
+                    <div className="relative group shrink-0">
+                      <div className="flex items-center gap-3 px-4 py-3 bg-[#F5F5F7] rounded-[16px] border border-[#E8E8ED]">
+                        <Folder className="w-6 h-6 text-[#FF9500]" />
+                        <span className="text-[14px] font-medium text-[#1D1D1F] max-w-[150px] truncate">
+                          {selectedFolder.name}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedFolder(null)}
+                        className="absolute -top-2 -right-2 bg-white text-[#86868B] hover:text-[#1D1D1F] p-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] border border-[#E8E8ED] transition-colors z-10 opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <div className="flex-1 min-h-[48px] bg-transparent flex items-center px-2 gap-2">
-                  {useSmart && (
-                    <button
-                      type="button"
-                      onClick={handleAttach}
-                      className="text-[#6E6E73] shrink-0 rounded-full p-2 hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
-                    >
-                      <PlusIcon className="w-5 h-5" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleAttach}
+                    className="text-[#6E6E73] shrink-0 rounded-full p-2 hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
+                  >
+                    <PlusIcon className="w-5 h-5" />
+                  </button>
                   <input
                     type="text"
                     value={input}

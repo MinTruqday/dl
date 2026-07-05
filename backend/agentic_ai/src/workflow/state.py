@@ -63,6 +63,7 @@ class AgentState(TypedDict):
     document_ids: list
     image_data: str
     file_data: str
+    folder_data: str
 
 class ActingState(TypedDict):
     req_data: Dict[str, Any]

@@ -113,6 +113,55 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             "route": "error",
         }
 
+async def _check_upload_quota(req: ChatRequest):
+    item_type = None
+    if req.folder_data:
+        item_type = "folder"
+    elif req.file_data:
+        item_type = "document"
+    elif req.image_data:
+        item_type = "image"
+        
+    if not item_type:
+        return True, ""
+        
+    try:
+        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
+            resp = await c.get(
+                f"{settings.MANAGEMENT_URL}/han-muc/tai-len/xac-minh",
+                params={"item_type": item_type},
+                headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
+            )
+            if resp.status_code != 200:
+                detail = resp.json().get("detail") or "Đã hết dung lượng tải lên"
+                return False, detail
+            return True, ""
+    except Exception as e:
+        logger.exception("Lỗi kiểm tra dung lượng tải lên")
+        return False, "Không thể xác minh dung lượng tải lên"
+
+async def _consume_upload_quota(req: ChatRequest):
+    item_type = None
+    if req.folder_data:
+        item_type = "folder"
+    elif req.file_data:
+        item_type = "document"
+    elif req.image_data:
+        item_type = "image"
+        
+    if not item_type:
+        return
+        
+    try:
+        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
+            await c.post(
+                f"{settings.MANAGEMENT_URL}/han-muc/tai-len/tieu-thu",
+                json={"user_id": req.user_id, "item_type": item_type, "req_reset_hours": 24},
+                headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
+            )
+    except Exception as e:
+        logger.exception("Lỗi tiêu thụ dung lượng tải lên")
+
 @router.post("/phat-truc-tiep")
 async def stream_endpoint(req: ChatRequest, request: Request):
     logger.info(f"Bắt đầu xử lý luồng Stream. Dữ liệu đầu vào: {req.model_dump(exclude={'token', 'user_id'})}")
@@ -145,6 +194,13 @@ async def stream_endpoint(req: ChatRequest, request: Request):
         agentops.record_session_start(session_id, user_id, req.query)
 
         try:
+            is_quota_ok, quota_msg = await _check_upload_quota(req)
+            if not is_quota_ok:
+                yield f"event: message\ndata: {json.dumps({'chunk': quota_msg})}\n\n"
+                yield "event: done\ndata: [DONE]\n\n"
+                agentops.record_session_end(session_id, "failed")
+                return
+
             if req.document_ids:
                 from src.tools.interface import INTERNAL_API_URL, _make_api_request
 
@@ -296,6 +352,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 except Exception as e:
                     logger.exception("Lỗi lưu tin nhắn vào database")
 
+            await _consume_upload_quota(req)
             agentops.record_session_end(session_id, "done")
 
         except Exception as e:
