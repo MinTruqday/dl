@@ -41,6 +41,9 @@ export const sendMessageAPI = async (
   imageUrl?: string,
   replyToId?: string,
   audioUrl?: string,
+  selfDestructIn?: number,
+  documentUrl?: string,
+  documentName?: string,
 ) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
@@ -56,6 +59,9 @@ export const sendMessageAPI = async (
       image_url: imageUrl,
       audio_url: audioUrl,
       reply_to_id: replyToId,
+      self_destruct_in: selfDestructIn,
+      document_url: documentUrl,
+      document_name: documentName,
       client_msg_id: crypto.randomUUID(),
     }),
   });
@@ -101,6 +107,30 @@ export const recallMessageAPI = async (messageId: string) => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể thu hồi tin nhắn");
+  return data;
+};
+
+export const deleteMessageForMeAPI = async (messageId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/tin-nhan/${messageId}/xoa-phia-toi`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể xóa tin nhắn");
+  return data;
+};
+
+export const restoreMessageAPI = async (messageId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/tin-nhan/${messageId}/khoi-phuc`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể khôi phục tin nhắn");
   return data;
 };
 

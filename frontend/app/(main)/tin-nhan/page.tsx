@@ -8,6 +8,8 @@ import {
   togglePinAPI,
   editMessageAPI,
   recallMessageAPI,
+  deleteMessageForMeAPI,
+  restoreMessageAPI,
   searchMessagesAPI,
   addReactionAPI,
   markAsReadAPI,
@@ -77,6 +79,9 @@ import {
   Undo2,
   CheckCheck,
   MessageSquare,
+  Timer,
+  Check,
+  FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/shared/lib/app_utils";
@@ -161,6 +166,24 @@ const CustomAudioPlayer = ({
 export default function MessagesPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
   const { showToast } = useToast();
+
+  const formatRelativeTime = (date: Date) => {
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const timeStr = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+    if (now.toDateString() === date.toDateString()) return `${timeStr} Hôm nay`;
+    
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (yesterday.toDateString() === date.toDateString()) return `${timeStr} Hôm qua`;
+    
+    if (diffDays < 7) {
+      const days = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+      return `${timeStr} ${days[date.getDay()]}`;
+    }
+    
+    return `${timeStr} ${date.toLocaleDateString("vi-VN")}`;
+  };
   const router = useRouter();
   const [conversations, setConversations] = useState<any[]>([]);
   const [selectedConv, setSelectedConv] = useState<any>(null);
@@ -180,10 +203,14 @@ export default function MessagesPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [replyingTo, setReplyingTo] = useState<any>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editingMsg, setEditingMsg] = useState<any>(null);
+  const [activeMsgMenuId, setActiveMsgMenuId] = useState<string | null>(null);
   const [showMsgMenu, setShowMsgMenu] = useState<string | null>(null);
+  const [showDeleteSubMenu, setShowDeleteSubMenu] = useState<string | null>(null);
+  const [activeMsgRect, setActiveMsgRect] = useState<{top: number; left: number; right: number; bottom: number; isSender: boolean} | null>(null);
+  const [activeMsgObj, setActiveMsgObj] = useState<any>(null);
   const [activeConvMenuId, setActiveConvMenuId] = useState<string | null>(null);
   const [searchMsgQuery, setSearchMsgQuery] = useState("");
   const [showSearchMsgBar, setShowSearchMsgBar] = useState(false);
@@ -204,16 +231,21 @@ export default function MessagesPage() {
   const [isOnline, setIsOnline] = useState(false);
   const [showSelfDestructMenu, setShowSelfDestructMenu] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isRecordingPaused, setIsRecordingPaused] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [showConvMenu, setShowConvMenu] = useState(false);
+  const [aliases, setAliases] = useState<Record<string, string>>({});
+  const [showAliasModal, setShowAliasModal] = useState(false);
+  const [aliasInput, setAliasInput] = useState("");
   const recordTimerRef = useRef<any>(null);
   const cancelRecordingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -230,13 +262,37 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/dang-nhap");
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user_aliases");
+    if (stored) {
+      try {
+        setAliases(JSON.parse(stored));
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleSetAlias = () => {
+    if (!selectedConv) return;
+    const userId = selectedConv.other_user_id;
+    const updated = { ...aliases, [userId]: aliasInput };
+    if (!aliasInput.trim()) delete updated[userId];
+    setAliases(updated);
+    localStorage.setItem("user_aliases", JSON.stringify(updated));
+    setShowAliasModal(false);
+  };
+
+  useEffect(() => {
     if (!authLoading && user) loadConversations();
   }, [authLoading, user, router, loadConversations]);
 
   useEffect(() => {
-    if (messagesEndRef.current)
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, selectedConv?.other_user_id]);
+    if (messagesContainerRef.current && !loadingMsgs) {
+      const el = messagesContainerRef.current;
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [messages.length, selectedConv?.other_user_id, loadingMsgs]);
 
   const updateConversationInPlace = useCallback(
     (senderId: string, messageData: any) => {
@@ -371,7 +427,7 @@ export default function MessagesPage() {
     setActiveConvMenuId(null);
     setLoadingMsgs(true);
     setReplyingTo(null);
-    setImageFile(null);
+    setImageFiles([]);
     setShowSearchMsgBar(false);
     setSearchMsgQuery("");
     setSearchedMsgResults([]);
@@ -411,7 +467,7 @@ export default function MessagesPage() {
       showToast("Không thể gửi khi bị chặn.", "error");
       return;
     }
-    if ((!newMessage.trim() && !imageFile) || !selectedConv || sending) return;
+    if ((!newMessage.trim() && imageFiles.length === 0) || !selectedConv || sending) return;
     if (editingMsg) {
       setSending(true);
       try {
@@ -437,38 +493,72 @@ export default function MessagesPage() {
     }
     setSending(true);
     try {
-      let imageUrl = "";
-      if (imageFile) {
+      if (imageFiles.length > 0) {
         setUploadingImage(true);
-        const formData = new FormData();
-        formData.append("file", imageFile);
-        const resUpload = await fetch(`${API_URL}/tai-len/file`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${getToken()}` },
-          body: formData,
-        });
-        const uploadData = await resUpload.json();
-        imageUrl = uploadData.data.url;
+        for (let i = 0; i < imageFiles.length; i++) {
+          const formData = new FormData();
+          formData.append("file", imageFiles[i]);
+          const resUpload = await fetch(`${API_URL}/tai-len/file`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${getToken()}` },
+            body: formData,
+          });
+          const uploadData = await resUpload.json();
+          const isImage = imageFiles[i].type.startsWith("image/");
+          const res = await sendMessageAPI(
+            selectedConv.other_user_id,
+            i === 0 ? newMessage.trim() : "",
+            isImage ? uploadData.data.url : undefined,
+            replyingTo?._id || replyingTo?.id,
+            undefined,
+            selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
+            !isImage ? uploadData.data.url : undefined,
+            !isImage ? imageFiles[i].name : undefined,
+          );
+          const msg = res.data || res;
+          setMessages((prev) => [...prev, msg]);
+          updateConversationInPlace(selectedConv.other_user_id, msg);
+        }
         setUploadingImage(false);
+      } else {
+        const res = await sendMessageAPI(
+          selectedConv.other_user_id,
+          newMessage.trim(),
+          "",
+          replyingTo?._id || replyingTo?.id,
+          undefined,
+          selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
+        );
+        const msg = res.data || res;
+        setMessages((prev) => [...prev, msg]);
+        updateConversationInPlace(selectedConv.other_user_id, msg);
       }
-      const res = await sendMessageAPI(
-        selectedConv.other_user_id,
-        newMessage.trim(),
-        imageUrl,
-        replyingTo?._id || replyingTo?.id,
-      );
-      const msg = res.data || res;
-      setMessages((prev) => [...prev, msg]);
       setNewMessage("");
       setReplyingTo(null);
-      setImageFile(null);
+      setImageFiles([]);
       await saveDraftAPI(selectedConv.other_user_id, "");
-      updateConversationInPlace(selectedConv.other_user_id, msg);
     } catch (err: any) {
       showToast("Gửi thất bại.", "error");
     } finally {
       setSending(false);
       setUploadingImage(false);
+    }
+  };
+
+  const handleTogglePauseRecording = () => {
+    if (mediaRecorder && isRecording) {
+      if (isRecordingPaused) {
+        mediaRecorder.resume();
+        setIsRecordingPaused(false);
+        recordTimerRef.current = setInterval(
+          () => setRecordingDuration((prev) => prev + 1),
+          1000,
+        );
+      } else {
+        mediaRecorder.pause();
+        setIsRecordingPaused(true);
+        clearInterval(recordTimerRef.current);
+      }
     }
   };
 
@@ -500,6 +590,7 @@ export default function MessagesPage() {
             undefined,
             undefined,
             uploadData.data.url,
+            selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
           );
           const msg = res.data || res;
           setMessages((prev) => [...prev, msg]);
@@ -513,7 +604,9 @@ export default function MessagesPage() {
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
+      setIsRecordingPaused(false);
       setRecordingDuration(0);
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current);
       recordTimerRef.current = setInterval(
         () => setRecordingDuration((prev) => prev + 1),
         1000,
@@ -527,6 +620,7 @@ export default function MessagesPage() {
     if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
       setIsRecording(false);
+      setIsRecordingPaused(false);
       clearInterval(recordTimerRef.current);
     }
   };
@@ -536,6 +630,7 @@ export default function MessagesPage() {
       cancelRecordingRef.current = true;
       mediaRecorder.stop();
       setIsRecording(false);
+      setIsRecordingPaused(false);
       clearInterval(recordTimerRef.current);
     }
   };
@@ -582,6 +677,16 @@ export default function MessagesPage() {
     } catch (err: any) {
       showToast("Thu hồi thất bại.", "error");
     }
+  };
+
+  const handleDeleteForMe = async (messageId: string) => {
+    try {
+      await deleteMessageForMeAPI(messageId);
+    } catch {
+      // ignore API error — hide locally regardless
+    }
+    setMessages((prev) => prev.filter((m) => (m._id || m.id) !== messageId));
+    showToast("Đã xóa khỏi màn hình của bạn.", "success");
   };
 
   const handleSearchMessages = async (q: string) => {
@@ -843,12 +948,15 @@ export default function MessagesPage() {
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <input
-            value={searchQuery}
-            onChange={(e) => handleSearchUsers(e.target.value)}
-            placeholder=""
-            className="apple-input w-full"
-          />
+          <div className="relative mb-4">
+            <Search className="w-4 h-4 text-[#A1A1A6] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={searchQuery}
+              onChange={(e) => handleSearchUsers(e.target.value)}
+              placeholder="Tìm kiếm người dùng..."
+              className="w-full bg-[#E8E8ED] text-[#1D1D1F] placeholder:text-[#A1A1A6] pl-9 pr-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-[15px]"
+            />
+          </div>
           <div className="max-h-[300px] overflow-y-auto space-y-2">
             {searching ? (
               <div className="py-12 flex justify-center">
@@ -1040,7 +1148,7 @@ export default function MessagesPage() {
                   <div
                     key={conv.other_user_id}
                     onClick={() => selectConversation(conv)}
-                    className={`p-4 rounded-[14px] cursor-pointer flex items-center gap-4 transition-colors ${active ? "bg-white" : "hover:bg-white/50"}`}
+                    className={`p-4 rounded-[14px] cursor-pointer flex items-center gap-4 transition-colors group/conv relative ${active ? "bg-white" : "hover:bg-white/50"}`}
                   >
                     <div className="w-6 h-6 bg-[#D2D2D7] rounded-full overflow-hidden shrink-0">
                       {conv.other_user?.avatar_url ? (
@@ -1058,7 +1166,7 @@ export default function MessagesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-[15px] font-medium text-[#1D1D1F] truncate pr-2">
-                          {conv.other_user?.full_name ||
+                          {aliases[conv.other_user_id] || conv.other_user?.full_name ||
                             conv.other_user?.username}
                         </span>
                         <span className="text-[12px] text-[#6E6E73] shrink-0">
@@ -1072,15 +1180,33 @@ export default function MessagesPage() {
                             : ""}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center relative group-hover/conv:pr-6">
                         <p
-                          className={`text-[13px] truncate ${conv.unread_count > 0 ? "font-semibold text-[#1D1D1F]" : "text-[#6E6E73]"}`}
+                          className={`text-[13px] truncate transition-all duration-300 ${conv.unread_count > 0 ? "font-semibold text-[#1D1D1F]" : "text-[#6E6E73]"}`}
                         >
                           {conv.last_message?.content || "Chưa có tin nhắn"}
                         </p>
                         {conv.unread_count > 0 && (
                           <div className="w-2.5 h-2.5 bg-[#0071E3] rounded-full shrink-0 ml-2" />
                         )}
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/conv:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setActiveConvMenuId(activeConvMenuId === conv.other_user_id ? null : conv.other_user_id); }}
+                            className="p-1 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full bg-[#F5F5F7] md:bg-white shadow-sm"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                          {activeConvMenuId === conv.other_user_id && (
+                            <div className="absolute z-50 w-40 bg-white/80 backdrop-blur-md rounded-[12px] shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#E8E8ED] py-2 flex flex-col right-0 top-full mt-1">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleDeleteConv(conv.other_user_id); setActiveConvMenuId(null); }}
+                                className="flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-[#F5F5F7] text-red-500 text-left"
+                              >
+                                <Trash2 className="w-4 h-4" /> Xóa
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1120,7 +1246,7 @@ export default function MessagesPage() {
                   </div>
                   <div>
                     <h3 className="text-[17px] font-medium text-[#1D1D1F]">
-                      {selectedConv.other_user?.full_name ||
+                      {aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name ||
                         selectedConv.other_user?.username}
                     </h3>
                     <p className="text-[12px] text-[#6E6E73]">
@@ -1128,7 +1254,14 @@ export default function MessagesPage() {
                     </p>
                   </div>
                 </div>
-                <div className="relative">
+                <div className="relative flex items-center gap-2">
+                  <button
+                    onClick={() => setShowSearchMsgBar(!showSearchMsgBar)}
+                    className={`p-2 rounded-full transition-colors ${showSearchMsgBar ? "bg-[#E8E8ED] text-[#1D1D1F]" : "text-[#0071E3] hover:bg-[#F5F5F7]"}`}
+                    title="Tìm kiếm"
+                  >
+                    <Search className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => setShowConvMenu(!showConvMenu)}
                     className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full"
@@ -1137,8 +1270,38 @@ export default function MessagesPage() {
                   </button>
                   {showConvMenu && (
                     <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[14px] shadow-lg border border-[#F5F5F7] py-2 z-50">
+                      <div className="relative">
+                        <button onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center justify-between text-[14px]">
+                          <span className="flex items-center gap-2"><Timer className="w-4 h-4" /> Tự hủy</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                        {showSelfDestructMenu && (
+                          <div className="absolute top-0 right-[100%] mr-2 w-48 bg-white rounded-[14px] shadow-lg border border-[#F5F5F7] py-2">
+                            <div className="px-4 py-2 text-[12px] font-semibold text-[#6E6E73] uppercase tracking-wider">Thời gian tự hủy</div>
+                            {[
+                              { label: "Tắt", value: 0 },
+                              { label: "5 giây", value: 5 },
+                              { label: "10 giây", value: 10 },
+                              { label: "1 phút", value: 60 },
+                              { label: "5 phút", value: 300 },
+                            ].map((opt) => (
+                              <button
+                                key={opt.value}
+                                onClick={() => { setSelfDestructSeconds(opt.value); setShowSelfDestructMenu(false); setShowConvMenu(false); }}
+                                className={`w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center justify-between text-[14px] ${selfDestructSeconds === opt.value ? "text-[#0071E3] font-medium" : "text-[#1D1D1F]"}`}
+                              >
+                                {opt.label}
+                                {selfDestructSeconds === opt.value && <Check className="w-4 h-4" />}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <button onClick={() => { openShareDoc(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px]">
                         <Share2 className="w-4 h-4" /> Chia sẻ tài liệu
+                      </button>
+                      <button onClick={() => { setAliasInput(aliases[selectedConv.other_user_id] || ""); setShowAliasModal(true); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px]">
+                        <Edit2 className="w-4 h-4" /> Đặt biệt danh
                       </button>
                       <button onClick={() => { handleToggleMute(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px]">
                         {isMuted ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />} {isMuted ? "Bật thông báo" : "Tắt thông báo"}
@@ -1154,7 +1317,24 @@ export default function MessagesPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 bg-transparent hide-scrollbar relative">
+              {messages.some((m) => m.is_pinned) && (
+                <div className="px-6 py-2 bg-white/50 backdrop-blur-md border-b border-[#F5F5F7] flex items-center gap-3 cursor-pointer hover:bg-white/80 transition-colors z-10 sticky top-0" onClick={() => {
+                  const pinnedMsgs = messages.filter((m) => m.is_pinned);
+                  const lastPinned = pinnedMsgs[pinnedMsgs.length - 1];
+                  if (lastPinned && messageRefs.current[lastPinned._id || lastPinned.id]) {
+                    messageRefs.current[lastPinned._id || lastPinned.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}>
+                  <Pin className="w-3.5 h-3.5 text-[#0071E3] shrink-0" />
+                  <span className="text-[13px] font-medium text-[#1D1D1F] truncate">
+                    {messages.filter(m => m.is_pinned).length > 1 
+                      ? `${messages.filter(m => m.is_pinned).length} tin nhắn đã ghim` 
+                      : `Tin nhắn đã ghim: ${messages.find((m) => m.is_pinned)?.content || "Đính kèm"}`}
+                  </span>
+                </div>
+              )}
+
+              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 bg-transparent hide-scrollbar relative">
                 {loadingMsgs ? (
                   <div className="space-y-4 flex flex-col h-full justify-end pb-4">
                     {[1, 2, 3].map((i) => (
@@ -1167,53 +1347,107 @@ export default function MessagesPage() {
                   <div className="space-y-4">
                     {messages.map((msg, i) => {
                       const isSender = msg.sender_id === user?._id;
+                      const prevMsg = i > 0 ? messages[i-1] : null;
+                      const showTime = !prevMsg || (new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() > 30 * 60 * 1000);
                       return (
                         <div
                           key={msg._id || msg.id || i}
                           ref={(el) => {
                             messageRefs.current[msg._id || msg.id] = el;
                           }}
-                          className={`flex ${isSender ? "justify-end" : "justify-start"}`}
+                          className={`flex flex-col transition-colors duration-500 mb-2 ${isSender ? "items-end" : "items-start"}`}
                         >
-                          <div
-                            className={`max-w-[70%] rounded-[18px] px-4 py-2.5 ${msg.is_recalled ? "bg-[#F5F5F7] text-[#6E6E73] italic" : isSender ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#1D1D1F]"}`}
-                          >
-                            {msg.image_url && !msg.is_recalled && (
-                              <img
-                                src={
-                                  msg.image_url.startsWith("http")
-                                    ? msg.image_url
-                                    : `${API_URL}/storage/${msg.image_url}`
-                                }
-                                alt=""
-                                className="rounded-[10px] mb-2 max-h-[300px]"
-                              />
-                            )}
-                            {msg.audio_url && !msg.is_recalled && (
-                              <CustomAudioPlayer
-                                src={
-                                  msg.audio_url.startsWith("http")
-                                    ? msg.audio_url
-                                    : `${API_URL}/storage/${msg.audio_url}`
-                                }
-                                isSender={isSender}
-                              />
-                            )}
-                            {!msg.is_recalled &&
-                              msg.content !== "Tin nhắn thoại" && (
-                                <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">
-                                  {msg.content}
-                                </p>
-                              )}
-                            {msg.is_recalled && "Tin nhắn đã thu hồi"}
+                          {showTime && (
+                            <div className="flex justify-center w-full my-3">
+                              <span className="text-[11px] font-medium text-[#6E6E73]">
+                                {formatRelativeTime(parseUTC(msg.created_at))}
+                              </span>
+                            </div>
+                          )}
+                          <div className={`group relative max-w-[85%] flex flex-col ${isSender ? "items-end" : "items-start"}`}>
                             <div
-                              className={`text-[11px] mt-1 ${isSender ? "text-blue-200 text-right" : "text-[#6E6E73]"}`}
+                              className={`rounded-[18px] px-4 py-2.5 ${
+                                msg.is_recalled
+                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73]"
+                                  : isSender
+                                  ? "bg-[#0071E3] text-white"
+                                  : "bg-white border border-[#E8E8ED] text-[#1D1D1F]"
+                              } ${msg.reactions && msg.reactions.length > 0 ? "pb-5" : ""} relative transition-transform duration-150 cursor-pointer select-none ${activeMsgMenuId === (msg._id || msg.id) ? "scale-105 shadow-2xl z-[45]" : ""}`}
+                              onDoubleClick={(e) => {
+                                e.stopPropagation();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                if (activeMsgMenuId === (msg._id || msg.id)) {
+                                  setActiveMsgMenuId(null);
+                                  setActiveMsgRect(null);
+                                  setActiveMsgObj(null);
+                                  setShowDeleteSubMenu(null);
+                                } else {
+                                  setActiveMsgMenuId(msg._id || msg.id);
+                                  setActiveMsgRect({ top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom, isSender });
+                                  setActiveMsgObj(msg);
+                                  setShowDeleteSubMenu(null);
+                                }
+                              }}
                             >
-                              {parseUTC(msg.created_at).toLocaleTimeString(
-                                "vi-VN",
-                                { hour: "2-digit", minute: "2-digit" },
+                              {msg.reply_to && !msg.is_recalled && (
+                                <div 
+                                  onClick={() => {
+                                    const replyId = typeof msg.reply_to === 'object' ? msg.reply_to._id || msg.reply_to.id : msg.reply_to;
+                                    if (replyId && messageRefs.current[replyId]) {
+                                      messageRefs.current[replyId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                      messageRefs.current[replyId]?.classList.add('opacity-50');
+                                      setTimeout(() => {
+                                        messageRefs.current[replyId]?.classList.remove('opacity-50');
+                                      }, 1500);
+                                    }
+                                  }}
+                                  className={`text-[12px] px-2 py-1.5 rounded-[10px] mb-2 truncate max-w-[250px] opacity-80 cursor-pointer hover:opacity-100 transition-opacity ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#6E6E73]"}`}
+                                >
+                                  <span className="font-semibold block mb-0.5">Trích dẫn:</span>
+                                  {typeof msg.reply_to === 'object' ? msg.reply_to.content : "Tin nhắn"}
+                                </div>
+                              )}
+                              {msg.image_url && !msg.is_recalled && (
+                                <img
+                                  src={msg.image_url.startsWith("http") ? msg.image_url : `${API_URL}/storage/${msg.image_url}`}
+                                  alt=""
+                                  className="rounded-[10px] mb-2 max-h-[300px] object-cover"
+                                />
+                              )}
+                              {msg.document_url && !msg.is_recalled && (
+                                <a href={msg.document_url.startsWith("http") ? msg.document_url : `${API_URL}/storage/${msg.document_url}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-[10px] mb-2 ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
+                                  <FileText className="w-5 h-5 shrink-0" />
+                                  <span className="text-[13px] truncate">{msg.document_name || "Tài liệu đính kèm"}</span>
+                                </a>
+                              )}
+                              {msg.audio_url && !msg.is_recalled && (
+                                <CustomAudioPlayer
+                                  src={msg.audio_url.startsWith("http") ? msg.audio_url : `${API_URL}/storage/${msg.audio_url}`}
+                                  isSender={isSender}
+                                />
+                              )}
+                              {!msg.is_recalled && msg.content !== "Tin nhắn thoại" && (
+                                <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{msg.content}</p>
+                              )}
+                              {msg.is_recalled && (
+                                <span className="text-[13px] italic">Tin nhắn đã thu hồi</span>
+                              )}
+                              {msg.reactions && msg.reactions.length > 0 && (
+                                <div className={`absolute -bottom-2 ${isSender ? "right-3" : "left-3"} bg-white border border-[#D2D2D7] rounded-full px-1.5 py-0.5 text-[10px] flex items-center gap-0.5 shadow-sm text-[#1D1D1F]`}>
+                                  {(() => {
+                                    const counts: Record<string, number> = {};
+                                    msg.reactions.forEach((r: any) => { counts[r.reaction] = (counts[r.reaction] || 0) + 1; });
+                                    return Object.entries(counts).map(([emoji, count]) => (
+                                      <span key={emoji}>{emoji}{count > 1 ? ` ${count}` : ""}</span>
+                                    ));
+                                  })()}
+                                </div>
                               )}
                             </div>
+                            <span className={`text-[10px] mt-1 text-[#6E6E73] ${isSender ? "mr-1" : "ml-1"}`}>
+                              {new Date(parseUTC(msg.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                            {/* popup now rendered globally as fixed overlay */}
                           </div>
                         </div>
                       );
@@ -1223,45 +1457,101 @@ export default function MessagesPage() {
                 )}
               </div>
 
-              <div className="p-4 bg-transparent">
+              <div className="p-4 bg-transparent relative">
+                {imageFiles.length > 0 && (
+                  <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar">
+                    {imageFiles.map((file, idx) => (
+                      <div key={idx} className="relative w-16 h-16 shrink-0 rounded-[10px] overflow-hidden border border-[#D2D2D7] bg-white flex items-center justify-center">
+                        {file.type.startsWith("image/") ? (
+                          <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <FileText className="w-6 h-6 text-[#6E6E73]" />
+                        )}
+                        <button onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-2 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full transition-colors shrink-0"
-                  >
-                    <ImageIcon className="w-4 h-4" />
-                  </button>
                   <input
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setImageFile(e.target.files ? e.target.files[0] : null)
-                    }
+                    multiple
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        setImageFiles(prev => [...prev, ...Array.from(e.target.files as FileList)]);
+                      }
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
                   />
                   <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleSend();
-                      }}
-                      placeholder="Nhập tin nhắn..."
-                      className="w-full bg-white border border-transparent rounded-[980px] pl-4 pr-12 py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]"
-                    />
-                    <button
-                      onClick={handleStartRecording}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-white rounded-full"
-                    >
-                      <Mic className="w-4 h-4" />
-                    </button>
+                    {isRecording ? (
+                      <div className="w-full bg-[#E8E8ED] border border-transparent rounded-[980px] px-4 h-[44px] text-[15px] flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2.5 h-2.5 bg-red-500 rounded-full ${!isRecordingPaused ? "animate-pulse" : ""}`} />
+                          <span className="text-red-500 font-medium">
+                            {isRecordingPaused ? "Tạm dừng" : "Đang ghi âm"} ({Math.floor(recordingDuration / 60)}:
+                            {(recordingDuration % 60)
+                              .toString()
+                              .padStart(2, "0")}
+                            )
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handleTogglePauseRecording}
+                            className="p-1.5 text-[#0071E3] hover:bg-[#D2D2D7] rounded-full transition-colors"
+                          >
+                            {isRecordingPaused ? <Mic className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                          </button>
+                          <button
+                            onClick={handleCancelRecording}
+                            className="p-1.5 text-[#6E6E73] hover:text-red-500 hover:bg-[#D2D2D7] rounded-full transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10"
+                        >
+                          <Paperclip className="w-4 h-4" />
+                        </button>
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSend();
+                          }}
+                          placeholder="Nhập tin nhắn..."
+                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[42px] pr-12 text-[15px] focus:outline-none focus:border-[#D2D2D7]"
+                        />
+                        <button
+                          onClick={handleStartRecording}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full"
+                        >
+                          <Mic className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                   <button
-                    onClick={handleSend}
-                    disabled={!newMessage.trim() && !imageFile}
-                    className="p-3 bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors shrink-0"
+                    onClick={() => {
+                      if (isRecording) {
+                        handleStopRecording();
+                      } else {
+                        handleSend();
+                      }
+                    }}
+                    disabled={!isRecording && !newMessage.trim() && imageFiles.length === 0}
+                    className="w-[44px] h-[44px] flex-shrink-0 self-end flex items-center justify-center bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors"
                   >
                     <Send className="w-4 h-4 ml-0.5" />
                   </button>
@@ -1278,6 +1568,144 @@ export default function MessagesPage() {
           )}
         </div>
       </div>
+
+      <Modal isOpen={showAliasModal} onClose={() => setShowAliasModal(false)}>
+        <ModalHeader>
+          <ModalTitle>Đặt biệt danh</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <div className="mb-4">
+            <input
+              type="text"
+              value={aliasInput}
+              onChange={(e) => setAliasInput(e.target.value)}
+              placeholder="Nhập biệt danh..."
+              className="w-full bg-[#E8E8ED] text-[#1D1D1F] px-4 py-2.5 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-[15px]"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => setShowAliasModal(false)}
+              className="px-4 py-2 text-[14px] font-medium text-[#1D1D1F] bg-[#E8E8ED] hover:bg-[#D2D2D7] rounded-full transition-colors"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={handleSetAlias}
+              className="px-4 py-2 text-[14px] font-medium text-white bg-[#0071E3] hover:bg-[#0055C6] rounded-full transition-colors"
+            >
+              Lưu
+            </button>
+          </div>
+        </ModalContent>
+      </Modal>
+
+      {/* ====== Global tapback popup (fixed, avoids overflow-y clipping) ====== */}
+      {activeMsgMenuId && activeMsgRect && activeMsgObj && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]"
+            onClick={() => { setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); setShowDeleteSubMenu(null); }}
+          />
+          {/* Popup panel */}
+          <div
+            style={{
+              position: "fixed",
+              zIndex: 50,
+              top: Math.min(activeMsgRect.bottom + 10, window.innerHeight - 320),
+              ...(activeMsgRect.isSender
+                ? { right: window.innerWidth - activeMsgRect.right }
+                : { left: activeMsgRect.left }),
+            }}
+            className="flex flex-col gap-2 min-w-[200px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Emoji row — only if not recalled */}
+            {!activeMsgObj.is_recalled && (
+              <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)]">
+                {["❤️", "👍", "😂", "😮", "😢", "🙏"].map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => { handleAddReaction(activeMsgObj._id || activeMsgObj.id, emoji); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); }}
+                    className="text-[22px] hover:scale-125 transition-transform duration-150 active:scale-110 px-1"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
+              {/* Reply */}
+              {!activeMsgObj.is_recalled && (
+                <button
+                  onClick={() => { setReplyingTo(activeMsgObj); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); }}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                >
+                  <Reply className="w-[18px] h-[18px] text-[#6E6E73]" />
+                  Trả lời
+                </button>
+              )}
+              {/* Pin */}
+              {!activeMsgObj.is_recalled && (
+                <button
+                  onClick={() => { handlePin(activeMsgObj._id || activeMsgObj.id); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); }}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                >
+                  {activeMsgObj.is_pinned ? <PinOff className="w-[18px] h-[18px] text-[#6E6E73]" /> : <Pin className="w-[18px] h-[18px] text-[#6E6E73]" />}
+                  {activeMsgObj.is_pinned ? "Bỏ ghim" : "Ghim"}
+                </button>
+              )}
+              {/* Edit — sender only, not recalled */}
+              {!activeMsgObj.is_recalled && activeMsgRect.isSender && (
+                <button
+                  onClick={() => { setEditingMsg(activeMsgObj); setNewMessage(activeMsgObj.content); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); }}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                >
+                  <Edit2 className="w-[18px] h-[18px] text-[#6E6E73]" />
+                  Chỉnh sửa
+                </button>
+              )}
+              {/* Xóa with submenu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowDeleteSubMenu(showDeleteSubMenu === (activeMsgObj._id || activeMsgObj.id) ? null : (activeMsgObj._id || activeMsgObj.id))}
+                  className="flex items-center justify-between gap-3 w-full px-4 py-3 text-[15px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="w-[18px] h-[18px]" />
+                    Xóa
+                  </div>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                {showDeleteSubMenu === (activeMsgObj._id || activeMsgObj.id) && (
+                  <div className="absolute left-full top-0 ml-1 bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[14px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden w-44 z-50">
+                    {activeMsgRect.isSender && !activeMsgObj.is_recalled && (
+                      <button
+                        onClick={() => { handleRecall(activeMsgObj._id || activeMsgObj.id); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); setShowDeleteSubMenu(null); }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-[14px] text-orange-500 hover:bg-orange-50 border-b border-[#F2F2F7] text-left transition-colors"
+                      >
+                        <Undo2 className="w-[16px] h-[16px]" />
+                        Xóa cả hai
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { handleDeleteForMe(activeMsgObj._id || activeMsgObj.id); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); setShowDeleteSubMenu(null); }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-[14px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors"
+                    >
+                      <Trash2 className="w-[16px] h-[16px]" />
+                      Xóa phía tôi
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

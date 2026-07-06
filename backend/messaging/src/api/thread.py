@@ -62,7 +62,7 @@ async def get_conversations(current_user=Depends(get_current_user)):
 async def get_messages(
     other_user_id: str,
     cursor: str = None,
-    limit: int = Query(50),
+    limit: int = Query(500),
     current_user=Depends(get_current_user),
 ):
     return APIResponse(
