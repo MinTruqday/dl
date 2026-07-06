@@ -211,6 +211,7 @@ export default function MessagesPage() {
   const [showDeleteSubMenu, setShowDeleteSubMenu] = useState<string | null>(null);
   const [activeMsgRect, setActiveMsgRect] = useState<{top: number; left: number; right: number; bottom: number; isSender: boolean} | null>(null);
   const [activeMsgObj, setActiveMsgObj] = useState<any>(null);
+  const [isPinnedExpanded, setIsPinnedExpanded] = useState(false);
   const [activeConvMenuId, setActiveConvMenuId] = useState<string | null>(null);
   const [searchMsgQuery, setSearchMsgQuery] = useState("");
   const [showSearchMsgBar, setShowSearchMsgBar] = useState(false);
@@ -498,13 +499,13 @@ export default function MessagesPage() {
         for (let i = 0; i < imageFiles.length; i++) {
           const formData = new FormData();
           formData.append("file", imageFiles[i]);
-          const resUpload = await fetch(`${API_URL}/tai-len/file`, {
+          const resUpload = await fetch(`${API_URL}/tai-len/tap-tin`, {
             method: "POST",
             headers: { Authorization: `Bearer ${getToken()}` },
             body: formData,
           });
           const uploadData = await resUpload.json();
-          const isImage = imageFiles[i].type.startsWith("image/");
+          const isImage = !!(imageFiles[i].type && imageFiles[i].type.startsWith("image/"));
           const res = await sendMessageAPI(
             selectedConv.other_user_id,
             i === 0 ? newMessage.trim() : "",
@@ -578,7 +579,7 @@ export default function MessagesPage() {
           const file = new File([blob], `voice.webm`, { type: mimeType });
           const formData = new FormData();
           formData.append("file", file);
-          const resUpload = await fetch(`${API_URL}/tai-len/file`, {
+          const resUpload = await fetch(`${API_URL}/tai-len/tap-tin`, {
             method: "POST",
             headers: { Authorization: `Bearer ${getToken()}` },
             body: formData,
@@ -1386,22 +1387,63 @@ export default function MessagesPage() {
                 </div>
               )}
 
-              {messages.some((m) => m.is_pinned) && (
-                <div className="px-6 py-2 bg-white/50 backdrop-blur-md border-b border-[#F5F5F7] flex items-center gap-3 cursor-pointer hover:bg-white/80 transition-colors z-10 sticky top-0" onClick={() => {
-                  const pinnedMsgs = messages.filter((m) => m.is_pinned);
-                  const lastPinned = pinnedMsgs[pinnedMsgs.length - 1];
-                  if (lastPinned && messageRefs.current[lastPinned._id || lastPinned.id]) {
-                    messageRefs.current[lastPinned._id || lastPinned.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }}>
-                  <Pin className="w-3.5 h-3.5 text-[#0071E3] shrink-0" />
-                  <span className="text-[13px] font-medium text-[#1D1D1F] truncate">
-                    {messages.filter(m => m.is_pinned).length > 1 
-                      ? `${messages.filter(m => m.is_pinned).length} tin nhắn đã ghim` 
-                      : `Tin nhắn đã ghim: ${messages.find((m) => m.is_pinned)?.content || "Đính kèm"}`}
-                  </span>
-                </div>
-              )}
+              {(() => {
+                const pinnedMsgs = messages.filter((m) => m.is_pinned);
+                if (pinnedMsgs.length === 0) return null;
+                return (
+                  <div className="z-10 sticky top-0 bg-transparent flex flex-col w-full transition-all duration-300">
+                    <div 
+                      className="flex items-center justify-between px-6 py-2.5 cursor-pointer hover:bg-black/5 transition-colors relative z-20" 
+                      onClick={() => {
+                        if (pinnedMsgs.length > 1) {
+                          setIsPinnedExpanded(!isPinnedExpanded);
+                        } else {
+                          const lastPinned = pinnedMsgs[0];
+                          if (messageRefs.current[lastPinned._id || lastPinned.id]) {
+                            messageRefs.current[lastPinned._id || lastPinned.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <Pin className="w-3.5 h-3.5 text-[#0071E3] shrink-0" />
+                        <span className="text-[13px] text-[#1D1D1F] opacity-90 truncate">
+                          {pinnedMsgs[pinnedMsgs.length - 1].content || "Đính kèm"}
+                        </span>
+                      </div>
+                      {pinnedMsgs.length > 1 && (
+                        <div className="text-[#6E6E73] flex items-center gap-1 shrink-0 ml-4">
+                          <span className="text-[12px] font-medium">{pinnedMsgs.length}</span>
+                          <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isPinnedExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    {isPinnedExpanded && pinnedMsgs.length > 1 && (
+                      <div className="absolute top-full left-0 w-full bg-[#F5F5F7] flex flex-col z-50">
+                        {pinnedMsgs.slice(0, -1).reverse().map((pinned) => (
+                          <div 
+                            key={pinned._id || pinned.id} 
+                            className="flex items-center gap-2 px-6 py-2.5 cursor-pointer hover:bg-black/5 transition-colors"
+                            onClick={() => {
+                              if (messageRefs.current[pinned._id || pinned.id]) {
+                                messageRefs.current[pinned._id || pinned.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                setIsPinnedExpanded(false);
+                              }
+                            }}
+                          >
+                            <div className="w-3.5 h-3.5 shrink-0" />
+                            <span className="text-[13px] text-[#1D1D1F] opacity-90 truncate">
+                              {pinned.content || "Đính kèm"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-6 pt-6 pb-2 bg-transparent hide-scrollbar relative">
                 {loadingMsgs ? (
@@ -1537,18 +1579,29 @@ export default function MessagesPage() {
               <div className="px-4 pb-4 pt-2 bg-transparent relative">
                 {imageFiles.length > 0 && (
                   <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar">
-                    {imageFiles.map((file, idx) => (
-                      <div key={idx} className="relative w-16 h-16 shrink-0 rounded-[10px] overflow-hidden border border-[#D2D2D7] bg-white flex items-center justify-center">
-                        {file.type.startsWith("image/") ? (
-                          <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <FileText className="w-6 h-6 text-[#6E6E73]" />
-                        )}
-                        <button onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
+                    {imageFiles.map((file, idx) => {
+                      let objectUrl = "";
+                      const isImg = !!(file.type && file.type.startsWith("image/"));
+                      if (isImg) {
+                        try {
+                          objectUrl = URL.createObjectURL(file);
+                        } catch (err) {
+                          console.error("Error creating object URL", err);
+                        }
+                      }
+                      return (
+                        <div key={idx} className="relative w-16 h-16 shrink-0 rounded-[10px] overflow-hidden border border-[#D2D2D7] bg-white flex items-center justify-center">
+                          {isImg && objectUrl ? (
+                            <img src={objectUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <FileText className="w-6 h-6 text-[#6E6E73]" />
+                          )}
+                          <button onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
                 <div className="flex items-center gap-3 h-[44px]">
@@ -1558,8 +1611,9 @@ export default function MessagesPage() {
                     className="hidden"
                     multiple
                     onChange={(e) => {
-                      if (e.target.files) {
-                        setImageFiles(prev => [...prev, ...Array.from(e.target.files as FileList)]);
+                      if (e.target.files && e.target.files.length > 0) {
+                        const newFiles = Array.from(e.target.files);
+                        setImageFiles(prev => [...prev, ...newFiles]);
                       }
                       if (fileInputRef.current) fileInputRef.current.value = "";
                     }}
@@ -1610,24 +1664,28 @@ export default function MessagesPage() {
                           placeholder=""
                           className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[40px] pr-[40px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
                         />
-                        {(!newMessage.trim() && imageFiles.length === 0) ? (
-                          <button
-                            onClick={handleStartRecording}
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
-                          >
-                            <Mic className="w-[18px] h-[18px]" />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={handleSend}
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-[#0071E3] text-white hover:bg-[#0055C6] rounded-full z-10 transition-colors"
-                          >
-                            <Send className="w-[16px] h-[16px] relative -left-[1px] top-[1px]" />
-                          </button>
-                        )}
+                        <button
+                          onClick={handleStartRecording}
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                        >
+                          <Mic className="w-[18px] h-[18px]" />
+                        </button>
                       </>
                     )}
                   </div>
+                  <button
+                    onClick={() => {
+                      if (isRecording) {
+                        handleStopRecording();
+                      } else {
+                        handleSend();
+                      }
+                    }}
+                    disabled={!isRecording && !newMessage.trim() && imageFiles.length === 0}
+                    className="w-[44px] h-[44px] flex-shrink-0 flex items-center justify-center bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors"
+                  >
+                    <Send className="w-[20px] h-[20px] relative -left-[1px] top-[1px]" />
+                  </button>
                 </div>
               </div>
             </>
@@ -1826,7 +1884,6 @@ export default function MessagesPage() {
                     Chỉnh sửa
                   </button>
                 )}
-                {/* Xóa with inline expand */}
                 <button
                   onClick={() => setShowDeleteSubMenu(showDeleteSubMenu === msgId ? null : msgId)}
                   className={`flex items-center justify-between gap-3 w-full px-4 py-3 text-[15px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors ${showDeleteSubMenu === msgId ? "border-b border-[#F2F2F7]" : ""}`}
