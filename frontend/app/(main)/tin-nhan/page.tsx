@@ -1496,14 +1496,12 @@ export default function MessagesPage() {
                             }}
                           >
                             <div
-                              className={`rounded-[18px] ${
+                              className={`rounded-[18px] flex flex-col gap-2 ${
                                 msg.is_recalled
-                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px] p-4"
-                                  : (!msg.content && !msg.reply_to && (msg.image_url || (msg.attachments && msg.attachments.length > 0) || msg.audio_url))
-                                  ? "bg-transparent p-0"
+                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] min-h-[38px] p-4 justify-center"
                                   : isSender
-                                  ? "bg-[#0071E3] text-white px-4 pt-4 pb-3"
-                                  : "bg-white border border-[#E8E8ED] text-[#1D1D1F] px-4 pt-4 pb-3"
+                                  ? "bg-[#0071E3] text-white p-4"
+                                  : "bg-white border border-[#E8E8ED] text-[#1D1D1F] p-4"
                               } relative cursor-pointer select-none`}
                             >
                               {msg.reply_to && !msg.is_recalled && (
@@ -1518,7 +1516,7 @@ export default function MessagesPage() {
                                       }, 1500);
                                     }
                                   }}
-                                  className={`text-[12px] px-2 py-1.5 rounded-[10px] mb-2 truncate max-w-[250px] opacity-80 cursor-pointer hover:opacity-100 transition-opacity ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#6E6E73]"}`}
+                                  className={`text-[12px] px-2 py-1.5 rounded-[10px] truncate max-w-[250px] opacity-80 cursor-pointer hover:opacity-100 transition-opacity ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#6E6E73]"}`}
                                 >
                                   <span className="font-semibold block mb-0.5">Trích dẫn:</span>
                                   {typeof msg.reply_to === 'object' ? msg.reply_to.content : "Tin nhắn"}
@@ -1528,11 +1526,11 @@ export default function MessagesPage() {
                                 <img
                                   src={msg.image_url.startsWith("http") ? msg.image_url : `${API_URL}/storage/${msg.image_url}`}
                                   alt=""
-                                  className="rounded-[10px] mb-2 max-h-[300px] object-cover"
+                                  className="rounded-[10px] max-h-[300px] object-cover"
                                 />
                               )}
                               {msg.attachments && msg.attachments.length > 0 && !msg.is_recalled && (
-                                <div className="space-y-2 mb-2">
+                                <div className="space-y-2">
                                   {msg.attachments.map((att: any, idx: number) => (
                                     <a key={idx} href={att.url.startsWith("http") ? att.url : `${API_URL}/storage/${att.url}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-[10px] ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
                                       <FileText className="w-5 h-5 shrink-0" />
@@ -1547,7 +1545,7 @@ export default function MessagesPage() {
                                   isSender={isSender}
                                 />
                               )}
-                              {!msg.is_recalled && msg.content !== "Tin nhắn thoại" && (
+                              {!msg.is_recalled && msg.content && msg.content !== "Tin nhắn thoại" && (
                                 <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{msg.content}</p>
                               )}
                               {msg.is_recalled && (
@@ -1787,25 +1785,25 @@ export default function MessagesPage() {
               onClick={dismiss}
             >
                <div
-                  className={`rounded-[18px] px-4 pt-4 pb-3 ${
+                  className={`rounded-[18px] flex flex-col gap-2 p-4 ${
                     activeMsgObj.is_recalled
-                      ? "bg-white/90 border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px]"
+                      ? "bg-white/90 border border-dashed border-[#D2D2D7] text-[#6E6E73] justify-center min-h-[38px]"
                       : isSender
                       ? "bg-[#0071E3] text-white"
                       : "bg-white border border-[#E8E8ED] text-[#1D1D1F]"
                   } cursor-pointer select-none shadow-2xl`}
                 >
                   {activeMsgObj.reply_to && !activeMsgObj.is_recalled && (
-                    <div className={`text-[12px] px-2 py-1.5 rounded-[10px] mb-2 truncate opacity-80 ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#6E6E73]"}`}>
+                    <div className={`text-[12px] px-2 py-1.5 rounded-[10px] truncate opacity-80 ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#6E6E73]"}`}>
                       <span className="font-semibold block mb-0.5">Trích dẫn:</span>
                       {typeof activeMsgObj.reply_to === 'object' ? activeMsgObj.reply_to.content : "Tin nhắn"}
                     </div>
                   )}
                   {activeMsgObj.image_url && !activeMsgObj.is_recalled && (
-                    <img src={activeMsgObj.image_url.startsWith("http") ? activeMsgObj.image_url : `${API_URL}/storage/${activeMsgObj.image_url}`} alt="" className="rounded-[10px] mb-2 max-h-[300px] object-cover" />
+                    <img src={activeMsgObj.image_url.startsWith("http") ? activeMsgObj.image_url : `${API_URL}/storage/${activeMsgObj.image_url}`} alt="" className="rounded-[10px] max-h-[300px] object-cover" />
                   )}
                   {activeMsgObj.attachments && activeMsgObj.attachments.length > 0 && !activeMsgObj.is_recalled && (
-                    <div className="space-y-2 mb-2">
+                    <div className="space-y-2">
                       {activeMsgObj.attachments.map((att: any, idx: number) => (
                         <div key={idx} className={`flex items-center gap-2 p-2 rounded-[10px] ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
                           <FileText className="w-5 h-5 shrink-0" />
@@ -1817,7 +1815,7 @@ export default function MessagesPage() {
                   {activeMsgObj.audio_url && !activeMsgObj.is_recalled && (
                     <div className={`text-[13px] ${isSender ? "text-white/80" : "text-[#6E6E73]"}`}>[Tin nhắn thoại]</div>
                   )}
-                  {!activeMsgObj.is_recalled && activeMsgObj.content !== "Tin nhắn thoại" && (
+                  {!activeMsgObj.is_recalled && activeMsgObj.content && activeMsgObj.content !== "Tin nhắn thoại" && (
                     <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{activeMsgObj.content}</p>
                   )}
                   {activeMsgObj.is_recalled && (

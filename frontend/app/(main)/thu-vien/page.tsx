@@ -17,7 +17,6 @@ import {
   deleteReadingHistoryItemAPI,
 } from "@/features/content/services/reading.service";
 import { API_URL } from "@/features/authentication/services/session.service";
-import { multiDocSynthesisAPI } from "@/features/agentic_ai/services/interaction.service";
 import {
   LayoutGrid,
   List as ListIcon,
@@ -43,7 +42,6 @@ import {
   ModalFooter,
 } from "@/shared/components/ui/Modal";
 import { useToast } from "@/shared/contexts/ToastContext";
-import ReactMarkdown from "react-markdown";
 import EmptyState from "@/shared/components/common/EmptyState";
 
 export default function LibraryPage() {
@@ -77,7 +75,6 @@ export default function LibraryPage() {
   const [isDeletingHistory, setIsDeletingHistory] = useState<string | null>(
     null,
   );
-  const [isSynthesisOpen, setIsSynthesisOpen] = useState(false);
 
   const fetchLibraryData = useCallback(async () => {
     if (!user) return;
@@ -233,14 +230,6 @@ export default function LibraryPage() {
                   {activeTab === t.id && <ChevronRight className="w-4 h-4 shrink-0" />}
                 </button>
               ))}
-              <div className="pt-4 mt-2">
-                <button
-                  onClick={() => setIsSynthesisOpen(true)}
-                  className="pill-button w-full flex items-center justify-center gap-2"
-                >
-                  Tổng hợp AI
-                </button>
-              </div>
             </nav>
           </div>
 
@@ -631,163 +620,6 @@ export default function LibraryPage() {
           </button>
         </ModalFooter>
       </Modal>
-
-      <LibraryAISynthesisModal
-        isOpen={isSynthesisOpen}
-        onClose={() => setIsSynthesisOpen(false)}
-        availableDocuments={[
-          ...pinnedDocs,
-          ...continueDocs,
-          ...history.slice(0, 20),
-        ]}
-      />
-    </div>
-  );
-}
-
-function LibraryAISynthesisModal({
-  isOpen,
-  onClose,
-  availableDocuments,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  availableDocuments: any[];
-}) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-  const { showToast } = useToast();
-
-  if (!isOpen) return null;
-
-  const handleSynthesize = async () => {
-    if (selectedIds.length === 0)
-      return showToast("Chọn ít nhất một tài liệu", "info");
-    if (!query.trim()) return showToast("Nhập câu hỏi tổng hợp", "info");
-    setLoading(true);
-    setResult(null);
-    try {
-      const data = await multiDocSynthesisAPI(selectedIds, query);
-      setResult(data.synthesis);
-    } catch (err: any) {
-      showToast("Tổng hợp thất bại", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleDoc = (id: string) =>
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(0,0,0,0.4)] p-6">
-      <div className="bg-[#F5F5F7] w-full max-w-5xl h-[85vh] rounded-[18px] flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-8 py-4 bg-white border-b border-[#D2D2D7]">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-[#0071E3] rounded-full flex items-center justify-center">
-              <Combine className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
-                Tổng hợp AI
-              </h2>
-              <p className="text-[13px] text-[#6E6E73]">
-                Phân tích dữ liệu từ thư viện cá nhân
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-[#6E6E73] hover:bg-[#F5F5F7] rounded-full transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="flex-1 flex overflow-hidden">
-          <div className="w-[320px] bg-white border-r border-[#D2D2D7] flex flex-col">
-            <div className="p-4 border-b border-[#D2D2D7]">
-              <span className="text-[13px] font-medium text-[#6E6E73]">
-                Chọn tài liệu ({selectedIds.length})
-              </span>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 hide-scrollbar">
-              {availableDocuments.map((doc) => (
-                <button
-                  key={doc.document_id || doc.id}
-                  onClick={() => toggleDoc(doc.document_id || doc.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-[12px] transition-colors text-left ${selectedIds.includes(doc.document_id || doc.id) ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
-                >
-                  <FileText className="w-5 h-5 shrink-0" />
-                  <span className="text-[14px] font-medium line-clamp-2">
-                    {doc.document_title || doc.title}
-                  </span>
-                </button>
-              ))}
-              {availableDocuments.length === 0 && (
-                <p className="text-[13px] text-[#6E6E73] text-center py-10">
-                  Không có tài liệu
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 flex flex-col bg-[#F5F5F7]">
-            <div className="p-6 bg-white border-b border-[#D2D2D7]">
-              <div className="relative flex items-center">
-                <Search className="absolute left-4 w-5 h-5 text-[#6E6E73]" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSynthesize()}
-                  placeholder=""
-                  className="w-full bg-[#F5F5F7] border border-transparent rounded-[980px] pl-12 pr-[120px] py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]"
-                />
-                <button
-                  onClick={handleSynthesize}
-                  disabled={loading || selectedIds.length === 0}
-                  className="absolute right-2 pill-button h-auto py-2 px-6 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    "Tổng hợp"
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-8 relative">
-              {loading ? (
-                <div className="h-full flex flex-col items-center justify-center">
-                  <Combine className="w-12 h-12 text-[#0071E3] animate-pulse mb-4" />
-                  <p className="text-[15px] text-[#6E6E73]">
-                    Đang phân tích {selectedIds.length} tài liệu
-                  </p>
-                </div>
-              ) : result ? (
-                <div className="bg-white p-8 rounded-[18px]">
-                  <ReactMarkdown className="prose prose-zinc max-w-none text-[15px] leading-relaxed">
-                    {result}
-                  </ReactMarkdown>
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center">
-                  <Sparkles className="w-12 h-12 text-[#D2D2D7] mb-4" />
-                  <p className="text-[15px] text-[#6E6E73]">
-                    Chọn tài liệu và đặt câu hỏi để nhận tổng hợp từ AI
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
