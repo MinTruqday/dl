@@ -523,7 +523,7 @@ services:
       - 8012:8012
     labels:
       - traefik.enable=true
-      - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`)
+      - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`) || PathPrefix(`/storage`)
       - traefik.http.services.cloud.loadbalancer.server.port=8012
     env_file:
       - .env

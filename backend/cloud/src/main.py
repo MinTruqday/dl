@@ -39,6 +39,14 @@ async def startup_event():
     await init_db()
     from src.core.storage import initialize_bucket
     await initialize_bucket()
+
+from fastapi.responses import RedirectResponse
+from src.services.upload import UploadService
+
+@app.get("/storage/{file_path:path}")
+async def get_storage_file(file_path: str):
+    url_data = await UploadService.get_presigned_url(file_path)
+    return RedirectResponse(url=url_data["download_url"], status_code=302)
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_db()

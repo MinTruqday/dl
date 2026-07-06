@@ -66,6 +66,7 @@ class ThreadService:
         reply_to_id: str = None,
         audio_url: str = None,
         client_msg_id: str = None,
+        attachments: list = None,
     ):
         sender_id = str(current_user.id)
         if client_msg_id:
@@ -104,6 +105,7 @@ class ThreadService:
             reply_to_id=reply_to_id,
             client_msg_id=client_msg_id,
             self_destruct_seconds=self_destruct_seconds,
+            attachments=attachments or [],
         )
         msg_dict = message.model_dump(by_alias=True)
         if reply_msg:
@@ -123,6 +125,7 @@ class ThreadService:
                 "content": content,
                 "image_url": image_url,
                 "audio_url": audio_url,
+                "attachments": attachments or [],
                 "is_recalled": False,
                 "created_at": msg_dict.get("created_at", datetime.now(timezone.utc)),
             },

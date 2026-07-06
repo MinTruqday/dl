@@ -1,5 +1,6 @@
 import re
 from typing import Any
+from fastapi.responses import RedirectResponse
 
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -70,7 +71,7 @@ async def upload_asset(
         status=201,
     )
 
-@router.get("/storage/{file_path:path}", response_model=APIResponse[Any])
+@router.get("/storage/{file_path:path}")
 async def get_presigned_download_url(
     file_path: str,
     current_user: CurrentUser = Depends(
@@ -78,11 +79,8 @@ async def get_presigned_download_url(
     ),
     db=Depends(get_db),
 ):
-    return APIResponse(
-        data=await UploadService.get_presigned_url(file_path),
-        message="Tạo liên kết tải xuống bảo mật thành công",
-        status=200,
-    )
+    url_data = await UploadService.get_presigned_url(file_path)
+    return RedirectResponse(url=url_data["download_url"], status_code=302)
 
 @router.post("/phan-doan", response_model=APIResponse[Any])
 async def upload_chunk(

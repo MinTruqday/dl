@@ -60,8 +60,7 @@ export const sendMessageAPI = async (
       audio_url: audioUrl,
       reply_to_id: replyToId,
       self_destruct_in: selfDestructIn,
-      document_url: documentUrl,
-      document_name: documentName,
+      attachments: documentUrl ? [{ url: documentUrl, name: documentName }] : [],
       client_msg_id: crypto.randomUUID(),
     }),
   });

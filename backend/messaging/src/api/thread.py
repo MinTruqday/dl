@@ -42,6 +42,7 @@ async def send_message(req: Creation, current_user=Depends(get_current_user)):
         req.reply_to_id,
         req.audio_url,
         req.client_msg_id,
+        req.attachments,
     )
     await publish_personal_message(
         {"type": "new_message", "data": msg}, req.receiver_id

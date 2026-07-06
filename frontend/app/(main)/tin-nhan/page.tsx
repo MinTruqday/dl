@@ -505,7 +505,9 @@ export default function MessagesPage() {
             body: formData,
           });
           const uploadData = await resUpload.json();
-          const isImage = !!(imageFiles[i].type && imageFiles[i].type.startsWith("image/"));
+          const filename = imageFiles[i].name || uploadData.data?.url || "";
+          const ext = filename.split(".").pop()?.toLowerCase() || "";
+          const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
           const res = await sendMessageAPI(
             selectedConv.other_user_id,
             i === 0 ? newMessage.trim() : "",
@@ -1494,12 +1496,14 @@ export default function MessagesPage() {
                             }}
                           >
                             <div
-                              className={`rounded-[18px] px-4 py-2.5 ${
+                              className={`rounded-[18px] ${
                                 msg.is_recalled
-                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px]"
+                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px] px-4 py-2.5"
+                                  : (!msg.content && !msg.reply_to && (msg.image_url || (msg.attachments && msg.attachments.length > 0) || msg.audio_url))
+                                  ? "bg-transparent p-0"
                                   : isSender
-                                  ? "bg-[#0071E3] text-white"
-                                  : "bg-white border border-[#E8E8ED] text-[#1D1D1F]"
+                                  ? "bg-[#0071E3] text-white px-4 py-2.5"
+                                  : "bg-white border border-[#E8E8ED] text-[#1D1D1F] px-4 py-2.5"
                               } relative cursor-pointer select-none`}
                             >
                               {msg.reply_to && !msg.is_recalled && (
@@ -1527,11 +1531,15 @@ export default function MessagesPage() {
                                   className="rounded-[10px] mb-2 max-h-[300px] object-cover"
                                 />
                               )}
-                              {msg.document_url && !msg.is_recalled && (
-                                <a href={msg.document_url.startsWith("http") ? msg.document_url : `${API_URL}/storage/${msg.document_url}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-[10px] mb-2 ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
-                                  <FileText className="w-5 h-5 shrink-0" />
-                                  <span className="text-[13px] truncate">{msg.document_name || "Tài liệu đính kèm"}</span>
-                                </a>
+                              {msg.attachments && msg.attachments.length > 0 && !msg.is_recalled && (
+                                <div className="space-y-2 mb-2">
+                                  {msg.attachments.map((att: any, idx: number) => (
+                                    <a key={idx} href={att.url.startsWith("http") ? att.url : `${API_URL}/storage/${att.url}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-[10px] ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
+                                      <FileText className="w-5 h-5 shrink-0" />
+                                      <span className="text-[13px] truncate">{att.name || "Tài liệu đính kèm"}</span>
+                                    </a>
+                                  ))}
+                                </div>
                               )}
                               {msg.audio_url && !msg.is_recalled && (
                                 <CustomAudioPlayer
@@ -1796,10 +1804,14 @@ export default function MessagesPage() {
                   {activeMsgObj.image_url && !activeMsgObj.is_recalled && (
                     <img src={activeMsgObj.image_url.startsWith("http") ? activeMsgObj.image_url : `${API_URL}/storage/${activeMsgObj.image_url}`} alt="" className="rounded-[10px] mb-2 max-h-[300px] object-cover" />
                   )}
-                  {activeMsgObj.document_url && !activeMsgObj.is_recalled && (
-                    <div className={`flex items-center gap-2 p-2 rounded-[10px] mb-2 ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
-                      <FileText className="w-5 h-5 shrink-0" />
-                      <span className="text-[13px] truncate">{activeMsgObj.document_name || "Tài liệu đính kèm"}</span>
+                  {activeMsgObj.attachments && activeMsgObj.attachments.length > 0 && !activeMsgObj.is_recalled && (
+                    <div className="space-y-2 mb-2">
+                      {activeMsgObj.attachments.map((att: any, idx: number) => (
+                        <div key={idx} className={`flex items-center gap-2 p-2 rounded-[10px] ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
+                          <FileText className="w-5 h-5 shrink-0" />
+                          <span className="text-[13px] truncate">{att.name || "Tài liệu đính kèm"}</span>
+                        </div>
+                      ))}
                     </div>
                   )}
                   {activeMsgObj.audio_url && !activeMsgObj.is_recalled && (
