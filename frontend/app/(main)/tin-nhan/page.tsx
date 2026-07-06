@@ -704,12 +704,22 @@ export default function MessagesPage() {
 
   const handleAddReaction = async (messageId: string, reaction: string) => {
     try {
-      const msg = messages.find((m) => (m._id || m.id) === messageId);
-      const existing = msg?.reactions?.find(
-        (r: any) => r.user_id === user?._id,
+      setMessages((prev) =>
+        prev.map((m) => {
+          if ((m._id || m.id) !== messageId) return m;
+          const reactions = m.reactions || [];
+          const updatedReactions = [...reactions, { user_id: user?._id, user_name: user?.full_name, reaction }];
+          return { ...m, reactions: updatedReactions };
+        })
       );
-      const finalReaction = existing?.reaction === reaction ? "" : reaction;
-      const res = await addReactionAPI(messageId, finalReaction);
+      if (activeMsgObj && (activeMsgObj._id || activeMsgObj.id) === messageId) {
+        setActiveMsgObj((prev: any) => {
+          const reactions = prev.reactions || [];
+          const updatedReactions = [...reactions, { user_id: user?._id, user_name: user?.full_name, reaction }];
+          return { ...prev, reactions: updatedReactions };
+        });
+      }
+      const res = await addReactionAPI(messageId, reaction);
       setMessages((prev) =>
         prev.map((m) =>
           (m._id || m.id) === messageId
@@ -1197,12 +1207,27 @@ export default function MessagesPage() {
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
                           {activeConvMenuId === conv.other_user_id && (
-                            <div className="absolute z-50 w-40 bg-white/80 backdrop-blur-md rounded-[12px] shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#E8E8ED] py-2 flex flex-col right-0 top-full mt-1">
+                            <div className="absolute z-50 w-48 bg-white/90 backdrop-blur-md rounded-[14px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E8E8ED] py-1.5 flex flex-col right-0 top-full mt-1">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleTogglePinConv(conv.other_user_id); }}
+                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-[#F5F5F7] text-[#1D1D1F] text-left rounded-t-[10px] transition-colors"
+                              >
+                                <Pin className="w-3.5 h-3.5 text-[#6E6E73]" />
+                                {isPinned ? "Bỏ ghim" : "Ghim"}
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleMarkAsRead(conv.other_user_id); }}
+                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-[#F5F5F7] text-[#1D1D1F] text-left transition-colors"
+                              >
+                                <CheckCheck className="w-3.5 h-3.5 text-[#6E6E73]" />
+                                Đánh dấu đã đọc
+                              </button>
+                              <div className="h-px bg-[#F2F2F7] mx-3 my-1" />
                               <button 
                                 onClick={(e) => { e.stopPropagation(); handleDeleteConv(conv.other_user_id); setActiveConvMenuId(null); }}
-                                className="flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-[#F5F5F7] text-red-500 text-left"
+                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-[#FFF5F5] text-red-500 text-left rounded-b-[10px] transition-colors"
                               >
-                                <Trash2 className="w-4 h-4" /> Xóa
+                                <Trash2 className="w-3.5 h-3.5" /> Xóa hội thoại
                               </button>
                             </div>
                           )}
@@ -1317,6 +1342,50 @@ export default function MessagesPage() {
                 </div>
               </div>
 
+              {/* Search bar — slides in below header */}
+              {showSearchMsgBar && (
+                <div className="px-4 py-2.5 border-b border-[#F2F2F7] bg-transparent">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-[#A1A1A6] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      autoFocus
+                      type="text"
+                      value={searchMsgQuery}
+                      onChange={(e) => handleSearchMessages(e.target.value)}
+                      placeholder="Tìm trong đoạn chat..."
+                      className="w-full bg-[#E8E8ED] text-[#1D1D1F] placeholder:text-[#A1A1A6] pl-8 pr-8 py-1.5 rounded-[10px] text-[14px] focus:outline-none transition-all"
+                    />
+                    {searchMsgQuery && (
+                      <button
+                        onClick={() => { setSearchMsgQuery(""); setSearchedMsgResults([]); }}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#A1A1A6] hover:text-[#6E6E73] transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {searchedMsgResults.length > 0 && (
+                    <div className="mt-2 max-h-[180px] overflow-y-auto space-y-1 hide-scrollbar">
+                      {searchedMsgResults.map((m) => (
+                        <div
+                          key={m._id || m.id}
+                          onClick={() => { scrollToMessage(m._id || m.id); setShowSearchMsgBar(false); setSearchMsgQuery(""); setSearchedMsgResults([]); }}
+                          className="px-3 py-2 bg-white rounded-[10px] cursor-pointer hover:bg-[#F5F5F7] transition-colors"
+                        >
+                          <p className="text-[13px] text-[#1D1D1F] truncate">{m.content}</p>
+                          <p className="text-[11px] text-[#6E6E73] mt-0.5">
+                            {new Date(parseUTC(m.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {searchMsgQuery.length > 0 && searchedMsgResults.length === 0 && (
+                    <p className="text-[12px] text-[#A1A1A6] mt-2 text-center">Không tìm thấy kết quả</p>
+                  )}
+                </div>
+              )}
+
               {messages.some((m) => m.is_pinned) && (
                 <div className="px-6 py-2 bg-white/50 backdrop-blur-md border-b border-[#F5F5F7] flex items-center gap-3 cursor-pointer hover:bg-white/80 transition-colors z-10 sticky top-0" onClick={() => {
                   const pinnedMsgs = messages.filter((m) => m.is_pinned);
@@ -1334,7 +1403,7 @@ export default function MessagesPage() {
                 </div>
               )}
 
-              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 bg-transparent hide-scrollbar relative">
+              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-6 pt-6 pb-2 bg-transparent hide-scrollbar relative">
                 {loadingMsgs ? (
                   <div className="space-y-4 flex flex-col h-full justify-end pb-4">
                     {[1, 2, 3].map((i) => (
@@ -1364,30 +1433,32 @@ export default function MessagesPage() {
                               </span>
                             </div>
                           )}
-                          <div className={`group relative max-w-[85%] flex flex-col ${isSender ? "items-end" : "items-start"}`}>
+                          <div 
+                            className={`group relative max-w-[85%] flex flex-col ${isSender ? "items-end" : "items-start"}`}
+                            onDoubleClick={(e) => {
+                              e.stopPropagation();
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              if (activeMsgMenuId === (msg._id || msg.id)) {
+                                setActiveMsgMenuId(null);
+                                setActiveMsgRect(null);
+                                setActiveMsgObj(null);
+                                setShowDeleteSubMenu(null);
+                              } else {
+                                setActiveMsgMenuId(msg._id || msg.id);
+                                setActiveMsgRect({ top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom, isSender });
+                                setActiveMsgObj(msg);
+                                setShowDeleteSubMenu(null);
+                              }
+                            }}
+                          >
                             <div
                               className={`rounded-[18px] px-4 py-2.5 ${
                                 msg.is_recalled
-                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73]"
+                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px]"
                                   : isSender
                                   ? "bg-[#0071E3] text-white"
                                   : "bg-white border border-[#E8E8ED] text-[#1D1D1F]"
-                              } ${msg.reactions && msg.reactions.length > 0 ? "pb-5" : ""} relative transition-transform duration-150 cursor-pointer select-none ${activeMsgMenuId === (msg._id || msg.id) ? "scale-105 shadow-2xl z-[45]" : ""}`}
-                              onDoubleClick={(e) => {
-                                e.stopPropagation();
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                if (activeMsgMenuId === (msg._id || msg.id)) {
-                                  setActiveMsgMenuId(null);
-                                  setActiveMsgRect(null);
-                                  setActiveMsgObj(null);
-                                  setShowDeleteSubMenu(null);
-                                } else {
-                                  setActiveMsgMenuId(msg._id || msg.id);
-                                  setActiveMsgRect({ top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom, isSender });
-                                  setActiveMsgObj(msg);
-                                  setShowDeleteSubMenu(null);
-                                }
-                              }}
+                              } relative cursor-pointer select-none`}
                             >
                               {msg.reply_to && !msg.is_recalled && (
                                 <div 
@@ -1430,23 +1501,29 @@ export default function MessagesPage() {
                                 <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{msg.content}</p>
                               )}
                               {msg.is_recalled && (
-                                <span className="text-[13px] italic">Tin nhắn đã thu hồi</span>
+                                <span className="text-[13px] italic flex items-center h-full">Tin nhắn đã thu hồi</span>
                               )}
-                              {msg.reactions && msg.reactions.length > 0 && (
-                                <div className={`absolute -bottom-2 ${isSender ? "right-3" : "left-3"} bg-white border border-[#D2D2D7] rounded-full px-1.5 py-0.5 text-[10px] flex items-center gap-0.5 shadow-sm text-[#1D1D1F]`}>
+                            </div>
+                            {/* Reaction badge & Time — below the bubble */}
+                            <div className={`flex items-center gap-2 mt-1 ${isSender ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}>
+                              <span className="text-[10px] text-[#6E6E73] whitespace-nowrap">
+                                {new Date(parseUTC(msg.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                              {!msg.is_recalled && msg.reactions && msg.reactions.length > 0 && (
+                                <div className="bg-white border border-[#D2D2D7] rounded-full px-1.5 py-0.5 text-[11px] flex items-center gap-1 shadow-sm text-[#1D1D1F]">
                                   {(() => {
                                     const counts: Record<string, number> = {};
                                     msg.reactions.forEach((r: any) => { counts[r.reaction] = (counts[r.reaction] || 0) + 1; });
                                     return Object.entries(counts).map(([emoji, count]) => (
-                                      <span key={emoji}>{emoji}{count > 1 ? ` ${count}` : ""}</span>
+                                      <span key={emoji} className="flex items-center gap-0.5 font-medium leading-none">
+                                        <span className="text-[12px] leading-none">{emoji}</span>
+                                        <span className="text-[#6E6E73] text-[11px] tabular-nums leading-none">{count}</span>
+                                      </span>
                                     ));
                                   })()}
                                 </div>
                               )}
                             </div>
-                            <span className={`text-[10px] mt-1 text-[#6E6E73] ${isSender ? "mr-1" : "ml-1"}`}>
-                              {new Date(parseUTC(msg.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
                             {/* popup now rendered globally as fixed overlay */}
                           </div>
                         </div>
@@ -1457,7 +1534,7 @@ export default function MessagesPage() {
                 )}
               </div>
 
-              <div className="p-4 bg-transparent relative">
+              <div className="px-4 pb-4 pt-2 bg-transparent relative">
                 {imageFiles.length > 0 && (
                   <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar">
                     {imageFiles.map((file, idx) => (
@@ -1474,7 +1551,7 @@ export default function MessagesPage() {
                     ))}
                   </div>
                 )}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 h-[44px]">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -1489,9 +1566,9 @@ export default function MessagesPage() {
                   />
                   <div className="flex-1 relative">
                     {isRecording ? (
-                      <div className="w-full bg-[#E8E8ED] border border-transparent rounded-[980px] px-4 h-[44px] text-[15px] flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2.5 h-2.5 bg-red-500 rounded-full ${!isRecordingPaused ? "animate-pulse" : ""}`} />
+                      <div className="w-full bg-[#E8E8ED] border border-transparent rounded-[980px] pl-4 pr-1.5 h-[44px] text-[15px] flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-2 h-2 bg-red-500 rounded-full ${!isRecordingPaused ? "animate-pulse" : ""}`} />
                           <span className="text-red-500 font-medium">
                             {isRecordingPaused ? "Tạm dừng" : "Đang ghi âm"} ({Math.floor(recordingDuration / 60)}:
                             {(recordingDuration % 60)
@@ -1500,18 +1577,18 @@ export default function MessagesPage() {
                             )
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-0.5">
                           <button
                             onClick={handleTogglePauseRecording}
-                            className="p-1.5 text-[#0071E3] hover:bg-[#D2D2D7] rounded-full transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-black/5 rounded-full transition-colors"
                           >
-                            {isRecordingPaused ? <Mic className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                            {isRecordingPaused ? <Mic className="w-[18px] h-[18px]" /> : <Pause className="w-[18px] h-[18px]" />}
                           </button>
                           <button
                             onClick={handleCancelRecording}
-                            className="p-1.5 text-[#6E6E73] hover:text-red-500 hover:bg-[#D2D2D7] rounded-full transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-[#6E6E73] hover:text-red-500 hover:bg-black/5 rounded-full transition-colors"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-[18px] h-[18px]" />
                           </button>
                         </div>
                       </div>
@@ -1519,9 +1596,9 @@ export default function MessagesPage() {
                       <>
                         <button
                           onClick={() => fileInputRef.current?.click()}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10"
+                          className="absolute left-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10"
                         >
-                          <Paperclip className="w-4 h-4" />
+                          <Paperclip className="w-[18px] h-[18px]" />
                         </button>
                         <input
                           type="text"
@@ -1530,31 +1607,27 @@ export default function MessagesPage() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter") handleSend();
                           }}
-                          placeholder="Nhập tin nhắn..."
-                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[42px] pr-12 text-[15px] focus:outline-none focus:border-[#D2D2D7]"
+                          placeholder=""
+                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[40px] pr-[40px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
                         />
-                        <button
-                          onClick={handleStartRecording}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full"
-                        >
-                          <Mic className="w-4 h-4" />
-                        </button>
+                        {(!newMessage.trim() && imageFiles.length === 0) ? (
+                          <button
+                            onClick={handleStartRecording}
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                          >
+                            <Mic className="w-[18px] h-[18px]" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleSend}
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-[#0071E3] text-white hover:bg-[#0055C6] rounded-full z-10 transition-colors"
+                          >
+                            <Send className="w-[16px] h-[16px] relative -left-[1px] top-[1px]" />
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
-                  <button
-                    onClick={() => {
-                      if (isRecording) {
-                        handleStopRecording();
-                      } else {
-                        handleSend();
-                      }
-                    }}
-                    disabled={!isRecording && !newMessage.trim() && imageFiles.length === 0}
-                    className="w-[44px] h-[44px] flex-shrink-0 self-end flex items-center justify-center bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors"
-                  >
-                    <Send className="w-4 h-4 ml-0.5" />
-                  </button>
                 </div>
               </div>
             </>
@@ -1601,111 +1674,194 @@ export default function MessagesPage() {
         </ModalContent>
       </Modal>
 
-      {/* ====== Global tapback popup (fixed, avoids overflow-y clipping) ====== */}
-      {activeMsgMenuId && activeMsgRect && activeMsgObj && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]"
-            onClick={() => { setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); setShowDeleteSubMenu(null); }}
-          />
-          {/* Popup panel */}
-          <div
-            style={{
-              position: "fixed",
-              zIndex: 50,
-              top: Math.min(activeMsgRect.bottom + 10, window.innerHeight - 320),
-              ...(activeMsgRect.isSender
-                ? { right: window.innerWidth - activeMsgRect.right }
-                : { left: activeMsgRect.left }),
-            }}
-            className="flex flex-col gap-2 min-w-[200px]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Emoji row — only if not recalled */}
-            {!activeMsgObj.is_recalled && (
-              <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)]">
-                {["❤️", "👍", "😂", "😮", "😢", "🙏"].map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => { handleAddReaction(activeMsgObj._id || activeMsgObj.id, emoji); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); }}
-                    className="text-[22px] hover:scale-125 transition-transform duration-150 active:scale-110 px-1"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
+      {/* ====== Global tapback popup (fixed, smart above/below) ====== */}
+      {activeMsgMenuId && activeMsgRect && activeMsgObj && (() => {
+        const msgId = activeMsgObj._id || activeMsgObj.id;
+        const isRecalled = activeMsgObj.is_recalled;
+        const isSender = activeMsgRect.isSender;
 
-            {/* Action buttons */}
-            <div className="bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
-              {/* Reply */}
-              {!activeMsgObj.is_recalled && (
-                <button
-                  onClick={() => { setReplyingTo(activeMsgObj); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+        // Estimate popup height: emoji pill (46px) + gap (8px) + actions (~200px)
+        const emojiH = isRecalled ? 0 : 54;
+        const actionsH = isRecalled ? 60 : (isSender ? 240 : 185);
+        const totalH = emojiH + (isRecalled ? 0 : 8) + actionsH + 12;
+
+        const spaceBelow = window.innerHeight - activeMsgRect.bottom;
+        const showAbove = spaceBelow < totalH && activeMsgRect.top > totalH;
+
+        const hPos = isSender
+          ? { right: window.innerWidth - activeMsgRect.right }
+          : { left: activeMsgRect.left };
+
+        const vPos = showAbove
+          ? { bottom: window.innerHeight - activeMsgRect.top + 8 }
+          : { top: activeMsgRect.bottom + 8 };
+
+        const dismiss = () => {
+          setActiveMsgMenuId(null);
+          setActiveMsgRect(null);
+          setActiveMsgObj(null);
+          setShowDeleteSubMenu(null);
+        };
+
+        return (
+          <>
+            {/* Backdrop */}
+            <div className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]" onClick={dismiss} />
+
+            {/* Cloned Message Group (elevates exactly above original) */}
+            <div 
+              style={{
+                position: 'fixed',
+                top: activeMsgRect.top,
+                left: activeMsgRect.left,
+                width: activeMsgRect.right - activeMsgRect.left,
+                zIndex: 55
+              }}
+              className={`flex flex-col ${isSender ? "items-end" : "items-start"}`}
+              onClick={dismiss}
+            >
+               <div
+                  className={`rounded-[18px] px-4 py-2.5 ${
+                    activeMsgObj.is_recalled
+                      ? "bg-white/90 border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px]"
+                      : isSender
+                      ? "bg-[#0071E3] text-white"
+                      : "bg-white border border-[#E8E8ED] text-[#1D1D1F]"
+                  } cursor-pointer select-none shadow-2xl`}
                 >
-                  <Reply className="w-[18px] h-[18px] text-[#6E6E73]" />
-                  Trả lời
-                </button>
+                  {activeMsgObj.reply_to && !activeMsgObj.is_recalled && (
+                    <div className={`text-[12px] px-2 py-1.5 rounded-[10px] mb-2 truncate opacity-80 ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#6E6E73]"}`}>
+                      <span className="font-semibold block mb-0.5">Trích dẫn:</span>
+                      {typeof activeMsgObj.reply_to === 'object' ? activeMsgObj.reply_to.content : "Tin nhắn"}
+                    </div>
+                  )}
+                  {activeMsgObj.image_url && !activeMsgObj.is_recalled && (
+                    <img src={activeMsgObj.image_url.startsWith("http") ? activeMsgObj.image_url : `${API_URL}/storage/${activeMsgObj.image_url}`} alt="" className="rounded-[10px] mb-2 max-h-[300px] object-cover" />
+                  )}
+                  {activeMsgObj.document_url && !activeMsgObj.is_recalled && (
+                    <div className={`flex items-center gap-2 p-2 rounded-[10px] mb-2 ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
+                      <FileText className="w-5 h-5 shrink-0" />
+                      <span className="text-[13px] truncate">{activeMsgObj.document_name || "Tài liệu đính kèm"}</span>
+                    </div>
+                  )}
+                  {activeMsgObj.audio_url && !activeMsgObj.is_recalled && (
+                    <div className={`text-[13px] ${isSender ? "text-white/80" : "text-[#6E6E73]"}`}>[Tin nhắn thoại]</div>
+                  )}
+                  {!activeMsgObj.is_recalled && activeMsgObj.content !== "Tin nhắn thoại" && (
+                    <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{activeMsgObj.content}</p>
+                  )}
+                  {activeMsgObj.is_recalled && (
+                    <span className="text-[13px] italic flex items-center h-full">Tin nhắn đã thu hồi</span>
+                  )}
+               </div>
+               
+               <div className={`flex items-center gap-2 mt-1 ${isSender ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}>
+                  <span className="text-[10px] text-white font-medium whitespace-nowrap drop-shadow-md">
+                    {new Date(parseUTC(activeMsgObj.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  {!activeMsgObj.is_recalled && activeMsgObj.reactions && activeMsgObj.reactions.length > 0 && (
+                    <div className="bg-white border border-[#D2D2D7] rounded-full px-1.5 py-0.5 text-[11px] flex items-center gap-1 shadow-md text-[#1D1D1F]">
+                      {(() => {
+                        const counts: Record<string, number> = {};
+                        activeMsgObj.reactions.forEach((r: any) => { counts[r.reaction] = (counts[r.reaction] || 0) + 1; });
+                        return Object.entries(counts).map(([emoji, count]) => (
+                          <span key={emoji} className="flex items-center gap-0.5 font-medium leading-none">
+                            <span className="text-[12px] leading-none">{emoji}</span>
+                            <span className="text-[#6E6E73] text-[11px] tabular-nums leading-none">{count}</span>
+                          </span>
+                        ));
+                      })()}
+                    </div>
+                  )}
+               </div>
+            </div>
+
+            {/* Unified popup container — flex direction flips for above/below */}
+            <div
+              style={{ position: "fixed", zIndex: 60, ...hPos, ...vPos }}
+              className={`flex w-max gap-2 ${showAbove ? "flex-col-reverse" : "flex-col"}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Emoji pill */}
+              {!isRecalled && (
+                <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.18)] self-start">
+                  {["❤️", "👍", "😂", "😮", "😢", "🙏"].map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => { handleAddReaction(msgId, emoji); dismiss(); }}
+                      className="text-[22px] hover:scale-125 transition-transform duration-150 active:scale-110 px-1"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               )}
-              {/* Pin */}
-              {!activeMsgObj.is_recalled && (
+
+              {/* Action panel */}
+              <div className="flex flex-col bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
+                {!isRecalled && (
+                  <button
+                    onClick={() => { setReplyingTo(activeMsgObj); dismiss(); }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                  >
+                    <Reply className="w-[18px] h-[18px] text-[#6E6E73]" />
+                    Trả lời
+                  </button>
+                )}
+                {!isRecalled && (
+                  <button
+                    onClick={() => { handlePin(msgId); dismiss(); }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                  >
+                    {activeMsgObj.is_pinned ? <PinOff className="w-[18px] h-[18px] text-[#6E6E73]" /> : <Pin className="w-[18px] h-[18px] text-[#6E6E73]" />}
+                    {activeMsgObj.is_pinned ? "Bỏ ghim" : "Ghim"}
+                  </button>
+                )}
+                {!isRecalled && isSender && (
+                  <button
+                    onClick={() => { setEditingMsg(activeMsgObj); setNewMessage(activeMsgObj.content); dismiss(); }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                  >
+                    <Edit2 className="w-[18px] h-[18px] text-[#6E6E73]" />
+                    Chỉnh sửa
+                  </button>
+                )}
+                {/* Xóa with inline expand */}
                 <button
-                  onClick={() => { handlePin(activeMsgObj._id || activeMsgObj.id); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
-                >
-                  {activeMsgObj.is_pinned ? <PinOff className="w-[18px] h-[18px] text-[#6E6E73]" /> : <Pin className="w-[18px] h-[18px] text-[#6E6E73]" />}
-                  {activeMsgObj.is_pinned ? "Bỏ ghim" : "Ghim"}
-                </button>
-              )}
-              {/* Edit — sender only, not recalled */}
-              {!activeMsgObj.is_recalled && activeMsgRect.isSender && (
-                <button
-                  onClick={() => { setEditingMsg(activeMsgObj); setNewMessage(activeMsgObj.content); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
-                >
-                  <Edit2 className="w-[18px] h-[18px] text-[#6E6E73]" />
-                  Chỉnh sửa
-                </button>
-              )}
-              {/* Xóa with submenu */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowDeleteSubMenu(showDeleteSubMenu === (activeMsgObj._id || activeMsgObj.id) ? null : (activeMsgObj._id || activeMsgObj.id))}
-                  className="flex items-center justify-between gap-3 w-full px-4 py-3 text-[15px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors"
+                  onClick={() => setShowDeleteSubMenu(showDeleteSubMenu === msgId ? null : msgId)}
+                  className={`flex items-center justify-between gap-3 w-full px-4 py-3 text-[15px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors ${showDeleteSubMenu === msgId ? "border-b border-[#F2F2F7]" : ""}`}
                 >
                   <div className="flex items-center gap-3">
                     <Trash2 className="w-[18px] h-[18px]" />
                     Xóa
                   </div>
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className={`w-4 h-4 transition-transform duration-150 ${showDeleteSubMenu === msgId ? "rotate-90" : ""}`} />
                 </button>
-                {showDeleteSubMenu === (activeMsgObj._id || activeMsgObj.id) && (
-                  <div className="absolute left-full top-0 ml-1 bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[14px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden w-44 z-50">
-                    {activeMsgRect.isSender && !activeMsgObj.is_recalled && (
+                {showDeleteSubMenu === msgId && (
+                  <div className="overflow-hidden">
+                    {isSender && !isRecalled && (
                       <button
-                        onClick={() => { handleRecall(activeMsgObj._id || activeMsgObj.id); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); setShowDeleteSubMenu(null); }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-[14px] text-orange-500 hover:bg-orange-50 border-b border-[#F2F2F7] text-left transition-colors"
+                        onClick={() => { handleRecall(msgId); dismiss(); }}
+                        className="flex items-center gap-3 w-full px-5 py-2.5 text-[14px] text-orange-500 hover:bg-orange-50 border-b border-[#F2F2F7] text-left transition-colors"
                       >
-                        <Undo2 className="w-[16px] h-[16px]" />
+                        <Undo2 className="w-[15px] h-[15px]" />
                         Xóa cả hai
                       </button>
                     )}
                     <button
-                      onClick={() => { handleDeleteForMe(activeMsgObj._id || activeMsgObj.id); setActiveMsgMenuId(null); setActiveMsgRect(null); setActiveMsgObj(null); setShowDeleteSubMenu(null); }}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-[14px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors"
+                      onClick={() => { handleDeleteForMe(msgId); dismiss(); }}
+                      className="flex items-center gap-3 w-full px-5 py-2.5 text-[14px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors"
                     >
-                      <Trash2 className="w-[16px] h-[16px]" />
+                      <Trash2 className="w-[15px] h-[15px]" />
                       Xóa phía tôi
                     </button>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        );
+      })()}
     </div>
   );
 }

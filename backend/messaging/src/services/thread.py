@@ -481,17 +481,27 @@ class ThreadService:
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
             return None
-        await MessageRepository.update_one(
-            {"_id": message_id},
-            {"$pull": {"reactions": {"user_id": str(current_user.id)}}},
+        
+        existing_reactions = msg.get("reactions", [])
+        user_id = str(current_user.id)
+        
+        has_this_reaction = any(
+            r.get("user_id") == user_id and r.get("reaction") == reaction
+            for r in existing_reactions
         )
-        if reaction:
+        
+        if has_this_reaction:
+            await MessageRepository.update_one(
+                {"_id": message_id},
+                {"$pull": {"reactions": {"user_id": user_id, "reaction": reaction}}},
+            )
+        elif reaction:
             await MessageRepository.update_one(
                 {"_id": message_id},
                 {
                     "$push": {
                         "reactions": {
-                            "user_id": str(current_user.id),
+                            "user_id": user_id,
                             "user_name": current_user.full_name,
                             "reaction": reaction,
                         }
