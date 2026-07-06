@@ -126,6 +126,14 @@ async def _check_upload_quota(req: ChatRequest):
         return True, ""
         
     try:
+        from src.core.infrastructure.database import database
+        user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": req.user_id})
+        ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
+        is_admin = user.get("role") == "admin" if user else False
+        
+        if is_admin or ai_tier != "BASIC":
+            return True, ""
+
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
             resp = await c.get(
                 f"{settings.USAGE_URL}/han-muc/tai-len/xac-minh",
@@ -153,6 +161,14 @@ async def _consume_upload_quota(req: ChatRequest):
         return
         
     try:
+        from src.core.infrastructure.database import database
+        user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": req.user_id})
+        ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
+        is_admin = user.get("role") == "admin" if user else False
+        
+        if is_admin or ai_tier != "BASIC":
+            return
+
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
             await c.post(
                 f"{settings.USAGE_URL}/han-muc/tai-len/tieu-thu",
@@ -339,11 +355,16 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 
                 try:
                     from src.services.history import HistoryService
-                    await HistoryService.add_message(session_id, {
+                    
+                    user_msg = {
                         "user_id": user_id,
                         "role": "user",
                         "content": req.query
-                    })
+                    }
+                    if req.attachments:
+                        user_msg["attachments"] = req.attachments
+
+                    await HistoryService.add_message(session_id, user_msg)
                     await HistoryService.add_message(session_id, {
                         "user_id": user_id,
                         "role": "assistant",

@@ -25,7 +25,8 @@ class PipelineRag:
         self._db = self._mongo.doclib
         minio_endpoint = settings.MINIO_ENDPOINT
         self._minio_base = minio_endpoint.rstrip("/")
-        self._bucket = settings.MINIO_BUCKET_NAME
+        self._minio_private_bucket = settings.MINIO_PRIVATE_BUCKET
+        self._minio_public_bucket = settings.MINIO_PUBLIC_BUCKET
 
     async def ingest_document(self, document_id: str) -> Dict:
         document = await self._db.documents.find_one(
@@ -246,15 +247,11 @@ class PipelineRag:
             if url.startswith("http"):
                 parsed = urlparse(url)
                 path_parts = parsed.path.lstrip("/").split("/", 1)
-                if len(path_parts) == 2:
-                    bucket = path_parts[0]
-                    object_key = path_parts[1]
-                else:
-                    bucket = self._bucket
-                    object_key = parsed.path.lstrip("/")
+                object_key = path_parts[1] if len(path_parts) == 2 else parsed.path.lstrip("/")
             else:
-                bucket = self._bucket
                 object_key = url
+                
+            bucket = self._minio_private_bucket if object_key.startswith("system/") else self._minio_public_bucket
 
             logger.info("Đang tải tệp từ không gian lưu trữ đám mây")
 

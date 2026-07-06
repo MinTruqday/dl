@@ -14,3 +14,4 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     conversation_history: Optional[list] = []
     token: Optional[str] = None
+    attachments: Optional[list] = []

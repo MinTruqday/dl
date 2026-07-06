@@ -150,7 +150,7 @@ async def download_zip(
     from fastapi.responses import StreamingResponse
 
     from src.core.infrastructure.configuration import settings
-    from src.core.storage import get_storage_client
+    from src.core.storage import get_storage_client, get_bucket
 
     item_ids = [i.strip() for i in ids.split(",") if i.strip()]
     if not item_ids:
@@ -165,7 +165,7 @@ async def download_zip(
                 if item and (not item.is_folder) and item.url:
                     try:
                         resp = await storage_client.get_object(
-                            Bucket=settings.MINIO_BUCKET_NAME, Key=item.url
+                            Bucket=get_bucket(item.url), Key=item.url
                         )
                         file_data = await resp["Body"].read()
                         zip_file.writestr(item.name, file_data)

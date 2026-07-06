@@ -114,7 +114,8 @@ def _extract_tables_from_html(html: str) -> List[Dict]:
 class ConversionRag:
     def __init__(self):
         self._minio_base = settings.MINIO_ENDPOINT.rstrip("/")
-        self._bucket = settings.MINIO_BUCKET_NAME
+        self._minio_private_bucket = settings.MINIO_PRIVATE_BUCKET
+        self._minio_public_bucket = settings.MINIO_PUBLIC_BUCKET
         self._minio_access = settings.MINIO_ACCESS_KEY
         self._minio_secret = settings.MINIO_SECRET_KEY
         self._minio_region = settings.MINIO_REGION
@@ -362,13 +363,11 @@ class ConversionRag:
             if file_url.startswith("http"):
                 parsed = urlparse(file_url)
                 path_parts = parsed.path.lstrip("/").split("/", 1)
-                bucket = path_parts[0] if len(path_parts) == 2 else self._bucket
-                object_key = (
-                    path_parts[1] if len(path_parts) == 2 else parsed.path.lstrip("/")
-                )
+                object_key = path_parts[1] if len(path_parts) == 2 else parsed.path.lstrip("/")
             else:
-                bucket = self._bucket
                 object_key = file_url
+                
+            bucket = self._minio_private_bucket if object_key.startswith("system/") else self._minio_public_bucket
 
             if ".." in object_key:
                 logger.error("Ngăn chặn rủi ro bảo mật")

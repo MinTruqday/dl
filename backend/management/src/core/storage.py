@@ -10,8 +10,14 @@ from src.core.infrastructure.configuration import settings
 MINIO_ENDPOINT = settings.MINIO_ENDPOINT
 MINIO_ACCESS_KEY = settings.MINIO_ACCESS_KEY
 MINIO_SECRET_KEY = settings.MINIO_SECRET_KEY
-MINIO_BUCKET_NAME = settings.MINIO_BUCKET_NAME
+MINIO_PRIVATE_BUCKET = settings.MINIO_PRIVATE_BUCKET
+MINIO_PUBLIC_BUCKET = settings.MINIO_PUBLIC_BUCKET
 MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
+
+def get_bucket(path: str) -> str:
+    if path.startswith("system/"):
+        return MINIO_PRIVATE_BUCKET
+    return MINIO_PUBLIC_BUCKET
 
 session = aioboto3.Session()
 _storage_client = None
@@ -29,12 +35,13 @@ async def get_storage_client():
 
 async def initialize_bucket():
     storage_client = await get_storage_client()
-    try:
-        await storage_client.head_bucket(Bucket=MINIO_BUCKET_NAME)
-    except ClientError as e:
-        logger.exception("Đang khởi tạo không gian lưu trữ")
-        await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
-        logger.exception("Khởi tạo không gian lưu trữ thành công")
+    for bucket in [MINIO_PRIVATE_BUCKET, MINIO_PUBLIC_BUCKET]:
+        try:
+            await storage_client.head_bucket(Bucket=bucket)
+        except ClientError as e:
+            logger.exception(f"Đang khởi tạo không gian lưu trữ {bucket}")
+            await storage_client.create_bucket(Bucket=bucket)
+            logger.exception(f"Khởi tạo không gian lưu trữ {bucket} thành công")
 
 async def upload_file(
     file_content: bytes,
@@ -43,7 +50,7 @@ async def upload_file(
     compress: bool = False,
 ) -> str:
     kwargs = {
-        "Bucket": MINIO_BUCKET_NAME,
+        "Bucket": get_bucket(object_name),
         "Key": object_name,
         "ContentType": content_type,
     }
@@ -70,7 +77,7 @@ async def upload_file(
 async def download_file(object_name: str) -> tuple[bytes, str]:
     storage_client = await get_storage_client()
     response = await storage_client.get_object(
-        Bucket=MINIO_BUCKET_NAME, Key=object_name
+        Bucket=get_bucket(object_name), Key=object_name
     )
     content = await response["Body"].read()
 
@@ -81,7 +88,7 @@ async def download_file(object_name: str) -> tuple[bytes, str]:
 
 async def generate_presigned_url(object_name: str, expiration: int = 3600) -> str:
     storage_client = await get_storage_client()
-    params = {"Bucket": MINIO_BUCKET_NAME, "Key": object_name}
+    params = {"Bucket": get_bucket(object_name), "Key": object_name}
 
     response = await storage_client.generate_presigned_url(
         "get_object", Params=params, ExpiresIn=expiration

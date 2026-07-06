@@ -19,7 +19,8 @@ class StorageService:
         if not self.access_key or not self.secret_key:
             raise ValueError("Thiếu thông tin khóa bảo mật")
 
-        self.bucket = settings.MINIO_BUCKET_NAME
+        self.private_bucket = settings.MINIO_PRIVATE_BUCKET
+        self.public_bucket = settings.MINIO_PUBLIC_BUCKET
         self.public_url = settings.MINIO_PUBLIC_URL
 
         self.session = aioboto3.Session()
@@ -35,14 +36,22 @@ class StorageService:
             ).__aenter__()
         return self._storage_client
 
+    def get_bucket(self, path: str) -> str:
+        if path.startswith("system/"):
+            return self.private_bucket
+        return self.public_bucket
+
     async def _ensure_bucket(self):
         try:
             client = await self.get_client()
-            await client.head_bucket(Bucket=self.bucket)
-        except ClientError as e:
-            logger.exception("Đang khởi tạo không gian lưu trữ đa phương tiện")
-            client = await self.get_client()
-            await client.create_bucket(Bucket=self.bucket)
+            for bucket in [self.private_bucket, self.public_bucket]:
+                try:
+                    await client.head_bucket(Bucket=bucket)
+                except ClientError:
+                    logger.exception(f"Đang khởi tạo không gian lưu trữ đa phương tiện {bucket}")
+                    await client.create_bucket(Bucket=bucket)
+        except Exception:
+            pass
 
     async def upload_local_file(
         self,
@@ -53,13 +62,14 @@ class StorageService:
         try:
             await self._ensure_bucket()
             client = await self.get_client()
+            target_bucket = self.get_bucket(object_name)
             await client.upload_file(
                 Filename=local_file_path,
-                Bucket=self.bucket,
+                Bucket=target_bucket,
                 Key=object_name,
                 ExtraArgs={"ContentType": content_type},
             )
-            url = f"{self.public_url}/{self.bucket}/{object_name}"
+            url = f"{self.public_url}/{target_bucket}/{object_name}"
             return url
         except Exception as e:
             logger.exception("Lỗi mạng khi lưu tệp vĩnh viễn")

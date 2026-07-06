@@ -187,17 +187,17 @@ class StorageService:
 
         if should_delete_physical:
             from src.core.infrastructure.configuration import settings
-            from src.core.storage import get_storage_client
+            from src.core.storage import get_storage_client, get_bucket
 
             try:
                 storage_client = await get_storage_client()
                 await storage_client.delete_object(
-                    Bucket=settings.MINIO_BUCKET_NAME, Key=item.url
+                    Bucket=get_bucket(item.url), Key=item.url
                 )
                 for old_url in old_version_urls:
                     try:
                         await storage_client.delete_object(
-                            Bucket=settings.MINIO_BUCKET_NAME, Key=old_url
+                            Bucket=get_bucket(old_url), Key=old_url
                         )
                     except Exception:
                         pass

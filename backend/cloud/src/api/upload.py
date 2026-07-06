@@ -9,6 +9,7 @@ from src.services.upload import UploadService
 
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
+from src.schemas.upload import PresignedUrlRequest, ConfirmUploadRequest
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tai-len")
 
@@ -32,7 +33,7 @@ async def upload_image(
 ) -> Any:
     await validate_svg(file)
     return APIResponse(
-        data=await UploadService.upload_image(file),
+        data=await UploadService.upload_image(file, owner_id=current_user.id, is_system=True),
         message="Tải lên hình ảnh thành công",
         status=201,
     )
@@ -44,7 +45,7 @@ async def upload_document(
     db=Depends(get_db),
 ) -> Any:
     return APIResponse(
-        data=await UploadService.upload_document(file),
+        data=await UploadService.upload_document(file, owner_id=current_user.id, is_system=True),
         message="Tải lên và lưu trữ tài liệu thành công",
         status=201,
     )
@@ -66,12 +67,174 @@ async def upload_asset(
             detail="Lỗi tải lên do vượt giới hạn lưu trữ",
         )
     return APIResponse(
-        data=await UploadService.upload_document(file),
+        data=await UploadService.upload_document(file, owner_id=current_user.id, is_system=False),
         message="Tải lên tệp tin thành công",
         status=201,
     )
 
-@router.get("/storage/{file_path:path}")
+@router.post("/tin-nhan", response_model=APIResponse[Any])
+async def upload_chat_attachment(
+    file: UploadFile = File(...),
+    current_user: CurrentUser = Depends(
+        require_role([Role.READER, Role.AUTHOR, Role.ADMIN])
+    ),
+    db=Depends(get_db),
+) -> Any:
+    from src.services.storage import StorageService
+    from src.schemas.storage import StorageItemCreate
+    from src.core.infrastructure.database import database
+    from src.core.infrastructure.configuration import settings
+    from datetime import datetime, timezone, timedelta
+
+    user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": current_user.id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    ai_tier = user.get("ai_tier", "BASIC")
+    is_admin = user.get("role") == "admin"
+
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+
+    if not is_admin and ai_tier != "BASIC":
+        quota = await StorageService.get_storage_quota(current_user.id)
+        if quota["used"] + file_size > quota["limit"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Dung lượng lưu trữ của bạn đã đầy. Vui lòng nâng cấp gói hoặc xóa bớt tệp."
+            )
+
+    result = await UploadService.upload_document(file, owner_id=current_user.id, is_system=False, is_message_attachment=True)
+    file_url = result["url"]
+
+    if ai_tier == "BASIC" and not is_admin:
+        expires_at = datetime.now(timezone.utc) + timedelta(days=14)
+        await database.mongodb[settings.SERVICE_DB_NAME].temp_chat_files.insert_one({
+            "owner_id": current_user.id,
+            "url": file_url,
+            "original_filename": file.filename,
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": expires_at
+        })
+        return APIResponse(
+            data={"url": file_url, "filename": file.filename, "expires_in_days": 14},
+            message="Tải lên tệp tin tạm thời thành công (14 ngày)",
+            status=201
+        )
+    else:
+        new_item = StorageItemCreate(
+            name=file.filename,
+            is_folder=False,
+            url=file_url,
+            size=file_size,
+            mime_type=file.content_type,
+            parent_id=None
+        )
+        await StorageService.create_item(new_item, current_user.id)
+        
+        return APIResponse(
+            data={"url": file_url, "filename": file.filename},
+            message="Tải lên tệp đính kèm thành công",
+            status=201
+        )
+
+@router.post("/presigned-url", response_model=APIResponse[Any])
+async def get_presigned_url_for_upload(
+    req: PresignedUrlRequest,
+    current_user: CurrentUser = Depends(
+        require_role([Role.READER, Role.AUTHOR, Role.ADMIN])
+    ),
+    db=Depends(get_db),
+) -> Any:
+    from src.services.storage import StorageService
+    from src.core.infrastructure.database import database
+    from src.core.infrastructure.configuration import settings
+
+    user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": current_user.id})
+    ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
+    is_admin = user.get("role") == "admin" if user else False
+
+    if not req.is_system:
+        if not (req.is_message_attachment and ai_tier == "BASIC"):
+            quota = await StorageService.get_storage_quota(current_user.id)
+            if quota["used"] + req.size > quota["limit"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Dung lượng lưu trữ của bạn đã đầy. Vui lòng nâng cấp gói hoặc xóa bớt tệp."
+                )
+            
+    result = await UploadService.get_presigned_upload_url(
+        filename=req.filename,
+        content_type=req.content_type,
+        owner_id=current_user.id,
+        is_system=req.is_system,
+        is_message_attachment=req.is_message_attachment
+    )
+    
+    return APIResponse(
+        data=result,
+        message="Tạo đường dẫn tải lên thành công",
+        status=200
+    )
+
+@router.post("/xac-nhan", response_model=APIResponse[Any])
+async def confirm_upload(
+    req: ConfirmUploadRequest,
+    current_user: CurrentUser = Depends(
+        require_role([Role.READER, Role.AUTHOR, Role.ADMIN])
+    ),
+    db=Depends(get_db),
+) -> Any:
+    from src.services.storage import StorageService
+    from src.schemas.storage import StorageItemCreate
+    from src.core.infrastructure.database import database
+    from src.core.infrastructure.configuration import settings
+    from datetime import datetime, timezone, timedelta
+    
+    user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": current_user.id})
+    ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
+    is_admin = user.get("role") == "admin" if user else False
+
+    if req.is_message_attachment and ai_tier == "BASIC" and not is_admin:
+        expires_at = datetime.now(timezone.utc) + timedelta(days=14)
+        await database.mongodb[settings.SERVICE_DB_NAME].temp_chat_files.insert_one({
+            "owner_id": current_user.id,
+            "url": req.file_path,
+            "original_filename": req.filename,
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": expires_at
+        })
+        return APIResponse(
+            data={"url": req.file_path, "filename": req.filename, "expires_in_days": 14},
+            message="Xác nhận tải lên tệp tin tạm thời thành công (14 ngày)",
+            status=201
+        )
+    else:
+        new_item = StorageItemCreate(
+            name=req.filename,
+            is_folder=False,
+            url=req.file_path,
+            size=req.size,
+            mime_type=req.content_type,
+            parent_id=None
+        )
+        await StorageService.create_item(new_item, current_user.id)
+        
+        try:
+            from src.jobs.task import celery_app
+            celery_app.send_task("src.tasks.compress_file_task", args=[req.file_path, req.content_type])
+        except Exception as e:
+            import logging
+            logging.error(f"Failed to trigger compression task: {e}")
+                
+        return APIResponse(
+            data={"url": req.file_path, "filename": req.filename},
+            message="Xác nhận tải lên tệp đính kèm thành công",
+            status=201
+        )
+
+@router.get("/luu-tru/{file_path:path}")
 async def get_presigned_download_url(
     file_path: str,
     current_user: CurrentUser = Depends(
@@ -121,7 +284,7 @@ async def upload_chunk(
                 self.filename = n
 
         local_file = LocalFileWrapper(final_path, filename)
-        result = await UploadService.upload_document(local_file)
+        result = await UploadService.upload_document(local_file, owner_id=current_user.id, is_system=False)
         import shutil
 
         shutil.rmtree(chunk_dir)

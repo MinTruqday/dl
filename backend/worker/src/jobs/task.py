@@ -128,3 +128,59 @@ def compile_document_tectonic(document_id, tex_content):
                 "error": "Lỗi xử lý tài liệu, vui lòng thử lại sau",
                 "document_id": document_id,
             }
+
+@celery_app.task(
+    name="src.tasks.compress_file_task",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def compress_file_task(file_path: str, mime_type: str):
+    import asyncio
+    import brotli
+    import aioboto3
+    
+    MINIO_ENDPOINT = settings.MINIO_ENDPOINT
+    MINIO_ACCESS_KEY = settings.MINIO_ACCESS_KEY
+    MINIO_SECRET_KEY = settings.MINIO_SECRET_KEY
+    MINIO_PRIVATE_BUCKET = settings.MINIO_PRIVATE_BUCKET
+    MINIO_PUBLIC_BUCKET = settings.MINIO_PUBLIC_BUCKET
+
+    def get_bucket(path: str) -> str:
+        if path.startswith("system/"):
+            return MINIO_PRIVATE_BUCKET
+        return MINIO_PUBLIC_BUCKET
+
+    async def _compress():
+        session = aioboto3.Session()
+        async with session.client(
+            "s3",
+            endpoint_url=MINIO_ENDPOINT,
+            aws_access_key_id=MINIO_ACCESS_KEY,
+            aws_secret_access_key=MINIO_SECRET_KEY,
+        ) as storage_client:
+            logger.info(f"Downloading {file_path} for compression")
+            target_bucket = get_bucket(file_path)
+            response = await storage_client.get_object(
+                Bucket=target_bucket, Key=file_path
+            )
+            content = await response["Body"].read()
+            
+            if response.get("ContentEncoding") == "br":
+                logger.info(f"File {file_path} is already compressed")
+                return
+
+            logger.info(f"Compressing {file_path}")
+            compressed_content = brotli.compress(content, quality=11)
+            
+            logger.info(f"Uploading compressed {file_path}")
+            await storage_client.put_object(
+                Bucket=target_bucket,
+                Key=file_path,
+                Body=compressed_content,
+                ContentType=mime_type,
+                ContentEncoding="br"
+            )
+            logger.info(f"Successfully compressed {file_path}")
+
+    asyncio.run(_compress())
+    return {"status": "success", "file_path": file_path}

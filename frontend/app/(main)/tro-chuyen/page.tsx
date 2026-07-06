@@ -1,5 +1,6 @@
 "use client";
 import { streamAiChatAPI } from "@/features/agentic_ai/services/interaction.service";
+import { uploadChatAttachmentAPI } from "@/features/cloud/services/upload.service";
 import {
   getToken,
   API_URL,
@@ -187,10 +188,12 @@ export default function TroChuyenPage() {
   const [selectedFile, setSelectedFile] = useState<{
     name: string;
     data: string;
+    fileObj?: File;
   } | null>(null);
   const [selectedImage, setSelectedImage] = useState<{
     name: string;
     data: string;
+    fileObj?: File;
   } | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<{
     name: string;
@@ -282,8 +285,8 @@ export default function TroChuyenPage() {
     reader.onload = (event) => {
       if (event.target?.result) {
         const data = event.target.result as string;
-        if (type === "image") setSelectedImage({ name: file.name, data });
-        if (type === "file") setSelectedFile({ name: file.name, data });
+        if (type === "image") setSelectedImage({ name: file.name, data, fileObj: file });
+        if (type === "file") setSelectedFile({ name: file.name, data, fileObj: file });
         setShowAttachments(false);
       }
     };
@@ -350,6 +353,37 @@ export default function TroChuyenPage() {
         ...prev,
         { role: "assistant", content: "", thoughts: [] },
       ]);
+
+      // Upload file to server first to count quota
+      let uploadedFileUrl = "";
+      if (selectedImage?.fileObj) {
+        try {
+          const res = await uploadChatAttachmentAPI(selectedImage.fileObj);
+          uploadedFileUrl = res.data.url;
+        } catch (e: any) {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1].content = e.message || "Không thể tải ảnh lên.";
+            return updated;
+          });
+          setIsSending(false);
+          return;
+        }
+      } else if (selectedFile?.fileObj) {
+        try {
+          const res = await uploadChatAttachmentAPI(selectedFile.fileObj);
+          uploadedFileUrl = res.data.url;
+        } catch (e: any) {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1].content = e.message || "Không thể tải tệp lên.";
+            return updated;
+          });
+          setIsSending(false);
+          return;
+        }
+      }
+
       const res = await streamAiChatAPI({
         query: userMessage,
         useSmart,
@@ -360,6 +394,10 @@ export default function TroChuyenPage() {
         image_data: selectedImage?.data,
         file_data: selectedFile?.data,
         folder_data: selectedFolder?.data,
+        attachments: uploadedFileUrl ? [{
+          url: uploadedFileUrl,
+          filename: selectedImage?.name || selectedFile?.name || "attachment"
+        }] : [],
       });
 
       setSelectedFile(null);
