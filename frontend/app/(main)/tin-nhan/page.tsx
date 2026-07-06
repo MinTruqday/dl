@@ -1498,12 +1498,12 @@ export default function MessagesPage() {
                             <div
                               className={`rounded-[18px] ${
                                 msg.is_recalled
-                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px] px-4 py-2.5"
+                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px] p-4"
                                   : (!msg.content && !msg.reply_to && (msg.image_url || (msg.attachments && msg.attachments.length > 0) || msg.audio_url))
                                   ? "bg-transparent p-0"
                                   : isSender
-                                  ? "bg-[#0071E3] text-white px-4 py-2.5"
-                                  : "bg-white border border-[#E8E8ED] text-[#1D1D1F] px-4 py-2.5"
+                                  ? "bg-[#0071E3] text-white px-4 pt-4 pb-3"
+                                  : "bg-white border border-[#E8E8ED] text-[#1D1D1F] px-4 pt-4 pb-3"
                               } relative cursor-pointer select-none`}
                             >
                               {msg.reply_to && !msg.is_recalled && (
@@ -1787,7 +1787,7 @@ export default function MessagesPage() {
               onClick={dismiss}
             >
                <div
-                  className={`rounded-[18px] px-4 py-2.5 ${
+                  className={`rounded-[18px] px-4 pt-4 pb-3 ${
                     activeMsgObj.is_recalled
                       ? "bg-white/90 border border-dashed border-[#D2D2D7] text-[#6E6E73] flex items-center min-h-[38px]"
                       : isSender
