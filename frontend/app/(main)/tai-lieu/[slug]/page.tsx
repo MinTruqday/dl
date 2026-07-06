@@ -183,7 +183,7 @@ export default function DocumentDetailsPage() {
     );
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-12 font-sans text-[#1D1D1F]">
+    <div className="w-full h-full py-6 font-sans text-[#1D1D1F]">
       {showReportModal && (
         <Report
           itemId={docData._id || docData.id}
@@ -311,7 +311,7 @@ export default function DocumentDetailsPage() {
           </div>
         </div>
 
-        <div className="flex-1 bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] p-8 min-h-[400px]">
+        <div className="flex-1 bg-[#F5F5F7] md:bg-transparent border-[#E8E8ED] rounded-[18px] md:rounded-none p-8 md:px-0 md:pt-8 min-h-[400px]">
           {activeTab === "about" && (
             <div className="space-y-6">
               <p className="text-[13px] font-medium text-[#6E6E73] mb-4">

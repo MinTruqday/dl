@@ -133,10 +133,10 @@ export default function CollectorPage() {
     );
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <aside className="w-full md:w-[320px] shrink-0 xl:col-span-3 flex flex-col bg-[#F5F5F7] rounded-[18px] overflow-hidden">
-          <div className="overflow-y-auto no-scrollbar p-6 flex flex-col flex-1 gap-8">
+        <aside className="w-full md:w-[320px] shrink-0 xl:col-span-3 flex flex-col bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none overflow-hidden">
+          <div className="overflow-y-auto no-scrollbar p-6 md:px-0 md:pt-6 flex flex-col flex-1 gap-8">
             <div>
               <p className="text-[13px] text-[#6E6E73] font-medium mb-4">Tài liệu đã thu thập</p>
               <p className="text-[32px] font-semibold text-[#1D1D1F]">

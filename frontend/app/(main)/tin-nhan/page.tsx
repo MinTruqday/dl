@@ -949,7 +949,7 @@ export default function MessagesPage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <Modal
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
@@ -1116,7 +1116,7 @@ export default function MessagesPage() {
         <div
           className={`w-full md:w-[320px] bg-[#F5F5F7] rounded-[18px] flex flex-col overflow-hidden shrink-0 ${selectedConv ? "hidden md:flex" : "flex"}`}
         >
-          <div className="p-6 pb-4 flex items-center justify-between">
+          <div className="p-6 md:px-0 pb-4 md:pt-6 flex items-center justify-between">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
               Tất cả tin nhắn
             </h2>
@@ -1137,7 +1137,7 @@ export default function MessagesPage() {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 hide-scrollbar">
+          <div className="flex-1 overflow-y-auto px-6 md:px-0 pb-4 space-y-2 hide-scrollbar">
             {loadingConv ? (
               <div className="space-y-2">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -1253,7 +1253,7 @@ export default function MessagesPage() {
         >
           {selectedConv ? (
             <>
-              <div className="h-[64px] px-6 flex items-center justify-between border-b border-[#D2D2D7] bg-transparent">
+              <div className="h-[64px] px-6 md:px-0 flex items-center justify-between border-b border-[#D2D2D7] bg-transparent">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setSelectedConv(null)}
@@ -1347,7 +1347,7 @@ export default function MessagesPage() {
 
               {/* Search bar — slides in below header */}
               {showSearchMsgBar && (
-                <div className="px-4 py-2.5 border-b border-[#F2F2F7] bg-transparent">
+                <div className="px-6 md:px-0 py-2.5 border-b border-[#F2F2F7] bg-transparent">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-[#A1A1A6] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
@@ -1447,7 +1447,7 @@ export default function MessagesPage() {
                 );
               })()}
 
-              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-6 pt-6 pb-2 bg-transparent hide-scrollbar relative">
+              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-6 md:px-0 pt-6 pb-2 bg-transparent hide-scrollbar relative">
                 {loadingMsgs ? (
                   <div className="space-y-4 flex flex-col h-full justify-end pb-4">
                     {[1, 2, 3].map((i) => (

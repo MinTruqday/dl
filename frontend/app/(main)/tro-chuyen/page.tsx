@@ -550,10 +550,10 @@ export default function TroChuyenPage() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <div className="flex flex-1 min-h-0 gap-6">
-        <aside className="w-full lg:w-[320px] bg-[#F5F5F7] rounded-[18px] flex flex-col overflow-hidden shrink-0 hidden lg:flex">
-          <div className="p-6 pb-4 shrink-0">
+        <aside className="w-full lg:w-[320px] bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none flex flex-col overflow-hidden shrink-0 hidden lg:flex">
+          <div className="p-6 md:px-0 md:pt-6 pb-4 shrink-0">
             <button
               onClick={() => (window.location.href = "/nang-cap")}
               className="pill-button w-full"
@@ -561,7 +561,7 @@ export default function TroChuyenPage() {
               Nâng cấp gói DocLib AI
             </button>
           </div>
-          <div className="px-6 pb-4 flex items-center justify-between shrink-0">
+          <div className="px-6 md:px-0 pb-4 flex items-center justify-between shrink-0">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
               Lịch sử
             </h2>
@@ -575,7 +575,7 @@ export default function TroChuyenPage() {
               <PlusIcon className="w-4 h-4" />
             </button>
           </div>
-          <div className="overflow-y-auto px-6 pb-6 flex flex-col gap-2 shrink custom-scrollbar">
+          <div className="overflow-y-auto px-6 md:px-0 pb-6 flex flex-col gap-2 shrink custom-scrollbar">
             {sessions.length === 0 ? (
               <div className="py-12 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
                 <p className="text-[17px] font-medium text-[#6E6E73]">
@@ -737,7 +737,7 @@ export default function TroChuyenPage() {
           </div>
         </aside>
 
-        <main className="flex-1 flex flex-col min-w-0 h-full bg-[#F5F5F7] rounded-[24px] relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 h-full bg-[#F5F5F7] md:bg-transparent rounded-[24px] md:rounded-none relative overflow-hidden">
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto flex flex-col min-h-0 custom-scrollbar relative"
@@ -752,7 +752,7 @@ export default function TroChuyenPage() {
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col w-full px-8 py-6 gap-6">
+              <div className="flex flex-col w-full px-8 md:px-0 py-6 md:pt-6 gap-6">
                 {messages.map((msg, idx) => {
                   if (msg.role === "user") {
                     return (
@@ -857,7 +857,7 @@ export default function TroChuyenPage() {
             )}
           </div>
 
-          <div className="shrink-0 p-6 pt-2">
+          <div className="shrink-0 p-6 md:px-0 pt-2">
             <div className="w-full relative bg-white border border-[#D2D2D7] focus-within:border-[#0071E3] transition-colors rounded-[24px] p-2">
               <input
                 type="file"

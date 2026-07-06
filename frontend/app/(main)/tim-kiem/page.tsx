@@ -95,10 +95,10 @@ function SearchResultsContent() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-[#1D1D1F]">
       <div className="flex flex-col md:flex-row gap-6">
         <aside className="w-full md:w-[320px] shrink-0 space-y-6">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Giao diện
             </p>
@@ -117,7 +117,7 @@ function SearchResultsContent() {
               </button>
             </div>
           </div>
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
             <div className="flex items-center justify-between mb-6">
               <span className="text-[15px] font-semibold text-[#1D1D1F]">
                 Bộ lọc nâng cao
@@ -191,7 +191,7 @@ function SearchResultsContent() {
           </div>
 
           {history.length > 0 && (
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[15px] font-semibold text-[#1D1D1F]">
                   Tìm kiếm gần đây

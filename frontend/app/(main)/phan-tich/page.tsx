@@ -46,7 +46,7 @@ export default function AuthorAnalyticsPage() {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
@@ -80,7 +80,7 @@ export default function AuthorAnalyticsPage() {
         ].map((item, i) => (
           <div
             key={i}
-            className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-4"
+            className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none border-[#E8E8ED] p-6 md:px-0 md:pt-6 flex flex-col gap-4"
           >
             <div
               className={`w-12 h-12 rounded-[10px] flex items-center justify-center ${item.bg}`}
@@ -101,7 +101,7 @@ export default function AuthorAnalyticsPage() {
         ))}
       </div>
 
-      <div className="flex-1 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-8 flex flex-col items-center justify-center min-h-[300px] text-center">
+      <div className="flex-1 bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none border-[#E8E8ED] p-8 md:px-0 md:pt-8 flex flex-col items-center justify-center min-h-[300px] text-center">
         <div className="w-20 h-20 bg-[#F5F5F7] flex items-center justify-center rounded-[20px] mb-4">
           <BarChart3 className="w-10 h-10 text-[#C7C7CC]" />
         </div>

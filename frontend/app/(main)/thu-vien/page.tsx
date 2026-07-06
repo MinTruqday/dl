@@ -179,11 +179,11 @@ export default function LibraryPage() {
       pinnedDocs.length === 0)
   ) {
     return (
-      <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] font-sans">
+      <div className="w-full max-w-[1200px] mx-auto px-6 md:px-0 py-6 min-h-[calc(100dvh-56px)] font-sans">
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="w-full md:w-[320px] shrink-0 space-y-6">
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 h-[250px] animate-pulse" />
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 h-[300px] animate-pulse" />
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 h-[250px] animate-pulse" />
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 h-[300px] animate-pulse" />
           </aside>
           <main className="flex-1 space-y-8 pt-6">
             <div className="h-8 w-48 bg-[#F5F5F7] rounded-full mb-6 animate-pulse" />
@@ -212,10 +212,10 @@ export default function LibraryPage() {
   ];
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Quản lý thư viện
             </p>
@@ -233,7 +233,7 @@ export default function LibraryPage() {
             </nav>
           </div>
 
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
               Tài liệu đã ghim
             </h2>

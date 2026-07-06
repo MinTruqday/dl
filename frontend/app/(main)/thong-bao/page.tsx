@@ -34,7 +34,7 @@ export default function AnnouncementsPage() {
     setIsLoading(true);
     try {
       const res = await getAnnouncementsAPI();
-      setAnnouncements(res.data || res || []);
+      setAnnouncements(Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []);
     } catch (err: any) {
       showToast("Lỗi tải thông báo", "error");
     } finally {
@@ -98,7 +98,7 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-end justify-end gap-4">
         <button
           onClick={handleMarkAllRead}
@@ -115,8 +115,8 @@ export default function AnnouncementsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
-        <div className="md:col-span-8 flex flex-col h-full bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] overflow-hidden">
-          <div className="flex  bg-[#F5F5F7]/30 px-6 pt-4 gap-6">
+        <div className="md:col-span-8 flex flex-col h-full bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none border-[#E8E8ED] overflow-hidden">
+          <div className="flex bg-[#F5F5F7]/30 md:bg-transparent px-6 md:px-0 pt-4 md:pt-6 gap-6">
             <button
               onClick={() => setActiveTab("all")}
               className={`pb-3 text-[14px] font-medium border-b-2 transition-colors ${activeTab === "all" ? "border-[#1D1D1F] text-[#1D1D1F]" : "border-transparent text-[#6E6E73] hover:text-[#1D1D1F]"}`}
@@ -144,7 +144,7 @@ export default function AnnouncementsPage() {
                 {filteredAnnouncements.map((n) => (
                   <div
                     key={n._id || n.id}
-                    className={`p-6 flex gap-4 transition-colors hover:bg-[#F5F5F7] border-b border-[#F5F5F7] group relative ${n.is_read ? "" : "bg-[#0071E3]/5"}`}
+                    className={`p-6 md:px-0 flex gap-4 transition-colors hover:bg-[#F5F5F7] border-b border-[#F5F5F7] group relative ${n.is_read ? "" : "bg-[#0071E3]/5"}`}
                   >
                     {!n.is_read && (
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0071E3]"></div>

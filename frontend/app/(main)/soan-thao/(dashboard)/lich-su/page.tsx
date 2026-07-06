@@ -179,7 +179,7 @@ export default function HistoryPage() {
   if (loadingDocs) return <PageLoader />;
 
   return (
-    <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6 font-sans text-[#1D1D1F] flex flex-col h-full">
+    <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6 font-sans text-[#1D1D1F] flex flex-col h-full">
       <div className="flex items-center justify-between shrink-0">
         <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
           Lịch sử

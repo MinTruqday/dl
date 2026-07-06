@@ -443,10 +443,10 @@ export default function StudioCollabPage() {
   if (loading || isLoading) return <PageLoader />;
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
         <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Gia nhập phiên
             </p>
@@ -466,7 +466,7 @@ export default function StudioCollabPage() {
               </button>
             </div>
           </div>
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Tài liệu hoạt động
             </p>
@@ -510,7 +510,7 @@ export default function StudioCollabPage() {
           </div>
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
               <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
                 Khóa phiên
               </p>
@@ -541,7 +541,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
               <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
                 Mời cộng tác
               </p>
@@ -581,7 +581,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && isOwnerOfSelected() && (
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
               <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
                 Mã mời nhanh
               </p>
@@ -612,7 +612,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && sentPendingInvites.length > 0 && (
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
               <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
                 Lời mời đã gửi (chờ)
               </p>
@@ -641,7 +641,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-4">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
                   Cộng tác viên
@@ -726,7 +726,7 @@ export default function StudioCollabPage() {
         </aside>
 
         <main className="flex-1 min-w-0 space-y-6 overflow-y-auto no-scrollbar pb-6">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
               Thư mời cộng tác
             </h2>
@@ -778,7 +778,7 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && (
             <>
-              <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6">
+              <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">
                   <CheckSquare className="w-5 h-5" /> Nhiệm vụ & Checklist
                 </h2>
@@ -845,7 +845,7 @@ export default function StudioCollabPage() {
                 </div>
               </div>
 
-              <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6">
+              <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
                 <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">
                   <MessageSquare className="w-5 h-5" /> Bảng ghim & Trao đổi
                 </h2>

@@ -89,10 +89,10 @@ export default function ExplorePage() {
   );
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-[#1D1D1F]">
       <div className="flex flex-col md:flex-row gap-6">
         <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Phân loại
             </p>
@@ -134,7 +134,7 @@ export default function ExplorePage() {
 
         <main className="flex-1 min-w-0 space-y-8 pt-6">
           {recommendations.length > 0 && !searchQuery && (
-            <section className="bg-[#F5F5F7] rounded-[18px] p-6">
+            <section className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">
                 Gợi ý dành cho bạn
               </h2>

@@ -272,13 +272,13 @@ export default function SettingsPage() {
   ].filter((s) => !user || s.roles.includes(user.role));
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <div
         className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
         <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Danh mục
             </p>
@@ -298,7 +298,7 @@ export default function SettingsPage() {
               })}
             </nav>
           </div>
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
             <div className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Định danh hiện tại
             </div>
@@ -327,7 +327,7 @@ export default function SettingsPage() {
         </aside>
 
         <main className="flex-1 min-w-0 xl:col-span-8">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 min-h-[600px]">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 min-h-[600px]">
             {activeSection === "privacy" && (
               <div className="space-y-8">
                 <div>

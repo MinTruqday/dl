@@ -37,7 +37,7 @@ export default function DraftsPage() {
   };
 
   return (
-    <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6 font-sans text-[#1D1D1F]">
+    <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6 font-sans text-[#1D1D1F]">
       <div className="flex items-center justify-between">
         <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
           Bản nháp

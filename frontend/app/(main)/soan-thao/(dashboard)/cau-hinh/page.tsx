@@ -220,7 +220,7 @@ export default function ConfigPage() {
   return (
     <div className="flex flex-col h-full font-sans">
       <div
-        className={`bg-[#F5F5F7] rounded-[18px] p-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
+        className={`bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:px-0 md:pt-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
         <div className="bg-white p-6 rounded-[18px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">

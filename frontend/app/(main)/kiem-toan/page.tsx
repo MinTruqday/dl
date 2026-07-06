@@ -74,9 +74,9 @@ export default function LogsPage() {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="bg-[#F5F5F7] rounded-[18px] overflow-hidden flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
+    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
+      <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="flex items-center justify-between p-6 md:px-0 md:pt-6 bg-[#F5F5F7]/30 md:bg-transparent">
           <button
             onClick={fetchData}
             disabled={isRefreshing}
@@ -94,7 +94,7 @@ export default function LogsPage() {
           </span>
         </div>
 
-        <div className="overflow-y-auto no-scrollbar flex-1 p-2">
+        <div className="overflow-y-auto no-scrollbar flex-1 p-2 md:px-0">
           <table className="w-full text-left text-[14px] border-collapse">
             <thead>
               <tr className="text-[13px] text-[#6E6E73]">

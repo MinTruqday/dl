@@ -180,7 +180,7 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <Modal
         isOpen={showTopupModal}
         onClose={() => {
@@ -334,7 +334,7 @@ export default function WalletPage() {
         className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
       >
         <aside className="w-full md:w-[320px] shrink-0 xl:col-span-4 space-y-8">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 text-center">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
               Số dư khả dụng
             </h2>
@@ -366,7 +366,7 @@ export default function WalletPage() {
         </aside>
 
         <main className="flex-1 min-w-0 xl:col-span-8">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 min-h-[500px]">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 min-h-[500px]">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
                 Lịch sử giao dịch

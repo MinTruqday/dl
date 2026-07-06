@@ -28,7 +28,7 @@ export default function TermsPage() {
   ];
 
   return (
-    <div className="w-full max-w-[800px] mx-auto px-6 py-12 md:py-20 font-sans text-[#1D1D1F]">
+    <div className="w-full max-w-[800px] mx-auto px-6 md:px-0 py-12 md:py-20 font-sans text-[#1D1D1F]">
       <div className="mb-16  pb-12 text-center">
         <h1 className="text-[40px] md:text-[56px] font-semibold tracking-tight text-[#1D1D1F] mb-4">
           Điều khoản & chính sách

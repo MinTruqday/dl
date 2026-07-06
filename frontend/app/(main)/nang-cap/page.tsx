@@ -53,12 +53,11 @@ export default function UpgradePage() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-56px)] font-sans text-[#1D1D1F] py-12 px-6">
-      <div className="max-w-6xl mx-auto space-y-12">
+    <div className="w-full h-full font-sans text-[#1D1D1F] overflow-y-auto no-scrollbar">
+      <div className="w-full space-y-12">
         <div className="text-center space-y-4">
           <h1 className="text-[40px] md:text-[48px] font-semibold tracking-tight flex items-center justify-center gap-3">
-            <Sparkles className="w-8 h-8 text-[#0071E3]" /> Nâng cấp Trải nghiệm
-            AI
+            Nâng cấp trải nghiệm DocLib
           </h1>
           <p className="text-[17px] text-[#6E6E73] max-w-2xl mx-auto leading-relaxed">
             Mở khóa sức mạnh của các mô hình AI tiên tiến nhất để tăng tốc quá
@@ -66,17 +65,14 @@ export default function UpgradePage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 items-start">
-          <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-8 flex flex-col h-full hover: transition-">
-            <div className="mb-8">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
+        <div className="grid md:grid-cols-3 gap-6 items-stretch">
+          <div className="bg-white rounded-[18px] border border-[#E8E8ED] p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
+            <div className="mb-10">
+              <h3 className="text-[22px] font-semibold text-[#1D1D1F] mb-4">
                 Cơ bản
-              </p>
-              <p className="text-[14px] text-[#6E6E73] min-h-[40px]">
-                Trải nghiệm AI giới hạn dành cho người dùng mới.
-              </p>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-[32px] font-semibold text-[#1D1D1F]">
+              </h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-[40px] font-bold text-[#1D1D1F] tracking-tight">
                   Miễn phí
                 </span>
               </div>
@@ -84,9 +80,6 @@ export default function UpgradePage() {
             <ul className="space-y-4 mb-8 flex-1">
               {[
                 "Mô hình ngôn ngữ tiêu chuẩn",
-                "10 lượt trò chuyện / ngày",
-                "Tối đa 3.000 token / ngày",
-                "Phân tích tối đa 1 tài liệu",
               ].map((f, i) => (
                 <li
                   key={i}
@@ -106,28 +99,22 @@ export default function UpgradePage() {
             </button>
           </div>
 
-          <div className="bg-[#1D1D1F] rounded-[18px] border border-[#333336] p-8 flex flex-col h-full relative transform md:-translate-y-4">
-            <div className="absolute top-0 right-8 bg-[#0071E3] text-white px-4 py-1.5 text-[12px] font-medium rounded-b-lg">
-              Phổ biến nhất
-            </div>
-            <div className="mb-8 mt-4">
-              <h3 className="text-[17px] font-medium text-white mb-2">
-                Nâng cao
+          <div className="bg-white rounded-[18px] border border-[#E8E8ED] p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
+            <div className="mb-10">
+              <h3 className="text-[22px] font-semibold text-[#1D1D1F] mb-4">
+                Chuyên sâu
               </h3>
-              <p className="text-[14px] text-[#A1A1A6] min-h-[40px]">
-                Phù hợp cho tác giả và nhà nghiên cứu bán chuyên.
-              </p>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-[32px] font-semibold text-white">
+              <div className="flex items-baseline gap-1">
+                <span className="text-[40px] font-bold text-[#1D1D1F] tracking-tight">
                   750
                 </span>
-                <span className="text-[14px] font-medium text-[#A1A1A6]">
+                <span className="text-[16px] font-medium text-[#6E6E73]">
                   dl / tháng
                 </span>
               </div>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-start gap-3 text-[14px] text-white">
+              <li className="flex items-start gap-3 text-[14px] text-[#1D1D1F]">
                 <Check className="w-5 h-5 text-[#34C759] shrink-0" />{" "}
                 <span className="font-semibold">
                   Mọi tính năng của gói Cơ bản
@@ -135,14 +122,13 @@ export default function UpgradePage() {
               </li>
               {[
                 "Mô hình ngôn ngữ thông minh",
-                "25 lượt trò chuyện / ngày",
-                "Tối đa 7.500 token / ngày",
-                "Phân tích tối đa 5 tài liệu",
-                "Bảo mật tài liệu cấp 1",
+                "Lượt trò chuyện dài hơn",
+                "Bảo mật tài liệu đơn giản",
+                "Cấp phát 10GB lưu trữ tài liệu",
               ].map((f, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-3 text-[14px] text-[#D1D1D6]"
+                  className="flex items-start gap-3 text-[14px] text-[#1D1D1F]"
                 >
                   <Check className="w-5 h-5 text-[#34C759] shrink-0" /> {f}
                 </li>
@@ -151,7 +137,7 @@ export default function UpgradePage() {
             <button
               onClick={() => handleUpgrade("PRO", 750)}
               disabled={!!loading || getTierState("PRO") !== "AVAILABLE"}
-              className={`w-full py-3.5 rounded-full text-[15px] font-medium flex items-center justify-center gap-2 ${getTierState("PRO") === "CURRENT" ? "bg-[#333336] text-[#A1A1A6]" : getTierState("PRO") === "DOWNGRADE" || getTierState("PRO") === "ADMIN" ? "bg-[#333336] text-[#6E6E73] cursor-not-allowed" : "bg-[#0071E3] text-white hover:bg-[#0077ED] transition-colors"}`}
+              className={`w-full py-3.5 rounded-full text-[15px] font-medium flex items-center justify-center gap-2 ${getTierState("PRO") === "CURRENT" || getTierState("PRO") === "DOWNGRADE" || getTierState("PRO") === "ADMIN" ? "bg-[#F5F5F7] text-[#86868B] cursor-not-allowed" : "bg-[#0071E3] text-white hover:bg-[#0077ED] transition-colors"}`}
             >
               {loading === "PRO" ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -165,19 +151,16 @@ export default function UpgradePage() {
             </button>
           </div>
 
-          <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-8 flex flex-col h-full hover: transition-">
-            <div className="mb-8">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
-                Cao cấp
-              </p>
-              <p className="text-[14px] text-[#6E6E73] min-h-[40px]">
-                Dành cho chuyên gia cần sức mạnh xử lý tối đa.
-              </p>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-[32px] font-semibold text-[#1D1D1F]">
+          <div className="bg-white rounded-[18px] border border-[#E8E8ED] p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
+            <div className="mb-10">
+              <h3 className="text-[22px] font-semibold text-[#1D1D1F] mb-4">
+                Toàn năng
+              </h3>
+              <div className="flex items-baseline gap-1">
+                <span className="text-[40px] font-bold text-[#1D1D1F] tracking-tight">
                   2.500
                 </span>
-                <span className="text-[14px] font-medium text-[#6E6E73]">
+                <span className="text-[16px] font-medium text-[#6E6E73]">
                   dl / tháng
                 </span>
               </div>
@@ -192,10 +175,9 @@ export default function UpgradePage() {
               {[
                 "Kích hoạt chế độ suy nghĩ sâu",
                 "Mở khóa AI trên soạn thảo",
-                "100 lượt trò chuyện / ngày",
-                "Tối đa 30.000 token / ngày",
-                "Không giới hạn số lượng tài liệu",
-                "Bảo mật tài liệu toàn diện: Thuỷ ấn & Mã hoá file E-DRM (Bước 1 & 2)",
+                "Lượt trò chuyện tối đa",
+                "Bảo mật tài liệu toàn diện",
+                "Cấp phát 100GB lưu trữ tài liệu",
               ].map((f, i) => (
                 <li
                   key={i}

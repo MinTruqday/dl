@@ -160,7 +160,7 @@ export default function OperationDashboard() {
     );
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F] flex flex-col gap-8">
+    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-8">
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <button
           onClick={fetchData}
@@ -297,7 +297,7 @@ export default function OperationDashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 text-center">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
               <p className="text-[13px] text-[#6E6E73] font-medium mb-1">
                 Tổng dung lượng
               </p>
@@ -305,7 +305,7 @@ export default function OperationDashboard() {
                 {formatBytes(minioStats?.total_size_bytes || 0)}
               </p>
             </div>
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 text-center">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
               <p className="text-[13px] text-[#6E6E73] font-medium mb-1">
                 Tổng số tệp
               </p>
@@ -313,7 +313,7 @@ export default function OperationDashboard() {
                 {minioStats?.total_objects_count || 0}
               </p>
             </div>
-            <div className="bg-[#F5F5F7] rounded-[18px] p-6 text-center">
+            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
               <p className="text-[13px] text-[#6E6E73] font-medium mb-1">
                 Số lượng Buckets
               </p>

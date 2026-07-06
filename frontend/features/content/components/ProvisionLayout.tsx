@@ -39,10 +39,10 @@ export default function ProvisionLayout({
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <div className="grid md:grid-cols-12 gap-8">
         <aside className="md:col-span-4 xl:col-span-4 space-y-6">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
               Soạn thảo
             </p>
@@ -63,7 +63,7 @@ export default function ProvisionLayout({
             </nav>
           </div>
 
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-[10px] bg-[#E8E8ED] flex items-center justify-center overflow-hidden shrink-0">
                 {user?.avatar_url ? (

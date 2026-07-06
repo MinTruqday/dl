@@ -37,7 +37,7 @@ export default function HelpPage() {
   );
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-[#1D1D1F]">
       <div className="text-center mb-16 space-y-6">
         <h1 className="text-[40px] md:text-[56px] font-semibold tracking-tight leading-tight">
           Trung tâm hỗ trợ

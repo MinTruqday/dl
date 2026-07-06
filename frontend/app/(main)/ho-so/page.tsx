@@ -124,13 +124,13 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 min-h-[calc(100dvh-56px)] flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <div
         className={`grid md:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
         <aside className="md:col-span-4 xl:col-span-4 space-y-6">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 flex flex-col items-center text-center">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 flex flex-col items-center text-center">
             <div className="relative group mb-6">
               <div className="w-32 h-32 rounded-full bg-[#D2D2D7] flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
                 {avatarUrl ? (
@@ -207,7 +207,7 @@ export default function ProfilePage() {
         </aside>
 
         <main className="md:col-span-8 xl:col-span-8 space-y-6">
-          <div className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">
               Thông tin cá nhân
             </h2>
