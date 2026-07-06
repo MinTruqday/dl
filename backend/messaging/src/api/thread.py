@@ -50,6 +50,14 @@ async def send_message(req: Creation, current_user=Depends(get_current_user)):
         data=msg, message="Gửi tin nhắn trực tiếp thành công", status=201
     )
 
+@router.get("/cuoc-tro-chuyen", response_model=APIResponse[Any])
+async def get_conversations(current_user=Depends(get_current_user)):
+    return APIResponse(
+        data=await ThreadService.get_conversations(current_user),
+        message="Lấy danh sách cuộc trò chuyện thành công",
+        status=200,
+    )
+
 @router.get("/{other_user_id}", response_model=APIResponse[Any])
 async def get_messages(
     other_user_id: str,
@@ -62,14 +70,6 @@ async def get_messages(
             other_user_id, current_user, limit, cursor
         ),
         message="Lấy lịch sử cuộc trò chuyện thành công",
-        status=200,
-    )
-
-@router.get("/cuoc-tro-chuyen", response_model=APIResponse[Any])
-async def get_conversations(current_user=Depends(get_current_user)):
-    return APIResponse(
-        data=await ThreadService.get_conversations(current_user),
-        message="Lấy danh sách cuộc trò chuyện thành công",
         status=200,
     )
 

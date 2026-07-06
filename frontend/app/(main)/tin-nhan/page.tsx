@@ -1128,12 +1128,30 @@ export default function MessagesPage() {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowConvMenu(!showConvMenu)}
-                  className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowConvMenu(!showConvMenu)}
+                    className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                  {showConvMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[14px] shadow-lg border border-[#F5F5F7] py-2 z-50">
+                      <button onClick={() => { openShareDoc(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px]">
+                        <Share2 className="w-4 h-4" /> Chia sẻ tài liệu
+                      </button>
+                      <button onClick={() => { handleToggleMute(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px]">
+                        {isMuted ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />} {isMuted ? "Bật thông báo" : "Tắt thông báo"}
+                      </button>
+                      <button onClick={() => { handleBlockUser(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px] text-red-500">
+                        <ShieldAlert className="w-4 h-4" /> {isBlocked ? "Bỏ chặn" : "Chặn người dùng"}
+                      </button>
+                      <button onClick={() => { handleDeleteConv(selectedConv.other_user_id); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px] text-red-500">
+                        <Trash2 className="w-4 h-4" /> Xóa hội thoại
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 bg-transparent hide-scrollbar relative">
@@ -1230,7 +1248,7 @@ export default function MessagesPage() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleSend();
                       }}
-                      placeholder=""
+                      placeholder="Nhập tin nhắn..."
                       className="w-full bg-white border border-transparent rounded-[980px] pl-4 pr-12 py-3 text-[15px] focus:outline-none focus:border-[#D2D2D7]"
                     />
                     <button

@@ -43,6 +43,14 @@ async def get_user_by_id(user_id: str, db=Depends(get_db)):
     if user: user["_id"] = str(user["_id"])
     return APIResponse(data=user, message="Lấy thông tin thành công")
 
+@router.post("/hang-loat", response_model=APIResponse[Any], include_in_schema=False)
+async def get_users_by_ids(user_ids: list[str], db=Depends(get_db)):
+    from src.repositories.user import UserRepository
+    users = await UserRepository.get_users_by_ids(user_ids)
+    for u in users:
+        u["_id"] = str(u["_id"])
+    return APIResponse(data=users, message="Lấy danh sách người dùng thành công")
+
 @router.put("/{user_id}", response_model=APIResponse[Any], include_in_schema=False)
 async def update_user(user_id: str, request: Request, db=Depends(get_db)):
     from src.repositories.user import UserRepository

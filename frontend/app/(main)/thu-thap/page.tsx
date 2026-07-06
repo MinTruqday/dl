@@ -35,7 +35,10 @@ export default function CollectorPage() {
   const { showToast } = useToast();
 
   const [collectorStats, setCollectorStats] = useState<any>(null);
-  const [collectionForm, setCollectionForm] = useState({
+  const [collectionForm, setCollectionForm] = useState<{
+    source: string;
+    pages: number | string;
+  }>({
     source: "",
     pages: 0,
   });
@@ -83,7 +86,7 @@ export default function CollectorPage() {
     setIsProcessing(true);
     try {
       setIsRefreshing(true);
-      await triggerCollectionAPI(collectionForm.source, collectionForm.pages);
+      await triggerCollectionAPI(collectionForm.source, collectionForm.pages as any);
       showToast("Đã kích hoạt thu thập", "success");
       setCollectionForm((p) => ({ ...p, pages: 1 }));
       fetchData();
@@ -132,54 +135,35 @@ export default function CollectorPage() {
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <aside className="w-full md:w-[320px] shrink-0 xl:col-span-3 flex flex-col gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-              Giao diện
-            </p>
-            <button
-              onClick={fetchData}
-              disabled={isRefreshing}
-              className="w-full py-2 rounded-[10px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {isRefreshing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : null}{" "}
-              Đồng bộ
-            </button>
-          </div>
-          <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 space-y-6">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4 flex items-center gap-2  ">
-              Trạng thái hệ thống
-            </p>
-            <div className="space-y-4">
-              <div className="bg-[#F5F5F7] rounded-[18px] p-5">
-                <p className="text-[13px] text-[#6E6E73] mb-2 font-medium">
-                  Tài liệu đã thu thập
-                </p>
-                <p className="text-[32px] font-semibold text-[#1D1D1F]">
-                  {collectorStats?.total_documents_collected || 0}
-                </p>
-              </div>
-              <div className="bg-[#F5F5F7] rounded-[18px] p-5">
-                <p className="text-[13px] text-[#6E6E73] mb-2 font-medium">
-                  Worker Status
-                </p>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full w-fit ">
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full ${collectorStats?.status === "operational" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`}
-                  />
-                  <span className="text-[13px] font-medium">
-                    {collectorStats?.status === "operational"
-                      ? "Đang hoạt động"
-                      : "Tạm dừng / Lỗi"}
-                  </span>
-                </div>
+        <aside className="w-full md:w-[320px] shrink-0 xl:col-span-3 flex flex-col bg-[#F5F5F7] rounded-[18px] overflow-hidden">
+          <div className="overflow-y-auto no-scrollbar p-6 flex flex-col flex-1 gap-8">
+            <div>
+              <p className="text-[13px] text-[#6E6E73] font-medium mb-4">Tài liệu đã thu thập</p>
+              <p className="text-[32px] font-semibold text-[#1D1D1F]">
+                {collectorStats?.total_documents_collected || 0}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[13px] text-[#6E6E73] font-medium mb-4">
+                Trạng thái hoạt động
+              </p>
+              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full w-fit">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${collectorStats?.status === "operational" ? "bg-[#34C759]" : collectorStats?.status === "paused" ? "bg-[#FF9500]" : "bg-[#FF3B30]"}`}
+                />
+                <span className="text-[13px] font-medium">
+                  {collectorStats?.status === "operational"
+                    ? "Hoạt động"
+                    : collectorStats?.status === "paused"
+                    ? "Tạm dừng"
+                    : "Lỗi"}
+                </span>
               </div>
               <button
                 onClick={handleStopCollection}
                 disabled={isProcessing}
-                className="w-full py-3 bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20 font-medium rounded-[16px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20 font-medium rounded-[16px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
               >
                 {isProcessing ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -187,88 +171,121 @@ export default function CollectorPage() {
                 Dừng tiến trình
               </button>
             </div>
-          </section>
 
-          <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 space-y-6">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4 flex items-center gap-2  ">
-              Khởi tạo nhiệm vụ
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
-                  Nguồn dữ liệu
-                </label>
-                <select
-                  value={collectionForm.source}
-                  onChange={(e) =>
-                    setCollectionForm({
-                      ...collectionForm,
-                      source: e.target.value,
-                    })
-                  }
-                  className="apple-input w-full bg-[#F5F5F7]"
-                >
-                  <option value="" disabled>
-                    -- Chọn nguồn --
-                  </option>
-                  <option value="AnnaArchive">Anna's Archive</option>
-                  <option value="NXBST">NXB Sự thật</option>
-                  <option value="NXBGD">NXB Giáo dục</option>
-                  <option value="CTAN">CTAN (TeX)</option>
-                </select>
-              </div>
-              {collectionForm.source && (
+            <div>
+              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+                Khởi tạo nhiệm vụ
+              </p>
+              <div className="space-y-4">
                 <div>
                   <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
-                    Số trang thu thập
+                    Nguồn dữ liệu
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={collectionForm.pages}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value);
+                  <select
+                    value={collectionForm.source}
+                    onChange={(e) =>
                       setCollectionForm({
                         ...collectionForm,
-                        pages: isNaN(v) ? 0 : v,
-                      });
-                    }}
-                    className="apple-input w-full bg-[#F5F5F7]"
-                  />
+                        source: e.target.value,
+                        pages: e.target.value === "CTAN" ? "a" : 1,
+                      })
+                    }
+                    className="apple-input w-full bg-white"
+                  >
+                    <option value="" disabled>
+                      -- Chọn nguồn --
+                    </option>
+                    <option value="AnnaArchive">Anna's Archive</option>
+                    <option value="NXBST">NXB Sự thật</option>
+                    <option value="NXBGD">NXB Giáo dục</option>
+                    <option value="CTAN">CTAN (TeX)</option>
+                  </select>
                 </div>
-              )}
-              {collectionForm.source && (
-                <button
-                  onClick={() => setConfirmModal(true)}
-                  disabled={isRefreshing || isProcessing}
-                  className="w-full pill-button mt-2 disabled:opacity-50"
-                >
-                  Bắt đầu thu thập
-                </button>
-              )}
-            </div>
-          </section>
-        </aside>
-
-        <main className="flex-1 min-w-0 xl:col-span-9 flex flex-col min-h-0 bg-[#1D1D1F] rounded-[18px] overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#333336] bg-[#2A2A2D]">
-            <div className="flex items-center gap-4">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#FF3B30]"></div>
-                <div className="w-3 h-3 rounded-full bg-[#FF9500]"></div>
-                <div className="w-3 h-3 rounded-full bg-[#34C759]"></div>
+                {collectionForm.source === "CTAN" ? (
+                  <div>
+                    <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                      Vần
+                    </label>
+                    <select
+                      value={collectionForm.pages || ""}
+                      onChange={(e) =>
+                        setCollectionForm({
+                          ...collectionForm,
+                          pages: e.target.value as any,
+                        })
+                      }
+                      className="apple-input w-full bg-white"
+                    >
+                      <option value="" disabled>-- Chọn vần --</option>
+                      {Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i)).map(char => (
+                        <option key={char} value={char}>{char.toUpperCase()}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : collectionForm.source ? (
+                  <div>
+                    <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                      Số trang thu thập
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={collectionForm.pages}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value);
+                        setCollectionForm({
+                          ...collectionForm,
+                          pages: isNaN(v) ? 0 : v,
+                        });
+                      }}
+                      className="apple-input w-full bg-white"
+                    />
+                  </div>
+                ) : null}
+                {collectionForm.source && (
+                  <button
+                    onClick={() => setConfirmModal(true)}
+                    disabled={isRefreshing || isProcessing}
+                    className="w-full pill-button mt-2 disabled:opacity-50"
+                  >
+                    Bắt đầu thu thập
+                  </button>
+                )}
               </div>
-              <div className="flex items-center gap-2 bg-[#1D1D1F] px-3 py-1 rounded-[8px] text-[#A1A1A6] text-[12px] font-mono">
-                <Terminal className="w-3.5 h-3.5" /> Live Console
-              </div>
-            </div>
-            <div className="text-[12px] font-mono text-[#A1A1A6] flex items-center gap-2">
-              <div className="w-2 h-2 bg-[#34C759] rounded-full animate-pulse" />{" "}
-              sys.log
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto no-scrollbar p-6 font-mono text-[13px] leading-relaxed text-[#D1D1D6] bg-[#1D1D1F]">
+        </aside>
+
+        <main className="flex-1 min-w-0 xl:col-span-9 flex flex-col min-h-0 gap-4">
+          <div className="flex justify-end">
+            <button
+              onClick={fetchData}
+              disabled={isRefreshing}
+              className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors disabled:opacity-50 flex-shrink-0 w-8 h-8 flex items-center justify-center"
+              title="Đồng bộ"
+            >
+              <RefreshCcw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+          <div className="flex-1 bg-[#1D1D1F] rounded-[18px] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#333336] bg-[#2A2A2D]">
+              <div className="flex items-center gap-4">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-[#FF3B30]"></div>
+                  <div className="w-3 h-3 rounded-full bg-[#FF9500]"></div>
+                  <div className="w-3 h-3 rounded-full bg-[#34C759]"></div>
+                </div>
+                <div className="flex items-center gap-2 bg-[#1D1D1F] px-3 py-1 rounded-[8px] text-[#A1A1A6] text-[12px] font-mono">
+                  <Terminal className="w-3.5 h-3.5" /> Live Console
+                </div>
+              </div>
+              <div className="text-[12px] font-mono text-[#A1A1A6] flex items-center gap-2">
+                <div className="w-2 h-2 bg-[#34C759] rounded-full animate-pulse" />{" "}
+                sys.log
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 font-mono text-[13px] leading-relaxed text-[#D1D1D6] bg-[#1D1D1F]">
             {logs.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center opacity-50">
                 <Terminal className="w-10 h-10 mb-3" />
@@ -321,6 +338,7 @@ export default function CollectorPage() {
                 })}
               </div>
             )}
+          </div>
           </div>
         </main>
       </div>

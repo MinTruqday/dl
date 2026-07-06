@@ -4,6 +4,7 @@ import os
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
+from motor.motor_asyncio import AsyncIOMotorClient
 
 class Database:
     def __init__(self):

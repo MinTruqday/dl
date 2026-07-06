@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel
 
 class Collection(BaseModel):
     source: str
-    pages: Optional[int] = 1
+    pages: Optional[Union[int, str]] = 1

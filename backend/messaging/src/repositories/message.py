@@ -46,6 +46,10 @@ class MessageRepository:
         return await mongo.find_one("message_groups", *args, **kwargs)
 
     @classmethod
+    def find_groups(cls, *args, **kwargs):
+        return mongo.find("message_groups", *args, **kwargs)
+
+    @classmethod
     async def update_setting(cls, *args, **kwargs):
         return await mongo.update_one("message_settings", *args, **kwargs)
 

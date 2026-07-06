@@ -20,7 +20,7 @@ class ThreadService:
     @staticmethod
     @log_logic_execution
     async def _upsert_conversation(
-        db, sender_id: str, receiver_id: str, message_data: dict
+        sender_id: str, receiver_id: str, message_data: dict
     ):
         participant_key = (
             receiver_id
@@ -114,7 +114,6 @@ class ThreadService:
             }
         await MessageRepository.insert_one(msg_dict)
         await ThreadService._upsert_conversation(
-            db,
             sender_id,
             receiver_id,
             {
@@ -186,11 +185,7 @@ class ThreadService:
                             "_id": {
                                 "$in": [
                                     g["_id"]
-                                    for g in await MessageRepository.get(
-                                        "message_groups"
-                                    )
-                                    .find({"members": str(current_user.id)})
-                                    .execute()
+                                    for g in await MessageRepository.find_groups({"members": str(current_user.id)}).execute()
                                 ]
                             }
                         },
@@ -212,17 +207,17 @@ class ThreadService:
             try:
                 async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
                     resp = await client.post(
-                        f"{settings.MANAGEMENT_URL}/nguoi-dung/hang-loat",
+                        f"{settings.HUMANITY_URL}/nguoi-dung/hang-loat",
                         json=other_user_ids,
                     )
                     if resp.status_code == 200:
                         users_list = resp.json().get("data", [])
-            except Exception:
-                pass
+            except Exception as e:
+                from loguru import logger
+                logger.error(f"Error fetching users in get_conversations: {e}")
         user_map = {str(u["_id"]): u for u in users_list}
         groups_list = (
-            await MessageGroupRepository
-            .find({"members": str(current_user.id)})
+            await MessageRepository.find_groups({"members": str(current_user.id)})
             .execute()
         )
         group_map = {str(g["_id"]): g for g in groups_list}

@@ -38,7 +38,7 @@ export const MENU_ITEMS = [
   { id: "collaboration", label: "Cộng tác", href: "/cong-tac", icon: Users, roles: ["author", "admin"] },
   { id: "storage", label: "Lưu trữ", href: "/luu-tru", icon: FolderOpen, roles: ["author", "admin"] },
   { id: "audit", label: "Kiểm toán", href: "/kiem-toan", icon: Clock, roles: ["moderator", "admin"] },
-  { id: "collect", label: "Bộ sưu tập", href: "/bo-suu-tap", icon: Database, roles: ["admin"] },
+  { id: "collect", label: "Thu thập", href: "/thu-thap", icon: Database, roles: ["admin"] },
   { id: "user_manage", label: "Người dùng", href: "/nguoi-dung", icon: Users, roles: ["admin"] },
   { id: "report", label: "Báo cáo", href: "/bao-cao", icon: AlertTriangle, roles: ["admin", "moderator"] },
   { id: "operation", label: "Vận hành", href: "/van-hanh", icon: Shield, roles: ["admin"] },

@@ -3,7 +3,7 @@ import {
   getAuthHeaders,
 } from "@/features/authentication/services/session.service";
 
-export async function triggerCollectionAPI(source: string, pages: number) {
+export async function triggerCollectionAPI(source: string, pages: number | string) {
   const res = await fetch(`${API_URL}/thu-thap/kich-hoat`, {
     method: "POST",
     headers: {

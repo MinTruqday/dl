@@ -1,6 +1,6 @@
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
-from src.services.ingestion import collector as collector_service
+from src.services import ingestion as collector_service
 from src.schemas.ingestion import Collection
 from src.core.dependency import get_current_user, require_role, Role
 
@@ -22,6 +22,6 @@ async def get_active_jobs(current_user = Depends(get_current_user)):
 async def get_collector_stats(current_user = Depends(get_current_user)):
     return await collector_service.get_collector_stats()
 
-@router.get("/nhat-ky-hoat-dong", dependencies=[Depends(require_role([Role.ADMIN]))])
+@router.get("/nhat-ky", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def get_collector_logs(current_user = Depends(get_current_user)):
     return await collector_service.get_collector_logs()
