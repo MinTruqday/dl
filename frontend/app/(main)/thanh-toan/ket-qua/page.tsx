@@ -19,14 +19,29 @@ export default function PaymentResultPage() {
     const orderCode = searchParams.get("orderCode");
     const cancelParam = searchParams.get("cancel");
     const statusParam = searchParams.get("status");
+    const codeParam = searchParams.get("code"); // PayOS success code: "00" = success
 
     if (cancelParam === "true" || statusParam === "CANCELLED") {
       setStatus("cancelled");
+      setPaymentInfo({ order_code: orderCode });
       return;
     }
 
     if (!orderCode) {
       setStatus("failed");
+      return;
+    }
+
+    if (codeParam === "00") {
+      setPaymentInfo({ order_code: orderCode, status: "PAID", amount: 0, amount_paid: 0 });
+      setStatus("success");
+      try {
+        const res = await verifyDepositAPI(Number(orderCode));
+        const data = res.data || res;
+        if (data) setPaymentInfo({ ...data, order_code: data.order_code || orderCode });
+      } catch (err) {
+        console.warn("Could not fetch full payment info:", err);
+      }
       return;
     }
 
@@ -42,6 +57,7 @@ export default function PaymentResultPage() {
       setStatus("failed");
     }
   }, [searchParams]);
+
 
   useEffect(() => {
     verifyPayment();
@@ -67,9 +83,9 @@ export default function PaymentResultPage() {
     success: {
       icon: CheckCircle2,
       title: "Nạp tiền thành công",
-      description: paymentInfo
+      description: (paymentInfo?.amount_paid || paymentInfo?.amount)
         ? `${Number(paymentInfo.amount_paid || paymentInfo.amount || 0).toLocaleString()} VNĐ đã được cộng vào ví`
-        : "Số dư đã được cập nhật",
+        : "Số dư sẽ được cập nhật trong giây lát",
       color: "text-[#34C759]",
       bgClass: "bg-[#EAF8ED]",
     },
@@ -108,28 +124,31 @@ export default function PaymentResultPage() {
         </h1>
         <p className="text-[15px] text-[#6E6E73] mb-8">{current.description}</p>
 
-        {paymentInfo && status === "success" && (
+        {status === "success" && paymentInfo && (
           <div className="w-full bg-[#F5F5F7] rounded-[18px] p-6 space-y-4 mb-8">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#6E6E73] font-medium">
-                Mã giao dịch
-              </span>
-              <span className="text-[15px] font-medium text-[#1D1D1F]">
-                #{paymentInfo.order_code}
-              </span>
+              <span className="text-[13px] text-[#6E6E73] font-medium">Mã giao dịch</span>
+              <span className="text-[15px] font-medium text-[#1D1D1F]">#{paymentInfo.order_code}</span>
             </div>
             <div className="w-full h-px bg-[#E8E8ED]"></div>
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#6E6E73] font-medium">
-                Số tiền nạp
-              </span>
+              <span className="text-[13px] text-[#6E6E73] font-medium">Số tiền nạp</span>
               <span className="text-[15px] font-semibold text-[#1D1D1F]">
-                {Number(
-                  paymentInfo.amount_paid || paymentInfo.amount || 0,
-                ).toLocaleString()}{" "}
-                VNĐ
+                {(paymentInfo.amount_paid || paymentInfo.amount)
+                  ? `${Number(paymentInfo.amount_paid || paymentInfo.amount).toLocaleString()} VNĐ`
+                  : <span className="text-[#6E6E73] text-[13px]">Đang cập nhật...</span>
+                }
               </span>
             </div>
+            {paymentInfo.dl > 0 && (
+              <>
+                <div className="w-full h-px bg-[#E8E8ED]"></div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-[#6E6E73] font-medium">Số dl nhận được</span>
+                  <span className="text-[15px] font-semibold text-[#34C759]">+{paymentInfo.dl.toLocaleString()} dl</span>
+                </div>
+              </>
+            )}
           </div>
         )}
 

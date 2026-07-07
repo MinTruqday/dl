@@ -189,21 +189,15 @@ class DepositService:
                 status_code=403, detail="Không có quyền xem chi tiết giao dịch này"
             )
 
-        if getattr(database, "redis", None):
-            rl_key = f"rl:verify_deposit:{current_user.id}"
-            try:
-                attempts = await redis.incr(rl_key)
-                if attempts == 1:
-                    await redis.expire(rl_key, 60)
-                if attempts > 10:
-                    raise HTTPException(
-                        status_code=429,
-                        detail="Đang giới hạn yêu cầu, vui lòng thử lại sau",
-                    )
-            except HTTPException:
-                raise
-            except Exception as e:
-                logger.exception("Quá tải yêu cầu xác minh giao dịch")
+        if order.get("status") == "success":
+            amount_vnd = order.get("amount", 0)
+            return {
+                "order_code": order_code,
+                "status": "PAID",
+                "amount": amount_vnd,
+                "amount_paid": amount_vnd,
+                "dl": order.get("dl", 0),
+            }
 
         try:
             async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
@@ -227,14 +221,29 @@ class DepositService:
                     "status": status,
                     "amount": payment_data.get("amount", 0),
                     "amount_paid": payment_data.get("amountPaid", 0),
+                    "dl": order.get("dl", 0),
                 }
             else:
-                raise HTTPException(status_code=400, detail="Lỗi xác minh giao dịch")
+                # Fallback: return DB info if PayOS API fails
+                return {
+                    "order_code": order_code,
+                    "status": order.get("status", "UNKNOWN").upper(),
+                    "amount": order.get("amount", 0),
+                    "amount_paid": order.get("amount", 0),
+                    "dl": order.get("dl", 0),
+                }
         except HTTPException:
             raise
         except Exception as e:
             logger.exception("Lỗi xác minh trạng thái giao dịch trên cổng thanh toán")
-            raise HTTPException(status_code=500, detail=f"Lỗi xác minh giao dịch: {e}")
+            # Fallback to DB data instead of raising error
+            return {
+                "order_code": order_code,
+                "status": order.get("status", "UNKNOWN").upper(),
+                "amount": order.get("amount", 0),
+                "amount_paid": order.get("amount", 0),
+                "dl": order.get("dl", 0),
+            }
 
     @staticmethod
     @log_logic_execution

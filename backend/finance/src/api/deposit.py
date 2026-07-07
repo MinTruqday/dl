@@ -24,3 +24,15 @@ async def create_deposit(
         message="Đã khởi tạo giao dịch nạp tiền, đang chờ xác nhận",
         status=201,
     )
+
+@router.get("/kiem-tra/{order_code}", response_model=APIResponse[Any])
+async def verify_deposit(
+    order_code: int,
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await DepositService.verify_deposit(order_code, current_user),
+        message="Xác minh giao dịch thành công",
+        status=200,
+    )

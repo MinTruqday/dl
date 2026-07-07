@@ -61,12 +61,12 @@ class WithdrawalService:
 
         amount = int(data.get("amount", 0))
         bank_info = data.get("bank_info", "")
-        if amount < 100000:
+        if amount < 50:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Số tiền rút dưới mức tối thiểu"
+                status_code=400, detail="Số tiền rút tối thiểu"
             )
 
         wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
@@ -141,7 +141,7 @@ class WithdrawalService:
                     },
                 ]
             )
-            .execute()
+            .to_list(length=None)
         )
 
         if daily_withdrawals:

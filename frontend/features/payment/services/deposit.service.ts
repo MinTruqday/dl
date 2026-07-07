@@ -7,7 +7,7 @@ export async function createDepositLinkAPI(amount: number) {
   const res = await fetch(`${API_URL}/nap-tien`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, method: "payos" }),
+    body: JSON.stringify({ amount, payment_method: "PAYOS" }),
   });
   const data = await res.json();
   if (!res.ok)
