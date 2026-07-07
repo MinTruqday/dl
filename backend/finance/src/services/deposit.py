@@ -111,7 +111,7 @@ class DepositService:
                 )
                 return {"checkout_url": checkout_url, "order_code": order_code}
             else:
-                logger.warning("Yêu cầu khởi tạo liên kết thanh toán bị từ chối")
+                logger.warning(f"Yêu cầu khởi tạo liên kết thanh toán bị từ chối: {res_data}")
                 await mongo.update_one("orders", 
                     {"order_code": order_code}, {"$set": {"status": "FAILED"}}
                 )

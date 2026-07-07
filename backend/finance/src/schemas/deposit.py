@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 class DepositRequest(BaseModel):
-    amount: float
+    amount: int
     payment_method: str = "PAYOS"

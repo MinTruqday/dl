@@ -3,7 +3,7 @@ from typing import Any
 
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, HTTPException
-from src.api.dependency import get_current_user, get_db, require_role
+from src.core.dependency import get_current_user, get_db, require_role
 from src.services.quota import QuotaService
 
 from src.core.response import APIResponse

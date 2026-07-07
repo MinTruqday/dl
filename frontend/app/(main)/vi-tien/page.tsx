@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   ArrowUpRight,
@@ -50,18 +50,21 @@ const PayOSEmbedded = ({
   onCancel?: (event: any) => void;
   onExit?: (event: any) => void;
 }) => {
+  const hasOpened = useRef(false);
   const { open, exit } = usePayOS({
     RETURN_URL: window.location.origin + "/vi-tien",
     ELEMENT_ID: "payos-checkout-container",
     CHECKOUT_URL: checkoutUrl,
-    embedded: true,
     onSuccess: (event: any) => onSuccess?.(event),
     onCancel: (event: any) => onCancel?.(event),
     onExit: (event: any) => onExit?.(event),
   } as any);
 
   useEffect(() => {
-    open();
+    if (!hasOpened.current) {
+      hasOpened.current = true;
+      open();
+    }
     return () => {
       if (exit) exit();
     };

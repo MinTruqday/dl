@@ -39,6 +39,8 @@ app.include_router(collector)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Tính năng thu thập dữ liệu đã sẵn sàng")
+    from src.core.infrastructure.database import init_db
+    await init_db()
     from src.services.queue import run_worker
     asyncio.create_task(run_worker())
 @app.get("/health")

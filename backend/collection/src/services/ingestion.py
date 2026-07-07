@@ -41,7 +41,7 @@ async def trigger_collection(req: Collection):
         )
 
     try:
-        await mq.publish(queue_name, payload)
+        await mq_client.publish(queue_name, payload)
         logger.info("Khởi tạo thu thập dữ liệu ngầm thành công")
         return {
             "status": "success",
@@ -70,13 +70,8 @@ async def stop_collection():
 
 @log_logic_execution
 async def get_active_jobs():
-    mongo_uri = settings.MONGODB_URI
-    client = AsyncIOMotorClient(mongo_uri)
-    db = client.get_default_database()
-    active_collectors = (
-        await CollectionRepository.get("collection_jobs")
-        .find({"status": {"$in": ["running", "pending"]}})
-        .execute()
+    active_collectors = await mongo.find(
+        "collection_jobs", {"status": {"$in": ["running", "pending"]}}
     )
     jobs = [
         {"id": str(j["_id"]), "progress": j.get("progress", 0), "status": j["status"]}
@@ -86,21 +81,14 @@ async def get_active_jobs():
 
 @log_logic_execution
 async def get_collector_stats():
-    mongo_uri = settings.MONGODB_URI
-    client = AsyncIOMotorClient(mongo_uri)
-    db = client.get_default_database()
     total_docs = await ArchiveRepository.count_documents({})
     total_assets = await ArchiveRepository.count_documents({})
-    recent_crawls = (
-        await DocumentRepository
-        .find({}, {"created_at": 1})
-        .sort("created_at", -1)
-        .limit(1)
-        .execute()
+    recent_crawls = await mongo.find(
+        "documents", {}, {"created_at": 1}, sort=[("created_at", -1)], limit=1
     )
     last_crawl = (
         recent_crawls[0]["created_at"].isoformat()
-        if recent_crawls and isinstance(recent_crawls[0].get("created_at"), datetime)
+        if recent_crawls and len(recent_crawls) > 0 and isinstance(recent_crawls[0].get("created_at"), datetime)
         else None
     )
     total_collected = await ArchiveRepository.count_documents(
