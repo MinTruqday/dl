@@ -32,7 +32,7 @@ class UserService:
     @staticmethod
     async def get_all_users(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         users = await UserRepository.get_users_query({}).sort("created_at", -1).skip(offset).limit(limit).execute()
-        return [{ "_id": str(u["_id"]), "email": u.get("email"), "full_name": u.get("full_name"), "role": u.get("role"), "is_active": u.get("is_active", True) } for u in users]
+        return [{ "_id": str(u["_id"]), "email": u.get("email"), "full_name": u.get("full_name"), "role": u.get("role"), "is_active": u.get("is_active", True), "created_at": u.get("created_at").isoformat() if hasattr(u.get("created_at"), "isoformat") else u.get("created_at"), "avatar_url": u.get("avatar_url"), "slug": u.get("slug") } for u in users]
         
     @staticmethod
     async def get_user_profile(user_id: str) -> Dict[str, Any]:

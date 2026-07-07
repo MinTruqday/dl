@@ -4,7 +4,7 @@ import {
   getAuthHeaders,
 } from "@/features/authentication/services/session.service";
 
-export async function getAdminUsersAPI(limit: number = 50, offset: number = 0) {
+export async function getUsersAPI(limit: number = 50, offset: number = 0) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(
@@ -17,6 +17,17 @@ export async function getAdminUsersAPI(limit: number = 50, offset: number = 0) {
   if (!res.ok)
     throw new Error(data.message || "Không thể tải danh sách người dùng");
   return data;
+}
+
+export async function createUserAPI(data: { email: string, password: string, full_name: string, role: string }) {
+  const { register } = await import("@/features/authentication/services/session.service");
+  const slug = data.email.split("@")[0] + "-" + Math.floor(Math.random() * 10000);
+  const newUser = await register(data.email, data.password, data.full_name, slug, true);
+  
+  if (data.role !== "reader" && newUser.id) {
+    await updateUserRoleAPI(newUser.id, data.role);
+  }
+  return newUser;
 }
 
 export async function updateUserRoleAPI(userId: string, role: string) {
