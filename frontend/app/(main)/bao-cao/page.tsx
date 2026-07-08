@@ -52,7 +52,7 @@ export default function ReportsManagementPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      if (user.role !== "admin" && user.role !== "moderator") router.push("/");
+      if (user.role !== "admin") router.push("/");
       else fetchData();
     }
   }, [user, authLoading, fetchData, router]);
@@ -77,7 +77,7 @@ export default function ReportsManagementPage() {
   );
 
   if (authLoading || isLoading) return <PageLoader />;
-  if (user?.role !== "admin" && user?.role !== "moderator")
+  if (user?.role !== "admin")
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
         <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]">

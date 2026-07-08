@@ -57,6 +57,17 @@ class RabbitMQClient:
             logger.exception("Lỗi phân phối tin nhắn vào RabbitMQ")
             return False
 
+    async def purge(self, queue_name: str) -> bool:
+        if not self.channel:
+            await self.connect()
+        try:
+            queue = await self.get_queue(queue_name)
+            await queue.purge()
+            return True
+        except Exception as e:
+            logger.exception("Lỗi xóa hàng đợi RabbitMQ")
+            return False
+
     async def consume(self, queue_name: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
         if not self.channel:
             await self.connect()

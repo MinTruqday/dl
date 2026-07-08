@@ -13,6 +13,14 @@ logger.add(
     filter=trace_id_filter,
     level="INFO",
 )
+logger.add(
+    "logs/backend.log",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+    level="INFO",
+    rotation="10 MB",
+    retention="7 days",
+    encoding="utf-8",
+)
 from src.api.ingestion import router as collector
 from src.core.infrastructure.configuration import settings
 app = FastAPI(title="DocLib Crawler", version=settings.VERSION)
@@ -30,7 +38,11 @@ async def internal_token_middleware(request: Request, call_next):
 app.middleware("http")(add_trace_id_header)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=(
+        settings.CORS_ALLOWED_ORIGINS.split(",")
+        if settings.CORS_ALLOWED_ORIGINS
+        else ["*"]
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

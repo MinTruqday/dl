@@ -54,7 +54,7 @@ export default function CollectorPage() {
       const statsRes = await getCollectorStatsAPI();
       setCollectorStats(statsRes.data || statsRes);
       const logsRes = await getCollectorLogsAPI();
-      setLogs(logsRes.data || []);
+      setLogs(Array.isArray(logsRes) ? logsRes : (logsRes.data || []));
     } catch (err: any) {
       showToast("Lỗi tải dữ liệu thu thập", "error");
     } finally {
@@ -68,7 +68,7 @@ export default function CollectorPage() {
     if (!authLoading && user && user.role === "admin") {
       interval = setInterval(() => {
         getCollectorLogsAPI()
-          .then((res) => setLogs(res.data || []))
+          .then((res) => setLogs(Array.isArray(res) ? res : (res.data || [])))
           .catch(() => {});
       }, 3000);
     }

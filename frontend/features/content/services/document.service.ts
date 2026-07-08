@@ -431,3 +431,25 @@ export async function updateChapterPaywallAPI(
   if (!res.ok) throw new Error(data.detail || "Cập nhật trả phí thất bại");
   return data;
 }
+
+export async function compileDocumentAPI(documentId: string) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/bien-dich`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Biên dịch tài liệu thất bại");
+  return data;
+}
+
+export async function publishDocumentAPI(documentId: string) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/xuat-ban`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Xuất bản tài liệu thất bại");
+  return data;
+}

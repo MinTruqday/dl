@@ -50,7 +50,6 @@ type TabKey =
   | "account"
   | "apply_author"
   | "author"
-  | "moderator"
   | "admin";
 
 export default function SettingsPage() {
@@ -230,19 +229,19 @@ export default function SettingsPage() {
       id: "privacy",
       label: "Quyền riêng tư",
       icon: Shield,
-      roles: ["reader", "potential_author", "author", "moderator", "admin"],
+      roles: ["reader", "potential_author", "author", "admin"],
     },
     {
       id: "announcements",
       label: "Thông báo",
       icon: Bell,
-      roles: ["reader", "potential_author", "author", "moderator", "admin"],
+      roles: ["reader", "potential_author", "author", "admin"],
     },
     {
       id: "account",
       label: "Tài khoản & Bảo mật",
       icon: Lock,
-      roles: ["reader", "potential_author", "author", "moderator", "admin"],
+      roles: ["reader", "potential_author", "author", "admin"],
     },
     ...(user?.role === "reader" &&
     user?.author_status !== "pending" &&
@@ -262,12 +261,7 @@ export default function SettingsPage() {
       icon: PenTool,
       roles: ["author", "admin"],
     },
-    {
-      id: "moderator",
-      label: "Công cụ kiểm duyệt",
-      icon: ShieldCheck,
-      roles: ["moderator", "admin"],
-    },
+
     { id: "admin", label: "Cấu hình hệ thống", icon: Zap, roles: ["admin"] },
   ].filter((s) => !user || s.roles.includes(user.role));
 
@@ -312,9 +306,7 @@ export default function SettingsPage() {
                     ? "Quản trị viên"
                     : user?.role === "author"
                       ? "Tác giả"
-                      : user?.role === "moderator"
-                        ? "Kiểm duyệt viên"
-                        : user?.role === "potential_author"
+                      : user?.role === "potential_author"
                           ? "Tác giả tiềm năng"
                           : "Độc giả"}
                 </p>
@@ -461,49 +453,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeSection === "moderator" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
-                    Công cụ kiểm duyệt
-                  </h2>
-                </div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
-                  <div className="p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-[17px] font-medium text-[#1D1D1F]">
-                        Thông báo vi phạm
-                      </h4>
-                    </div>
-                    <CustomSwitch
-                      active={modNotifs}
-                      onToggle={async () => {
-                        const s = await handleUpdateGeneral({
-                          mod_notifs: !modNotifs,
-                        });
-                        if (s) setModNotifs(!modNotifs);
-                      }}
-                    />
-                  </div>
-                  <div className="p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-[17px] font-medium text-[#1D1D1F]">
-                        Tự động làm mới
-                      </h4>
-                    </div>
-                    <CustomSwitch
-                      active={autoRefresh}
-                      onToggle={async () => {
-                        const s = await handleUpdateGeneral({
-                          auto_refresh: !autoRefresh,
-                        });
-                        if (s) setAutoRefresh(!autoRefresh);
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+
 
             {activeSection === "admin" && (
               <div className="space-y-8">

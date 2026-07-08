@@ -47,11 +47,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  if (role === "moderator") {
-    if (pathname.startsWith("/compose") || pathname.startsWith("/admin")) {
-      return NextResponse.redirect(new URL("/operation", request.url));
-    }
-  }
+
 
   return NextResponse.next();
 }

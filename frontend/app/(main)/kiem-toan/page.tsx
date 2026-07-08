@@ -39,7 +39,7 @@ export default function LogsPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      if (user.role !== "admin" && user.role !== "moderator") {
+      if (user.role !== "admin") {
         router.push("/");
       } else {
         fetchData();
@@ -55,7 +55,7 @@ export default function LogsPage() {
     );
   }
 
-  if (user?.role !== "admin" && user?.role !== "moderator") {
+  if (user?.role !== "admin") {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
         <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]">
@@ -74,92 +74,85 @@ export default function LogsPage() {
   }
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none overflow-hidden flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between p-6 md:px-0 md:pt-6 bg-[#F5F5F7]/30 md:bg-transparent">
-          <button
-            onClick={fetchData}
-            disabled={isRefreshing}
-            className="pill-button flex items-center gap-2 disabled:opacity-50 bg-white  text-[#1D1D1F] hover:bg-[#F5F5F7]"
-          >
-            {isRefreshing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <RefreshCcw className="w-4 h-4" />
-            )}
-            Đồng bộ dữ liệu
-          </button>
-          <span className="px-3 py-1 bg-white  text-[#6E6E73] text-[13px] font-medium rounded-full">
-            {activityLogs.length} bản ghi
-          </span>
-        </div>
+    <div className="w-full h-full font-sans text-[#1D1D1F]">
+      <div className="flex flex-col">
+        <main className="flex-1 min-w-0 space-y-8 pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <div className="relative inline-block w-fit">
+                <span className="bg-transparent h-10 text-[20px] font-semibold text-[#1D1D1F] focus:outline-none flex items-center">
+                  Nhật ký hệ thống
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchData}
+                disabled={isRefreshing}
+                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors disabled:opacity-50"
+                title="Làm mới"
+              >
+                <RefreshCcw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              </button>
+            </div>
+          </div>
 
-        <div className="overflow-y-auto no-scrollbar flex-1 p-2 md:px-0">
-          <table className="w-full text-left text-[14px] border-collapse">
-            <thead>
-              <tr className="text-[13px] text-[#6E6E73]">
-                <th className="py-3 px-6 font-medium w-[25%]">Thao tác</th>
-                <th className="py-3 px-6 font-medium w-[35%]">Đối tượng</th>
-                <th className="py-3 px-6 font-medium w-[25%]">Thời gian</th>
-                <th className="py-3 px-6 font-medium text-right w-[15%]">
-                  Trạng thái
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {activityLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-24 text-center">
-                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                      <div className="w-16 h-16 bg-[#F5F5F7] rounded-[16px] flex items-center justify-center mb-4">
-                        <FileText className="w-8 h-8 text-[#C7C7CC]" />
-                      </div>
-                      <h2 className="text-[20px] font-medium text-[#1D1D1F] mb-1">
-                        Nhật ký trống
-                      </h2>
-                      <p className="text-[17px] text-[#6E6E73]">
-                        Chưa có hoạt động quản trị nào được ghi nhận.
-                      </p>
-                    </div>
-                  </td>
+          <div className="w-full overflow-x-auto min-h-[400px] transition-colors">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="text-[13px] text-[#6E6E73] border-b border-[#E8E8ED]">
+                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center w-[25%]">Thao tác</th>
+                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center w-[35%]">Đối tượng</th>
+                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center w-[25%]">Thời gian</th>
+                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center w-[15%]">Trạng thái</th>
                 </tr>
-              ) : (
-                activityLogs.map((log: any, idx: number) => (
-                  <tr
-                    key={idx}
-                    className="hover:bg-[#F5F5F7] transition-colors"
-                  >
-                    <td className="py-3 px-6">
-                      <span className="font-medium text-[#1D1D1F]">
-                        {log.action || "Thao tác điều hành"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-6">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[12px] bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-md w-fit font-medium">
-                          {log.target_type}
-                        </span>
-                        <span className="text-[13px] text-[#6E6E73] font-mono">
-                          {log.target_id}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-6">
-                      <span className="text-[#6E6E73]">
-                        {new Date(log.created_at).toLocaleString("vi-VN")}
-                      </span>
-                    </td>
-                    <td className="py-3 px-6 text-right">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#34C759] rounded-full text-[13px] font-medium">
-                        <CheckCircle2 className="w-4 h-4" /> Hoàn tất
+              </thead>
+              <tbody>
+                {activityLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={4}>
+                      <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center my-4">
+                        <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  activityLogs.map((log: any, idx: number) => (
+                    <tr
+                      key={idx}
+                      className="hover:bg-[#E8E8ED]/60 transition-colors group cursor-default"
+                    >
+                      <td className="py-3 px-6 text-center">
+                        <span className="font-medium text-[14px] text-[#1D1D1F]">
+                          {log.action || "Thao tác điều hành"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-6 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[12px] bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-md w-fit font-medium">
+                            {log.target_type}
+                          </span>
+                          <span className="text-[13px] text-[#6E6E73] font-mono">
+                            {log.target_id}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-6 text-[#6E6E73] text-[13px] text-center">
+                        {new Date(log.created_at).toLocaleString("vi-VN")}
+                      </td>
+                      <td className="py-3 px-6 text-center">
+                        <div className="inline-flex items-center justify-center px-3 py-1 bg-[#E8F5E9] text-[#34C759] rounded-full text-[12px] font-medium whitespace-nowrap gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Hoàn tất
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </main>
       </div>
     </div>
   );

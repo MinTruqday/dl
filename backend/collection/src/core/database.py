@@ -14,7 +14,7 @@ class Database:
 
     async def insert_document(self, document_data: dict):
         try:
-            res = await mongo.insert_one("db_client", collection="documents", document=document_data)
+            res = await self.client["doclib_content"]["documents"].insert_one(document_data)
             logger.info("Tạo bản ghi tài liệu thành công")
             return str(res.inserted_id)
         except Exception as e:
@@ -25,7 +25,7 @@ class Database:
         try:
             from bson import ObjectId
 
-            await self.db.documents.update_one(
+            await self.client["doclib_content"]["documents"].update_one(
                 {"_id": ObjectId(document_id)}, {"$set": update_data}
             )
             logger.info("Cập nhật bản ghi tài liệu thành công")

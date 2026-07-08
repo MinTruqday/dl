@@ -78,17 +78,17 @@ class State:
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info("Chụp ảnh màn hình thành công")
+                        logger.info("[NXBST] Chụp ảnh màn hình thành công")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.exception("Lỗi xử lý tài sản nội bộ")
+                    logger.exception("[NXBST] Lỗi xử lý tài sản nội bộ")
         except Exception as e:
-            logger.exception("Lỗi phân tích luồng dữ liệu mạng")
+            logger.exception("[NXBST] Lỗi phân tích luồng dữ liệu mạng")
 
     async def process_viewer(self, page):
         try:
-            logger.info("Đang chuẩn bị môi trường xem tài liệu")
+            logger.info("[NXBST] Đang chuẩn bị môi trường xem tài liệu")
             consecutive_fails = 0
             previous_count = self.page_counter
 
@@ -102,14 +102,14 @@ class State:
                     previous_count = self.page_counter
                 else:
                     consecutive_fails += 1
-                    logger.warning("Không phát hiện trang mới, đang thử lại")
+                    logger.warning("[NXBST] Không phát hiện trang mới, đang thử lại")
                     await asyncio.sleep(2)
 
                 if consecutive_fails > 6:
-                    logger.info("Quá trình quét tài liệu bị gián đoạn")
+                    logger.info("[NXBST] Quá trình quét tài liệu bị gián đoạn")
                     break
         except Exception as e:
-            logger.exception("Lỗi đồng bộ đọc tài liệu")
+            logger.exception("[NXBST] Lỗi đồng bộ đọc tài liệu")
 
     async def compile_and_upload(self, title: str, author: str):
         import tempfile
@@ -136,13 +136,13 @@ class State:
                     files_by_page["unknown"].append(os.path.join(self.temp_dir, f))
 
         if not files_by_page:
-            logger.warning("Bỏ qua quá Tectonic do không có nội dung")
+            logger.warning("[NXBST] Bỏ qua quá Tectonic do không có nội dung")
             return
 
         images = []
         try:
             sorted_pages = sorted([p for p in files_by_page.keys() if p != "unknown"])
-            logger.info("Đang tổng hợp các phân đoạn hình ảnh")
+            logger.info("[NXBST] Đang tổng hợp các phân đoạn hình ảnh")
 
             for p in sorted_pages:
                 tiles_dict = files_by_page[p]
@@ -178,7 +178,7 @@ class State:
                             Image.open(t).convert("RGB").save(page_path, "JPEG")
                             images.append(page_path)
                 except Exception as e:
-                    logger.exception("Lỗi căn chỉnh hình ảnh trang")
+                    logger.exception("[NXBST] Lỗi căn chỉnh hình ảnh trang")
 
             if "unknown" in files_by_page:
                 for f in sorted(files_by_page["unknown"]):
@@ -189,15 +189,15 @@ class State:
                         Image.open(f).convert("RGB").save(page_path, "JPEG")
                         images.append(page_path)
                     except Exception as e:
-                        logger.exception("Lỗi tải hình ảnh do định dạng bị lỗi")
+                        logger.exception("[NXBST] Lỗi tải hình ảnh do định dạng bị lỗi")
 
             if images:
-                logger.info("Đang tổng hợp hình ảnh thành tệp PDF")
+                logger.info("[NXBST] Đang tổng hợp hình ảnh thành tệp PDF")
                 with open(pdf_path, "wb") as f:
                     f.write(img2pdf.convert(images))
-                logger.info("Biên dịch tài liệu thành công")
+                logger.info("[NXBST] Biên dịch tài liệu thành công")
 
-            logger.info("Đang chuyển tài liệu biên dịch vào lưu trữ vĩnh viễn")
+            logger.info("[NXBST] Đang chuyển tài liệu biên dịch vào lưu trữ vĩnh viễn")
             minio_url = await storage.upload_local_file(
                 f"documents/nxbst/{final_pdf_name}", pdf_path
             )
@@ -224,7 +224,7 @@ class State:
                 os.remove(pdf_path)
 
         except Exception as e:
-            logger.exception("Lỗi đóng gói và lưu trữ tài liệu")
+            logger.exception("[NXBST] Lỗi đóng gói và lưu trữ tài liệu")
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -235,7 +235,7 @@ class NxbstSource:
     @staticmethod
     async def run_list_collector(pages: int = 0):
         start_url = "https://stbook.vn/"
-        logger.info("Đang quét danh sách từ nguồn dữ liệu chính")
+        logger.info("[NXBST] Đang quét danh sách từ nguồn dữ liệu chính")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -255,16 +255,16 @@ class NxbstSource:
                     if href and ("/category/" in href or "/chuyen-muc/" in href):
                         category_urls.add(urllib.parse.urljoin(start_url, href))
 
-                logger.info("Phân tích danh mục thành công")
+                logger.info("[NXBST] Phân tích danh mục thành công")
 
                 for cat_url in category_urls:
-                    logger.info("Đang truy cập danh mục con để trích xuất")
+                    logger.info("[NXBST] Đang truy cập danh mục con để trích xuất")
                     await page.goto(cat_url, timeout=60000)
                     await asyncio.sleep(3)
 
                     current_page = 1
                     while True:
-                        logger.info("Đang quét danh mục để tìm liên kết tài liệu")
+                        logger.info("[NXBST] Đang quét danh mục để tìm liên kết tài liệu")
 
                         document_nodes_css = (
                             '#main a[href*="store_detail"], #main a[href*="/sach/"]'
@@ -280,16 +280,16 @@ class NxbstSource:
                                 full_url = urllib.parse.urljoin(start_url, href)
                                 found_documents += 1
                                 if not await dedup.is_collected("nxbst_url", full_url):
-                                    await mq.publish(
+                                    await mq_client.publish(
                                         "collect_detail_queue",
                                         {"url": full_url, "source": "NXBST"},
                                     )
                                     await dedup.mark_collected("nxbst_url", full_url)
 
-                        logger.info("Thêm tài liệu vào hàng đợi thành công")
+                        logger.info("[NXBST] Thêm tài liệu vào hàng đợi thành công")
 
                         if current_page >= pages:
-                            logger.info("Đạt giới hạn số trang thu thập cho danh mục")
+                            logger.info("[NXBST] Đạt giới hạn số trang thu thập cho danh mục")
                             break
 
                         next_page_idx = current_page + 1
@@ -306,12 +306,12 @@ class NxbstSource:
                         except Exception:
                             break
             except Exception as e:
-                logger.exception("Lỗi quét danh sách trang")
+                logger.exception("[NXBST] Lỗi quét danh sách trang")
                 raise
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info("Đang trích xuất thông tin tài liệu")
+        logger.info("[NXBST] Đang trích xuất thông tin tài liệu")
         state_manager = State()
 
         async with managed_browser() as browser:
@@ -336,7 +336,7 @@ class NxbstSource:
                 author_el = await page.query_selector("#detail .author a")
                 raw_author = await author_el.inner_text() if author_el else "Unknown"
 
-                logger.info("Trích xuất dữ liệu thành công, đang tải xuống")
+                logger.info("[NXBST] Trích xuất dữ liệu thành công, đang tải xuống")
 
                 read_btn_css = (
                     '#whatchNow, a:has-text("Read Book"), a:has-text("View Now")'
@@ -344,7 +344,7 @@ class NxbstSource:
                 read_btn = await page.query_selector(read_btn_css)
 
                 if read_btn:
-                    logger.info("Đang chuẩn bị môi trường thu thập nội dung")
+                    logger.info("[NXBST] Đang chuẩn bị môi trường thu thập nội dung")
 
                     import tempfile
 
@@ -355,7 +355,7 @@ class NxbstSource:
                     state_manager.captured_hashes = set()
                     state_manager.page_counter = 0
 
-                    logger.info("Khởi tạo bộ lọc mạng thành công")
+                    logger.info("[NXBST] Khởi tạo bộ lọc mạng thành công")
                     state_manager.is_capturing = True
 
                     await read_btn.click()
@@ -367,7 +367,7 @@ class NxbstSource:
 
                     await state_manager.compile_and_upload(raw_title, raw_author)
                 else:
-                    logger.warning("Không tìm thấy cấu trúc quyền truy cập")
+                    logger.warning("[NXBST] Không tìm thấy cấu trúc quyền truy cập")
             except Exception as e:
-                logger.exception("Lỗi đồng bộ luồng xem tài liệu")
+                logger.exception("[NXBST] Lỗi đồng bộ luồng xem tài liệu")
                 raise

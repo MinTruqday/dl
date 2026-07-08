@@ -24,7 +24,7 @@ export default function ProvisionLayout({
 }) {
   const pathname = usePathname();
   const { user } = useAuth() as any;
-  const isAdminOrMod = user?.role === "admin" || user?.role === "moderator";
+  const isAdminOrMod = user?.role === "admin";
 
   const navItems = [
     { id: "step1", label: "Khởi tạo", href: "/soan-thao" },
@@ -85,9 +85,7 @@ export default function ProvisionLayout({
                 <span className="text-[12px] text-[#6E6E73] truncate">
                   {user?.role === "admin"
                     ? "Quản trị viên"
-                    : user?.role === "moderator"
-                      ? "Kiểm duyệt viên"
-                      : "Tác giả xác thực"}
+                    : "Tác giả xác thực"}
                 </span>
               </div>
             </div>

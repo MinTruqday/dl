@@ -7,6 +7,8 @@ from src.sources.ctan import CtanSource
 from src.sources.nxbgd import NxbgdSource
 from src.sources.nxbst import NxbstSource
 
+WORKER_TASKS = []
+
 @log_logic_execution
 async def run_worker():
     logger.info("Khởi động nền tiêu thụ tin nhắn từ Queue Service")
@@ -18,13 +20,21 @@ async def run_worker():
 
     @log_logic_execution
     async def route_ctan_collector(payload):
-        pages = int(payload.get("pages", 0))
+        pages = payload.get("pages", 0)
+        if isinstance(pages, str) and not pages.isdigit():
+            pages = 0
+        else:
+            pages = int(pages)
         await CtanSource.run_list_collector(pages)
 
     @log_logic_execution
     async def route_list_collector(payload):
         source = payload.get("source", "AnnaArchive")
-        pages = int(payload.get("pages", 0))
+        raw_pages = payload.get("pages", 0)
+        if isinstance(raw_pages, str) and not raw_pages.isdigit():
+            pages = 0
+        else:
+            pages = int(raw_pages)
         if source == "NXBST":
             await NxbstSource.run_list_collector(pages)
         elif source == "CTAN":
@@ -86,8 +96,20 @@ async def run_worker():
         "nxbst_queue": route_nxbst_collector,
     }
 
-    tasks = []
+    global WORKER_TASKS
+    WORKER_TASKS = []
     for q_name, handler in queues.items():
-        tasks.append(asyncio.create_task(poll_queue(q_name, handler)))
+        WORKER_TASKS.append(asyncio.create_task(poll_queue(q_name, handler)))
 
-    await asyncio.gather(*tasks)
+    try:
+        await asyncio.gather(*WORKER_TASKS)
+    except asyncio.CancelledError:
+        logger.info("Worker tasks have been cancelled")
+
+async def restart_workers():
+    global WORKER_TASKS
+    for t in WORKER_TASKS:
+        t.cancel()
+    
+    await asyncio.sleep(2)
+    asyncio.create_task(run_worker())

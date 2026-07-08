@@ -1,6 +1,7 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import os
+import asyncio
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
@@ -12,6 +13,8 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 from src.schemas.ingestion import Collection
 from src.repositories.archive import ArchiveRepository
+
+from src.core.infrastructure.redis import redis
 
 @log_logic_execution
 async def trigger_collection(req: Collection):
@@ -41,6 +44,7 @@ async def trigger_collection(req: Collection):
         )
 
     try:
+        await redis.delete("stop_collection")
         await mq_client.publish(queue_name, payload)
         logger.info("Khởi tạo thu thập dữ liệu ngầm thành công")
         return {
@@ -57,6 +61,17 @@ async def trigger_collection(req: Collection):
 @log_logic_execution
 async def stop_collection():
     try:
+        await redis.set("stop_collection", "1")
+        queues = [
+            "anna_archive_queue", "nxbst_queue", "nxbgd_queue", "ctan_queue",
+            "collect_list_queue", "collect_detail_queue", "download_processor_queue"
+        ]
+        for q in queues:
+            await mq_client.purge(q)
+
+        from src.services.queue import restart_workers
+        asyncio.create_task(restart_workers())
+
         logger.info("Tạm dừng quá trình thu thập dữ liệu thành công")
         return {
             "status": "success",

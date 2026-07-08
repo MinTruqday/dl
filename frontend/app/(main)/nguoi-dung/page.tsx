@@ -164,7 +164,7 @@ export default function UsersManagementPage() {
     const role = u.role || "reader";
     if (viewMode === "reader") matchesView = role === "reader";
     if (viewMode === "author") matchesView = role === "author";
-    if (viewMode === "admin") matchesView = role === "admin" || role === "moderator";
+    if (viewMode === "admin") matchesView = role === "admin";
     
     return matchesSearch && matchesView;
   });
@@ -314,7 +314,7 @@ export default function UsersManagementPage() {
                           >
                             <option value="reader">Độc giả</option>
                             <option value="author">Tác giả</option>
-                            <option value="moderator">Điều hành</option>
+
                             <option value="admin">Quản trị</option>
                           </select>
                           <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6E6E73] pointer-events-none" />
@@ -404,7 +404,7 @@ export default function UsersManagementPage() {
         <ModalContent>
           <p className="text-[15px] text-[#6E6E73] leading-relaxed">
             {confirmModal?.type === "role"
-              ? `Thay đổi quyền hạn của "${confirmModal.user.full_name || confirmModal.user.email}" thành "${confirmModal.value === "reader" ? "Độc giả" : confirmModal.value === "author" ? "Tác giả" : confirmModal.value === "moderator" ? "Điều hành viên" : "Quản trị viên"}"?`
+              ? `Thay đổi quyền hạn của "${confirmModal.user.full_name || confirmModal.user.email}" thành "${confirmModal.value === "reader" ? "Độc giả" : confirmModal.value === "author" ? "Tác giả" : "Quản trị viên"}"?`
               : `Bạn có chắc chắn muốn ${confirmModal?.value ? "kích hoạt" : "vô hiệu hóa"} tài khoản của "${confirmModal?.user.full_name || confirmModal?.user.email}"?`}
           </p>
         </ModalContent>
@@ -478,7 +478,7 @@ export default function UsersManagementPage() {
                 >
                   <option value="reader">Độc giả</option>
                   <option value="author">Tác giả</option>
-                  <option value="moderator">Điều hành</option>
+
                   <option value="admin">Quản trị viên</option>
                 </select>
                 <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E73] pointer-events-none" />

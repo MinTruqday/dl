@@ -26,9 +26,9 @@ class AnnaSource:
     @staticmethod
     async def run_list_collector(search_query: str = "", pages: int = 0):
         if search_query:
-            logger.info("Đang tìm kiếm thông tin từ nguồn ngoài")
+            logger.info("[AnnaSource] Đang tìm kiếm thông tin từ nguồn ngoài")
         else:
-            logger.info("Bắt đầu quá trình thu thập dữ liệu hàng loạt")
+            logger.info("[AnnaSource] Bắt đầu quá trình thu thập dữ liệu hàng loạt")
         encoded = urllib.parse.quote(search_query)
 
         async with managed_browser() as browser:
@@ -41,7 +41,7 @@ class AnnaSource:
 
                 while True:
                     search_url = f"https://annas-archive.gl/search?index=journals&sort=&lang=en&lang=anti__zh&lang=la&lang=vi&display=&q={encoded}&page={page_num}"
-                    logger.info("Đang chuyển sang trang kết quả tiếp theo")
+                    logger.info("[AnnaSource] Đang chuyển sang trang kết quả tiếp theo")
 
                     await page.goto(
                         search_url, timeout=60000, wait_until="domcontentloaded"
@@ -49,7 +49,7 @@ class AnnaSource:
                     content = await page.content()
 
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Phát hiện tường lửa bảo vệ")
+                        logger.info("[AnnaSource] Phát hiện tường lửa bảo vệ")
                         flaresolverr_url = settings.FLARESOLVERR_URL
                         async with aiohttp.ClientSession() as session:
                             async with session.post(
@@ -72,7 +72,7 @@ class AnnaSource:
                     try:
                         await page.wait_for_selector(list_selector, timeout=15000)
                     except Exception as e:
-                        logger.exception("Lỗi trích xuất liên kết do thay đổi giao diện")
+                        logger.exception("[AnnaSource] Lỗi trích xuất liên kết do thay đổi giao diện")
 
                     document_nodes = await page.query_selector_all(list_selector)
                     if not document_nodes:
@@ -92,28 +92,28 @@ class AnnaSource:
                             )
                             document_urls.add(full_url)
 
-                    logger.info("Trích xuất liên kết tài liệu thành công")
+                    logger.info("[AnnaSource] Trích xuất liên kết tài liệu thành công")
                     new_urls_found = 0
 
                     for url in document_urls:
                         if not await dedup.is_collected("anna_url", url):
-                            await mq.publish(
+                            await mq_client.publish(
                                 "collect_detail_queue", {"url": url}
                             )
                             await dedup.mark_collected("anna_url", url)
                             new_urls_found += 1
 
-                    logger.info("Thêm liên kết tài liệu vào hàng đợi thành công")
+                    logger.info("[AnnaSource] Thêm liên kết tài liệu vào hàng đợi thành công")
                     if page_num >= pages:
-                        logger.info("Đã đạt giới hạn số trang, đang dừng quét")
+                        logger.info("[AnnaSource] Đã đạt giới hạn số trang, đang dừng quét")
                         break
                     page_num += 1
             except Exception as e:
-                logger.exception("Lỗi tải danh sách tài liệu từ nguồn ngoài")
+                logger.exception("[AnnaSource] Lỗi tải danh sách tài liệu từ nguồn ngoài")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
-        logger.info("Đang lấy thông tin phiên làm việc hợp lệ")
+        logger.info("[AnnaSource] Đang lấy thông tin phiên làm việc hợp lệ")
         try:
             flare_url = settings.FLARESOLVERR_URL
             async with aiohttp.ClientSession() as session:
@@ -146,12 +146,12 @@ class AnnaSource:
                             await context.add_cookies(formatted_cookies)
                         return context
         except Exception as e:
-            logger.exception("Lỗi vượt tường lửa")
+            logger.exception("[AnnaSource] Lỗi vượt tường lửa")
         return await get_stealth_context(browser)
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info("Đang xử lý thông tin chi tiết tài liệu")
+        logger.info("[AnnaSource] Đang xử lý thông tin chi tiết tài liệu")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -163,7 +163,7 @@ class AnnaSource:
                 content = await page.content()
 
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Tài liệu được bảo vệ, đang xử lý truy cập")
+                    logger.info("[AnnaSource] Tài liệu được bảo vệ, đang xử lý truy cập")
                     await page.close()
                     await context.close()
 
@@ -194,7 +194,7 @@ class AnnaSource:
                     await author_el.inner_text() if author_el else "Unknown"
                 )
 
-                logger.info("Trích xuất thông tin tài liệu thành công")
+                logger.info("[AnnaSource] Trích xuất thông tin tài liệu thành công")
 
                 cover_el = (
                     await page.query_selector('img[src*="covers/"]')
@@ -218,13 +218,13 @@ class AnnaSource:
                         if slow_href.startswith("/")
                         else slow_href
                     )
-                    logger.info("Đang truy cập cổng tải xuống")
+                    logger.info("[AnnaSource] Đang truy cập cổng tải xuống")
 
                     await page.goto(slow_url, timeout=60000)
                     content = await page.content()
 
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Phát hiện tường lửa, đang xử lý vượt rào")
+                        logger.info("[AnnaSource] Phát hiện tường lửa, đang xử lý vượt rào")
                         await page.close()
                         await context.close()
 
@@ -239,7 +239,7 @@ class AnnaSource:
                         download_link = None
                         js_link_css = 'main p a[href*="http"]'
 
-                        logger.info("Đang chờ xác minh bảo mật")
+                        logger.info("[AnnaSource] Đang chờ xác minh bảo mật")
                         for _ in range(60):
                             try:
                                 link_els = await page.query_selector_all(js_link_css)
@@ -255,13 +255,13 @@ class AnnaSource:
                                 if download_link:
                                     break
                             except Exception as e:
-                                logger.exception("Lỗi trích xuất liên kết tải xuống")
+                                logger.exception("[AnnaSource] Lỗi trích xuất liên kết tải xuống")
 
                             await page.wait_for_timeout(5000)
 
                         if download_link:
                             payload["download_link"] = download_link
-                            logger.info("Trích xuất liên kết tải xuống thành công")
+                            logger.info("[AnnaSource] Trích xuất liên kết tải xuống thành công")
 
                             ext = (
                                 payload["download_link"].split("")[-1][:4]
@@ -276,24 +276,24 @@ class AnnaSource:
                             payload["filename"] = f"{slug}.{ext}"
                             payload["content_format"] = ext
 
-                            await mq.publish("download_processor_queue", payload)
+                            await mq_client.publish("download_processor_queue", payload)
                         else:
-                            logger.warning("Quá thời gian chờ bảo mật")
+                            logger.warning("[AnnaSource] Quá thời gian chờ bảo mật")
                     except Exception as e:
-                        logger.exception("Lỗi giám sát tạo liên kết tải xuống")
+                        logger.exception("[AnnaSource] Lỗi giám sát tạo liên kết tải xuống")
                 if not slow_link_el:
-                    logger.warning("Không tìm thấy nút tải xuống")
+                    logger.warning("[AnnaSource] Không tìm thấy nút tải xuống")
                     await page.screenshot(
                         path="/app/logs/anna_error.png", full_page=True
                     )
                     links = await page.evaluate(
                         "Array.from(document.querySelectorAll('a, button')).map(el => el.innerText.trim()).filter(t => t.length > 0)"
                     )
-                    logger.warning("Đang ghi nhận các thành phần trang để gỡ lỗi")
+                    logger.warning("[AnnaSource] Đang ghi nhận các thành phần trang để gỡ lỗi")
                     await page.close()
                     raise Exception("Không tìm thấy liên kết tải xuống")
             except Exception as e:
-                logger.exception("Lỗi trích xuất tài liệu")
+                logger.exception("[AnnaSource] Lỗi trích xuất tài liệu")
                 raise
 
     @staticmethod
@@ -302,10 +302,10 @@ class AnnaSource:
         title = payload.get("title", "document")
 
         if not url:
-            logger.error("Đường dẫn tải xuống không hợp lệ")
+            logger.error("[AnnaSource] Đường dẫn tải xuống không hợp lệ")
             return
 
-        logger.info("Đang tải xuống tài liệu vào bộ nhớ tạm")
+        logger.info("[AnnaSource] Đang tải xuống tài liệu vào bộ nhớ tạm")
 
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         ext = payload.get("content_format", "pdf")
@@ -319,7 +319,7 @@ class AnnaSource:
 
             success = await download_file_with_retry(url, target_local)
             if success:
-                logger.info("Tải xuống tài liệu thành công")
+                logger.info("[AnnaSource] Tải xuống tài liệu thành công")
                 minio_url = await storage.upload_local_file(
                     f"documents/anna_archive/{filename}", target_local
                 )
@@ -327,11 +327,11 @@ class AnnaSource:
             if os.path.exists(target_local):
                 os.unlink(target_local)
         except Exception as e:
-            logger.exception("Lỗi tải xuống và lưu trữ tài liệu")
+            logger.exception("[AnnaSource] Lỗi tải xuống và lưu trữ tài liệu")
             raise
 
         if minio_url:
-            logger.info("Chuyển tài liệu tải xuống vào bộ nhớ vĩnh viễn thành công")
+            logger.info("[AnnaSource] Chuyển tài liệu tải xuống vào bộ nhớ vĩnh viễn thành công")
 
             metadata = {
                 "title": title,
