@@ -142,7 +142,7 @@ export default function ExplorePage() {
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
-                    href={`/document/${doc.slug}`}
+                    href={`/tai-lieu/${doc.slug}`}
                     className="flex gap-4 p-4 bg-white rounded-[18px] transition-transform hover:scale-[1.02]"
                   >
                     <div className="w-[88px] h-[88px] shrink-0 bg-[#F5F5F7] rounded-[10px] overflow-hidden">
@@ -221,7 +221,7 @@ export default function ExplorePage() {
                 {documents.map((document, i) => (
                   <Link
                     key={`doc-${document._id || i}`}
-                    href={`/document/${document.slug}`}
+                    href={`/tai-lieu/${document.slug}`}
                     className={`flex ${
                       viewMode === "grid"
                         ? "flex-col"

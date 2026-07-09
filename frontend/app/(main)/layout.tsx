@@ -16,7 +16,7 @@ export default function MainLayout({
     if (pathname.startsWith("/author")) return true;
     if (pathname.startsWith("/search")) return true;
 
-    if (pathname.startsWith("/document/")) {
+    if (pathname.startsWith("/tai-lieu/")) {
       return true;
     }
 

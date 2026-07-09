@@ -114,6 +114,7 @@ export default function DocumentsPage() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const fetchData = useCallback(
     async (isLoadMore = false) => {
@@ -139,24 +140,28 @@ export default function DocumentsPage() {
           !isLoadMore ? getFoldersAPI(currentFolder?._id) : Promise.resolve([]),
         ]);
         let docs = docsData.data || docsData || [];
-        if (!isAdmin) {
-          if (currentFolder)
-            docs = docs.filter((d: any) => d.folder_id === currentFolder._id);
-          else docs = docs.filter((d: any) => !d.folder_id);
-          if (filterStar) docs = docs.filter((d: any) => d.is_starred);
-          if (filterFormat !== "all")
-            docs = docs.filter((d: any) =>
-              d.file_url?.toLowerCase().endsWith(filterFormat),
-            );
-          if (searchQuery)
-            docs = docs.filter(
-              (d: any) =>
-                d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (d.publisher_name || "")
-                  .toLowerCase()
-                  .includes(searchQuery.toLowerCase()),
-            );
+        
+        // Always filter on the frontend because the API does not support folder_id filtering
+        if (currentFolder) {
+          const folderId = currentFolder._id || currentFolder.id;
+          docs = docs.filter((d: any) => (d.folder_id || d.folder) === folderId);
+        } else {
+          docs = docs.filter((d: any) => !d.folder_id && !d.folder);
         }
+        if (filterStar) docs = docs.filter((d: any) => d.is_starred);
+        if (filterFormat !== "all")
+          docs = docs.filter((d: any) =>
+            d.file_url?.toLowerCase().endsWith(filterFormat),
+          );
+        if (searchQuery)
+          docs = docs.filter(
+            (d: any) =>
+              d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (d.publisher_name || "")
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()),
+          );
+          
         setHasMore(docs.length >= 20);
         if (docs.length > 0)
           setCursor(docs[docs.length - 1].id || docs[docs.length - 1]._id);
@@ -190,7 +195,7 @@ export default function DocumentsPage() {
         publisher_name: isAdmin ? "DocLib" : user.full_name || "",
       }));
     }
-  }, [user, authLoading, isAdmin]);
+  }, [user, authLoading, isAdmin, currentFolder, filterStar, filterFormat]);
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -221,6 +226,34 @@ export default function DocumentsPage() {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+  };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const selectedFile = e.dataTransfer.files[0];
+      setFile(selectedFile);
+      const name = selectedFile.name.split(".")[0];
+      setNewDoc((p) => ({
+        ...p,
+        title: p.title || name,
+        slug: p.slug || name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+      }));
+      setCreateDocModal(true);
+    }
+  };
+
   const handleCreateDocument = async () => {
     if (!newDoc.title || !file) {
       showToast("Vui lòng nhập tiêu đề và chọn tệp", "error");
@@ -228,11 +261,15 @@ export default function DocumentsPage() {
     }
     setIsCreating(true);
     try {
+      let ext = file.name.split(".").pop()?.toLowerCase() || "json";
+      if (ext === "md") ext = "markdown";
+      else if (ext === "tex") ext = "latex";
+
       const submissionData = {
         ...newDoc,
         file_url: "",
-        content_format: file.name.split(".").pop()?.toLowerCase() || "json",
-        folder_id: currentFolder?._id || null,
+        content_format: ext,
+        folder_id: currentFolder?._id || currentFolder?.id || null,
         slug:
           newDoc.slug ||
           newDoc.title.toLowerCase().replace(/\s+/g, "-") +
@@ -323,7 +360,7 @@ export default function DocumentsPage() {
     e.preventDefault();
     if (!shareModal?.docId) return;
     setPublicUrl(
-      `${window.location.origin}/document/viewer/${shareModal.docId}${sharePassword ? `?pwd=${sharePassword}` : ""}`,
+      `${window.location.origin}/tai-lieu/viewer/${shareModal.docId}${sharePassword ? `?pwd=${sharePassword}` : ""}`,
     );
     showToast("Sẵn sàng chia sẻ", "success");
   };
@@ -339,401 +376,360 @@ export default function DocumentsPage() {
   if (authLoading || isLoading) return <PageLoader />;
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+    <div className="w-full h-full font-sans text-[#1D1D1F]">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      <div className="flex flex-col md:flex-row">
+        <aside className="w-full md:w-[240px] shrink-0 space-y-6 sticky top-0 h-fit mb-6 md:mb-0 md:mr-6">
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
             <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-              Quản lý
+              Phân loại
             </p>
-            <div className="flex flex-col gap-2">
+            <nav className="flex flex-col gap-1.5">
               <button
-                onClick={() => setCreateDocModal(true)}
-                className="pill-button w-full justify-center flex items-center gap-2"
+                onClick={() => { setViewMode("list"); setFilterStar(false); setFilterFormat("all"); }}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors bg-white text-[#0071E3] font-medium`}
               >
-                Thêm tài liệu
+                <span className="truncate text-left">Tất cả tài liệu</span>
+                <ChevronRight className="w-4 h-4 shrink-0" />
               </button>
-              <button
-                onClick={() => setCreateFolderModal(true)}
-                className="pill-button bg-white text-[#0071E3] font-medium  w-full justify-center flex items-center gap-2"
-              >
-                Thư mục mới
-              </button>
-            </div>
+            </nav>
           </div>
 
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
-                Giao diện
-              </p>
-              <div className="flex bg-[#E8E8ED] p-0.5 rounded-full shrink-0">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            <button
-              onClick={() => fetchData()}
-              className="w-full py-2 rounded-[10px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2"
-            >
-              {isRefreshing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : null}{" "}
-              Làm mới
-            </button>
-          </div>
-
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4 flex items-center gap-2">
-              Lọc dữ liệu
+          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-2">
+            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+              Lọc định dạng
             </p>
-            <button
-              onClick={() => setFilterStar(!filterStar)}
-              className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${filterStar ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
-            >
-              <span className="truncate text-left">Yêu thích</span>
-            </button>
-            <div className="space-y-2 pt-2">
-              <label className="text-[13px] font-medium text-[#6E6E73]">
-                Định dạng
-              </label>
-              <div className="relative">
-                <select
-                  value={filterFormat}
-                  onChange={(e) => setFilterFormat(e.target.value)}
-                  className="w-full h-[44px] bg-white  px-4 text-[14px] font-medium focus:outline-none focus:border-[#0071E3] appearance-none rounded-[10px]"
-                >
-                  <option value="all">Mọi định dạng</option>
-                  <option value="pdf">PDF</option>
-                  <option value="docx">Word</option>
-                  <option value="xlsx">Excel</option>
-                  <option value="pptx">PowerPoint</option>
-                  <option value="zip">ZIP</option>
-                </select>
-                <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-[#6E6E73]" />
-              </div>
+            <div className="relative">
+              <select
+                value={filterFormat}
+                onChange={(e) => setFilterFormat(e.target.value)}
+                className="w-full h-[44px] bg-[#F5F5F7] md:bg-white px-4 text-[14px] font-medium focus:outline-none focus:border-[#0071E3] appearance-none rounded-[10px] border border-transparent focus:bg-white transition-colors"
+              >
+                <option value="all">Mọi định dạng</option>
+                <option value="pdf">PDF</option>
+                <option value="docx">Word</option>
+                <option value="xlsx">Excel</option>
+                <option value="pptx">PowerPoint</option>
+                <option value="zip">ZIP</option>
+              </select>
+              <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-[#6E6E73]" />
             </div>
           </div>
         </aside>
 
-        <main className="flex-1 min-w-0 flex flex-col gap-6 h-full min-h-0 overflow-hidden pt-6">
-          <div className="flex items-center gap-2 text-[15px] text-[#6E6E73] font-medium px-4 overflow-x-auto no-scrollbar">
-            <button
-              onClick={() => {
-                setCurrentFolder(null);
-                setBreadcrumbs([]);
-              }}
-              className={`flex items-center gap-1 transition-colors ${!currentFolder ? "text-[#1D1D1F]" : "hover:text-[#1D1D1F]"}`}
-            >
-              Gốc
-            </button>
-            {breadcrumbs.map((b, idx) => (
-              <div key={b._id} className="flex items-center gap-2 shrink-0">
-                <ChevronRight className="w-4 h-4 text-[#A1A1A6]" />
+        <main className="flex-1 min-w-0 space-y-8 pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-[#1D1D1F]">
+              {!currentFolder && breadcrumbs.length === 0 ? (
+                <span>Gốc</span>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setCurrentFolder(null);
+                      setBreadcrumbs([]);
+                    }}
+                    className={`flex items-center gap-1 transition-colors hover:text-[#1D1D1F] text-[#6E6E73]`}
+                  >
+                    Gốc
+                  </button>
+                  <ChevronRight className="w-5 h-5 text-[#A1A1A6]" />
+                  {breadcrumbs.map((crumb, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const nb = breadcrumbs.slice(0, idx + 1);
+                          setBreadcrumbs(nb);
+                          setCurrentFolder(nb[nb.length - 1]);
+                        }}
+                        className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                      >
+                        {crumb.name}
+                      </button>
+                      {idx < breadcrumbs.length - 1 && (
+                        <ChevronRight className="w-5 h-5 text-[#A1A1A6]" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </h2>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
-                    const nb = breadcrumbs.slice(0, idx + 1);
-                    setBreadcrumbs(nb);
-                    setCurrentFolder(nb[nb.length - 1]);
-                  }}
-                  className={`transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "hover:text-[#1D1D1F]"}`}
+                  onClick={() => fetchData()}
+                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  title="Làm mới"
                 >
-                  {b.name}
+                  {isRefreshing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCcw className="w-4 h-4" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setCreateFolderModal(true)}
+                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  title="Thêm thư mục mới"
+                >
+                  <FolderPlus className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setCreateDocModal(true)}
+                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  title="Thêm tài liệu"
+                >
+                  <Plus className="w-4 h-4" />
                 </button>
               </div>
-            ))}
+            </div>
           </div>
 
-          {viewMode === "list" ? (
-            <div className="bg-[#F5F5F7] rounded-[18px] flex-1 overflow-y-auto no-scrollbar">
+          <div
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`w-full overflow-x-auto min-h-[400px] transition-colors rounded-[18px] ${isDraggingOver ? "border-2 border-dashed border-[#0071E3] bg-[#0071E3]/5" : ""}`}
+          >
+            {isLoading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
+              </div>
+            ) : viewMode === "list" ? (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-[13px] text-[#6E6E73]">
-                    <th className="py-3 px-6 font-medium">Tên</th>
-                    <th className="py-3 px-6 font-medium">Loại</th>
-                    <th className="py-3 px-6 font-medium">Bảo mật</th>
-                    <th className="py-3 px-6 font-medium text-right">
-                      Thao tác
-                    </th>
+                  <tr className="text-[13px] text-[#6E6E73] border-b border-[#E8E8ED]">
+                    <th className="py-3 px-6 font-medium text-left">Tên</th>
+                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Thể loại</th>
+                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Bảo mật</th>
+                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Trạng thái</th>
+                    <th className="py-3 px-6 font-medium text-right whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {folders.map((folder) => (
-                    <tr
-                      key={folder._id}
-                      onClick={() => {
-                        setCurrentFolder(folder);
-                        setBreadcrumbs([...breadcrumbs, folder]);
-                      }}
-                      className="hover:bg-[#F5F5F7] cursor-pointer transition-colors group"
-                    >
-                      <td className="py-3 px-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-white  flex items-center justify-center rounded-[12px] text-[#1D1D1F]">
-                            <Folder className="w-5 h-5" />
-                          </div>
-                          <span className="font-medium text-[#1D1D1F]">
-                            {folder.name}
-                          </span>
+                  {folders.length === 0 && documents.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center my-4">
+                          <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
                         </div>
                       </td>
-                      <td className="py-3 px-6">
-                        <span className="text-[12px] bg-[#F5F5F7] text-[#6E6E73] px-3 py-1 rounded-full font-medium">
-                          Thư mục
-                        </span>
-                      </td>
-                      <td className="py-3 px-6 text-[#6E6E73]">--</td>
-                      <td className="py-3 px-6 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConfirmModal({
-                              show: true,
-                              title: "Xóa thư mục?",
-                              docId: folder._id,
-                              type: "folder",
-                            });
+                    </tr>
+                  ) : (
+                    <>
+                      {folders.map((folder) => (
+                        <tr
+                          key={folder._id}
+                          onClick={() => {
+                            setCurrentFolder(folder);
+                            setBreadcrumbs([...breadcrumbs, folder]);
                           }}
-                          className="p-2 text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                          className="hover:bg-[#E8E8ED]/60 transition-colors cursor-pointer group border-b border-[#F5F5F7] last:border-0"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {documents.map((doc) => (
-                    <tr
-                      key={doc._id || doc.id}
-                      className="hover:bg-[#F5F5F7] transition-colors group"
-                    >
-                      <td className="py-3 px-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-12 bg-white  flex items-center justify-center rounded-[12px] text-[#6E6E73]">
-                            <FileText className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-[#1D1D1F] max-w-sm truncate">
-                              {doc.title}
-                            </p>
-                            <p className="text-[12px] text-[#6E6E73] mt-0.5">
-                              {doc.publisher_name || "DocLib"} •{" "}
-                              {doc.category || "Tài liệu"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-6">
-                        <span
-                          className={`text-[12px] px-3 py-1 rounded-full font-medium ${doc.status === "published" ? "bg-[#E8F3FF] text-[#0071E3]" : "bg-[#F5F5F7] text-[#6E6E73]"}`}
+                          <td className="py-3 px-6 max-w-[300px]">
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentFolder(folder);
+                                  setBreadcrumbs([...breadcrumbs, folder]);
+                                }}
+                                className="font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate text-left"
+                              >
+                                {folder.name}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-3 px-6 text-center hidden md:table-cell">
+                            <span className="text-[12px] bg-[#F5F5F7] text-[#6E6E73] px-3 py-1 rounded-full font-medium">Thư mục</span>
+                          </td>
+                          <td className="py-3 px-6 text-center hidden md:table-cell text-[#6E6E73]">--</td>
+                          <td className="py-3 px-6 text-center hidden md:table-cell text-[#6E6E73]">--</td>
+                          <td className="py-3 px-6 text-right">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmModal({
+                                  show: true,
+                                  title: "Xóa thư mục?",
+                                  docId: folder._id,
+                                  type: "folder",
+                                });
+                              }}
+                              className="p-2 text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {documents.map((doc) => (
+                        <tr
+                          key={doc._id || doc.id}
+                          onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, "_blank")}
+                          className="hover:bg-[#E8E8ED]/60 transition-colors cursor-pointer group border-b border-[#F5F5F7] last:border-0"
                         >
-                          {doc.status === "published" ? "Đã đăng" : "Bản nháp"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-6">
-                        {doc.is_protected ? (
-                          <span className="flex items-center gap-1 text-[13px] text-[#1D1D1F]">
-                            <Lock className="w-4 h-4" /> Đã khóa
-                          </span>
-                        ) : (
-                          <span className="text-[13px] text-[#6E6E73]">
-                            Không
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-6 text-right">
-                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => toggleStar(doc._id || doc.id)}
-                            className={`p-2 rounded-[10px] transition-colors ${doc.is_starred ? "text-[#FF9500] bg-[#FF9500]/10" : "text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F]"}`}
-                          >
-                            <Star
-                              className={`w-4 h-4 ${doc.is_starred ? "fill-[#FF9500]" : ""}`}
-                            />
-                          </button>
-                          <button
-                            onClick={() =>
-                              setLockModal({
-                                show: true,
-                                docId: doc._id || doc.id,
-                              })
-                            }
-                            className="p-2 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[10px] transition-colors"
-                          >
-                            <Lock className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              setShareModal({
-                                show: true,
-                                docId: doc._id || doc.id,
-                              })
-                            }
-                            className="p-2 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[10px] transition-colors"
-                          >
-                            <Share2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              window.open(
-                                `/document/viewer/${doc._id || doc.id}`,
-                                "_blank",
-                              )
-                            }
-                            className="p-2 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[10px] transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              setConfirmModal({
-                                show: true,
-                                title: "Xóa tài liệu?",
-                                docId: doc._id || doc.id,
-                                type: "doc",
-                              })
-                            }
-                            className="p-2 text-[#6E6E73] hover:bg-[#FF3B30]/10 hover:text-[#FF3B30] rounded-[10px] transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          <td className="py-3 px-6 max-w-[300px]">
+                            <div className="flex items-center gap-3">
+                              <div className="flex flex-col min-w-0">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  {doc.is_starred && <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500] shrink-0" />}
+                                  <p className="font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate">{doc.title}</p>
+                                </div>
+                                <p className="text-[12px] text-[#6E6E73] mt-0.5">{doc.publisher_name || "DocLib"}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-6 text-center hidden md:table-cell">
+                            <span className="text-[13px] text-[#6E6E73]">{doc.category || "Tài liệu"}</span>
+                          </td>
+                          <td className="py-3 px-6 text-center hidden md:table-cell">
+                            {doc.is_protected ? (
+                              <span className="inline-flex items-center justify-center gap-1 text-[13px] text-[#1D1D1F] bg-[#F5F5F7] px-3 py-1 rounded-full">
+                                <Lock className="w-3 h-3" /> Đã khóa
+                              </span>
+                            ) : (
+                              <span className="text-[13px] text-[#6E6E73]">Không</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-6 text-center hidden md:table-cell">
+                            <span className={`text-[12px] px-3 py-1 rounded-full font-medium inline-block ${doc.status === "published" ? "bg-[#E8F3FF] text-[#0071E3]" : "bg-[#F5F5F7] text-[#6E6E73]"}`}>
+                              {doc.status === "published" ? "Đã đăng" : "Bản nháp"}
+                            </span>
+                          </td>
+                          <td className="py-3 px-6 text-right">
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); toggleStar(doc._id || doc.id); }}
+                                className={`p-2 rounded-full transition-colors ${doc.is_starred ? "text-[#FF9500] bg-[#FF9500]/10" : "text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F]"}`}
+                              >
+                                <Star className={`w-4 h-4 ${doc.is_starred ? "fill-[#FF9500]" : ""}`} />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setLockModal({ show: true, docId: doc._id || doc.id }); }}
+                                className="p-2 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-full transition-colors"
+                              >
+                                <Lock className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setShareModal({ show: true, docId: doc._id || doc.id }); }}
+                                className="p-2 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-full transition-colors"
+                              >
+                                <Share2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmModal({
+                                    show: true,
+                                    title: "Xóa tài liệu?",
+                                    docId: doc._id || doc.id,
+                                    type: "doc",
+                                  });
+                                }}
+                                className="p-2 text-[#6E6E73] hover:bg-[#FF3B30]/10 hover:text-[#FF3B30] rounded-full transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </>
+                  )}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-              {folders.map((folder) => (
-                <div
-                  key={folder._id}
-                  onClick={() => {
-                    setCurrentFolder(folder);
-                    setBreadcrumbs([...breadcrumbs, folder]);
-                  }}
-                  className="bg-[#F5F5F7] p-6 flex flex-col items-center justify-center gap-3 cursor-pointer rounded-[18px] hover: transition- group"
-                >
-                  <div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[16px] text-[#1D1D1F]">
-                    <Folder className="w-8 h-8" />
-                  </div>
-                  <span className="text-[15px] font-medium text-[#1D1D1F] text-center">
-                    {folder.name}
-                  </span>
-                </div>
-              ))}
-              {documents.map((doc) => (
-                <div
-                  key={doc._id || doc.id}
-                  className="bg-[#F5F5F7] p-5 flex flex-col rounded-[18px] hover: transition- group relative"
-                >
-                  <button
-                    onClick={() => toggleStar(doc._id || doc.id)}
-                    className="absolute top-4 right-4 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                {folders.map((folder) => (
+                  <div
+                    key={folder._id}
+                    onClick={() => {
+                      setCurrentFolder(folder);
+                      setBreadcrumbs([...breadcrumbs, folder]);
+                    }}
+                    className="group bg-white border border-[#E8E8ED] hover:border-[#0071E3] hover:shadow-sm rounded-[18px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-square relative"
                   >
-                    <Star
-                      className={`w-4 h-4 ${doc.is_starred ? "text-[#FF9500] fill-[#FF9500]" : "text-[#6E6E73]"}`}
-                    />
-                  </button>
-                  <div className="flex flex-col items-center gap-4 mb-4 mt-2">
-                    <div className="w-24 h-32 bg-[#F5F5F7] flex items-center justify-center rounded-[10px] text-[#A1A1A6] overflow-hidden ">
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1 z-10">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmModal({
+                            show: true,
+                            title: "Xóa thư mục?",
+                            docId: folder._id,
+                            type: "folder",
+                          });
+                        }}
+                        className="p-1.5 text-[#6E6E73] hover:bg-[#FF3B30]/10 hover:text-[#FF3B30] rounded-full bg-white shadow-sm"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <Folder className="w-12 h-12 text-[#0071E3] fill-[#0071E3]/10 mb-3" />
+                    <span className="font-medium text-[#1D1D1F] text-[14px] line-clamp-2 w-full px-2">{folder.name}</span>
+                    <span className="text-[12px] text-[#6E6E73] mt-1">Thư mục</span>
+                  </div>
+                ))}
+                {documents.map((doc) => (
+                  <div
+                    key={doc._id || doc.id}
+                    onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, "_blank")}
+                    className="group bg-white border border-[#E8E8ED] hover:border-[#0071E3] hover:shadow-sm rounded-[18px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-[3/4] relative"
+                  >
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1 z-10">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleStar(doc._id || doc.id); }}
+                        className={`p-1.5 rounded-full bg-white shadow-sm transition-colors ${doc.is_starred ? "text-[#FF9500]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                      >
+                        <Star className={`w-3 h-3 ${doc.is_starred ? "fill-[#FF9500]" : ""}`} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmModal({
+                            show: true,
+                            title: "Xóa tài liệu?",
+                            docId: doc._id || doc.id,
+                            type: "doc",
+                          });
+                        }}
+                        className="p-1.5 text-[#6E6E73] hover:bg-[#FF3B30]/10 hover:text-[#FF3B30] rounded-full bg-white shadow-sm"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                    {doc.is_starred && (
+                      <div className="absolute top-2 left-2 group-hover:hidden">
+                        <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500]" />
+                      </div>
+                    )}
+                    <div className="w-full flex-1 bg-[#F5F5F7] rounded-[12px] flex flex-col items-center justify-center mb-3 text-[#6E6E73] overflow-hidden">
                       {doc.cover_url ? (
-                        <img
-                          src={doc.cover_url}
-                          className="w-full h-full object-cover"
-                          alt=""
-                        />
+                        <img src={doc.cover_url} alt="Cover" className="w-full h-full object-cover" />
                       ) : (
-                        <FileText className="w-10 h-10" />
+                        <FileText className="w-12 h-12 mb-2 opacity-50" />
                       )}
                     </div>
-                    <div className="text-center w-full px-2">
-                      <p className="text-[15px] font-medium text-[#1D1D1F] truncate w-full">
-                        {doc.title}
-                      </p>
-                      <p className="text-[12px] text-[#6E6E73] truncate w-full mt-1">
-                        {doc.category || "Tài liệu"}
-                      </p>
-                    </div>
+                    <span className="font-medium text-[#1D1D1F] text-[14px] line-clamp-2 w-full px-1">{doc.title}</span>
+                    <span className="text-[12px] text-[#6E6E73] mt-1 line-clamp-1 w-full px-1">{doc.publisher_name || "DocLib"}</span>
                   </div>
-                  <div className="mt-auto pt-4 flex justify-between gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() =>
-                        window.open(
-                          `/document/viewer/${doc._id || doc.id}`,
-                          "_blank",
-                        )
-                      }
-                      className="flex-1 py-2 text-[#6E6E73] bg-[#F5F5F7] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[12px] flex justify-center transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setLockModal({ show: true, docId: doc._id || doc.id })
-                      }
-                      className="flex-1 py-2 text-[#6E6E73] bg-[#F5F5F7] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[12px] flex justify-center transition-colors"
-                    >
-                      <Lock className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setShareModal({ show: true, docId: doc._id || doc.id })
-                      }
-                      className="flex-1 py-2 text-[#6E6E73] bg-[#F5F5F7] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[12px] flex justify-center transition-colors"
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setConfirmModal({
-                          show: true,
-                          title: "Xóa tài liệu?",
-                          docId: doc._id || doc.id,
-                          type: "doc",
-                        })
-                      }
-                      className="flex-1 py-2 text-[#FF3B30] bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 rounded-[12px] flex justify-center transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {documents.length === 0 && folders.length === 0 && !isLoading && (
-            <div className="flex-1 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
-              <Search className="w-12 h-12 text-[#C7C7CC] mb-4" />
-              <h2 className="text-[20px] font-medium text-[#1D1D1F]">
-                Không có tài liệu
-              </h2>
-              <p className="text-[17px] text-[#6E6E73] mt-2">
-                Thư mục hiện đang trống.
-              </p>
-            </div>
-          )}
-
-          {isRefreshing && hasMore && (
-            <div className="h-10 flex justify-center">
-              <Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" />
-            </div>
-          )}
-          <div ref={observerTarget} className="h-10"></div>
+                ))}
+              </div>
+            )}
+            
+            {hasMore && (
+              <div ref={observerTarget} className="h-10 w-full" />
+            )}
+          </div>
         </main>
       </div>
-
       <Modal
         isOpen={!!confirmModal}
         onClose={() => setConfirmModal(null)}

@@ -56,3 +56,19 @@ class AgentRepository:
     @classmethod
     def query(cls, *args, **kwargs):
         return mongo.query("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def get_traces_since(cls, since_datetime, limit: int = 500) -> list:
+        try:
+            from datetime import timezone
+            cutoff = since_datetime
+            results = []
+            cursor = mongo.find("agent_traces", {"started_at": {"$gte": cutoff}})
+            async for doc in cursor:
+                doc.pop("_id", None)
+                results.append(doc)
+                if len(results) >= limit:
+                    break
+            return results
+        except Exception:
+            return []

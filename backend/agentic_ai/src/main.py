@@ -25,6 +25,8 @@ from src.api.finetuning import router as finetune
 from src.api.history import router as history
 from src.api.inference import router as inference
 from src.api.ingestion import router as ingest
+from src.api.events import router as events
+from src.api.hill_climbing import router as hill_climbing
 
 app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 
@@ -56,6 +58,8 @@ app.include_router(ingest)
 app.include_router(feedback)
 app.include_router(finetune)
 app.include_router(history)
+app.include_router(events)
+app.include_router(hill_climbing)
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
@@ -103,12 +107,24 @@ async def startup_event():
             await db["finetune_jobs"].create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
-            client.close()
             logger.info("Khởi tạo chỉ mục MongoDB thành công")
     except Exception as e:
         logger.exception("Lỗi khởi tạo chỉ mục MongoDB")
+    try:
+        from src.harness.event_loop import cron_scheduler, event_driven_loop
+        await event_driven_loop.start_worker()
+        await cron_scheduler.start()
+        logger.info("Khởi động event-driven loop thành công")
+    except Exception as e:
+        logger.exception("Lỗi khởi động event-driven loop")
 @app.on_event("shutdown")
 async def shutdown_event():
+    try:
+        from src.harness.event_loop import cron_scheduler, event_driven_loop
+        await cron_scheduler.stop()
+        await event_driven_loop.stop_worker()
+    except Exception:
+        pass
     try:
         from src.core.infrastructure.redis import redis
         await redis.aclose()

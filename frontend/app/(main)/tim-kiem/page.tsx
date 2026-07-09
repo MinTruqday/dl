@@ -263,7 +263,7 @@ function SearchResultsContent() {
               {results.map((document, i) => (
                 <Link
                   key={`doc-${document._id || i}`}
-                  href={`/document/${document.slug}`}
+                  href={`/tai-lieu/${document.slug}`}
                   className={`flex ${viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-4 items-center"} bg-[#F5F5F7] rounded-[18px] overflow-hidden transition-transform hover:scale-[1.02]`}
                 >
                   <div

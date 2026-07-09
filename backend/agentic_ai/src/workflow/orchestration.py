@@ -149,7 +149,7 @@ async def researcher_agent_node(state: ActingState):
     return await execute_tool_node(state, researcher, "Knowledge")
 
 async def reasoner_agent_node(state: ActingState):
-    return await execute_tool_node(state, reasoning, "Reasoning")
+    return await execute_tool_node(state, reasoner, "Reasoning")
 
 async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])

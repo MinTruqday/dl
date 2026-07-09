@@ -242,7 +242,7 @@ export default function LibraryPage() {
                 pinnedDocs.map((doc, i) => (
                   <Link
                     key={`pinned-${doc.id || i}`}
-                    href={`/document/${doc.slug}`}
+                    href={`/tai-lieu/${doc.slug}`}
                     className="flex gap-4 items-center group p-2 -mx-2 rounded-[12px] hover:bg-white transition-colors"
                   >
                     <div className="w-12 h-12 bg-white rounded-[8px] overflow-hidden shrink-0">
@@ -286,7 +286,7 @@ export default function LibraryPage() {
                 {continueDocs.map((doc) => (
                   <Link
                     key={doc.document_id}
-                    href={`/document/${doc.document_slug}`}
+                    href={`/tai-lieu/${doc.document_slug}`}
                     className="flex flex-col bg-[#F5F5F7] rounded-[18px] overflow-hidden transition-transform hover:scale-[1.02]"
                   >
                     <div className="aspect-[4/3] w-full bg-white relative overflow-hidden">
@@ -370,7 +370,7 @@ export default function LibraryPage() {
                       } bg-[#F5F5F7] rounded-[18px] overflow-hidden transition-transform hover:scale-[1.02] ${isDeletingHistory === item.document_id ? "opacity-50" : ""}`}
                     >
                       <Link
-                        href={`/document/${item.document_slug}`}
+                        href={`/tai-lieu/${item.document_slug}`}
                         className={`${
                           viewMode === "grid"
                             ? "aspect-[4/3] w-full"
@@ -405,7 +405,7 @@ export default function LibraryPage() {
                           viewMode === "grid" ? "p-5" : "flex-1"
                         } flex flex-col gap-2`}
                       >
-                        <Link href={`/document/${item.document_slug}`}>
+                        <Link href={`/tai-lieu/${item.document_slug}`}>
                           <h3
                             className={`${
                               viewMode === "grid" ? "text-[17px]" : "text-[20px]"
