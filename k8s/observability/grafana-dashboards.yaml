@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-provider
+  namespace: doclib-production
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: default
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-doclib
+  namespace: doclib-production
+data:
+  doclib.json: |
+    {
+      "title": "DocLib Services",
+      "uid": "doclib-services",
+      "schemaVersion": 38,
+      "panels": [
+        {
+          "id": 1,
+          "title": "Total Requests per Service",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "sum by (service) (rate(http_requests_total[5m]))",
+              "legendFormat": "{{service}}"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Error Rate (5xx) per Service",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "sum by (service) (rate(http_errors_total[5m]))",
+              "legendFormat": "{{service}}"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Avg Request Duration (s) per Service",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
+          "targets": [
+            {
+              "expr": "sum by (service) (rate(http_request_duration_seconds_total[5m])) / sum by (service) (rate(http_requests_total[5m]))",
+              "legendFormat": "{{service}}"
+            }
+          ]
+        }
+      ],
+      "time": { "from": "now-1h", "to": "now" },
+      "refresh": "30s"
+    }

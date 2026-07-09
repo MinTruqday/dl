@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 permissions:
   contents: read
   packages: write
@@ -138,13 +142,13 @@ jobs:
           done
 
       - name: Smoke test health endpoints
+        shell: bash
         run: |
           declare -A SERVICE_PORTS
-          SERVICE_PORTS=("authentication:8001" "humanity:8002" "content:8004" "cloud:8012" "drm:8013" "compilation:8011" "messaging:8009" "notification:8007" "collection:8005" "finance:8006" "usage:8014" "management:8003" "agentic-ai:8008" "websocket:8010")
-          for entry in "${SERVICE_PORTS[@]}"; do
-            svc="${entry%%:*}"
-            port="${entry##*:}"
-            RESPONSE=$(kubectl run health-check-$svc --image=curlimages/curl:latest --restart=Never --rm -i -n doclib-production -- curl -sf --max-time 10 http://$svc/$port/health 2>&1 || echo "failed")
+          SERVICE_PORTS=([authentication]=8001 [humanity]=8002 [content]=8004 [cloud]=8012 [drm]=8013 [compilation]=8011 [messaging]=8009 [notification]=8007 [collection]=8005 [finance]=8006 [usage]=8014 [management]=8003 [agentic-ai]=8008 [websocket]=8010)
+          for svc in "${!SERVICE_PORTS[@]}"; do
+            port="${SERVICE_PORTS[$svc]}"
+            RESPONSE=$(kubectl run health-check-$svc --image=curlimages/curl:latest --restart=Never --rm -i -n doclib-production -- curl -sf --max-time 10 http://$svc:$port/health 2>&1 || echo "failed")
             if echo "$RESPONSE" | grep -q "failed"; then
               echo "Health check failed for $svc"
               exit 1
