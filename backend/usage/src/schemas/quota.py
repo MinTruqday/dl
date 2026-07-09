@@ -4,8 +4,6 @@ from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, Field
 
-
-
 class QuotaLimit(BaseModel):
     daily_requests: Union[int, float] = 0
     daily_tokens: Union[int, float] = 0

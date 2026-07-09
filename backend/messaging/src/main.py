@@ -3,6 +3,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.thread import router as message
+from src.api.conversation import router as conversation
+from src.api.group import router as group
+from src.api.interaction import router as interaction
+from src.api.pin import router as pin
+from src.api.attachment import router as attachment
+from src.api.enhancement import router as enhancement
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
 app = FastAPI(title="DocLib Massaging", version=settings.VERSION)
@@ -29,6 +35,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(message)
+app.include_router(conversation)
+app.include_router(group)
+app.include_router(interaction)
+app.include_router(pin)
+app.include_router(attachment)
+app.include_router(enhancement)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Message service initialization completed successfully")

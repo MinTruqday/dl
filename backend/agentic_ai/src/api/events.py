@@ -13,30 +13,9 @@ from src.harness.event_loop import (
     event_driven_loop,
 )
 
-router = APIRouter(prefix="/events")
+from src.schemas.events import WebhookPayload, CreateScheduleRequest, ScheduleResponse
 
-class WebhookPayload(BaseModel):
-    event_type: str = "webhook"
-    source: str = "external"
-    payload: Dict[str, Any] = {}
-
-
-class CreateScheduleRequest(BaseModel):
-    name: str
-    interval_seconds: int
-    event_type: str = "system_heartbeat"
-    payload_template: Dict[str, Any] = {}
-    enabled: bool = True
-
-
-class ScheduleResponse(BaseModel):
-    schedule_id: str
-    name: str
-    interval_seconds: int
-    event_type: str
-    enabled: bool
-    run_count: int
-    last_run_at: Optional[str]
+router = APIRouter(prefix="/su-kien")
 
 @router.post("/webhook")
 async def receive_webhook(request: Request, body: WebhookPayload = Body(...)):
@@ -86,14 +65,14 @@ async def document_uploaded_webhook(
     await event_driven_loop.emit_event(event)
     return {"status": "accepted", "event_id": event.event_id}
 
-@router.get("/schedules")
+@router.get("/lich-trinh")
 async def list_schedules():
     return {
         "schedules": cron_scheduler.list_schedules(),
         "total": len(cron_scheduler._schedules),
     }
 
-@router.post("/schedules")
+@router.post("/lich-trinh")
 async def create_schedule(req: CreateScheduleRequest):
     event_type_map = {
         "system_heartbeat": EventType.SYSTEM_HEARTBEAT,
@@ -129,7 +108,7 @@ async def create_schedule(req: CreateScheduleRequest):
     }
 
 
-@router.delete("/schedules/{schedule_id}")
+@router.delete("/lich-trinh/{schedule_id}")
 async def delete_schedule(schedule_id: str):
     if schedule_id not in cron_scheduler._schedules:
         raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy lịch trình thực thi yêu cầu")
@@ -137,7 +116,7 @@ async def delete_schedule(schedule_id: str):
     return {"status": "deleted", "schedule_id": schedule_id}
 
 
-@router.patch("/schedules/{schedule_id}/toggle")
+@router.patch("/lich-trinh/{schedule_id}/trang-thai")
 async def toggle_schedule(schedule_id: str):
     schedule = cron_scheduler._schedules.get(schedule_id)
     if not schedule:
@@ -149,17 +128,17 @@ async def toggle_schedule(schedule_id: str):
         "enabled": schedule.enabled,
     }
 
-@router.get("/status")
+@router.get("/trang-thai")
 async def event_loop_status():
     return event_driven_loop.get_stats()
 
-@router.get("/history")
+@router.get("/lich-su")
 async def event_history(limit: int = 20):
     return {
         "events": event_driven_loop.get_recent_events(limit=limit),
     }
 
-@router.get("/updates")
+@router.get("/cap-nhat")
 async def system_updates(limit: int = 20):
     updates = event_driven_loop.update_registry.get_recent(limit=limit)
     return {
@@ -177,7 +156,7 @@ async def system_updates(limit: int = 20):
         "stats": event_driven_loop.update_registry.get_stats(),
     }
 
-@router.post("/trigger/{event_type}")
+@router.post("/kich-hoat/{event_type}")
 async def manual_trigger(event_type: str, payload: Dict[str, Any] = Body(default={})):
     event_type_map = {
         "heartbeat": EventType.SYSTEM_HEARTBEAT,
