@@ -4,13 +4,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.response import JSONResponse
 from pydantic import BaseModel
 from src.core.infrastructure.configuration import settings
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 app = FastAPI(title="Background Task Service", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="worker")
 app.add_route("/metrics", metrics_endpoint("worker"))
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:

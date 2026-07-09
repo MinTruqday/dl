@@ -7,13 +7,13 @@ from src.api.health import router as operation
 from src.api.telemetry import router as telemetry
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 app = FastAPI(title="DocLib Management", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="management")
 app.add_route("/metrics", metrics_endpoint("management"))
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:

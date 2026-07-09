@@ -6,13 +6,13 @@ from src.api.composition import router as composition_socket
 from src.api.message import router as message_socket
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 app = FastAPI(title="DocLib WebSocket", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="websocket")
 app.add_route("/metrics", metrics_endpoint("websocket"))
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:

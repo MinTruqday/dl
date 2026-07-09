@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 logger.remove()
 logger.add(
     sys.stdout,
@@ -29,7 +30,6 @@ app.add_route("/metrics", metrics_endpoint("collection"))
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:

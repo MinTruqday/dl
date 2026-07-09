@@ -7,13 +7,13 @@ from src.api.passkey import router as passkey
 from src.api.google import router as google
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 app = FastAPI(title="DocLib Authentication", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="authentication")
 app.add_route("/metrics", metrics_endpoint("authentication"))
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
