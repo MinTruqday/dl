@@ -82,7 +82,7 @@ services:
       - doclib_network
 
   nginx:
-    image: nginx:alpine
+    image: fholzer/nginx-brotli:latest
     container_name: doclib_nginx
     restart: always
     volumes:
@@ -152,8 +152,7 @@ services:
       - 8006:8006
     labels:
       - traefik.enable=true
-      - traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`)
-        || PathPrefix(`/kiem-tien`) || PathPrefix(`/vi-tien`)
+      - traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`) || PathPrefix(`/kiem-tien`) || PathPrefix(`/vi-tien`)
       - traefik.http.services.finance.loadbalancer.server.port=8006
     env_file:
       - .env
@@ -204,10 +203,7 @@ services:
       - 8008:8008
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`)
-        || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`)
-        || PathPrefix(`/tro-chuyen`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`)
-        || PathPrefix(`/lich-su`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nhap-lieu`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/toi-uu`) || PathPrefix(`/tiep-nap`)
       - traefik.http.services.ai.loadbalancer.server.port=8008
     env_file:
       - .env
@@ -340,7 +336,7 @@ services:
       - 8001:8001
     labels:
       - traefik.enable=true
-      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`)
+      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`) || PathPrefix(`/google`)
       - traefik.http.services.authentication.loadbalancer.server.port=8001
     env_file:
       - .env

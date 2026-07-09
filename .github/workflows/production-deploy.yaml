@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [authentication, content, finance, management, agentic_ai, notification, messaging, worker, usage]
+        service: [agentic_ai, authentication, cloud, collection, compilation, content, drm, finance, humanity, management, messaging, notification, usage, websocket, worker]
     
     steps:
       - name: Checkout repository
@@ -109,10 +109,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure Kubernetes Credentials
-        uses: azure/k8s-set-context@v4
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
 
       - name: Lowercase repository
         run: |

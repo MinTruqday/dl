@@ -5,7 +5,7 @@ from loguru import logger
 
 from src.harness.hill_climbing import hill_climbing_loop
 
-router = APIRouter(prefix="/hill-climbing", tags=["Loop 4 - Hill Climbing"])
+router = APIRouter(prefix="/toi-uu", tags=["Loop 4 - Hill Climbing"])
 
 @router.get("/dashboard")
 async def get_dashboard():
