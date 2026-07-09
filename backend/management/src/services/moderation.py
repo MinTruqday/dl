@@ -26,7 +26,7 @@ class ModerationService:
             ],
             "reactions_given": len(reactions),
         }
-        logger.info("Đã gửi yêu cầu xuất dữ liệu")
+        logger.info("Data export request submitted successfully")
         return takeout_payload
 
     @staticmethod
@@ -37,18 +37,18 @@ class ModerationService:
         await mongo.delete_many(collection="reactions", filter={"user_id": user_id})
         await redis.delete(f"active_session:{user_id}")
         await mongo.delete_one(collection="users", filter={"_id": str(current_user.id)})
-        logger.info("Đã xóa dữ liệu vĩnh viễn theo yêu cầu")
+        logger.info("User data permanently deleted upon request")
         return {
             "status": "success",
-            "message": "Tài khoản của bạn đã bị xóa vĩnh viễn",
+            "message": "Tài khoản và toàn bộ dữ liệu liên quan đã được xóa vĩnh viễn khỏi hệ thống",
         }
 
     @staticmethod
     @log_logic_execution
     async def request_data_export(current_user):
-        logger.info("Yêu cầu xuất dữ liệu đã được ghi nhận")
+        logger.info("Data export request recorded successfully")
         return {
-            "message": "Yêu cầu xuất dữ liệu thành công, liên kết sẽ được gửi qua email"
+            "message": "Yêu cầu trích xuất dữ liệu thành công, kết quả sẽ được gửi qua email"
         }
 
     @staticmethod
@@ -63,5 +63,5 @@ class ModerationService:
             .find({"creator_id": user_id})
             .execute(),
         }
-        logger.info("Xuất dữ liệu thành công")
+        logger.info("Data exported successfully")
         return {"status": "success", "data": full_data}

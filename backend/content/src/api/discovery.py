@@ -16,7 +16,7 @@ router = APIRouter(route_class=LoggingRoute, prefix="/kham-pha")
 async def get_tags_categories(db=Depends(get_db)):
     return APIResponse(
         data=await DocumentService.get_tags_categories(),
-        message="Lấy danh sách thẻ và danh mục thành công",
+        message="Lấy danh sách thẻ và danh mục hệ thống thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -30,7 +30,7 @@ async def smart_search(
     if not current_user:
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
-            message="Thực hiện tìm kiếm văn bản thành công",
+            message="Thực hiện truy vấn tìm kiếm văn bản thành công",
         )
 
     from src.core.infrastructure.configuration import settings as smart_settings
@@ -39,7 +39,7 @@ async def smart_search(
     if not rag_url:
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
-            message="Lỗi tìm kiếm thông minh, đang dùng tìm kiếm tiêu chuẩn",
+            message="Hệ thống AI tạm thời không khả dụng, đã tự động chuyển sang phương thức tìm kiếm tiêu chuẩn",
         )
 
     try:
@@ -54,18 +54,18 @@ async def smart_search(
             )
             if resp.status_code == 200:
                 result = resp.json()
-                return APIResponse(data=result, message="Tìm kiếm ngữ nghĩa thành công")
+                return APIResponse(data=result, message="Thực hiện truy vấn tìm kiếm ngữ nghĩa thành công")
             else:
-                logger.error("Lỗi tìm kiếm thông minh")
+                logger.error("Smart search query failed")
                 return APIResponse(
                     data=await DocumentService.get_text_search(query, limit),
-                    message="Tìm kiếm tiêu chuẩn thành công",
+                    message="Thực hiện truy vấn tìm kiếm văn bản thành công",
                 )
     except Exception as e:
-        logger.exception("Lỗi thực thi tìm kiếm ngữ nghĩa")
+        logger.exception("Semantic search execution error")
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
-            message=f"Tìm kiếm tiêu chuẩn thành công: {e}",
+            message="Hệ thống AI tạm thời không khả dụng, đã tự động chuyển sang phương thức tìm kiếm tiêu chuẩn",
         )
 
 @router.get("/goi-y-ai", response_model=APIResponse[Any])
@@ -76,7 +76,7 @@ async def get_ai_recommendations(
 ):
     return APIResponse(
         data=await DocumentService.get_trending_documents(limit),
-        message="Lấy đề xuất tài liệu thành công",
+        message="Truy xuất danh sách đề xuất tài liệu từ hệ thống AI thành công",
     )
 
 

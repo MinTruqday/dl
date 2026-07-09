@@ -25,8 +25,8 @@ class ReasoningAgent:
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             return result.content.strip()
         except Exception as e:
-            logger.exception("Lỗi thực thi tác vụ suy luận")
-            return f"Mô hình AI đang gặp trục trặc trong quá trình tư duy và suy luận: {e}"
+            logger.exception("Reasoning task execution error")
+            return f"Mô hình AI đang gặp trục trặc trong quá trình tư duy và suy luận, vui lòng thử lại sau {e}"
 
     async def evaluate_quality(
         self, query: str, answer: str, context_documents: List[Dict]
@@ -54,7 +54,7 @@ class ReasoningAgent:
                 "feedback": eval_res.feedback,
             }
         except Exception as e:
-            logger.exception("Lỗi đánh giá chất lượng tài liệu")
+            logger.exception("Document quality evaluation error")
             return {
                 "should_retry": False,
                 "feedback": "The system encountered an error during the quality evaluation phase",
@@ -62,7 +62,7 @@ class ReasoningAgent:
 
     def _build_context(self, documents: List[Dict]) -> str:
         if not documents:
-            return "Kho tri thức hiện tại không chứa bất kỳ tài liệu nào khớp với thông tin bạn cần"
+            return "The current knowledge base does not contain any documents matching your required information"
         parts = []
         for i, doc in enumerate(documents[:5], 1):
             title = doc.get("metadata", {}).get("title", "Unknown")

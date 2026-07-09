@@ -18,7 +18,7 @@ class HttpCore:
                 self.state = "HALF_OPEN"
             else:
                 raise HTTPException(
-                    status_code=503, detail="Tính năng đang được bảo trì"
+                    status_code=503, detail="Hệ thống hiện đang bảo trì, vui lòng thử lại sau"
                 )
 
     def on_success(self):
@@ -30,7 +30,7 @@ class HttpCore:
         self.last_failure_time = time.time()
         if self.failure_count >= self.max_failures:
             self.state = "OPEN"
-            logger.warning("Mất kết nối do lỗi liên tục")
+            logger.warning("Circuit breaker opened due to continuous connection failures")
 
 ai_circuit_breaker = HttpCore()
 

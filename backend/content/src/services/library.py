@@ -26,7 +26,7 @@ class LibraryService:
             "created_at": datetime.now(timezone.utc),
         }
         await ReadingRepository.insert_list(new_list)
-        logger.info("Tạo bộ sưu tập đọc cá nhân thành công")
+        logger.info("Reading collection created successfully")
         return new_list
 
     @staticmethod
@@ -45,7 +45,7 @@ class LibraryService:
             {"_id": list_id, "user_id": str(current_user.id)}
         )
         if not reading_list:
-            raise HTTPException(status_code=404, detail="Không tìm thấy danh sách đọc")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy danh sách đọc yêu cầu")
         doc_ids = reading_list.get("documents", [])
         if doc_ids:
             docs = (
@@ -71,8 +71,8 @@ class LibraryService:
             },
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy danh sách đọc")
-        return {"status": "success", "message": "Đã thêm tài liệu vào danh sách đọc"}
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy danh sách đọc yêu cầu")
+        return {"status": "success", "message": "Thêm tài liệu vào danh sách đọc cá nhân thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -87,8 +87,8 @@ class LibraryService:
             },
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy danh sách đọc")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy danh sách đọc yêu cầu")
         return {
             "status": "success",
-            "message": "Xóa tài liệu khỏi bộ sưu tập đọc thành công",
+            "message": "Xóa tài liệu khỏi danh sách đọc cá nhân thành công",
         }

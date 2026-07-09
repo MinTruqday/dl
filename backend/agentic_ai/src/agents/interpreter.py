@@ -14,7 +14,7 @@ class InterpreterAgent:
 
     async def execute(self, task_desc: str) -> str:
         import sys
-        logger.info("Hệ thống đang tích cực xử lý yêu cầu của bạn, vui lòng đợi")
+        logger.info("System is actively processing your request, please wait")
 
         try:
             from src.agents.plan import llm
@@ -92,7 +92,7 @@ class InterpreterAgent:
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.communicate()
-                    return "Quá trình xử lý mất quá nhiều thời gian và đã bị buộc chấm dứt để bảo vệ tài nguyên hệ thống"
+                    return "The execution process took too long and was forcibly terminated to protect system resources"
 
                 MAX_OUTPUT = 512 * 1024
                 if proc.returncode == 0:
@@ -120,7 +120,7 @@ class InterpreterAgent:
 
             return final_res
         except Exception as e:
-            logger.exception("Lỗi thực thi hệ thống nội bộ")
-            return f"Đã xảy ra lỗi trong quá trình thực thi lệnh, vui lòng thử lại sau giây lát: {e}"
+            logger.exception("Internal system execution error")
+            return f"An error occurred during command execution, please try again in a moment {e}"
 
 interpreter = InterpreterAgent()

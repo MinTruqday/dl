@@ -41,7 +41,7 @@ async def read_users_me(
                 user_doc = None
     except Exception as e:
         import logging
-        logging.error(f"Exception fetching profile: {e}")
+        logging.error(f"Exception fetching profile {e}")
         user_doc = None
 
     try:
@@ -59,11 +59,11 @@ async def read_users_me(
                     user_doc["is_premium"] = usage_doc.get("is_premium", False)
     except Exception as e:
         import logging
-        logging.error(f"Exception fetching usage tier: {e}")
+        logging.error(f"Exception fetching usage tier {e}")
 
     if not user_doc:
         from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+        raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
         
     user_data = user_doc
     user_data["_id"] = str(user_doc["_id"])
@@ -75,7 +75,7 @@ async def read_users_me(
     
     return APIResponse(
         data=user_data,
-        message="Lấy thông tin cá nhân thành công",
+        message="Truy xuất thông tin cá nhân thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -91,7 +91,7 @@ async def register_user(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await SessionService.register_user(user_in, client_ip),
-        message="Đăng ký thành công, vui lòng đăng nhập",
+        message="Đăng ký tài khoản thành công, vui lòng tiến hành đăng nhập",
         status=status.HTTP_201_CREATED,
     )
 
@@ -109,7 +109,7 @@ async def login(
         data=await SessionService.login_user(
             form_data.username, form_data.password, client_ip
         ),
-        message="Xác thực và cấp quyền truy cập thành công",
+        message="Xác thực thông tin và cấp quyền truy cập hệ thống thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -120,7 +120,7 @@ async def forgot_password(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await SessionService.forgot_password(payload.email, client_ip),
-        message="Yêu cầu đặt lại mật khẩu đã được gửi đi",
+        message="Thực hiện gửi yêu cầu đặt lại mật khẩu thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -133,7 +133,7 @@ async def reset_password(
         data=await SessionService.reset_password(
             payload.token, payload.new_password, client_ip
         ),
-        message="Đổi mật khẩu thành công",
+        message="Thực hiện thay đổi mật khẩu tài khoản thành công",
         status=status.HTTP_200_OK,
     )
 
@@ -144,7 +144,7 @@ async def verify_code(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await SessionService.verify_reset_code(payload.token, client_ip),
-        message="Xác thực mã bảo mật thành công",
+        message="Xác minh mã bảo mật thành công",
         status=status.HTTP_200_OK,
     )
 

@@ -202,7 +202,7 @@ class StorageService:
                     except Exception:
                         pass
             except Exception as e:
-                logger.exception("Lỗi dọn dẹp tệp tin lưu trữ tạm")
+                logger.exception("Failed to cleanup physical storage files during hard delete")
 
         return True
 
@@ -304,14 +304,14 @@ class StorageService:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy người dùng với email này"
+                status_code=404, detail="Không tìm thấy tài khoản người dùng tương ứng với email"
             )
         target_user_id = str(target_user["_id"])
         if target_user_id == owner_id:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=400, detail="Không thể chia sẻ tài liệu với chính mình"
+                status_code=400, detail="Không thể tự chia sẻ tài liệu cho chính mình"
             )
         item = await database.mongodb[settings.SERVICE_DB_NAME].storage_items.find_one(
             {"_id": item_id, "owner_id": owner_id}
@@ -320,7 +320,7 @@ class StorageService:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tệp hoặc không có quyền chia sẻ"
+                status_code=404, detail="Không tìm thấy dữ liệu hoặc thiếu quyền chia sẻ"
             )
         result = (
             await database.mongodb[settings.SERVICE_DB_NAME].storage_items.update_one(

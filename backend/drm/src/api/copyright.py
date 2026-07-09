@@ -28,7 +28,7 @@ async def update_drm_settings(
         current_user,
     )
     return APIResponse(
-        data=result, message="Cập nhật cấu hình bảo vệ bản quyền thành công"
+        data=result, message="Cập nhật cấu hình bảo vệ bản quyền tài liệu thành công"
     )
 
 @router.post(

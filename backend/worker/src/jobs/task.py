@@ -43,7 +43,7 @@ celery_app.conf.task_queues = (
     default_retry_delay=10,
 )
 def hard_delete_document_task(document_id: str, user_id: str):
-    logger.info("Đang bắt đầu quá trình xóa vĩnh viễn tài liệu")
+    logger.info("Starting hard deletion process for document")
     try:
         from src.core.infrastructure.database import database
 
@@ -53,9 +53,9 @@ def hard_delete_document_task(document_id: str, user_id: str):
                 f"{rag_url}/inference/vector/{document_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
-        logger.info("Xóa vĩnh viễn tài liệu thành công")
+        logger.info("Hard deletion process for document completed successfully")
     except Exception as e:
-        logger.exception("Lỗi xóa vĩnh viễn dữ liệu tài liệu")
+        logger.exception("Failed to execute hard deletion process for document")
         raise hard_delete_document_task.retry(exc=e)
 
 @celery_app.task(
@@ -66,7 +66,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     default_retry_delay=10,
 )
 def compile_document_tectonic(document_id, tex_content):
-    logger.info("Đang bắt đầu quá Tectonic tài liệu")
+    logger.info("Starting Tectonic compilation process for document")
     with tempfile.TemporaryDirectory() as temp_dir:
         tex_path = os.path.join(temp_dir, f"{document_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{document_id}.pdf")
@@ -76,7 +76,7 @@ def compile_document_tectonic(document_id, tex_content):
             f.write(tex_content)
 
         try:
-            logger.debug("Đang thực thi biên dịch tài liệu")
+            logger.debug("Executing Tectonic compilation binary")
             process = subprocess.run(
                 [
                     "tectonic",
@@ -94,7 +94,7 @@ def compile_document_tectonic(document_id, tex_content):
             )
 
             if not os.path.exists(pdf_path):
-                logger.error("Lỗi biên dịch, không thể tạo kết quả cuối cùng")
+                logger.error("Failed to generate output PDF file")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
@@ -106,7 +106,7 @@ def compile_document_tectonic(document_id, tex_content):
                     "document_id": document_id,
                 }
 
-            logger.info("Biên dịch tài liệu thành công")
+            logger.info("Tectonic compilation process completed successfully")
 
             return {
                 "status": "success",
@@ -115,17 +115,17 @@ def compile_document_tectonic(document_id, tex_content):
                 "logs": process.stdout,
             }
         except subprocess.TimeoutExpired as e:
-            logger.exception("Lỗi vượt quá thời gian cho phép khi biên dịch")
+            logger.exception("Compilation process timed out")
             return {
                 "status": "error",
                 "error": "Quá thời gian biên dịch, vui lòng kiểm tra cấu trúc tài liệu",
                 "document_id": document_id,
             }
         except Exception as e:
-            logger.exception("Lỗi khi biên dịch tài liệu")
+            logger.exception("Unexpected error during Tectonic compilation")
             return {
                 "status": "error",
-                "error": "Lỗi xử lý tài liệu, vui lòng thử lại sau",
+                "error": "Xử lý tài liệu thất bại, vui lòng thử lại sau",
                 "document_id": document_id,
             }
 

@@ -15,7 +15,7 @@ class RouteAgent:
     def __init__(self):
         llama_model = settings.LLAMA_MODEL
         if not llama_model:
-            raise ValueError("Hệ thống chưa được thiết lập cấu hình đầy đủ cho mô hình ngôn ngữ AI")
+            raise ValueError("System is not fully configured for the AI language model")
 
         self.llama_client = AsyncInferenceClient(
             model=settings.LLAMA_MODEL,
@@ -43,7 +43,7 @@ class RouteAgent:
             return {"route": route, "answer": res.answer}
 
         except Exception as e:
-            logger.exception("Lỗi điều hướng ngữ nghĩa")
+            logger.exception("Semantic routing error")
             return {"route": "knowledge", "answer": ""}
 
 semantic_router = RouteAgent()

@@ -25,7 +25,7 @@ def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_use
         and current_user.role.value != "admin"
     ):
         raise HTTPException(
-            status_code=403, detail="Tính năng AI nâng cao chỉ dành cho gói trả phí"
+            status_code=403, detail="Tính năng AI nâng cao chỉ dành cho tài khoản đã nâng cấp gói trả phí"
         )
     return current_user
 
@@ -41,7 +41,7 @@ async def sync_keystroke_buffer(
         "data": await CompositionService.sync_keystroke_buffer(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Đồng bộ hóa dữ liệu chỉnh sửa thành công",
+        "message": "Thực hiện đồng bộ hóa dữ liệu phiên bản chỉnh sửa thành công",
         "status": 200,
     }
 
@@ -55,7 +55,7 @@ async def add_inline_suggestion(
         "data": await CompositionService.add_inline_suggestion(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Ghi nhận đề xuất chỉnh sửa thành công",
+        "message": "Thực hiện ghi nhận thông tin đề xuất chỉnh sửa thành công",
         "status": 201,
     }
 
@@ -69,7 +69,7 @@ async def resolve_suggestion(
         "data": await CompositionService.resolve_suggestion(
             suggestion_id, payload.model_dump(), current_user
         ),
-        "message": "Xử lý đề xuất chỉnh sửa thành công",
+        "message": "Thực hiện xử lý đề xuất chỉnh sửa thành công",
         "status": 200,
     }
 
@@ -81,7 +81,7 @@ async def sync_pomodoro_session(
         "data": await CompositionService.sync_pomodoro_session(
             payload.model_dump(), current_user
         ),
-        "message": "Đồng bộ dữ liệu phiên tập trung thành công",
+        "message": "Đồng bộ dữ liệu thời gian phiên tập trung (Pomodoro) thành công",
         "status": 200,
     }
 
@@ -93,7 +93,7 @@ async def auto_save_draft(
         "data": await CompositionService.auto_save_draft(
             document_id, payload.content, current_user
         ),
-        "message": "Lưu bản nháp thành công",
+        "message": "Thực hiện thao tác lưu tự động bản nháp thành công",
         "status": 200,
     }
 
@@ -101,7 +101,7 @@ async def auto_save_draft(
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await CompositionService.submit_for_review(document_id, current_user),
-        "message": "Đã đưa tài liệu vào hàng đợi xét duyệt",
+        "message": "Đưa tài liệu vào hàng đợi xét duyệt thành công",
         "status": 201,
     }
 
@@ -133,7 +133,7 @@ async def add_inline_comment(
         "data": await CompositionService.add_inline_comment(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Thêm bình luận ngữ cảnh thành công",
+        "message": "Thực hiện thêm mới bình luận theo ngữ cảnh thành công",
         "status": 200,
     }
 
@@ -141,7 +141,7 @@ async def add_inline_comment(
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await CompositionService.get_inline_comments(document_id, current_user),
-        "message": "Lấy bình luận trực tiếp thành công",
+        "message": "Truy xuất danh sách bình luận trực tiếp thành công",
         "status": 200,
     }
 
@@ -149,7 +149,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await CompositionService.resolve_comment(comment_id, current_user),
-        "message": "Người dùng đã giải quyết bình luận",
+        "message": "Thực hiện đánh dấu giải quyết bình luận thành công",
         "status": 200,
     }
 

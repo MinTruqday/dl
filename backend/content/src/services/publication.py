@@ -21,7 +21,7 @@ class PublicationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
+                detail="Hệ thống không tìm thấy tài liệu yêu cầu hoặc bạn không có quyền truy cập",
             )
         await DocumentRepository.update_one(
             {"_id": str(document_id)},
@@ -35,8 +35,8 @@ class PublicationService:
                 }
             },
         )
-        logger.info("Chỉnh sửa thông tin SEO thành công")
-        return {"message": "Cập nhật thông tin và thẻ phân loại thành công"}
+        logger.info("Document SEO metadata updated successfully")
+        return {"message": "Cập nhật dữ liệu SEO và thẻ phân loại thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -45,7 +45,7 @@ class PublicationService:
             {"_id": str(document_id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
         content = doc.get("content")
         if not content:
             return {"score": 0, "level": "No content available", "words": 0}
@@ -68,11 +68,11 @@ class PublicationService:
                 "analysis": "Readable structure" if score > 60 else "Complex structure",
             }
         except ImportError as e:
-            logger.exception("Lỗi phân tích cú pháp ngôn ngữ")
-            return {"error": f"Đánh giá khả năng đọc đang bảo trì: {e}"}
+            logger.exception("Linguistic syntax analysis failed")
+            return {"error": "Hệ thống phân tích chỉ số đọc hiểu hiện đang bảo trì, vui lòng thử lại sau"}
         except Exception as e:
-            logger.exception("Lỗi phân tích cấu trúc văn bản")
-            return {"error": f"Lỗi phân tích ngôn ngữ do định dạng không xác định: {e}"}
+            logger.exception("Text structure analysis failed")
+            return {"error": "Hệ thống không thể phân tích văn bản do định dạng dữ liệu không xác định"}
 
     @staticmethod
     @log_logic_execution
@@ -84,8 +84,8 @@ class PublicationService:
             {"_id": document_id, "creator_id": user_id},
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at) if isinstance(publish_at, str) else publish_at}},
         )
-        logger.info("Cấu hình lịch xuất bản tài liệu thành công")
-        return {"message": "Ghi nhận lịch xuất bản thành công"}
+        logger.info("Document publication schedule configured successfully")
+        return {"message": "Thiết lập lịch trình xuất bản tự động thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -96,7 +96,7 @@ class PublicationService:
             {"_id": document_id, "creator_id": user_id}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
         from src.core.publication import trigger_document_publish_job
 
         await trigger_document_publish_job(document_id, user_id)
@@ -109,5 +109,5 @@ class PublicationService:
                 }
             },
         )
-        logger.info("Đã bắt đầu quy trình xuất bản")
+        logger.info("Document publication process initiated successfully")
         return await docs_collection.find_one({"_id": document_id})

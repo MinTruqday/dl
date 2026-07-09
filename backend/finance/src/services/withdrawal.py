@@ -66,7 +66,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Số tiền rút tối thiểu"
+                status_code=400, detail="Số tiền giao dịch chưa đạt hạn mức rút tiền tối thiểu quy định"
             )
 
         wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
@@ -75,7 +75,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Tài khoản không đủ số dư để rút tiền"
+                status_code=400, detail="Số dư ví không đủ để thực hiện giao dịch rút tiền"
             )
 
         now = datetime.now(timezone.utc)
@@ -89,7 +89,7 @@ class WithdrawalService:
                 if resp.status_code == 200:
                     user_info = resp.json().get("data") or {}
         except Exception as e:
-            logger.exception("Lỗi đồng bộ hồ sơ tài khoản bên ngoài")
+            logger.exception("User profile synchronization with external management service failed")
 
         if user_info.get("last_password_change"):
             last_pw_str = user_info["last_password_change"]
@@ -102,7 +102,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=403,
-                    detail="Khóa rút tiền tạm thời do vừa đổi mật khẩu",
+                    detail="Tính năng rút tiền bị tạm khóa vì lý do bảo mật sau khi đổi mật khẩu",
                 )
 
         if wallet.get("last_bank_update"):
@@ -117,7 +117,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=403,
-                    detail="Tạm khóa rút tiền do vừa cập nhật tài khoản ngân hàng",
+                    detail="Tính năng rút tiền bị tạm khóa vì lý do bảo mật sau khi cập nhật thông tin ngân hàng",
                 )
 
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -151,7 +151,7 @@ class WithdrawalService:
                     await session.abort_transaction()
                     await session.end_session()
                 raise HTTPException(
-                    status_code=429, detail="Vượt quá số lần rút tiền tối đa trong ngày"
+                    status_code=429, detail="Giao dịch vượt quá số lần rút tiền tối đa cho phép trong ngày"
                 )
             if stats["total_amount"] + amount > 20000000:
                 if should_close_session:
@@ -159,7 +159,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=429,
-                    detail="Vượt quá giới hạn rút tiền tối đa trong ngày",
+                    detail="Giao dịch vượt quá hạn mức rút tiền tối đa cho phép trong ngày",
                 )
 
         withdrawal_id = str(uuid7())
@@ -173,7 +173,7 @@ class WithdrawalService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="Tài khoản không đủ số dư để rút tiền"
+                    status_code=400, detail="Số dư ví không đủ để thực hiện giao dịch rút tiền"
                 )
 
             withdrawal_request = {
@@ -201,9 +201,9 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
 
-            logger.info("Đã ghi nhận yêu cầu rút tiền")
+            logger.info("Withdrawal request successfully registered and pending review")
             return {
-                "message": "Gửi yêu cầu rút tiền thành công",
+                "message": "Gửi yêu cầu khởi tạo giao dịch rút tiền thành công",
                 "withdrawal_id": withdrawal_id,
             }
         except HTTPException:
@@ -211,9 +211,9 @@ class WithdrawalService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception("Lỗi khởi tạo luồng giao dịch rút tiền")
+            logger.exception("Failed to initialize withdrawal transaction workflow")
             raise HTTPException(
-                status_code=500, detail=f"Không thể xử lý yêu cầu rút tiền lúc này: {e}"
+                status_code=500, detail="Không thể xử lý yêu cầu rút tiền vào lúc này"
             )
         finally:
             if should_close_session:
@@ -225,7 +225,7 @@ class WithdrawalService:
         normalized_status = status.upper()
         if normalized_status not in ALLOWED_WITHDRAWAL_QUEUE_STATUSES:
             raise HTTPException(
-                status_code=400, detail="Trạng thái rút tiền không hợp lệ"
+                status_code=400, detail="Tham số trạng thái lọc giao dịch rút tiền không hợp lệ"
             )
         pipeline = [
             {"$match": {"status": normalized_status}},
@@ -280,7 +280,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ")
+            raise HTTPException(status_code=400, detail="Tham số hành động xác thực giao dịch không hợp lệ")
 
         withdrawal = await mongo.find_one(collection="withdrawal_requests", query={"_id": withdrawal_id})
         if not withdrawal:
@@ -289,7 +289,7 @@ class WithdrawalService:
                 await session.end_session()
             raise HTTPException(
                 status_code=404,
-                detail="Không tìm thấy yêu cầu rút tiền với mã giao dịch này",
+                detail="Không tìm thấy yêu cầu rút tiền khớp với mã giao dịch cung cấp",
             )
 
         if str(current_user.id) == withdrawal.get("user_id"):
@@ -297,7 +297,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=403, detail="Không thể tự duyệt yêu cầu rút tiền của mình"
+                status_code=403, detail="Hệ thống không cho phép người dùng tự phê duyệt yêu cầu rút tiền của chính mình"
             )
 
         current_status = withdrawal.get("status")
@@ -306,7 +306,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Yêu cầu rút tiền đã được xử lý"
+                status_code=400, detail="Yêu cầu rút tiền này đã được hệ thống xử lý trước đó"
             )
 
         status = "APPROVED" if normalized_action == "approve" else "REJECTED"
@@ -366,16 +366,16 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
 
-            logger.info("Xác minh yêu cầu rút tiền thành công")
-            return {"message": "Xác minh yêu cầu rút tiền thành công"}
+            logger.info("Administrative verification of withdrawal request completed successfully")
+            return {"message": "Xử lý xác minh yêu cầu rút tiền thành công"}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception("Lỗi quá trình xác minh yêu cầu rút tiền")
+            logger.exception("Failed to process administrative verification of withdrawal request")
             raise HTTPException(
-                status_code=500, detail=f"Giao dịch thanh toán đang gặp lỗi: {e}"
+                status_code=500, detail="Giao dịch thanh toán đang gặp sự cố gián đoạn"
             )
         finally:
             if should_close_session:
@@ -401,14 +401,14 @@ class WithdrawalService:
                 await session.end_session()
             raise HTTPException(
                 status_code=404,
-                detail="Không tìm thấy yêu cầu rút tiền với mã giao dịch này",
+                detail="Không tìm thấy yêu cầu rút tiền khớp với mã giao dịch cung cấp",
             )
         if withdrawal.get("status") != "PENDING":
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Chỉ có thể hủy yêu cầu rút tiền đang chờ xử lý"
+                status_code=400, detail="Hệ thống chỉ hỗ trợ hủy các yêu cầu rút tiền đang ở trạng thái chờ xử lý"
             )
 
         try:
@@ -430,7 +430,7 @@ class WithdrawalService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="Lỗi cập nhật trạng thái yêu cầu rút tiền"
+                    status_code=400, detail="Không thể cập nhật trạng thái yêu cầu rút tiền"
                 )
 
             await mongo.update_one("wallets", 
@@ -453,16 +453,16 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
 
-            logger.info("Đã hủy yêu cầu rút tiền và hoàn tiền")
-            return {"message": "Đã hủy yêu cầu rút tiền và hoàn tiền"}
+            logger.info("Withdrawal request successfully cancelled and reserved funds restored")
+            return {"message": "Hủy yêu cầu rút tiền và hoàn trả số dư thành công"}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception("Lỗi xử lý hủy bỏ yêu cầu rút tiền")
+            logger.exception("Failed to process cancellation of withdrawal request")
             raise HTTPException(
-                status_code=500, detail=f"Giao dịch thanh toán đang gặp lỗi: {e}"
+                status_code=500, detail="Giao dịch thanh toán đang gặp sự cố gián đoạn"
             )
         finally:
             if should_close_session:

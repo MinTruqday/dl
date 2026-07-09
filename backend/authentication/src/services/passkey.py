@@ -46,11 +46,11 @@ class PasskeyService:
     async def login_begin(email: str):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
         passkeys = user.get("passkeys", [])
         if not passkeys:
             raise HTTPException(
-                status_code=400, detail="Tài khoản chưa thiết lập khóa truy cập"
+                status_code=400, detail="Tài khoản hiện tại chưa được thiết lập bất kỳ mã bảo mật nào"
             )
         options = generate_authentication_options(
             rp_id=RP_ID,
@@ -67,7 +67,7 @@ class PasskeyService:
         try:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
         except Exception as e:
-            logger.exception("Lỗi lưu trữ tạm thời mã xác thực")
+            logger.exception("Failed to persist temporary authentication challenge to cache layer")
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)
         return json.loads(options_to_json(options))
 
@@ -76,12 +76,12 @@ class PasskeyService:
     async def login_finish(email: str, credential_data: dict):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
         challenge = None
         try:
             challenge = await AuthenticationRepository.get_redis_passkey_challenge(email)
         except Exception as e:
-            logger.exception("Lỗi tải thông tin xác thực")
+            logger.exception("Failed to retrieve temporary authentication challenge from cache layer")
         if not challenge:
             chal_doc = await AuthenticationRepository.get_passkey_challenge(email)
             if chal_doc:
@@ -93,7 +93,7 @@ class PasskeyService:
                     challenge = chal_doc["challenge"]
         if not challenge:
             raise HTTPException(
-                status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn"
+                status_code=400, detail="Mã xác minh bảo mật không hợp lệ hoặc đã quá hạn sử dụng"
             )
         credential_id_b64 = credential_data.get("id")
         passkey = next(
@@ -105,7 +105,7 @@ class PasskeyService:
             None,
         )
         if not passkey:
-            raise HTTPException(status_code=400, detail="Khóa bảo mật không chính xác")
+            raise HTTPException(status_code=400, detail="Thông tin mã bảo mật cung cấp không chính xác")
         try:
             verification = verify_authentication_response(
                 credential=credential_data,
@@ -116,7 +116,7 @@ class PasskeyService:
                 credential_current_sign_count=passkey["sign_count"],
             )
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Lỗi xác minh mã bảo mật: {e}")
+            raise HTTPException(status_code=400, detail="Quá trình xác minh dữ liệu mã bảo mật gặp sự cố")
         await AuthenticationRepository.update_passkey_sign_count(
             user["_id"], credential_id_b64, verification.new_sign_count
         )
@@ -124,7 +124,7 @@ class PasskeyService:
         try:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
         except Exception as e:
-            logger.exception("Lỗi dọn dẹp mã xác thực")
+            logger.exception("Failed to clear expired authentication challenge from cache layer")
         user_doc = None
         try:
             async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
@@ -138,7 +138,7 @@ class PasskeyService:
             pass
 
         if not user_doc:
-            raise HTTPException(status_code=401, detail="Không thể xác minh tài khoản")
+            raise HTTPException(status_code=401, detail="Quá trình xác minh định danh tài khoản gặp sự cố")
 
         from src.services.passkey import SessionService
 
@@ -149,7 +149,7 @@ class PasskeyService:
     async def register_begin(email: str):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
 
         passkeys = user.get("passkeys", [])
         
@@ -175,7 +175,7 @@ class PasskeyService:
         try:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
         except Exception as e:
-            logger.exception("Lỗi lưu trữ tạm thời mã xác thực")
+            logger.exception("Failed to persist temporary authentication challenge to cache layer")
             
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)
 
@@ -186,13 +186,13 @@ class PasskeyService:
     async def register_finish(email: str, credential_data: dict):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
 
         challenge = None
         try:
             challenge = await AuthenticationRepository.get_redis_passkey_challenge(email)
         except Exception as e:
-            logger.exception("Lỗi tải thông tin xác thực")
+            logger.exception("Failed to retrieve temporary authentication challenge from cache layer")
             
         if not challenge:
             chal_doc = await AuthenticationRepository.get_passkey_challenge(email)
@@ -206,7 +206,7 @@ class PasskeyService:
 
         if not challenge:
             raise HTTPException(
-                status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn"
+                status_code=400, detail="Mã xác minh bảo mật không hợp lệ hoặc đã quá hạn sử dụng"
             )
 
         try:
@@ -217,7 +217,7 @@ class PasskeyService:
                 expected_rp_id=RP_ID,
             )
         except InvalidRegistrationResponse as e:
-            raise HTTPException(status_code=400, detail=f"Lỗi xác minh mã bảo mật: {e}")
+            raise HTTPException(status_code=400, detail="Quá trình xác minh dữ liệu mã bảo mật gặp sự cố")
 
         new_passkey = {
             "credential_id": base64.b64encode(verification.credential_id).decode("utf-8"),
@@ -235,6 +235,6 @@ class PasskeyService:
         try:
             await AuthenticationRepository.delete_redis_passkey_challenge(email)
         except Exception as e:
-            logger.exception("Lỗi dọn dẹp mã xác thực")
+            logger.exception("Failed to clear expired authentication challenge from cache layer")
 
-        return {"message": "Đăng ký Passkey thành công"}
+        return {"message": "Thực hiện đăng ký mã bảo mật thành công"}

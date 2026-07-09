@@ -79,29 +79,29 @@ class EngineAgent:
                 formatted += f"- {res.get('title')} {res.get('body')}\n  Source link {res.get('href')}\n"
             return formatted
         except Exception as e:
-            logger.exception("Quá trình tìm kiếm bằng công cụ dự phòng đã thất bại")
+            logger.exception("Search process using backup tool failed")
             return ""
 
     async def execute(self, query: str) -> str:
-        logger.info("Đang tìm kiếm thông tin")
+        logger.info("Searching for information")
 
         if _is_ssrf_attempt(query):
-            logger.warning("Ngăn chặn yêu cầu mạng trái phép")
-            return "Yêu cầu bị hệ thống từ chối do vi phạm nghiêm trọng các quy tắc bảo mật an toàn thông tin"
+            logger.warning("Blocked unauthorized network request")
+            return "Request rejected due to severe violation of information security rules"
 
         if self.api_key_valid:
             try:
                 result = await self._tavily_search(query)
                 if result:
                     return result
-                logger.warning("Đang chuyển sang công cụ tìm kiếm thay thế")
+                logger.warning("Switching to alternative search tool")
             except Exception as e:
-                logger.exception("Hệ thống tra cứu chính gặp sự cố kết nối, tự động chuyển hướng sang cụm máy chủ dự phòng")
+                logger.exception("Primary search system encountered a connection issue, automatically switching to backup servers")
 
         result = await self._duckduckgo_search(query)
         if result:
             return result
 
-        return "Hệ thống không thể trích xuất được bất kỳ thông tin nào có giá trị từ các nguồn dữ liệu tra cứu"
+        return "The system could not extract any valuable information from the search data sources"
 
 search_engine = EngineAgent()

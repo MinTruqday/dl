@@ -22,10 +22,10 @@ class RabbitMQClient:
             try:
                 self.connection = await aio_pika.connect_robust(self.url)
                 self.channel = await self.connection.channel()
-                logger.info("Kết nối RabbitMQ thành công")
+                logger.info("RabbitMQ message broker connection established successfully")
                 return
             except Exception as e:
-                logger.exception("Lỗi kết nối RabbitMQ, đang thử lại")
+                logger.exception("Failed to connect to RabbitMQ broker, retrying")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)
@@ -54,7 +54,7 @@ class RabbitMQClient:
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             return True
         except Exception as e:
-            logger.exception("Lỗi phân phối tin nhắn vào RabbitMQ")
+            logger.exception("Failed to publish message to RabbitMQ exchange")
             return False
 
     async def consume(self, queue_name: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
@@ -79,14 +79,14 @@ class RabbitMQClient:
         except aio_pika.exceptions.QueueEmpty:
             return None
         except Exception as e:
-            logger.exception("Lỗi lấy tin nhắn từ RabbitMQ")
+            logger.exception("Failed to consume message from RabbitMQ queue")
             return None
 
     async def _auto_nack_if_timeout(self, ack_id: str, delay: int):
         await asyncio.sleep(delay)
         message = self.pending_acks.pop(ack_id, None)
         if message:
-            logger.warning(f"Quá thời gian chờ xác nhận (ACK/NACK) cho tin nhắn {ack_id} từ RabbitMQ, tiến hành thử lại")
+            logger.warning(f"Timeout waiting for acknowledgment (ACK/NACK) for message {ack_id} from RabbitMQ, retrying")
             try:
                 await message.nack(requeue=True)
             except Exception as e:
@@ -99,7 +99,7 @@ class RabbitMQClient:
                 await message.ack()
                 return True
             except Exception as e:
-                logger.exception("Lỗi phản hồi xác nhận (ACK) tin nhắn tới RabbitMQ")
+                logger.exception("Failed to acknowledge (ACK) message to RabbitMQ")
                 return False
         return False
 

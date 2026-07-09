@@ -114,7 +114,7 @@ class FailureAttributionHarness:
             self._records[session_id] = []
         self._records[session_id].append(record)
         logger.warning(
-            f"Ghi nhận lỗi phiên làm việc: {failure_type} tại node {node or 'unknown'}"
+            f"Session failure recorded: type={failure_type}, node={node or 'unknown'}"
         )
         try:
             asyncio.get_running_loop().create_task(self._persist_record(record))
@@ -136,9 +136,9 @@ class FailureAttributionHarness:
                 "occurred_at": record.occurred_at,
             }
             await AgentRepository.insert_trace(doc)
-            logger.info("Lưu bản ghi lỗi phiên làm việc thành công")
+            logger.info("Session failure record persisted to MongoDB successfully")
         except Exception:
-            logger.exception("Lỗi lưu trữ bản ghi lỗi phiên làm việc")
+            logger.exception("Error persisting session failure record to MongoDB")
 
     def get_report(self, session_id: str) -> AttributionReport:
         records = self._records.get(session_id, [])

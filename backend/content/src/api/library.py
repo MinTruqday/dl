@@ -24,7 +24,7 @@ async def create_reading_list(
 ):
     return APIResponse(
         data=await LibraryService.create_reading_list(data, current_user),
-        message="Tạo danh sách đọc cá nhân thành công",
+        message="Khởi tạo danh sách đọc tài liệu mới thành công",
         status=201,
     )
 
@@ -34,7 +34,7 @@ async def get_my_lists(
 ):
     return APIResponse(
         data=await LibraryService.get_my_reading_lists(current_user),
-        message="Lấy danh sách đọc thành công",
+        message="Truy xuất bộ sưu tập danh sách đọc thành công",
     )
 
 @router.get("/danh-sach/{list_id}", response_model=APIResponse[Any])
@@ -43,7 +43,7 @@ async def get_list_by_id(
 ):
     return APIResponse(
         data=await LibraryService.get_reading_list_by_id(list_id, current_user),
-        message="Lấy nội dung danh sách đọc thành công",
+        message="Truy xuất nội dung chi tiết danh sách đọc thành công",
     )
 
 @router.post(
@@ -59,7 +59,7 @@ async def add_to_list(
         data=await LibraryService.add_document_to_list(
             list_id, document_id, current_user
         ),
-        message="Đã thêm tài liệu vào danh sách đọc",
+        message="Bổ sung tài liệu vào danh sách đọc thành công",
     )
 
 @router.delete(
@@ -75,5 +75,5 @@ async def remove_from_list(
         data=await LibraryService.remove_document_from_list(
             list_id, document_id, current_user
         ),
-        message="Xóa tài liệu khỏi danh sách đọc thành công",
+        message="Loại bỏ tài liệu khỏi danh sách đọc thành công",
     )

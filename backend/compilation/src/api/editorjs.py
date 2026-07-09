@@ -14,8 +14,8 @@ async def compile_editorjs(req: CompileRequest):
         pdf_bytes = await EditorjsEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception as e:
-        logger.exception("Lỗi xử lý biên dịch nội dung EditorJS")
-        raise HTTPException(status_code=500, detail=f"Lỗi biên dịch tài liệu: {e}")
+        logger.exception("Failed to compile EditorJS content to requested format")
+        raise HTTPException(status_code=500, detail="Quá trình biên dịch tài liệu gặp sự cố không mong muốn")
 
 @router.post("/ket-xuat/{format}")
 async def export_editorjs(
@@ -32,5 +32,5 @@ async def export_editorjs(
                 content=out_bytes, media_type="application/octet-stream"
             )
     except Exception as e:
-        logger.exception("Lỗi xử lý kết xuất tài liệu")
-        raise HTTPException(status_code=500, detail=f"Lỗi kết xuất tài liệu: {e}")
+        logger.exception("Failed to export EditorJS content to requested format")
+        raise HTTPException(status_code=500, detail="Quá trình kết xuất tài liệu gặp sự cố không mong muốn")

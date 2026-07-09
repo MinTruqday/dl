@@ -17,7 +17,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Từ chối truy cập: Mã thông báo xác thực nội bộ không hợp lệ"})
     return await call_next(request)
 
 app.add_middleware(
@@ -36,7 +36,7 @@ async def startup_event():
     import asyncio
     from src.outbox_worker import process_outbox
     from src.core.infrastructure.database import init_db
-    logger.info("Tính năng thanh toán đã sẵn sàng")
+    logger.info("Financial management service provisioned and ready")
     await init_db()
     asyncio.create_task(process_outbox())
 @app.on_event("shutdown")

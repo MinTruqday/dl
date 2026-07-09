@@ -12,7 +12,7 @@ class CompositionSocket:
         if room_id not in self.active_connections:
             self.active_connections[room_id] = []
         self.active_connections[room_id].append(websocket)
-        logger.info("Thiết bị mới đã kết nối vào không gian cộng tác")
+        logger.info("New device connected to collaboration workspace")
 
     def disconnect(self, websocket: WebSocket, room_id: str):
         if (
@@ -22,7 +22,7 @@ class CompositionSocket:
             self.active_connections[room_id].remove(websocket)
             if not self.active_connections[room_id]:
                 del self.active_connections[room_id]
-            logger.info("Thiết bị đã ngắt kết nối khỏi không gian cộng tác")
+            logger.info("Device disconnected from collaboration workspace")
 
     async def broadcast(self, message: bytes, room_id: str, sender: WebSocket):
         if room_id in self.active_connections:
@@ -32,7 +32,7 @@ class CompositionSocket:
                     try:
                         await connection.send_bytes(message)
                     except Exception as e:
-                        logger.exception("Lỗi đồng bộ hóa dữ liệu cộng tác theo thời gian thực")
+                        logger.exception("Real-time collaboration data synchronization failed")
                         dead_connections.append(connection)
             for dead in dead_connections:
                 self.disconnect(dead, room_id)

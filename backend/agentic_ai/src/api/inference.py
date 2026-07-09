@@ -32,7 +32,7 @@ router = APIRouter(route_class=LoggingRoute, prefix="/suy-luan")
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
 async def _check_quota(current_user: CurrentUser):
-    logger.info(f"Bắt đầu kiểm tra hạn mức sử dụng AI cho user_id={current_user.id}")
+    logger.info(f"Started AI quota verification for user_id={current_user.id}")
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
             resp = await c.get(
@@ -47,19 +47,19 @@ async def _check_quota(current_user: CurrentUser):
             if resp.status_code != 200:
                 raise HTTPException(
                     status_code=429,
-                    detail="Đã hết dung lượng sử dụng AI",
+                    detail="Tài khoản của bạn đã sử dụng vượt mức dung lượng AI cho phép",
                 )
             return resp.json().get("data", {})
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("Lỗi kiểm tra dung lượng sử dụng")
+        logger.exception("AI quota verification error")
         return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
 
 async def _consume_quota(
     current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
 ):
-    logger.info(f"Bắt đầu trừ hạn mức sử dụng AI cho user_id={current_user.id}, tokens={tokens}")
+    logger.info(f"Started AI quota consumption for user_id={current_user.id}, tokens={tokens}")
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
             await c.post(
@@ -72,7 +72,7 @@ async def _consume_quota(
                 },
             )
     except Exception as e:
-        logger.exception("Lỗi trừ dung lượng AI đã sử dụng")
+        logger.exception("AI quota consumption error")
 
 async def _chat_direct(
     messages: List[dict],
@@ -94,8 +94,8 @@ async def _chat_direct(
             return f"<think>\n{reasoning}\n</think>\n{content}"
         return content
     except Exception as e:
-        logger.exception("Quá trình AI tạo văn bản bị gián đoạn")
-        raise Exception("Đã xảy ra lỗi hệ thống, vui lòng thử lại sau")
+        logger.exception("AI text generation execution error")
+        raise Exception("Hệ thống gặp sự cố bất ngờ, vui lòng thử lại sau")
 
 async def _run_ai_with_quota(
     current_user: CurrentUser,
@@ -118,7 +118,7 @@ async def _run_ai_with_quota(
 async def generate_text(
     req: GenerationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu xử lý API tạo nội dung cho user_id={current_user.id}")
+    logger.info(f"Started text generation API request for user_id={current_user.id}")
     try:
         result = await _run_ai_with_quota(
             current_user,
@@ -126,19 +126,19 @@ async def generate_text(
             max_tokens=req.max_tokens,
             temperature=req.temperature,
         )
-        logger.info(f"Hoàn tất API tạo nội dung cho user_id={current_user.id}")
+        logger.info(f"Completed text generation API request for user_id={current_user.id}")
         return {"result": result}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình tạo nội dung")
+        logger.exception("Text generation error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/dich-thuat")
 async def translate_text(
     req: TranslationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu xử lý API dịch thuật sang {req.target_lang} cho user_id={current_user.id}")
+    logger.info(f"Started translation API request to {req.target_lang} for user_id={current_user.id}")
     try:
         prompt = registry.get(PromptType.TRANSLATE).format(
             target_lang=req.target_lang, text=req.text
@@ -149,11 +149,11 @@ async def translate_text(
             max_tokens=len(req.text) * 3,
             temperature=0.1,
         )
-        logger.info(f"Hoàn tất API dịch thuật cho user_id={current_user.id}")
+        logger.info(f"Completed translation API request for user_id={current_user.id}")
         return {"translation": result.strip()}
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
+            status_code=500, detail=f"Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau {e}"
         )
 
 @router.post("/tao-ma")
@@ -173,7 +173,7 @@ async def generate_code(
         return {"code": result.strip()}
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
+            status_code=500, detail=f"Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau {e}"
         )
 
 @router.post("/kiem-tra-ngu-phap")
@@ -187,7 +187,7 @@ async def grammar_check(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng chỉ dành cho gói trả phí",
+                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng",
             )
 
         prompt = registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
@@ -209,14 +209,14 @@ async def grammar_check(
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Đã xảy ra lỗi, vui lòng thử lại sau: {e}"
+            status_code=500, detail=f"Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau {e}"
         )
 
 @router.post("/tom-tat")
 async def summarize_text(
     req: SummarizeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API tóm tắt văn bản cho user_id={current_user.id}")
+    logger.info(f"Started text summarization API request for user_id={current_user.id}")
     try:
         prompt = registry.get(PromptType.SUMMARIZE).format(
             language=req.language, text=req.text
@@ -227,28 +227,28 @@ async def summarize_text(
             max_tokens=300,
             temperature=0.3,
         )
-        logger.info(f"Hoàn tất API tóm tắt văn bản cho user_id={current_user.id}")
+        logger.info(f"Completed text summarization API request for user_id={current_user.id}")
         return {"summary": result.strip()}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình tóm tắt văn bản")
+        logger.exception("Text summarization error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/kiem-tra-dao-van")
 async def check_plagiarism(
     req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API kiểm tra đạo văn cho user_id={current_user.id}")
+    logger.info(f"Started plagiarism detection API request for user_id={current_user.id}")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != "PREMIUM"
         ):
-            logger.warning(f"Từ chối truy cập kiểm tra đạo văn cho user_id={current_user.id} do thiếu quyền")
+            logger.warning(f"Plagiarism detection access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng chỉ dành cho gói trả phí"
+                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
             )
 
         from src.rag.embedding import embedder
@@ -291,7 +291,7 @@ async def check_plagiarism(
             if json_match:
                 return json_mod.loads(json_match.group())
         except Exception as e:
-            logger.exception("Lỗi định dạng dữ liệu kiểm tra đạo văn")
+            logger.exception("Plagiarism detection JSON output parsing error")
 
         max_score = max([m["score"] for m in significant_matches]) * 100
         return {
@@ -303,16 +303,16 @@ async def check_plagiarism(
             "matches": significant_matches[:3],
         }
     except Exception as e:
-        logger.exception("Lỗi trong quá trình kiểm tra đạo văn")
+        logger.exception("Plagiarism detection error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/hanh-dong")
 async def unified_action(
     req: ActionRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API xử lý hành động ({req.action}) cho user_id={current_user.id}")
+    logger.info(f"Started unified action API ({req.action}) for user_id={current_user.id}")
     try:
         prompts = {
             "autocomplete": registry.get(PromptType.AUTOCOMPLETE).format(
@@ -334,8 +334,8 @@ async def unified_action(
 
         prompt = prompts.get(req.action)
         if not prompt:
-            logger.warning(f"Hành động không hợp lệ: {req.action}")
-            raise HTTPException(status_code=400, detail="Thao tác không hợp lệ")
+            logger.warning(f"Invalid unified action requested {req.action}")
+            raise HTTPException(status_code=400, detail="Thao tác yêu cầu không hợp lệ")
 
         result = await _run_ai_with_quota(
             current_user,
@@ -343,28 +343,28 @@ async def unified_action(
             max_tokens=500,
             temperature=0.3,
         )
-        logger.info(f"Hoàn tất API xử lý hành động ({req.action}) cho user_id={current_user.id}")
+        logger.info(f"Completed unified action API ({req.action}) for user_id={current_user.id}")
         return {"result": result.strip()}
     except Exception as e:
-        logger.exception("Lỗi thực thi tác vụ AI")
+        logger.exception("Unified AI action execution error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/tu-dong-nghia")
 async def get_synonyms(
     req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API lấy từ đồng nghĩa cho user_id={current_user.id}")
+    logger.info(f"Started synonym retrieval API request for user_id={current_user.id}")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != "PREMIUM"
         ):
-            logger.warning(f"Từ chối truy cập từ đồng nghĩa cho user_id={current_user.id} do thiếu quyền")
+            logger.warning(f"Synonym retrieval access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng chỉ dành cho gói trả phí"
+                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
             )
 
         prompt = registry.get(PromptType.SYNONYMS).format(text=req.text)
@@ -374,28 +374,28 @@ async def get_synonyms(
             max_tokens=100,
             temperature=0.5,
         )
-        logger.info(f"Hoàn tất API lấy từ đồng nghĩa cho user_id={current_user.id}")
+        logger.info(f"Completed synonym retrieval API request for user_id={current_user.id}")
         return {"synonyms": [s.strip() for s in result.split(",")]}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình lấy từ đồng nghĩa")
+        logger.exception("Synonym retrieval error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/trich-dan-thong-minh")
 async def suggest_citations(
     req: CitationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API gợi ý trích dẫn cho user_id={current_user.id}")
+    logger.info(f"Started citation suggestion API request for user_id={current_user.id}")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != "PREMIUM"
         ):
-            logger.warning(f"Từ chối truy cập gợi ý trích dẫn cho user_id={current_user.id} do thiếu quyền")
+            logger.warning(f"Citation suggestion access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng chỉ dành cho gói trả phí"
+                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
             )
 
         from src.rag.embedding import embedder
@@ -420,28 +420,28 @@ async def suggest_citations(
             max_tokens=500,
             temperature=0.3,
         )
-        logger.info(f"Hoàn tất API gợi ý trích dẫn cho user_id={current_user.id}")
+        logger.info(f"Completed citation suggestion API request for user_id={current_user.id}")
         return {"citations": result.strip()}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình tạo gợi ý trích dẫn")
+        logger.exception("Citation suggestion generation error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/bien-doi-van-ban")
 async def transform_tone(
     req: ToneRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API biến đổi ngữ điệu văn bản cho user_id={current_user.id}")
+    logger.info(f"Started tone transformation API request for user_id={current_user.id}")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != "PREMIUM"
         ):
-            logger.warning(f"Từ chối truy cập biến đổi ngữ điệu cho user_id={current_user.id} do thiếu quyền")
+            logger.warning(f"Tone transformation access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng chỉ dành cho gói trả phí"
+                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
             )
 
         action = "expand and transform" if req.expansion else "transform"
@@ -454,28 +454,28 @@ async def transform_tone(
             max_tokens=1000 if req.expansion else 500,
             temperature=0.4,
         )
-        logger.info(f"Hoàn tất API biến đổi ngữ điệu văn bản cho user_id={current_user.id}")
+        logger.info(f"Completed tone transformation API request for user_id={current_user.id}")
         return {"transformed_text": result.strip()}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình biến đổi ngữ điệu văn bản")
+        logger.exception("Tone transformation error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/kiem-duyet-noi-dung")
 async def peer_review(
     req: ReviewRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API kiểm duyệt nội dung cho user_id={current_user.id}")
+    logger.info(f"Started content review API request for user_id={current_user.id}")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != "PREMIUM"
         ):
-            logger.warning(f"Từ chối truy cập kiểm duyệt nội dung cho user_id={current_user.id} do thiếu quyền")
+            logger.warning(f"Content review access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng chỉ dành cho gói trả phí"
+                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
             )
 
         criteria_str = (
@@ -492,19 +492,19 @@ async def peer_review(
             max_tokens=1024,
             temperature=0.2,
         )
-        logger.info(f"Hoàn tất API kiểm duyệt nội dung cho user_id={current_user.id}")
+        logger.info(f"Completed content review API request for user_id={current_user.id}")
         return {"review_report": result.strip()}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình kiểm duyệt nội dung")
+        logger.exception("Content review error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/tong-hop-tai-lieu")
 async def multi_doc_synthesis(
     req: SynthesisRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API tổng hợp nhiều tài liệu cho user_id={current_user.id}")
+    logger.info(f"Started multi-document synthesis API request for user_id={current_user.id}")
     try:
         from src.rag.embedding import embedder
         from src.store.database import vector_store
@@ -528,42 +528,42 @@ async def multi_doc_synthesis(
             max_tokens=1024,
             temperature=0.3,
         )
-        logger.info(f"Hoàn tất API tổng hợp tài liệu cho user_id={current_user.id}")
+        logger.info(f"Completed multi-document synthesis API request for user_id={current_user.id}")
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình tổng hợp tài liệu")
+        logger.exception("Multi-document synthesis error")
         raise HTTPException(
-            status_code=500, detail="Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
         )
 
 @router.post("/trich-xuat-van-ban")
 async def extract_text(req: dict, current_user: CurrentUser = Depends(get_current_user)):
-    logger.info(f"Bắt đầu API trích xuất văn bản từ tệp tin cho user_id={current_user.id}")
+    logger.info(f"Started document text extraction API request for user_id={current_user.id}")
     try:
         file_url = req.get("file_url")
         if not file_url:
-            logger.warning("Thiếu thông tin vị trí tệp tin")
+            logger.warning("Missing file location URL in request")
             raise HTTPException(
-                status_code=400, detail="Thiếu thông tin vị trí tệp tin"
+                status_code=400, detail="Yêu cầu bị từ chối do thiếu thông tin đường dẫn tệp tin"
             )
 
         from src.rag.pipeline import ingestion_pipeline
 
         extracted_text = await ingestion_pipeline._extract_text(file_url)
 
-        logger.info(f"Hoàn tất API trích xuất văn bản cho user_id={current_user.id}")
+        logger.info(f"Completed document text extraction API request for user_id={current_user.id}")
         return {"extracted_text": extracted_text}
     except Exception as e:
-        logger.exception("Lỗi trích xuất dữ liệu từ tệp tin")
+        logger.exception("Document text extraction pipeline error")
         raise HTTPException(
-            status_code=500, detail="Không thể trích xuất văn bản từ nguồn cung cấp"
+            status_code=500, detail="Hệ thống không thể trích xuất nội dung từ tệp tin được cung cấp"
         )
 
 @router.post("/phan-tich-tai-lieu")
 async def analyze_document(
     req: dict, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API phân tích tài liệu (folder: {req.get('folder_str')}) cho user_id={current_user.id}")
+    logger.info(f"Started document analysis API request (folder {req.get('folder_str')}) for user_id={current_user.id}")
     try:
         context = req.get("context", "")
         ext = req.get("ext", "txt")
@@ -585,27 +585,27 @@ async def analyze_document(
 
         json_match = re.search(r"\{.*\}", result, re.DOTALL)
         if json_match:
-            logger.info(f"Hoàn tất API phân tích tài liệu cho user_id={current_user.id}")
+            logger.info(f"Completed document analysis API request for user_id={current_user.id}")
             return json_mod.loads(json_match.group())
         else:
-            logger.warning("Mô hình ngôn ngữ trả về kết quả phân tích sai định dạng")
+            logger.warning("LLM returned malformed JSON response during document analysis")
             raise ValueError("Mô hình ngôn ngữ trả về sai định dạng")
     except Exception as e:
-        logger.exception("Lỗi phân tích nội dung tài liệu")
-        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi khi phân tích tài liệu")
+        logger.exception("Document analysis error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình phân tích tài liệu, vui lòng thử lại sau")
 
 @router.delete("/vector/{document_id}")
 async def delete_vector_document(document_id: str):
-    logger.info(f"Bắt đầu API xóa dữ liệu vector cho tài liệu: {document_id}")
+    logger.info(f"Started vector index deletion for document {document_id}")
     try:
         from src.store.database import vector_store
 
         await vector_store.delete_by_document(document_id)
-        logger.info(f"Hoàn tất API xóa dữ liệu vector cho tài liệu: {document_id}")
-        return {"status": "success", "message": "Xóa chỉ mục tài liệu thành công"}
+        logger.info(f"Completed vector index deletion for document {document_id}")
+        return {"status": "success", "message": "Đã xóa toàn bộ dữ liệu vector của tài liệu thành công"}
     except Exception as e:
-        logger.exception("Lỗi xóa chỉ mục dữ liệu vector của tài liệu")
-        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi khi xóa chỉ mục tài liệu")
+        logger.exception("Vector index deletion error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình xóa dữ liệu, vui lòng thử lại sau")
 
 def _extract_json(text: str) -> dict:
     import re
@@ -622,7 +622,7 @@ def _extract_json(text: str) -> dict:
 async def extract_glossary(
     req: GlossaryRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API giải thích thuật ngữ cho user_id={current_user.id}")
+    logger.info(f"Started glossary extraction API request for user_id={current_user.id}")
     try:
         prompt = registry.get(PromptType.EXTRACT_GLOSSARY).format(text=req.text)
         result = await _run_ai_with_quota(
@@ -632,17 +632,17 @@ async def extract_glossary(
             temperature=0.3,
         )
         data = _extract_json(result)
-        logger.info(f"Hoàn tất API giải thích thuật ngữ cho user_id={current_user.id}")
+        logger.info(f"Completed glossary extraction API request for user_id={current_user.id}")
         return data if data else {"glossary": []}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình giải thích thuật ngữ")
-        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau")
+        logger.exception("Glossary extraction error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
 
 @router.post("/bat-chuoc-van-phong")
 async def imitate_style(
     req: StyleImitationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Bắt đầu API bắt chước văn phong cho user_id={current_user.id}")
+    logger.info(f"Started style imitation API request for user_id={current_user.id}")
     try:
         prompt = registry.get(PromptType.IMITATE_STYLE).format(reference_text=req.reference_text, text=req.text)
         result = await _run_ai_with_quota(
@@ -651,8 +651,8 @@ async def imitate_style(
             max_tokens=2000,
             temperature=0.5,
         )
-        logger.info(f"Hoàn tất API bắt chước văn phong cho user_id={current_user.id}")
+        logger.info(f"Completed style imitation API request for user_id={current_user.id}")
         return {"result": result}
     except Exception as e:
-        logger.exception("Lỗi trong quá trình bắt chước văn phong")
-        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi, vui lòng thử lại sau")
+        logger.exception("Style imitation error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")

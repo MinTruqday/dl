@@ -48,7 +48,7 @@ except ImportError:
 
 class ChunkRag:
     def __init__(self):
-        logger.info("Hệ thống đang nạp và khởi tạo bộ vi xử lý phân tích ngữ nghĩa văn bản")
+        logger.info("Loading and initializing semantic text analysis processor")
         self.chunker = None
         self.type = "fallback"
 
@@ -61,24 +61,24 @@ class ChunkRag:
                     similarity_threshold=0.5,
                 )
                 self.type = "chonkie_semantic"
-                logger.info("Khởi tạo công cụ phân mảnh ngữ nghĩa thành công")
+                logger.info("Semantic chunking tool initialized successfully")
             except Exception as e:
-                logger.exception("Khởi tạo công cụ chia nhỏ văn bản thất bại, đang chuyển sang chế độ tiêu chuẩn")
+                logger.exception("Semantic chunking tool initialization failed, falling back to standard mode")
                 try:
                     self.chunker = TokenChunker(
                         chunk_size=settings.DEFAULT_CHUNK_SIZE,
                         chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
                     )
                     self.type = "chonkie_token"
-                    logger.exception("Tải công cụ phân đoạn văn bản thành công")
+                    logger.info("Token chunker loaded successfully")
                 except Exception as e:
-                    logger.exception("Sự cố xảy ra khi khởi tạo bộ xử lý phân mảnh văn bản")
+                    logger.exception("Error occurred while initializing text chunker processor")
 
     async def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
-        logger.info("Đang xử lý phân đoạn văn bản")
+        logger.info("Processing text chunking")
 
         if not self.chunker:
-            logger.warning("Đang dùng phương pháp phân mảnh thay thế")
+            logger.warning("Using fallback chunking method")
             return await self._fallback_chunking(text, metadata)
 
         try:
@@ -104,11 +104,11 @@ class ChunkRag:
             results = await asyncio.gather(*(process_chunk(i, c) for i, c in enumerate(chonkie_chunks)))
             chunks = [r for r in results if r is not None]
 
-            logger.info("Xử lý phân mảnh văn bản thành công")
+            logger.info("Text chunking processing successful")
             return chunks
 
         except Exception as e:
-            logger.exception("Lỗi phân mảnh văn bản, đang chuyển sang phương pháp thay thế")
+            logger.exception("Text chunking error, switching to fallback method")
             return await self._fallback_chunking(text, metadata)
 
     async def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:

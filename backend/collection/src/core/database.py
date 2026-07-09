@@ -15,10 +15,10 @@ class Database:
     async def insert_document(self, document_data: dict):
         try:
             res = await self.client["doclib_content"]["documents"].insert_one(document_data)
-            logger.info("Tạo bản ghi tài liệu thành công")
+            logger.info("Document record created successfully")
             return str(res.inserted_id)
         except Exception as e:
-            logger.exception("Lỗi lưu tài liệu vào MongoDB")
+            logger.exception("MongoDB document insertion failed")
             return None
 
     async def update_document(self, document_id: str, update_data: dict):
@@ -28,8 +28,8 @@ class Database:
             await self.client["doclib_content"]["documents"].update_one(
                 {"_id": ObjectId(document_id)}, {"$set": update_data}
             )
-            logger.info("Cập nhật bản ghi tài liệu thành công")
+            logger.info("Document record updated successfully")
         except Exception as e:
-            logger.exception("Lỗi cập nhật dữ liệu tài liệu")
+            logger.exception("MongoDB document update failed")
 
 database = Database()

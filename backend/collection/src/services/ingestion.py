@@ -40,22 +40,22 @@ async def trigger_collection(req: Collection):
         payload["pages"] = pages
     else:
         raise HTTPException(
-            status_code=400, detail="Nguồn thu thập dữ liệu không được hỗ trợ"
+            status_code=400, detail="Nguồn dữ liệu không được hệ thống hỗ trợ"
         )
 
     try:
         await redis.delete("stop_collection")
         await mq_client.publish(queue_name, payload)
-        logger.info("Khởi tạo thu thập dữ liệu ngầm thành công")
+        logger.info("Background data collection initialized successfully")
         return {
             "status": "success",
             "job_id": payload["job_id"],
-            "message": "Bắt đầu quá trình thu thập dữ liệu ngầm",
+            "message": "Đang bắt đầu tiến trình thu thập dữ liệu ngầm",
         }
     except Exception as e:
-        logger.exception("Lỗi kích hoạt tiến trình thu thập dữ liệu ngầm")
+        logger.exception("Failed to activate background data collection process")
         raise HTTPException(
-            status_code=500, detail=f"Lỗi đưa quá trình thu thập dữ liệu vào hàng đợi: {e}"
+            status_code=500, detail=f"Không thể đưa tiến trình thu thập dữ liệu vào hàng đợi {e}"
         )
 
 @log_logic_execution
@@ -72,15 +72,15 @@ async def stop_collection():
         from src.services.queue import restart_workers
         asyncio.create_task(restart_workers())
 
-        logger.info("Tạm dừng quá trình thu thập dữ liệu thành công")
+        logger.info("Data collection process paused successfully")
         return {
             "status": "success",
-            "message": "Đã tạm dừng quá trình thu thập",
+            "message": "Đã tạm dừng toàn bộ tiến trình thu thập dữ liệu",
         }
     except Exception as e:
-        logger.exception("Lỗi truyền tín hiệu tạm dừng luồng thu thập dữ liệu")
+        logger.exception("Failed to transmit pause signal to data collection streams")
         raise HTTPException(
-            status_code=500, detail=f"Lỗi gửi lệnh tạm dừng cho tiến trình nền: {e}"
+            status_code=500, detail=f"Lỗi khi gửi lệnh tạm dừng đến tiến trình nền {e}"
         )
 
 @log_logic_execution

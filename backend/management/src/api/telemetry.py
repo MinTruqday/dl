@@ -20,7 +20,7 @@ router = APIRouter(route_class=LoggingRoute, prefix="/giam-sat")
 async def get_stats(db=Depends(get_db)):
     return APIResponse(
         data=await TelemetryService.get_system_stats(),
-        message="Lấy thống kê hiệu suất thành công",
+        message="Trích xuất báo cáo thống kê hiệu suất thành công",
     )
 
 @router.get(
@@ -31,7 +31,7 @@ async def get_stats(db=Depends(get_db)):
 async def get_sys_health(db=Depends(get_db)):
     return APIResponse(
         data=await TelemetryService.get_sys_health(),
-        message="Hoàn tất kiểm tra",
+        message="Trích xuất báo cáo tình trạng hệ thống thành công",
     )
 
 @router.get(
@@ -46,7 +46,7 @@ async def get_audit_logs(
 ):
     return APIResponse(
         data=await TelemetryService.get_activity_stats(days=30),
-        message="Lấy nhật ký thành công",
+        message="Trích xuất nhật ký giám sát hệ thống thành công",
     )
 
 @router.get(
@@ -59,5 +59,5 @@ async def get_activity(
 ):
     return APIResponse(
         data=await TelemetryService.get_activity_log(str(current_user.id)),
-        message="Lấy nhật ký kiểm duyệt thành công",
+        message="Trích xuất nhật ký hoạt động kiểm duyệt thành công",
     )

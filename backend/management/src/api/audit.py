@@ -21,5 +21,5 @@ async def get_activity(
 ):
     return APIResponse(
         data=await AuditService.get_moderator_activity_log(str(current_user.id)),
-        message="Lấy nhật ký hoạt động thành công",
+        message="Trích xuất nhật ký hoạt động thành công",
     )

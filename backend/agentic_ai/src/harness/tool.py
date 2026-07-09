@@ -46,7 +46,7 @@ class ToolHarness:
             max_retries=max_retries,
             is_async=is_async,
         )
-        logger.info("Tiện ích AI đã được đăng ký")
+        logger.info(f"AI tool registered successfully {name}")
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry
@@ -60,7 +60,7 @@ class ToolHarness:
     ) -> ToolResult:
         definition = self._registry.get(tool_name)
         if not definition:
-            logger.error("Tiện ích AI chưa được đăng ký")
+            logger.error(f"Unregistered AI tool execution attempted {tool_name}")
             return ToolResult(
                 success=False,
                 data=None,
@@ -85,7 +85,7 @@ class ToolHarness:
                     )
 
                 duration_ms = int((time.monotonic() - start_ms) * 1000)
-                logger.info("Thực thi tác vụ AI thành công")
+                logger.info(f"AI tool executed successfully {definition.name}")
                 return ToolResult(
                     success=True,
                     data=result_data,
@@ -95,18 +95,18 @@ class ToolHarness:
 
             except asyncio.TimeoutError as e:
                 last_error = "The execution of the utility exceeded the maximum allowed processing time and was forcefully terminated"
-                logger.exception("Trí tuệ nhân tạo không phản hồi")
+                logger.exception(f"AI tool execution timeout {definition.name}")
 
             except Exception as e:
                 last_error = "The utility encountered an unexpected internal exception during its execution phase"
-                logger.exception("Lỗi thực thi tác vụ AI")
+                logger.exception(f"AI tool execution unexpected error {definition.name}")
 
             if attempt <= definition.max_retries:
                 delay = RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1))
                 await asyncio.sleep(delay)
 
         duration_ms = int((time.monotonic() - start_ms) * 1000)
-        logger.error("Tiện ích AI không thể thực thi")
+        logger.error(f"AI tool execution failed after {attempt} attempts {tool_name}")
         return ToolResult(
             success=False,
             data=None,

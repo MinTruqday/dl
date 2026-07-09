@@ -18,14 +18,14 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
             tmp.write(file_bytes)
             tmp_path = tmp.name
 
-        logger.info("Đang trích xuất nội dung văn bản")
+        logger.info("Extracting text content")
         md = MarkItDown()
         result = md.convert(tmp_path)
         full_text = result.text_content
 
         os.remove(tmp_path)
-        logger.info("Trích xuất văn bản thành công")
+        logger.info("Text extraction successful")
         return full_text
     except Exception as e:
-        logger.exception("Lỗi trích xuất văn bản từ tệp tin")
+        logger.exception("File text extraction error")
         return ""

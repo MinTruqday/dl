@@ -49,7 +49,7 @@ class SecurityHarness:
             
             sanitized = result.sanitized_text or text
         except Exception as e:
-            logger.exception("Truy vết bảo mật AI thất bại")
+            logger.exception("AI security tracing failed")
             
         return sanitized, violations
 
@@ -78,7 +78,7 @@ class SecurityHarness:
         risk_score = min(injection_score + anomaly * 0.2, 1.0)
 
         if injection_violations:
-            logger.warning("Ngăn chặn lệnh độc hại thành công")
+            logger.warning("Malicious command blocked successfully")
             return ScanResult(
                 passed=False,
                 blocked=True,
@@ -88,7 +88,7 @@ class SecurityHarness:
             )
 
         if pii_violations:
-            logger.info("Hệ thống đã tự động làm mờ và bảo vệ các thông tin cá nhân nhạy cảm")
+            logger.info("System automatically obscured and protected sensitive PII")
 
         return ScanResult(
             passed=True,
@@ -103,8 +103,8 @@ class SecurityHarness:
             return text
         sanitized, violations = await self._adetect_security_issues(text)
         if any("credential_leak" in v for v in violations):
-            logger.error("Hệ thống đã chủ động ngăn chặn và vô hiệu hóa thành công nguy cơ rò rỉ dữ liệu nhạy cảm")
-            return "Nội dung phản hồi đã bị hệ thống an ninh chặn lại do phát hiện có chứa dữ liệu nhạy cảm"
+            logger.error("System proactively blocked and neutralized credential leak risk")
+            return "Hệ thống bảo mật đã tự động chặn phản hồi do phát hiện rủi ro rò rỉ thông tin xác thực"
         return sanitized
 
 security = SecurityHarness()

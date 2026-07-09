@@ -52,14 +52,14 @@ class ResponseLengthGrader(BaseGrader):
         text = response.strip()
         if not text:
             return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                feedback="Phản hồi trống rỗng. Hãy cung cấp nội dung có giá trị")
+                feedback="Nội dung phản hồi trống. Vui lòng cung cấp thông tin có ý nghĩa")
         if len(text) < self.min_length:
             return GraderResult(grader_name=self.name, passed=False,
                 score=len(text) / self.min_length,
-                feedback=f"Phản hồi quá ngắn ({len(text)} ký tự). Cần ít nhất {self.min_length} ký tự")
+                feedback=f"Nội dung phản hồi không đạt độ dài tối thiểu ({len(text)}/{self.min_length} ký tự)")
         if len(text) > self.max_length:
             return GraderResult(grader_name=self.name, passed=False, score=0.5,
-                feedback=f"Phản hồi quá dài ({len(text)} ký tự). Hãy rút gọn dưới {self.max_length} ký tự")
+                feedback=f"Nội dung phản hồi vượt quá giới hạn cho phép ({len(text)}/{self.max_length} ký tự)")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class ErrorPrefixGrader(BaseGrader):
@@ -77,7 +77,7 @@ class ErrorPrefixGrader(BaseGrader):
         for marker in self.ERROR_MARKERS:
             if lower.startswith(marker):
                 return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                    feedback=f"Phản hồi bắt đầu bằng tín hiệu lỗi '{marker}'. Hãy xử lý lỗi rõ ràng hơn")
+                    feedback=f"Phát hiện chuỗi cảnh báo lỗi '{marker}' ở đầu phản hồi. Vui lòng cung cấp kết quả xử lý hợp lệ")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class ToolResultGrader(BaseGrader):
@@ -89,7 +89,7 @@ class ToolResultGrader(BaseGrader):
         tool_error = context.get("tool_error")
         if tool_error:
             return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                feedback=f"Công cụ trả về lỗi: {str(tool_error)[:200]}. Hãy thử công cụ khác hoặc điều chỉnh tham số.")
+                feedback=f"Tiến trình thực thi công cụ thất bại: {str(tool_error)[:200]}. Vui lòng thay đổi tham số đầu vào hoặc chuyển đổi công cụ")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class KeywordPresenceGrader(BaseGrader):
@@ -111,7 +111,7 @@ class KeywordPresenceGrader(BaseGrader):
         if missing:
             return GraderResult(grader_name=self.name, passed=False,
                 score=1.0 - len(missing) / len(self.required_keywords),
-                feedback=f"Phản hồi thiếu thông tin bắt buộc: {', '.join(missing)}.")
+                feedback=f"Nội dung phản hồi bị thiếu các từ khóa bắt buộc: {', '.join(missing)}")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class HallucinationGrader(BaseGrader):
@@ -141,9 +141,9 @@ class HallucinationGrader(BaseGrader):
             if result.is_hallucination_or_refusal and result.confidence > 0.7:
                 return GraderResult(grader_name=self.name, passed=False,
                     score=1.0 - result.confidence,
-                    feedback=f"Phát hiện hallucination (confidence={result.confidence:.2f}): {result.explanation}. Hãy trả lời dựa trên thông tin thực tế.")
+                    feedback=f"Hệ thống phát hiện dấu hiệu ảo giác dữ liệu (mức độ tin cậy: {result.confidence:.2f}): {result.explanation}. Vui lòng cung cấp phản hồi dựa trên thông tin đã được kiểm chứng")
         except Exception as e:
-            logger.warning(f"HallucinationGrader error, skipping: {e}")
+            logger.warning(f"HallucinationGrader error, skipping {e}")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 
@@ -175,10 +175,10 @@ class RelevanceGrader(BaseGrader):
             if not result.is_relevant or result.relevance_score < 0.5:
                 return GraderResult(grader_name=self.name, passed=False,
                     score=result.relevance_score,
-                    feedback=f"Phản hồi không đủ liên quan (score={result.relevance_score:.2f}): {result.feedback}.")
+                    feedback=f"Mức độ liên quan của phản hồi không đạt yêu cầu (điểm đánh giá: {result.relevance_score:.2f}): {result.feedback}")
             return GraderResult(grader_name=self.name, passed=True, score=result.relevance_score)
         except Exception as e:
-            logger.warning(f"RelevanceGrader error, skipping: {e}")
+            logger.warning(f"RelevanceGrader error, skipping {e}")
             return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 
@@ -193,7 +193,7 @@ class Rubric:
         resolved: List[GraderResult] = []
         for i, res in enumerate(results):
             if isinstance(res, Exception):
-                logger.warning(f"Grader {self.graders[i].name} raised: {res}")
+                logger.warning(f"Grader {self.graders[i].name} raised {res}")
                 resolved.append(GraderResult(grader_name=self.graders[i].name, passed=True, score=1.0))
             else:
                 resolved.append(res)
@@ -252,12 +252,12 @@ class RubricMiddleware:
         last_rubric_result = None
 
         for attempt in range(1, self.max_retries + 1):
-            logger.info(f"RubricMiddleware: attempt {attempt}/{self.max_retries} (rubric={self.rubric.name})")
+            logger.info(f"RubricMiddleware attempt {attempt}/{self.max_retries} (rubric={self.rubric.name})")
             try:
                 last_response = await agent_callable(*current_args, **current_kwargs)
             except Exception as e:
-                logger.exception(f"Agent callable failed on attempt {attempt}: {e}")
-                last_response = f"Lỗi thực thi: {e}"
+                logger.exception(f"Agent callable failed on attempt {attempt} {e}")
+                last_response = f"Lỗi thực thi {e}"
 
             rubric_result = await self.rubric.evaluate(
                 response=last_response, context=context, attempt=attempt)
@@ -265,7 +265,7 @@ class RubricMiddleware:
             self._history.append(rubric_result)
 
             if rubric_result.passed:
-                logger.info(f"RubricMiddleware: PASSED on attempt {attempt} (score={rubric_result.average_score:.2f})")
+                logger.info(f"RubricMiddleware PASSED on attempt {attempt} (score={rubric_result.average_score:.2f})")
                 return last_response, rubric_result
 
             logger.warning(
@@ -278,7 +278,7 @@ class RubricMiddleware:
                     current_kwargs = new_kwargs
                 await asyncio.sleep(self.retry_delay_seconds)
 
-        logger.warning(f"RubricMiddleware: max retries ({self.max_retries}) reached.")
+        logger.warning(f"RubricMiddleware max retries ({self.max_retries}) reached.")
         return last_response, last_rubric_result
 
     def get_history(self) -> list[RubricResult]:

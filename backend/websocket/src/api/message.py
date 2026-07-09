@@ -25,11 +25,11 @@ async def websocket_endpoint(
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         token_user_id = payload.get("uid") or payload.get("sub")
         if token_user_id != user_id:
-            logger.warning("Thông tin xác thực không chính xác")
+            logger.warning("WebSocket authentication failed due to User ID mismatch")
             await websocket.close(code=1008)
             return
     except Exception as e:
-        logger.exception("Lỗi xác thực kết nối do mã thông báo không hợp lệ hoặc đã hết hạn")
+        logger.exception("WebSocket authentication failed due to invalid or expired token")
         await websocket.close(code=1008)
         return
 
@@ -72,5 +72,5 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
     except Exception as e:
-        logger.exception("Lỗi xử lý luồng tin nhắn trực tiếp")
+        logger.exception("Direct message stream processing failed")
         message_manager.disconnect(user_id, websocket)

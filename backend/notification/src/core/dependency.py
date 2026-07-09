@@ -50,7 +50,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Phiên đăng nhập của bạn đã quá hạn an toàn, vui lòng tiến hành đăng nhập lại",
+        detail="Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại hệ thống",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -58,22 +58,22 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         email: str = payload.get("sub")
         session_id: str = payload.get("sid")
         if email is None or session_id is None:
-            logger.warning("Lỗi xác minh mã thông báo do thiếu thông tin")
+            logger.warning("Token verification failed due to missing identity claims")
             raise credentials_exception
     except jwt.PyJWTError as e:
-        logger.exception("Lỗi giải mã xác thực do dữ liệu không hợp lệ")
+        logger.exception("Authentication decoding failed due to invalid token payload")
         raise credentials_exception
 
     uid = payload.get("uid")
     if not uid:
-        logger.warning("Thiếu UID trong token")
+        logger.warning("Token verification failed due to missing identity claims")
         raise credentials_exception
 
     is_valid_session = await redis.sismember(
         f"user_sessions:{uid}", session_id
     )
     if not is_valid_session:
-        logger.warning("Ngăn chặn truy cập phiên đăng nhập đã hủy")
+        logger.warning("Attempted to use an invalidated or revoked session token")
         raise credentials_exception
 
     user_doc = {
@@ -111,10 +111,10 @@ def require_role(required_roles: List[Role]):
         if current_user.role == Role.ADMIN:
             return current_user
         if current_user.role not in required_roles:
-            logger.warning("Từ chối truy cập do không đủ ủy quyền")
+            logger.warning("Access denied due to insufficient authorization privileges")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Không có quyền thực hiện thao tác này",
+                detail="Tài khoản của bạn không có quyền thực hiện thao tác này",
             )
         return current_user
 
@@ -127,8 +127,6 @@ class RateLimiting:
         self.period = period
 
     async def __call__(self, request: Request):
-        if settings.SERVICE_DB_NAME == "doclib_test":
-            return True
 
         client_ip = request.client.host if request.client else "unknown"
         path = request.url.path
@@ -137,7 +135,7 @@ class RateLimiting:
         if current is not None and int(current) >= self.calls:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Vượt quá giới hạn yêu cầu, tạm thời bị hạn chế truy cập",
+                detail="Hệ thống đang xử lý quá nhiều yêu cầu, vui lòng thử lại sau",
             )
         await redis.pipeline_incr_expire(key, self.period)
         return True
@@ -154,7 +152,7 @@ def require_permissions(required_permissions: List[str]):
         if missing:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Thao tác bị từ chối do không đủ quyền",
+                detail="Tài khoản của bạn thiếu quyền hạn bắt buộc để thực hiện thao tác này",
             )
         return current_user
 
@@ -173,7 +171,7 @@ def get_current_user_from_header(
     if not x_user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Thiếu thông tin định danh người dùng",
+            detail="Không tìm thấy thông tin định danh người dùng hợp lệ",
         )
     return AuthenticatedUser(x_user_id, x_user_name)
 

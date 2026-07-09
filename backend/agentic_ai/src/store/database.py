@@ -43,7 +43,7 @@ class DatabaseStore:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.exception("Lỗi đẩy dữ liệu chỉ mục tìm kiếm vào RabbitMQ")
+                logger.exception("Search index payload upsert queue error")
 
     async def ensure_collection(self):
         try:
@@ -61,7 +61,7 @@ class DatabaseStore:
                     ),
                 )
         except Exception as e:
-            logger.exception("Lỗi khởi tạo cấu trúc chỉ mục tìm kiếm hệ thống")
+            logger.exception("System search index structure initialization error")
             raise
 
     async def upsert(
@@ -121,7 +121,7 @@ class DatabaseStore:
                 for hit in results
             ]
         except Exception as e:
-            logger.exception("Lỗi phân tích và xử lý truy vấn tìm kiếm")
+            logger.exception("Search query parsing and processing error")
             return []
 
     async def delete_by_document(self, document_id: str):
@@ -137,7 +137,7 @@ class DatabaseStore:
                 ),
             )
         except Exception as e:
-            logger.exception("Lỗi xóa bỏ chỉ mục tìm kiếm")
+            logger.exception("Search index deletion error")
             raise
 
 vector_store = DatabaseStore()

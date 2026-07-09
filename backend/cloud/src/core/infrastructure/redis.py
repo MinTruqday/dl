@@ -17,56 +17,56 @@ class RedisAPIClient:
         try:
             return await self.get_client().set(key, value)
         except Exception as e:
-            logger.exception(f"Lỗi lưu trữ dữ liệu (SET) vào Redis Cache với khóa {key}")
+            logger.exception(f"Failed to execute SET operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def setex(self, key: str, expire: int, value: str):
         try:
             return await self.get_client().setex(key, expire, value)
         except Exception as e:
-            logger.exception(f"Lỗi lưu trữ dữ liệu có thời hạn (SETEX) vào Redis Cache với khóa {key}")
+            logger.exception(f"Failed to execute SETEX operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def get(self, key: str):
         try:
             return await self.get_client().get(key)
         except Exception as e:
-            logger.exception(f"Lỗi lấy dữ liệu (GET) từ Redis Cache với khóa {key}")
+            logger.exception(f"Failed to execute GET operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def delete(self, key: str):
         try:
             return await self.get_client().delete(key)
         except Exception as e:
-            logger.exception(f"Lỗi xóa dữ liệu (DELETE) khỏi Redis Cache với khóa {key}")
+            logger.exception(f"Failed to execute DELETE operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def sadd(self, key: str, member: str):
         try:
             return await self.get_client().sadd(key, member)
         except Exception as e:
-            logger.exception(f"Lỗi thêm phần tử (SADD) vào set Redis Cache với khóa {key}")
+            logger.exception(f"Failed to execute SADD operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def sismember(self, key: str, member: str):
         try:
             return await self.get_client().sismember(key, member)
         except Exception as e:
-            logger.exception(f"Lỗi kiểm tra phần tử (SISMEMBER) trong set Redis Cache với khóa {key}")
+            logger.exception(f"Failed to execute SISMEMBER operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def smembers(self, key: str):
         try:
             return await self.get_client().smembers(key)
         except Exception as e:
-            logger.exception(f"Lỗi lấy danh sách phần tử (SMEMBERS) từ set Redis Cache với khóa {key}")
+            logger.exception(f"Failed to execute SMEMBERS operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def publish(self, channel: str, message: str):
         try:
             return await self.get_client().publish(channel, message)
         except Exception as e:
-            logger.exception(f"Lỗi xuất bản tin nhắn (PUBLISH) lên kênh {channel} của Redis Cache")
+            logger.exception(f"Failed to execute PUBLISH operation to Redis channel {channel}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def pipeline_incr_expire(self, key: str, expire: int):
@@ -78,7 +78,7 @@ class RedisAPIClient:
                 res = await pipe.execute()
                 return res
         except Exception as e:
-            logger.exception(f"Lỗi thực thi pipeline (INCR/EXPIRE) trên Redis Cache với khóa {key}")
+            logger.exception(f"Failed to execute atomic INCR/EXPIRE pipeline on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
     async def aclose(self):

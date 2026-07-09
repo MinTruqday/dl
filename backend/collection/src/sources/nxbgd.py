@@ -64,13 +64,13 @@ class NxbgdSource:
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info("[NXBGD] Chụp và lưu trang tài liệu thành công")
+                        logger.info("[NXBGD] Document page captured and saved successfully")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.exception("[NXBGD] Lỗi tải hình ảnh trang")
+                    logger.exception("[NXBGD] Page image download failed")
         except Exception as e:
-            logger.exception("[NXBGD] Lỗi phân tích dữ liệu mạng")
+            logger.exception("[NXBGD] Network response analysis failed")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -101,16 +101,16 @@ class NxbgdSource:
         )
 
         if not image_files:
-            logger.warning("[NXBGD] Bỏ qua quá Tectonic do không quét được ảnh hợp lệ")
+            logger.warning("[NXBGD] Skipping PDF compilation due to lack of valid captured images")
             return
 
         try:
-            logger.info("[NXBGD] Đang biên dịch hình ảnh thành file PDF")
+            logger.info("[NXBGD] Compiling captured images into PDF document")
             with open(pdf_path, "wb") as f:
                 f.write(img2pdf.convert(image_files))
-            logger.info("[NXBGD] Biên dịch và lưu tài liệu tạm thời thành công")
+            logger.info("[NXBGD] PDF compilation and temporary storage successful")
 
-            logger.info("[NXBGD] Đang chuyển tài liệu biên dịch vào lưu trữ vĩnh viễn")
+            logger.info("[NXBGD] Uploading compiled document to permanent storage")
             minio_url = await storage.upload_local_file(
                 f"documents/nxbgd/{final_pdf_name}", pdf_path
             )
@@ -136,22 +136,22 @@ class NxbgdSource:
                     pass
 
         except Exception as e:
-            logger.exception("[NXBGD] Lỗi biên dịch và tải lên tài liệu")
+            logger.exception("[NXBGD] Document compilation or upload failed")
             raise
         finally:
 
-            logger.exception("[NXBGD] Đang xóa dữ liệu tạm thời")
+            logger.info("[NXBGD] Cleaning up temporary data directories")
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception as e:
-                logger.exception("[NXBGD] Lỗi quyền truy cập khi xóa tệp tạm thời")
+                logger.exception("[NXBGD] Permission error during temporary file cleanup")
 
     async def execute(self):
         await self.init_browser()
 
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         try:
-            logger.info("[NXBGD] Đang truy cập tên miền gốc để quét danh mục")
+            logger.info("[NXBGD] Accessing root domain for category scraping")
             await self.page.goto(url, timeout=60000)
             await asyncio.sleep(5)
 
@@ -167,7 +167,7 @@ class NxbgdSource:
                     if href and href not in document_urls:
                         document_urls.append(href)
 
-                logger.info("[NXBGD] Tìm thấy tài liệu trên trang thành công")
+                logger.info("[NXBGD] Found document elements on category page successfully")
 
                 for doc_url in document_urls:
                     full_doc_url = (
@@ -175,7 +175,7 @@ class NxbgdSource:
                         if doc_url.startswith("/")
                         else doc_url
                     )
-                    logger.info("[NXBGD] Đang truy xuất chi tiết thông tin tài liệu")
+                    logger.info("[NXBGD] Retrieving detailed document information")
 
                     try:
                         await self.page.goto(full_doc_url, timeout=60000)
@@ -193,7 +193,7 @@ class NxbgdSource:
                             full_title = res_name
 
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info("[NXBGD] Bỏ qua tài liệu đã xử lý")
+                                logger.info("[NXBGD] Skipping already processed document")
                                 continue
 
                             await dedup.mark_collected("taphuan_book", full_title)
@@ -202,7 +202,7 @@ class NxbgdSource:
                             if viewer_url.startswith("/"):
                                 viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
 
-                            logger.info("[NXBGD] Đang chuẩn bị xử lý nội dung chi tiết")
+                            logger.info("[NXBGD] Preparing to process detailed document content")
 
                             safe_title = re.sub(r'[\\/*?:"<>|]', "", full_title).strip()
                             import tempfile
@@ -234,7 +234,7 @@ class NxbgdSource:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
                                 except Exception as e:
-                                    logger.exception("[NXBGD] Lỗi tương tác trình xem tài liệu")
+                                    logger.exception("[NXBGD] Document viewer interaction failed")
                                 await asyncio.sleep(2)
 
                                 current_pages = len(self.captured_hashes)
@@ -244,7 +244,7 @@ class NxbgdSource:
                                 ):
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info("[NXBGD] Quét tài liệu thành công")
+                                        logger.info("[NXBGD] Document scanning completed successfully")
                                         break
                                 else:
                                     stable_count = 0
@@ -254,7 +254,7 @@ class NxbgdSource:
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
                     except Exception as e:
-                        logger.exception("[NXBGD] Lỗi kiểm tra thông tin tài liệu")
+                        logger.exception("[NXBGD] Document information extraction failed")
 
                 try:
                     await self.page.goto(url, timeout=60000)
@@ -266,25 +266,25 @@ class NxbgdSource:
                         and "p-disabled"
                         not in (await next_btn.get_attribute("class") or "")
                     ):
-                        logger.info("[NXBGD] Đang tải thêm danh sách tài liệu")
+                        logger.info("[NXBGD] Loading next page of document list")
                         await next_btn.click()
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info("[NXBGD] Đã quét đến trang cuối cùng")
+                        logger.info("[NXBGD] Reached the last page of document list")
                 except Exception as e:
-                    logger.exception("[NXBGD] Lỗi chuyển trang tự động")
+                    logger.exception("[NXBGD] Automatic pagination failed")
                     has_next = False
 
                 break
 
         except Exception as e:
-            logger.exception("[NXBGD] Lỗi chuyển hướng khi thu thập dữ liệu nguồn")
+            logger.exception("[NXBGD] Redirection error during source data collection")
             raise
         finally:
             await self.close()
 
 async def run_nxbgd_collector(target_class: str):
-    logger.info("[NXBGD] Đang khởi tạo chuỗi thu thập dữ liệu")
+    logger.info("[NXBGD] Initializing data collection pipeline")
     collector = NxbgdSource(target_class=target_class)
     await collector.execute()

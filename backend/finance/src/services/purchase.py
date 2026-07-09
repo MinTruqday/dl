@@ -66,7 +66,7 @@ class PurchaseService:
         if tier not in ["PRO", "PREMIUM"]:
             raise HTTPException(
                 status_code=400,
-                detail="Gói hội viên không hợp lệ, vui lòng chọn lại",
+                detail="Yêu cầu từ chối: Gói hội viên không hợp lệ, vui lòng chọn lại tùy chọn phù hợp",
             )
 
         price = 750 if tier == "PRO" else 2500
@@ -74,14 +74,14 @@ class PurchaseService:
         if current_user.ai_tier and current_user.ai_tier.value == tier:
             raise HTTPException(
                 status_code=400,
-                detail="Tài khoản đã có gói thành viên này",
+                detail="Tài khoản hiện đã được đăng ký và sở hữu gói thành viên này",
             )
 
         wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < price:
             raise HTTPException(
                 status_code=400,
-                detail="Số dư không đủ để đăng ký gói thành viên",
+                detail="Yêu cầu từ chối: Số dư ví không đủ để đăng ký và kích hoạt gói thành viên",
             )
 
         session = await database.mongodb.start_session()
@@ -96,7 +96,7 @@ class PurchaseService:
                 await session.abort_transaction()
                 raise HTTPException(
                     status_code=400,
-                    detail="Số dư không đủ để đăng ký gói thành viên",
+                    detail="Yêu cầu từ chối: Số dư ví không đủ để đăng ký và kích hoạt gói thành viên",
                 )
 
             await mongo.update_one("users", 
@@ -116,7 +116,7 @@ class PurchaseService:
             )
 
             await session.commit_transaction()
-            logger.info("Nâng cấp gói thành viên thành công")
+            logger.info("Membership tier successfully upgraded and activated for user")
             return {
                 "tier": tier,
                 "status": "active",
@@ -125,10 +125,10 @@ class PurchaseService:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.exception("Lỗi nâng cấp gói thành viên hệ thống")
+            logger.exception("System encountered an error while processing membership upgrade")
             raise HTTPException(
                 status_code=500,
-                detail=f"Lỗi nâng cấp gói thành viên, vui lòng thử lại sau: {e}",
+                detail="Không thể hoàn tất quá trình nâng cấp gói thành viên, vui lòng thử lại sau",
             )
         finally:
             await session.end_session()
@@ -149,7 +149,7 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy dữ liệu tài liệu theo yêu cầu")
         price = doc.get("price_dl", doc.get("price_dls", 0))
         if price <= 0:
             if should_close_session:
@@ -162,7 +162,7 @@ class PurchaseService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Tài khoản không đủ tiền để giao dịch"
+                status_code=400, detail="Yêu cầu từ chối: Số dư ví không đủ để thực hiện giao dịch thanh toán"
             )
         lock = None
         if redis:
@@ -195,7 +195,7 @@ class PurchaseService:
                     if should_close_session:
                         await session.abort_transaction()
                     raise HTTPException(
-                        status_code=400, detail="Tài khoản không đủ tiền để giao dịch"
+                        status_code=400, detail="Yêu cầu từ chối: Số dư ví không đủ để thực hiện giao dịch thanh toán"
                     )
                 if creator_id:
                     await mongo.update_one("wallets", 
@@ -265,10 +265,10 @@ class PurchaseService:
                                         },
                                     )
                         except Exception as e:
-                            logger.exception("Lỗi gửi thông báo xác nhận giao dịch thành công")
-                logger.info("Giao dịch mua tài liệu thành công")
+                            logger.exception("Failed to send transaction confirmation notification")
+                logger.info("Document purchase transaction completed and recorded successfully")
                 return {
-                    "message": "Thanh toán mua tài liệu thành công",
+                    "message": "Thực hiện giao dịch thanh toán mua tài liệu thành công",
                     "status": "purchased",
                 }
             except HTTPException:
@@ -276,9 +276,9 @@ class PurchaseService:
             except Exception as e:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.exception("Lỗi quá trình xử lý thanh toán tài liệu")
+                logger.exception("System encountered an error during document purchase transaction processing")
                 raise HTTPException(
-                    status_code=500, detail=f"Lỗi xử lý giao dịch tài chính: {e}"
+                    status_code=500, detail="Quá trình xử lý giao dịch tài chính gặp sự cố"
                 )
             finally:
                 if should_close_session:
@@ -314,7 +314,7 @@ class PurchaseService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy lịch sử giao dịch mua hàng"
+                status_code=404, detail="Không tìm thấy lịch sử giao dịch mua hàng khớp với dữ liệu yêu cầu"
             )
         purchased_at = purchase.get("purchased_at", datetime.now(timezone.utc))
         if isinstance(purchased_at, str):
@@ -323,7 +323,7 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=400, detail="Từ chối hoàn tiền do quá hạn")
+            raise HTTPException(status_code=400, detail="Yêu cầu hoàn tiền không hợp lệ do vượt quá thời hạn cho phép")
         price = purchase.get("price", 0)
         doc_id = purchase.get("document_id")
         doc = await mongo.find_one(collection="documents", query={"_id": doc_id}) if doc_id else None
@@ -347,7 +347,7 @@ class PurchaseService:
                         await session.abort_transaction()
                     raise HTTPException(
                         status_code=400,
-                        detail="Tài khoản không đủ số dư để hoàn tiền",
+                        detail="Yêu cầu từ chối: Tài khoản người bán không đủ số dư để thực hiện giao dịch hoàn tiền",
                     )
 
             await mongo.update_one("purchases", 
@@ -387,8 +387,8 @@ class PurchaseService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception("Lỗi quá trình xử lý hoàn tiền giao dịch")
-            raise HTTPException(status_code=500, detail=f"Lỗi xử lý hoàn tiền: {e}")
+            logger.exception("System encountered an error while processing refund transaction")
+            raise HTTPException(status_code=500, detail="Quá trình xử lý yêu cầu hoàn tiền gặp sự cố")
         finally:
             if should_close_session:
                 await session.end_session()

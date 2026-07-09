@@ -26,7 +26,7 @@ class CompositionService:
     ):
         if not content:
             raise HTTPException(
-                status_code=400, detail="Không thể xử lý vì tài liệu rỗng"
+                status_code=400, detail="Hệ thống không thể xử lý yêu cầu với nội dung tài liệu rỗng"
             )
         try:
             url = f"{compiler_url}/export/{format_type}"
@@ -36,16 +36,16 @@ class CompositionService:
                 )
                 if response.status_code != 200:
                     raise HTTPException(
-                        status_code=422, detail="Lỗi xuất định dạng tài liệu"
+                        status_code=422, detail="Quá trình xuất tài liệu sang định dạng yêu cầu gặp sự cố"
                     )
                 return response.content
         except httpx.TimeoutException as e:
-            raise HTTPException(status_code=408, detail=f"Quá thời gian xuất tài liệu: {e}")
+            raise HTTPException(status_code=408, detail="Quá trình xuất tài liệu vượt quá thời gian quy định")
         except HTTPException:
             raise
         except Exception as e:
-            logger.exception("Lỗi chuyển đổi định dạng khi xuất tài liệu")
-            raise HTTPException(status_code=500, detail=f"Lỗi xuất tài liệu: {e}")
+            logger.exception("Failed to convert document to requested export format")
+            raise HTTPException(status_code=500, detail="Quá trình xuất tài liệu gặp sự cố kỹ thuật")
 
     @staticmethod
     @log_logic_execution
@@ -54,7 +54,7 @@ class CompositionService:
     ):
         if not content:
             raise HTTPException(
-                status_code=400, detail="Không thể xử lý vì tài liệu rỗng"
+                status_code=400, detail="Hệ thống không thể xử lý yêu cầu với nội dung tài liệu rỗng"
             )
         try:
             url = f"{compiler_url}/compile"
@@ -62,19 +62,19 @@ class CompositionService:
                 response = await http_client.post(url, json={"content": content})
                 if response.status_code != 200:
                     raise HTTPException(
-                        status_code=422, detail="Lỗi biên dịch tài liệu"
+                        status_code=422, detail="Hệ thống gặp sự cố trong quá trình biên dịch tài liệu"
                     )
                 return response.content
         except httpx.TimeoutException as e:
             raise HTTPException(
                 status_code=408,
-                detail=f"Quá thời gian chờ, quá trình biên dịch tài liệu bị hủy: {e}",
+                detail="Quá trình biên dịch vượt quá thời gian quy định và đã bị hủy bỏ",
             )
         except HTTPException:
             raise
         except Exception as e:
-            logger.exception("Lỗi trong quá Tectonic tài liệu")
-            raise HTTPException(status_code=500, detail=f"Lỗi biên dịch tài liệu: {e}")
+            logger.exception("Unexpected error occurred during Tectonic compilation")
+            raise HTTPException(status_code=500, detail="Quá trình biên dịch tài liệu gặp sự cố không mong muốn")
 
     @staticmethod
     @log_logic_execution
@@ -92,8 +92,8 @@ class CompositionService:
                 )
             return {"status": "synced_cache", "timestamp": payload.get("timestamp")}
         except Exception as e:
-            logger.exception("Lỗi đồng bộ hóa dữ liệu từ bộ nhớ đệm")
-            return {"status": "sync_failed", "error": f"Lỗi đồng bộ hóa dữ liệu: {e}"}
+            logger.exception("Failed to synchronize document keystroke buffer from cache")
+            return {"status": "sync_failed", "error": "Quá trình đồng bộ hóa dữ liệu từ bộ nhớ đệm gặp sự cố"}
 
     @staticmethod
     @log_logic_execution
@@ -112,8 +112,8 @@ class CompositionService:
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }
         )
-        logger.info("Đã ghi nhận đề xuất chỉnh sửa mới")
-        return {"message": "Đã gửi đề xuất chỉnh sửa"}
+        logger.info("New inline suggestion successfully registered")
+        return {"message": "Thực hiện ghi nhận thông tin đề xuất chỉnh sửa thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -126,7 +126,7 @@ class CompositionService:
         )
         if not sug:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy đề xuất chỉnh sửa"
+                status_code=404, detail="Không tìm thấy dữ liệu đề xuất chỉnh sửa trên hệ thống"
             )
         doc = None
         try:
@@ -137,7 +137,7 @@ class CompositionService:
                 if r.status_code == 200:
                     doc = r.json().get("data")
         except Exception as e:
-            logger.exception("Không thể lấy thông tin tài liệu để kiểm tra quyền")
+            logger.exception("Failed to fetch document metadata to verify authorization")
         if (
             doc
             and str(doc.get("creator_id")) != user_id
@@ -145,7 +145,7 @@ class CompositionService:
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Không có quyền giải quyết đề xuất chỉnh sửa này",
+                detail="Tài khoản không có đủ thẩm quyền để giải quyết đề xuất chỉnh sửa này",
             )
 
         action = payload.get("action", "rejected")
@@ -158,8 +158,8 @@ class CompositionService:
                 }
             },
         )
-        logger.info("Đã giải quyết đề xuất chỉnh sửa")
-        return {"message": "Cập nhật đề xuất chỉnh sửa thành công"}
+        logger.info("Inline suggestion successfully resolved")
+        return {"message": "Thực hiện xử lý đề xuất chỉnh sửa thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -174,7 +174,7 @@ class CompositionService:
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }
         )
-        logger.info("Ghi nhận phiên tập trung thành công")
+        logger.info("Pomodoro session metrics successfully recorded")
         return {"status": "The session metrics have been successfully recorded"}
 
     @staticmethod
@@ -222,7 +222,7 @@ class CompositionService:
                 if "data" in block and "text" in block["data"]:
                     words += len(str(block["data"]["text"]).split())
         except Exception as e:
-            logger.exception("Lỗi cấu trúc trong quá trình phân tích bản nháp")
+            logger.exception("Document structure analysis failed during draft parsing")
 
         reading_time_minutes = max(1, words // 200)
         try:
@@ -237,9 +237,9 @@ class CompositionService:
                     headers={"X-User-Id": user_id},
                 )
         except Exception as e:
-            logger.exception("Lỗi lưu trữ bản nháp vào hệ thống quản lý nội dung")
+            logger.exception("Failed to persist document draft to content management system")
         return {
-            "message": "Lưu bản nháp thành công",
+            "message": "Thực hiện thao tác lưu tự động bản nháp thành công",
             "timestamp": str(datetime.now(timezone.utc)),
         }
 
@@ -255,9 +255,9 @@ class CompositionService:
                     headers={"X-User-Id": user_id},
                 )
         except Exception as e:
-            logger.exception("Lỗi gửi yêu cầu xét duyệt tài liệu")
-        logger.info("Đã chuyển tài liệu vào hàng đợi xét duyệt")
-        return {"message": "Đã đưa tài liệu vào hàng đợi xét duyệt"}
+            logger.exception("Failed to submit document for administrative review")
+        logger.info("Document successfully transitioned to pending review status")
+        return {"message": "Đưa tài liệu vào hàng đợi xét duyệt thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -280,11 +280,11 @@ class CompositionService:
                 if r.status_code == 200:
                     document = r.json().get("data")
         except Exception as e:
-            logger.exception("Lỗi tải thông tin tài liệu từ hệ thống quản lý nội dung")
+            logger.exception("Failed to fetch document metadata from content management system")
         if not document or str(document.get("creator_id")) != user_id:
             raise HTTPException(
                 status_code=403,
-                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
+                detail="Không tìm thấy tài liệu hoặc tài khoản không có quyền truy cập",
             )
 
         flags = 0 if match_case else re.IGNORECASE
@@ -330,9 +330,9 @@ class CompositionService:
                     headers={"X-User-Id": user_id},
                 )
         except Exception as e:
-            logger.exception("Lỗi cập nhật nội dung tài liệu")
+            logger.exception("Failed to persist updated document content after find and replace")
         
-        logger.info("Tìm kiếm và thay thế thành công")
+        logger.info("Global find and replace operation completed successfully")
         return {
             "message": "Thao tác tìm kiếm và thay thế thành công",
             "affected_fields": ["title", "description", "content"],
@@ -356,7 +356,7 @@ class CompositionService:
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         await CompositionRepository.insert_comment(comment)
-        return {"_id": comment_id, "message": "Ghi nhận bình luận thành công"}
+        return {"_id": comment_id, "message": "Thực hiện thêm mới bình luận theo ngữ cảnh thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -385,7 +385,7 @@ class CompositionService:
         )
         if not comment:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy bình luận trực tiếp"
+                status_code=404, detail="Không tìm thấy dữ liệu bình luận trực tiếp trên hệ thống"
             )
 
         doc = None
@@ -397,14 +397,14 @@ class CompositionService:
                 if r.status_code == 200:
                     doc = r.json().get("data")
         except Exception as e:
-            logger.exception("Không thể lấy thông tin tài liệu để kiểm tra quyền")
+            logger.exception("Failed to fetch document metadata to verify authorization")
         if (
             doc
             and str(doc.get("creator_id")) != str(current_user.id)
             and comment.get("user_id") != str(current_user.id)
         ):
             raise HTTPException(
-                status_code=403, detail="Không có quyền giải quyết bình luận này"
+                status_code=403, detail="Tài khoản không có đủ thẩm quyền để đánh dấu giải quyết bình luận này"
             )
 
         await CompositionRepository.update_comment(
@@ -417,7 +417,7 @@ class CompositionService:
                 }
             },
         )
-        return {"message": "Đã đánh dấu bình luận là đã giải quyết"}
+        return {"message": "Thực hiện đánh dấu giải quyết bình luận thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -438,10 +438,10 @@ class CompositionService:
                         if str(v.get("_id")) == version_id_b:
                             v_b = v
         except Exception as e:
-            logger.exception("Lỗi truy xuất lịch sử phiên bản tài liệu")
+            logger.exception("Failed to retrieve document version history for comparison")
         if not v_a or not v_b:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy phiên bản tài liệu để so sánh"
+                status_code=404, detail="Hệ thống không tìm thấy các phiên bản tài liệu yêu cầu để thực hiện so sánh"
             )
         return {
             "version_a": v_a.get("content"),

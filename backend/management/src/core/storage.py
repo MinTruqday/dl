@@ -39,9 +39,9 @@ async def initialize_bucket():
         try:
             await storage_client.head_bucket(Bucket=bucket)
         except ClientError as e:
-            logger.exception(f"Đang khởi tạo không gian lưu trữ {bucket}")
+            logger.info(f"Initializing storage bucket {bucket}")
             await storage_client.create_bucket(Bucket=bucket)
-            logger.exception(f"Khởi tạo không gian lưu trữ {bucket} thành công")
+            logger.info(f"Storage bucket initialized successfully {bucket}")
 
 async def upload_file(
     file_content: bytes,

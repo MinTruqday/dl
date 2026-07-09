@@ -15,7 +15,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
     return await call_next(request)
 
 app.add_middleware(
@@ -33,7 +33,7 @@ app.include_router(composition_socket)
 app.include_router(message_socket)
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Tính năng tin nhắn đã sẵn sàng")
+    logger.info("WebSocket service initialized successfully")
 @app.on_event("shutdown")
 async def shutdown_event():
     from src.core.infrastructure.database import close_db

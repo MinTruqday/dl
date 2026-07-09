@@ -21,7 +21,7 @@ async def create_deposit(
         data=await DepositService.create_deposit_link(
             req, current_user
         ),
-        message="Đã khởi tạo giao dịch nạp tiền, đang chờ xác nhận",
+        message="Khởi tạo giao dịch nạp tiền thành công, hệ thống đang chờ xác nhận",
         status=201,
     )
 
@@ -33,6 +33,6 @@ async def verify_deposit(
 ):
     return APIResponse(
         data=await DepositService.verify_deposit(order_code, current_user),
-        message="Xác minh giao dịch thành công",
+        message="Xác minh giao dịch nạp tiền thành công",
         status=200,
     )

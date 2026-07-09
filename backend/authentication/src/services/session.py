@@ -24,12 +24,12 @@ class SessionService:
     async def register_user(user_in: UserCreate, client_ip: str):
         config = await IdentityRepository.get_system_config()
         if config and (not config.get("registration_enabled", True)):
-            raise HTTPException(status_code=403, detail="Tạo tài khoản tạm thời bị vô hiệu hóa")
+            raise HTTPException(status_code=403, detail="Tính năng đăng ký tài khoản mới tạm thời bị vô hiệu hóa trên hệ thống")
 
         if await IdentityRepository.get_auth_credential_by_email(user_in.email):
-            raise HTTPException(status_code=400, detail="Tài khoản với email này đã tồn tại")
+            raise HTTPException(status_code=400, detail="Địa chỉ thư điện tử đã được sử dụng cho một tài khoản khác")
         if await IdentityRepository.get_auth_credential_by_slug(user_in.slug):
-            raise HTTPException(status_code=400, detail="Tên người dùng đã được sử dụng")
+            raise HTTPException(status_code=400, detail="Tên đăng nhập đã tồn tại trên hệ thống")
 
         import httpx
         humanity_url = settings.HUMANITY_URL + "/nguoi-dung/"
@@ -42,11 +42,11 @@ class SessionService:
                     "role": "reader"
                 }, timeout=10.0)
                 if resp.status_code != 201:
-                    raise HTTPException(status_code=400, detail=f"Không thể tạo hồ sơ người dùng: {resp.text}")
+                    raise HTTPException(status_code=400, detail="Quá trình khởi tạo hồ sơ người dùng gặp sự cố")
                 user_id = resp.json()["data"]["user_id"]
             except Exception as e:
-                logger.exception("Lỗi gọi API Humanity khi tạo người dùng")
-                raise HTTPException(status_code=500, detail="Lỗi kết nối quản lý người dùng")
+                logger.exception("Failed to execute external HTTP request to Humanity service for user registration")
+                raise HTTPException(status_code=500, detail="Quá trình kết nối đến dịch vụ quản lý thông tin người dùng gặp sự cố")
 
         auth_cred = {
             "_id": user_id,
@@ -62,7 +62,7 @@ class SessionService:
             "ip": client_ip,
             "timestamp": datetime.now(timezone.utc),
         })
-        logger.info("Đăng ký tài khoản mới thành công")
+        logger.info("User account registration process completed successfully")
         return {
             "email": user_in.email,
             "full_name": user_in.full_name,
@@ -84,7 +84,7 @@ class SessionService:
             auth_cred = None
 
         if not auth_cred:
-            raise HTTPException(status_code=401, detail="Không tìm thấy tài khoản")
+            raise HTTPException(status_code=401, detail="Không tìm thấy thông tin tài khoản người dùng")
 
         password_hash = auth_cred.get("password_hash") if auth_cred else "invalid"
 
@@ -95,7 +95,7 @@ class SessionService:
                 "ip": client_ip,
                 "timestamp": datetime.now(timezone.utc),
             })
-            logger.warning("Đăng nhập thất bại do sai thông tin xác thực")
+            logger.warning("User authentication failed due to invalid credentials provided")
             raise HTTPException(status_code=401, detail="Thông tin đăng nhập không chính xác")
             
         user_id_str = str(auth_cred["_id"])
@@ -113,11 +113,11 @@ class SessionService:
                     role = user_data.get("role", "reader")
                     is_active = user_data.get("is_active", True)
             except Exception as e:
-                logger.exception("Lỗi gọi API Humanity lúc đăng nhập")
+                logger.exception("Failed to fetch user profile details from Humanity service during login")
                 pass
 
         if not is_active:
-            raise HTTPException(status_code=403, detail="Tài khoản đang bị khóa hoặc không hoạt động")
+            raise HTTPException(status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động")
 
         session_id = str(uuid7())
         from src.core.infrastructure.redis import redis
@@ -141,7 +141,7 @@ class SessionService:
             "ip": client_ip,
             "timestamp": datetime.now(timezone.utc),
         })
-        logger.info("Đăng nhập thành công")
+        logger.info("User authentication process completed successfully")
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -156,8 +156,8 @@ class SessionService:
     async def revoke_all_sessions(current_user: UserInDB):
         user_id_str = str(current_user.id)
         await IdentityRepository.revoke_all_sessions(user_id_str)
-        logger.info("Đã thu hồi tất cả phiên đăng nhập của tài khoản")
-        return {"message": "Đã đăng xuất khỏi tất cả thiết bị"}
+        logger.info("Revocation of all active user sessions completed successfully")
+        return {"message": "Thực hiện đăng xuất khỏi tất cả các thiết bị thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -189,8 +189,8 @@ class SessionService:
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
             except Exception as e:
-                logger.exception("Lỗi gửi thư điện tử khôi phục mật khẩu")
-        return {"status": "ok", "message": "Đang xử lý yêu cầu khôi phục mật khẩu"}
+                logger.exception("Failed to dispatch password recovery email notification")
+        return {"status": "ok", "message": "Hệ thống đang tiến hành xử lý yêu cầu khôi phục mật khẩu"}
 
     @staticmethod
     @log_logic_execution
@@ -198,7 +198,7 @@ class SessionService:
         token_doc = await IdentityRepository.get_valid_password_reset_token(token)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(
-                status_code=400, detail="Mã xác minh không hợp lệ hoặc đã hết hạn"
+                status_code=400, detail="Mã xác minh bảo mật không hợp lệ hoặc đã quá hạn sử dụng"
             )
         auth_cred = await IdentityRepository.get_auth_credential_by_email(
             token_doc["email"]
@@ -216,8 +216,8 @@ class SessionService:
                 "timestamp": datetime.now(timezone.utc),
             },
         )
-        logger.info("Đổi mật khẩu thành công")
-        return {"status": "ok", "message": "Cập nhật mật khẩu thành công"}
+        logger.info("User account password modification completed successfully")
+        return {"status": "ok", "message": "Thực hiện thay đổi mật khẩu tài khoản thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -225,16 +225,16 @@ class SessionService:
         token_doc = await IdentityRepository.get_valid_password_reset_token(token)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(
-                status_code=400, detail="Mã xác minh không hợp lệ hoặc đã hết hạn"
+                status_code=400, detail="Mã xác minh bảo mật không hợp lệ hoặc đã quá hạn sử dụng"
             )
-        return {"status": "ok", "message": "Mã xác minh hợp lệ"}
+        return {"status": "ok", "message": "Xác minh mã bảo mật thành công"}
 
     @staticmethod
     @log_logic_execution
     async def issue_token_for_user(user_doc: dict, client_ip: str):
         if not user_doc.get("is_active", True):
             raise HTTPException(
-                status_code=403, detail="Tài khoản đang bị khóa hoặc không hoạt động"
+                status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động"
             )
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])

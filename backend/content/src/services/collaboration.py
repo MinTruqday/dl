@@ -50,7 +50,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
+                detail="Hệ thống không tìm thấy tài liệu yêu cầu hoặc bạn không có quyền truy cập",
             )
         invitee = None
         try:
@@ -63,23 +63,23 @@ class CollaborationService:
         except Exception:
             pass
         if not invitee:
-            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy người dùng được yêu cầu")
         invitee_id = str(invitee["_id"])
         if invitee_id == str(current_user.id):
             raise HTTPException(
-                status_code=400, detail="Không thể gửi lời mời cộng tác cho chính mình"
+                status_code=400, detail="Thao tác không hợp lệ: Không thể gửi lời mời cộng tác cho chính chủ sở hữu"
             )
         existing_invite = await CollaborationRepository.find_invite(
             {"document_id": document_id, "invitee_id": invitee_id, "status": "PENDING"}
         )
         if existing_invite:
             raise HTTPException(
-                status_code=400, detail="Đã gửi lời mời cộng tác trước đó"
+                status_code=400, detail="Lời mời cộng tác đã được gửi trước đó và đang chờ phản hồi"
             )
         coauthors = doc.get("coauthors", [])
         if invitee_id in coauthors:
             raise HTTPException(
-                status_code=400, detail="Tài khoản đã tham gia cộng tác"
+                status_code=400, detail="Tài khoản yêu cầu đã là thành viên cộng tác của tài liệu này"
             )
         invite = {
             "_id": str(uuid7()),
@@ -99,9 +99,9 @@ class CollaborationService:
             "Send invitation",
             "A new editorial collaboration invitation has been processed and dispatched via the internal notification system",
         )
-        logger.info("Gửi lời mời cộng tác thành công")
+        logger.info("Collaboration invitation processed and sent successfully")
         return {
-            "message": "Xử lý và gửi lời mời cộng tác thành công",
+            "message": "Xử lý và gửi lời mời tham gia cộng tác thành công",
             "invite_id": invite["_id"],
         }
 
@@ -127,11 +127,11 @@ class CollaborationService:
         if not invite:
             raise HTTPException(
                 status_code=404,
-                detail="Lời mời cộng tác không hợp lệ hoặc đã được xử lý",
+                detail="Lời mời cộng tác không hợp lệ, đã hết hạn hoặc đã được xử lý trước đó",
             )
         if status not in ["ACCEPTED", "REJECTED"]:
             raise HTTPException(
-                status_code=400, detail="Trạng thái phản hồi lời mời không hợp lệ"
+                status_code=400, detail="Trạng thái phản hồi cung cấp không hợp lệ"
             )
         await CollaborationRepository.update_invite(
             {"_id": invite_id},
@@ -151,8 +151,8 @@ class CollaborationService:
             "Accepted" if status == "ACCEPTED" else "Declined",
             "The recipient has officially registered their response to the pending editorial collaboration invitation",
         )
-        logger.info("Đã xử lý lời mời cộng tác")
-        return {"message": "Ghi nhận phản hồi lời mời thành công"}
+        logger.info("Collaboration invitation response processed successfully")
+        return {"message": "Ghi nhận trạng thái phản hồi lời mời cộng tác thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -169,7 +169,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
+                detail="Hệ thống không tìm thấy tài liệu yêu cầu hoặc bạn không có quyền truy cập",
             )
         invites = (
             await mongo
@@ -211,7 +211,7 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Lỗi tải cấu hình môi trường cộng tác"
+                status_code=404, detail="Hệ thống gặp sự cố khi tải cấu hình môi trường cộng tác"
             )
         doc = await DocumentRepository.find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
@@ -219,7 +219,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="Không có quyền quản lý người tham gia",
+                detail="Bạn không có quyền quản lý danh sách thành viên cộng tác",
             )
         await DocumentRepository.update_one(
             {"_id": invite["document_id"]},
@@ -234,8 +234,8 @@ class CollaborationService:
             "Collaborator removed",
             "The specified collaborator has been effectively removed from the authorized modification list",
         )
-        logger.info("Xóa cộng tác viên thành công")
-        return {"message": "Xóa thành viên cộng tác thành công"}
+        logger.info("Collaborator removed successfully")
+        return {"message": "Đã thu hồi quyền và xóa thành viên khỏi danh sách cộng tác"}
 
     @staticmethod
     @log_logic_execution
@@ -302,12 +302,12 @@ class CollaborationService:
         if not target_user:
             raise HTTPException(
                 status_code=404,
-                detail="Không tìm thấy tài khoản nhận quyền sở hữu",
+                detail="Hệ thống không tìm thấy tài khoản để chuyển quyền sở hữu",
             )
         if target_user_id not in doc.get("coauthors", []):
             raise HTTPException(
                 status_code=400,
-                detail="Chỉ có thể chuyển quyền sở hữu cho cộng tác viên",
+                detail="Chỉ có thể chuyển quyền sở hữu cho thành viên đang cộng tác",
             )
         await DocumentRepository.update_one(
             {"_id": document_id},
@@ -328,8 +328,8 @@ class CollaborationService:
             "Transfer ownership",
             "The primary administrative ownership rights of the document have been securely reassigned",
         )
-        logger.info("Chuyển quyền sở hữu tài liệu cộng tác thành công")
-        return {"message": "Chuyển quyền sở hữu tài liệu thành công"}
+        logger.info("Document ownership transferred successfully")
+        return {"message": "Cập nhật và chuyển giao quyền sở hữu tài liệu thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -344,7 +344,7 @@ class CollaborationService:
             },
             upsert=True,
         )
-        return {"message": "Đồng bộ trạng thái hoạt động thành công"}
+        return {"message": "Đồng bộ hóa trạng thái hoạt động trực tuyến thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -391,7 +391,7 @@ class CollaborationService:
                 detail="Không có quyền quản lý người tham gia",
             )
         if role not in ["editor", "viewer"]:
-            raise HTTPException(status_code=400, detail="Quyền truy cập không hợp lệ")
+            raise HTTPException(status_code=400, detail="Phân quyền truy cập cung cấp không hợp lệ")
         await CollaborationRepository.update_invite(
             {"_id": collaboration_id}, {"$set": {"role": role}}
         )
@@ -401,7 +401,7 @@ class CollaborationService:
             "Update role",
             "The specific access privileges and system roles for the collaborator have been modified",
         )
-        return {"message": "Cập nhật quyền cộng tác viên thành công"}
+        return {"message": "Cập nhật cấu hình phân quyền cộng tác viên thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -429,7 +429,7 @@ class CollaborationService:
             "timestamp": datetime.now(timezone.utc),
         }
         await CollaborationRepository.insert_memo(memo)
-        return {"message": "Gửi tin nhắn cộng tác nội bộ thành công", "memo": memo}
+        return {"message": "Phân phối tin nhắn cộng tác nội bộ thành công", "memo": memo}
 
     @staticmethod
     @log_logic_execution
@@ -485,7 +485,7 @@ class CollaborationService:
             )
         if access_level not in ["invite_only", "anyone_with_link"]:
             raise HTTPException(
-                status_code=400, detail="Cấu hình quyền truy cập không hợp lệ"
+                status_code=400, detail="Cấu hình mức độ truy cập cộng tác không hợp lệ"
             )
         await DocumentRepository.update_one(
             {"_id": document_id}, {"$set": {"collab_access_level": access_level}}
@@ -497,7 +497,7 @@ class CollaborationService:
             "The core collaborative access permissions for the environment have been successfully adjusted",
         )
         return {
-            "message": "Cập nhật cấu hình quyền cộng tác thành công",
+            "message": "Cập nhật cấu hình mức độ quyền truy cập cộng tác thành công",
             "collab_access_level": access_level,
         }
 
@@ -529,14 +529,14 @@ class CollaborationService:
         if not invite:
             raise HTTPException(
                 status_code=404,
-                detail="Không tìm thấy lời mời cộng tác hoặc đã được xử lý",
+                detail="Hệ thống không tìm thấy lời mời cộng tác yêu cầu hoặc lời mời đã được xử lý",
             )
         doc = await DocumentRepository.find_one(
             {"_id": invite["document_id"], "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Không có quyền thu hồi lời mời này"
+                status_code=403, detail="Bạn không có quyền thu hồi lời mời cộng tác này"
             )
         await CollaborationRepository.delete_invite(
             {"_id": invite_id}
@@ -547,7 +547,7 @@ class CollaborationService:
             "Invitation revoked",
             "The active collaboration invitation token has been securely invalidated by the document owner",
         )
-        return {"message": "Thu hồi lời mời cộng tác thành công"}
+        return {"message": "Hủy bỏ và thu hồi lời mời tham gia cộng tác thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -612,7 +612,7 @@ class CollaborationService:
             "Create draft",
             "A structural milestone snapshot has been permanently recorded in the version control history",
         )
-        return {"message": "Lưu lịch sử tài liệu thành công", "snapshot": snapshot}
+        return {"message": "Lưu trữ bản chụp phiên bản tài liệu thành công", "snapshot": snapshot}
 
     @staticmethod
     @log_logic_execution
@@ -682,7 +682,7 @@ class CollaborationService:
             ):
                 raise HTTPException(
                     status_code=400,
-                    detail="Tài liệu đang bị khóa chỉnh sửa bởi người khác",
+                    detail="Tài liệu hiện đang trong phiên chỉnh sửa độc quyền của người dùng khác",
                 )
         await CollaborationRepository.update_lock(
             {"document_id": document_id},
@@ -701,7 +701,7 @@ class CollaborationService:
             "Document locked",
             "An exclusive access token has been acquired to prevent overlapping editorial modifications",
         )
-        return {"message": "Đã khóa phiên chỉnh sửa"}
+        return {"message": "Thiết lập khóa phiên chỉnh sửa tài liệu thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -719,7 +719,7 @@ class CollaborationService:
                 "Unlock document",
                 "The previously acquired exclusive editorial lock has been safely released back into the available pool",
             )
-        return {"message": "Đã mở khóa phiên chỉnh sửa"}
+        return {"message": "Hủy khóa phiên chỉnh sửa tài liệu thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -784,18 +784,18 @@ class CollaborationService:
         )
         if not code_entry:
             raise HTTPException(
-                status_code=404, detail="Mã cộng tác không hợp lệ hoặc đã hết hạn"
+                status_code=404, detail="Mã mời tham gia cộng tác không hợp lệ hoặc đã quá hạn sử dụng"
             )
         document_id = code_entry["document_id"]
         doc = await DocumentRepository.find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
         if doc.get("creator_id") == str(current_user.id):
             raise HTTPException(
-                status_code=400, detail="Bạn đã là chủ sở hữu của tài liệu này"
+                status_code=400, detail="Bạn hiện là chủ sở hữu chính của tài liệu này"
             )
         if str(current_user.id) in doc.get("coauthors", []):
-            raise HTTPException(status_code=400, detail="Bạn đã tham gia cộng tác này")
+            raise HTTPException(status_code=400, detail="Bạn hiện đã là thành viên trong không gian cộng tác của tài liệu này")
         await DocumentRepository.update_one(
             {"_id": document_id},
             {
@@ -824,7 +824,7 @@ class CollaborationService:
             "The authenticated user has successfully claimed the invitation token and entered the editorial workspace",
         )
         return {
-            "message": "Tham gia nhóm cộng tác thành công",
+            "message": "Tham gia không gian cộng tác tài liệu thành công",
             "document_id": document_id,
         }
 
@@ -912,7 +912,7 @@ class CollaborationService:
         )
         if not task:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy nhiệm vụ cộng tác"
+                status_code=404, detail="Hệ thống không tìm thấy nhiệm vụ cộng tác yêu cầu"
             )
         doc = await DocumentRepository.find_one(
             {
@@ -925,7 +925,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Không có quyền chỉnh sửa nhiệm vụ cộng tác"
+                status_code=403, detail="Bạn không có quyền chỉnh sửa nhiệm vụ cộng tác này"
             )
         await CollaborationRepository.update_task(
             {"_id": task_id}, {"$set": {"is_done": is_done}}
@@ -936,7 +936,7 @@ class CollaborationService:
             "Update task",
             "The execution status of the designated collaborative task has been formally modified",
         )
-        return {"message": "Cập nhật trạng thái nhiệm vụ cộng tác thành công"}
+        return {"message": "Cập nhật trạng thái thực thi nhiệm vụ cộng tác thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -961,7 +961,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Không có quyền thảo luận trong nhiệm vụ này"
+                status_code=403, detail="Bạn không có quyền tham gia thảo luận trong nhiệm vụ này"
             )
         comment = {
             "_id": str(uuid7()),

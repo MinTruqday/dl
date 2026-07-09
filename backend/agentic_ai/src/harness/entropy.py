@@ -37,7 +37,7 @@ class EntropyAuditor:
     def register_session(self, session_id: str):
         self._session_start_times[session_id] = time.monotonic()
         self._unresolved_tool_calls[session_id] = 0
-        logger.info(f"Bắt đầu theo dõi entropy phiên làm việc {session_id}")
+        logger.info(f"Started entropy monitoring for session {session_id}")
 
     def record_tool_dispatched(self, session_id: str):
         if session_id in self._unresolved_tool_calls:
@@ -90,7 +90,7 @@ class EntropyAuditor:
 
         if should_reset:
             logger.warning(
-                f"Entropy phiên làm việc {session_id} vượt ngưỡng: {entropy:.4f} - Khuyến nghị reset"
+                f"Session {session_id} entropy exceeded threshold: {entropy:.4f} - Reset recommended"
             )
         return snapshot
 
@@ -99,7 +99,7 @@ class EntropyAuditor:
         session_id: str,
         redis_client=None,
     ):
-        logger.info(f"Bắt đầu reset entropy phiên làm việc {session_id}")
+        logger.info(f"Started entropy reset for session {session_id}")
         try:
             if redis_client:
                 await redis_client.delete(f"session:{session_id}:history")
@@ -107,9 +107,9 @@ class EntropyAuditor:
             self._unresolved_tool_calls[session_id] = 0
             self._session_start_times[session_id] = time.monotonic()
             self._snapshots.pop(session_id, None)
-            logger.info(f"Hoàn tất reset entropy phiên làm việc {session_id}")
+            logger.info(f"Completed entropy reset for session {session_id}")
         except Exception:
-            logger.exception(f"Lỗi reset entropy phiên làm việc {session_id}")
+            logger.exception(f"Error resetting entropy for session {session_id}")
 
     def should_reset(
         self,

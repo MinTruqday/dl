@@ -23,10 +23,10 @@ async def supervisor_node(state: ActingState):
         start_time = time.time()
 
     if time.time() - start_time > 45:
-        logger.exception("Quá thời gian thực thi tác vụ AI")
+        logger.exception("AI task execution exceeded hard timeout")
         return {
             "next_node": "trimmer",
-            "error": "Yêu cầu quá phức tạp, vượt giới hạn thời gian xử lý",
+            "error": "Hệ thống đã tự động dừng tiến trình do vượt quá thời gian xử lý cho phép",
         }
 
     steps = state.get("steps", [])
@@ -38,7 +38,7 @@ async def supervisor_node(state: ActingState):
             "steps": steps,
             "current_step_index": len(steps),
             "next_node": "trimmer",
-            "error": "Trí tuệ nhân tạo vượt quá số bước thực thi",
+            "error": "Tiến trình bị hủy do vượt quá giới hạn số bước lập kế hoạch",
         }
 
     if not steps:
@@ -46,7 +46,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
 
     if state.get("error"):
-        logger.warning("Bỏ qua các bước tiếp theo do lỗi trước đó")
+        logger.warning("Skipping subsequent plan steps due to previous node error")
         return {
             "steps": steps,
             "current_step_index": len(steps),
@@ -110,14 +110,14 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
 
                 if eval_res.status == "FAIL":
                     replan_count += 1
-                    logger.warning("Tự đánh giá thất bại, đang tạo lại kế hoạch")
+                    logger.warning("Self-reflection failed, initiating replan sequence")
                     current_task = eval_res.revised_task or current_task
                     final_res = res
                 else:
                     final_res = res
                     break
             except Exception as e:
-                logger.exception("Lỗi phân tích kết quả đánh giá")
+                logger.exception("Evaluation result parsing error")
                 final_res = res
                 break
 
@@ -130,7 +130,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "last_agent_result": final_res,
         }
     except Exception as e:
-        logger.exception("Lỗi máy chủ thực thi")
+        logger.exception("Execution server internal error")
         return {
             "consolidated_results": ["The execution step failed"],
             "error": "Internal processing error",
@@ -158,7 +158,7 @@ async def trimmer_node(state: ActingState):
 
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
-        logger.info("Đang tổng hợp kết quả")
+        logger.info("Aggregating and consolidating node results")
         try:
             from src.workflow.graph import llm
 
@@ -169,7 +169,7 @@ async def trimmer_node(state: ActingState):
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception as e:
-            logger.exception("Lỗi rút gọn tóm tắt")
+            logger.exception("Summary trimmer execution error")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "aggregator"}
 
@@ -222,8 +222,8 @@ class OrchestrationWorkflow:
         self.app = supervisor_app
 
     async def execute_plan(self, req_data):
-        logger.info("Khởi tạo luồng thực thi")
-        yield {"type": "status", "node": "The system is analyzing your request"}
+        logger.info("Initializing orchestration execution stream")
+        yield {"type": "status", "node": "Hệ thống đang tiến hành phân tích yêu cầu"}
 
         initial_state = {
             "req_data": req_data,
@@ -269,7 +269,7 @@ class OrchestrationWorkflow:
                         }
 
                 elif node_name == "aggregator":
-                    yield {"type": "status", "node": "Synthesizing information"}
+                    yield {"type": "status", "node": "Hệ thống đang tổng hợp dữ liệu phản hồi"}
 
         if not final_results:
             final_results = ["Unable to locate data"]

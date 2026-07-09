@@ -67,10 +67,10 @@ class TraceAnalysisAgent:
             from src.repositories.agent import AgentRepository
             cutoff = datetime.now(timezone.utc) - timedelta(hours=self.lookback_hours)
             traces = await AgentRepository.get_traces_since(cutoff)
-            logger.info(f"TraceAnalysisAgent: fetched {len(traces)} traces from last {self.lookback_hours}h")
+            logger.info(f"TraceAnalysisAgent fetched {len(traces)} traces from last {self.lookback_hours}h")
             return traces
         except Exception as e:
-            logger.exception(f"TraceAnalysisAgent: failed to fetch traces: {e}")
+            logger.exception(f"TraceAnalysisAgent failed to fetch traces {e}")
             return []
 
     def compute_trace_stats(self, traces: List[Dict]) -> Dict[str, Any]:
@@ -123,7 +123,7 @@ class TraceAnalysisAgent:
             result = await llm.ainvoke(prompt)
             return result.content.strip()
         except Exception as e:
-            logger.exception(f"TraceAnalysisAgent: LLM analysis failed: {e}")
+            logger.exception(f"TraceAnalysisAgent LLM analysis failed {e}")
             return ""
 
 
@@ -197,7 +197,7 @@ class IssueDetector:
                 severity="medium",
             ))
 
-        logger.info(f"IssueDetector: found {len(issues)} issues from trace stats")
+        logger.info(f"IssueDetector found {len(issues)} issues from trace stats")
         return issues
 
 
@@ -213,7 +213,7 @@ class HarnessImprover:
             if suggestion:
                 suggestions.append(suggestion)
 
-        logger.info(f"HarnessImprover: generated {len(suggestions)} improvement suggestions")
+        logger.info(f"HarnessImprover generated {len(suggestions)} improvement suggestions")
         return suggestions
 
     async def _suggest_for_issue(
@@ -317,17 +317,17 @@ class PromptVersionControl:
             "content": content,
             "saved_at": datetime.now(timezone.utc).isoformat(),
         })
-        logger.info(f"PromptVersionControl: snapshotted {prompt_type} (version={version_id})")
+        logger.info(f"PromptVersionControl snapshotted {prompt_type} (version={version_id})")
         return version_id
 
     def rollback(self, prompt_type: str) -> Optional[str]:
         versions = self._versions.get(prompt_type, [])
         if len(versions) < 2:
-            logger.warning(f"PromptVersionControl: no previous version for {prompt_type}")
+            logger.warning(f"PromptVersionControl no previous version for {prompt_type}")
             return None
         versions.pop()
         prev = versions[-1]
-        logger.info(f"PromptVersionControl: rolled back {prompt_type} to version {prev['version_id']}")
+        logger.info(f"PromptVersionControl rolled back {prompt_type} to version {prev['version_id']}")
         return prev["content"]
 
     def get_history(self, prompt_type: str) -> List[Dict]:
@@ -352,10 +352,10 @@ class PromptOptimizer:
             elif suggestion.improvement_type == "routing_rule":
                 return await self._apply_routing_rule(config, suggestion)
             else:
-                logger.warning(f"PromptOptimizer: unknown improvement type '{suggestion.improvement_type}'")
+                logger.warning(f"PromptOptimizer unknown improvement type '{suggestion.improvement_type}'")
                 return False
         except Exception as e:
-            logger.exception(f"PromptOptimizer: failed to apply improvement {suggestion.improvement_id}: {e}")
+            logger.exception(f"PromptOptimizer failed to apply improvement {suggestion.improvement_id} {e}")
             return False
 
     async def _apply_prompt_tweak(self, config: Dict, suggestion: ImprovementSuggestion) -> bool:
@@ -371,14 +371,14 @@ class PromptOptimizer:
             if config.get("action") == "append_suffix":
                 new_content = current_content + config.get("suffix", "")
                 registry.update(prompt_type, new_content)
-                logger.info(f"PromptOptimizer: applied prompt suffix to {prompt_type_str} (version={version_id})")
+                logger.info(f"PromptOptimizer applied prompt suffix to {prompt_type_str} (version={version_id})")
                 return True
             elif config.get("action") == "replace":
                 new_content = config.get("new_content", current_content)
                 registry.update(prompt_type, new_content)
                 return True
         except Exception as e:
-            logger.exception(f"PromptOptimizer: prompt tweak failed: {e}")
+            logger.exception(f"PromptOptimizer prompt tweak failed {e}")
         return False
 
     async def _apply_tool_config(self, config: Dict, suggestion: ImprovementSuggestion) -> bool:
@@ -398,19 +398,19 @@ class PromptOptimizer:
                 value = config.get("value")
                 if role in ROLE_POLICIES and field_name and value is not None:
                     ROLE_POLICIES[role][field_name] = value
-                    logger.info(f"PromptOptimizer: updated governance {role}.{field_name} = {value}")
+                    logger.info(f"PromptOptimizer updated governance {role}.{field_name} = {value}")
                     return True
         except Exception as e:
-            logger.exception(f"PromptOptimizer: grader config failed: {e}")
+            logger.exception(f"PromptOptimizer grader config failed {e}")
         return False
 
     async def _apply_routing_rule(self, config: Dict, suggestion: ImprovementSuggestion) -> bool:
-        logger.info(f"PromptOptimizer: routing rule change logged: {suggestion.proposed_change}")
+        logger.info(f"PromptOptimizer routing rule change logged {suggestion.proposed_change}")
         return True
 
     async def rollback_improvement(self, suggestion: ImprovementSuggestion) -> bool:
         if not suggestion.rollback_config:
-            logger.warning(f"PromptOptimizer: no rollback config for {suggestion.improvement_id}")
+            logger.warning(f"PromptOptimizer no rollback config for {suggestion.improvement_id}")
             return False
         try:
             if suggestion.improvement_type == "prompt_tweak":
@@ -420,10 +420,10 @@ class PromptOptimizer:
                 if prev_content:
                     prompt_type = PromptType[prompt_type_str]
                     registry.update(prompt_type, prev_content)
-                    logger.info(f"PromptOptimizer: rolled back {prompt_type_str}")
+                    logger.info(f"PromptOptimizer rolled back {prompt_type_str}")
                     return True
         except Exception as e:
-            logger.exception(f"PromptOptimizer: rollback failed: {e}")
+            logger.exception(f"PromptOptimizer rollback failed {e}")
         return False
 
 
@@ -451,12 +451,12 @@ class HillClimbingLoop:
 
     async def analyze_and_improve(self) -> Dict[str, Any]:
         async with self._lock:
-            logger.info("HillClimbingLoop: starting analysis cycle")
+            logger.info("HillClimbingLoop starting analysis cycle")
             start = datetime.now(timezone.utc)
 
             traces = await self.trace_analyzer.fetch_recent_traces()
             if len(traces) < self.trace_analyzer.min_traces:
-                logger.info(f"HillClimbingLoop: insufficient traces ({len(traces)} < {self.trace_analyzer.min_traces}), skipping")
+                logger.info(f"HillClimbingLoop insufficient traces ({len(traces)} < {self.trace_analyzer.min_traces}), skipping")
                 return {"status": "skipped", "reason": "insufficient_traces", "traces_available": len(traces)}
 
             stats = self.trace_analyzer.compute_trace_stats(traces)
@@ -504,17 +504,17 @@ class HillClimbingLoop:
     async def approve_improvement(self, improvement_id: str, approver: str = "human") -> bool:
         suggestion = next((s for s in self._suggestions if s.improvement_id == improvement_id), None)
         if not suggestion:
-            logger.warning(f"HillClimbingLoop: improvement {improvement_id} not found")
+            logger.warning(f"HillClimbingLoop improvement {improvement_id} not found")
             return False
         if suggestion.status != "pending":
-            logger.warning(f"HillClimbingLoop: improvement {improvement_id} is not pending (status={suggestion.status})")
+            logger.warning(f"HillClimbingLoop improvement {improvement_id} is not pending (status={suggestion.status})")
             return False
 
         success = await self.prompt_optimizer.apply_improvement(suggestion)
         suggestion.status = "applied" if success else "pending"
         suggestion.applied_at = datetime.now(timezone.utc) if success else None
         suggestion.applied_by = approver
-        logger.info(f"HillClimbingLoop: improvement {improvement_id} {'applied' if success else 'failed'} by {approver}")
+        logger.info(f"HillClimbingLoop improvement {improvement_id} {'applied' if success else 'failed'} by {approver}")
         return success
 
     async def reject_improvement(self, improvement_id: str) -> bool:
@@ -522,7 +522,7 @@ class HillClimbingLoop:
         if not suggestion:
             return False
         suggestion.status = "rejected"
-        logger.info(f"HillClimbingLoop: improvement {improvement_id} rejected")
+        logger.info(f"HillClimbingLoop improvement {improvement_id} rejected")
         return True
 
     async def rollback_improvement(self, improvement_id: str) -> bool:

@@ -360,7 +360,7 @@ class EditorjsEngine:
         ):
             return ""
 
-        logger.warning("Đã bỏ qua nội dung không hợp lệ")
+        logger.warning("Invalid block content skipped during rendering")
         return ""
 
     @staticmethod
@@ -404,10 +404,10 @@ class EditorjsEngine:
                 else []
             )
         except json.JSONDecodeError as e:
-            raise Exception(f"Định dạng nội dung tài liệu không hợp lệ: {e}")
+            raise Exception("Định dạng dữ liệu nội dung tài liệu không hợp lệ")
 
         if not blocks:
-            raise Exception("Tài liệu không có nội dung hợp lệ")
+            raise Exception("Tài liệu yêu cầu không chứa nội dung hợp lệ để xuất")
 
         html_content = EditorjsEngine._convert_blocks_to_html(blocks)
 
@@ -440,8 +440,8 @@ class EditorjsEngine:
             )
 
             if not os.path.exists(pdf_path):
-                logger.error("Lỗi xuất tài liệu PDF")
-                raise Exception("Lỗi xuất tài liệu")
+                logger.error("Failed to generate PDF document using Pandoc/WeasyPrint")
+                raise Exception("Quá trình xuất dữ liệu tài liệu gặp sự cố")
 
             with open(pdf_path, "rb") as f:
                 return f.read()
@@ -451,15 +451,15 @@ class EditorjsEngine:
                 try:
                     process.kill()
                 except Exception as e:
-                    logger.exception("Lỗi dừng tác vụ biên dịch")
-            raise Exception("Hết thời gian chờ quá trình biên dịch tài liệu")
+                    logger.exception("Failed to terminate orphaned compilation process")
+            raise Exception("Quá trình biên dịch tài liệu vượt quá thời gian tối đa cho phép")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.exception("Lỗi dọn dẹp tệp tạm thời")
+                    logger.exception("Failed to clean up temporary compilation artifacts")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -471,10 +471,10 @@ class EditorjsEngine:
                 else []
             )
         except json.JSONDecodeError as e:
-            raise Exception(f"Định dạng nội dung tài liệu không hợp lệ: {e}")
+            raise Exception("Định dạng dữ liệu nội dung tài liệu không hợp lệ")
 
         if not blocks:
-            raise Exception("Tài liệu không có nội dung hợp lệ")
+            raise Exception("Tài liệu yêu cầu không chứa nội dung hợp lệ để xuất")
 
         html_content = EditorjsEngine._convert_blocks_to_html(blocks)
 
@@ -506,8 +506,8 @@ class EditorjsEngine:
             )
 
             if not os.path.exists(out_path):
-                logger.error("Lỗi xuất tài liệu")
-                raise Exception("Lỗi xuất tài liệu")
+                logger.error("Failed to generate document using Pandoc")
+                raise Exception("Quá trình xuất dữ liệu tài liệu gặp sự cố")
 
             with open(out_path, "rb") as f:
                 return f.read()
@@ -517,12 +517,12 @@ class EditorjsEngine:
                 try:
                     process.kill()
                 except Exception as e:
-                    logger.exception("Lỗi dừng tác vụ biên dịch")
-            raise Exception("Hết thời gian chờ quá trình xuất tài liệu")
+                    logger.exception("Failed to terminate orphaned compilation process")
+            raise Exception("Quá trình xuất dữ liệu tài liệu vượt quá thời gian tối đa cho phép")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.exception("Lỗi dọn dẹp tệp tạm thời")
+                    logger.exception("Failed to clean up temporary compilation artifacts")

@@ -78,7 +78,7 @@ class GovernanceHarness:
             user_id=user_id,
             role=role,
         )
-        logger.info("Khởi tạo phiên quản lý thành công")
+        logger.info(f"Governance session initialized for user {user_id} with role {role}")
 
     def close_session(self, session_id: str):
         self._sessions.pop(session_id, None)
@@ -94,7 +94,7 @@ class GovernanceHarness:
         policy = self._get_policy(state.role)
 
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
-            logger.warning("Hành động đã bị chặn do tài khoản của bạn chưa được cấp quyền tương ứng")
+            logger.warning(f"Tool {tool_name} execution blocked present in blocked_tools for role {state.role}")
             return PolicyDecision(
                 allowed=False,
                 reason="The requested operation is strictly restricted and not allowed for the current authorization level",
@@ -105,7 +105,7 @@ class GovernanceHarness:
             policy["allowed_tools"] is not None
             and tool_name not in policy["allowed_tools"]
         ):
-            logger.warning("Hành động đã bị chặn do tài khoản của bạn chưa được cấp quyền tương ứng")
+            logger.warning(f"Tool {tool_name} execution blocked not present in allowed_tools for role {state.role}")
             return PolicyDecision(
                 allowed=False,
                 reason="The requested operation is not present in the allowed operations list for the current session",
@@ -114,7 +114,7 @@ class GovernanceHarness:
 
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
-            logger.warning("Yêu cầu bị từ chối: Tài khoản của bạn đã sử dụng vượt mức dung lượng hoặc hạn mức cho phép")
+            logger.warning(f"Tool execution blocked for max_tool_calls_per_session ({max_calls}) exceeded for session {session_id}")
             return PolicyDecision(
                 allowed=False,
                 reason="The current session has exceeded the maximum allowed number of utility invocations",
@@ -135,7 +135,7 @@ class GovernanceHarness:
         policy = self._get_policy(state.role)
         max_steps = policy["max_plan_steps"]
         if max_steps != -1 and num_steps > max_steps:
-            logger.warning("Vượt quá giới hạn số bước lập kế hoạch")
+            logger.warning(f"Plan steps limit exceeded for session {session_id} {num_steps} > {max_steps}")
             return PolicyDecision(
                 allowed=False,
                 reason="The generated execution plan exceeds the maximum allowed complexity for the current authorization level",
@@ -154,7 +154,7 @@ class GovernanceHarness:
             max_tokens != -1
             and (state.estimated_tokens_used + additional_tokens) > max_tokens
         ):
-            logger.warning("Vượt quá giới hạn xử lý token")
+            logger.warning(f"Token budget limit exceeded for session {session_id} limit={max_tokens}")
             return PolicyDecision(
                 allowed=False,
                 reason="The current session has exceeded its allocated token processing budget and cannot proceed",

@@ -21,7 +21,7 @@ async def validate_svg(file: UploadFile):
             "<!DOCTYPE", text, re.IGNORECASE
         ):
             raise HTTPException(
-                status_code=400, detail="Từ chối tệp đồ họa vector do có rủi ro"
+                status_code=400, detail="Từ chối thao tác: Tệp đồ họa vector bị chặn do tiềm ẩn rủi ro bảo mật"
             )
         await file.seek(0)
 
@@ -64,7 +64,7 @@ async def upload_asset(
     if quota["used"] >= quota["limit"]:
         raise HTTPException(
             status_code=400,
-            detail="Lỗi tải lên do vượt giới hạn lưu trữ",
+            detail="Từ chối thao tác: Đã vượt quá giới hạn dung lượng lưu trữ cho phép",
         )
     return APIResponse(
         data=await UploadService.upload_document(file, owner_id=current_user.id, is_system=False),
@@ -88,7 +88,7 @@ async def upload_chat_attachment(
 
     user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": current_user.id})
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng tương ứng")
     
     ai_tier = user.get("ai_tier", "BASIC")
     is_admin = user.get("role") == "admin"
@@ -102,7 +102,7 @@ async def upload_chat_attachment(
         if quota["used"] + file_size > quota["limit"]:
             raise HTTPException(
                 status_code=400,
-                detail="Dung lượng lưu trữ của bạn đã đầy. Vui lòng nâng cấp gói hoặc xóa bớt tệp."
+                detail="Dung lượng lưu trữ đã đầy, vui lòng nâng cấp gói cước hoặc xóa bớt dữ liệu"
             )
 
     result = await UploadService.upload_document(file, owner_id=current_user.id, is_system=False, is_message_attachment=True)
@@ -119,7 +119,7 @@ async def upload_chat_attachment(
         })
         return APIResponse(
             data={"url": file_url, "filename": file.filename, "expires_in_days": 14},
-            message="Tải lên tệp tin tạm thời thành công (14 ngày)",
+            message="Tải lên tệp đính kèm tạm thời thành công",
             status=201
         )
     else:
@@ -135,7 +135,7 @@ async def upload_chat_attachment(
         
         return APIResponse(
             data={"url": file_url, "filename": file.filename},
-            message="Tải lên tệp đính kèm thành công",
+            message="Tải lên tệp đính kèm lưu trữ thành công",
             status=201
         )
 
@@ -161,7 +161,7 @@ async def get_presigned_url_for_upload(
             if quota["used"] + req.size > quota["limit"]:
                 raise HTTPException(
                     status_code=400,
-                    detail="Dung lượng lưu trữ của bạn đã đầy. Vui lòng nâng cấp gói hoặc xóa bớt tệp."
+                    detail="Dung lượng lưu trữ đã đầy, vui lòng nâng cấp gói cước hoặc xóa bớt dữ liệu"
                 )
             
     result = await UploadService.get_presigned_upload_url(
@@ -174,7 +174,7 @@ async def get_presigned_url_for_upload(
     
     return APIResponse(
         data=result,
-        message="Tạo đường dẫn tải lên thành công",
+        message="Tạo đường dẫn tải lên bảo mật thành công",
         status=200
     )
 
@@ -207,7 +207,7 @@ async def confirm_upload(
         })
         return APIResponse(
             data={"url": req.file_path, "filename": req.filename, "expires_in_days": 14},
-            message="Xác nhận tải lên tệp tin tạm thời thành công (14 ngày)",
+            message="Xác nhận tải lên tệp đính kèm tạm thời thành công",
             status=201
         )
     else:
@@ -226,11 +226,11 @@ async def confirm_upload(
             celery_app.send_task("src.tasks.compress_file_task", args=[req.file_path, req.content_type])
         except Exception as e:
             import logging
-            logging.error(f"Failed to trigger compression task: {e}")
+            logging.error(f"Failed to trigger compression task {e}")
                 
         return APIResponse(
             data={"url": req.file_path, "filename": req.filename},
-            message="Xác nhận tải lên tệp đính kèm thành công",
+            message="Xác nhận tải lên tệp đính kèm lưu trữ thành công",
             status=201
         )
 
@@ -294,6 +294,6 @@ async def upload_chunk(
         )
     return APIResponse(
         data={"uploaded": chunk_index},
-        message="Tải lên tệp tạm thời thành công",
+        message="Tải lên phân đoạn tệp tạm thời thành công",
         status=200,
     )

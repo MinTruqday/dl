@@ -22,7 +22,7 @@ async def purchase_document(
         data=await PurchaseService.purchase_document(
             req.document_id, current_user
         ),
-        message="Thanh toán mua tài liệu thành công",
+        message="Thực hiện giao dịch thanh toán mua tài liệu thành công",
         status=200,
     )
 
@@ -34,7 +34,7 @@ async def buy_membership(
 ):
     return APIResponse(
         data=await PurchaseService.buy_ai_tier(req.tier, current_user),
-        message="Nâng cấp gói thành viên thành công",
+        message="Giao dịch nâng cấp gói thành viên thành công",
         status=200,
     )
 
@@ -42,7 +42,7 @@ async def buy_membership(
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
         data=await PricingService.get_pricing_config(),
-        message="Lấy giá gói thành viên thành công",
+        message="Truy xuất thông tin cấu hình giá gói thành viên thành công",
         status=200,
     )
 
@@ -51,7 +51,7 @@ async def get_author_revenue(current_user: CurrentUser = Depends(get_current_use
     revenue_data = await PurchaseService.get_revenue(current_user)
     return APIResponse(
         data=revenue_data,
-        message="Lấy số liệu doanh thu thành công",
+        message="Truy xuất dữ liệu thống kê doanh thu thành công",
         status=200
     )
 
@@ -73,9 +73,9 @@ async def set_document_pricing(
 
     doc = await PricingRepository.get_document(req.document_id)
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu tài liệu yêu cầu")
     if doc.get("creator_id") != str(current_user.id) and current_user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Chỉ tác giả mới được thay đổi giá bán")
+        raise HTTPException(status_code=403, detail="Chỉ tác giả mới có quyền thực hiện thay đổi giá bán tài liệu")
         
     await PricingRepository.update_document(
         req.document_id,
@@ -88,7 +88,7 @@ async def set_document_pricing(
 
     return APIResponse(
         data={"document_id": req.document_id, "price_dl": req.price_dl, "is_drm_protected": req.is_drm_protected},
-        message="Cập nhật giá bán thành công",
+        message="Cập nhật cấu hình giá bán tài liệu thành công",
         status=200
     )
 

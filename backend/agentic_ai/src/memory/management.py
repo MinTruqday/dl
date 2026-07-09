@@ -13,7 +13,7 @@ class ManagementMemory:
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
         except Exception as e:
-            logger.exception("Lỗi kết nối Redis")
+            logger.exception("Redis connection error")
             self._redis = None
 
         self._short_term_ttl = 3600 * 2
@@ -29,7 +29,7 @@ class ManagementMemory:
             if data:
                 return json.loads(data)
         except Exception as e:
-            logger.exception("Lỗi đọc dữ liệu bộ nhớ")
+            logger.exception("Error reading memory data")
         return []
 
     async def save_short_term(self, conversation_id: str, entry: Dict):
@@ -49,7 +49,7 @@ class ManagementMemory:
                 key, self._short_term_ttl, json.dumps(history, ensure_ascii=False)
             )
         except Exception as e:
-            logger.exception("Lỗi lưu dữ liệu bộ nhớ")
+            logger.exception("Error saving memory data")
 
     async def save_long_term(self, user_id: str, entry: Dict):
         if not self._redis:
@@ -68,7 +68,7 @@ class ManagementMemory:
                 key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
             )
         except Exception as e:
-            logger.exception("Lỗi lưu trữ dữ liệu")
+            logger.exception("Error storing data")
 
     async def get_long_term(self, user_id: str) -> List[Dict]:
         if not self._redis:
@@ -80,7 +80,7 @@ class ManagementMemory:
             if data:
                 return json.loads(data)
         except Exception as e:
-            logger.exception("Lỗi truy xuất dữ liệu lưu trữ dài hạn")
+            logger.exception("Error retrieving long-term storage data")
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:

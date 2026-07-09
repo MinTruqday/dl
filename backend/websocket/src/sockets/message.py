@@ -53,7 +53,7 @@ class MessageSocket:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            logger.exception("Lỗi kết nối máy chủ nhận tín hiệu tin nhắn nền")
+            logger.exception("Background message pubsub listener connection failed")
             self._listener_task = None
 
     async def connect(self, user_id: str, websocket: WebSocket):

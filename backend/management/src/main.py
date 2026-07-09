@@ -16,7 +16,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
     return await call_next(request)
 
 app.add_middleware(
@@ -35,7 +35,7 @@ app.include_router(telemetry)
 app.include_router(operation)
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Tính năng cung cấp đã sẵn sàng")
+    logger.info("Management service provisioned and ready")
     await init_db()
 @app.on_event("shutdown")
 async def shutdown_event():

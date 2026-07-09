@@ -15,5 +15,5 @@ async def editor_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         composition_socket_manager.disconnect(websocket, document_id)
     except Exception as e:
-        logger.exception("Lỗi thiết lập kết nối dữ liệu theo thời gian thực")
+        logger.exception("CRDT real-time connection setup failed")
         composition_socket_manager.disconnect(websocket, document_id)

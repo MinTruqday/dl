@@ -105,7 +105,7 @@ class ReadingService:
             {"_id": document_id}, {"content": 1, "title": 1}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
         content = doc.get("content", "")
         query_lower = query.lower()
         content_lower = content.lower()
@@ -128,7 +128,7 @@ class ReadingService:
         await ReadingRepository.delete_historys(
             {"user_id": str(current_user.id)}
         )
-        return {"status": "success", "message": "Xóa toàn bộ lịch sử đọc thành công"}
+        return {"status": "success", "message": "Đã xóa toàn bộ dữ liệu lịch sử đọc khỏi hệ thống"}
 
     @staticmethod
     @log_logic_execution
@@ -136,4 +136,4 @@ class ReadingService:
         await ReadingRepository.delete_history(
             {"user_id": str(current_user.id), "document_id": document_id}
         )
-        return {"status": "success", "message": "Xóa lịch sử đọc cá nhân thành công"}
+        return {"status": "success", "message": "Xóa mục lịch sử đọc thành công"}

@@ -94,7 +94,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception as e:
-        logger.exception("Lỗi đánh giá đầu ra mô hình ngôn ngữ")
+        logger.exception("Language model output evaluation error")
         return {
             "accuracy": 0,
             "completeness": 0,
@@ -111,9 +111,9 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info("Tải bộ dữ liệu kiểm tra thành công")
+            logger.info("Test dataset loaded successfully")
         except Exception as e:
-            logger.exception("Lỗi tải bộ dữ liệu kiểm tra")
+            logger.exception("Test dataset loading error")
             self._dataset = []
 
     async def evaluate_rag_response(
@@ -172,7 +172,7 @@ class EvaluationHarness:
             overall_score=round(overall, 4),
         )
         self._reports.append(report)
-        logger.info("Hoàn tất đánh giá truy xuất thông tin")
+        logger.info("Information retrieval evaluation complete")
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
@@ -186,7 +186,7 @@ class EvaluationHarness:
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
         except Exception as e:
-            return {"error": f"Lỗi khởi tạo máy khách đánh giá: {e}"}
+            return {"error": f"Lỗi khởi tạo máy khách đánh giá {e}"}
 
         results = []
         for sample in self._dataset:
@@ -260,7 +260,7 @@ class EvaluationHarness:
             "average_judge_scores": avg_judge,
             "results": results,
         }
-        logger.info("Hoàn tất đánh giá mô hình AI")
+        logger.info("AI model evaluation complete")
         return summary
 
     def get_dashboard_metrics(self) -> dict:

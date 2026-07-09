@@ -106,14 +106,14 @@ def _run_training_sync(job_id: str, config: dict, loop):
         )
 
     except Exception as e:
-        logger.exception("Lỗi trong quá trình tinh chỉnh mô hình")
-        sync_update({"status": "failed", "error_message": "Lỗi tinh chỉnh mô hình"})
+        logger.exception("Model fine-tuning process error")
+        sync_update({"status": "failed", "error_message": "Quá trình tinh chỉnh mô hình gặp sự cố bất ngờ"})
     finally:
         active_jobs.pop(job_id, None)
 
 @log_logic_execution
 async def create_dataset(req: dict):
-    logger.info(f"Bắt đầu xử lý tạo bộ dữ liệu huấn luyện cho user_id={req.get('user_id')}")
+    logger.info(f"Started fine-tuning dataset creation for user_id={req.get('user_id')}")
     doc = {
         "_id": str(uuid7()),
         "user_id": req.get("user_id"),
@@ -142,7 +142,7 @@ async def get_dataset(dataset_id: str, user_id: str):
         {"_id": dataset_id, "user_id": user_id}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
     return doc
 
 @log_logic_execution
@@ -156,7 +156,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
             {"dataset_id": dataset_id}
         )
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
+    raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
 
 @log_logic_execution
 async def add_samples(dataset_id: str, req: dict):
@@ -166,7 +166,7 @@ async def add_samples(dataset_id: str, req: dict):
         {"_id": dataset_id, "user_id": user_id}
     )
     if not dataset:
-        raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
     documents = [
         {
             "_id": str(uuid7()),
@@ -200,7 +200,7 @@ async def get_samples(
     if not await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
-        raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
     return (
         await FinetuneSampleRepository
         .find({"dataset_id": dataset_id})
@@ -216,7 +216,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     if not await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
-        raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
     if (
         await FinetuneRepository.delete_sample(
             {"_id": sample_id, "dataset_id": dataset_id}
@@ -230,7 +230,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
             {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}},
         )
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Không tìm thấy mẫu yêu cầu")
+    raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy mẫu dữ liệu yêu cầu")
 
 @log_logic_execution
 async def import_feedback(req: dict):
@@ -359,7 +359,7 @@ async def import_documents(req: dict):
                             }
                         )
             except Exception as e:
-                logger.exception("Lỗi trong quá trình trích xuất dữ liệu huấn luyện")
+                logger.exception("Training data extraction error")
     if samples:
         await FinetuneRepository.insert_samples(samples)
         await FinetuneRepository.update_dataset(
@@ -375,9 +375,9 @@ async def create_job(req: dict):
         {"_id": ds_id, "user_id": user_id}
     )
     if not dataset:
-        raise HTTPException(status_code=404, detail="Không tìm thấy bộ dữ liệu")
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
     if dataset.get("sample_count", 0) < 10:
-        return {"error": "Không đủ dữ liệu huấn luyện"}
+        return {"error": "Bộ dữ liệu chưa đạt số lượng mẫu tối thiểu để tiến hành huấn luyện"}
     job_id = str(uuid7())
     job = {
         "_id": job_id,
@@ -411,9 +411,9 @@ async def start_job(job_id: str, req: dict):
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tác vụ huấn luyện")
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
     if job_id in active_jobs:
-        return {"error": "Tác vụ huấn luyện đang chạy"}
+        return {"error": "Tiến trình huấn luyện này đang được thực thi"}
     samples = (
         await FinetuneSampleRepository
         .find({"dataset_id": job["dataset_id"]})
@@ -460,7 +460,7 @@ async def list_jobs(user_id: str):
 async def get_job(job_id: str, user_id: str):
     job = await mongo.find_one("finetune_jobs", {"_id": job_id, "user_id": user_id})
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tác vụ huấn luyện")
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
     return job
 
 @log_logic_execution
@@ -478,7 +478,7 @@ async def cancel_job(job_id: str, req: dict):
         active_jobs.pop(job_id, None)
         return {"status": "cancelled"}
     raise HTTPException(
-        status_code=400, detail="Không thể hủy tác vụ huấn luyện lúc này"
+        status_code=400, detail="Hệ thống không thể hủy tiến trình huấn luyện vào lúc này"
     )
 
 @log_logic_execution
@@ -489,7 +489,7 @@ async def deploy_model(job_id: str, req: dict):
     )
     if not job:
         raise HTTPException(
-            status_code=404, detail="Không tìm thấy tác vụ huấn luyện hoàn thành"
+            status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện đã hoàn thành để triển khai"
         )
     model_name = job.get("merged_model_name", job["job_name"])
     gguf_path = job.get("gguf_path")
@@ -498,7 +498,7 @@ async def deploy_model(job_id: str, req: dict):
     hf_token = settings.HF_TOKEN
     if not hf_token:
         raise HTTPException(
-            status_code=500, detail="Thiếu thông tin xác thực kho lưu trữ"
+            status_code=500, detail="Hệ thống thiếu thông tin xác thực để kết nối với kho lưu trữ"
         )
 
     try:
@@ -510,14 +510,14 @@ async def deploy_model(job_id: str, req: dict):
 
         repo_id = f"{hf_username}/{model_name}"
 
-        logger.info("Tạo kho lưu trữ mô hình từ xa thành công")
+        logger.info("Remote model repository created successfully")
         api.create_repo(repo_id=repo_id, exist_ok=True)
 
         if merged_path:
             import os
 
             if os.path.exists(merged_path):
-                logger.info("Đang tải mô hình lên kho lưu trữ")
+                logger.info("Uploading model to remote repository")
                 import asyncio
 
                 loop = asyncio.get_event_loop()
@@ -530,8 +530,8 @@ async def deploy_model(job_id: str, req: dict):
                     ),
                 )
             else:
-                logger.warning("Không tìm thấy thư mục mô hình")
-                raise Exception("Không tìm thấy thư mục mô hình")
+                logger.warning("Model output directory not found")
+                raise Exception("Hệ thống không tìm thấy thư mục chứa mô hình")
 
         model_name = repo_id
         await FinetuneRepository.update_job(
@@ -539,9 +539,9 @@ async def deploy_model(job_id: str, req: dict):
         )
 
     except Exception as e:
-        logger.exception("Lỗi triển khai mô hình lên kho lưu trữ từ xa")
+        logger.exception("Model deployment to remote repository error")
         raise HTTPException(
-            status_code=500, detail="Lỗi triển khai mô hình lên kho lưu trữ từ xa"
+            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình triển khai mô hình"
         )
 
     await FinetuneRepository.update_job(
@@ -557,7 +557,7 @@ async def evaluate_model(job_id: str, req: dict):
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tác vụ huấn luyện")
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
     model_name = job.get("merged_model_name") or job.get("base_model")
     use_judge = req.get("use_judge", True)
     evaluation._dataset = req.get("test_samples", [])

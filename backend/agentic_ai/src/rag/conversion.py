@@ -120,13 +120,13 @@ class ConversionRag:
         self._minio_secret = settings.MINIO_SECRET_KEY
         self._minio_region = settings.MINIO_REGION
         self._chandra: Optional[_ChandraModel] = None
-        logger.info("Khởi tạo công cụ phân tích tài liệu thành công")
+        logger.info("Document analysis tool initialized successfully")
 
     def _get_chandra(self) -> _ChandraModel:
         if self._chandra is None:
-            logger.info("Tải mô hình Chandra OCR 2 (8-bit)")
+            logger.info("Loading Chandra OCR 2 (8-bit) model")
             self._chandra = _ChandraModel()
-            logger.info("Tải mô hình Chandra OCR 2 thành công")
+            logger.info("Chandra OCR 2 model loaded successfully")
         return self._chandra
 
     def _run_chandra_on_images(self, images: List) -> List[str]:
@@ -149,8 +149,8 @@ class ConversionRag:
                 return await self._parse_image_with_chandra(tmp_path)
             return await self._parse_pdf_with_chandra(tmp_path)
         except Exception as e:
-            logger.exception("Lỗi phân tích nội dung tài liệu")
-            return {"error": f"Lỗi phân tích cú pháp tài liệu: {e}"}
+            logger.exception("Document content analysis error")
+            return {"error": f"Lỗi phân tích cú pháp tài liệu {e}"}
         finally:
             tmp_path.unlink(missing_ok=True)
 
@@ -169,7 +169,7 @@ class ConversionRag:
         markdown = "\n\n---\n\n".join(page_markdowns)
         chunks = self._split_markdown_to_chunks(markdown)
 
-        logger.info("Trích xuất văn bản từ tài liệu thành công")
+        logger.info("Extracted text from document successfully")
         return {
             "markdown": markdown,
             "chunks": chunks,
@@ -188,7 +188,7 @@ class ConversionRag:
         markdown = await loop.run_in_executor(None, _convert)
         chunks = self._split_markdown_to_chunks(markdown)
 
-        logger.info("Trích xuất văn bản từ hình ảnh thành công")
+        logger.info("Extracted text from image successfully")
         return {
             "markdown": markdown,
             "chunks": chunks,
@@ -235,10 +235,10 @@ class ConversionRag:
                 return all_tables
 
             tables = await loop.run_in_executor(None, _extract)
-            logger.info("Trích xuất bảng dữ liệu thành công")
+            logger.info("Extracted data tables successfully")
             return tables
         except Exception as e:
-            logger.exception("Lỗi trích xuất bảng dữ liệu")
+            logger.exception("Data table extraction error")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -321,7 +321,7 @@ class ConversionRag:
     async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning("Lỗi phân tích tài liệu")
+            logger.warning("Document parsing error")
             return []
 
         chunks = parse_result.get("chunks", [])
@@ -349,7 +349,7 @@ class ConversionRag:
                 }
             )
 
-        logger.info("Tạo phân mảnh văn bản thành công")
+        logger.info("Created text chunks successfully")
         return ingestion_chunks
 
     async def get_markdown(self, file_url: str) -> str:
@@ -370,7 +370,7 @@ class ConversionRag:
             bucket = self._minio_private_bucket if object_key.startswith("system/") else self._minio_public_bucket
 
             if ".." in object_key:
-                logger.error("Ngăn chặn rủi ro bảo mật")
+                logger.error("Prevented path traversal attempt")
                 return None, ""
 
             s3 = boto3.client(
@@ -402,11 +402,11 @@ class ConversionRag:
                     ext = mapped_ext
                     break
 
-            logger.info("Lấy nội dung tệp từ kho lưu trữ thành công")
+            logger.info("Retrieved file content from storage successfully")
             return data, ext
 
         except Exception as e:
-            logger.exception("Lỗi kết nối tải tệp")
+            logger.exception("File download connection error")
             return None, ""
 
 document_parser = ConversionRag()

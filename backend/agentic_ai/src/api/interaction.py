@@ -19,14 +19,14 @@ router = APIRouter(route_class=LoggingRoute, prefix="/tro-chuyen")
 
 @router.post("")
 async def chat_endpoint(req: ChatRequest, request: Request):
-    logger.info(f"Bắt đầu xử lý luồng Chat. Dữ liệu đầu vào: {req.model_dump(exclude={'token', 'user_id'})}")
+    logger.info(f"Started Chat streaming process. Input data {req.model_dump(exclude={'token', 'user_id'})}")
     token = request.headers.get("Authorization")
     if token:
         req.token = token.replace("Bearer ", "")
 
     scan = await security.ascan_input(req.query, user_id=req.user_id or "")
     if not scan.passed:
-        logger.warning("Truy vấn bị từ chối do vi phạm chính sách bảo mật")
+        logger.warning("Query execution blocked due to security policy violation")
         return {
             "answer": "Nội dung yêu cầu vi phạm chính sách bảo mật và không thể xử lý",
             "route": "blocked",
@@ -47,13 +47,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if doc_res.status_code not in [200, 201]:
-                        logger.warning(f"Tài liệu {doc_id} không tồn tại hoặc không đủ quyền truy cập")
+                        logger.warning(f"Document {doc_id} access denied or not found")
                         return {
                             "answer": "Tài liệu không tồn tại hoặc bạn không có quyền truy cập",
                             "route": "error",
                         }
                 except Exception as e:
-                    logger.exception(f"Lỗi xác minh quyền truy cập tài liệu {doc_id}")
+                    logger.exception(f"Document {doc_id} access verification error")
                     return {
                         "answer": "Hệ thống tạm thời không thể xác minh quyền truy cập tài liệu",
                         "route": "error",
@@ -103,13 +103,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         final_answer = await security.ascan_output(final_answer)
         return {
-            "answer": final_answer or "Đã xảy ra lỗi, vui lòng thử lại sau",
+            "answer": final_answer or "Hệ thống tạm thời không thể phản hồi, vui lòng thử lại sau",
             "route": "agentic_ai",
         }
     except Exception as e:
-        logger.exception("Lỗi thực thi quy trình AI")
+        logger.exception("AI agent workflow execution error")
         return {
-            "answer": "Đã xảy ra lỗi, vui lòng thử lại sau",
+            "answer": "Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau",
             "route": "error",
         }
 
@@ -141,12 +141,12 @@ async def _check_upload_quota(req: ChatRequest):
                 headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
             )
             if resp.status_code != 200:
-                detail = resp.json().get("detail") or "Đã hết dung lượng tải lên"
+                detail = resp.json().get("detail") or "Tài khoản của bạn đã vượt mức giới hạn dung lượng tải lên"
                 return False, detail
             return True, ""
     except Exception as e:
-        logger.exception("Lỗi kiểm tra dung lượng tải lên")
-        return False, "Không thể xác minh dung lượng tải lên"
+        logger.exception("Upload quota verification error")
+        return False, "Hệ thống tạm thời không thể xác minh dung lượng lưu trữ"
 
 async def _consume_upload_quota(req: ChatRequest):
     item_type = None
@@ -176,11 +176,11 @@ async def _consume_upload_quota(req: ChatRequest):
                 headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
             )
     except Exception as e:
-        logger.exception("Lỗi tiêu thụ dung lượng tải lên")
+        logger.exception("Upload quota consumption error")
 
 @router.post("/phat-truc-tiep")
 async def stream_endpoint(req: ChatRequest, request: Request):
-    logger.info(f"Bắt đầu xử lý luồng Stream. Dữ liệu đầu vào: {req.model_dump(exclude={'token', 'user_id'})}")
+    logger.info(f"Started Server-Sent Events stream. Input data {req.model_dump(exclude={'token', 'user_id'})}")
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
 
@@ -196,7 +196,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             agentops.record_security_event(
                 session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
             )
-            yield f"event: message\ndata: {json.dumps({'chunk': 'The submitted request contains prohibited content and cannot be processed'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'Nội dung yêu cầu chứa dữ liệu vi phạm chính sách bảo mật và không thể xử lý'})}\n\n"
             yield "event: done\ndata: [DONE]\n\n"
             return
 
@@ -229,12 +229,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
                         if doc_res.status_code not in [200, 201]:
-                            logger.warning(f"Tài liệu {doc_id} không tồn tại hoặc không đủ quyền truy cập")
+                            logger.warning(f"Document {doc_id} access denied or not found")
                             yield f"event: message\ndata: {json.dumps({'chunk': 'Tài liệu không tồn tại hoặc bạn không có quyền truy cập'})}\n\n"
                             agentops.record_session_end(session_id, "failed")
                             return
                     except Exception as e:
-                        logger.exception(f"Lỗi xác minh quyền truy cập tài liệu {doc_id}")
+                        logger.exception(f"Document {doc_id} access verification error")
                         yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống tạm thời không thể xác minh quyền truy cập tài liệu'})}\n\n"
                         agentops.record_session_end(session_id, "failed")
                         return
@@ -371,15 +371,15 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         "content": final_answer
                     })
                 except Exception as e:
-                    logger.exception("Lỗi lưu tin nhắn vào database")
+                    logger.exception("Chat history persistence to database error")
 
             await _consume_upload_quota(req)
             agentops.record_session_end(session_id, "done")
 
         except Exception as e:
-            logger.exception("Lỗi thực thi luồng Chat")
+            logger.exception("Chat stream execution unexpected error")
             agentops.record_session_end(session_id, "failed")
-            yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống gặp lỗi không mong đợi, vui lòng thử lại sau'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau'})}\n\n"
 
         yield "event: done\ndata: [DONE]\n\n"
 

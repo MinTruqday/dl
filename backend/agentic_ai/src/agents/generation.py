@@ -12,12 +12,12 @@ class GenerationAgent:
         pass
 
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
-        logger.info("Đang tổng hợp kết quả tìm kiếm")
+        logger.info("Aggregating search results")
 
         scan = await security.ascan_input(query)
         if scan.blocked:
-            logger.warning("Phát hiện thao tác không hợp lệ")
-            yield "Yêu cầu vi phạm chính sách bảo mật và không thể tiếp tục xử lý"
+            logger.warning("Detected invalid operation")
+            yield "Yêu cầu của bạn vi phạm chính sách bảo mật, hệ thống không thể tiếp tục xử lý"
             return
 
         try:
@@ -37,7 +37,7 @@ class GenerationAgent:
                     yield chunk.content
 
         except Exception as e:
-            logger.exception("Lỗi tạo nội dung phản hồi")
-            yield f"Hệ thống gặp lỗi không mong đợi trong quá trình tạo phản hồi, vui lòng thử lại sau: {e}"
+            logger.exception("Error generating response content")
+            yield f"Hệ thống đã gặp lỗi bất ngờ trong quá trình tạo phản hồi, vui lòng thử lại sau {e}"
 
 response_generator = GenerationAgent()

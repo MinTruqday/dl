@@ -18,6 +18,6 @@ class CacheCore:
     async def mark_collected(self, key_type: str, value: str):
         redis_key = f"DataCollection:dedup:{key_type}"
         await self.r.sadd(redis_key, value)
-        logger.debug("Ghi nhận thu thập tài nguyên thành công")
+        logger.debug("Resource collection deduplication marked successfully")
 
 dedup = CacheCore()

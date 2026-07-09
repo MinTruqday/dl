@@ -23,7 +23,7 @@ async def get_history(
         data=await ReadingService.get_reading_history(
             current_user, cursor, limit
         ),
-        message="Lấy lịch sử đọc thành công",
+        message="Truy xuất dữ liệu lịch sử đọc thành công",
     )
 
 @router.post("/tien-do", response_model=APIResponse[Any])
@@ -34,7 +34,7 @@ async def update_progress(
 ):
     return APIResponse(
         data=await ReadingService.update_progress(data, current_user),
-        message="Đồng bộ tiến độ đọc thành công",
+        message="Đồng bộ hóa tiến trình đọc tài liệu thành công",
     )
 
 @router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
@@ -48,7 +48,7 @@ async def search_in_document(
         data=await ReadingService.search_in_document(
             document_id, q, current_user
         ),
-        message="Tìm kiếm trong tài liệu thành công",
+        message="Thực hiện tìm kiếm nội dung trong tài liệu thành công",
     )
 
 @router.delete("/lich-su", response_model=APIResponse[Any])
@@ -57,7 +57,7 @@ async def clear_reading_history(
 ):
     return APIResponse(
         data=await ReadingService.clear_reading_history(current_user),
-        message="Xóa toàn bộ lịch sử đọc thành công",
+        message="Đã xóa toàn bộ dữ liệu lịch sử đọc khỏi hệ thống",
     )
 
 @router.delete("/lich-su/{document_id}", response_model=APIResponse[Any])
@@ -68,7 +68,7 @@ async def delete_history_item(
 ):
     return APIResponse(
         data=await ReadingService.delete_history_item(document_id, current_user),
-        message="Xóa lịch sử đọc thành công",
+        message="Xóa mục lịch sử đọc thành công",
     )
 
 import io
@@ -83,17 +83,17 @@ from fastapi import HTTPException
 def validate_url_ssrf(url: str):
     parsed = urlparse(url)
     if not parsed.hostname:
-        raise HTTPException(status_code=400, detail="Đường dẫn tệp không hợp lệ")
+        raise HTTPException(status_code=400, detail="Đường dẫn tệp tin cung cấp không hợp lệ")
     try:
         ip = socket.gethostbyname(parsed.hostname)
         ip_obj = ipaddress.ip_address(ip)
         if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
             raise HTTPException(
                 status_code=403,
-                detail="Không thể truy cập tên miền nội bộ",
+                detail="Yêu cầu bị từ chối do cố gắng truy cập mạng nội bộ hệ thống",
             )
     except socket.gaierror as e:
-        raise HTTPException(status_code=400, detail=f"Lỗi phân giải tên miền: {e}")
+        raise HTTPException(status_code=400, detail="Hệ thống không thể phân giải tên miền yêu cầu")
 
 def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
     if "" in info.filename or info.filename.startswith("/"):
@@ -127,18 +127,18 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
                                     }
                                 )
                         return APIResponse(
-                            data=tree, message="Lấy cấu trúc thư mục thành công"
+                            data=tree, message="Truy xuất cấu trúc tệp nén thành công"
                         )
                 else:
                     return APIResponse(
                         data=None,
-                        message="Tệp tin không khả dụng từ máy chủ",
+                        message="Tệp tin yêu cầu không khả dụng hoặc không tồn tại trên máy chủ",
                         status=400,
                     )
     except HTTPException as he:
         raise he
     except Exception as e:
-        return APIResponse(data=None, message=f"Lỗi tải cấu trúc thư mục: {e}", status=500)
+        return APIResponse(data=None, message="Hệ thống gặp sự cố trong quá trình phân tích cấu trúc tệp nén", status=500)
 
 @router.get("/luu-tru/noi-dung", response_model=APIResponse[Any])
 async def get_zip_content(
@@ -156,7 +156,7 @@ async def get_zip_content(
                             if not is_safe_zip_info(info):
                                 return APIResponse(
                                     data=None,
-                                    message="Tệp có rủi ro bảo mật",
+                                    message="Hệ thống phát hiện tệp tin chứa nội dung có rủi ro bảo mật",
                                     status=403,
                                 )
                             file_bytes = z.read(path)
@@ -164,7 +164,7 @@ async def get_zip_content(
                                 text = file_bytes.decode("utf-8")
                                 return APIResponse(
                                     data={"content": text, "type": "text"},
-                                    message="Trích xuất nội dung tệp thành công",
+                                    message="Trích xuất nội dung tệp tin thành công",
                                 )
                             except UnicodeDecodeError:
                                 return APIResponse(
@@ -172,14 +172,14 @@ async def get_zip_content(
                                         "content": "Binary files do not support direct viewing",
                                         "type": "binary",
                                     },
-                                    message="Không thể xem trực tiếp tệp nhị phân",
+                                    message="Định dạng tệp nhị phân không hỗ trợ xem trực tiếp",
                                 )
                         return APIResponse(
                             data=None,
-                            message="Không tìm thấy tệp trong thư mục nén",
+                            message="Hệ thống không tìm thấy tệp tin được yêu cầu trong tệp nén",
                             status=404,
                         )
     except HTTPException as he:
         raise he
     except Exception as e:
-        return APIResponse(data=None, message=f"Lỗi xử lý tệp nén: {e}", status=500)
+        return APIResponse(data=None, message="Hệ thống gặp sự cố trong quá trình xử lý tệp nén", status=500)

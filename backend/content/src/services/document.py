@@ -139,7 +139,7 @@ class DocumentService:
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
             raise HTTPException(
-                status_code=400, detail="Đường dẫn định tuyến đã được sử dụng"
+                status_code=400, detail="Đường dẫn tĩnh yêu cầu đã tồn tại trên hệ thống"
             )
 
         doc_dict = doc_in.model_dump()
@@ -148,7 +148,7 @@ class DocumentService:
 
         doc_doc = DocumentInDB(**doc_dict, creator_id=str(current_user.id))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
-        logger.info("Tạo tài liệu mới thành công")
+        logger.info("Document successfully created in the system")
         return doc_doc
 
     @staticmethod
@@ -207,7 +207,7 @@ class DocumentService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
 
         if content_in.expected_version:
             db_updated = document.get("updated_at")
@@ -218,7 +218,7 @@ class DocumentService:
             ):
                 raise HTTPException(
                     status_code=409,
-                    detail="Không thể chỉnh sửa do đã có phiên bản mới hơn",
+                    detail="Xung đột phiên bản: Tài liệu đã được cập nhật bởi một phiên làm việc khác",
                 )
 
         if document.get("content"):
@@ -256,9 +256,9 @@ class DocumentService:
                         },
                     )
             except Exception as e:
-                logger.exception("Lỗi phân phối sự kiện cập nhật tài liệu")
+                logger.exception("Document update notification dispatch failed")
 
-        logger.info("Cập nhật nội dung tài liệu thành công")
+        logger.info("Document content successfully synchronized and updated")
 
         if redis:
             await redis.delete(f"document:{document_id}")
@@ -280,7 +280,7 @@ class DocumentService:
             and current_user.role != "ADMIN"
         ):
             raise HTTPException(
-                status_code=403, detail="Không có quyền chỉnh sửa tài liệu"
+                status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này"
             )
 
         if hasattr(doc_update, "expected_version") and doc_update.expected_version:
@@ -382,7 +382,7 @@ class DocumentService:
         ):
             if not current_user or current_user.role != "ADMIN":
                 raise HTTPException(
-                    status_code=403, detail="Tài liệu đang ở trạng thái nháp"
+                    status_code=403, detail="Tài liệu hiện đang ở trạng thái nháp và chưa được công bố"
                 )
 
         if (
@@ -403,7 +403,7 @@ class DocumentService:
                 if attempts and int(attempts) >= 5:
                     raise HTTPException(
                         status_code=429,
-                        detail="Tạm khóa tài khoản do sai mật khẩu quá nhiều lần",
+                        detail="Truy cập bị tạm khóa do vi phạm giới hạn thử mật khẩu tài liệu",
                     )
 
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -413,7 +413,7 @@ class DocumentService:
                     await redis.expire(rl_key, 900)
                 raise HTTPException(
                     status_code=403,
-                    detail="Thông tin xác thực không khớp với hồ sơ bảo mật tài liệu",
+                    detail="Thông tin xác thực không chính xác hoặc không khớp với hồ sơ bảo mật",
                 )
 
             if rl_key and redis:
@@ -455,8 +455,8 @@ class DocumentService:
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
-        logger.info("Đã chuyển tài liệu vào thùng rác")
-        return {"message": "Đã chuyển tài liệu vào thùng rác"}
+        logger.info("Document successfully moved to the recycle bin")
+        return {"message": "Tài liệu đã được di chuyển vào thùng rác hệ thống"}
 
     @staticmethod
     @log_logic_execution
@@ -472,11 +472,11 @@ class DocumentService:
         )
         if res.modified_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài liệu trong thùng rác"
+                status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu trong thùng rác"
             )
 
-        logger.info("Tài liệu của bạn đã được khôi phục thành công về trạng thái ban đầu")
-        return {"message": "Khôi phục tài liệu từ thùng rác thành công"}
+        logger.info("Document successfully restored from the recycle bin")
+        return {"message": "Tài liệu đã được khôi phục thành công từ thùng rác"}
 
     @staticmethod
     @log_logic_execution
@@ -524,8 +524,8 @@ class DocumentService:
                 }
             },
         )
-        logger.info("Bật bảo vệ mật khẩu tài liệu thành công")
-        return {"message": "Thiết lập mật khẩu tài liệu thành công"}
+        logger.info("Document password protection enabled successfully")
+        return {"message": "Thiết lập mật khẩu bảo vệ tài liệu thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -546,21 +546,21 @@ class DocumentService:
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
         except Exception as e:
-            logger.exception("Lỗi đồng bộ thông tin tác giả")
+            logger.exception("Author profile synchronization failed")
 
         if not target_user:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài khoản với email này"
+                status_code=404, detail="Hệ thống không tìm thấy tài khoản liên kết với địa chỉ email cung cấp"
             )
 
         if str(target_user["_id"]) in document.get("coauthors", []):
-            return {"message": "Tài khoản đã là cộng tác viên"}
+            return {"message": "Tài khoản yêu cầu đã là thành viên cộng tác của tài liệu này"}
 
         await DocumentRepository.update_one(
             {"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}}
         )
-        logger.info("Gửi lời mời cộng tác thành công")
-        return {"message": "Bổ nhiệm cộng tác viên thành công"}
+        logger.info("Collaboration invitation sent successfully")
+        return {"message": "Gửi lời mời tham gia cộng tác thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -632,7 +632,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     author = resp.json().get("data")
         except Exception as e:
-            logger.exception("Lỗi đồng bộ hồ sơ tác giả")
+            logger.exception("Failed to synchronize author profile data")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),
@@ -668,7 +668,7 @@ class DocumentService:
             b64_key = await redis.get(f"aes_key:{document_id}:{user_id}")
             if b64_key:
                 return {"key": b64_key.decode('utf-8') if isinstance(b64_key, bytes) else b64_key}
-        raise HTTPException(status_code=403, detail="Khóa giải mã không tồn tại hoặc đã hết hạn")
+        raise HTTPException(status_code=403, detail="Khóa giải mã tài liệu không hợp lệ hoặc đã quá hạn sử dụng")
 
     @staticmethod
     @log_logic_execution

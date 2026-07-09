@@ -16,7 +16,7 @@ async def init_db():
     mongo_uri = settings.MONGODB_URI
 
     if not mongo_uri :
-        logger.error("Lỗi khởi tạo do thiếu kết nối MongoDB")
+        logger.error("Failed to initialize database connection due to missing MongoDB URI")
         import sys
 
         sys.exit(1)
@@ -33,9 +33,9 @@ async def setup_indexes():
         await db["users"].create_index([("followers_count", -1)], background=True)
         await db["users"].create_index([("email", 1)], unique=True, background=True)
 
-        logger.info("Hoàn tất tạo chỉ mục MongoDB")
+        logger.info("MongoDB index initialization completed")
     except Exception as e:
-        logger.exception("Lỗi khởi tạo chỉ mục cho MongoDB")
+        logger.exception("Failed to initialize MongoDB collection indexes")
 
 async def close_db():
     if database.mongodb:

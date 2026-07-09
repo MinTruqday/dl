@@ -17,7 +17,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
     return await call_next(request)
 
 app.add_middleware(
@@ -34,12 +34,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Khởi động dịch vụ Humanity")
+    logger.info("Humanity microservice starting up")
     await init_db()
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info("Tắt dịch vụ Humanity")
+    logger.info("Humanity microservice shutting down gracefully")
     await close_db()
 
 app.include_router(user_router)

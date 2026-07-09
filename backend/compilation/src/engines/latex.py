@@ -27,7 +27,7 @@ class LatexEngine:
     async def compile_to_pdf(content: str) -> bytes:
         for pattern in LatexEngine.DANGEROUS_PATTERNS:
             if re.search(pattern, content):
-                raise Exception("Mã chứa lệnh không hợp lệ")
+                raise Exception("Mã nguồn tài liệu chứa các chỉ thị không an toàn hoặc không được phép")
 
         job_id = str(uuid7())
         temp_dir = tempfile.gettempdir()
@@ -61,7 +61,7 @@ class LatexEngine:
             )
 
             if not os.path.exists(pdf_path):
-                raise Exception("Lỗi biên dịch do cú pháp không hợp lệ")
+                raise Exception("Quá trình biên dịch thất bại do lỗi cú pháp trong tài liệu")
 
             with open(pdf_path, "rb") as f:
                 return f.read()
@@ -71,15 +71,15 @@ class LatexEngine:
                 try:
                     process.kill()
                 except Exception as e:
-                    logger.exception("Lỗi dừng tác vụ biên dịch")
-            raise Exception("Hết thời gian chờ quá trình biên dịch tài liệu")
+                    logger.exception("Failed to terminate orphaned compilation process")
+            raise Exception("Quá trình biên dịch tài liệu vượt quá thời gian tối đa cho phép")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.exception("Lỗi dọn dẹp tệp tạm thời")
+                    logger.exception("Failed to clean up temporary compilation artifacts")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -105,7 +105,7 @@ class LatexEngine:
             )
 
             if not os.path.exists(out_path):
-                raise Exception("Lỗi chuyển đổi định dạng tài liệu")
+                raise Exception("Quá trình chuyển đổi định dạng tài liệu gặp sự cố")
 
             with open(out_path, "rb") as f:
                 return f.read()
@@ -114,7 +114,7 @@ class LatexEngine:
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.exception("Lỗi dọn dẹp tệp tạm thời")
+                    logger.exception("Failed to clean up temporary compilation artifacts")
 
     @staticmethod
     def format_latex(content: str) -> dict:

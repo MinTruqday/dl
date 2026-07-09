@@ -26,7 +26,7 @@ class ProfileRepository:
                         except: pass
                         return data
             except Exception as e:
-                logger.exception("Lỗi HTTP khi lấy thông tin hồ sơ")
+                logger.exception("HTTP error during profile retrieval")
         return None
 
     @classmethod
@@ -40,4 +40,4 @@ class ProfileRepository:
                     try: await redis.delete(f"profile:{user_id}")
                     except: pass
             except Exception as e:
-                logger.exception("Lỗi HTTP khi cập nhật thông tin hồ sơ")
+                logger.exception("HTTP error during profile update")

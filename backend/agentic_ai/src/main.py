@@ -37,7 +37,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
     return await call_next(request)
 
 app.middleware("http")(add_trace_id_header)
@@ -81,14 +81,14 @@ async def harness_status():
     }
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Khởi tạo AI thành công")
+    logger.info("Agentic AI system initialized successfully")
     from src.store.database import vector_store
     from src.core.infrastructure.configuration import settings
     try:
         await vector_store.ensure_collection()
-        logger.info("Khởi tạo Qdrant thành công")
+        logger.info("Qdrant vector store connection established")
     except Exception as e:
-        logger.exception("Lỗi khởi tạo cấu trúc Qdrant")
+        logger.exception("Qdrant vector store initialization error")
     try:
         from src.core.infrastructure.database import init_db
         await init_db()
@@ -107,16 +107,16 @@ async def startup_event():
             await db["finetune_jobs"].create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
-            logger.info("Khởi tạo chỉ mục MongoDB thành công")
+            logger.info("MongoDB indexing initialized successfully")
     except Exception as e:
-        logger.exception("Lỗi khởi tạo chỉ mục MongoDB")
+        logger.exception("MongoDB indexing error")
     try:
         from src.harness.event_loop import cron_scheduler, event_driven_loop
         await event_driven_loop.start_worker()
         await cron_scheduler.start()
-        logger.info("Khởi động event-driven loop thành công")
+        logger.info("Event-driven loop started successfully")
     except Exception as e:
-        logger.exception("Lỗi khởi động event-driven loop")
+        logger.exception("Event-driven loop startup error")
 @app.on_event("shutdown")
 async def shutdown_event():
     try:

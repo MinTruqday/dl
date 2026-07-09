@@ -41,7 +41,7 @@ class Mem0Memory:
                 }
                 self.memory = Memory.from_config(config_dict=config)
             except Exception as e:
-                logger.exception("Khởi tạo trình quản lý bộ nhớ đệm thất bại")
+                logger.exception("Cache memory manager initialization failed")
 
     async def add_memory(self, messages: List[Dict], user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
@@ -51,7 +51,7 @@ class Mem0Memory:
 
             await asyncio.to_thread(self.memory.add, messages, user_id=user_id)
         except Exception as e:
-            logger.exception("Không thể lưu trữ bản ghi dữ liệu vào hệ thống lưu trữ")
+            logger.exception("Failed to store data record into storage system")
 
     async def update_memory(self, memory_id: str, new_content: str):
         if not self.memory:
@@ -63,7 +63,7 @@ class Mem0Memory:
                 self.memory.update, memory_id=memory_id, data=new_content
             )
         except Exception as e:
-            logger.exception("Lỗi cập nhật bộ nhớ")
+            logger.exception("Memory update error")
 
     async def delete_memory(self, memory_id: str):
         if not self.memory:
@@ -73,7 +73,7 @@ class Mem0Memory:
 
             await asyncio.to_thread(self.memory.delete, memory_id=memory_id)
         except Exception as e:
-            logger.exception("Lỗi xóa bản ghi bộ nhớ")
+            logger.exception("Memory record deletion error")
 
     async def search_and_resolve_conflicts(self, new_content: str, user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
@@ -90,7 +90,7 @@ class Mem0Memory:
                 if r.get("score", 0) > 0.95 and r.get("memory", "") != new_content:
                     await self.delete_memory(r["id"])
         except Exception as e:
-            logger.exception("Lỗi xử lý xung đột dữ liệu")
+            logger.exception("Data conflict resolution error")
 
     async def get_context(self, query: str, user_id: str) -> str:
         if not self.memory or not user_id or user_id == "guess_user":
@@ -113,7 +113,7 @@ class Mem0Memory:
                 context += f"- {m}\n"
             return context
         except Exception as e:
-            logger.exception("Lỗi truy xuất dữ liệu bộ nhớ")
+            logger.exception("Memory data retrieval error")
             return ""
 
 mem0_manager = Mem0Memory()

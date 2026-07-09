@@ -52,7 +52,7 @@ class AgentopsHarness:
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
             except Exception as e:
-                logger.exception("Lỗi kết nối MongoDB")
+                logger.exception("MongoDB connection error")
         return self._db_client
 
     def record_session_start(
@@ -64,7 +64,7 @@ class AgentopsHarness:
             started_at=datetime.now(timezone.utc),
         )
         self._sessions[session_id] = metrics
-        logger.info("Bắt đầu ghi lại phiên làm việc thành công")
+        logger.info("Started recording session successfully")
 
     def record_session_end(
         self,
@@ -79,7 +79,7 @@ class AgentopsHarness:
         metrics.total_duration_ms = int(
             (metrics.ended_at - metrics.started_at).total_seconds() * 1000
         )
-        logger.info("Kết thúc quá trình ghi lại phiên làm việc")
+        logger.info("Finished recording session")
         asyncio.create_task(self._flush_session(session_id))
 
     def record_tool_call(
@@ -119,7 +119,7 @@ class AgentopsHarness:
             metrics.total_tokens_in += prompt_tokens
             metrics.total_tokens_out += completion_tokens
             metrics.llm_latencies_ms.append(duration_ms)
-        logger.info("Ghi nhận sự kiện gọi mô hình ngôn ngữ thành công")
+        logger.info("Recorded language model call event successfully")
 
     def record_security_event(
         self,
@@ -131,7 +131,7 @@ class AgentopsHarness:
         metrics = self._sessions.get(session_id)
         if metrics:
             metrics.security_violations += 1
-        logger.warning("Ghi nhận rủi ro vi phạm bảo mật")
+        logger.warning("Recorded security violation risk")
 
     async def _flush_session(self, session_id: str):
         metrics = self._sessions.pop(session_id, None)
@@ -161,9 +161,9 @@ class AgentopsHarness:
                 ),
             }
             await AgentRepository.insert_trace(doc)
-            logger.info("Lưu lịch sử phiên làm việc thành công")
+            logger.info("Saved session history successfully")
         except Exception as e:
-            logger.exception("Lỗi lưu lịch sử phiên làm việc")
+            logger.exception("Error saving session history")
 
     def get_prometheus_metrics(self) -> str:
         active_count = len(self._sessions)

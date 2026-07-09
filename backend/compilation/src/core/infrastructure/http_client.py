@@ -28,7 +28,7 @@ class InternalHttpClient:
                 raise httpx.RequestError(f"Internal service error: {response.status_code}")
             return response
         except (httpx.RequestError, httpx.TimeoutException) as e:
-            logger.exception(f"Lỗi gọi HTTP tới máy chủ nội bộ với địa chỉ {url}")
+            logger.exception(f"Failed to execute internal HTTP request to endpoint {url}")
             raise e
 
     async def get(self, url: str, **kwargs):

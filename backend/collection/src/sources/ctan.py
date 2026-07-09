@@ -24,7 +24,7 @@ from src.core.storage import storage
 class CtanSource:
     @staticmethod
     async def run_list_collector(pages: int = 0):
-        logger.info("[CTAN] Đang bắt đầu quá trình thu thập danh sách chữ cái")
+        logger.info("[CTAN] Starting alphabetical list collection process")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -34,7 +34,7 @@ class CtanSource:
             try:
                 for letter in string.ascii_uppercase:
                     search_url = f"https://www.ctan.org/pkg/:{letter}"
-                    logger.info("[CTAN] Đang quét danh mục chữ cái")
+                    logger.info("[CTAN] Scanning alphabetical category")
 
                     await page.goto(search_url, timeout=60000)
                     await page.wait_for_timeout(2000)
@@ -44,7 +44,7 @@ class CtanSource:
                     try:
                         await page.wait_for_selector("main", timeout=15000)
                     except Exception as e:
-                        logger.exception("[CTAN] Không tìm thấy tài liệu trong danh mục chữ cái")
+                        logger.exception("[CTAN] Documents not found in alphabetical category")
                         continue
 
                     book_nodes = await page.query_selector_all(list_css)
@@ -60,7 +60,7 @@ class CtanSource:
                             )
                             book_urls.add(full_url)
 
-                    logger.info("[CTAN] Thu thập dữ liệu chuyên mục thành công")
+                    logger.info("[CTAN] Category data collected successfully")
                     for url in book_urls:
                         if not await dedup.is_collected("ctan_url", url):
                             await mq_client.publish(
@@ -69,12 +69,12 @@ class CtanSource:
                             await dedup.mark_collected("ctan_url", url)
 
             except Exception as e:
-                logger.exception("[CTAN] Lỗi lấy danh sách dữ liệu chữ cái")
+                logger.exception("[CTAN] Failed to get alphabetical data list")
                 raise
 
     @staticmethod
     async def run_detail_collector(book_url: str):
-        logger.info("[CTAN] Đang xử lý dữ liệu gói phần mềm")
+        logger.info("[CTAN] Processing software package data")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -127,7 +127,7 @@ class CtanSource:
                         )
                         payload["download_link"] = full_download_url
 
-                        logger.info("[CTAN] Tạo đường dẫn tải xuống thành công")
+                        logger.info("[CTAN] Download URL created successfully")
 
                         slug = urllib.parse.quote(
                             payload["title"].lower().replace(" ", "-")
@@ -139,12 +139,12 @@ class CtanSource:
                             "download_processor_queue", {**payload, "source": "CTAN"}
                         )
                     else:
-                        logger.warning("[CTAN] Liên kết tải xuống không có dữ liệu")
+                        logger.warning("[CTAN] Download link contains no data")
                 else:
-                    logger.warning("[CTAN] Không tìm thấy nút tải xuống trên trang")
+                    logger.warning("[CTAN] Download button not found on page")
 
             except Exception as e:
-                logger.exception("[CTAN] Lỗi xử lý dữ liệu tệp nén")
+                logger.exception("[CTAN] Compressed file data processing failed")
                 raise
 
     @staticmethod
@@ -156,10 +156,10 @@ class CtanSource:
         title = payload.get("title", "package")
 
         if not url:
-            logger.error("[CTAN] Đường dẫn tải xuống không hợp lệ")
+            logger.error("[CTAN] Invalid download URL")
             return
 
-        logger.info("[CTAN] Đang tải xuống và giải nén tệp tin")
+        logger.info("[CTAN] Downloading and extracting file")
 
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         filename = payload.get("filename") or f"{slug}.zip"
@@ -173,13 +173,13 @@ class CtanSource:
         try:
             success = await download_file_with_retry(url, target_zip_local)
             if success:
-                logger.info("[CTAN] Tải xuống tệp nén thành công")
+                logger.info("[CTAN] Compressed file downloaded successfully")
 
                 minio_url_book = await storage.upload_local_file(
                     f"books/ctan/{filename}", target_zip_local
                 )
 
-                logger.info("[CTAN] Đang giải nén tệp tải xuống")
+                logger.info("[CTAN] Extracting downloaded file")
                 os.makedirs(extracted_folder_path, exist_ok=True)
                 with zipfile.ZipFile(target_zip_local, "r") as zip_ref:
                     zip_ref.extractall(extracted_folder_path)
@@ -190,7 +190,7 @@ class CtanSource:
                     os.path.join(extracted_folder_path, contents[0])
                 ):
                     search_root = os.path.join(extracted_folder_path, contents[0])
-                    logger.info("[CTAN] Đang xử lý cấu trúc thư mục tệp nén")
+                    logger.info("[CTAN] Processing compressed file directory structure")
 
                 found_pdf = None
                 for root, _, files in os.walk(search_root):
@@ -207,7 +207,7 @@ class CtanSource:
                     minio_url_pdf = await storage.upload_local_file(
                         f"documents/ctan/{pdf_filename}", found_pdf
                     )
-                    logger.info("[CTAN] Tải lên tệp PDF thành công")
+                    logger.info("[CTAN] PDF file uploaded successfully")
                     payload["pdf_url"] = minio_url_pdf
 
                 md_content = f"# Source code for {title}\n\n"
@@ -237,7 +237,7 @@ class CtanSource:
                             except UnicodeDecodeError:
                                 pass
                             except Exception as e:
-                                logger.exception("[CTAN] Lỗi đọc tệp tin lồng nhau")
+                                logger.exception("[CTAN] Nested file reading failed")
 
                 md_filename = f"{slug}_source.md"
                 md_path = os.path.join(temp_base, md_filename)
@@ -247,21 +247,21 @@ class CtanSource:
                 minio_url_md = await storage.upload_local_file(
                     f"documents/ctan/{md_filename}", md_path
                 )
-                logger.info("[CTAN] Biên dịch và tải lên mã nguồn thành công")
+                logger.info("[CTAN] Source code compiled and uploaded successfully")
                 payload["markdown_url"] = minio_url_md
 
-                logger.info("[CTAN] Xử lý tệp nén thành công")
+                logger.info("[CTAN] Compressed file processed successfully")
             else:
-                logger.error("[CTAN] Lỗi tải tệp nén từ máy chủ từ xa")
+                logger.error("[CTAN] Compressed file download from remote server failed")
                 return
         except Exception as e:
-            logger.exception("[CTAN] Lỗi xử lý tệp nén")
+            logger.exception("[CTAN] Compressed file processing failed")
             raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)
 
         if minio_url_book:
-            logger.info("[CTAN] Lưu tệp nén vĩnh viễn thành công")
+            logger.info("[CTAN] Compressed file saved permanently successfully")
 
             book_document = {
                 "title": title,

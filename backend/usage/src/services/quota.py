@@ -105,7 +105,7 @@ class QuotaService:
 
         if current_reqs >= limits.daily_requests:
             raise HTTPException(
-                status_code=429, detail="Đã vượt quá giới hạn yêu cầu trong ngày"
+                status_code=429, detail="Đã vượt quá giới hạn yêu cầu cấp phép trong ngày"
             )
 
         token_key = f"quota:{user_id}:{feature}:token"
@@ -114,7 +114,7 @@ class QuotaService:
 
         if current_tokens >= limits.daily_tokens:
             raise HTTPException(
-                status_code=429, detail="Đã hết hạn mức sử dụng mã thông báo trong ngày"
+                status_code=429, detail="Đã sử dụng hết hạn mức mã thông báo (token) trong ngày"
             )
         return limits
 
@@ -183,7 +183,7 @@ class QuotaService:
             return True
         
         if item_type == "folder" and ai_tier != "PREMIUM":
-            raise HTTPException(status_code=403, detail="Chỉ tài khoản PREMIUM mới được tải lên thư mục")
+            raise HTTPException(status_code=403, detail="Yêu cầu đặc quyền Toàn năng để tải lên cấu trúc thư mục")
             
         limits = {"BASIC": 1, "PRO": 5, "PREMIUM": math.inf}
         daily_limit = limits.get(ai_tier, 1)
@@ -196,7 +196,7 @@ class QuotaService:
         current = int(current) if current else 0
         
         if current >= daily_limit:
-            raise HTTPException(status_code=429, detail=f"Đã vượt quá giới hạn tải lên {item_type} trong ngày")
+            raise HTTPException(status_code=429, detail=f"Đã vượt quá giới hạn tải lên tài nguyên {item_type} trong ngày")
             
         return True
 

@@ -34,17 +34,17 @@ class LoggingRoute(APIRoute):
                     body_str = body.decode('utf-8', errors='ignore')[:500]
             
             query = str(request.query_params)
-            logger.info(f"Bắt đầu API: {request.method} {request.url.path} - Query: {query} - Body: {body_str}")
+            logger.info(f"API Request Started for {request.method} {request.url.path} with Query {query} and Body {body_str}")
             
             start_time = time.time()
             try:
                 response: Response = await original_route_handler(request)
                 process_time = time.time() - start_time
-                logger.info(f"Hoàn tất API: {request.method} {request.url.path} - Status: {response.status_code} - Thời gian: {process_time:.3f}s")
+                logger.info(f"API Request Completed for {request.method} {request.url.path} with Status {response.status_code} in {process_time:.3f}s")
                 return response
             except Exception as e:
                 process_time = time.time() - start_time
-                logger.exception(f"Lỗi hệ thống bất ngờ khi xử lý API {request.method} {request.url.path} - Thời gian: {process_time:.3f}s")
+                logger.exception(f"Unexpected system error while processing API request {request.method} {request.url.path} after {process_time:.3f}s")
                 raise e
 
         return custom_route_handler

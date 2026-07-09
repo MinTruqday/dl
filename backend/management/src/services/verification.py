@@ -21,7 +21,7 @@ class VerificationService:
         if current_user.role != Role.READER:
             raise HTTPException(
                 status_code=400,
-                detail="Chỉ tài khoản độc giả mới có thể nâng cấp",
+                detail="Yêu cầu bị từ chối do phân quyền tài khoản không hợp lệ",
             )
         await mongo.update_one("users", 
             {"_id": user_id},
@@ -32,29 +32,29 @@ class VerificationService:
                 }
             },
         )
-        logger.info("Nâng cấp quyền tác giả thành công")
-        return {"status": "success", "message": "Đã nâng cấp tài khoản tác giả"}
+        logger.info("Author privileges granted successfully")
+        return {"status": "success", "message": "Hệ thống đã cấp quyền tác giả cho tài khoản thành công"}
 
     @staticmethod
     @log_logic_execution
     async def apply_author(application, current_user):
         user_id = str(current_user.id)
         if current_user.role == Role.AUTHOR:
-            raise HTTPException(status_code=400, detail="Tài khoản đã có quyền tác giả")
+            raise HTTPException(status_code=400, detail="Yêu cầu bị từ chối do tài khoản đã được cấp quyền tác giả")
         if current_user.role != Role.READER:
             raise HTTPException(
                 status_code=403,
-                detail="Chỉ tài khoản người đọc mới có thể đăng ký tác giả",
+                detail="Yêu cầu bị từ chối do phân quyền tài khoản không hợp lệ",
             )
         if current_user.creator_status == Creator.PENDING:
             raise HTTPException(
                 status_code=400,
-                detail="Yêu cầu nâng cấp tác giả đang được xét duyệt",
+                detail="Hồ sơ đăng ký tác giả của bạn đang trong quá trình xét duyệt",
             )
         if current_user.creator_status == Creator.SUSPENDED:
             raise HTTPException(
                 status_code=403,
-                detail="Tài khoản bị hạn chế nâng cấp tác giả",
+                detail="Tài khoản hiện đang bị hạn chế tính năng đăng ký tác giả",
             )
         application_data = {
             "_id": str(uuid7()),
@@ -82,8 +82,8 @@ class VerificationService:
                 }
             },
         )
-        logger.info("Gửi yêu cầu nâng cấp tác giả thành công")
-        return {"status": "success", "message": "Đã gửi yêu cầu nâng cấp tác giả"}
+        logger.info("Author application submitted successfully")
+        return {"status": "success", "message": "Hồ sơ đăng ký tác giả đã được gửi và đang chờ xét duyệt"}
 
     @staticmethod
     @log_logic_execution
@@ -92,10 +92,10 @@ class VerificationService:
         if current_user.kyc_status == KYC.PENDING:
             raise HTTPException(
                 status_code=400,
-                detail="Tài liệu xác minh danh tính đang được xét duyệt",
+                detail="Hồ sơ xác minh danh tính của bạn đang trong quá trình xét duyệt",
             )
         if current_user.kyc_status == KYC.VERIFIED:
-            raise HTTPException(status_code=400, detail="Tài khoản đã được xác minh")
+            raise HTTPException(status_code=400, detail="Yêu cầu bị từ chối do tài khoản đã hoàn tất xác minh danh tính")
         file_bytes = await file.read()
         file_ext = file.filename.split(".")[-1]
         object_name = f"kyc/{user_id}_{uuid7()}.{file_ext}"
@@ -111,10 +111,10 @@ class VerificationService:
         await mongo.update_one("users", 
             {"_id": user_id}, {"$set": {"kyc_status": KYC.PENDING}}
         )
-        logger.info("Tải lên tài liệu xác minh thành công")
+        logger.info("Identity verification documents uploaded successfully")
         return {
             "status": "success",
-            "message": "Tài liệu xác minh danh tính đang chờ xét duyệt",
+            "message": "Hồ sơ xác minh danh tính đã được gửi và đang chờ xét duyệt",
         }
 
     @staticmethod
@@ -128,7 +128,7 @@ class VerificationService:
         )
         if not author:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy hồ sơ công khai"
+                status_code=404, detail="Hệ thống không tìm thấy hồ sơ định danh công khai yêu cầu"
             )
         creator_id = str(author["_id"])
         docs = (
@@ -140,7 +140,7 @@ class VerificationService:
         )
         return {
             "_id": creator_id,
-            "full_name": author.get("full_name", "Anonymous Member"),
+            "full_name": author.get("full_name", "Thành viên ẩn danh"),
             "slug": author.get("slug", ""),
             "role": author.get("role", "READER"),
             "avatar_url": author.get("avatar_url"),

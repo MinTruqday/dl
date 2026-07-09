@@ -36,7 +36,7 @@ class HighlightService:
             "created_at": datetime.now(timezone.utc),
         }
         await HighlightRepository.insert_one(highlight)
-        logger.info("Tạo phần văn bản nổi bật thành công")
+        logger.info("Document text highlight created successfully")
         return highlight
 
     @staticmethod
@@ -76,9 +76,9 @@ class HighlightService:
         )
         if result.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy ghi chú đánh dấu"
+                status_code=404, detail="Hệ thống không tìm thấy dữ liệu đánh dấu văn bản yêu cầu"
             )
-        return {"message": "Cập nhật chú thích đoạn nổi bật thành công"}
+        return {"message": "Cập nhật nội dung ghi chú cho đoạn văn bản nổi bật thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -88,10 +88,10 @@ class HighlightService:
         )
         if result.deleted_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy ghi chú đánh dấu"
+                status_code=404, detail="Hệ thống không tìm thấy dữ liệu đánh dấu văn bản yêu cầu"
             )
-        logger.info("Xóa vĩnh viễn ghi chú và phần đánh dấu")
-        return {"message": "Đã xóa phần đánh dấu văn bản"}
+        logger.info("Document highlight and associated note permanently deleted")
+        return {"message": "Dữ liệu đánh dấu văn bản đã được xóa vĩnh viễn khỏi hệ thống"}
 
     @staticmethod
     @log_logic_execution
@@ -108,7 +108,7 @@ class HighlightService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except ValueError as e:
-                logger.exception("Lỗi định dạng phân trang")
+                logger.exception("Pagination cursor format error")
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
             pipeline.append({"$skip": skip})

@@ -6,7 +6,7 @@ class AnalysisAgent:
         pass
 
     async def execute(self, req) -> str:
-        logger.info("Đang truy vấn MongoDB")
+        logger.info("Querying MongoDB")
         try:
             if isinstance(req, dict):
                 query = req.get("query", "")
@@ -52,7 +52,7 @@ class AnalysisAgent:
                 "The system could not extract any relevant information from the available documents",
             )
         except Exception as e:
-            logger.exception("Lỗi truy cập cơ sở kiến thức")
-            return f"Không thể lấy dữ liệu từ máy chủ, vui lòng làm mới và thử lại: {e}"
+            logger.exception("Knowledge base access error")
+            return f"Không thể kết nối đến máy chủ dữ liệu, vui lòng làm mới trang và thử lại {e}"
 
 researcher = AnalysisAgent()

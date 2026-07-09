@@ -5,7 +5,7 @@ from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.mq import mq
 
 async def process_outbox():
-    logger.info("Khởi động Outbox Worker")
+    logger.info("Outbox worker service started successfully")
     while True:
         try:
             db = mongo.get_db()
@@ -22,6 +22,6 @@ async def process_outbox():
                     )
                     continue
         except Exception as e:
-            logger.exception("Lỗi quá trình đồng bộ hóa Outbox Worker")
+            logger.exception("Unexpected error during outbox synchronization process")
 
         await asyncio.sleep(5)

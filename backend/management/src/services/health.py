@@ -68,10 +68,10 @@ class HealthService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy hồ sơ người dùng"
+                status_code=404, detail="Hệ thống không tìm thấy hồ sơ người dùng yêu cầu"
             )
-        logger.info("Cập nhật quyền truy cập tài khoản thành công")
-        return {"message": "Cập nhật quyền truy cập thành công"}
+        logger.info("Account access privileges updated successfully")
+        return {"message": "Cập nhật quyền truy cập hệ thống thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -87,10 +87,10 @@ class HealthService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy hồ sơ người dùng"
+                status_code=404, detail="Hệ thống không tìm thấy hồ sơ người dùng yêu cầu"
             )
-        logger.info("Cập nhật trạng thái hoạt động tài khoản thành công")
-        return {"message": "Cập nhật trạng thái hoạt động thành công"}
+        logger.info("Account status updated successfully")
+        return {"message": "Cập nhật trạng thái hoạt động tài khoản thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -108,14 +108,14 @@ class HealthService:
             },
             upsert=True,
         )
-        logger.warning("Thay đổi trạng thái bảo trì thành công")
-        return {"message": "Cập nhật cấu hình bảo trì thành công"}
+        logger.warning("System maintenance mode toggled successfully")
+        return {"message": "Cập nhật cấu hình bảo trì hệ thống thành công"}
 
     @staticmethod
     @log_logic_execution
     async def trigger_backup(action: str = "FULL") -> dict:
-        logger.info("Đã lên lịch sao lưu dữ liệu")
-        return {"message": "Đang chạy tác vụ sao lưu dữ liệu"}
+        logger.info("System data backup scheduled successfully")
+        return {"message": "Tiến trình sao lưu dữ liệu hệ thống đang được thực thi"}
 
     @staticmethod
     @log_logic_execution
@@ -266,7 +266,7 @@ class HealthService:
                     "categories": formatted_categories,
                 }
         except Exception as e:
-            logger.exception("Lỗi truy xuất thống kê lưu trữ do sự cố kết nối")
+            logger.exception("Failed to retrieve storage statistics due to connection failure")
             return {
                 "status": "unreachable",
                 "total_buckets": 0,
@@ -290,8 +290,8 @@ class HealthService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Ghi nhận báo cáo lỗi thành công")
-        return {"message": "Báo cáo sự cố thành công"}
+        logger.info("Bug report recorded successfully")
+        return {"message": "Báo cáo sự cố hệ thống đã được ghi nhận thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -307,7 +307,7 @@ class HealthService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Đã gửi đề xuất chính sách")
+        logger.info("Policy proposal submitted successfully")
 
 
     @staticmethod

@@ -13,11 +13,11 @@ class UserService:
     async def create_user(req: CreateUserRequest) -> str:
         existing_email = await UserRepository.get_user_by_email(req.email)
         if existing_email:
-            raise HTTPException(status_code=400, detail="Email đã tồn tại")
+            raise HTTPException(status_code=400, detail="Địa chỉ email đã được đăng ký trên hệ thống")
         
         existing_slug = await UserRepository.get_user_by_slug(req.slug)
         if existing_slug:
-            raise HTTPException(status_code=400, detail="Slug đã tồn tại")
+            raise HTTPException(status_code=400, detail="Tên miền cá nhân đã được sử dụng")
             
         user_id = str(uuid7())
         user_doc = req.model_dump()
@@ -38,7 +38,7 @@ class UserService:
     async def get_user_profile(user_id: str) -> Dict[str, Any]:
         user = await UserRepository.get_user_by_id(user_id)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+            raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu người dùng tương ứng")
         user["_id"] = str(user["_id"])
         return user
 

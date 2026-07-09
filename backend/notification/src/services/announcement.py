@@ -90,5 +90,5 @@ class AnnouncementService:
                 json.dumps({"title": data.title, "body": data.body}),
             )
         except Exception as e:
-                logger.exception("Lỗi phân phối thông báo theo thời gian thực")
+                logger.exception("Failed to distribute real-time notification")
         return {"id": notif_id}

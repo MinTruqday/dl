@@ -13,13 +13,13 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
     return await call_next(request)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
-        status_code=503, content={"detail": "Đã xảy ra lỗi, vui lòng thử lại sau"}
+        status_code=503, content={"detail": "Đã xảy ra lỗi không mong muốn, vui lòng thử lại sau"}
     )
 @app.get("/health")
 async def read_health():
@@ -32,13 +32,13 @@ def compile_document(payload: dict):
     doc_id = payload.get("document_id")
     if not doc_id:
         raise HTTPException(
-            status_code=400, detail="Thiếu mã tài liệu hợp lệ để biên dịch"
+            status_code=400, detail="Yêu cầu thiếu tham số mã tài liệu hợp lệ để thực hiện biên dịch"
         )
 
     from src.jobs.task import compile_document_tectonic
 
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
-    return {"message": "Đã thêm tài liệu vào hàng đợi", "task_id": task.id}
+    return {"message": "Đã thêm yêu cầu biên dịch tài liệu vào hàng đợi xử lý thành công", "task_id": task.id}
 
 @app.on_event("shutdown")
 async def shutdown_event():

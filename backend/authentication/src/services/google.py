@@ -13,10 +13,10 @@ class GoogleService:
         google_client_id = settings.GOOGLE_CLIENT_ID
         redirect_uri = settings.GOOGLE_REDIRECT_URI
         if not google_client_id or not redirect_uri:
-            logger.error("Lỗi cấu hình nhà cung cấp dịch vụ xác thực hệ thống")
+            logger.error("External authentication provider is missing or invalid")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Chưa cấu hình xác thực bên ngoài",
+                detail="Hệ thống chưa được cấu hình các dịch vụ xác thực liên kết bên ngoài",
             )
         auth_url = f"{settings.GOOGLE_AUTH_URL}?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile"
         return auth_url
@@ -41,8 +41,8 @@ class GoogleService:
             )
             token_data = token_resp.json()
             if "access_token" not in token_data:
-                logger.warning("Yêu cầu xác thực tài khoản bị từ chối")
-                raise HTTPException(status_code=400, detail="Lỗi xác thực liên kết")
+                logger.warning("External authentication request was rejected by the provider")
+                raise HTTPException(status_code=400, detail="Quá trình xác thực liên kết gặp sự cố")
             user_resp = await client.get(
                 settings.GOOGLE_USERINFO_URL,
                 headers={"Authorization": f"Bearer {token_data['access_token']}"},
@@ -62,7 +62,7 @@ class GoogleService:
             if config and (not config.get("registration_enabled", True)):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Tạo tài khoản tạm thời bị vô hiệu hóa",
+                    detail="Tính năng đăng ký tài khoản mới tạm thời bị vô hiệu hóa trên hệ thống",
                 )
             try:
                 async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
@@ -80,7 +80,7 @@ class GoogleService:
                     )
                     if resp.status_code not in (200, 201):
                         raise HTTPException(
-                            status_code=500, detail="Lỗi kết nối tài khoản"
+                            status_code=500, detail="Quá trình thiết lập kết nối liên kết tài khoản gặp sự cố"
                         )
                     user_id = resp.json().get("data", {}).get("user_id")
 
@@ -94,7 +94,7 @@ class GoogleService:
                     user_doc = {"_id": user_id, "email": email, "is_active": True}
             except httpx.RequestError as e:
                 raise HTTPException(
-                    status_code=500, detail=f"Lỗi kết nối quản lý người dùng: {e}"
+                    status_code=500, detail="Quá trình kết nối đến dịch vụ quản lý thông tin người dùng gặp sự cố"
                 )
-            logger.info("Tự động tạo tài khoản liên kết thành công")
+            logger.info("Automatic creation of federated user account completed successfully")
         return await SessionService.issue_token_for_user(user_doc, client_ip)

@@ -17,7 +17,7 @@ try:
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
 except ImportError as e:
-    logger.exception("Lỗi hệ thống công cụ hiển thị tài liệu")
+    logger.exception("Document rendering toolkit (ReportLab) import failed")
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
@@ -30,11 +30,11 @@ class WatermarkService:
         if not REPORTLAB_AVAILABLE:
             raise HTTPException(
                 status_code=500,
-                detail="Tính năng xuất PDF đang bảo trì",
+                detail="Tính năng kết xuất PDF tạm thời không khả dụng, vui lòng thử lại sau",
             )
         document = await LicenseRepository.get_document(str(document_id))
         if not document:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu kết xuất")
         user_email = (
             current_user.email
             if hasattr(current_user, "email") and current_user.email
@@ -56,12 +56,12 @@ class WatermarkService:
                     tier_data = data.get("data") or {}
                     user_tier = tier_data.get("ai_tier", "BASIC")
         except Exception as e:
-            logger.warning(f"Không thể lấy thông tin tier: {e}")
+            logger.warning(f"Failed to fetch user tier information {e}")
 
         if user_tier == "BASIC" and (not hasattr(current_user, "role") or current_user.role != "admin"):
             raise HTTPException(
                 status_code=403,
-                detail="Gói cước Basic không hỗ trợ tính năng xuất bảo mật. Vui lòng nâng cấp",
+                detail="Gói cước hiện tại không hỗ trợ tính năng kết xuất tài liệu bảo mật. Vui lòng nâng cấp để sử dụng",
             )
 
         if (
@@ -73,7 +73,7 @@ class WatermarkService:
             if not purchase:
                 raise HTTPException(
                     status_code=403,
-                    detail="Yêu cầu có bản quyền hoặc xác nhận mua hàng",
+                    detail="Tài liệu yêu cầu quyền truy cập đặc biệt hoặc xác nhận mua hàng",
                 )
         
         if (
@@ -106,7 +106,7 @@ class WatermarkService:
                 import os
                 font_path = os.path.join(os.path.dirname(__file__), "Roboto-Regular.ttf")
                 if not os.path.exists(font_path):
-                    raise RuntimeError("Thiếu file Roboto-Regular.ttf trên Docker. Không thể ghi Watermark")
+                    raise RuntimeError("Missing Roboto-Regular.ttf font file. Cannot apply watermark")
                 
                 pdfmetrics.registerFont(TTFont('Roboto-Regular', font_path))
                 font_name = "Roboto-Regular"
@@ -166,17 +166,17 @@ class WatermarkService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.exception("Lỗi quá trình kết xuất định dạng PDF")
+                logger.exception("PDF rendering process failed during watermark generation")
                 return None
 
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
         if pdf_data is None:
             raise HTTPException(
-                status_code=500, detail="Lỗi xuất tài liệu bảo vệ bản quyền"
+                status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình kết xuất tài liệu bảo mật"
             )
             
         if user_tier == "PRO" and (not hasattr(current_user, "role") or current_user.role != "admin"):
-            logger.info("Xuất tài liệu thành công")
+            logger.info("Document exported successfully without E-DRM (PRO tier)")
             return pdf_data, "pdf", "application/pdf"
             
         import os
@@ -187,8 +187,8 @@ class WatermarkService:
         try:
             file_id, aes_key = await LicenseService.create_license(str(document["_id"]), user_id)
         except Exception as e:
-            logger.exception("Lỗi khởi tạo cấu trúc giấy phép E-DRM")
-            raise HTTPException(status_code=500, detail=f"Lỗi tạo khóa bảo mật tài liệu: {e}")
+            logger.exception("Failed to initialize E-DRM license structure")
+            raise HTTPException(status_code=500, detail="Đã xảy ra lỗi trong quá trình tạo khóa bảo vệ tài liệu E-DRM")
             
         try:
             aesgcm = AESGCM(aes_key)
@@ -198,10 +198,10 @@ class WatermarkService:
             file_id_bytes = uuid.UUID(file_id).bytes 
             final_doclib_data = file_id_bytes + nonce + ciphertext
         except Exception as e:
-            logger.exception("Lỗi mã hóa AES nội dung tài liệu")
-            raise HTTPException(status_code=500, detail=f"Lỗi mã hóa tài liệu: {e}")
+            logger.exception("AES encryption failed for document content")
+            raise HTTPException(status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình mã hóa tài liệu")
 
-        logger.info(f"Xuất tài liệu E-DRM thành công, file_id={file_id}")
+        logger.info(f"Successfully exported E-DRM document, file_id={file_id}")
         return final_doclib_data, "doclib", "application/octet-stream"
 
     @staticmethod

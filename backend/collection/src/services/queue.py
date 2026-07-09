@@ -11,7 +11,7 @@ WORKER_TASKS = []
 
 @log_logic_execution
 async def run_worker():
-    logger.info("Khởi động nền tiêu thụ tin nhắn từ Queue Service")
+    logger.info("Starting background message consumer for Queue service")
 
     @log_logic_execution
     async def route_anna_collector(payload):
@@ -82,7 +82,7 @@ async def run_worker():
                 elif res: 
                     await handler_func(res)
             except Exception as e:
-                logger.exception(f"Lỗi nhận tín hiệu xử lý hàng đợi {queue_name} từ RabbitMQ")
+                logger.exception(f"Failed to consume from queue {queue_name} in RabbitMQ")
                 await asyncio.sleep(5)
             await asyncio.sleep(1)
 

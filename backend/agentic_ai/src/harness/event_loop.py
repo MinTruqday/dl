@@ -77,13 +77,13 @@ class CronScheduler:
 
     def register(self, schedule: CronSchedule):
         self._schedules[schedule.schedule_id] = schedule
-        logger.info(f"CronScheduler: registered schedule '{schedule.name}' (every {schedule.interval_seconds}s)")
+        logger.info(f"CronScheduler registered schedule '{schedule.name}' (every {schedule.interval_seconds}s)")
 
     def unregister(self, schedule_id: str):
         schedule = self._schedules.pop(schedule_id, None)
         if schedule and schedule._task:
             schedule._task.cancel()
-        logger.info(f"CronScheduler: unregistered schedule {schedule_id}")
+        logger.info(f"CronScheduler unregistered schedule {schedule_id}")
 
     def set_event_loop(self, event_driven_loop: "EventDrivenLoop"):
         self._event_loop_ref = event_driven_loop
@@ -110,14 +110,14 @@ class CronScheduler:
                     self._run_schedule(schedule),
                     name=f"cron:{schedule.name}",
                 )
-        logger.info(f"CronScheduler: started {len(self._schedules)} schedules")
+        logger.info(f"CronScheduler started {len(self._schedules)} schedules")
 
     async def stop(self):
         self._running = False
         for schedule in self._schedules.values():
             if schedule._task and not schedule._task.done():
                 schedule._task.cancel()
-        logger.info("CronScheduler: stopped all schedules")
+        logger.info("CronScheduler stopped all schedules")
 
     async def _run_schedule(self, schedule: CronSchedule):
         while self._running and schedule.enabled:
@@ -137,17 +137,17 @@ class CronScheduler:
                     source=f"cron:{schedule.name}",
                 )
 
-                logger.info(f"CronScheduler: firing event for schedule '{schedule.name}' (run #{schedule.run_count})")
+                logger.info(f"CronScheduler firing event for schedule '{schedule.name}' (run #{schedule.run_count})")
 
                 if self._event_loop_ref:
                     asyncio.create_task(self._event_loop_ref.handle_event(event))
                 else:
-                    logger.warning(f"CronScheduler: no EventDrivenLoop attached for schedule '{schedule.name}'")
+                    logger.warning(f"CronScheduler no EventDrivenLoop attached for schedule '{schedule.name}'")
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.exception(f"CronScheduler: error in schedule '{schedule.name}': {e}")
+                logger.exception(f"CronScheduler error in schedule '{schedule.name}' with {e}")
                 await asyncio.sleep(5)
 
 
@@ -158,7 +158,7 @@ class SystemUpdateRegistry:
 
     def record(self, update: SystemUpdate):
         self._updates.append(update)
-        logger.info(f"SystemUpdateRegistry: recorded update '{update.update_type}' for event {update.event_id}")
+        logger.info(f"SystemUpdateRegistry recorded update '{update.update_type}' for event {update.event_id}")
 
     def get_recent(self, limit: int = 50) -> List[SystemUpdate]:
         return list(reversed(self._updates[-limit:]))
@@ -191,19 +191,19 @@ class EventDrivenLoop:
         if handler.event_type not in self._handlers:
             self._handlers[handler.event_type] = []
         self._handlers[handler.event_type].append(handler)
-        logger.info(f"EventDrivenLoop: registered handler for {handler.event_type.value}: {handler.description}")
+        logger.info(f"EventDrivenLoop registered handler for {handler.event_type.value} {handler.description}")
 
     async def emit_event(self, event: AgentEvent):
         try:
             self._event_queue.put_nowait(event)
-            logger.info(f"EventDrivenLoop: queued event {event.event_id} ({event.event_type.value})")
+            logger.info(f"EventDrivenLoop queued event {event.event_id} ({event.event_type.value})")
         except asyncio.QueueFull:
-            logger.warning(f"EventDrivenLoop: event queue full, dropping event {event.event_id}")
+            logger.warning(f"EventDrivenLoop event queue full, dropping event {event.event_id}")
 
     async def handle_event(self, event: AgentEvent) -> Optional[str]:
         handlers = self._handlers.get(event.event_type, [])
         if not handlers:
-            logger.debug(f"EventDrivenLoop: no handlers for {event.event_type.value}")
+            logger.debug(f"EventDrivenLoop no handlers for {event.event_type.value}")
             return None
 
         results = []
@@ -223,7 +223,7 @@ class EventDrivenLoop:
                     )
                     self._update_registry.record(update)
             except Exception as e:
-                logger.exception(f"EventDrivenLoop: handler '{handler.description}' failed: {e}")
+                logger.exception(f"EventDrivenLoop handler '{handler.description}' failed with {e}")
                 update = SystemUpdate(
                     update_id=str(uuid.uuid4()),
                     event_id=event.event_id,
@@ -241,13 +241,13 @@ class EventDrivenLoop:
     async def start_worker(self):
         self._running = True
         self._worker_task = asyncio.create_task(self._worker_loop(), name="event_driven_worker")
-        logger.info("EventDrivenLoop: worker started")
+        logger.info("EventDrivenLoop worker started")
 
     async def stop_worker(self):
         self._running = False
         if self._worker_task and not self._worker_task.done():
             self._worker_task.cancel()
-        logger.info("EventDrivenLoop: worker stopped")
+        logger.info("EventDrivenLoop worker stopped")
 
     async def _worker_loop(self):
         while self._running:
@@ -260,7 +260,7 @@ class EventDrivenLoop:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.exception(f"EventDrivenLoop: worker error: {e}")
+                logger.exception(f"EventDrivenLoop worker error {e}")
 
     def get_stats(self) -> Dict[str, Any]:
         return {
@@ -293,14 +293,14 @@ class EventDrivenLoop:
 
 
 async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
-    logger.info(f"EventDrivenLoop: heartbeat ping from {event.source}")
+    logger.info(f"EventDrivenLoop heartbeat ping from {event.source}")
     payload = event.payload
     if payload.get("check_hill_climbing", False):
         try:
             from src.harness.hill_climbing import hill_climbing_loop
             asyncio.create_task(hill_climbing_loop.analyze_and_improve())
         except Exception as e:
-            logger.warning(f"Heartbeat: hill climbing trigger failed: {e}")
+            logger.warning(f"Heartbeat hill climbing trigger failed {e}")
     return "Heartbeat processed"
 
 
@@ -308,14 +308,14 @@ async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
     doc_id = event.payload.get("document_id")
     if not doc_id:
         return None
-    logger.info(f"EventDrivenLoop: document uploaded event for doc_id={doc_id}")
+    logger.info(f"EventDrivenLoop document uploaded event for doc_id={doc_id}")
     return f"Document {doc_id} upload event processed"
 
 
 async def _handle_user_query_event(event: AgentEvent) -> Optional[str]:
     query = event.payload.get("query", "")
     user_id = event.payload.get("user_id", "")
-    logger.debug(f"EventDrivenLoop: user query event from user={user_id}")
+    logger.debug(f"EventDrivenLoop user query event from user={user_id}")
     return f"User query event recorded for user {user_id}"
 
 

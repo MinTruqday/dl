@@ -32,7 +32,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
     return await call_next(request)
 
 app.middleware("http")(add_trace_id_header)
@@ -50,7 +50,7 @@ app.add_middleware(
 app.include_router(collector)
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Tính năng thu thập dữ liệu đã sẵn sàng")
+    logger.info("Data collection service is ready")
     from src.core.infrastructure.database import init_db
     await init_db()
     from src.services.queue import run_worker

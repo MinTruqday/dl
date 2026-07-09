@@ -21,10 +21,10 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
             raise HTTPException(status_code=404, detail="Không tìm thấy giấy phép bản quyền của tài liệu")
             
         if license_doc.get("status") != "ACTIVE":
-            raise HTTPException(status_code=403, detail="Giấy phép bản quyền đã bị thu hồi hoặc hết hạn")
+            raise HTTPException(status_code=403, detail="Giấy phép bản quyền tài liệu đã hết hạn hoặc bị thu hồi")
             
         if license_doc["user_id"] != str(current_user.id):
-            raise HTTPException(status_code=403, detail="Tài khoản không có quyền giải mã file này")
+            raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập và giải mã tài liệu này")
             
         user_id = str(current_user.id)
         
@@ -34,7 +34,7 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
             if not purchase:
                 
                 await LicenseRepository.update_license(license_doc["_id"], {"$set": {"status": "REVOKED"}})
-                raise HTTPException(status_code=403, detail="Bạn đã hết hạn hoặc bị thu hồi quyền truy cập tài liệu này")
+                raise HTTPException(status_code=403, detail="Giấy phép bản quyền tài liệu đã hết hạn hoặc bị thu hồi")
 
         await LicenseRepository.update_license(
             license_doc["_id"],
@@ -57,13 +57,13 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
             )
             encoded_encrypted_key = base64.b64encode(encrypted_aes_key).decode('utf-8')
         except Exception as e:
-            logger.exception("Lỗi mã hóa RSA dữ liệu hệ thống")
-            raise HTTPException(status_code=400, detail="Public Key không hợp lệ")
+            logger.exception("RSA encryption failed for client public key")
+            raise HTTPException(status_code=400, detail="Khóa công khai (Public Key) không hợp lệ")
         
-        logger.info(f"Đã cấp phép truy cập cho tài liệu {req.file_id} cho người dùng {user_id}")
+        logger.info(f"Granted DRM access for document {req.file_id} to user {user_id}")
         return Token(encrypted_aes_key=encoded_encrypted_key)
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("Lỗi cấp phép bản quyền tài liệu")
-        raise HTTPException(status_code=500, detail=f"Lỗi hệ thống nội bộ: {e}")
+        logger.exception("Failed to acquire DRM license")
+        raise HTTPException(status_code=500, detail="Đã xảy ra lỗi hệ thống khi cấp phép bản quyền")

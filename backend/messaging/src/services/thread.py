@@ -78,7 +78,7 @@ class ThreadService:
                 return existing
         user_doc = await ProfileRepository.get_profile(receiver_id)
         if user_doc and sender_id in user_doc.get("blocked_users", []):
-            raise Exception("Tài khoản này không nhận tin nhắn từ bạn")
+            raise Exception("Tài khoản này hiện không tiếp nhận tin nhắn từ bạn")
         self_destruct_at = None
         settings_id = (
             f"settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
@@ -217,7 +217,7 @@ class ThreadService:
                         users_list = resp.json().get("data", [])
             except Exception as e:
                 from loguru import logger
-                logger.error(f"Error fetching users in get_conversations: {e}")
+                logger.error(f"Error fetching users in get_conversations {e}")
         user_map = {str(u["_id"]): u for u in users_list}
         groups_list = (
             await MessageRepository.find_groups({"members": str(current_user.id)})

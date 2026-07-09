@@ -14,12 +14,12 @@ class UploadService:
     async def upload_image(file, owner_id: str = None, is_system: bool = False):
         if "svg" in file.content_type.lower() or file.filename.lower().endswith(".svg"):
             raise HTTPException(
-                status_code=400, detail="Không hỗ trợ định dạng hình ảnh vector này"
+                status_code=400, detail="Từ chối thao tác: Không hỗ trợ lưu trữ định dạng hình ảnh vector"
             )
         if not file.content_type.startswith("image/"):
             raise HTTPException(
                 status_code=400,
-                detail="Chỉ chấp nhận các định dạng hình ảnh tiêu chuẩn",
+                detail="Từ chối thao tác: Yêu cầu định dạng hình ảnh tiêu chuẩn hợp lệ",
             )
         ext = file.filename.split(".")[-1]
         
@@ -34,9 +34,9 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.exception("Lỗi lưu trữ hình ảnh")
+            logger.exception("Image storage operation failed")
             raise HTTPException(
-                status_code=500, detail=f"Lỗi truyền tệp hình ảnh vào bộ nhớ vĩnh viễn: {e}"
+                status_code=500, detail="Không thể lưu trữ tệp hình ảnh vào bộ nhớ vĩnh viễn"
             )
         return {
             "url": filename,
@@ -76,11 +76,11 @@ class UploadService:
         ext = file.filename.split(".")[-1].lower()
         if ext == "svg" or "svg" in file.content_type.lower():
             raise HTTPException(
-                status_code=400, detail="Không hỗ trợ định dạng hình ảnh vector này"
+                status_code=400, detail="Từ chối thao tác: Không hỗ trợ lưu trữ định dạng hình ảnh vector"
             )
         if ext not in allowed_extensions:
             raise HTTPException(
-                status_code=400, detail="Định dạng tệp không được hỗ trợ"
+                status_code=400, detail="Từ chối thao tác: Định dạng tệp tin yêu cầu không được hỗ trợ"
             )
             
         if is_system:
@@ -95,9 +95,9 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.exception("Lỗi mạng trong quá trình lưu trữ tài liệu")
+            logger.exception("Document storage operation failed during file transfer")
             raise HTTPException(
-                status_code=500, detail=f"Lỗi lưu trữ, không thể tải lên tài liệu: {e}"
+                status_code=500, detail="Không thể lưu trữ tài liệu vào bộ nhớ"
             )
         return {
             "url": filename,
@@ -111,15 +111,15 @@ class UploadService:
     async def get_presigned_url(file_path: str):
         if ".." in file_path or file_path.startswith("/"):
             raise HTTPException(
-                status_code=400, detail="Đường dẫn tệp tin không hợp lệ"
+                status_code=400, detail="Yêu cầu bị từ chối: Đường dẫn truy cập tệp tin không hợp lệ"
             )
         try:
             url = await generate_presigned_url(file_path, 3600)
             return {"download_url": url}
         except Exception as e:
-            logger.exception("Lỗi tạo đường dẫn tải xuống bảo mật")
+            logger.exception("Failed to generate presigned download URL")
             raise HTTPException(
-                status_code=500, detail=f"Lỗi tạo liên kết truy cập bảo mật: {e}"
+                status_code=500, detail="Không thể khởi tạo liên kết tải xuống bảo mật"
             )
 
     @staticmethod
@@ -145,7 +145,7 @@ class UploadService:
             url = await generate_presigned_put_url(file_path, content_type, 3600)
             return {"upload_url": url, "file_path": file_path}
         except Exception as e:
-            logger.exception("Lỗi tạo đường dẫn tải lên bảo mật")
+            logger.exception("Failed to generate presigned upload URL")
             raise HTTPException(
-                status_code=500, detail=f"Lỗi tạo liên kết tải lên: {e}"
+                status_code=500, detail="Không thể khởi tạo liên kết tải lên bảo mật"
             )

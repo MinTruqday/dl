@@ -173,7 +173,7 @@ async def share_document(
 ):
     document_id = req.get("document_id")
     if not document_id:
-        return APIResponse(message="Lỗi chia sẻ do thiếu mã tài liệu", status=400)
+        return APIResponse(message="Yêu cầu chia sẻ không cung cấp đầy đủ mã định danh tài liệu", status=400)
     result = await ThreadService.share_document(receiver_id, document_id, current_user)
     if not result:
         return APIResponse(
@@ -195,7 +195,7 @@ async def get_shared_attachments(
 async def block_user(other_user_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await ThreadService.block_user(other_user_id, current_user),
-        message="Đã chặn người dùng gửi tin nhắn cho bạn",
+        message="Thực hiện chặn tài khoản gửi tin nhắn thành công",
     )
 
 @router.post("/{other_user_id}/bo-chan", response_model=APIResponse[Any])
@@ -252,7 +252,7 @@ async def create_group(req: dict, current_user=Depends(get_current_user)):
     group_name = req.get("group_name")
     member_ids = req.get("member_ids", [])
     if not group_name:
-        return APIResponse(message="Lỗi tạo nhóm do tên nhóm không hợp lệ", status=400)
+        return APIResponse(message="Tên nhóm cung cấp không hợp lệ", status=400)
     result = await ThreadService.create_group(group_name, member_ids, current_user)
     return APIResponse(
         data=result, message="Tạo nhóm trò chuyện thành công", status=201
@@ -286,7 +286,7 @@ async def toggle_self_destruct(
         },
         other_user_id,
     )
-    return APIResponse(data=result, message="Đã bật tự động xóa tin nhắn")
+    return APIResponse(data=result, message="Kích hoạt tính năng tự động hủy tin nhắn thành công")
 
 @router.post("/{other_user_id}/tat-thong-bao", response_model=APIResponse[Any])
 async def toggle_mute(other_user_id: str, current_user=Depends(get_current_user)):

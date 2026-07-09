@@ -32,7 +32,7 @@ class RetrievalRag:
 
                 self._reranker = CrossEncoder(settings.RERANKER_MODEL)
             except Exception as e:
-                logger.exception("Lỗi tải mô hình xếp hạng AI")
+                logger.exception("AI ranking model loading error")
                 self._reranker = False
         return self._reranker
 
@@ -68,7 +68,7 @@ class RetrievalRag:
             queries = [q for q in queries if q]
             queries.append(question)
         except Exception as e:
-            logger.exception("Lỗi tạo truy vấn đa chiều")
+            logger.exception("Multi-dimensional query generation error")
             queries = [question]
 
         all_documents = []
@@ -110,7 +110,7 @@ class RetrievalRag:
             reranked_documents = [doc for doc, score in scored_documents]
             return reranked_documents[:k]
         except Exception as e:
-            logger.exception("Lỗi sắp xếp kết quả tìm kiếm")
+            logger.exception("Search result sorting error")
             return documents[:k]
 
     async def cross_document_retrieve(
@@ -133,7 +133,7 @@ class RetrievalRag:
             if isinstance(parsed, list) and len(parsed) == len(document_ids):
                 sub_queries = parsed
         except Exception as e:
-            logger.exception("Lỗi phân tích truy vấn chéo tài liệu")
+            logger.exception("Cross-document query analysis error")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)

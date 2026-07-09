@@ -29,7 +29,7 @@ async def create_folder(
     item = await StorageService.create_item(data, current_user.id)
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Tạo thư mục mới thành công",
+        message="Tạo thư mục lưu trữ mới thành công",
         status=201,
     )
 
@@ -47,7 +47,7 @@ async def create_file(
     item = await StorageService.create_item(data, current_user.id)
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Tải lên tệp tin cá nhân thành công",
+        message="Tạo tệp tin lưu trữ mới thành công",
         status=201,
     )
 
@@ -66,7 +66,7 @@ async def list_items(
     )
     response_items = [StorageItemResponse(**item.dict()) for item in items]
     return APIResponse(
-        data=response_items, message="Lấy nội dung thư mục thành công", status=200
+        data=response_items, message="Truy xuất nội dung thư mục lưu trữ thành công", status=200
     )
 
 @router.get("/tim-kiem", response_model=APIResponse[List[StorageItemResponse]])
@@ -81,7 +81,7 @@ async def search_items(
     items = await StorageService.search_items(q, current_user.id, type)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
-        message="Tìm kiếm thành công",
+        message="Tìm kiếm dữ liệu lưu trữ thành công",
         status=200,
     )
 
@@ -96,7 +96,7 @@ async def get_recent_items(
     items = await StorageService.get_recent_items(current_user.id, limit)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
-        message="Lấy danh sách tệp truy cập gần đây thành công",
+        message="Truy xuất danh sách tệp truy cập gần đây thành công",
         status=200,
     )
 
@@ -109,7 +109,7 @@ async def get_storage_quota(
 ):
     data = await StorageService.get_storage_quota(current_user.id)
     return APIResponse(
-        data=data, message="Cập nhật dung lượng lưu trữ thành công", status=200
+        data=data, message="Truy xuất thông tin hạn mức lưu trữ thành công", status=200
     )
 
 @router.post(
@@ -128,11 +128,11 @@ async def create_shortcut(
     )
     if not item:
         raise HTTPException(
-            status_code=404, detail="Không tìm thấy tệp gốc để tạo lối tắt"
+            status_code=404, detail="Không tìm thấy tệp tin gốc để tạo lối tắt"
         )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Tạo lối tắt tệp thành công",
+        message="Tạo lối tắt tệp tin thành công",
         status=201,
     )
 
@@ -155,7 +155,7 @@ async def download_zip(
     item_ids = [i.strip() for i in ids.split(",") if i.strip()]
     if not item_ids:
         raise HTTPException(
-            status_code=400, detail="Lỗi tạo tệp nén do không có tệp nào được chọn"
+            status_code=400, detail="Yêu cầu ít nhất một tệp tin để tạo bản nén"
         )
     zip_buffer = io.BytesIO()
     storage_client = await get_storage_client()
@@ -170,7 +170,7 @@ async def download_zip(
                         file_data = await resp["Body"].read()
                         zip_file.writestr(item.name, file_data)
                     except Exception as e:
-                        logger.exception("Lỗi tải tệp nén")
+                        logger.exception("Failed to add file to zip archive during download request")
     zip_buffer.seek(0)
     return StreamingResponse(
         zip_buffer,
@@ -204,10 +204,10 @@ async def update_item(
     else:
         item = await StorageService.update_item(item_id, current_user.id, data)
     if not item:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tệp hoặc thư mục")
+        raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu tệp tin hoặc thư mục yêu cầu")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Cập nhật dữ liệu tệp lưu trữ thành công",
+        message="Cập nhật thông tin tệp lưu trữ thành công",
         status=200,
     )
 
@@ -224,10 +224,10 @@ async def delete_item(
         success = await StorageService.delete_item(item_id, current_user.id)
         if not success:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tệp hoặc thư mục"
+                status_code=404, detail="Không tìm thấy dữ liệu tệp tin hoặc thư mục yêu cầu"
             )
         return APIResponse(
-            data=None, message="Đã xóa vĩnh viễn dữ liệu lưu trữ", status=200
+            data=None, message="Xóa vĩnh viễn dữ liệu lưu trữ thành công", status=200
         )
     else:
         item = await StorageService.update_item(
@@ -235,9 +235,9 @@ async def delete_item(
         )
         if not item:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tệp hoặc thư mục"
+                status_code=404, detail="Không tìm thấy dữ liệu tệp tin hoặc thư mục yêu cầu"
             )
-        return APIResponse(data=None, message="Đã chuyển mục vào thùng rác", status=200)
+        return APIResponse(data=None, message="Chuyển dữ liệu vào thùng rác thành công", status=200)
 
 @router.post(
     "/tap-tin/{item_id}/sao-chep", response_model=APIResponse[StorageItemResponse]
@@ -254,10 +254,10 @@ async def copy_item(
         item_id, current_user.id, target_parent_id
     )
     if not item:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
+        raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu tệp tin yêu cầu")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Sao chép tệp thành công",
+        message="Sao chép dữ liệu tệp tin thành công",
         status=201,
     )
 
@@ -275,10 +275,10 @@ async def add_version(
 ):
     item = await StorageService.add_version(item_id, current_user.id, url, size)
     if not item:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
+        raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu tệp tin yêu cầu")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Cập nhật phiên bản mới thành công",
+        message="Cập nhật phiên bản dữ liệu mới thành công",
         status=200,
     )
 
@@ -300,10 +300,10 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageService.get_public_item(share_token)
     if not item:
         raise HTTPException(
-            status_code=404, detail="Liên kết chia sẻ không hợp lệ hoặc đã hết hạn"
+            status_code=404, detail="Liên kết chia sẻ dữ liệu không hợp lệ hoặc đã hết hạn"
         )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Lấy thông tin tệp chia sẻ thành công",
+        message="Truy xuất thông tin tệp chia sẻ thành công",
         status=200,
     )

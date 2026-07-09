@@ -23,7 +23,7 @@ class CopyrightService:
                 }
             },
         )
-        logger.info("Giải quyết tranh chấp bản quyền thành công")
+        logger.info("Copyright dispute resolved successfully")
         return {"message": "Đã giải quyết tranh chấp bản quyền"}
     
     @staticmethod

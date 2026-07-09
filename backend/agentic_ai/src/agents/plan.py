@@ -30,7 +30,7 @@ class PlanAgent:
         return await self.llm.ainvoke(messages)
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
-        logger.info("Đang lập kế hoạch thực thi")
+        logger.info("Executing execution planning")
 
         from src.core.registry import PromptType, registry
 
@@ -79,7 +79,7 @@ class PlanAgent:
             return steps
 
         except Exception as e:
-            logger.exception("Lỗi tạo kế hoạch")
-            return [{"agent": "Knowledge", "task": f"Thông báo cho người dùng về việc phân tích thất bại: {e}"}]
+            logger.exception("Plan generation error")
+            return [{"agent": "Knowledge", "task": f"Inform user about analysis failure {e}"}]
 
 planner = PlanAgent()

@@ -22,7 +22,7 @@ class VersionService:
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
         await DocumentRepository.insert_version(
             {
                 "document_id": document_id,
@@ -39,8 +39,8 @@ class VersionService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Lưu bản chụp lịch sử tài liệu thành công")
-        return {"message": "Lưu bản nháp lịch sử thành công"}
+        logger.info("Document version snapshot saved successfully")
+        return {"message": "Lưu trữ phiên bản lịch sử tài liệu thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -64,7 +64,7 @@ class VersionService:
         )
         if not version:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy bản chụp lịch sử"
+                status_code=404, detail="Hệ thống không tìm thấy phiên bản lịch sử yêu cầu"
             )
         snapshot = version.get("snapshot")
         if not snapshot:
@@ -77,5 +77,5 @@ class VersionService:
         await DocumentRepository.update_one(
             {"_id": version["document_id"]}, {"$set": update_data}
         )
-        logger.info("Khôi phục phiên bản lịch sử tài liệu thành công")
-        return {"message": "Khôi phục phiên bản lịch sử thành công"}
+        logger.info("Document version restored successfully")
+        return {"message": "Khôi phục tài liệu về phiên bản lịch sử thành công"}

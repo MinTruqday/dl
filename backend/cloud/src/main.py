@@ -21,7 +21,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Từ chối truy cập: Mã thông báo xác thực nội bộ không hợp lệ"})
     return await call_next(request)
 
 app.add_middleware(
@@ -35,7 +35,7 @@ app.include_router(storage)
 app.include_router(upload)
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Khởi tạo Cloud thành công")
+    logger.info("Cloud storage service provisioned and ready")
     await init_db()
     from src.core.storage import initialize_bucket
     await initialize_bucket()

@@ -34,19 +34,19 @@ async def managed_browser(headless=True):
         )
         yield browser
     except Exception as e:
-        logger.exception("Lỗi khởi tạo trình duyệt tự động")
+        logger.exception("Automated browser initialization failed")
         raise
     finally:
         if browser:
             try:
                 await browser.close()
             except Exception as e:
-                logger.exception("Lỗi dọn dẹp trình duyệt tự động")
+                logger.exception("Automated browser cleanup failed")
         if playwright:
             try:
                 await playwright.stop()
             except Exception as e:
-                logger.exception("Lỗi dừng tác vụ xuất hình ảnh")
+                logger.exception("Image export task stopping failed")
 
 async def get_stealth_context(browser):
     context = await browser.new_context(
@@ -72,11 +72,11 @@ async def download_file_with_retry(
                                 f.write(chunk)
                         return True
                     else:
-                        logger.error("Lỗi kết nối mạng từ xa")
+                        logger.error("Remote network connection failed")
         except Exception as e:
-            logger.exception("Mất kết nối mạng khi tải, đang thử lại")
+            logger.exception("Network connection lost during download, retrying")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2**attempt)
             else:
-                logger.exception("Lỗi tải xuống tệp sau nhiều lần thử lại")
+                logger.exception("File download failed after multiple retries")
     return False

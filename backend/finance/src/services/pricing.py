@@ -16,15 +16,15 @@ class PricingService:
     ) -> dict:
         doc = await PricingRepository.get_document(document_id, str(current_user.id))
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu tài liệu yêu cầu để cập nhật giá")
         update = {
             "price_dl": max(0, data.get("price_dl", 0)),
             "is_drm_protected": data.get("is_drm_protected", True),
             "updated_at": datetime.now(timezone.utc),
         }
         await PricingRepository.update_document(document_id, {"$set": update})
-        logger.info("Cập nhật giá tài liệu thành công")
-        return {"message": "Cập nhật cấu hình giá tài liệu thành công"}
+        logger.info("Document pricing configuration successfully updated")
+        return {"message": "Cập nhật cấu hình giá bán tài liệu thành công"}
 
     @staticmethod
     @log_logic_execution
@@ -36,21 +36,24 @@ class PricingService:
         default_config = {
             "tiers": {
                 "BASIC": {
+                    "name": "Cơ bản",
                     "monthly_price": 0.0,
-                    "features": ["Standard reading access", "Basic collection tools"],
+                    "features": ["Truy cập đọc tài liệu tiêu chuẩn", "Các công cụ sưu tầm cơ bản"],
                 },
                 "PRO": {
+                    "name": "Chuyên sâu",
                     "monthly_price": 99000.0,
                     "features": [
-                        "Advanced artificial intelligence suggestions",
-                        "Priority administrative support",
+                        "Gợi ý trí tuệ nhân tạo nâng cao",
+                        "Hỗ trợ quản trị ưu tiên",
                     ],
                 },
                 "PREMIUM": {
+                    "name": "Toàn năng",
                     "monthly_price": 199000.0,
                     "features": [
-                        "Unlimited resource access",
-                        "Advanced logical verification tools",
+                        "Truy cập tài nguyên không giới hạn",
+                        "Công cụ xác minh logic chuyên sâu",
                     ],
                 },
             }

@@ -28,7 +28,7 @@ class HttpCore:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("Hệ thống tạm dừng hoạt động do phát hiện chuỗi lỗi liên tiếp")
+            logger.error("System paused operations due to consecutive errors")
 
     def record_success(self):
         self._failures = 0
@@ -39,7 +39,7 @@ class HttpCore:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info("Hệ thống đang nỗ lực khôi phục lại các thao tác bị gián đoạn")
+            logger.info("System attempting to recover interrupted operations")
             self._tripped_at = None
             self._failures = 0
             return False
@@ -79,7 +79,7 @@ class OrchestrationHarness:
         session_id: str,
     ) -> AsyncGenerator[dict, None]:
         if self._circuit_breaker.is_open():
-            logger.error("Đã tạm dừng để tránh quá tải hệ thống")
+            logger.error("Paused to prevent system overload")
             yield {
                 "type": "error",
                 "message": "System overloaded, please retry",
@@ -87,26 +87,26 @@ class OrchestrationHarness:
             return
 
         self._open_session(session_id)
-        logger.info("Khởi tạo phiên làm việc thành công")
+        logger.info("Session initialized successfully")
 
         try:
             async with asyncio.timeout(SESSION_HARD_TIMEOUT_SECONDS):
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
-                        logger.info("Phiên làm việc hiện tại đã bị hệ thống chủ động buộc dừng")
+                        logger.info("Current session was forcibly stopped by the system")
                         yield {"type": "error", "message": "Phiên làm việc đã bị hủy"}
                         return
                     yield event
 
             self._close_session(session_id, "done")
             self._circuit_breaker.record_success()
-            logger.info("Phiên làm việc hoàn thành không có lỗi")
+            logger.info("Session completed without errors")
 
         except asyncio.TimeoutError as e:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.exception("Quá thời gian thực thi, phiên làm việc bị hủy")
+            logger.exception("Execution timeout, session cancelled")
             yield {
                 "type": "error",
                 "message": "Quá thời gian xử lý yêu cầu",
@@ -114,7 +114,7 @@ class OrchestrationHarness:
 
         except asyncio.CancelledError as e:
             self._close_session(session_id, "cancelled")
-            logger.exception("Đã hủy phiên làm việc")
+            logger.exception("Session cancelled")
             yield {
                 "type": "error",
                 "message": "Mất kết nối",
@@ -123,17 +123,17 @@ class OrchestrationHarness:
         except Exception as e:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.exception("Lỗi điều phối phiên làm việc")
+            logger.exception("Session orchestration error")
             yield {
                 "type": "error",
-                "message": f"Orchestration error, please retry: {e}",
+                "message": f"Orchestration error, please retry {e}",
             }
 
     def cancel_session(self, session_id: str):
         state = self._sessions.get(session_id)
         if state:
             state.status = "cancelled"
-            logger.info("Đã hủy phiên làm việc theo yêu cầu")
+            logger.info("Session cancelled as requested")
 
     def get_active_sessions(self) -> list[str]:
         return list(self._sessions.keys())

@@ -28,7 +28,7 @@ class ActingAgent:
         self, action: str, params: dict, user_id: str, token: str = None
     ) -> str:
         if not token and action != "public_query":
-            return "Bạn cần phải xác thực danh tính để tiếp tục"
+            return "Bạn cần phải xác thực danh tính để tiếp tục thực hiện thao tác này"
 
         system_prompt = registry.get(PromptType.TOOL_DISPATCHER)
 
@@ -44,14 +44,14 @@ class ActingAgent:
                 res = await llm_with_tools.ainvoke(messages)
 
                 if not res.tool_calls:
-                    return "Hệ thống AI không tìm ra được công cụ thích hợp để xử lý yêu cầu này"
+                    return "Hệ thống không tìm thấy công cụ phù hợp để xử lý yêu cầu của bạn"
 
                 tool_call = res.tool_calls[0]
                 tool_name = tool_call["name"]
                 tool_params = tool_call["args"]
 
                 if tool_name not in self.tool_map:
-                    return "Tiện ích mà bạn yêu cầu hiện không khả dụng hoặc không tồn tại"
+                    return "Công cụ bạn yêu cầu hiện không khả dụng hoặc không tồn tại trên hệ thống"
 
                 selected_tool = self.tool_map[tool_name]
 
@@ -63,9 +63,9 @@ class ActingAgent:
                     "redeem_coupon",
                 ]
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
-                    return "Thao tác này bắt buộc phải có sự xác nhận ủy quyền trực tiếp từ người dùng"
+                    return "Thao tác này yêu cầu xác nhận ủy quyền trực tiếp từ bạn"
 
-                logger.info("Đang khởi chạy tiện ích")
+                logger.info("Initializing utility")
 
                 try:
                     tool_result = await selected_tool.ainvoke(
@@ -82,12 +82,12 @@ class ActingAgent:
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    logger.exception("Gặp sự cố khi xử lý dữ liệu, hệ thống đang tự động thử lại")
+                    logger.exception("Data processing issue encountered, system is automatically retrying")
                     if attempt == 2:
-                        return "Thao tác vẫn không thành công mặc dù hệ thống đã nỗ lực thử lại nhiều lần"
+                        return "Thao tác thực hiện không thành công sau nhiều lần thử lại, vui lòng kiểm tra lại yêu cầu"
 
         except Exception as e:
-            logger.exception("Quá trình thực thi bị gián đoạn")
-            return f"Đã xảy ra lỗi trong quá trình thực thi lệnh, vui lòng thử lại sau giây lát: {e}"
+            logger.exception("Execution process interrupted")
+            return f"Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát {e}"
 
 actor = ActingAgent()

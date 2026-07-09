@@ -67,7 +67,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
     """Get the current user's DocLib wallet balance in dl currency"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Thao tác này yêu cầu tính bảo mật cao, vui lòng đăng nhập vào tài khoản của bạn và thử lại"
+        return "High security operation, please log in to your account and try again"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -79,20 +79,20 @@ async def get_user_balance(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", {})
             balance = data.get("balance", 0)
-            return f"Số dư tài khoản hiện tại của bạn là {balance} credits"
+            return f"Your current account balance is {balance} credits"
         elif response.status_code == 401:
-            return "Phiên đăng nhập của bạn đã quá hạn an toàn, vui lòng tiến hành đăng nhập lại"
-        raise Exception("Lỗi tải số dư tài khoản")
+            return "Your session has expired. Please log in again"
+        raise Exception("Failed to load account balance")
     except Exception as e:
-        logger.exception("Lỗi truy cập dữ liệu số dư")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to access balance data")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def get_transaction_history(config: RunnableConfig) -> str:
     """View recent financial transaction history including deposit and payments"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Vui lòng xác thực tài khoản để xem chi tiết lịch sử các giao dịch"
+        return "Please authenticate your account to view transaction history details"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -104,27 +104,27 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
-                return "Chưa ghi nhận bất kỳ giao dịch thanh toán nào trong thời gian gần đây"
+                return "No recent payment transactions recorded"
             history_text = ""
             for i, tx in enumerate(data[:5]):
                 tx_type = "Deposit" if tx.get("type") == "TOPUP" else "Payment"
                 amount = tx.get("amount", 0)
                 note = tx.get("note", "No content")
                 history_text += f"{i+1} {tx_type} transaction of {amount} credits with note {note}\n"
-            return f"Dưới đây là lịch sử giao dịch gần đây của bạn\n{history_text}"
-        return "Hệ thống đang gặp gián đoạn khi truy xuất lịch sử giao dịch thanh toán của bạn"
+            return f"Here is your recent transaction history:\n{history_text}"
+        return "System is experiencing issues retrieving your payment transaction history"
     except Exception as e:
-        logger.exception("Hệ thống đang gặp gián đoạn khi truy xuất lịch sử giao dịch thanh toán của bạn")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to retrieve payment transaction history")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     """Redeem a gift voucher code to add funds to the account"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Yêu cầu đăng nhập tài khoản hợp lệ để sử dụng mã quà tặng"
+        return "Valid account login is required to use a gift voucher"
     if not code or not code.strip():
-        return "Mã khuyến mãi này không hợp lệ hoặc đã được ai đó sử dụng trước đó"
+        return "This promo code is invalid or has already been used"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -136,18 +136,18 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         if response.status_code == 200:
             res_data = response.json().get("data", {})
             bonus = res_data.get("bonus_dl", 0)
-            return f"Đổi mã quà tặng thành công và tài khoản của bạn đã được cộng {bonus} credits"
-        return "Hệ thống không thể xử lý yêu cầu quy đổi mã quà tặng lúc này"
+            return f"Gift voucher redeemed successfully. Your account has been credited with {bonus} credits"
+        return "The system cannot process the gift voucher redemption request at this time"
     except Exception as e:
-        logger.exception("Lỗi xử lý yêu cầu đổi thưởng")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to process reward redemption request")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def get_revenue_report(config: RunnableConfig) -> str:
     """View revenue report from document sales, intended for authors"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Để bảo mật, vui lòng đăng nhập tài khoản trước khi xem báo cáo doanh thu"
+        return "For security reasons, please log in before viewing the revenue report"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -160,18 +160,18 @@ async def get_revenue_report(config: RunnableConfig) -> str:
             data = response.json().get("data", {})
             total = data.get("total_revenue", 0)
             pending = data.get("pending_withdrawal", 0)
-            return f"Báo cáo tài chính cho thấy tổng doanh thu là {total} currency units with {pending} units pending withdrawal"
-        return "Không thể truy xuất số liệu thống kê doanh thu tài chính"
+            return f"Financial report shows total revenue of {total} currency units with {pending} units pending withdrawal"
+        return "Unable to retrieve financial revenue statistics"
     except Exception as e:
-        logger.exception("Lỗi tải báo cáo doanh thu")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to load revenue report")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
     """List all personal documents owned or published by the current user"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Vui lòng đăng nhập vào hệ thống để có thể duyệt thư viện tài liệu của bạn"
+        return "Please log into the system to browse your document library"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -183,24 +183,24 @@ async def get_my_documents(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
-                return "Hiện tại thư viện cá nhân của bạn chưa có bất kỳ tài liệu nào"
+                return "Your personal library currently does not have any documents"
             res = "Here is the list of your available documents\n"
             for doc in data:
                 res += f"Document {doc.get('title')} is currently in {doc.get('status')} status\n"
             return res
-        return "Gặp khó khăn trong việc tải danh sách tài liệu từ cơ sở dữ liệu"
+        return "Encountered difficulties loading the document list from the database"
     except Exception as e:
-        logger.exception("Gặp khó khăn trong việc tải danh sách tài liệu từ MongoDB")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to load document list from MongoDB")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
     """View deleted documents currently in the trash bin"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Bạn cần phải xác thực danh tính để tiếp tục"
+        return "You need to authenticate your identity to continue"
     if not _check_system_access(token):
-        return "Cảnh báo bảo mật: Bạn không có đủ đặc quyền để can thiệp vào khu vực này"
+        return "Security warning: You do not have sufficient privileges to access this area"
 
     headers = {"Authorization": token}
     try:
@@ -213,22 +213,22 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
-                return "Không có tài liệu nào đang nằm trong khu vực thùng rác của bạn"
+                return "There are no documents in your trash bin"
             res = "The following documents are located within the trash bin\n"
             for doc in data:
                 res += f"Document {doc.get('title')} was deleted on {doc.get('deleted_at')}\n"
             return res
-        return "Đường truyền truy cập vào dữ liệu thùng rác đang gặp sự cố"
+        return "Connection to trash bin data is currently experiencing issues"
     except Exception as e:
-        logger.exception("Lỗi tải danh sách mục đã xóa")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to load deleted items list")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
     """Delete a document by ID, moving it to the trash bin"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Hệ thống yêu cầu bạn đăng nhập để xác nhận quyền sở hữu trước khi xóa tài liệu"
+        return "The system requires you to log in to confirm ownership before deleting a document"
 
     headers = {"Authorization": token}
     try:
@@ -243,21 +243,21 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
                 from src.store.database import vector_store
 
                 await vector_store.delete_by_document(document_id)
-                logger.info("Dọn dẹp chỉ mục tài liệu thành công")
+                logger.info("Document index cleanup completed successfully")
             except Exception as e:
-                logger.exception("Lỗi dọn dẹp chỉ mục tài liệu")
-            return "Tài liệu đã được dọn dẹp và xóa bỏ hoàn toàn khỏi hệ thống"
-        return "Thao tác xóa bỏ tài liệu đã thất bại do lỗi hệ thống"
+                logger.exception("Failed to clean up document index")
+            return "The document has been completely removed from the system"
+        return "Document deletion failed due to a system error"
     except Exception as e:
-        logger.exception("Thao tác xóa bỏ tài liệu đã thất bại do lỗi hệ thống")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Document deletion failed due to system error")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def restore_document(document_id: str, config: RunnableConfig) -> str:
     """Restore a document from the trash bin by its ID"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Bạn cần phải xác thực danh tính để tiếp tục"
+        return "You need to authenticate your identity to continue"
 
     headers = {"Authorization": token}
     try:
@@ -268,20 +268,20 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
-            return "Tài liệu của bạn đã được khôi phục thành công về trạng thái ban đầu"
-        return "Quá trình khôi phục tài liệu từ thùng rác đã thất bại"
+            return "Your document has been successfully restored to its original state"
+        return "Document restoration from the trash bin failed"
     except Exception as e:
-        logger.exception("Quá trình khôi phục tài liệu từ thùng rác đã thất bại")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Document restoration from trash failed")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
     """View detailed analytics including read count and drop-off rate for a document"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Bạn cần phải xác thực danh tính để tiếp tục"
+        return "You need to authenticate your identity to continue"
     if not _check_system_access(token):
-        return "Bạn không được cấp đủ đặc quyền để thực thi thao tác này"
+        return "You do not have sufficient privileges to perform this operation"
 
     headers = {"Authorization": token}
     try:
@@ -295,11 +295,11 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
             data = response.json().get("data", {})
             readers = data.get("readers_started", 0)
             rate = data.get("dropoff_rate", 0)
-            return f"Phân tích độc giả cho thấy {readers} readers with a bounce rate of {rate} percent"
-        return "Gặp lỗi trong việc tổng hợp và xuất dữ liệu báo cáo thống kê"
+            return f"Reader analytics show {readers} readers with a bounce rate of {rate}%"
+        return "Error aggregating and exporting statistical report data"
     except Exception as e:
-        logger.exception("Lỗi truy xuất dữ liệu phân tích")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to retrieve analytics data")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
@@ -312,7 +312,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
     except Exception as e:
-        logger.exception("Lỗi tải nội dung tài liệu")
+        logger.exception("Failed to load document content")
     return ""
 
 from src.api.inference import peer_review, suggest_citations, transform_tone
@@ -325,7 +325,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Phần nội dung thực tế của tài liệu hiện không khả dụng"
+        return "The actual content of the document is currently unavailable"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
@@ -335,10 +335,10 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     try:
         req = CitationRequest(text=safe_text, style="APA")
         data = await suggest_citations(req)
-        return f"Dưới đây là các trích dẫn đề xuất cho tài liệu\n\n{data.get('citations', '')}"
+        return f"Here are the suggested citations for the document:\n\n{data.get('citations', '')}"
     except Exception as e:
-        logger.exception("Lỗi tạo gợi ý trích dẫn")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to generate citation suggestions")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
@@ -346,7 +346,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Phần nội dung thực tế của tài liệu hiện không khả dụng"
+        return "The actual content of the document is currently unavailable"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
@@ -356,10 +356,10 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     try:
         req = ReviewRequest(text=safe_text)
         data = await peer_review(req)
-        return f"Dưới đây là báo cáo phản biện cho tài liệu\n\n{data.get('review_report', '')}"
+        return f"Here is the peer review report for the document:\n\n{data.get('review_report', '')}"
     except Exception as e:
-        logger.exception("Lỗi quá trình đánh giá chéo")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Peer review process failed")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def agent_transform_tone(
@@ -369,7 +369,7 @@ async def agent_transform_tone(
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Phần nội dung thực tế của tài liệu hiện không khả dụng"
+        return "The actual content of the document is currently unavailable"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
@@ -379,17 +379,17 @@ async def agent_transform_tone(
     try:
         req = ToneRequest(text=safe_text, tone=tone, expansion=False)
         data = await transform_tone(req)
-        return f"Dưới đây là văn bản đã được chuyển đổi theo văn phong yêu cầu\n\n{data.get('transformed_text', '')}"
+        return f"Here is the text transformed to the requested tone:\n\n{data.get('transformed_text', '')}"
     except Exception as e:
-        logger.exception("Lỗi thay đổi giọng văn")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Tone transformation failed")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
     """Create a deposit link to top up the dl wallet. Amount is in VND. Returns a payment URL"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Bạn cần phải xác thực tài khoản trước khi tiến hành nạp tiền"
+        return "You need to authenticate your account before proceeding with a deposit"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -404,11 +404,11 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             checkout_url = data.get("checkout_url") or data.get("payment_url")
             if checkout_url:
                 return f"Yêu cầu nạp {amount} currency units has been created please visit the following link to proceed with the payment [Pay here]({checkout_url}/)"
-            return "Hệ thống không thể khởi tạo đường dẫn thanh toán an toàn tại thời điểm này"
-        return "Gặp lỗi nghiêm trọng khi bắt đầu tiến trình giao dịch thanh toán"
+            return "The system cannot generate a secure payment link at this time"
+        return "A critical error occurred while starting the payment transaction process"
     except Exception as e:
-        logger.exception("Lỗi xử lý yêu cầu nạp tiền")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to process deposit request")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 from src.workflow.reduction import agent_summarize_long_document
 
@@ -426,7 +426,7 @@ async def create_document(
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Bạn cần phải xác thực danh tính để tiếp tục"
+        return "You need to authenticate your identity to continue"
 
     headers = {"Authorization": token}
 
@@ -454,7 +454,7 @@ async def create_document(
                 profile_data.get("full_name") or profile_data.get("name") or "User"
             )
     except Exception as e:
-        logger.exception("Lỗi tải hồ sơ người dùng để lấy thông tin tác giả")
+        logger.exception("Failed to load user profile for author information")
 
     if format == "latex":
         if "\\documentclass" not in content:
@@ -506,18 +506,18 @@ async def create_document(
             new_doc = res_create.json().get("data", {})
             doc_id = new_doc.get("id") or new_doc.get("_id")
             if doc_id:
-                return f"Tạo tài liệu mới thành công [Xem tài liệu](/editor?document_id={doc_id})"
-            return "Tài liệu đã được khởi tạo thành công trên hệ thống nhưng không thể truy xuất mã định danh"
-        return "Quá trình khởi tạo và lưu trữ tài liệu mới đã gặp trục trặc"
+                return f"New document created successfully. [View Document](/editor?document_id={doc_id})"
+            return "The document was successfully initialized but its identifier could not be retrieved"
+        return "An issue occurred while creating and storing the new document"
     except Exception as e:
-        raise Exception(f"Đã xảy ra một lỗi bất thường trong quá trình xử lý luồng dữ liệu: {e}")
+        raise Exception(f"An abnormal error occurred during data flow processing {e}")
 
 @tool
 async def read_document(document_id: str, config: RunnableConfig) -> str:
     """Read the content of a document by its ID. Use this before updating a document so you know its current content"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Bạn cần phải xác thực danh tính để tiếp tục"
+        return "You need to authenticate your identity to continue"
 
     headers = {"Authorization": token}
     try:
@@ -525,20 +525,20 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
             "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
         )
         if res.status_code != 200:
-            return "Không thể trích xuất dữ liệu thông tin chi tiết của tài liệu"
+            return "Cannot extract detailed information data of the document"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Lỗi tải tài liệu: {e}")
+        raise Exception(f"Error loading document {e}")
 
     format = doc_data.get("content_format", "json")
     content = doc_data.get("content", "")
 
     if format == "json":
-        return f"Tài liệu sử dụng định dạng tiêu chuẩn với nội dung sau\n{content}"
+        return f"The document uses the standard format with the following content:\n{content}"
     elif format == "latex":
-        return f"Tài liệu sử dụng định dạng toán học với nội dung sau\n{content}"
+        return f"The document uses the mathematical format with the following content:\n{content}"
     else:
-        return f"Tài liệu sử dụng định dạng thay thế với nội dung sau\n{content}"
+        return f"The document uses an alternative format with the following content:\n{content}"
 
 @tool
 async def update_document(
@@ -554,7 +554,7 @@ async def update_document(
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Bạn cần phải xác thực danh tính để tiếp tục"
+        return "You need to authenticate your identity to continue"
 
     headers = {"Authorization": token}
 
@@ -563,10 +563,10 @@ async def update_document(
             "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
         )
         if res.status_code != 200:
-            return "Thao tác không được phép: Do hạn chế về quyền bảo mật hoặc tài liệu không còn tồn tại"
+            return "Operation not permitted: Due to security restrictions or the document no longer exists"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Lỗi tải tài liệu: {e}")
+        raise Exception(f"Error loading document {e}")
 
     payload = {}
     if title:
@@ -609,7 +609,7 @@ async def update_document(
         payload["content"] = final_content
 
     if not payload:
-        return "Không có bất kỳ sự thay đổi nội dung nào được ghi nhận trên tài liệu này"
+        return "No content changes were recorded for this document"
 
     try:
         res_update = await _make_api_request(
@@ -619,10 +619,10 @@ async def update_document(
             json=payload,
         )
         if res_update.status_code in [200, 201]:
-            return f"Cập nhật tài liệu thành công [Xem tài liệu](/editor?document_id={document_id})"
-        raise Exception("Lỗi cập nhật tài liệu")
+            return f"Document updated successfully. [View Document](/editor?document_id={document_id})"
+        raise Exception("Error updating document")
     except Exception as e:
-        raise Exception(f"Đã xảy ra một lỗi bất thường trong quá trình xử lý luồng dữ liệu: {e}")
+        raise Exception(f"An abnormal error occurred during data flow processing {e}")
 
 @tool
 async def translate_document(
@@ -631,7 +631,7 @@ async def translate_document(
     """Translate an existing document to a target language. If language is not specified, default to English. Creates a new translated document"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Bạn cần phải xác thực danh tính để tiếp tục"
+        return "You need to authenticate your identity to continue"
 
     headers = {"Authorization": token}
 
@@ -640,17 +640,17 @@ async def translate_document(
             "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
         )
         if res.status_code != 200:
-            return "Không thể trích xuất dữ liệu thông tin chi tiết của tài liệu"
+            return "Cannot extract detailed information data of the document"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Lỗi tải tài liệu: {e}")
+        raise Exception(f"Error loading document {e}")
 
     original_content = doc_data.get("content", "")
     format = doc_data.get("content_format", "json")
     original_title = doc_data.get("title", "Document")
 
     if not original_content:
-        return "Tài liệu này hoàn toàn trống hoặc không chứa nội dung văn bản hợp lệ để thực hiện dịch thuật"
+        return "This document is completely empty or does not contain valid text content to perform translation"
 
     import json
 
@@ -680,13 +680,13 @@ async def translate_document(
             timeout=60,
         )
         if trans_res.status_code != 200:
-            return "Dịch vụ thông dịch ngôn ngữ hiện đang gặp sự cố kết nối"
+            return "The language translation service is currently experiencing connection issues"
         translated_text = trans_res.json().get("translation", "")
     except Exception:
-        return "Toàn bộ chu trình dịch thuật tài liệu đã bị hủy do phát sinh lỗi"
+        return "The entire document translation cycle was cancelled due to an error"
 
     if not translated_text:
-        return "Quá trình thông dịch nội dung tài liệu đã gặp lỗi không xác định"
+        return "The document content translation process encountered an unknown error"
 
     import datetime
 
@@ -756,12 +756,12 @@ async def translate_document(
             new_doc = res_create.json().get("data", {})
             new_doc_id = new_doc.get("id") or new_doc.get("_id")
             if new_doc_id:
-                return f"Tạo và lưu bản dịch thành công, bạn có thể xem tại đây [Xem bản dịch](/editor?document_id={new_doc_id})"
-            return "Bản dịch đã hoàn tất nhưng không thể liên kết với mã định danh tệp tin"
-        return "Quá trình dịch thuật đã hoàn tất nhưng gặp sự cố khi lưu trữ kết quả vào máy chủ"
+                return f"Translation created and saved successfully, you can view it here. [View Translation](/editor?document_id={new_doc_id})"
+            return "Translation is complete but could not be linked with a file identifier"
+        return "Translation process completed but encountered an issue saving the result to the server"
     except Exception as e:
-        logger.exception("Lỗi trong quá trình tạo tài liệu dịch")
-        raise Exception(f"Một sự cố bất khả kháng đã xảy ra, mong bạn thông cảm và thao tác lại: {e}")
+        logger.exception("Failed to create translated document")
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
@@ -783,10 +783,10 @@ async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
                 results.append(f"--- Component: {basename} ---\n{content[:2000]}")
 
         if not results:
-            return f"No custom UI components found matching '{query}'. Try a different keyword."
+            return f"No custom UI components found matching '{query}'. Try a different keyword"
         return "\n\n".join(results)
     except Exception as e:
-        return f"Không thể khởi tạo và xuất tệp tài liệu dịch thuật mới: {e}"
+        return f"Cannot initialize and export the new translated document file {e}"
 
 tools = [
     agent_summarize_long_document,

@@ -31,7 +31,7 @@ async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
                     detail=resp.json().get("detail", "StorageService quota exceeded"),
                 )
             elif resp.status_code != 200:
-                logger.warning("Lỗi xác minh dung lượng lưu trữ")
+                logger.warning("Storage quota verification failed")
     except Exception as e:
-        logger.exception("Lỗi kết nối dịch vụ nền")
+        logger.exception("Background service connection error")
     return current_user

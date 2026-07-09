@@ -25,7 +25,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden: Invalid internal token"})
+            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
     return await call_next(request)
 
 app.middleware("http")(add_trace_id_header)
@@ -41,7 +41,7 @@ app.include_router(editorjs)
 app.include_router(editor)
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Khởi tạo biên dịch thành công")
+    logger.info("Document compilation service successfully initialized and running")
 @app.get("/health")
 async def health_check():
     return {

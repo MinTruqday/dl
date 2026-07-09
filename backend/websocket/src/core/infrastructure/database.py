@@ -22,7 +22,7 @@ async def init_db():
         
     redis_uri = settings.REDIS_URI
     if not redis_uri:
-        logger.error("Lỗi khởi tạo do thiếu kết nối MongoDB")
+        logger.error("Failed to initialize database connection due to missing REDIS URI")
         import sys
         sys.exit(1)
 

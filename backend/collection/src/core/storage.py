@@ -17,7 +17,7 @@ class StorageService:
         self.secret_key = settings.MINIO_SECRET_KEY
 
         if not self.access_key or not self.secret_key:
-            raise ValueError("Thiếu thông tin khóa bảo mật")
+            raise ValueError("Missing MinIO authentication keys (MINIO_ACCESS_KEY or MINIO_SECRET_KEY)")
 
         self.private_bucket = settings.MINIO_PRIVATE_BUCKET
         self.public_bucket = settings.MINIO_PUBLIC_BUCKET
@@ -48,7 +48,7 @@ class StorageService:
                 try:
                     await client.head_bucket(Bucket=bucket)
                 except ClientError:
-                    logger.exception(f"Đang khởi tạo không gian lưu trữ đa phương tiện {bucket}")
+                    logger.exception(f"Initializing MinIO bucket {bucket}")
                     await client.create_bucket(Bucket=bucket)
         except Exception:
             pass
@@ -72,7 +72,7 @@ class StorageService:
             url = f"{self.public_url}/{target_bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.exception("Lỗi mạng khi lưu tệp vĩnh viễn")
+            logger.exception("Network error during permanent file storage upload")
             raise e
 
 storage = StorageService()

@@ -62,7 +62,7 @@ class InterventionHarness:
                     settings.REDIS_URI, decode_responses=True
                 )
             except Exception:
-                logger.exception("Lỗi kết nối Redis cho hệ thống ghi nhận can thiệp")
+                logger.exception("Intervention tracking system Redis connection error")
         return self._redis_client
 
     async def request_approval(
@@ -105,10 +105,10 @@ class InterventionHarness:
                 await redis.setex(key, ttl, json.dumps(payload, ensure_ascii=False))
                 asyncio.create_task(self._auto_expire(intervention_id, ttl))
             except Exception:
-                logger.exception("Lỗi lưu yêu cầu can thiệp vào Redis")
+                logger.exception("Error persisting intervention request to Redis layer")
 
         logger.warning(
-            f"Yêu cầu phê duyệt can thiệp: {action_type} - mức rủi ro {risk_level} - phiên {session_id}"
+            f"Intervention approval requested: action={action_type}, risk={risk_level}, session={session_id}"
         )
         return request
 
@@ -121,7 +121,7 @@ class InterventionHarness:
             self._pending.pop(intervention_id, None)
             self._record_audit(request)
             logger.warning(
-                f"Yêu cầu can thiệp {intervention_id} hết hạn do không nhận được phản hồi"
+                f"Intervention request {intervention_id} expired due to timeout"
             )
 
     async def record_feedback(
@@ -133,7 +133,7 @@ class InterventionHarness:
     ) -> Optional[InterventionRequest]:
         request = self._pending.get(intervention_id)
         if not request:
-            logger.warning(f"Không tìm thấy yêu cầu can thiệp {intervention_id}")
+            logger.warning(f"Intervention request {intervention_id} not found in pending queue")
             return None
 
         request.status = status
@@ -150,10 +150,10 @@ class InterventionHarness:
             try:
                 await redis.delete(key)
             except Exception:
-                logger.exception("Lỗi xóa yêu cầu can thiệp khỏi Redis")
+                logger.exception("Error deleting intervention request from Redis cache")
 
         logger.info(
-            f"Ghi nhận phản hồi can thiệp {intervention_id}: {status}"
+            f"Intervention feedback recorded: id={intervention_id}, status={status}"
         )
         return request
 
@@ -208,7 +208,7 @@ class InterventionHarness:
                         status=data.get("status", "PENDING_APPROVAL"),
                     )
         except Exception:
-            logger.exception("Lỗi kiểm tra trạng thái can thiệp từ Redis")
+            logger.exception("Error checking intervention status from Redis")
         return None
 
     def get_pending_by_session(self, session_id: str) -> List[InterventionRequest]:

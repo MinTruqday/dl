@@ -37,7 +37,7 @@ class WalletService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except Exception as e:
-                logger.exception("Lỗi định dạng phân trang")
+                logger.exception("Invalid pagination cursor format provided")
         txs = await mongo.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit)
         type_translations = {
             "topup": "Deposit",

@@ -42,7 +42,7 @@ class PipelineRag:
         if not file_url:
             raise ValueError("Thiếu tham số vị trí tệp tin")
 
-        logger.info("Khởi tạo quá trình nạp tài liệu")
+        logger.info("Initializing document ingestion process")
 
         metadata = {
             "document_id": document_id,
@@ -94,7 +94,7 @@ class PipelineRag:
                     },
                 }
             except Exception as e:
-                logger.exception("Lỗi tạo tóm tắt tài liệu")
+                logger.exception("Document summary generation error")
                 return None
 
         if doc_chunks:
@@ -173,7 +173,7 @@ class PipelineRag:
         ext = os.path.splitext(file_url.split("?")[0])[1].lower()
 
         if ext == ".zip":
-            logger.info("Phát hiện tệp nén")
+            logger.info("Compressed file detected")
             return await self._extract_from_zip(file_bytes)
 
         return self._extract_with_markitdown(file_bytes, file_url)
@@ -216,14 +216,14 @@ class PipelineRag:
                 os.path.join(extract_path, top_contents[0])
             ):
                 search_root = os.path.join(extract_path, top_contents[0])
-                logger.info("Đang mở thư mục con trong tệp nén")
+                logger.info("Opening subdirectory inside compressed file")
 
             for root, _, files in os.walk(search_root):
                 for f in files:
                     f_ext = os.path.splitext(f)[1].lower()
                     if f_ext in supported_exts:
                         f_path = os.path.join(root, f)
-                        logger.info("Đang giải nén nội dung tệp")
+                        logger.info("Extracting file content")
                         try:
                             with open(f_path, "rb") as f_handle:
                                 content_bytes = f_handle.read()
@@ -233,7 +233,7 @@ class PipelineRag:
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
                         except Exception as e:
-                            logger.exception("Lỗi tải dữ liệu từ tệp nén")
+                            logger.exception("Error loading data from compressed file")
 
         return "\n\n".join(all_text)
 
@@ -253,7 +253,7 @@ class PipelineRag:
                 
             bucket = self._minio_private_bucket if object_key.startswith("system/") else self._minio_public_bucket
 
-            logger.info("Đang tải tệp từ không gian lưu trữ đám mây")
+            logger.info("Downloading file from cloud storage")
 
             import boto3
 
@@ -266,10 +266,10 @@ class PipelineRag:
             )
             obj = s3.get_object(Bucket=bucket, Key=object_key)
             data = obj["Body"].read()
-            logger.info("Tải xuống dữ liệu tệp thành công")
+            logger.info("File data downloaded successfully")
             return data
         except Exception as e:
-            logger.exception("Lỗi tải xuống tệp tin")
+            logger.exception("File download error")
             return None
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
@@ -285,20 +285,20 @@ class PipelineRag:
                 tmp.write(data)
                 tmp_path = tmp.name
 
-            logger.info("Đang phân tích dữ liệu tệp tải xuống")
+            logger.info("Analyzing downloaded file data")
             md = MarkItDown()
             result = md.convert(tmp_path)
             full_text = result.text_content
 
             os.remove(tmp_path)
 
-            logger.info("Phân tích nội dung tài liệu thành công")
+            logger.info("Document content analyzed successfully")
             return full_text
         except ImportError as e:
-            logger.exception("Thiếu thư viện phân tích nội dung")
+            logger.exception("Missing content analysis library")
             return ""
         except Exception as e:
-            logger.exception("Lỗi phân tích dữ liệu")
+            logger.exception("Data analysis error")
             return ""
 
 ingestion_pipeline = PipelineRag()

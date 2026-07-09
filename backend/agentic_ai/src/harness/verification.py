@@ -34,13 +34,13 @@ def _check_response_not_empty(response: str) -> CheckResult:
         return CheckResult(
             name="response_not_empty",
             status="failed",
-            reason="Phản hồi trống rỗng không chứa nội dung có ý nghĩa",
+            reason="Nội dung phản hồi trống",
         )
     if len(response.strip()) < 10:
         return CheckResult(
             name="response_not_empty",
             status="failed",
-            reason="Phản hồi quá ngắn để được coi là hợp lệ",
+            reason="Nội dung phản hồi không đạt độ dài tiêu chuẩn",
         )
     return CheckResult(name="response_not_empty", status="passed")
 
@@ -60,7 +60,7 @@ async def _check_no_hallucination_markers(response: str) -> CheckResult:
             return CheckResult(
                 name="no_hallucination_markers",
                 status="failed",
-                reason=f"Phát hiện tín hiệu từ chối hoặc hallucination: {result.reason}",
+                reason=f"Phát hiện dấu hiệu từ chối phản hồi hoặc ảo giác dữ liệu: {result.reason}",
             )
     except Exception as e:
         if len(response) < 15 and "?" not in response:
@@ -73,14 +73,14 @@ def _check_plan_fully_executed(steps: List[Dict], current_step_index: int) -> Ch
         return CheckResult(
             name="plan_fully_executed",
             status="skipped",
-            reason="Không có kế hoạch thực thi để kiểm tra",
+            reason="Không tìm thấy cấu trúc kế hoạch thực thi",
         )
     total = len(steps)
     if current_step_index < total:
         return CheckResult(
             name="plan_fully_executed",
             status="failed",
-            reason=f"Kế hoạch chưa hoàn thành: đã thực hiện {current_step_index}/{total} bước",
+            reason=f"Tiến độ thực thi kế hoạch chưa hoàn tất ({current_step_index}/{total} bước)",
         )
     return CheckResult(name="plan_fully_executed", status="passed")
 
@@ -89,13 +89,13 @@ def _check_tool_result_valid(tool_result: Any) -> CheckResult:
         return CheckResult(
             name="tool_result_valid",
             status="failed",
-            reason="Kết quả tool trả về None",
+            reason="Kết quả trả về từ công cụ trống (None)",
         )
     if isinstance(tool_result, dict) and tool_result.get("error"):
         return CheckResult(
             name="tool_result_valid",
             status="failed",
-            reason=f"Tool trả về lỗi: {str(tool_result.get('error', ''))[:100]}",
+            reason=f"Tiến trình thực thi công cụ phát sinh lỗi: {str(tool_result.get('error', ''))[:100]}",
         )
     return CheckResult(name="tool_result_valid", status="passed")
 
@@ -114,7 +114,7 @@ def _check_no_error_prefix(response: str) -> CheckResult:
             return CheckResult(
                 name="no_error_prefix",
                 status="failed",
-                reason=f"Phản hồi bắt đầu bằng tín hiệu lỗi: '{prefix}'",
+                reason=f"Phát hiện cảnh báo lỗi '{prefix}' trong nội dung phản hồi",
             )
     return CheckResult(name="no_error_prefix", status="passed")
 
@@ -130,7 +130,7 @@ class VerificationHarness:
         steps: Optional[List[Dict]] = None,
         current_step_index: Optional[int] = None,
     ) -> VerificationResult:
-        logger.info("Bắt đầu xác minh kết quả tác vụ")
+        logger.info("Starting task result verification")
         checks = [
             _check_response_not_empty(response),
             await _check_no_hallucination_markers(response),
@@ -155,11 +155,11 @@ class VerificationHarness:
         self._history[session_id].append(result)
 
         if passed:
-            logger.info("Xác minh tác vụ hoàn tất: tất cả kiểm tra đều đạt")
+            logger.info("Task verification complete and all checks passed")
         else:
             failed_names = [c.name for c in failed]
             logger.warning(
-                f"Xác minh tác vụ thất bại: các kiểm tra không đạt gồm {failed_names}"
+                f"Task verification failed: checks that failed include {failed_names}"
             )
         return result
 
@@ -178,7 +178,7 @@ class VerificationHarness:
             checks=[check],
         )
         if not passed:
-            logger.warning(f"Kết quả tool không hợp lệ: {check.reason}")
+            logger.warning(f"Invalid tool result {check.reason}")
         return result
 
     def get_session_history(self, session_id: str) -> List[VerificationResult]:
