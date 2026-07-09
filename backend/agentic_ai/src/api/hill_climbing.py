@@ -5,19 +5,19 @@ from loguru import logger
 
 from src.harness.hill_climbing import hill_climbing_loop
 
-router = APIRouter(prefix="/toi-uu", tags=["Loop 4 - Hill Climbing"])
+router = APIRouter(prefix="/toi-uu")
 
-@router.get("/dashboard")
+@router.get("/tong-quan")
 async def get_dashboard():
     return hill_climbing_loop.get_dashboard()
 
-@router.get("/issues")
+@router.get("/van-de")
 async def get_issues(limit: int = 50):
     return {
         "issues": hill_climbing_loop.get_issues(limit=limit),
     }
 
-@router.get("/improvements")
+@router.get("/de-xuat")
 async def get_improvements(status: Optional[str] = None, limit: int = 50):
     return {
         "improvements": hill_climbing_loop.get_suggestions(
@@ -25,7 +25,7 @@ async def get_improvements(status: Optional[str] = None, limit: int = 50):
         ),
     }
 
-@router.post("/improvements/{improvement_id}/approve")
+@router.post("/de-xuat/{improvement_id}/phe-duyet")
 async def approve_improvement(improvement_id: str, approver: str = "admin"):
     success = await hill_climbing_loop.approve_improvement(improvement_id, approver=approver)
     if not success:
@@ -39,7 +39,7 @@ async def approve_improvement(improvement_id: str, approver: str = "admin"):
         "applied_by": approver,
     }
 
-@router.post("/improvements/{improvement_id}/reject")
+@router.post("/de-xuat/{improvement_id}/tu-choi")
 async def reject_improvement(improvement_id: str):
     success = await hill_climbing_loop.reject_improvement(improvement_id)
     if not success:
@@ -52,7 +52,7 @@ async def reject_improvement(improvement_id: str):
         "improvement_id": improvement_id,
     }
 
-@router.post("/improvements/{improvement_id}/rollback")
+@router.post("/de-xuat/{improvement_id}/hoan-tac")
 async def rollback_improvement(improvement_id: str):
     success = await hill_climbing_loop.rollback_improvement(improvement_id)
     if not success:
@@ -65,19 +65,19 @@ async def rollback_improvement(improvement_id: str):
         "improvement_id": improvement_id,
     }
 
-@router.post("/run")
+@router.post("/phan-tich")
 async def run_analysis():
     logger.info("Hill climbing analysis triggered manually via API")
     result = await hill_climbing_loop.analyze_and_improve()
     return result
 
-@router.get("/history")
+@router.get("/lich-su")
 async def get_analysis_history(limit: int = 10):
     return {
         "history": hill_climbing_loop.get_analysis_history(limit=limit),
     }
 
-@router.get("/config")
+@router.get("/cau-hinh")
 async def get_config():
     return {
         "auto_apply": hill_climbing_loop.auto_apply,
@@ -91,7 +91,7 @@ async def get_config():
         },
     }
 
-@router.patch("/config")
+@router.patch("/cau-hinh")
 async def update_config(
     auto_apply: Optional[bool] = Body(default=None),
     min_traces: Optional[int] = Body(default=None),

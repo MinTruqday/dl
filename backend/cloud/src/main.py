@@ -13,6 +13,8 @@ logger.add(
     level="INFO",
 )
 app = FastAPI(title="DocLib Cloud", version=settings.VERSION)
+app.add_middleware(PrometheusMiddleware, service_name="cloud")
+app.add_route("/metrics", metrics_endpoint("cloud"))
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -42,6 +44,7 @@ async def startup_event():
 
 from fastapi.responses import RedirectResponse
 from src.services.upload import UploadService
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 
 @app.get("/storage/{file_path:path}")
 async def get_storage_file(file_path: str):

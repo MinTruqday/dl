@@ -9,8 +9,11 @@ from fastapi.responses import JSONResponse
 
 from src.api.tier import router as tier_router
 from src.api.quota import router as quota_router
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 
 app = FastAPI(title="DocLib Usage", version=settings.VERSION)
+app.add_middleware(PrometheusMiddleware, service_name="usage")
+app.add_route("/metrics", metrics_endpoint("usage"))
 
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):

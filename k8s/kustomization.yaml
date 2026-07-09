@@ -9,6 +9,8 @@ resources:
   - infrastructure/qdrant.yaml
   - infrastructure/ollama.yaml
   - infrastructure/flaresolverr.yaml
+  - observability/prometheus-config.yaml
+  - observability/grafana-datasource.yaml
   - observability/prometheus.yaml
   - observability/grafana.yaml
   - apps/agentic_ai.yaml

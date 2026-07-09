@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-and-check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [agentic_ai, authentication, cloud, collection, compilation, content, drm, finance, humanity, management, messaging, notification, usage, websocket, worker]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/${{ matrix.service }}/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install ruff
+          pip install -r backend/${{ matrix.service }}/requirements.txt
+
+      - name: Run Ruff lint check
+        run: ruff check backend/${{ matrix.service }}/src/
+
+      - name: Run Ruff format check
+        run: ruff format --check backend/${{ matrix.service }}/src/
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scan on repository
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: ./backend
+          format: table
+          exit-code: 1
+          severity: CRITICAL

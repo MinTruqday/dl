@@ -16,9 +16,12 @@ logger.add(
     level="INFO",
 )
 app = FastAPI(title="DocLib DRM", version=settings.VERSION)
+app.add_middleware(PrometheusMiddleware, service_name="drm")
+app.add_route("/metrics", metrics_endpoint("drm"))
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:

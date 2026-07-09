@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: doclib-production
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+      - job_name: authentication
+        static_configs:
+          - targets: ['authentication:8000']
+
+      - job_name: humanity
+        static_configs:
+          - targets: ['humanity:8000']
+
+      - job_name: content
+        static_configs:
+          - targets: ['content:8000']
+
+      - job_name: cloud
+        static_configs:
+          - targets: ['cloud:8000']
+
+      - job_name: drm
+        static_configs:
+          - targets: ['drm:8000']
+
+      - job_name: compilation
+        static_configs:
+          - targets: ['compilation:8000']
+
+      - job_name: messaging
+        static_configs:
+          - targets: ['messaging:8000']
+
+      - job_name: notification
+        static_configs:
+          - targets: ['notification:8000']
+
+      - job_name: collection
+        static_configs:
+          - targets: ['collection:8000']
+
+      - job_name: finance
+        static_configs:
+          - targets: ['finance:8000']
+
+      - job_name: usage
+        static_configs:
+          - targets: ['usage:8000']
+
+      - job_name: management
+        static_configs:
+          - targets: ['management:8000']
+
+      - job_name: agentic-ai
+        static_configs:
+          - targets: ['agentic-ai:8000']
+
+      - job_name: websocket
+        static_configs:
+          - targets: ['websocket:8000']

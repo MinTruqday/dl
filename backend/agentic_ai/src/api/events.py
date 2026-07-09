@@ -50,7 +50,7 @@ async def receive_webhook(request: Request, body: WebhookPayload = Body(...)):
         logger.exception(f"Webhook processing error {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/webhook/document-uploaded")
+@router.post("/webhook/tai-lieu-dang-tai")
 async def document_uploaded_webhook(
     document_id: str,
     user_id: str = "",

@@ -17,9 +17,12 @@ from src.api.composition import router as editorjs
 from src.api.latex import router as latex
 from src.core.infrastructure.configuration import settings
 app = FastAPI(title="DocLib Compiler", version=settings.VERSION)
+app.add_middleware(PrometheusMiddleware, service_name="compilation")
+app.add_route("/metrics", metrics_endpoint("compilation"))
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:

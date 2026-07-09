@@ -15,28 +15,42 @@ spec:
       containers:
       - name: prometheus
         image: prom/prometheus:latest
+        args:
+          - "--config.file=/etc/prometheus/prometheus.yml"
+          - "--storage.tsdb.path=/prometheus"
+          - "--storage.tsdb.retention.time=30d"
         ports:
         - containerPort: 9090
         volumeMounts:
         - name: prometheus-data
           mountPath: /prometheus
-        # - name: config
-        #   mountPath: /etc/prometheus/prometheus.yml
-        #   subPath: prometheus.yml
+        - name: config
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
       volumes:
       - name: prometheus-data
         persistentVolumeClaim:
           claimName: prometheus-pvc
+      - name: config
+        configMap:
+          name: prometheus-config
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: prometheus-pvc
 spec:
-  accessModes: [ "ReadWriteOnce" ]
+  accessModes: ["ReadWriteOnce"]
   resources:
     requests:
-      storage: 5Gi
+      storage: 10Gi
 ---
 apiVersion: v1
 kind: Service
