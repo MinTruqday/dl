@@ -14,18 +14,18 @@ export default class DocLibTextEmboss implements BlockTool {
 
   constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
-    this.data = { content: data.content || "" };
+    this.data = { content: data?.content || "" };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block, "doclib-doc-lib-text-emboss");
     this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data.content;
+    this.wrapper.innerHTML = this.data?.content;
     this.wrapper.dataset.placeholder = "Doc Lib Text Emboss";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data.content = e.target.innerHTML;
+      this.data?.content = e.target.innerHTML;
     });
 
     return this.wrapper;

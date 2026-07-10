@@ -14,18 +14,18 @@ export default class DocLibRestrictEditing implements BlockTool {
 
   constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
-    this.data = { content: data.content || "" };
+    this.data = { content: data?.content || "" };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block, "doclib-restrict");
     this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data.content;
+    this.wrapper.innerHTML = this.data?.content;
     this.wrapper.dataset.placeholder = "Restricted content";
 
     this.wrapper.addEventListener("input", () => {
-      this.data.content = this.wrapper!.innerHTML;
+      this.data?.content = this.wrapper!.innerHTML;
     });
 
     return this.wrapper;

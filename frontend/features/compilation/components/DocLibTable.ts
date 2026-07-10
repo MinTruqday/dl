@@ -21,8 +21,8 @@ export default class DocLibTable implements BlockTool {
     this.api = api;
     this.data = {
       content:
-        data.content && data.content.length > 0
-          ? data.content
+        data?.content && data?.content.length > 0
+          ? data?.content
           : [
               ["", ""],
               ["", ""],
@@ -62,7 +62,7 @@ export default class DocLibTable implements BlockTool {
     table.classList.add("doclib-table");
     this.tbody = document.createElement("tbody");
 
-    this.data.content.forEach((rowData) => {
+    this.data?.content.forEach((rowData) => {
       const tr = document.createElement("tr");
       rowData.forEach((cellData) => {
         const td = document.createElement("td");
@@ -84,8 +84,8 @@ export default class DocLibTable implements BlockTool {
     addRowBtn.classList.add("doclib-table-btn");
     addRowBtn.innerText = "+ Add row";
     addRowBtn.addEventListener("click", () => {
-      const cols = this.data.content[0]?.length || 2;
-      this.data.content.push(Array(cols).fill(""));
+      const cols = this.data?.content[0]?.length || 2;
+      this.data?.content.push(Array(cols).fill(""));
       this.buildUI();
     });
 
@@ -93,7 +93,7 @@ export default class DocLibTable implements BlockTool {
     addColBtn.classList.add("doclib-table-btn");
     addColBtn.innerText = "+ Add column";
     addColBtn.addEventListener("click", () => {
-      this.data.content.forEach((row) => row.push(""));
+      this.data?.content.forEach((row) => row.push(""));
       this.buildUI();
     });
 
@@ -101,8 +101,8 @@ export default class DocLibTable implements BlockTool {
     rmRowBtn.classList.add("doclib-table-btn");
     rmRowBtn.innerText = "- Remove row";
     rmRowBtn.addEventListener("click", () => {
-      if (this.data.content.length > 1) {
-        this.data.content.pop();
+      if (this.data?.content.length > 1) {
+        this.data?.content.pop();
         this.buildUI();
       }
     });
@@ -111,8 +111,8 @@ export default class DocLibTable implements BlockTool {
     rmColBtn.classList.add("doclib-table-btn");
     rmColBtn.innerText = "- Remove column";
     rmColBtn.addEventListener("click", () => {
-      if (this.data.content[0]?.length > 1) {
-        this.data.content.forEach((row) => row.pop());
+      if (this.data?.content[0]?.length > 1) {
+        this.data?.content.forEach((row) => row.pop());
         this.buildUI();
       }
     });
@@ -127,7 +127,7 @@ export default class DocLibTable implements BlockTool {
   private saveData() {
     if (!this.tbody) return;
     const rows = Array.from(this.tbody.querySelectorAll("tr"));
-    this.data.content = rows.map((tr) => {
+    this.data?.content = rows.map((tr) => {
       return Array.from(tr.querySelectorAll("td")).map((td) => td.innerHTML);
     });
   }

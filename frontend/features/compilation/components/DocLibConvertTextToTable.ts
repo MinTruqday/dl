@@ -22,7 +22,7 @@ export default class DocLibConvertTextToTable implements BlockTool {
     this.wrapper.classList.add("ce-block");
     const input = document.createElement("input");
     input.classList.add("ce-paragraph", "cdx-block");
-    input.value = this.data.content || "";
+    input.value = this.data?.content || "";
     input.placeholder = "DocLib Convert Text To Table";
     this.wrapper.appendChild(input);
     return this.wrapper;

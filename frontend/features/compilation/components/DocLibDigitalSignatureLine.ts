@@ -22,7 +22,7 @@ export default class DocLibDigitalSignatureLine implements BlockTool {
     this.wrapper.classList.add("ce-block");
     const input = document.createElement("input");
     input.classList.add("ce-paragraph", "cdx-block");
-    input.value = this.data.content || "";
+    input.value = this.data?.content || "";
     input.placeholder = "DocLib Digital Signature Line";
     this.wrapper.appendChild(input);
     return this.wrapper;

@@ -20,7 +20,7 @@ export default class DocLibToggle implements BlockTool {
     this.api = api;
     this.data = {
       title: data.title || "",
-      content: data.content || "",
+      content: data?.content || "",
       status: data.status || "",
     };
   }
@@ -89,10 +89,10 @@ export default class DocLibToggle implements BlockTool {
     const content = document.createElement("div");
     content.classList.add("doclib-toggle-content");
     content.contentEditable = "true";
-    content.innerHTML = this.data.content;
+    content.innerHTML = this.data?.content;
     content.addEventListener(
       "input",
-      () => (this.data.content = content.innerHTML),
+      () => (this.data?.content = content.innerHTML),
     );
 
     details.appendChild(summary);

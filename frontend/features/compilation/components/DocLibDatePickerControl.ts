@@ -14,18 +14,18 @@ export default class DocLibDatePickerControl implements BlockTool {
 
   constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
-    this.data = { content: data.content || "" };
+    this.data = { content: data?.content || "" };
   }
 
   render() {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block, "doclib-doc-lib-date-picker-control");
     this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data.content;
+    this.wrapper.innerHTML = this.data?.content;
     this.wrapper.dataset.placeholder = "Doc Lib Date Picker Control";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data.content = e.target.innerHTML;
+      this.data?.content = e.target.innerHTML;
     });
 
     return this.wrapper;
