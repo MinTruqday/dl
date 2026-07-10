@@ -157,7 +157,6 @@ export default function StandardEditor({
       const DocLibTextVariant = (await import("./DocLibTextVariant")).default;
       const DocLibCodeBox = (await import("./DocLibCodeBox")).default;
       const DocLibAnchor = (await import("./DocLibAnchor")).default;
-      const DocLibGroupImage = (await import("./DocLibGroupImage")).default;
       const DocLibImage = (await import("./DocLibImage")).default;
       const DocLibAudio = (await import("./DocLibAudio")).default;
       const DocLibTextStyle = (await import("./DocLibTextStyle")).default;
@@ -166,7 +165,6 @@ export default function StandardEditor({
       const DocLibChart = (await import("./DocLibChart")).default;
       const DocLibGallery = (await import("./DocLibGallery")).default;
       const DocLibHyperlink = (await import("./DocLibHyperlink")).default;
-      const DocLibTelegramPost = (await import("./DocLibTelegramPost")).default;
       const DocLibTitle = (await import("./DocLibTitle")).default;
       const DocLibStyleTune = (await import("./DocLibStyleTune")).default;
       const DocLibNestedChecklist = (await import("./DocLibNestedChecklist"))
@@ -177,14 +175,9 @@ export default function StandardEditor({
       const DocLibComment = (await import("./DocLibComment")).default;
       const DocLibImageCrop = (await import("./DocLibImageCrop")).default;
       const DocLibTemplate = (await import("./DocLibTemplate")).default;
-      const DocLibNotice = (await import("./DocLibNotice")).default;
       const DocLibFootnote = (await import("./DocLibFootnote")).default;
       const DocLibBreakLine = (await import("./DocLibBreakLine")).default;
-      const DocLibGist = (await import("./DocLibGist")).default;
 
-      const DocLibPersonality = (await import("./DocLibPersonality")).default;
-      const DocLibCarousel = (await import("./DocLibCarousel")).default;
-      const DocLibQuiz = (await import("./DocLibQuiz")).default;
       const DocLibSuperscript = (await import("./DocLibSuperscript")).default;
       const DocLibSubscript = (await import("./DocLibSubscript")).default;
       const DocLibToggle = (await import("./DocLibToggle")).default;
@@ -192,16 +185,10 @@ export default function StandardEditor({
       const DocLibAiText = (await import("./DocLibAiText")).default;
 
       const DocLibDrawing = (await import("./DocLibDrawing")).default;
-      const DocLibGif = (await import("./DocLibGif")).default;
-      const DocLibImageWithLink = (await import("./DocLibImageWithLink"))
         .default;
-      const DocLibFlipbox = (await import("./DocLibFlipbox")).default;
 
       const DocLibNestedList = (await import("./DocLibNestedList")).default;
-      const DocLibLinkSearch = (await import("./DocLibLinkSearch")).default;
       const DocLibTimeline = (await import("./DocLibTimeline")).default;
-      const DocLibPricing = (await import("./DocLibPricing")).default;
-      const DocLibTestimonial = (await import("./DocLibTestimonial")).default;
       const DocLibMath = (await import("./DocLibMath")).default;
       const DocLibKanban = (await import("./DocLibKanban")).default;
       const DocLibCodeMirror = (await import("./DocLibCodeMirror")).default;
@@ -211,43 +198,21 @@ export default function StandardEditor({
         await import("./DocLibMultiBlockSelection")
       ).default;
 
-      const DocLibCallout = (await import("./DocLibCallout")).default;
       const DocLibBookmark = (await import("./DocLibBookmark")).default;
-      const DocLibCountdown = (await import("./DocLibCountdown")).default;
-      const DocLibProgressBar = (await import("./DocLibProgressBar")).default;
-      const DocLibSteps = (await import("./DocLibSteps")).default;
-      const DocLibPoll = (await import("./DocLibPoll")).default;
       const DocLibIframeEmbed = (await import("./DocLibIframeEmbed")).default;
       const DocLibDivider = (await import("./DocLibDivider")).default;
-      const DocLibBadge = (await import("./DocLibBadge")).default;
       const DocLibKeyboard = (await import("./DocLibKeyboard")).default;
-      const DocLibQRCode = (await import("./DocLibQRCode")).default;
       const DocLibCitation = (await import("./DocLibCitation")).default;
-      const DocLibMapEmbed = (await import("./DocLibMapEmbed")).default;
-      const DocLibFlashcard = (await import("./DocLibFlashcard")).default;
       const DocLibDiffViewer = (await import("./DocLibDiffViewer")).default;
-      const DocLibReadingTime = (await import("./DocLibReadingTime")).default;
-      const DocLibWordCloud = (await import("./DocLibWordCloud")).default;
-      const DocLibSocialCard = (await import("./DocLibSocialCard")).default;
       const DocLibGantt = (await import("./DocLibGantt")).default;
-      const DocLibTypewriter = (await import("./DocLibTypewriter")).default;
-      const DocLibCodePlayground = (await import("./DocLibCodePlayground"))
         .default;
-      const DocLibRecipe = (await import("./DocLibRecipe")).default;
       const DocLibColorPalette = (await import("./DocLibColorPalette")).default;
-      const DocLibEventCard = (await import("./DocLibEventCard")).default;
-      const DocLibNumberCounter = (await import("./DocLibNumberCounter"))
         .default;
-      const DocLibBioLink = (await import("./DocLibBioLink")).default;
-      const DocLibMusicEmbed = (await import("./DocLibMusicEmbed")).default;
-      const DocLibFeedback = (await import("./DocLibFeedback")).default;
       const DocLibMindMap = (await import("./DocLibMindMap")).default;
       const DocLibSignature = (await import("./DocLibSignature")).default;
       const DocLibKanbanBoard = (await import("./DocLibKanbanBoard")).default;
       const DocLibVerticalTimeline = (await import("./DocLibVerticalTimeline"))
         .default;
-      const DocLibPricingTable = (await import("./DocLibPricingTable")).default;
-      const DocLibInteractiveQuiz = (await import("./DocLibInteractiveQuiz"))
         .default;
       const DocLibPageBreak = (await import("./DocLibPageBreak")).default;
       const DocLibWatermark = (await import("./DocLibWatermark")).default;
@@ -290,36 +255,19 @@ export default function StandardEditor({
       const DocLibFormDropdown = (await import("./DocLibFormDropdown")).default;
       const DocLibMacroButton = (await import("./DocLibMacroButton")).default;
 
-      const DocLibProductCard = (await import("./DocLibProductCard")).default;
-      const DocLibDonationBox = (await import("./DocLibDonationBox")).default;
-      const DocLibRestaurantMenu = (await import("./DocLibRestaurantMenu"))
         .default;
       const DocLibRealEstateListing = (
-        await import("./DocLibRealEstateListing")
       ).default;
-      const DocLibCouponCode = (await import("./DocLibCouponCode")).default;
-      const DocLibChangelog = (await import("./DocLibChangelog")).default;
-      const DocLibProductRoadmap = (await import("./DocLibProductRoadmap"))
         .default;
       const DocLibDirectoryTree = (await import("./DocLibDirectoryTree"))
         .default;
       const DocLibJsonViewer = (await import("./DocLibJsonViewer")).default;
       const DocLibMarkdownBlock = (await import("./DocLibMarkdownBlock"))
         .default;
-      const DocLibGithubRepo = (await import("./DocLibGithubRepo")).default;
-      const DocLibBeforeAfterImage = (await import("./DocLibBeforeAfterImage"))
         .default;
-      const DocLibNewsTicker = (await import("./DocLibNewsTicker")).default;
-      const DocLibBreadcrumb = (await import("./DocLibBreadcrumb")).default;
-      const DocLibReviewSummary = (await import("./DocLibReviewSummary"))
         .default;
-      const DocLibTeamRoster = (await import("./DocLibTeamRoster")).default;
-      const DocLibEventAgenda = (await import("./DocLibEventAgenda")).default;
       const DocLibTournamentBracket = (
-        await import("./DocLibTournamentBracket")
       ).default;
-      const DocLibLeaderboard = (await import("./DocLibLeaderboard")).default;
-      const DocLibJobListing = (await import("./DocLibJobListing")).default;
 
       const DocLibFormRadioButton = (await import("./DocLibFormRadioButton"))
         .default;
@@ -330,7 +278,6 @@ export default function StandardEditor({
       const DocLibFormSpinButton = (await import("./DocLibFormSpinButton"))
         .default;
       const DocLibDatePicker = (await import("./DocLibDatePicker")).default;
-      const DocLibDropList = (await import("./DocLibDropList")).default;
       const DocLibAddressBlock = (await import("./DocLibAddressBlock")).default;
       const DocLibGreetingLine = (await import("./DocLibGreetingLine")).default;
       const DocLibEnvelope = (await import("./DocLibEnvelope")).default;
@@ -379,7 +326,6 @@ export default function StandardEditor({
         .default;
       const DocLibSubdocument = (await import("./DocLibSubdocument")).default;
       const DocLibOutlineLevel = (await import("./DocLibOutlineLevel")).default;
-      const DocLibBarcode = (await import("./DocLibBarcode")).default;
       const DocLibTranslation = (await import("./DocLibTranslation")).default;
       const DocLibThesaurus = (await import("./DocLibThesaurus")).default;
       const DocLibEquationArray = (await import("./DocLibEquationArray"))
@@ -555,7 +501,6 @@ export default function StandardEditor({
 
       if (DocLibPersonality)
         tools.personality = {
-          class: DocLibPersonality,
           config: { endpoint: "/api/uploadFile" },
         };
       if (DocLibQuiz) tools.quiz = DocLibQuiz;

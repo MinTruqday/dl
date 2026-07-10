@@ -172,7 +172,7 @@ class EditorjsEngine:
             cap = san(s(d.get("caption", "")))
             return f'<div style="border:1px solid #ddd;padding:8px;text-align:center">[Video: {cap or url}]</div>'
 
-        if t in ("embed", "gif", "telegramPost", "iframe"):
+        if t in ("embed", "iframe"):
             src = san(
                 s(d.get("source", d.get("embed", d.get("url", d.get("src", "")))))
             )
@@ -233,21 +233,8 @@ class EditorjsEngine:
             text = san(s(d.get("text", "")))
             return f'<p><a href="{link}" style="display:inline-block;padding:6px 16px;background:#333;color:#fff;text-decoration:none">{text}</a></p>'
 
-        if t == "quiz":
-            q = san(s(d.get("question", "")))
-            opts = "".join(
-                f'<li>{san(s(o.get("text",o) if isinstance(o,dict) else o))}</li>'
-                for o in d.get("options", [])
-            )
-            return f'<div style="border:1px solid #ddd;padding:8px"><strong>Quiz:</strong> {q}<ol>{opts}</ol></div>'
 
-        if t == "poll":
-            q = san(s(d.get("question", d.get("title", ""))))
-            opts = "".join(
-                f'<li>{san(s(o.get("text",o) if isinstance(o,dict) else o))}</li>'
-                for o in d.get("options", [])
-            )
-            return f'<div style="border:1px solid #ddd;padding:8px"><strong>Poll:</strong> {q}<ul>{opts}</ul></div>'
+
 
         if t == "kanban":
             parts = []
@@ -272,55 +259,6 @@ class EditorjsEngine:
                     f'<div style="padding:6px 0;border-left:3px solid #333;padding-left:12px;margin:4px 0"><strong>{date}</strong> &#8211; {text}<br/><small>{desc}</small></div>'
                 )
             return f'<div>{"".join(parts)}</div>'
-
-        if t == "steps":
-            parts = [
-                f'<div style="margin:4px 0"><strong>Step {i}:</strong> {san(s(item.get("text", item.get("title", "")) if isinstance(item, dict) else item))}</div>'
-                for i, item in enumerate(d.get("items", d.get("steps", [])), 1)
-            ]
-            return f'<div>{"".join(parts)}</div>'
-
-        if t == "pricing":
-            parts = [
-                f'<div style="display:inline-block;border:1px solid #ddd;padding:8px 12px;margin:4px;vertical-align:top"><strong>{san(s(p.get("title",p.get("name",""))))}</strong><br/>{san(s(p.get("price","")))}</div>'
-                for p in d.get("plans", d.get("items", []))
-            ]
-            return f'<div>{"".join(parts)}</div>'
-
-        if t == "testimonial":
-            return f'<blockquote style="border-left:4px solid #ddd;padding:8px 12px;font-style:italic">{san(s(d.get("text",d.get("content",""))))}<cite> &#8212; {san(s(d.get("author",d.get("name",""))))}</cite></blockquote>'
-
-        if t == "personality":
-            photo = san(s(d.get("photo", "")))
-            img = (
-                f'<img src="{photo}" style="width:48px;height:48px;border-radius:50%;margin-right:8px;vertical-align:middle"/>'
-                if photo
-                else ""
-            )
-            return f'<div style="border:1px solid #eee;padding:8px">{img}<strong>{san(s(d.get("name","")))}</strong><br/><small>{san(s(d.get("description","")))}</small></div>'
-
-        if t in ("countdown", "progressBar", "progress"):
-            label = san(s(d.get("label", d.get("title", ""))))
-            value = d.get("progress", d.get("percent", d.get("value", 0)))
-            return f'<div>{label}<div style="background:#eee;height:12px;border-radius:6px;overflow:hidden"><div style="background:#333;height:100%;width:{value}%"></div></div><small>{value}%</small></div>'
-
-        if t == "flipbox":
-            front_raw = d.get("front", "")
-            back_raw = d.get("back", "")
-            front = san(
-                s(
-                    front_raw.get("text", "")
-                    if isinstance(front_raw, dict)
-                    else front_raw
-                )
-            )
-            back = san(
-                s(back_raw.get("text", "") if isinstance(back_raw, dict) else back_raw)
-            )
-            return f'<div style="border:1px solid #ddd;padding:8px"><strong>Front:</strong> {front}<br/><strong>Back:</strong> {back}</div>'
-
-        if t == "badge":
-            return f'<span style="display:inline-block;background:{d.get("color","#333")};color:#fff;padding:2px 8px;border-radius:12px;font-size:0.8em">{san(s(d.get("text","")))}</span>'
 
         if t == "keyboard":
             return f'<kbd>{san(s(d.get("text", d.get("key", ""))))}</kbd>'
@@ -359,6 +297,86 @@ class EditorjsEngine:
             "template",
         ):
             return ""
+
+
+        if t in ("pageBreak", "columnBreak", "evenPageBreak", "oddPageBreak", "sectionBreak", "textWrappingBreak"):
+            return '<div style="page-break-after: always;"></div>'
+
+        if t in ("formCheckBox", "formComboBox", "formDropdown", "formListBox", "formRadioButton", "formSpinButton", "formToggleButton"):
+            lbl = san(s(d.get("label", d.get("text", ""))))
+            if "Check" in t or "Radio" in t:
+                return f'<div style="margin:4px 0"><input type="{"checkbox" if "Check" in t else "radio"}"/> {lbl}</div>'
+            else:
+                return f'<div style="margin:4px 0">{lbl}: <span style="display:inline-block;width:100px;border-bottom:1px solid #333;"></span></div>'
+
+        if t in ("smartArtCycle", "smartArtHierarchy", "smartArtList", "smartArtMatrix", "smartArtProcess", "smartArtPyramid", "smartArtRelationship", "wordArt", "shape", "textBox", "drawing"):
+            title = san(s(d.get("title", d.get("text", t))))
+            return f'<div style="border:2px solid #aaa;padding:12px;margin:8px 0;text-align:center;background:#fafafa"><strong>[{t}]</strong><br/>{title}</div>'
+
+        if t in ("tableOfContents", "tableOfFigures", "tableOfAuthorities", "index", "bibliography", "citation", "crossReference"):
+            items = d.get("items", d.get("list", []))
+            if not items:
+                return f'<div style="border:1px dashed #ccc;padding:8px">[{t}]</div>'
+            lis = "".join(f'<li>{san(s(i.get("text", i)))}</li>' for i in items)
+            return f'<ul>{lis}</ul>'
+
+        if t == "footnote":
+            txt = san(s(d.get("text", "")))
+            num = san(s(d.get("number", "1")))
+            return f'<p><sup>[{num}]</sup> {txt}</p>'
+
+        if t in ("addressBlock", "greetingLine", "dateAndTime", "envelope", "labelConfig", "letterhead", "digitalSignature", "signature"):
+            return f'<div style="font-family:monospace;color:#555">[{t}: {san(s(d.get("text", d.get("name", ""))))}]</div>'
+
+        if t in ("documentProperty", "documentStats", "thesaurus", "versionHistory", "compatibilityChecker", "protectDocument", "trackChanges", "macroButton", "printPreview", "combineDocuments", "masterDocument", "subdocument"):
+            return ""
+
+        if t in ("gantt", "kanbanBoard", "mindMap", "verticalTimeline", "directoryTree"):
+            title = san(s(d.get("title", t)))
+            return f'<div style="border:1px solid #333;padding:12px;margin:12px 0;text-align:center;"><strong>[Biểu đồ {title}]</strong></div>'
+
+        if t in ("watermark", "watermarkImage"):
+            return ""
+            
+        if t == "pageBorder":
+            return ""
+            
+        if t == "pageColor":
+            return ""
+
+        if t == "dropCap":
+            txt = san(s(d.get("text", "")))
+            if txt:
+                return f'<p><span style="font-size:2em;float:left;line-height:1;margin-right:4px;">{txt[0]}</span>{txt[1:]}</p>'
+            return ""
+
+        if t == "iframeEmbed":
+            src = san(s(d.get("src", d.get("url", ""))))
+            return f'<div style="border:1px solid #ccc;padding:8px;text-align:center">[IFrame: {src}]</div>'
+
+        if t == "jsonViewer":
+            return f'<pre><code>{san(s(d.get("json", "")))}</code></pre>'
+
+        if t == "markdownBlock":
+            return f'<div style="font-family:monospace;padding:8px;background:#f9f9f9">{san(s(d.get("text", "")))}</div>'
+
+        if t == "caption":
+            return f'<figcaption style="text-align:center;font-style:italic">{san(s(d.get("text", "")))}</figcaption>'
+
+        if t in ("diffViewer", "colorPalette", "lineNumbers", "linkPreview", "outlineLevel", "textDirection", "textHighlight", "translation"):
+            return f'<div style="padding:4px;border:1px dotted #ccc">[{t}: {san(s(d.get("text", "")))}]</div>'
+
+
+        if t == "equationArray":
+            import html as _html
+            return f'<p style="font-family:monospace;text-align:center">{_html.escape(s(d.get("formula", d.get("math", d.get("text", "")))))}</p>'
+
+        if t in ("headerBlock", "footerBlock", "pageNumber", "bordersAndShading", "hyphenation", "quickParts"):
+            return ""
+
+        if t in ("datePicker", "coverPage", "mailMerge"):
+            title = san(s(d.get("title", d.get("text", t))))
+            return f'<div style="font-style:italic;color:#555">[{t}: {title}]</div>'
 
         logger.warning("Invalid block content skipped during rendering")
         return ""
