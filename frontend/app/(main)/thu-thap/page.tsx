@@ -56,7 +56,7 @@ export default function CollectorPage() {
       const logsRes = await getCollectorLogsAPI();
       setLogs(Array.isArray(logsRes) ? logsRes : (logsRes.data || []));
     } catch (err: any) {
-      showToast("Lỗi tải dữ liệu thu thập", "error");
+      showToast("Lỗi trích xuất cấu hình thu thập", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -87,12 +87,12 @@ export default function CollectorPage() {
     try {
       setIsRefreshing(true);
       await triggerCollectionAPI(collectionForm.source, collectionForm.pages as any);
-      showToast("Đã kích hoạt thu thập", "success");
+      showToast("Khởi tạo tiến trình thu thập hoàn tất", "success");
       setCollectionForm((p) => ({ ...p, pages: 1 }));
       fetchData();
       setConfirmModal(false);
     } catch (err: any) {
-      showToast("Lỗi kích hoạt thu thập", "error");
+      showToast("Lỗi khởi tạo tiến trình thu thập", "error");
     } finally {
       setIsRefreshing(false);
       setIsProcessing(false);
@@ -104,10 +104,10 @@ export default function CollectorPage() {
     try {
       setIsRefreshing(true);
       await stopCollectionAPI();
-      showToast("Đã dừng tiến trình", "success");
+      showToast("Hủy bỏ tiến trình thu thập hoàn tất", "success");
       fetchData();
     } catch (err: any) {
-      showToast("Lỗi dừng tiến trình", "error");
+      showToast("Lỗi hủy bỏ tiến trình thu thập", "error");
     } finally {
       setIsRefreshing(false);
       setIsProcessing(false);

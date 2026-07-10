@@ -172,7 +172,7 @@ export default class DocLibImage implements BlockTool {
               this.buildUI();
             })
             .catch((err) => {
-              console.error("Upload failed", err);
+              console.error("Lỗi đồng bộ dữ liệu hình ảnh", err);
               if (this.data.file)
                 this.data.file.url = URL.createObjectURL(file);
               this.buildUI();
@@ -185,7 +185,7 @@ export default class DocLibImage implements BlockTool {
 
       uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = prompt("Paste direct Image URL:");
+        const url = prompt("Vui lòng cung cấp đường dẫn hình ảnh tĩnh (Direct Image URL):");
         if (url) {
           if (this.data.file) this.data.file.url = url;
           this.buildUI();

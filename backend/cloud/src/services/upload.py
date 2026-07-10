@@ -41,7 +41,7 @@ class UploadService:
         return {
             "url": filename,
             "filename": filename,
-            "message": "Tải lên hình ảnh lưu trữ thành công",
+            "message": "Truyền tải hình ảnh lưu trữ hoàn tất",
         }
 
     @staticmethod
@@ -103,7 +103,7 @@ class UploadService:
             "url": filename,
             "filename": filename,
             "extension": ext,
-            "message": "Tải lên tài liệu thành công",
+            "message": "Truyền tải tài liệu hoàn tất",
         }
 
     @staticmethod

@@ -16,7 +16,7 @@ export async function submitReportAPI(payload: {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Gửi báo cáo nội dung vi phạm thất bại");
+    throw new Error(data.message || "Lỗi khởi tạo yêu cầu báo cáo vi phạm");
   return data;
 }
 
@@ -38,7 +38,7 @@ export async function reportTypoAPI(
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Gửi báo cáo lỗi chính tả thất bại");
+    throw new Error(data.message || "Lỗi ghi nhận báo cáo lỗi chính tả");
   return data;
 }
 
@@ -51,6 +51,6 @@ export async function getTypoReportsAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách báo cáo lỗi");
+    throw new Error(data.message || "Lỗi trích xuất danh sách báo cáo lỗi");
   return data;
 }

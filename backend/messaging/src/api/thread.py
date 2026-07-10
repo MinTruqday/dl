@@ -48,7 +48,7 @@ async def send_message(req: Creation, current_user=Depends(get_current_user)):
         {"type": "new_message", "data": msg}, req.receiver_id
     )
     return APIResponse(
-        data=msg, message="Gửi tin nhắn trực tiếp thành công", status=201
+        data=msg, message="Gửi tin nhắn trực tiếp hoàn tất", status=201
     )
 
 @router.get("/{other_user_id}", response_model=APIResponse[Any])
@@ -62,7 +62,7 @@ async def get_messages(
         data=await ThreadService.get_messages(
             other_user_id, current_user, limit, cursor
         ),
-        message="Lấy lịch sử cuộc trò chuyện thành công",
+        message="Trích xuất lịch sử cuộc trò chuyện hoàn tất",
         status=200,
     )
 
@@ -83,7 +83,7 @@ async def edit_message(
     )
     await publish_personal_message({"type": "message_edited", "data": result}, other_id)
     return APIResponse(
-        data=result, message="Cập nhật nội dung tin nhắn thành công", status=200
+        data=result, message="Cập nhật nội dung tin nhắn hoàn tất", status=200
     )
 
 @router.delete("/{message_id}", response_model=APIResponse[Any])
@@ -99,7 +99,7 @@ async def recall_message(message_id: str, current_user=Depends(get_current_user)
     await publish_personal_message(
         {"type": "message_recalled", "data": result}, other_id
     )
-    return APIResponse(data=result, message="Thu hồi tin nhắn thành công", status=200)
+    return APIResponse(data=result, message="Thu hồi tin nhắn hoàn tất", status=200)
 
 @router.get("/{other_user_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_messages(
@@ -107,6 +107,6 @@ async def search_messages(
 ):
     return APIResponse(
         data=await ThreadService.search_messages(other_user_id, q, current_user),
-        message="Tìm kiếm tin nhắn thành công",
+        message="Tìm kiếm tin nhắn hoàn tất",
     )
 

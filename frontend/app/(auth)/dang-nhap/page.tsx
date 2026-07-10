@@ -96,10 +96,10 @@ export default function LoginPage() {
       const verify = await passkeyLoginFinishAPI(inputEmail, credentialJSON);
 
       await loginState(verify.access_token || verify);
-      showToast("Đăng nhập Passkey thành công", "success");
+      showToast("Xác thực chứng thư số Passkey hợp lệ", "success");
       router.push("/");
     } catch (err: any) {
-      showToast(err.message || "Đăng nhập bằng Passkey thất bại", "error");
+      showToast(err.message || "Lỗi xác thực định danh chứng thư số", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -111,13 +111,13 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     if (!email) {
-      showToast("Vui lòng nhập email hoặc tên tài khoản", "error");
+      showToast("Lỗi thiếu hụt trường dữ liệu định danh bắt buộc", "error");
       setIsSubmitting(false);
       return;
     }
 
     if (!password) {
-      showToast("Vui lòng nhập mật khẩu", "error");
+      showToast("Lỗi thiếu hụt trường khóa truy cập bắt buộc", "error");
       setIsSubmitting(false);
       return;
     }
@@ -128,14 +128,14 @@ export default function LoginPage() {
 
       if (!data.user?.has_passkey) {
         setPendingPasskeyEmail(data.user?.email || email);
-        showToast("Đăng nhập thành công", "success");
+        showToast("Xác thực thông tin đăng nhập hợp lệ", "success");
         setIsSubmitting(false);
       } else {
-        showToast("Đăng nhập thành công", "success");
+        showToast("Xác thực thông tin đăng nhập hợp lệ", "success");
         router.push("/");
       }
     } catch (err: any) {
-      showToast(err.message || "Sai email hoặc mật khẩu", "error");
+      showToast(err.message || "Lỗi sai lệch thông tin định danh hệ thống", "error");
       setIsSubmitting(false);
     }
   };
@@ -272,7 +272,7 @@ export default function LoginPage() {
                 onClick={async () => {
                   if (!email) {
                     showToast(
-                      "Vui lòng nhập email trước để dùng Passkey",
+                      "Lỗi thiếu hụt trường địa chỉ email cho định danh chứng thư số",
                       "error",
                     );
                     return;
@@ -291,7 +291,7 @@ export default function LoginPage() {
                     const url = await getGoogleLoginUrlAPI();
                     window.location.href = url;
                   } catch (err: any) {
-                    showToast("Không thể kết nối với Google", "error");
+                    showToast("Lỗi kết nối điểm cuối định danh Google", "error");
                   }
                 }}
                 className="w-full inline-flex justify-center items-center py-3 border border-[#D2D2D7] rounded-[10px] bg-white text-[15px] font-medium text-[#1D1D1F] gap-2 hover:bg-[#F5F5F7] transition-colors"

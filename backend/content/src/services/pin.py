@@ -68,7 +68,7 @@ class PinService:
             upsert=True,
         )
         logger.info("Document successfully pinned to user collection")
-        return {"status": "success", "message": "Ghim tài liệu vào danh sách ưu tiên thành công"}
+        return {"status": "success", "message": "Ghim tài liệu vào danh sách ưu tiên hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -81,7 +81,7 @@ class PinService:
         )
         return {
             "status": "success",
-            "message": "Hủy ghim tài liệu khỏi danh sách ưu tiên thành công",
+            "message": "Hủy ghim tài liệu khỏi danh sách ưu tiên hoàn tất",
         }
 
     @staticmethod
@@ -95,5 +95,5 @@ class PinService:
         )
         return {
             "status": "success",
-            "message": "Cập nhật danh sách tài liệu ghim thành công",
+            "message": "Cập nhật danh sách tài liệu ghim hoàn tất",
         }

@@ -31,10 +31,10 @@ function VerifyCodeContent() {
     try {
       setResending(true);
       await forgotPasswordAPI(email);
-      showToast("Đã gửi lại mã xác thực", "success");
+      showToast("Hoàn tất tái khởi tạo luồng phân phối mã", "success");
       setCountdown(60);
     } catch (err: any) {
-      showToast(err.message || "Không thể gửi lại mã", "error");
+      showToast(err.message || "Lỗi tái khởi tạo luồng phân phối mã", "error");
     } finally {
       setResending(false);
     }
@@ -44,21 +44,21 @@ function VerifyCodeContent() {
     e.preventDefault();
 
     if (!token.trim()) {
-      showToast("Vui lòng nhập mã xác thực", "error");
+      showToast("Lỗi thiếu hụt chuỗi dữ liệu mã xác thực", "error");
       return;
     }
 
     try {
       setLoading(true);
       await verifyCodeAPI(token.trim());
-      showToast("Mã xác thực hợp lệ", "success");
+      showToast("Xác thực chuỗi dữ liệu OTP hợp lệ", "success");
       setTimeout(() => {
         router.push(
           `/dat-lai-mat-khau?token=${encodeURIComponent(token.trim())}`,
         );
       }, 1200);
     } catch (err: any) {
-      showToast(err.message || "Mã xác thực không hợp lệ", "error");
+      showToast(err.message || "Lỗi sai lệch chuỗi dữ liệu định danh OTP", "error");
     } finally {
       setLoading(false);
     }

@@ -26,7 +26,7 @@ async def delete_document_endpoint(document_id: str):
         logger.info(f"Document deletion completed successfully document_id={document_id}")
         return {
             "status": "success",
-            "message": "Đã xóa toàn bộ dữ liệu vector của tài liệu thành công"
+            "message": "Hủy bỏ toàn bộ dữ liệu vector của tài liệu hoàn tất"
         }
     except Exception as e:
         logger.exception("Document deletion error")

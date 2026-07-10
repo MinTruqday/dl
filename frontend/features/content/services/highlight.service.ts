@@ -30,7 +30,7 @@ export async function createHighlightAPI(
     body: JSON.stringify(bodyData),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Tạo nêu bật thất bại");
+  if (!res.ok) throw new Error(result.message || "Lỗi khởi tạo siêu dữ liệu đánh dấu");
   return result;
 }
 
@@ -40,7 +40,7 @@ export async function getHighlightsAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách nêu bật");
+    throw new Error(data.message || "Lỗi trích xuất bộ sưu tập đánh dấu");
   return data;
 }
 
@@ -55,7 +55,7 @@ export async function updateHighlightNoteAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Cập nhật ghi chú nêu bật thất bại");
+    throw new Error(data.message || "Lỗi lưu trữ dữ liệu chú thích");
   return data;
 }
 
@@ -65,7 +65,7 @@ export async function deleteHighlightAPI(highlightId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xóa nêu bật thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ bản ghi đánh dấu");
   return data;
 }
 
@@ -78,7 +78,7 @@ export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách ghi chú");
+    throw new Error(data.message || "Lỗi trích xuất tập hợp chú thích");
   return data;
 }
 
@@ -88,7 +88,7 @@ export async function getReadingPreferencesAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải cài đặt tùy chỉnh đọc");
+    throw new Error(data.message || "Lỗi trích xuất tham số cấu hình hiển thị");
   return data;
 }
 
@@ -106,7 +106,7 @@ export async function updateReadingPreferencesAPI(data: {
   });
   const result = await res.json();
   if (!res.ok)
-    throw new Error(result.message || "Cập nhật cài đặt đọc thất bại");
+    throw new Error(result.message || "Lỗi lưu trữ tham số cấu hình hiển thị");
   return result;
 }
 
@@ -115,6 +115,6 @@ export async function exportHighlightsMarkdownAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xuất dữ liệu nêu bật thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi kết xuất siêu dữ liệu đánh dấu");
   return data;
 }

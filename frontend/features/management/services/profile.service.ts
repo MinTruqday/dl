@@ -6,7 +6,7 @@ import {
 
 export async function getUsersAPI(limit: number = 50, offset: number = 0) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(
     `${API_URL}/nguoi-dung?limit=${limit}&offset=${offset}`,
     {
@@ -15,7 +15,7 @@ export async function getUsersAPI(limit: number = 50, offset: number = 0) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách người dùng");
+    throw new Error(data.message || "Lỗi trích xuất danh sách tài khoản người dùng");
   return data;
 }
 
@@ -32,7 +32,7 @@ export async function createUserAPI(data: { email: string, password: string, ful
 
 export async function updateUserRoleAPI(userId: string, role: string) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/nguoi-dung/${userId}/vai-tro`, {
     method: "PUT",
     headers: {
@@ -42,13 +42,13 @@ export async function updateUserRoleAPI(userId: string, role: string) {
     body: JSON.stringify({ role }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật quyền thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi phân quyền tài khoản người dùng");
   return data;
 }
 
 export async function updateUserStatusAPI(userId: string, isActive: boolean) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/nguoi-dung/${userId}/status`, {
     method: "PUT",
     headers: {
@@ -59,7 +59,7 @@ export async function updateUserStatusAPI(userId: string, isActive: boolean) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Cập nhật trạng thái tài khoản thất bại");
+    throw new Error(data.message || "Lỗi cập nhật trạng thái hoạt động tài khoản");
   return data;
 }
 
@@ -71,18 +71,18 @@ export async function searchUsersAPI(query: string, limit: number = 10) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tìm kiếm người dùng");
+  if (!res.ok) throw new Error(data.message || "Lỗi truy vấn dữ liệu người dùng");
   return data;
 }
 
 export async function deleteUserAPI(userId: string) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/nguoi-dung/${userId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xóa người dùng thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ tài khoản người dùng");
   return data;
 }

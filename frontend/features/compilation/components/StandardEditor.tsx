@@ -749,19 +749,19 @@ export default function StandardEditor({
                   const { autoSaveDraftAPI } =
                     await import("@/features/compilation/services/editorjs.service");
                   await autoSaveDraftAPI(documentId, saved);
-                  if (setSaveStatus) setSaveStatus("Đã lưu");
+                  if (setSaveStatus) setSaveStatus("Lưu trữ hoàn tất");
                 } catch (e: any) {
-                  if (setSaveStatus) setSaveStatus("Lỗi lưu");
+                  if (setSaveStatus) setSaveStatus("Lỗi lưu trữ bản thảo");
                 }
               } else {
-                if (setSaveStatus) setSaveStatus("Đã lưu");
+                if (setSaveStatus) setSaveStatus("Lưu trữ hoàn tất");
               }
             }, 2000);
           } catch (err: any) {
-            if (setSaveStatus) setSaveStatus("Lỗi lưu");
+            if (setSaveStatus) setSaveStatus("Lỗi lưu trữ bản thảo");
             if (showToast)
               showToast(
-                "Lỗi khi tự động lưu nội dung: " + (err.message || ""),
+                "Lỗi tiến trình đồng bộ dữ liệu tự động: " + (err.message || ""),
                 "error",
               );
           }
@@ -774,7 +774,7 @@ export default function StandardEditor({
         editor.isReady
           .then(() => editor.destroy())
           .catch((err) => {
-            console.error(err);
+            console.error("Error destroying EditorJS instance:", err);
           });
         holderDiv.remove();
       }

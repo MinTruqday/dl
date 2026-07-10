@@ -23,7 +23,7 @@ async def get_announcements(
         data=await AnnouncementService.get_announcements(
             str(current_user.id), skip, limit, db
         ),
-        message="Lấy thông báo thành công",
+        message="Trích xuất thông báo hoàn tất",
     )
 
 @router.patch("/{notif_id}/doc-hieu", response_model=APIResponse[Any])
@@ -56,14 +56,14 @@ async def delete_announcement(
         data=await AnnouncementService.delete_announcement(
             notif_id, str(current_user.id), db
         ),
-        message="Xóa thông báo vĩnh viễn thành công",
+        message="Xóa thông báo vĩnh viễn hoàn tất",
     )
 
 @router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False)
 async def create_announcement(data: AnnouncementCreate, db=Depends(get_db)):
     return APIResponse(
         data=await AnnouncementService.create_announcement(data, db),
-        message="Gửi thông báo thành công",
+        message="Gửi thông báo hoàn tất",
         status=201,
     )
 
@@ -78,7 +78,7 @@ async def get_settings(
     settings = (user_doc or {}).get("announcement_settings", {})
     return APIResponse(
         data=settings,
-        message="Lấy cài đặt thông báo thành công",
+        message="Trích xuất cài đặt thông báo hoàn tất",
     )
 
 @router.post("/cai-dat", response_model=APIResponse[Any])
@@ -94,6 +94,6 @@ async def update_settings(
     )
     return APIResponse(
         data=settings,
-        message="Cập nhật cài đặt thông báo thành công",
+        message="Cập nhật cài đặt thông báo hoàn tất",
         status=200,
     )

@@ -21,7 +21,7 @@ export async function queryRagAPI(
   if (!res.ok)
     throw new Error(
       data.detail ||
-        "Cố vấn AI đang bận xử lý dữ liệu khác, vui lòng thử lại sau",
+        "MODULE AGENTIC_AI: RAG backend busy or unavailable",
     );
   return data;
 }
@@ -61,6 +61,6 @@ export async function ingestDocumentAPI(documentId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Đồng bộ AI thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Vector ingestion pipeline failed");
   return data;
 }

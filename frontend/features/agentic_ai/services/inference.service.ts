@@ -13,7 +13,7 @@ export async function translateTextAPI(
     body: JSON.stringify({ text, target_lang: targetLang }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Dịch thuật thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Translation inference failed");
   return data;
 }
 
@@ -24,7 +24,7 @@ export async function grammarCheckAPI(text: string) {
     body: JSON.stringify({ text }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Kiểm tra ngữ pháp thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Grammar analysis inference failed");
   return data;
 }
 
@@ -35,7 +35,7 @@ export async function getSynonymsAPI(text: string) {
     body: JSON.stringify({ text }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tìm từ đồng nghĩa thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Synonym extraction failed");
   return data;
 }
 
@@ -46,6 +46,6 @@ export async function generateCodeAPI(prompt: string) {
     body: JSON.stringify({ prompt }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo mã nguồn thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Code generation inference failed");
   return data;
 }

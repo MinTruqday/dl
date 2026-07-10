@@ -25,17 +25,17 @@ function ResetPasswordContent() {
     e.preventDefault();
 
     if (!newPassword || newPassword.length < 6) {
-      showToast("Mật khẩu mới tối thiểu 6 ký tự", "error");
+      showToast("Lỗi sai lệch quy tắc định dạng mật khẩu tối thiểu", "error");
       return;
     }
 
     try {
       setLoading(true);
       const data = await resetPasswordAPI(token, newPassword);
-      showToast(data.message || "Đã đặt lại mật khẩu thành công", "success");
+      showToast(data.message || "Cập nhật cấu trúc mật khẩu hoàn tất", "success");
       setTimeout(() => router.push("/dang-nhap"), 1500);
     } catch (err: any) {
-      showToast(err.message || "Đặt lại mật khẩu thất bại", "error");
+      showToast(err.message || "Lỗi cập nhật cấu trúc mật khẩu mới", "error");
     } finally {
       setLoading(false);
     }

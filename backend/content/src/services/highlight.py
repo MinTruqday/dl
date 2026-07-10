@@ -78,7 +78,7 @@ class HighlightService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không tìm thấy dữ liệu đánh dấu văn bản yêu cầu"
             )
-        return {"message": "Cập nhật nội dung ghi chú cho đoạn văn bản nổi bật thành công"}
+        return {"message": "Cập nhật nội dung ghi chú cho đoạn văn bản nổi bật hoàn tất"}
 
     @staticmethod
     @log_logic_execution

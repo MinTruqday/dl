@@ -10,7 +10,7 @@ export async function requestWithdrawalAPI(amount: number, bankInfo: any) {
     body: JSON.stringify({ amount, bank_info: bankInfo }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Yêu cầu rút tiền thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo yêu cầu rút tiền");
   return data;
 }
 
@@ -20,7 +20,7 @@ export async function getWithdrawalQueueAPI(status: string = "PENDING") {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải hàng đợi thanh toán");
+    throw new Error(data.message || "Lỗi trích xuất hàng đợi thanh toán");
   return data;
 }
 
@@ -36,7 +36,7 @@ export async function verifyWithdrawalAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xử lý thanh toán thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi xử lý luồng thanh toán");
   return data;
 }
 
@@ -46,7 +46,7 @@ export async function cancelWithdrawalAPI(withdrawalId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Hủy yêu cầu rút tiền thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi hủy bỏ yêu cầu rút tiền");
   return data;
 }
 
@@ -56,6 +56,6 @@ export async function getMyWithdrawalsAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách yêu cầu rút tiền");
+    throw new Error(data.message || "Lỗi trích xuất danh sách yêu cầu rút tiền");
   return data;
 }

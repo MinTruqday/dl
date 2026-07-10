@@ -136,4 +136,4 @@ class ReadingService:
         await ReadingRepository.delete_history(
             {"user_id": str(current_user.id), "document_id": document_id}
         )
-        return {"status": "success", "message": "Xóa mục lịch sử đọc thành công"}
+        return {"status": "success", "message": "Xóa mục lịch sử đọc hoàn tất"}

@@ -602,7 +602,7 @@ async def delete_vector_document(document_id: str):
 
         await vector_store.delete_by_document(document_id)
         logger.info(f"Completed vector index deletion for document {document_id}")
-        return {"status": "success", "message": "Đã xóa toàn bộ dữ liệu vector của tài liệu thành công"}
+        return {"status": "success", "message": "Hủy bỏ toàn bộ dữ liệu vector của tài liệu hoàn tất"}
     except Exception as e:
         logger.exception("Vector index deletion error")
         raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình xóa dữ liệu, vui lòng thử lại sau")

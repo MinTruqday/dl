@@ -81,11 +81,11 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
 
       await passkeyRegisterFinishAPI(email, credentialJSON);
 
-      showToast("Đã kích hoạt Passkey thành công!", "success");
+      showToast("Kích hoạt chứng thư số Passkey hoàn tất", "success");
       onSuccess();
     } catch (err: any) {
-      console.error(err);
-      showToast(err.message || "Không thể đăng ký Passkey lúc này", "error");
+      console.error("Error during passkey verification:", err);
+      showToast(err.message || "Lỗi khởi tạo luồng định danh chứng thư số", "error");
     } finally {
       setLoading(false);
     }

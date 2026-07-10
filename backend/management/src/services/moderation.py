@@ -48,7 +48,7 @@ class ModerationService:
     async def request_data_export(current_user):
         logger.info("Data export request recorded successfully")
         return {
-            "message": "Yêu cầu trích xuất dữ liệu thành công, kết quả sẽ được gửi qua email"
+            "message": "Yêu cầu trích xuất dữ liệu hoàn tất, kết quả sẽ được gửi qua email"
         }
 
     @staticmethod

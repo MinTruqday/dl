@@ -75,7 +75,7 @@ async def read_users_me(
     
     return APIResponse(
         data=user_data,
-        message="Truy xuất thông tin cá nhân thành công",
+        message="Trích xuất thông tin cá nhân hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -91,7 +91,7 @@ async def register_user(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await SessionService.register_user(user_in, client_ip),
-        message="Đăng ký tài khoản thành công, vui lòng tiến hành đăng nhập",
+        message="Đăng ký tài khoản hoàn tất, vui lòng tiến hành đăng nhập",
         status=status.HTTP_201_CREATED,
     )
 
@@ -109,7 +109,7 @@ async def login(
         data=await SessionService.login_user(
             form_data.username, form_data.password, client_ip
         ),
-        message="Xác thực thông tin và cấp quyền truy cập hệ thống thành công",
+        message="Xác thực thông tin và cấp quyền truy cập hệ thống hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -120,7 +120,7 @@ async def forgot_password(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await SessionService.forgot_password(payload.email, client_ip),
-        message="Thực hiện gửi yêu cầu đặt lại mật khẩu thành công",
+        message="Thực hiện truyền tải yêu cầu đặt lại mật khẩu hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -133,7 +133,7 @@ async def reset_password(
         data=await SessionService.reset_password(
             payload.token, payload.new_password, client_ip
         ),
-        message="Thực hiện thay đổi mật khẩu tài khoản thành công",
+        message="Thực hiện thay đổi mật khẩu tài khoản hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -144,7 +144,7 @@ async def verify_code(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await SessionService.verify_reset_code(payload.token, client_ip),
-        message="Xác minh mã bảo mật thành công",
+        message="Xác thực mã bảo mật hoàn tất",
         status=status.HTTP_200_OK,
     )
 

@@ -72,7 +72,7 @@ export default function OperationDashboard() {
       if (qData) setQuotaConfigs(qData);
       if (minioData) setMinioStats(minioData.data || minioData);
     } catch (err: any) {
-      showToast("Lỗi tải dữ liệu", "error");
+      showToast("Lỗi trích xuất số liệu vận hành", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -92,11 +92,11 @@ export default function OperationDashboard() {
       await toggleMaintenanceModeAPI(!maintenanceMode);
       setMaintenanceMode(!maintenanceMode);
       showToast(
-        !maintenanceMode ? "Đã bật bảo trì" : "Đã tắt bảo trì",
+        !maintenanceMode ? "Kích hoạt chế độ bảo trì hoàn tất" : "Vô hiệu hóa chế độ bảo trì hoàn tất",
         "success",
       );
     } catch (err: any) {
-      showToast("Lỗi chế độ bảo trì", "error");
+      showToast("Lỗi cấu hình chế độ bảo trì", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -107,9 +107,9 @@ export default function OperationDashboard() {
     setIsProcessing(true);
     try {
       await triggerBackupAPI();
-      showToast("Đã yêu cầu sao lưu", "success");
+      showToast("Khởi tạo yêu cầu sao lưu hệ thống hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi sao lưu", "error");
+      showToast("Lỗi khởi tạo tiến trình sao lưu hệ thống", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -119,9 +119,9 @@ export default function OperationDashboard() {
     setIsSavingQuota(role);
     try {
       await updateRoleQuotaAPI(role, quotaConfigs[role]);
-      showToast(`Cập nhật hạn mức ${role} thành công`, "success");
+      showToast(`Cập nhật hạn mức phân quyền ${role} hoàn tất`, "success");
     } catch (err: any) {
-      showToast("Lỗi cập nhật hạn mức", "error");
+      showToast("Lỗi cập nhật hạn mức phân quyền", "error");
     } finally {
       setIsSavingQuota(null);
     }

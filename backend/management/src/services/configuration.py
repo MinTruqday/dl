@@ -47,4 +47,4 @@ class ConfigurationService:
             },
         )
         logger.info("System configuration updated successfully")
-        return {"message": "Cập nhật cấu hình cá nhân thành công"}
+        return {"message": "Cập nhật cấu hình cá nhân hoàn tất"}

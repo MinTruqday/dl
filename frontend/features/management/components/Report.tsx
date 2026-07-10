@@ -27,7 +27,7 @@ export default function Report({ itemId, itemType, onClose }: ReportProps) {
 
   const handleSubmit = async () => {
     if (!reason.trim()) {
-      showToast("Vui lòng cung cấp lý do báo cáo", "error");
+      showToast("Lỗi thiếu hụt nguyên nhân vi phạm", "error");
       return;
     }
 
@@ -40,10 +40,10 @@ export default function Report({ itemId, itemType, onClose }: ReportProps) {
         description: detail,
       });
 
-      showToast("Báo cáo đã được gửi tới hội đồng điều hành", "success");
+      showToast("Đồng bộ báo cáo tới hệ thống điều hành hoàn tất", "success");
       setTimeout(onClose, 2000);
     } catch (err: any) {
-      showToast(err.message || "Gửi báo cáo thất bại", "error");
+      showToast(err.message || "Lỗi đồng bộ báo cáo hệ thống", "error");
     } finally {
       setIsSubmitting(false);
     }

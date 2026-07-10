@@ -110,7 +110,7 @@ export default function HistoryPage() {
       setDocuments(list);
       if (list.length > 0) setSelectedDocumentId(list[0]._id || list[0].id);
     } catch {
-      showToast("Lỗi tải danh sách tác phẩm", "error");
+      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
     } finally {
       setLoadingDocs(false);
     }
@@ -128,7 +128,7 @@ export default function HistoryPage() {
     try {
       setVersions((await getDocumentVersionsAPI(selectedDocumentId)) || []);
     } catch {
-      showToast("Không thể tải danh sách phiên bản", "error");
+      showToast("Lỗi trích xuất danh sách phiên bản lưu trữ", "error");
       setVersions([]);
     } finally {
       setLoadingVersions(false);
@@ -158,7 +158,7 @@ export default function HistoryPage() {
         ),
       );
     } catch (err: any) {
-      showToast(err.message || "Không thể so sánh phiên bản", "error");
+      showToast(err.message || "Lỗi xử lý đối chiếu phiên bản", "error");
     } finally {
       setIsComparing(false);
     }
@@ -168,11 +168,11 @@ export default function HistoryPage() {
     if (!confirmRestore) return;
     try {
       await restoreVersionAPI(confirmRestore);
-      showToast("Đã khôi phục phiên bản thành công", "success");
+      showToast("Phục hồi phiên bản lưu trữ hoàn tất", "success");
       setConfirmRestore(null);
       fetchVersions();
     } catch (e: any) {
-      showToast(e.message || "Khôi phục thất bại", "error");
+      showToast(e.message || "Lỗi phục hồi phiên bản lưu trữ", "error");
     }
   };
 

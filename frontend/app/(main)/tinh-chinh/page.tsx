@@ -64,7 +64,7 @@ export default function FineTuningPage() {
       setDatasets(dsRes.data || []);
       setJobs(jobsRes.data || []);
     } catch (err: any) {
-      showToast(err.message || "Lỗi tải dữ liệu", "error");
+      showToast(err.message || "Lỗi trích xuất bộ sưu tập dữ liệu", "error");
     } finally {
       setLoading(false);
     }
@@ -88,51 +88,51 @@ export default function FineTuningPage() {
 
   const handleCreateDataset = async () => {
     if (!newDatasetName.trim())
-      return showToast("Vui lòng nhập tên tập dữ liệu", "error");
+      return showToast("Lỗi thiếu hụt tên tập dữ liệu bắt buộc", "error");
     try {
       await createDatasetAPI(newDatasetName, newDatasetDesc);
-      showToast("Tạo thành công", "success");
+      showToast("Khởi tạo tập dữ liệu hoàn tất", "success");
       setShowNewDataset(false);
       setNewDatasetName("");
       setNewDatasetDesc("");
       loadData();
     } catch (err: any) {
-      showToast(err.message || "Lỗi tạo", "error");
+      showToast(err.message || "Lỗi khởi tạo tập dữ liệu", "error");
     }
   };
 
   const handleCreateJob = async () => {
     if (!selectedDatasetId)
-      return showToast("Vui lòng chọn tập dữ liệu", "error");
+      return showToast("Lỗi thiếu hụt tập dữ liệu nguồn", "error");
     try {
       const res = await createJobAPI({
         dataset_id: selectedDatasetId,
         ...jobConfig,
       });
-      showToast("Tạo công việc thành công", "success");
+      showToast("Khởi tạo tiến trình huấn luyện hoàn tất", "success");
       setShowNewJob(false);
       const jobId = res.data?._id;
       if (jobId) {
         await startTrainingAPI(jobId);
-        showToast("Đã bắt đầu huấn luyện", "success");
+        showToast("Kích hoạt tiến trình huấn luyện hoàn tất", "success");
       }
       loadData();
     } catch (err: any) {
-      showToast(err.message || "Lỗi tạo công việc", "error");
+      showToast(err.message || "Lỗi khởi tạo tiến trình huấn luyện", "error");
     }
   };
 
   const handleImportFeedback = async () => {
     try {
-      showToast("Đang thu thập phản hồi", "success");
+      showToast("Đang khởi tạo thu thập phản hồi", "success");
       const res = await importFromFeedbackAPI();
       showToast(
-        `Đã tạo tập dữ liệu với ${res.data?.imported || 0} mẫu`,
+        `Khởi tạo tập dữ liệu với ${res.data?.imported || 0} mẫu hoàn tất`,
         "success",
       );
       loadData();
     } catch (err: any) {
-      showToast(err.message || "Lỗi nhập", "error");
+      showToast(err.message || "Lỗi tích hợp dữ liệu phản hồi", "error");
     }
   };
 
@@ -157,7 +157,7 @@ export default function FineTuningPage() {
       case "running":
         return "Đang huấn luyện";
       case "failed":
-        return "Thất bại";
+        return "Lỗi trạng thái";
       case "deployed":
         return "Đã triển khai";
       case "pending":

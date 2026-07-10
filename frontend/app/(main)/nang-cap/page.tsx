@@ -28,17 +28,17 @@ export default function UpgradePage() {
       return;
     }
     if (balance < price) {
-      showToast(`Số dư không đủ. Cần thêm ${price - balance} dl`, "error");
+      showToast(`Lỗi thiếu hụt số dư khả dụng. Cần bổ sung ${price - balance} dl`, "error");
       setTimeout(() => router.push("/vi-tien"), 1500);
       return;
     }
 
     setLoading(tier);
     try {
-      showToast(`Nâng cấp gói ${tier} thành công!`, "success");
+      showToast(`Cập nhật cấp độ thành viên ${tier} hoàn tất`, "success");
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
-      showToast(err.message || "Lỗi nâng cấp gói AI", "error");
+      showToast(err.message || "Lỗi cập nhật cấp độ thành viên", "error");
     } finally {
       setLoading(null);
     }

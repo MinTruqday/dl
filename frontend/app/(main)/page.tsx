@@ -33,7 +33,7 @@ export default function ExplorePage() {
       setCategories(catData.data?.categories || catData.categories || []);
       setRecommendations(recData.data || recData || []);
     } catch (err) {
-      showToast("Lỗi tải dữ liệu khám phá", "error");
+      showToast("Lỗi trích xuất bộ sưu tập gợi ý", "error");
     }
   }, [showToast]);
 
@@ -52,7 +52,7 @@ export default function ExplorePage() {
       }
       setDocuments(data.data || data || []);
     } catch (err) {
-      showToast("Lỗi tải danh sách tài liệu", "error");
+      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
     } finally {
       setLoading(false);
     }

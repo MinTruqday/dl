@@ -14,7 +14,7 @@ export async function createReadingListAPI(data: {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Tạo danh sách đọc thất bại");
+  if (!res.ok) throw new Error(result.message || "Lỗi khởi tạo cấu trúc danh sách lưu trữ");
   return result;
 }
 
@@ -23,7 +23,7 @@ export async function getMyReadingListsAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách đọc");
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất bộ sưu tập danh sách lưu trữ");
   return data;
 }
 
@@ -33,7 +33,7 @@ export async function getReadingListByIdAPI(listId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải chi tiết danh sách");
+    throw new Error(data.message || "Lỗi trích xuất cấu trúc chi tiết danh sách");
   return data;
 }
 
@@ -46,7 +46,7 @@ export async function addDocumentToListAPI(listId: string, documentId: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Thêm vào danh sách thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi liên kết tài liệu vào danh sách");
   return data;
 }
 
@@ -62,6 +62,6 @@ export async function removeDocumentFromListAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xóa khỏi danh sách thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi gỡ bỏ liên kết tài liệu khỏi danh sách");
   return data;
 }

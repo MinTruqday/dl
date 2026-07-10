@@ -27,7 +27,7 @@ async def publish_document(
         data=await PublicationService.publish_document(
             document_id, current_user
         ),
-        message="Tài liệu đã được công bố chính thức thành công",
+        message="Tài liệu đã được công bố chính thức hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -46,7 +46,7 @@ async def schedule_publish(
         data=await PublicationService.schedule_publish(
             document_id, req.publish_at, current_user
         ),
-        message="Cấu hình lịch trình xuất bản tự động thành công",
+        message="Cấu hình lịch trình xuất bản tự động hoàn tất",
         status=200,
     )
 
@@ -65,7 +65,7 @@ async def update_seo_metadata(
         data=await PublicationService.update_seo_metadata(
             document_id, req.model_dump(), current_user
         ),
-        message="Cập nhật dữ liệu metadata chuẩn SEO thành công",
+        message="Cập nhật dữ liệu metadata chuẩn SEO hoàn tất",
         status=200,
     )
 
@@ -79,6 +79,6 @@ async def get_readability_score(
         data=await PublicationService.get_readability_score(
             document_id, current_user
         ),
-        message="Thực thi phân tích chỉ số đọc hiểu tài liệu thành công",
+        message="Thực thi phân tích chỉ số đọc hiểu tài liệu hoàn tất",
         status=200,
     )

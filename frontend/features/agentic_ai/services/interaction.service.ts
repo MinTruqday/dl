@@ -17,7 +17,7 @@ export async function processTextAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Xử lý văn bản bằng AI thất bại");
+    throw new Error(data.message || "MODULE AGENTIC_AI: Text processing failed");
   return data;
 }
 
@@ -29,7 +29,7 @@ export async function smartSearchAIAPI(query: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tìm kiếm thông minh thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Semantic search failed");
   return data;
 }
 
@@ -43,7 +43,7 @@ export async function getAiSessionsAPI(documentId?: string, userId?: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải lịch sử hội thoại");
+    throw new Error(data.message || "MODULE AGENTIC_AI: Failed to retrieve conversation history");
   return data;
 }
 
@@ -58,7 +58,7 @@ export async function createAiSessionAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Khởi tạo hội thoại mới thất bại");
+    throw new Error(data.message || "MODULE AGENTIC_AI: Failed to initialize AI session");
   return data;
 }
 
@@ -72,7 +72,7 @@ export async function updateAiSessionTitleAPI(
     body: JSON.stringify({ title }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật tiêu đề thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to update session title");
   return data;
 }
 
@@ -82,7 +82,7 @@ export async function deleteAiSessionAPI(sessionId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xóa hội thoại thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to delete session");
   return data;
 }
 export async function streamAiChatAPI(payload: any) {
@@ -114,7 +114,7 @@ export async function queryRagAPI(
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Truy vấn AI thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: RAG query inference failed");
   return data;
 }
 
@@ -132,7 +132,7 @@ export async function suggestCitationsAPI(text: string, style: string = "APA") {
     body: JSON.stringify({ text, style }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Gợi ý trích dẫn thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Citation suggestion inference failed");
   return data;
 }
 
@@ -147,7 +147,7 @@ export async function transformToneAPI(
     body: JSON.stringify({ text, tone, expansion }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Biến đổi văn bản thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Text transformation inference failed");
   return data;
 }
 
@@ -158,7 +158,7 @@ export async function peerReviewAPI(text: string, criteria: string[] = []) {
     body: JSON.stringify({ text, criteria }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Thẩm định nội dung thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Content review inference failed");
   return data;
 }
 
@@ -172,6 +172,6 @@ export async function multiDocSynthesisAPI(
     body: JSON.stringify({ document_ids: documentIds, query }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tổng hợp đa tài liệu thất bại");
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Multi-document synthesis inference failed");
   return data;
 }

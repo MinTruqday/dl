@@ -54,7 +54,7 @@ export default function Comment({
       const data = await getCommentsByItemAPI(itemId);
       setComments(Array.isArray(data.data) ? data.data : data || []);
     } catch (err: any) {
-      showToast("Không thể kết nối hệ thống thảo luận", "error");
+      showToast("Lỗi kết nối hệ thống phân phối thảo luận", "error");
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ export default function Comment({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      showToast("Vui lòng đăng nhập để tham gia thảo luận", "error");
+      showToast("Lỗi thiếu hụt phân quyền tham gia thảo luận", "error");
       return;
     }
     if (!newText.trim()) return;
@@ -82,10 +82,10 @@ export default function Comment({
       });
       setNewText("");
       setReplyTo(null);
-      showToast("Đã đăng thảo luận thành công", "success");
+      showToast("Khởi tạo luồng thảo luận mới hoàn tất", "success");
       fetchComments();
     } catch (err: any) {
-      showToast(err.message || "Lỗi kết nối hệ thống thảo luận", "error");
+      showToast(err.message || "Lỗi khởi tạo luồng thảo luận", "error");
     } finally {
       setSubmitting(false);
     }

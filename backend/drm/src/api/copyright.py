@@ -28,7 +28,7 @@ async def update_drm_settings(
         current_user,
     )
     return APIResponse(
-        data=result, message="Cập nhật cấu hình bảo vệ bản quyền tài liệu thành công"
+        data=result, message="Cập nhật cấu hình bảo vệ bản quyền tài liệu hoàn tất"
     )
 
 @router.post(
@@ -44,5 +44,5 @@ async def resolve_copyright_dispute(
         dispute_id, resolution, current_user
     )
     return APIResponse(
-        data=result, message="Giải quyết tranh chấp bản quyền thành công"
+        data=result, message="Giải quyết tranh chấp bản quyền hoàn tất"
     )

@@ -237,4 +237,4 @@ class PasskeyService:
         except Exception as e:
             logger.exception("Failed to clear expired authentication challenge from cache layer")
 
-        return {"message": "Thực hiện đăng ký mã bảo mật thành công"}
+        return {"message": "Thực hiện đăng ký mã bảo mật hoàn tất"}

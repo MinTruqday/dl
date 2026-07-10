@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
 
     if (!email || !email.includes("@")) {
-      showToast("Vui lòng nhập email hợp lệ", "error");
+      showToast("Lỗi sai lệch định dạng chuẩn email", "error");
       return;
     }
 
@@ -22,14 +22,14 @@ export default function ForgotPasswordPage() {
       setLoading(true);
       const data = await forgotPasswordAPI(email);
       showToast(
-        data.message || "Mã xác thực đã được gửi tới email của bạn",
+        data.message || "Hoàn tất khởi tạo luồng khôi phục dữ liệu",
         "success",
       );
       setTimeout(() => {
         window.location.href = `/xac-thuc?email=${encodeURIComponent(email)}`;
       }, 1500);
     } catch (err: any) {
-      showToast(err.message || "Không thể gửi mã khôi phục", "error");
+      showToast(err.message || "Lỗi khởi tạo luồng phân phối mã xác thực", "error");
     } finally {
       setLoading(false);
     }

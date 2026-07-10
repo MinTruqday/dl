@@ -9,7 +9,7 @@ export async function publishDocumentAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xuất bản tài liệu thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi chạy tiến trình xuất bản");
   return data;
 }
 
@@ -23,7 +23,7 @@ export async function schedulePublishAPI(
     body: JSON.stringify({ publish_at: publishAt }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lên lịch xuất bản thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi cấu hình lịch trình xuất bản");
   return data;
 }
 
@@ -38,7 +38,7 @@ export async function configPremiumAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Thiết lập chương tính phí thất bại");
+    throw new Error(data.message || "Lỗi thiết lập cơ chế kiểm soát truy cập thu phí");
   return data;
 }
 
@@ -53,7 +53,7 @@ export async function setFreePreviewAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Thiết lập chương đọc thử thất bại");
+    throw new Error(data.message || "Lỗi cấp quyền truy cập công khai cục bộ");
   return data;
 }
 
@@ -73,7 +73,7 @@ export async function updateSeoMetadataAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Cập nhật thông tin SEO thất bại");
+    throw new Error(data.message || "Lỗi cập nhật cấu trúc siêu dữ liệu tối ưu hóa tìm kiếm (SEO)");
   return data;
 }
 
@@ -83,6 +83,6 @@ export async function getReadabilityScoreAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể lấy điểm độ đọc hiểu");
+    throw new Error(data.message || "Lỗi trích xuất chỉ số đo lường khả năng đọc hiểu");
   return data;
 }

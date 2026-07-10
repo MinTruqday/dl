@@ -168,7 +168,7 @@ export default function DocumentsPage() {
         setDocuments((prev) => (isLoadMore ? [...prev, ...docs] : docs));
         if (!isLoadMore) setFolders(foldersData.data || foldersData || []);
       } catch (err: any) {
-        showToast("Lỗi tải danh sách tài liệu", "error");
+        showToast("Lỗi trích xuất danh sách tài liệu từ hệ thống", "error");
       } finally {
         setIsRefreshing(false);
         setIsLoading(false);
@@ -256,7 +256,7 @@ export default function DocumentsPage() {
 
   const handleCreateDocument = async () => {
     if (!newDoc.title || !file) {
-      showToast("Vui lòng nhập tiêu đề và chọn tệp", "error");
+      showToast("Thông tin khởi tạo tài liệu không hợp lệ", "error");
       return;
     }
     setIsCreating(true);
@@ -289,9 +289,9 @@ export default function DocumentsPage() {
         await deleteAuthorDocumentAPI(
           createdDoc.data._id || createdDoc.data.id,
         ).catch(() => {});
-        throw new Error("Lỗi tải file");
+        throw new Error("Lỗi truyền tải tệp tin lên hệ thống lưu trữ đám mây");
       }
-      showToast("Khởi tạo tài liệu thành công", "success");
+      showToast("Khởi tạo tài liệu mới hoàn tất", "success");
       setCreateDocModal(false);
       setNewDoc({
         title: "",
@@ -310,7 +310,7 @@ export default function DocumentsPage() {
       setFile(null);
       fetchData();
     } catch (err: any) {
-      showToast(err.message || "Lỗi hệ thống", "error");
+      showToast(err.message || "Lỗi thực thi nghiệp vụ tài liệu", "error");
     } finally {
       setIsCreating(false);
     }
@@ -320,12 +320,12 @@ export default function DocumentsPage() {
     if (!folderName) return;
     try {
       await createFolderAPI(folderName, currentFolder?._id || null);
-      showToast("Đã tạo thư mục", "success");
+      showToast("Khởi tạo thư mục mới hoàn tất", "success");
       setCreateFolderModal(false);
       setFolderName("");
       fetchData();
     } catch (err: any) {
-      showToast("Lỗi tạo thư mục", "error");
+      showToast("Lỗi khởi tạo thư mục lưu trữ", "error");
     }
   };
   const executeDelete = async () => {
@@ -335,10 +335,10 @@ export default function DocumentsPage() {
         if (isAdmin) await deleteAdminDocumentAPI(confirmModal.docId);
         else await deleteAuthorDocumentAPI(confirmModal.docId);
       } else await deleteFolderAPI(confirmModal.docId);
-      showToast("Đã xóa thành công", "success");
+      showToast("Xóa dữ liệu hoàn tất", "success");
       fetchData();
     } catch (err: any) {
-      showToast("Xóa thất bại", "error");
+      showToast("Lỗi xóa dữ liệu khỏi hệ thống", "error");
     } finally {
       setConfirmModal(null);
     }
@@ -348,12 +348,12 @@ export default function DocumentsPage() {
     if (!lockModal?.docId || !lockPassword) return;
     try {
       await lockDocumentAPI(lockModal.docId, lockPassword);
-      showToast("Đã khóa", "success");
+      showToast("Cập nhật trạng thái bảo mật hoàn tất", "success");
       setLockModal(null);
       setLockPassword("");
       fetchData();
     } catch (err: any) {
-      showToast("Lỗi khóa", "error");
+      showToast("Lỗi cấu hình bảo mật tài liệu", "error");
     }
   };
   const handleShareSubmit = async (e: React.FormEvent) => {
@@ -362,14 +362,14 @@ export default function DocumentsPage() {
     setPublicUrl(
       `${window.location.origin}/tai-lieu/viewer/${shareModal.docId}${sharePassword ? `?pwd=${sharePassword}` : ""}`,
     );
-    showToast("Sẵn sàng chia sẻ", "success");
+    showToast("Khởi tạo liên kết chia sẻ hoàn tất", "success");
   };
   const toggleStar = async (id: string) => {
     try {
       await toggleStarDocumentAPI(id);
       fetchData();
     } catch (err: any) {
-      showToast("Lỗi thao tác", "error");
+      showToast("Lỗi cập nhật trạng thái dữ liệu", "error");
     }
   };
 

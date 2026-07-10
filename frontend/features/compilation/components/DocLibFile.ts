@@ -163,7 +163,7 @@ export default class DocLibFile implements BlockTool {
               this.buildUI();
             })
             .catch((err) => {
-              console.error("Upload failed", err);
+              console.error("Lỗi đồng bộ dữ liệu tập tin", err);
               const fallbackUrl = URL.createObjectURL(file);
               if (this.data.file) this.data.file.url = fallbackUrl;
               this.data.file = {
@@ -182,7 +182,7 @@ export default class DocLibFile implements BlockTool {
 
       uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = prompt("Paste direct URL:");
+        const url = prompt("Vui lòng cung cấp đường dẫn truy cập tĩnh (Direct URL):");
         if (url) {
           if (this.data.file) this.data.file.url = url;
           this.data.file = {

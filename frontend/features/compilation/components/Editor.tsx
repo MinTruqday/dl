@@ -87,7 +87,7 @@ export default function Editor({
 
   const checkPremiumAI = () => {
     if (user?.ai_tier === "PREMIUM" || user?.role === "admin") return true;
-    showToast("Tính năng AI này chỉ dành cho gói Cao cấp", "error");
+    showToast("Lỗi phân quyền truy cập tính năng AI độc quyền", "error");
     return false;
   };
 
@@ -140,13 +140,13 @@ export default function Editor({
         if (b.data?.text) text += b.data.text + " ";
       });
       if (!text || text.length < 50) {
-        showToast("Vui lòng viết thêm nội dung để kiểm tra ngữ pháp", "info");
+        showToast("Lỗi thiếu hụt khối lượng dữ liệu ngữ cảnh tối thiểu", "info");
         return;
       }
-      showToast("Đang phân tích ngữ pháp bằng AI", "info");
+      showToast("Đang khởi chạy luồng phân tích cú pháp bằng mô hình AI", "info");
       const res = await grammarCheckAPI(text);
       if (res.data) {
-        showToast(`Kết quả AI: Điểm ${res.data.score}/100.`, "success");
+        showToast(`Kết quả phân tích: Điểm độ tin cậy ${res.data.score}/100.`, "success");
         if (res.data.corrected_text) {
           editorRef.current.blocks.insert("paragraph", {
             text: `<i>[Đề xuất sửa ngữ pháp]: ${res.data.corrected_text}</i>`,
@@ -154,14 +154,14 @@ export default function Editor({
         }
       }
     } catch (err: any) {
-      showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
+      showToast(err.message || "Lỗi thiết lập kênh giao tiếp với máy chủ AI", "error");
     }
   };
 
   const handleCompilePreview = async () => {
     if (!editorRef.current) return;
     setIsCompiling(true);
-    showToast("Đang biên dịch mã nguồn LaTeX", "info");
+      showToast("Đang khởi chạy luồng kết xuất mã nguồn LaTeX", "info");
     try {
       const data = await editorRef.current.save();
       let latexCode = "";
@@ -178,7 +178,7 @@ export default function Editor({
       });
 
       if (!latexCode.trim()) {
-        showToast("Vui lòng nhập nội dung để biên dịch", "info");
+        showToast("Lỗi thiếu hụt dữ liệu đầu vào cho trình biên dịch", "info");
         setIsCompiling(false);
         return;
       }
@@ -199,9 +199,9 @@ ${latexCode}
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setPreviewPdfUrl(pdfUrl);
       setIsPreview(true);
-      showToast("Biên dịch LaTeX thành công", "success");
+      showToast("Kết xuất mã nguồn LaTeX hoàn tất", "success");
     } catch (err: any) {
-      showToast(err.message || "Lỗi khi biên dịch LaTeX", "error");
+      showToast(err.message || "Lỗi trong quá trình kết xuất mã nguồn LaTeX", "error");
       setIsCompiling(false);
     }
   };
@@ -209,7 +209,7 @@ ${latexCode}
   const handleExportWord = async () => {
     if (!documentId) return;
     setIsExportingWord(true);
-    showToast("Đang xuất tài liệu sang Word", "info");
+      showToast("Đang khởi chạy tiến trình kết xuất định dạng Word", "info");
     try {
       const { exportToWordAPI } =
         await import("@/features/compilation/services/editorjs.service");
@@ -222,9 +222,9 @@ ${latexCode}
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      showToast("Xuất Word thành công", "success");
+      showToast("Kết xuất định dạng Word hoàn tất", "success");
     } catch (err: any) {
-      showToast(err.message || "Lỗi khi xuất Word", "error");
+      showToast(err.message || "Lỗi trong quá trình kết xuất định dạng Word", "error");
     } finally {
       setIsExportingWord(false);
     }
@@ -235,10 +235,10 @@ ${latexCode}
     setIsFinding(true);
     try {
       await globalFindReplaceAPI(documentId, findText, replaceText, false);
-      showToast("Đã thay thế thành công, nội dung sẽ được cập nhật", "success");
+      showToast("Tiến trình thay thế chuỗi ký tự cục bộ hoàn tất", "success");
       setShowFindReplace(false);
     } catch (err: any) {
-      showToast(err.message || "Lỗi khi thay thế", "error");
+      showToast(err.message || "Lỗi thực thi biểu thức thay thế chuỗi", "error");
     } finally {
       setIsFinding(false);
     }
@@ -257,7 +257,7 @@ ${latexCode}
 
       if (!targetWord || targetWord.split(" ").length > 3) {
         showToast(
-          "Vui lòng chọn một từ hoặc cụm từ ngắn để tìm đồng nghĩa",
+          "Lỗi vi phạm giới hạn độ dài tham số đầu vào (Max 3 tokens)",
           "info",
         );
         setIsSuggesting(false);
@@ -267,12 +267,12 @@ ${latexCode}
       const res = await getSynonymsAPI(targetWord);
       const synonyms = res.data?.synonyms || [];
       if (synonyms.length > 0) {
-        showToast(`Gợi ý cho "${targetWord}": ${synonyms.join(", ")}`, "info");
+        showToast(`Kết quả phân tích cụm từ "${targetWord}": ${synonyms.join(", ")}`, "info");
       } else {
-        showToast("Không tìm thấy từ đồng nghĩa phù hợp", "info");
+        showToast("Lỗi không tìm thấy ánh xạ đồng nghĩa tương đương", "info");
       }
     } catch (err: any) {
-      showToast(err.message || "Không thể lấy gợi ý lúc này", "error");
+      showToast(err.message || "Lỗi truy xuất bộ dữ liệu mạng ngữ nghĩa", "error");
     } finally {
       setIsSuggesting(false);
     }
@@ -295,12 +295,12 @@ ${latexCode}
           },
         );
         if (!res.ok)
-          throw new Error("Lỗi xác thực hoặc không thể tải nhận xét");
+          throw new Error("Lỗi xác thực luồng dữ liệu phản hồi");
         const data = await res.json();
         setSidebarData(data.data || []);
       }
     } catch (err: any) {
-      showToast("Không thể tải dữ liệu thanh bên", "error");
+      showToast("Lỗi trích xuất bộ sưu tập dữ liệu điều hướng", "error");
     } finally {
       setLoadingSidebar(false);
     }
@@ -329,12 +329,12 @@ ${latexCode}
       const result = await res.json();
       const conflicts = result.data?.conflicts || [];
       if (conflicts.length > 0) {
-        showToast(`Cảnh báo logic: ${conflicts[0]}`, "error");
+        showToast(`Lỗi xung đột cây logic nội dung: ${conflicts[0]}`, "error");
       } else {
-        showToast("Nội dung nhất quán với các chương trước", "success");
+        showToast("Kết quả đối chiếu: Tính nhất quán logic đạt chuẩn", "success");
       }
     } catch (err: any) {
-      showToast("Không thể kiểm tra tính nhất quán", "error");
+      showToast("Lỗi thực thi luồng kiểm định tính toàn vẹn logic", "error");
     } finally {
       setIsSuggesting(false);
     }
@@ -345,7 +345,7 @@ ${latexCode}
     if (!editorRef.current && contentFormat === "json") return;
     setIsTranslating(true);
     setShowTranslateModal(false);
-    showToast(`Đang dịch sang ${targetLang}... Vui lòng đợi`, "info");
+    showToast(`Đang khởi chạy luồng phiên dịch ngữ nghĩa sang ${targetLang}`, "info");
 
     try {
       if (contentFormat === "latex") {
@@ -357,7 +357,7 @@ ${latexCode}
           latexValueRef.current = translated;
           setLocalText(translated);
           if (onSave) onSave(translated);
-          showToast("Đã dịch thành công", "success");
+          showToast("Tiến trình phiên dịch ngữ nghĩa hoàn tất", "success");
         }
       } else {
         if (!editorRef.current) return;
@@ -386,10 +386,10 @@ ${latexCode}
         data.blocks = newBlocks;
         await editorRef.current.render(data);
         if (onSave) onSave(JSON.stringify(data));
-        showToast("Đã dịch thành công", "success");
+        showToast("Tiến trình phiên dịch khối dữ liệu hoàn tất", "success");
       }
     } catch (err: any) {
-      showToast("Lỗi dịch thuật: " + err.message, "error");
+      showToast("Lỗi thực thi mô hình phiên dịch: " + err.message, "error");
     } finally {
       setIsTranslating(false);
     }
@@ -408,7 +408,7 @@ ${latexCode}
       if (onSave) onSave(originalContentForUndo);
     }
     setOriginalContentForUndo(null);
-    showToast("Đã hoàn tác về nguyên bản", "success");
+    showToast("Khôi phục cấu trúc dữ liệu nguyên bản hoàn tất", "success");
   };
 
   return (

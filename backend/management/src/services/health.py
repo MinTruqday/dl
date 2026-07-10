@@ -71,7 +71,7 @@ class HealthService:
                 status_code=404, detail="Hệ thống không tìm thấy hồ sơ người dùng yêu cầu"
             )
         logger.info("Account access privileges updated successfully")
-        return {"message": "Cập nhật quyền truy cập hệ thống thành công"}
+        return {"message": "Cập nhật quyền truy cập hệ thống hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -90,7 +90,7 @@ class HealthService:
                 status_code=404, detail="Hệ thống không tìm thấy hồ sơ người dùng yêu cầu"
             )
         logger.info("Account status updated successfully")
-        return {"message": "Cập nhật trạng thái hoạt động tài khoản thành công"}
+        return {"message": "Cập nhật trạng thái hoạt động tài khoản hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -109,7 +109,7 @@ class HealthService:
             upsert=True,
         )
         logger.warning("System maintenance mode toggled successfully")
-        return {"message": "Cập nhật cấu hình bảo trì hệ thống thành công"}
+        return {"message": "Cập nhật cấu hình bảo trì hệ thống hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -291,7 +291,7 @@ class HealthService:
             }
         )
         logger.info("Bug report recorded successfully")
-        return {"message": "Báo cáo sự cố hệ thống đã được ghi nhận thành công"}
+        return {"message": "Báo cáo sự cố hệ thống đã được ghi nhận hoàn tất"}
 
     @staticmethod
     @log_logic_execution

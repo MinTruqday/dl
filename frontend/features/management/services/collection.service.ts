@@ -14,7 +14,7 @@ export async function triggerCollectionAPI(source: string, pages: number | strin
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể kích hoạt tiến trình thu thập");
+    throw new Error(data.message || "Lỗi khởi chạy tiến trình thu thập dữ liệu");
   return data;
 }
 
@@ -25,7 +25,7 @@ export async function stopCollectionAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể dừng tiến trình thu thập");
+    throw new Error(data.message || "Lỗi tạm ngưng tiến trình thu thập dữ liệu");
   return data;
 }
 
@@ -35,7 +35,7 @@ export async function getCollectorStatsAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải trạng thái thu thập");
+    throw new Error(data.message || "Lỗi trích xuất trạng thái luồng dữ liệu thu thập");
   return data;
 }
 
@@ -44,6 +44,6 @@ export async function getCollectorLogsAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải log tiến trình");
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất nhật ký tiến trình thu thập");
   return data;
 }

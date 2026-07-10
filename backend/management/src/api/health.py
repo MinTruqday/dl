@@ -20,7 +20,7 @@ router = APIRouter(route_class=LoggingRoute, prefix="/van-hanh")
 async def get_system_metrics(db=Depends(get_db)):
     return APIResponse(
         data=await TelemetryService.get_system_stats(),
-        message="Trích xuất dữ liệu giám sát hoạt động thành công",
+        message="Trích xuất dữ liệu giám sát hoạt động hoàn tất",
     )
 
 @router.get(
@@ -31,7 +31,7 @@ async def get_system_metrics(db=Depends(get_db)):
 async def get_maintenance_status(db=Depends(get_db)):
     return APIResponse(
         data=await HealthService.get_maintenance_mode(),
-        message="Trích xuất trạng thái bảo trì hệ thống thành công",
+        message="Trích xuất trạng thái bảo trì hệ thống hoàn tất",
     )
 
 @router.post(
@@ -42,7 +42,7 @@ async def get_maintenance_status(db=Depends(get_db)):
 async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(
         data=await HealthService.toggle_maintenance_mode(enabled),
-        message="Cập nhật cấu hình bảo trì hệ thống thành công",
+        message="Cập nhật cấu hình bảo trì hệ thống hoàn tất",
     )
 
 @router.post(
@@ -63,7 +63,7 @@ async def trigger_backup(db=Depends(get_db)):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_system_config(db=Depends(get_db)):
-    return APIResponse(data={}, message="Trích xuất cấu hình hệ thống thành công")
+    return APIResponse(data={}, message="Trích xuất cấu hình hệ thống hoàn tất")
 
 @router.get(
     "/tinh-trang",
@@ -73,7 +73,7 @@ async def get_system_config(db=Depends(get_db)):
 async def get_system_health(db=Depends(get_db)):
     return APIResponse(
         data=await HealthService.get_system_health(),
-        message="Trích xuất báo cáo tình trạng hệ thống thành công",
+        message="Trích xuất báo cáo tình trạng hệ thống hoàn tất",
     )
 
 @router.get(
@@ -84,7 +84,7 @@ async def get_system_health(db=Depends(get_db)):
 async def get_admin_reports(db=Depends(get_db)):
     return APIResponse(
         data=await AccountService.get_report_queue(status_filter=None),
-        message="Trích xuất danh sách báo cáo vi phạm thành công",
+        message="Trích xuất danh sách báo cáo vi phạm hoàn tất",
     )
 
 @router.post(
@@ -99,7 +99,7 @@ async def shadowban_user(
         data=await HealthService.bulk_update_shadowban(
             payload.user_ids, payload.status, current_user
         ),
-        message="Cập nhật quyền hiển thị nội dung thành công",
+        message="Cập nhật quyền hiển thị nội dung hoàn tất",
     )
 
 @router.post(
@@ -114,7 +114,7 @@ async def verify_kyc(
         data=await HealthService.bulk_verify_kyc(
             payload.user_ids, payload.status, current_user
         ),
-        message="Cập nhật trạng thái hồ sơ xác minh danh tính thành công",
+        message="Cập nhật trạng thái hồ sơ xác minh danh tính hoàn tất",
     )
 
 @router.get(
@@ -125,5 +125,5 @@ async def verify_kyc(
 async def get_minio_stats(db=Depends(get_db)):
     return APIResponse(
         data=await HealthService.get_minio_stats(),
-        message="Trích xuất thống kê sử dụng không gian lưu trữ thành công",
+        message="Trích xuất thống kê sử dụng không gian lưu trữ hoàn tất",
     )

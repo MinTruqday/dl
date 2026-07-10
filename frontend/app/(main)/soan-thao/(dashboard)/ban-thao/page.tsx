@@ -30,7 +30,7 @@ export default function DraftsPage() {
       const list = data.data || data || [];
       setDrafts(list.filter((d: any) => d.status === "draft"));
     } catch {
-      showToast("Không thể tải danh sách bản nháp", "error");
+      showToast("Lỗi trích xuất danh sách bản thảo", "error");
     } finally {
       setLoading(false);
     }

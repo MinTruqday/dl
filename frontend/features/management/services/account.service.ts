@@ -8,7 +8,7 @@ export async function getMyProfileAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thông tin hồ sơ");
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất thông tin định danh cá nhân");
   return data;
 }
 
@@ -26,7 +26,7 @@ export async function updateMyProfileAPI(data: {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Cập nhật hồ sơ thất bại");
+  if (!res.ok) throw new Error(result.message || "Lỗi lưu trữ dữ liệu hồ sơ cá nhân");
   return result;
 }
 
@@ -36,7 +36,7 @@ export async function getUserProfileAPI(slug: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải thông tin thành viên");
+    throw new Error(data.message || "Lỗi trích xuất hồ sơ thành viên hệ thống");
   return data;
 }
 

@@ -41,7 +41,7 @@ async def sync_keystroke_buffer(
         "data": await CompositionService.sync_keystroke_buffer(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Thực hiện đồng bộ hóa dữ liệu phiên bản chỉnh sửa thành công",
+        "message": "Thực hiện đồng bộ hóa dữ liệu phiên bản chỉnh sửa hoàn tất",
         "status": 200,
     }
 
@@ -55,7 +55,7 @@ async def add_inline_suggestion(
         "data": await CompositionService.add_inline_suggestion(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Thực hiện ghi nhận thông tin đề xuất chỉnh sửa thành công",
+        "message": "Thực hiện ghi nhận thông tin đề xuất chỉnh sửa hoàn tất",
         "status": 201,
     }
 
@@ -69,7 +69,7 @@ async def resolve_suggestion(
         "data": await CompositionService.resolve_suggestion(
             suggestion_id, payload.model_dump(), current_user
         ),
-        "message": "Thực hiện xử lý đề xuất chỉnh sửa thành công",
+        "message": "Thực hiện xử lý đề xuất chỉnh sửa hoàn tất",
         "status": 200,
     }
 
@@ -81,7 +81,7 @@ async def sync_pomodoro_session(
         "data": await CompositionService.sync_pomodoro_session(
             payload.model_dump(), current_user
         ),
-        "message": "Đồng bộ dữ liệu thời gian phiên tập trung (Pomodoro) thành công",
+        "message": "Đồng bộ dữ liệu thời gian phiên tập trung (Pomodoro) hoàn tất",
         "status": 200,
     }
 
@@ -93,7 +93,7 @@ async def auto_save_draft(
         "data": await CompositionService.auto_save_draft(
             document_id, payload.content, current_user
         ),
-        "message": "Thực hiện thao tác lưu tự động bản nháp thành công",
+        "message": "Thực hiện thao tác lưu tự động bản nháp hoàn tất",
         "status": 200,
     }
 
@@ -101,7 +101,7 @@ async def auto_save_draft(
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await CompositionService.submit_for_review(document_id, current_user),
-        "message": "Đưa tài liệu vào hàng đợi xét duyệt thành công",
+        "message": "Đưa tài liệu vào hàng đợi xét duyệt hoàn tất",
         "status": 201,
     }
 
@@ -119,7 +119,7 @@ async def global_find_replace(
             payload.match_case,
             current_user,
         ),
-        "message": "Thao tác tìm kiếm và thay thế thành công",
+        "message": "Thao tác tìm kiếm và thay thế hoàn tất",
         "status": 200,
     }
 
@@ -133,7 +133,7 @@ async def add_inline_comment(
         "data": await CompositionService.add_inline_comment(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Thực hiện thêm mới bình luận theo ngữ cảnh thành công",
+        "message": "Thực hiện thêm mới bình luận theo ngữ cảnh hoàn tất",
         "status": 200,
     }
 
@@ -141,7 +141,7 @@ async def add_inline_comment(
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await CompositionService.get_inline_comments(document_id, current_user),
-        "message": "Truy xuất danh sách bình luận trực tiếp thành công",
+        "message": "Trích xuất danh sách bình luận trực tiếp hoàn tất",
         "status": 200,
     }
 
@@ -149,7 +149,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await CompositionService.resolve_comment(comment_id, current_user),
-        "message": "Thực hiện đánh dấu giải quyết bình luận thành công",
+        "message": "Thực hiện đánh dấu giải quyết bình luận hoàn tất",
         "status": 200,
     }
 
@@ -163,6 +163,6 @@ async def get_version_diff(
         "data": await CompositionService.get_version_diff(
             document_id, payload.version_id_a, payload.version_id_b, current_user
         ),
-        "message": "Phân tích so sánh các phiên bản tài liệu thành công",
+        "message": "Phân tích so sánh các phiên bản tài liệu hoàn tất",
         "status": 200,
     }

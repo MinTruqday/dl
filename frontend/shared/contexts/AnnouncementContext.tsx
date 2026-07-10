@@ -52,7 +52,7 @@ export function AnnouncementProvider({
       if (!Array.isArray(arr)) arr = [];
       setAnnouncements(arr);
     } catch (e) {
-      console.error(e);
+      console.error("Error fetching global announcements:", e);
     }
   }, [user]);
 
@@ -63,7 +63,7 @@ export function AnnouncementProvider({
         prev.map((n) => (n._id === id ? { ...n, is_read: true } : n)),
       );
     } catch (e) {
-      console.error(e);
+      console.error("Error marking announcement as read:", e);
     }
   }, []);
 

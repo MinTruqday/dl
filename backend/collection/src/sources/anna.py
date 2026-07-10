@@ -335,7 +335,7 @@ class AnnaSource:
             metadata = {
                 "title": title,
                 "slug": slug,
-                "description": "Trích xuất tự động thành công",
+                "description": "Trích xuất tự động hoàn tất",
                 "file_url": minio_url,
                 "pdf_url": minio_url if ext.lower() == "pdf" else None,
                 "tags": ["AnnaSource's Archive", payload.get("author", "Unknown")],

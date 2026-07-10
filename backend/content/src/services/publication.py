@@ -36,7 +36,7 @@ class PublicationService:
             },
         )
         logger.info("Document SEO metadata updated successfully")
-        return {"message": "Cập nhật dữ liệu SEO và thẻ phân loại thành công"}
+        return {"message": "Cập nhật dữ liệu SEO và thẻ phân loại hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -85,7 +85,7 @@ class PublicationService:
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at) if isinstance(publish_at, str) else publish_at}},
         )
         logger.info("Document publication schedule configured successfully")
-        return {"message": "Thiết lập lịch trình xuất bản tự động thành công"}
+        return {"message": "Thiết lập lịch trình xuất bản tự động hoàn tất"}
 
     @staticmethod
     @log_logic_execution

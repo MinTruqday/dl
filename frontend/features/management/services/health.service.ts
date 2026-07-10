@@ -5,7 +5,7 @@ import {
 
 export async function getAuthorApplicationsAPI(status: string = "PENDING") {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(
     `${API_URL}/nguoi-dung/don-dang-ky/tac-gia?status=${status}`,
     {
@@ -14,7 +14,7 @@ export async function getAuthorApplicationsAPI(status: string = "PENDING") {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách đơn ứng tuyển");
+    throw new Error(data.message || "Lỗi trích xuất danh sách hồ sơ đăng ký tác giả");
   return data;
 }
 
@@ -24,7 +24,7 @@ export async function reviewAuthorApplicationAPI(
   reason: string,
 ) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(
     `${API_URL}/nguoi-dung/don-dang-ky/tac-gia/${applicationId}/xet-duyet`,
     {
@@ -37,25 +37,25 @@ export async function reviewAuthorApplicationAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Thao tác xử lý hồ sơ thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái xét duyệt hồ sơ");
   return data;
 }
 
 export async function getAdminConfigAPI() {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/van-hanh/cai-dat`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải cấu hình hệ thống");
+    throw new Error(data.message || "Lỗi trích xuất siêu dữ liệu cấu hình hệ thống");
   return data;
 }
 
 export async function updateAdminConfigAPI(config: any) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/van-hanh/cai-dat`, {
     method: "PUT",
     headers: {
@@ -66,37 +66,37 @@ export async function updateAdminConfigAPI(config: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể cập nhật cấu hình hệ thống");
+    throw new Error(data.message || "Lỗi lưu trữ tham số cấu hình hệ thống");
   return data;
 }
 
 export async function getSystemHealthAPI() {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/van-hanh/tinh-trang`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải sức khỏe hệ thống");
+    throw new Error(data.message || "Lỗi giám sát trạng thái sức khỏe hệ thống");
   return data;
 }
 
 export async function getMaintenanceModeAPI() {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/van-hanh/bao-tri`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải trạng thái bảo trì");
+    throw new Error(data.message || "Lỗi trích xuất trạng thái bảo trì hệ thống");
   return data;
 }
 
 export async function toggleMaintenanceModeAPI(enabled: boolean) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/van-hanh/bao-tri?enabled=${enabled}`, {
     method: "POST",
     headers: {
@@ -105,13 +105,13 @@ export async function toggleMaintenanceModeAPI(enabled: boolean) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Thao tác chuyển đổi bảo trì thất bại");
+    throw new Error(data.message || "Lỗi thay đổi trạng thái bảo trì hệ thống");
   return data;
 }
 
 export async function triggerBackupAPI() {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/van-hanh/sao-luu`, {
     method: "POST",
     headers: {
@@ -119,30 +119,30 @@ export async function triggerBackupAPI() {
     },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Khởi tạo sao lưu thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo tiến trình sao lưu dữ liệu");
   return data;
 }
 
 export async function getAdminReportsAPI() {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/van-hanh/bao-cao`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách báo cáo");
+    throw new Error(data.message || "Lỗi trích xuất danh sách báo cáo quản trị");
   return data;
 }
 
 export async function getMinioStatsAPI() {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/van-hanh/luu-tru/thong-ke`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải thông số lưu trữ MinIO");
+    throw new Error(data.message || "Lỗi trích xuất thông số lưu trữ hệ thống MinIO");
   return data;
 }

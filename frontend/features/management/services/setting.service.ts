@@ -5,19 +5,19 @@ import {
 
 export async function getPrivacySettingsAPI() {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải cài đặt riêng tư");
+    throw new Error(data.message || "Lỗi trích xuất cấu hình quyền riêng tư");
   return data;
 }
 
 export async function updatePrivacySettingsAPI(settings: any) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: {
@@ -28,13 +28,13 @@ export async function updatePrivacySettingsAPI(settings: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Cập nhật quyền riêng tư thất bại");
+    throw new Error(data.message || "Lỗi cập nhật cấu hình quyền riêng tư");
   return data;
 }
 
 export async function updateTypographyAPI(typography: any) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/doc-hieu/giao-dien`, {
     method: "PUT",
     headers: {
@@ -44,13 +44,13 @@ export async function updateTypographyAPI(typography: any) {
     body: JSON.stringify(typography),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật hiển thị thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật cấu hình giao diện hiển thị");
   return data;
 }
 
 export async function updateGeneralSettingsAPI(settings: any) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: {
@@ -61,7 +61,7 @@ export async function updateGeneralSettingsAPI(settings: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Cập nhật cài đặt chung thất bại");
+    throw new Error(data.message || "Lỗi cập nhật cấu hình hệ thống");
   return data;
 }
 

@@ -12,7 +12,7 @@ async def google_login():
     auth_url = await GoogleService.get_google_auth_url()
     return APIResponse(
         data={"url": auth_url},
-        message="Khởi tạo liên kết cổng xác thực thành công",
+        message="Khởi tạo liên kết cổng xác thực hoàn tất",
         status=200,
     )
 
@@ -21,6 +21,6 @@ async def google_callback(code: str, request: Request):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await GoogleService.handle_google_callback(code, client_ip),
-        message="Xác thực tài khoản thông qua liên kết ngoài thành công",
+        message="Xác thực tài khoản thông qua liên kết ngoài hoàn tất",
         status=200,
     )

@@ -34,7 +34,7 @@ async def upload_image(
     await validate_svg(file)
     return APIResponse(
         data=await UploadService.upload_image(file, owner_id=current_user.id, is_system=True),
-        message="Tải lên hình ảnh thành công",
+        message="Truyền tải hình ảnh hoàn tất",
         status=201,
     )
 
@@ -46,7 +46,7 @@ async def upload_document(
 ) -> Any:
     return APIResponse(
         data=await UploadService.upload_document(file, owner_id=current_user.id, is_system=True),
-        message="Tải lên và lưu trữ tài liệu thành công",
+        message="Truyền tải và lưu trữ tài liệu hoàn tất",
         status=201,
     )
 
@@ -68,7 +68,7 @@ async def upload_asset(
         )
     return APIResponse(
         data=await UploadService.upload_document(file, owner_id=current_user.id, is_system=False),
-        message="Tải lên tệp tin thành công",
+        message="Truyền tải tệp tin hoàn tất",
         status=201,
     )
 
@@ -119,7 +119,7 @@ async def upload_chat_attachment(
         })
         return APIResponse(
             data={"url": file_url, "filename": file.filename, "expires_in_days": 14},
-            message="Tải lên tệp đính kèm tạm thời thành công",
+            message="Truyền tải tệp đính kèm tạm thời hoàn tất",
             status=201
         )
     else:
@@ -135,7 +135,7 @@ async def upload_chat_attachment(
         
         return APIResponse(
             data={"url": file_url, "filename": file.filename},
-            message="Tải lên tệp đính kèm lưu trữ thành công",
+            message="Truyền tải tệp đính kèm lưu trữ hoàn tất",
             status=201
         )
 
@@ -174,7 +174,7 @@ async def get_presigned_url_for_upload(
     
     return APIResponse(
         data=result,
-        message="Tạo đường dẫn tải lên bảo mật thành công",
+        message="Khởi tạo đường dẫn truyền tải bảo mật hoàn tất",
         status=200
     )
 
@@ -207,7 +207,7 @@ async def confirm_upload(
         })
         return APIResponse(
             data={"url": req.file_path, "filename": req.filename, "expires_in_days": 14},
-            message="Xác nhận tải lên tệp đính kèm tạm thời thành công",
+            message="Xác thực truyền tải tệp đính kèm tạm thời hoàn tất",
             status=201
         )
     else:
@@ -230,7 +230,7 @@ async def confirm_upload(
                 
         return APIResponse(
             data={"url": req.file_path, "filename": req.filename},
-            message="Xác nhận tải lên tệp đính kèm lưu trữ thành công",
+            message="Xác thực truyền tải tệp đính kèm lưu trữ hoàn tất",
             status=201
         )
 
@@ -290,10 +290,10 @@ async def upload_chunk(
         shutil.rmtree(chunk_dir)
         os.remove(final_path)
         return APIResponse(
-            data=result, message="Tải lên tệp tin thành công", status=201
+            data=result, message="Truyền tải tệp tin hoàn tất", status=201
         )
     return APIResponse(
         data={"uploaded": chunk_index},
-        message="Tải lên phân đoạn tệp tạm thời thành công",
+        message="Truyền tải phân đoạn dữ liệu tạm thời hoàn tất",
         status=200,
     )

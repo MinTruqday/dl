@@ -68,7 +68,7 @@ export default function WalletPage() {
       const txList = historyRes.data ?? historyRes ?? [];
       setHistory(Array.isArray(txList) ? txList : []);
     } catch (error) {
-      showToast("Lỗi tải dữ liệu ví", "error");
+      showToast("Lỗi trích xuất dữ liệu ví điện tử", "error");
     } finally {
       setIsLoading(false);
       requestAnimationFrame(() => setVisible(true));
@@ -81,7 +81,7 @@ export default function WalletPage() {
 
   const handleTopup = async () => {
     if (topupAmount < 10000)
-      return showToast("Số tiền tối thiểu là 10.000 VNĐ", "error");
+      return showToast("Mức nạp tối thiểu là 10.000 VNĐ", "error");
     setTopupLoading(true);
     try {
       const res = await createDepositLinkAPI(topupAmount);
@@ -90,11 +90,11 @@ export default function WalletPage() {
         setShowTopupModal(false);
         window.location.href = url;
       } else {
-        showToast("Không nhận được link thanh toán từ cổng", "error");
+        showToast("Lỗi kết nối đến cổng thanh toán", "error");
         console.error("Deposit response:", res);
       }
     } catch (e: any) {
-      showToast(e.message || "Lỗi tạo liên kết nạp tiền", "error");
+      showToast(e.message || "Lỗi khởi tạo giao dịch nạp tiền", "error");
     } finally {
       setTopupLoading(false);
     }
@@ -116,19 +116,19 @@ export default function WalletPage() {
   const handleWithdrawal = async () => {
     const amount = parseInt(withdrawAmount);
     if (!amount || amount < 50)
-      return showToast("Tối thiểu 50 dl (50.000 VNĐ)", "error");
+      return showToast("Mức rút tối thiểu là 50 dl", "error");
     if (amount > balance)
-      return showToast("Số dư không đủ", "error");
-    if (!bankName.trim()) return showToast("Nhập tên ngân hàng", "error");
-    if (!bankAccount.trim()) return showToast("Nhập số tài khoản", "error");
-    if (!accountHolder.trim()) return showToast("Nhập tên chủ tài khoản", "error");
+      return showToast("Số dư trong ví không đủ để thực hiện giao dịch", "error");
+    if (!bankName.trim()) return showToast("Tên ngân hàng không được để trống", "error");
+    if (!bankAccount.trim()) return showToast("Số tài khoản không được để trống", "error");
+    if (!accountHolder.trim()) return showToast("Tên chủ tài khoản không được để trống", "error");
 
     const bankInfo = `${bankName.trim()} | ${bankAccount.trim()} | ${accountHolder.trim()}`;
 
     setWithdrawLoading(true);
     try {
       await requestWithdrawalAPI(amount, bankInfo);
-      showToast("Đã gửi yêu cầu rút tiền, chờ admin xác nhận", "success");
+      showToast("Khởi tạo yêu cầu rút tiền hoàn tất", "success");
       setWithdrawAmount("");
       setBankName("");
       setBankAccount("");
@@ -136,7 +136,7 @@ export default function WalletPage() {
       setShowWithdrawModal(false);
       fetchWalletData();
     } catch (e: any) {
-      showToast(e.message || "Rút tiền thất bại", "error");
+      showToast(e.message || "Lỗi thực thi giao dịch rút tiền", "error");
     } finally {
       setWithdrawLoading(false);
     }

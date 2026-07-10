@@ -41,7 +41,7 @@ def compile_document(payload: dict):
     from src.jobs.task import compile_document_tectonic
 
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
-    return {"message": "Đã thêm yêu cầu biên dịch tài liệu vào hàng đợi xử lý thành công", "task_id": task.id}
+    return {"message": "Đã thêm yêu cầu biên dịch tài liệu vào hàng đợi xử lý hoàn tất", "task_id": task.id}
 
 @app.on_event("shutdown")
 async def shutdown_event():

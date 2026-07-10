@@ -21,7 +21,7 @@ async def save_version(
         data=await VersionService.save_version(
             document_id, version_note, current_user
         ),
-        message="Lưu phiên bản lịch sử tài liệu thành công",
+        message="Lưu phiên bản lịch sử tài liệu hoàn tất",
         status=201,
     )
 
@@ -33,7 +33,7 @@ async def get_document_versions(
 ):
     return APIResponse(
         data=await VersionService.get_versions(document_id, current_user),
-        message="Lấy lịch sử phiên bản thành công",
+        message="Trích xuất lịch sử phiên bản hoàn tất",
     )
 
 @router.post("/{version_id}/khoi-phuc", response_model=APIResponse[Any])
@@ -44,5 +44,5 @@ async def restore_version(
 ):
     return APIResponse(
         data=await VersionService.restore_version(version_id, current_user),
-        message="Khôi phục phiên bản lịch sử thành công",
+        message="Khôi phục phiên bản lịch sử hoàn tất",
     )

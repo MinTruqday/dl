@@ -23,7 +23,7 @@ async def get_history(
         data=await ReadingService.get_reading_history(
             current_user, cursor, limit
         ),
-        message="Truy xuất dữ liệu lịch sử đọc thành công",
+        message="Trích xuất dữ liệu lịch sử đọc hoàn tất",
     )
 
 @router.post("/tien-do", response_model=APIResponse[Any])
@@ -34,7 +34,7 @@ async def update_progress(
 ):
     return APIResponse(
         data=await ReadingService.update_progress(data, current_user),
-        message="Đồng bộ hóa tiến trình đọc tài liệu thành công",
+        message="Đồng bộ hóa tiến trình đọc tài liệu hoàn tất",
     )
 
 @router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
@@ -48,7 +48,7 @@ async def search_in_document(
         data=await ReadingService.search_in_document(
             document_id, q, current_user
         ),
-        message="Thực hiện tìm kiếm nội dung trong tài liệu thành công",
+        message="Thực hiện tìm kiếm nội dung trong tài liệu hoàn tất",
     )
 
 @router.delete("/lich-su", response_model=APIResponse[Any])
@@ -68,7 +68,7 @@ async def delete_history_item(
 ):
     return APIResponse(
         data=await ReadingService.delete_history_item(document_id, current_user),
-        message="Xóa mục lịch sử đọc thành công",
+        message="Xóa mục lịch sử đọc hoàn tất",
     )
 
 import io
@@ -127,7 +127,7 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
                                     }
                                 )
                         return APIResponse(
-                            data=tree, message="Truy xuất cấu trúc tệp nén thành công"
+                            data=tree, message="Trích xuất cấu trúc tệp nén hoàn tất"
                         )
                 else:
                     return APIResponse(
@@ -164,7 +164,7 @@ async def get_zip_content(
                                 text = file_bytes.decode("utf-8")
                                 return APIResponse(
                                     data={"content": text, "type": "text"},
-                                    message="Trích xuất nội dung tệp tin thành công",
+                                    message="Trích xuất nội dung tệp tin hoàn tất",
                                 )
                             except UnicodeDecodeError:
                                 return APIResponse(

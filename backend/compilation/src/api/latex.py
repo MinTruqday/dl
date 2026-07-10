@@ -58,7 +58,7 @@ async def export_project_zip(req: CompileRequest):
 async def clean_temp_files(current_user: CurrentUser = Depends(get_current_user_optional)):
     if current_user and redis:
         await redis.delete(f"latex_draft:{current_user.id}")
-    return {"message": "Thực hiện thao tác dọn dẹp tập tin tạm thời thành công", "data": {}}
+    return {"message": "Thực hiện thao tác dọn dẹp tập tin tạm thời hoàn tất", "data": {}}
 
 @router.post("/tu-dong-luu")
 async def auto_save_latex(payload: dict, current_user: CurrentUser = Depends(get_current_user)):
@@ -66,12 +66,12 @@ async def auto_save_latex(payload: dict, current_user: CurrentUser = Depends(get
         content = payload.get("content", "")
         if content:
             await redis.setex(f"latex_draft:{current_user.id}", 604800, content)
-    return {"message": "Thực hiện thao tác lưu tự động bản nháp thành công", "data": {}}
+    return {"message": "Thực hiện thao tác lưu tự động bản nháp hoàn tất", "data": {}}
 
 @router.get("/ban-nhap")
 async def get_latex_draft(current_user: CurrentUser = Depends(get_current_user)):
     if redis:
         draft = await redis.get(f"latex_draft:{current_user.id}")
         if draft:
-            return {"message": "Truy xuất dữ liệu bản nháp thành công", "data": {"content": draft.decode('utf-8') if isinstance(draft, bytes) else draft}}
-    return {"message": "Thao tác thành công: Không tìm thấy dữ liệu bản nháp", "data": {"content": None}}
+            return {"message": "Trích xuất dữ liệu bản nháp hoàn tất", "data": {"content": draft.decode('utf-8') if isinstance(draft, bytes) else draft}}
+    return {"message": "Thao tác hoàn tất: Không tìm thấy dữ liệu bản nháp", "data": {"content": None}}

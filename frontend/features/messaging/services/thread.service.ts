@@ -5,13 +5,13 @@ import {
 
 export const getConversationsAPI = async () => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/cuoc-tro-chuyen`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách hội thoại");
+    throw new Error(data.message || "Lỗi truy xuất bộ sưu tập luồng hội thoại");
   return data;
 };
 
@@ -21,7 +21,7 @@ export const getMessagesAPI = async (
   cursor?: string,
 ) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   let url = `${API_URL}/tin-nhan/${otherUserId}?limit=${limit}`;
   if (cursor) {
     url += `&cursor=${cursor}`;
@@ -31,7 +31,7 @@ export const getMessagesAPI = async (
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải lịch sử tin nhắn");
+    throw new Error(data.message || "Lỗi truy xuất dữ liệu lịch sử hội thoại");
   return data;
 };
 
@@ -46,7 +46,7 @@ export const sendMessageAPI = async (
   documentName?: string,
 ) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/`, {
     method: "POST",
     headers: {
@@ -65,25 +65,25 @@ export const sendMessageAPI = async (
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Gửi tin nhắn thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thực thi luồng chuyển tiếp dữ liệu thông điệp");
   return data;
 };
 
 export const togglePinAPI = async (messageId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${messageId}/ghim`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thực hiện ghim");
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái dữ liệu ghim");
   return data;
 };
 
 export const editMessageAPI = async (messageId: string, content: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${messageId}/chinh-sua`, {
     method: "PUT",
     headers: {
@@ -93,49 +93,49 @@ export const editMessageAPI = async (messageId: string, content: string) => {
     body: JSON.stringify({ content }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể chỉnh sửa tin nhắn");
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật cấu trúc dữ liệu thông điệp");
   return data;
 };
 
 export const recallMessageAPI = async (messageId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${messageId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thu hồi tin nhắn");
+  if (!res.ok) throw new Error(data.message || "Lỗi hoàn tác trạng thái dữ liệu thông điệp");
   return data;
 };
 
 export const deleteMessageForMeAPI = async (messageId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${messageId}/xoa-phia-toi`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xóa tin nhắn");
+  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ bản ghi dữ liệu cục bộ");
   return data;
 };
 
 export const restoreMessageAPI = async (messageId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${messageId}/khoi-phuc`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể khôi phục tin nhắn");
+  if (!res.ok) throw new Error(data.message || "Lỗi phục hồi bản ghi dữ liệu thông điệp");
   return data;
 };
 
 export const searchMessagesAPI = async (otherUserId: string, q: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(
     `${API_URL}/tin-nhan/${otherUserId}/tim-kiem?q=${encodeURIComponent(q)}`,
     {
@@ -143,13 +143,13 @@ export const searchMessagesAPI = async (otherUserId: string, q: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi tìm kiếm tin nhắn");
+  if (!res.ok) throw new Error(data.message || "Lỗi truy vấn cơ sở dữ liệu thông điệp");
   return data;
 };
 
 export const addReactionAPI = async (messageId: string, reaction: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${messageId}/bay-to-cam-xuc`, {
     method: "POST",
     headers: {
@@ -160,19 +160,19 @@ export const addReactionAPI = async (messageId: string, reaction: string) => {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể thực hiện bày tỏ cảm xúc");
+    throw new Error(data.message || "Lỗi cập nhật trường dữ liệu tương tác biểu tượng");
   return data;
 };
 
 export const markAsReadAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/doc-hieu`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể đánh dấu đã xem");
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái đọc của người dùng");
   return data;
 };
 
@@ -181,7 +181,7 @@ export const shareDocumentAPI = async (
   documentId: string,
 ) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(
     `${API_URL}/tin-nhan/${receiverId}/tai-lieu/chia-se`,
     {
@@ -194,13 +194,13 @@ export const shareDocumentAPI = async (
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Chia sẻ tài liệu thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thiết lập quyền truy cập tài liệu liên kết");
   return data;
 };
 
 export const getSharedAttachmentsAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(
     `${API_URL}/tin-nhan/${otherUserId}/tai-lieu/da-chia-se`,
     {
@@ -208,37 +208,37 @@ export const getSharedAttachmentsAPI = async (otherUserId: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải tệp tin chia sẻ");
+  if (!res.ok) throw new Error(data.message || "Lỗi truy xuất danh sách tập tin đính kèm chia sẻ");
   return data;
 };
 
 export const blockUserAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/chan`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Chặn người dùng thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thiết lập quy tắc hạn chế người dùng");
   return data;
 };
 
 export const unblockUserAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/bo-chan`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Bỏ chặn thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ quy tắc hạn chế người dùng");
   return data;
 };
 
 export const getBlockedStatusAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(
     `${API_URL}/tin-nhan/${otherUserId}/trang-thai-chan`,
     {
@@ -246,13 +246,13 @@ export const getBlockedStatusAPI = async (otherUserId: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi tải trạng thái chặn");
+  if (!res.ok) throw new Error(data.message || "Lỗi truy xuất trạng thái quy tắc hạn chế");
   return data;
 };
 
 export const togglePinConversationAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(
     `${API_URL}/tin-nhan/cuoc-tro-chuyen/${otherUserId}/ghim`,
     {
@@ -261,7 +261,7 @@ export const togglePinConversationAPI = async (otherUserId: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể ghim hội thoại");
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái ghim luồng hội thoại");
   return data;
 };
 
@@ -270,7 +270,7 @@ export const translateMessageAPI = async (
   targetLang: string,
 ) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${messageId}/dich-thuat`, {
     method: "POST",
     headers: {
@@ -280,7 +280,7 @@ export const translateMessageAPI = async (
     body: JSON.stringify({ target_lang: targetLang }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi dịch tin nhắn");
+  if (!res.ok) throw new Error(data.message || "Lỗi thực thi luồng phiên dịch thông điệp");
   return data;
 };
 
@@ -289,7 +289,7 @@ export const createGroupAPI = async (
   memberIds: string[],
 ) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/nhom`, {
     method: "POST",
     headers: {
@@ -299,13 +299,13 @@ export const createGroupAPI = async (
     body: JSON.stringify({ group_name: groupName, member_ids: memberIds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo nhóm thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo luồng hội thoại nhóm");
   return data;
 };
 
 export const saveDraftAPI = async (otherUserId: string, content: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/ban-nhap`, {
     method: "POST",
     headers: {
@@ -315,18 +315,18 @@ export const saveDraftAPI = async (otherUserId: string, content: string) => {
     body: JSON.stringify({ content }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lưu tin nhắn nháp thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi lưu trữ dữ liệu thông điệp tạm thời");
   return data;
 };
 
 export const getDraftAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/ban-nhap`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tải tin nhắn nháp thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi truy xuất bản ghi thông điệp tạm thời");
   return data;
 };
 
@@ -335,7 +335,7 @@ export const toggleSelfDestructAPI = async (
   seconds: number,
 ) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/tu-huy`, {
     method: "POST",
     headers: {
@@ -345,36 +345,36 @@ export const toggleSelfDestructAPI = async (
     body: JSON.stringify({ seconds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật tự hủy thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thiết lập bộ đếm vòng đời thông điệp");
   return data;
 };
 
 export const toggleMuteAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/tat-thong-bao`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tắt âm hội thoại thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thay đổi trạng thái cấu hình thông báo luồng");
   return data;
 };
 
 export const getConversationSettingsAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/cai-dat`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lấy cài đặt thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi truy xuất bộ thông số cấu hình luồng");
   return data;
 };
 
 export const deleteConversationAPI = async (otherUserId: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
   const res = await fetch(
     `${API_URL}/tin-nhan/cuoc-tro-chuyen/${otherUserId}`,
     {
@@ -383,6 +383,6 @@ export const deleteConversationAPI = async (otherUserId: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xóa cuộc hội thoại thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ toàn bộ dữ liệu luồng hội thoại");
   return data;
 };

@@ -134,7 +134,7 @@ function StudioContent() {
         })
         .catch((err: any) =>
           showToast(
-            "Lỗi biên dịch: " + (err.message || "Lỗi không xác định"),
+            "Lỗi biên dịch mã nguồn: " + (err.message || "Lỗi hệ thống không xác định"),
             "error",
           ),
         )
@@ -155,7 +155,7 @@ function StudioContent() {
       if (list.length > 0 && !selectedDocumentId)
         setSelectedDocumentId(list[0]._id || list[0].id);
     } catch (err: any) {
-      showToast("Lỗi tải danh sách tài liệu", "error");
+      showToast("Lỗi đồng bộ danh sách tài liệu", "error");
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +168,7 @@ function StudioContent() {
       setContent(data.data?.content || data?.content || "");
       setStatusMsg("Đã tải xong");
     } catch (e: any) {
-      setStatusMsg("Lỗi tải bản nháp");
+      setStatusMsg("Lỗi trích xuất dữ liệu bản thảo");
     }
   }, [selectedDocumentId]);
 
@@ -183,7 +183,7 @@ function StudioContent() {
   useEffect(() => {
     if (!selectedDocumentId) return;
     const timer = setTimeout(async () => {
-      setStatusMsg("Đang lưu bản nháp...");
+      setStatusMsg("Đang lưu trữ bản thảo");
       try {
         await saveDocumentDraftAPI(
           selectedDocumentId,
@@ -193,7 +193,7 @@ function StudioContent() {
         setStatusMsg("Đã lưu bản nháp");
         setTimeout(() => setStatusMsg("Sẵn sàng"), 2000);
       } catch (err) {
-        setStatusMsg("Lỗi lưu bản thảo");
+        setStatusMsg("Lỗi lưu trữ dữ liệu bản thảo");
       }
     }, 5000);
     return () => clearTimeout(timer);
@@ -202,16 +202,16 @@ function StudioContent() {
   const handleSave = async () => {
     if (!selectedDocumentId) return;
     setIsSaving(true);
-    setStatusMsg("Đang lưu...");
+    setStatusMsg("Đang lưu trữ dữ liệu");
     try {
       await saveDocumentDraftAPI(
         selectedDocumentId,
         content,
         selectedDocument?.content_format || "json",
       );
-      showToast("Đã lưu bản nháp thành công", "success");
+      showToast("Lưu trữ bản thảo hoàn tất", "success");
     } catch (err: any) {
-      showToast("Không thể lưu bản nháp", "error");
+      showToast("Lỗi lưu trữ dữ liệu bản thảo", "error");
     } finally {
       setIsSaving(false);
       setStatusMsg("Sẵn sàng");
@@ -224,10 +224,10 @@ function StudioContent() {
     try {
       await compileDocumentAPI(selectedDocumentId);
       await publishDocumentAPI(selectedDocumentId);
-      showToast("Tài liệu đã được công bố", "success");
+      showToast("Xuất bản tài liệu hoàn tất", "success");
       fetchDocuments();
     } catch (err: any) {
-      showToast("Xuất bản thất bại", "error");
+      showToast("Lỗi khởi chạy tiến trình xuất bản", "error");
       setStatusMsg("Sẵn sàng");
     }
   };
@@ -235,7 +235,7 @@ function StudioContent() {
   const handleExportPDF = async () => {
     if (!selectedDocumentId || !content) return;
     setIsExporting(true);
-    setStatusMsg("Đang tạo PDF...");
+    setStatusMsg("Đang kết xuất PDF");
     try {
       let blob;
       if (selectedDocument?.content_format === "latex") {
@@ -252,9 +252,9 @@ function StudioContent() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      showToast("Tải PDF thành công", "success");
+      showToast("Kết xuất PDF hoàn tất", "success");
     } catch (e: any) {
-      showToast("Lỗi tạo PDF", "error");
+      showToast("Lỗi tiến trình kết xuất PDF", "error");
     } finally {
       setIsExporting(false);
       setStatusMsg("Sẵn sàng");
@@ -264,7 +264,7 @@ function StudioContent() {
   const handleExportDOCX = async () => {
     if (!selectedDocumentId || !content) return;
     setIsExporting(true);
-    setStatusMsg("Đang tạo DOCX...");
+    setStatusMsg("Đang kết xuất DOCX");
     try {
       let blob;
       if (selectedDocument?.content_format === "latex") {
@@ -280,9 +280,9 @@ function StudioContent() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      showToast("Tải DOCX thành công", "success");
+      showToast("Kết xuất Word hoàn tất", "success");
     } catch (e: any) {
-      showToast("Lỗi tạo DOCX", "error");
+      showToast("Lỗi tiến trình kết xuất Word", "error");
     } finally {
       setIsExporting(false);
       setStatusMsg("Sẵn sàng");
@@ -292,12 +292,12 @@ function StudioContent() {
   const handleExportDRM = async () => {
     if (!selectedDocumentId) return;
     setIsExporting(true);
-    setStatusMsg("Đang tạo tệp bảo mật...");
+    setStatusMsg("Đang kết xuất tệp bảo mật");
     try {
       const res = await fetch(`${API_URL}/ket-xuat/${selectedDocumentId}/drm`, {
         headers: getAuthHeaders(),
       });
-      if (!res.ok) throw new Error("Xuất DRM thất bại");
+      if (!res.ok) throw new Error("Lỗi kết xuất tài liệu định dạng mã hóa bảo mật");
       
       const contentDisposition = res.headers.get('content-disposition');
       let filename = `${selectedDocument?.title || "ban-thao"}.doclib`;
@@ -314,9 +314,9 @@ function StudioContent() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      showToast("Tải tệp bảo mật thành công", "success");
+      showToast("Kết xuất tài liệu bảo mật hoàn tất", "success");
     } catch (e: any) {
-      showToast("Lỗi tạo tệp bảo mật", "error");
+      showToast("Lỗi tiến trình kết xuất tài liệu bảo mật", "error");
     } finally {
       setIsExporting(false);
       setStatusMsg("Sẵn sàng");

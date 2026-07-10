@@ -33,7 +33,7 @@ class VerificationService:
             },
         )
         logger.info("Author privileges granted successfully")
-        return {"status": "success", "message": "Hệ thống đã cấp quyền tác giả cho tài khoản thành công"}
+        return {"status": "success", "message": "Hệ thống đã cấp quyền tác giả cho tài khoản hoàn tất"}
 
     @staticmethod
     @log_logic_execution

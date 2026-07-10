@@ -19,7 +19,7 @@ async def request_withdrawal(
 ):
     return APIResponse(
         data=await WithdrawalService.request_withdrawal(req.model_dump(), current_user),
-        message="Gửi yêu cầu khởi tạo giao dịch rút tiền thành công",
+        message="Gửi yêu cầu khởi tạo giao dịch rút tiền hoàn tất",
         status=201,
     )
 
@@ -33,7 +33,7 @@ async def get_withdrawal_queue(
 ):
     return APIResponse(
         data=await WithdrawalService.get_withdrawal_queue(status, limit),
-        message="Truy xuất danh sách giao dịch rút tiền thành công",
+        message="Trích xuất danh sách giao dịch rút tiền hoàn tất",
         status=200,
     )
 
@@ -53,6 +53,6 @@ async def verify_withdrawal(
         data=await WithdrawalService.verify_withdrawal(
             withdrawal_id, action, reason, current_user
         ),
-        message="Xử lý xác minh yêu cầu rút tiền thành công",
+        message="Xử lý xác minh yêu cầu rút tiền hoàn tất",
         status=200,
     )

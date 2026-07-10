@@ -23,7 +23,7 @@ class BookmarkService:
         bookmarks = profile.get("bookmarks", []) if profile else []
         if document_id in bookmarks:
             bookmarks.remove(document_id)
-            message = "Xóa tài liệu khỏi danh sách lưu trữ cá nhân thành công"
+            message = "Xóa tài liệu khỏi danh sách lưu trữ cá nhân hoàn tất"
             is_bookmarked = False
             await ProfileRepository.update_profile(
                 user_id, {
@@ -33,7 +33,7 @@ class BookmarkService:
             )
         else:
             bookmarks.append(document_id)
-            message = "Thêm tài liệu vào danh sách lưu trữ cá nhân thành công"
+            message = "Thêm tài liệu vào danh sách lưu trữ cá nhân hoàn tất"
             is_bookmarked = True
             await ProfileRepository.update_profile(
                 user_id, {
@@ -133,7 +133,7 @@ class BookmarkService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không tìm thấy thư mục dấu trang yêu cầu"
             )
-        return {"message": "Cập nhật thông tin thư mục dấu trang thành công"}
+        return {"message": "Cập nhật thông tin thư mục dấu trang hoàn tất"}
 
     @staticmethod
     @log_logic_execution

@@ -28,7 +28,7 @@ async def share_document(
             message="Không tìm thấy tài liệu trong kho lưu trữ", status=404
         )
     await publish_personal_message({"type": "new_message", "data": result}, receiver_id)
-    return APIResponse(data=result, message="Chia sẻ tài liệu thành công", status=201)
+    return APIResponse(data=result, message="Chia sẻ tài liệu hoàn tất", status=201)
 
 @router.get("/{other_user_id}/tai-lieu/da-chia-se", response_model=APIResponse[Any])
 async def get_shared_attachments(
@@ -36,6 +36,6 @@ async def get_shared_attachments(
 ):
     return APIResponse(
         data=await AttachmentService.get_shared_attachments(other_user_id, current_user),
-        message="Lấy danh sách tệp đính kèm thành công",
+        message="Trích xuất danh sách tệp đính kèm hoàn tất",
     )
 

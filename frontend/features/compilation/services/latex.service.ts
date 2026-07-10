@@ -10,7 +10,7 @@ export async function cleanTempFilesAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Dọn dẹp tập tin tạm thời thất bại");
+    throw new Error(data.message || "Lỗi giải phóng bộ nhớ đệm tập tin tạm");
   return data;
 }
 
@@ -21,7 +21,7 @@ export async function cloudAutoSaveAPI(documentId: string, content: string) {
     body: JSON.stringify({ document_id: documentId, content }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tự động lưu mã nguồn thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi đồng bộ hóa dữ liệu mã nguồn tự động");
   return data;
 }
 
@@ -31,7 +31,7 @@ export async function getLatexDraftAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lấy bản nháp thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi truy xuất bộ đệm dữ liệu nháp");
   return data;
 }
 
@@ -46,7 +46,7 @@ export async function compileLatexPreviewAPI(
   });
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.message || "Biên dịch LaTeX thất bại");
+    throw new Error(data.message || "Lỗi thực thi tiến trình kết xuất LaTeX");
   }
   return res.blob();
 }
@@ -59,7 +59,7 @@ export async function formatLatexAPI(content: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Định dạng mã nguồn LaTeX thất bại");
+    throw new Error(data.message || "Lỗi thực thi tiến trình chuẩn hóa cú pháp LaTeX");
   return data;
 }
 
@@ -71,7 +71,7 @@ export async function exportLatexAPI(content: string, format: string = "docx") {
   });
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.message || "Xuất tài liệu thất bại");
+    throw new Error(data.message || "Lỗi khởi tạo luồng kết xuất tài liệu đích");
   }
   return res.blob();
 }
@@ -84,7 +84,7 @@ export async function exportProjectZipAPI(content: string) {
   });
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.message || "Xuất tệp nén dự án thất bại");
+    throw new Error(data.message || "Lỗi khởi tạo luồng nén và kết xuất dự án");
   }
   return res.blob();
 }

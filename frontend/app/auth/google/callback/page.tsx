@@ -33,10 +33,10 @@ function GoogleCallbackContent() {
               router.push("/");
             }
           } else {
-            setError(data.message || authData.detail || "Xác thực thất bại.");
+            setError(data.message || authData.detail || "Xác thực lỗi");
           }
         } catch (err) {
-          setError("Lỗi kết nối với hệ thống.");
+          setError("Lỗi kết nối hệ thống dịch vụ");
         }
       };
       handleCallback();

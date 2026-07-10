@@ -157,7 +157,7 @@ class SessionService:
         user_id_str = str(current_user.id)
         await IdentityRepository.revoke_all_sessions(user_id_str)
         logger.info("Revocation of all active user sessions completed successfully")
-        return {"message": "Thực hiện đăng xuất khỏi tất cả các thiết bị thành công"}
+        return {"message": "Thực hiện đăng xuất khỏi tất cả các thiết bị hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -217,7 +217,7 @@ class SessionService:
             },
         )
         logger.info("User account password modification completed successfully")
-        return {"status": "ok", "message": "Thực hiện thay đổi mật khẩu tài khoản thành công"}
+        return {"status": "ok", "message": "Thực hiện thay đổi mật khẩu tài khoản hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -227,7 +227,7 @@ class SessionService:
             raise HTTPException(
                 status_code=400, detail="Mã xác minh bảo mật không hợp lệ hoặc đã quá hạn sử dụng"
             )
-        return {"status": "ok", "message": "Xác minh mã bảo mật thành công"}
+        return {"status": "ok", "message": "Xác thực mã bảo mật hoàn tất"}
 
     @staticmethod
     @log_logic_execution

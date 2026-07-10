@@ -131,7 +131,7 @@ export default class DocLibButton implements BlockTool {
 
     this.registButton.addEventListener("click", () => {
       if (!this.linkInput?.textContent || !this.textInput?.textContent) {
-        alert("Please enter button text and link");
+        alert("Lỗi thiếu hụt tham số cấu hình nhãn và đường dẫn liên kết");
         return;
       }
       this.data = {

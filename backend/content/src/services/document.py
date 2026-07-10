@@ -476,7 +476,7 @@ class DocumentService:
             )
 
         logger.info("Document successfully restored from the recycle bin")
-        return {"message": "Tài liệu đã được khôi phục thành công từ thùng rác"}
+        return {"message": "Tài liệu đã được khôi phục hoàn tất từ thùng rác"}
 
     @staticmethod
     @log_logic_execution
@@ -525,7 +525,7 @@ class DocumentService:
             },
         )
         logger.info("Document password protection enabled successfully")
-        return {"message": "Thiết lập mật khẩu bảo vệ tài liệu thành công"}
+        return {"message": "Thiết lập mật khẩu bảo vệ tài liệu hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -560,7 +560,7 @@ class DocumentService:
             {"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}}
         )
         logger.info("Collaboration invitation sent successfully")
-        return {"message": "Gửi lời mời tham gia cộng tác thành công"}
+        return {"message": "Gửi lời mời tham gia cộng tác hoàn tất"}
 
     @staticmethod
     @log_logic_execution

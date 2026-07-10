@@ -116,7 +116,7 @@ export default function StudioCollabPage() {
       setDocuments(docsData.data || docsData || []);
       setInvites(invitesData.data || invitesData || []);
     } catch (err) {
-      showToast("Lỗi tải dữ liệu", "error");
+      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
     } finally {
       setLoading(false);
     }
@@ -149,7 +149,7 @@ export default function StudioCollabPage() {
       setLockStatus(lock.data || lock || { is_locked: false });
       setTasks(tasksRes.data || tasksRes || []);
     } catch (err) {
-      showToast("Lỗi tải chi tiết", "error");
+      showToast("Lỗi trích xuất cấu hình cộng tác", "error");
     }
   }, [selectedDocumentId, showToast]);
 
@@ -208,12 +208,12 @@ export default function StudioCollabPage() {
     setActionLoading(true);
     try {
       await inviteCollaboratorAPI(selectedDocumentId, collaboratorEmail, role);
-      showToast("Đã gửi lời mời", "success");
+      showToast("Khởi tạo yêu cầu cấp quyền cộng tác hoàn tất", "success");
       setCollaboratorEmail("");
       loadData();
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Gửi thất bại", "error");
+      showToast("Lỗi khởi tạo yêu cầu cấp quyền cộng tác", "error");
     } finally {
       setActionLoading(false);
     }
@@ -224,13 +224,13 @@ export default function StudioCollabPage() {
     try {
       await respondToInviteAPI(inviteId, status);
       showToast(
-        status === "ACCEPTED" ? "Đã chấp nhận" : "Đã từ chối",
+        status === "ACCEPTED" ? "Xác thực phản hồi chấp thuận hoàn tất" : "Xác thực phản hồi từ chối hoàn tất",
         "success",
       );
       loadData();
       if (selectedDocumentId) fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Xử lý thất bại", "error");
+      showToast("Lỗi xác thực phản hồi yêu cầu", "error");
     } finally {
       setActionLoading(false);
     }
@@ -240,10 +240,10 @@ export default function StudioCollabPage() {
     setActionLoading(true);
     try {
       await removeCollaboratorAPI(collabId);
-      showToast("Đã xóa", "success");
+      showToast("Thu hồi quyền truy cập cộng tác hoàn tất", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Xóa thất bại", "error");
+      showToast("Lỗi thu hồi quyền truy cập cộng tác", "error");
     } finally {
       setActionLoading(false);
     }
@@ -254,13 +254,13 @@ export default function StudioCollabPage() {
     setActionLoading(true);
     try {
       await transferOwnershipAPI(selectedDocumentId, transferId);
-      showToast(`Đã chuyển cho ${transferName}`, "success");
+      showToast(`Chuyển giao quyền sở hữu cho ${transferName} hoàn tất`, "success");
       setTransferId(null);
       setTransferName("");
       loadData();
       setSelectedDocumentId("");
     } catch (err) {
-      showToast("Chuyển thất bại", "error");
+      showToast("Lỗi chuyển giao quyền sở hữu tài liệu", "error");
     } finally {
       setActionLoading(false);
     }
@@ -269,10 +269,10 @@ export default function StudioCollabPage() {
   const handleUpdateRole = async (collabId: string, newRole: string) => {
     try {
       await updateCollaboratorRoleAPI(collabId, newRole);
-      showToast("Đã cập nhật vai trò", "success");
+      showToast("Cập nhật phân quyền truy cập hoàn tất", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Cập nhật thất bại", "error");
+      showToast("Lỗi cập nhật phân quyền truy cập", "error");
     }
   };
 
@@ -283,7 +283,7 @@ export default function StudioCollabPage() {
       setNewMemo("");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Gửi thất bại", "error");
+      showToast("Lỗi truyền tải dữ liệu ghi chú", "error");
     }
   };
 
@@ -292,20 +292,20 @@ export default function StudioCollabPage() {
     try {
       await updateCollabAccessAPI(selectedDocumentId, level);
       setAccessLevel(level);
-      showToast("Đã cập nhật", "success");
+      showToast("Cập nhật cấu hình bảo mật hoàn tất", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Cập nhật thất bại", "error");
+      showToast("Lỗi cập nhật cấu hình bảo mật", "error");
     }
   };
 
   const handleRevokeInvite = async (inviteId: string) => {
     try {
       await revokeInviteAPI(inviteId);
-      showToast("Đã thu hồi", "success");
+      showToast("Hủy bỏ yêu cầu cấp quyền hoàn tất", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Thu hồi thất bại", "error");
+      showToast("Lỗi hủy bỏ yêu cầu cấp quyền", "error");
     }
   };
 
@@ -313,11 +313,11 @@ export default function StudioCollabPage() {
     if (!selectedDocumentId || !newSnapshotName.trim()) return;
     try {
       await createSnapshotAPI(selectedDocumentId, newSnapshotName.trim());
-      showToast("Đã tạo bản sao", "success");
+      showToast("Khởi tạo bản sao lưu dữ liệu hoàn tất", "success");
       setNewSnapshotName("");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Tạo thất bại", "error");
+      showToast("Lỗi khởi tạo bản sao lưu dữ liệu", "error");
     }
   };
 
@@ -325,10 +325,10 @@ export default function StudioCollabPage() {
     if (!selectedDocumentId) return;
     try {
       await acquireLockAPI(selectedDocumentId);
-      showToast("Đã sở hữu khóa", "success");
+      showToast("Cấp phát khóa phiên độc quyền hoàn tất", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Sở hữu thất bại", "error");
+      showToast("Lỗi cấp phát khóa phiên độc quyền", "error");
     }
   };
 
@@ -336,10 +336,10 @@ export default function StudioCollabPage() {
     if (!selectedDocumentId) return;
     try {
       await releaseLockAPI(selectedDocumentId);
-      showToast("Đã nhả khóa", "success");
+      showToast("Giải phóng khóa phiên độc quyền hoàn tất", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Nhả khóa thất bại", "error");
+      showToast("Lỗi giải phóng khóa phiên độc quyền", "error");
     }
   };
 
@@ -348,9 +348,9 @@ export default function StudioCollabPage() {
     try {
       const res = await generateInviteCodeAPI(selectedDocumentId);
       setInviteCode(res.data?.invite_code || res.invite_code || "");
-      showToast("Tạo mã thành công", "success");
+      showToast("Khởi tạo mã phiên truy cập hoàn tất", "success");
     } catch (err) {
-      showToast("Tạo mã thất bại", "error");
+      showToast("Lỗi khởi tạo mã phiên truy cập", "error");
     }
   };
 
@@ -358,11 +358,11 @@ export default function StudioCollabPage() {
     if (!joinCodeInput.trim()) return;
     try {
       await joinViaInviteCodeAPI(joinCodeInput.trim());
-      showToast("Đã tham gia", "success");
+      showToast("Xác thực mã phiên tham gia hoàn tất", "success");
       setJoinCodeInput("");
       loadData();
     } catch (err) {
-      showToast("Mã không hợp lệ", "error");
+      showToast("Lỗi xác thực mã phiên tham gia", "error");
     }
   };
 
@@ -377,9 +377,9 @@ export default function StudioCollabPage() {
       setNewTaskDesc("");
       setNewTaskAssigned("");
       fetchCollaboratorDetails();
-      showToast("Đã thêm nhiệm vụ", "success");
+      showToast("Khởi tạo bản ghi nhiệm vụ hoàn tất", "success");
     } catch (err) {
-      showToast("Thêm thất bại", "error");
+      showToast("Lỗi khởi tạo bản ghi nhiệm vụ", "error");
     }
   };
 
@@ -388,7 +388,7 @@ export default function StudioCollabPage() {
       await updateCollabTaskAPI(taskId, !currentStatus);
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi cập nhật", "error");
+      showToast("Lỗi cập nhật trạng thái nhiệm vụ", "error");
     }
   };
 
@@ -399,7 +399,7 @@ export default function StudioCollabPage() {
       const cRes = await getTaskCommentsAPI(taskId);
       setActiveTaskComments(cRes.data || cRes || []);
     } catch (err) {
-      showToast("Lỗi tải bình luận", "error");
+      showToast("Lỗi trích xuất bộ sưu tập phản hồi", "error");
     }
   };
 
@@ -411,7 +411,7 @@ export default function StudioCollabPage() {
       const cRes = await getTaskCommentsAPI(activeTaskId);
       setActiveTaskComments(cRes.data || cRes || []);
     } catch (err) {
-      showToast("Lỗi gửi", "error");
+      showToast("Lỗi truyền tải dữ liệu phản hồi", "error");
     }
   };
 
@@ -593,7 +593,7 @@ export default function StudioCollabPage() {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(inviteCode);
-                      showToast("Đã copy mã", "success");
+                      showToast("Sao chép mã phiên truy cập vào bộ nhớ tạm hoàn tất", "success");
                     }}
                     className="text-[13px] font-medium text-[#0071E3]"
                   >

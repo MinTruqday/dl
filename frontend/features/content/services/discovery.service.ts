@@ -7,7 +7,7 @@ export const getTagsCategoriesAPI = async () => {
   const res = await fetch(`${API_URL}/kham-pha/the-loai`);
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách thẻ và danh mục");
+    throw new Error(data.message || "Lỗi trích xuất cây cấu trúc thẻ và danh mục");
   return data;
 };
 
@@ -16,7 +16,7 @@ export const smartSearchAPI = async (query: string, limit: number = 10) => {
     `${API_URL}/kham-pha/tim-kiem-thong-minh?query=${encodeURIComponent(query)}&limit=${limit}`,
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tìm kiếm thông minh thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thực thi truy vấn tìm kiếm ngữ nghĩa");
   return data;
 };
 
@@ -26,7 +26,7 @@ export const getAIRecommendationsAPI = async (limit: number = 10) => {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải gợi ý tài liệu từ AI");
+    throw new Error(data.message || "Lỗi truy xuất bộ dữ liệu khuyến nghị cá nhân hóa");
   return data;
 };
 

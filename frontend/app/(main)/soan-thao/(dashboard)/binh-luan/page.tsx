@@ -43,7 +43,7 @@ export default function CommentsPage() {
       setDocuments(list);
       if (list.length > 0) setSelectedDocumentId(list[0]._id || list[0].id);
     } catch {
-      showToast("Lỗi tải danh sách tác phẩm", "error");
+      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
     } finally {
       setLoadingDocs(false);
       requestAnimationFrame(() => setVisible(true));
@@ -79,22 +79,22 @@ export default function CommentsPage() {
         content: replyContent.trim(),
         parent_id: replyingTo,
       });
-      showToast("Đã gửi phản hồi", "success");
+      showToast("Lưu trữ dữ liệu phản hồi hoàn tất", "success");
       setReplyContent("");
       setReplyingTo(null);
       fetchComments();
     } catch (e: any) {
-      showToast(e.message || "Gửi phản hồi thất bại", "error");
+      showToast(e.message || "Lỗi lưu trữ dữ liệu phản hồi", "error");
     }
   };
 
   const handleDeleteComment = async (commentId: string) => {
     try {
       await deleteCommentAPI(commentId);
-      showToast("Đã xóa bình luận", "success");
+      showToast("Hủy bỏ bản ghi dữ liệu phản hồi hoàn tất", "success");
       fetchComments();
     } catch (e: any) {
-      showToast(e.message || "Xóa bình luận thất bại", "error");
+      showToast(e.message || "Lỗi hủy bỏ bản ghi dữ liệu phản hồi", "error");
     }
   };
 

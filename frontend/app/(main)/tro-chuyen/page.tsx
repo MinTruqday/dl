@@ -363,7 +363,7 @@ export default function TroChuyenPage() {
         } catch (e: any) {
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1].content = e.message || "Không thể tải ảnh lên.";
+            updated[updated.length - 1].content = e.message || "Lỗi truyền tải tệp ảnh lên máy chủ";
             return updated;
           });
           setIsSending(false);
@@ -376,7 +376,7 @@ export default function TroChuyenPage() {
         } catch (e: any) {
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1].content = e.message || "Không thể tải tệp lên.";
+            updated[updated.length - 1].content = e.message || "Lỗi truyền tải tệp tin lên máy chủ";
             return updated;
           });
           setIsSending(false);
@@ -405,10 +405,10 @@ export default function TroChuyenPage() {
       setSelectedFolder(null);
 
       if (!res.ok) {
-        let errorText = "Hệ thống hiện không phản hồi, vui lòng thử lại sau";
+        let errorText = "Máy chủ AI không phản hồi, vui lòng thử lại sau";
         if (res.status === 429)
           errorText =
-            "Bạn đã hết hạn mức sử dụng hôm nay. Vui lòng quay lại vào ngày mai hoặc nâng cấp gói cước";
+            "Tài khoản đã vượt quá hạn mức sử dụng (Quota Exceeded). Vui lòng nâng cấp gói dịch vụ để tiếp tục";
         else {
           try {
             const errJson = await res.json();
@@ -543,7 +543,7 @@ export default function TroChuyenPage() {
             setMessages((prev) => {
               const updated = [...prev];
               const lastMsg = { ...updated[updated.length - 1] };
-              lastMsg.content = "Đã xảy ra lỗi khi xử lý dữ liệu";
+              lastMsg.content = "Lỗi thực thi luồng dữ liệu phản hồi từ AI";
               updated[updated.length - 1] = lastMsg;
               return updated;
             });
@@ -578,7 +578,7 @@ export default function TroChuyenPage() {
         const updated = [...prev];
         const lastMsg = updated[updated.length - 1];
         if (lastMsg.role === "assistant" && !lastMsg.content) {
-          lastMsg.content = "Kết nối bị gián đoạn, vui lòng kiểm tra mạng";
+          lastMsg.content = "Mất kết nối Stream API đến máy chủ AI";
         }
         return updated;
       });

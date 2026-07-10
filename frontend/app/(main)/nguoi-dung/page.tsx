@@ -67,10 +67,10 @@ export default function UsersManagementPage() {
     setIsUpdating(true);
     try {
       await deleteUserAPI(user._id);
-      showToast("Xóa tài khoản thành công", "success");
+      showToast("Xóa dữ liệu tài khoản hoàn tất", "success");
       fetchData();
     } catch (err: any) {
-      showToast(err.message || "Lỗi xóa tài khoản", "error");
+      showToast(err.message || "Lỗi xóa dữ liệu tài khoản", "error");
     } finally {
       setIsUpdating(false);
     }
@@ -78,18 +78,18 @@ export default function UsersManagementPage() {
 
   const handleCreateUser = async () => {
     if (!newUserForm.email || !newUserForm.password || !newUserForm.full_name) {
-      showToast("Vui lòng điền đầy đủ thông tin", "error");
+      showToast("Lỗi thiếu hụt trường dữ liệu bắt buộc", "error");
       return;
     }
     setIsCreating(true);
     try {
       await createUserAPI(newUserForm);
-      showToast("Tạo người dùng thành công", "success");
+      showToast("Khởi tạo tài khoản hệ thống hoàn tất", "success");
       setCreateModalOpen(false);
       setNewUserForm({ email: "", full_name: "", password: "", role: "reader" });
       fetchData();
     } catch (e: any) {
-      showToast(e.message || "Lỗi tạo người dùng", "error");
+      showToast(e.message || "Lỗi khởi tạo tài khoản hệ thống", "error");
     } finally {
       setIsCreating(false);
     }
@@ -101,7 +101,7 @@ export default function UsersManagementPage() {
       const data = await getUsersAPI(100, 0);
       setUsers(data.data || data || []);
     } catch (err: any) {
-      showToast("Lỗi tải danh sách nhân sự", "error");
+      showToast("Lỗi trích xuất bộ sưu tập tài khoản", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -119,11 +119,11 @@ export default function UsersManagementPage() {
     setIsUpdating(true);
     try {
       await updateUserRoleAPI(confirmModal.user._id, confirmModal.value);
-      showToast("Cập nhật quyền hạn thành công", "success");
+      showToast("Cập nhật phân quyền truy cập hoàn tất", "success");
       fetchData();
       setConfirmModal(null);
     } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật quyền", "error");
+      showToast(err.message || "Lỗi cập nhật phân quyền truy cập", "error");
     } finally {
       setIsUpdating(false);
     }
@@ -136,14 +136,14 @@ export default function UsersManagementPage() {
       await updateUserStatusAPI(confirmModal.user._id, confirmModal.value);
       showToast(
         confirmModal.value
-          ? "Đã kích hoạt tài khoản"
-          : "Đã vô hiệu hóa tài khoản",
+          ? "Kích hoạt trạng thái tài khoản hoàn tất"
+          : "Vô hiệu hóa trạng thái tài khoản hoàn tất",
         "success",
       );
       fetchData();
       setConfirmModal(null);
     } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật trạng thái", "error");
+      showToast(err.message || "Lỗi cập nhật trạng thái tài khoản", "error");
     } finally {
       setIsUpdating(false);
     }

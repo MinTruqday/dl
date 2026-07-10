@@ -267,7 +267,7 @@ class CtanSource:
                 "title": title,
                 "slug": slug,
                 "description": payload.get(
-                    "description", "Trích xuất tự động thành công"
+                    "description", "Trích xuất tự động hoàn tất"
                 ),
                 "file_url": minio_url_book,
                 "pdf_url": payload.get("pdf_url"),

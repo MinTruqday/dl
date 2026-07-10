@@ -40,7 +40,7 @@ class VersionService:
             }
         )
         logger.info("Document version snapshot saved successfully")
-        return {"message": "Lưu trữ phiên bản lịch sử tài liệu thành công"}
+        return {"message": "Lưu trữ phiên bản lịch sử tài liệu hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -78,4 +78,4 @@ class VersionService:
             {"_id": version["document_id"]}, {"$set": update_data}
         )
         logger.info("Document version restored successfully")
-        return {"message": "Khôi phục tài liệu về phiên bản lịch sử thành công"}
+        return {"message": "Khôi phục tài liệu về phiên bản lịch sử hoàn tất"}

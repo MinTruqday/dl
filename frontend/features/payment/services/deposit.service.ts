@@ -11,7 +11,7 @@ export async function createDepositLinkAPI(amount: number) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Khởi tạo liên kết nạp tiền thất bại");
+    throw new Error(data.message || "Lỗi khởi tạo phiên giao dịch nạp tiền");
   return data;
 }
 
@@ -21,6 +21,6 @@ export async function verifyDepositAPI(orderCode: number) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể kiểm tra trạng thái nạp tiền");
+    throw new Error(data.message || "Lỗi xác thực trạng thái giao dịch nạp tiền");
   return data;
 }

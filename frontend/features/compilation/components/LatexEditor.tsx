@@ -110,7 +110,7 @@ export default function LatexEditor({
     if (documentId) {
       autoSaveTimeoutRef.current = setTimeout(() => {
         cloudAutoSaveAPI(documentId, text)
-          .then(() => showToast("Đã lưu nháp LaTeX lên đám mây", "success"))
+          .then(() => showToast("Đồng bộ dữ liệu nháp LaTeX lên hệ thống đám mây hoàn tất", "success"))
           .catch(() => {});
       }, 5000); // 5 seconds auto save
     }

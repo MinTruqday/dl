@@ -9,6 +9,6 @@ export async function compileDocumentAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Biên dịch tài liệu thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thực thi tiến trình kết xuất tài liệu");
   return data;
 }

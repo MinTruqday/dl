@@ -28,18 +28,18 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedToTerms) {
-      showToast("Bạn cần đồng ý với điều khoản để tiếp tục", "info");
+      showToast("Yêu cầu xác nhận thỏa thuận dịch vụ trước khi tiếp tục", "info");
       return;
     }
     setLoading(true);
 
     try {
       await register(email, password, displayName, slug, agreedToTerms);
-      showToast("Đăng ký thành công", "success");
+      showToast("Khởi tạo hồ sơ định danh hoàn tất", "success");
       router.push("/dang-nhap");
     } catch (err: any) {
       showToast(
-        err.message || "Tên đăng nhập hoặc email đã được sử dụng",
+        err.message || "Lỗi trùng lặp dữ liệu định danh trong hệ thống",
         "error",
       );
     } finally {

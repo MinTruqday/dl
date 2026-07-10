@@ -268,7 +268,7 @@ class PurchaseService:
                             logger.exception("Failed to send transaction confirmation notification")
                 logger.info("Document purchase transaction completed and recorded successfully")
                 return {
-                    "message": "Thực hiện giao dịch thanh toán mua tài liệu thành công",
+                    "message": "Thực hiện giao dịch thanh toán mua tài liệu hoàn tất",
                     "status": "purchased",
                 }
             except HTTPException:
@@ -381,7 +381,7 @@ class PurchaseService:
 
             if should_close_session:
                 await session.commit_transaction()
-            return {"message": "Hoàn tiền thành công", "refunded_amount": price}
+            return {"message": "Hoàn tiền hoàn tất", "refunded_amount": price}
         except HTTPException:
             raise
         except Exception as e:

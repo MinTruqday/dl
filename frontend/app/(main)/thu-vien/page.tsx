@@ -101,7 +101,7 @@ export default function LibraryPage() {
       );
       setReadingLists(listsRes?.data || listsRes || []);
     } catch (error) {
-      showToast("Không thể kết nối tới kho lưu trữ", "error");
+      showToast("Lỗi truy xuất hệ thống kho lưu trữ", "error");
     } finally {
       setLoading(false);
     }
@@ -129,9 +129,9 @@ export default function LibraryPage() {
       setIsCreateModalOpen(false);
       setNewFolderName("");
       setCreateListForm({ name: "", description: "", is_public: true });
-      showToast("Khởi tạo thành công", "success");
+      showToast("Khởi tạo phân vùng lưu trữ hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi khởi tạo", "error");
+      showToast("Lỗi khởi tạo phân vùng lưu trữ", "error");
     } finally {
       setIsCreating(false);
     }
@@ -144,9 +144,9 @@ export default function LibraryPage() {
       setHistory([]);
       setContinueDocs([]);
       setIsClearModalOpen(false);
-      showToast("Đã làm sạch lịch sử", "success");
+      showToast("Làm sạch lịch sử truy cập hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi làm sạch", "error");
+      showToast("Lỗi làm sạch lịch sử truy cập", "error");
     } finally {
       setIsClearing(false);
     }
@@ -162,9 +162,9 @@ export default function LibraryPage() {
       setContinueDocs((prev) =>
         prev.filter((item) => item.document_id !== documentId),
       );
-      showToast("Đã xóa mục lịch sử", "success");
+      showToast("Xóa bản ghi lịch sử hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi xóa mục", "error");
+      showToast("Lỗi xóa bản ghi lịch sử", "error");
     } finally {
       setIsDeletingHistory(null);
     }

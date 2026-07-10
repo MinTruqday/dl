@@ -34,7 +34,7 @@ async def toggle_pin(message_id: str, current_user=Depends(get_current_user)):
     await publish_personal_message({"type": "message_pinned", "data": result}, other_id)
     return APIResponse(
         data=result["is_pinned"],
-        message="Cập nhật trạng thái ghim tin nhắn thành công",
+        message="Cập nhật trạng thái ghim tin nhắn hoàn tất",
         status=200,
     )
 
@@ -44,6 +44,6 @@ async def toggle_pin_conversation(
 ):
     return APIResponse(
         data=await PinService.toggle_pin_conversation(other_user_id, current_user),
-        message="Cập nhật ưu tiên cuộc trò chuyện thành công",
+        message="Cập nhật ưu tiên cuộc trò chuyện hoàn tất",
     )
 

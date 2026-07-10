@@ -16,7 +16,7 @@ router = APIRouter(route_class=LoggingRoute, prefix="/kham-pha")
 async def get_tags_categories(db=Depends(get_db)):
     return APIResponse(
         data=await DocumentService.get_tags_categories(),
-        message="Lấy danh sách thẻ và danh mục hệ thống thành công",
+        message="Trích xuất danh sách thẻ và danh mục hệ thống hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -30,7 +30,7 @@ async def smart_search(
     if not current_user:
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
-            message="Thực hiện truy vấn tìm kiếm văn bản thành công",
+            message="Thực hiện truy vấn tìm kiếm văn bản hoàn tất",
         )
 
     from src.core.infrastructure.configuration import settings as smart_settings
@@ -54,12 +54,12 @@ async def smart_search(
             )
             if resp.status_code == 200:
                 result = resp.json()
-                return APIResponse(data=result, message="Thực hiện truy vấn tìm kiếm ngữ nghĩa thành công")
+                return APIResponse(data=result, message="Thực hiện truy vấn tìm kiếm ngữ nghĩa hoàn tất")
             else:
                 logger.error("Smart search query failed")
                 return APIResponse(
                     data=await DocumentService.get_text_search(query, limit),
-                    message="Thực hiện truy vấn tìm kiếm văn bản thành công",
+                    message="Thực hiện truy vấn tìm kiếm văn bản hoàn tất",
                 )
     except Exception as e:
         logger.exception("Semantic search execution error")
@@ -76,7 +76,7 @@ async def get_ai_recommendations(
 ):
     return APIResponse(
         data=await DocumentService.get_trending_documents(limit),
-        message="Truy xuất danh sách đề xuất tài liệu từ hệ thống AI thành công",
+        message="Trích xuất danh sách đề xuất tài liệu từ hệ thống AI hoàn tất",
     )
 
 

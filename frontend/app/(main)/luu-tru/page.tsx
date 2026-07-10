@@ -169,7 +169,7 @@ export default function StoragePage() {
         setItems(await listStorageItemsAPI(folderId, mode === "trash"));
       }
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi truy xuất bộ sưu tập lưu trữ", "error");
     } finally {
       setLoading(false);
     }
@@ -204,12 +204,12 @@ export default function StoragePage() {
     if (!newFolderName.trim()) return;
     try {
       await createFolderAPI(newFolderName.trim(), currentFolderId);
-      showToast("Tạo thành công", "success");
+      showToast("Khởi tạo thư mục hoàn tất", "success");
       setCreateFolderOpen(false);
       setNewFolderName("");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi khởi tạo thư mục", "error");
     }
   };
 
@@ -220,11 +220,11 @@ export default function StoragePage() {
     try {
       for (let i = 0; i < files.length; i++)
         await uploadStorageFileAPI(files[i], currentFolderId);
-      showToast("Tải lên thành công", "success");
+      showToast("Tải lên tệp đa phương tiện hoàn tất", "success");
       fetchItems(currentFolderId);
       fetchQuota();
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi truyền tải tệp đa phương tiện", "error");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -249,11 +249,11 @@ export default function StoragePage() {
     try {
       for (let i = 0; i < files.length; i++)
         await uploadStorageFileAPI(files[i], currentFolderId);
-      showToast("Tải lên thành công", "success");
+      showToast("Tải lên tệp đa phương tiện hoàn tất", "success");
       fetchItems(currentFolderId);
       fetchQuota();
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi truyền tải tệp đa phương tiện", "error");
     } finally {
       setUploading(false);
     }
@@ -273,13 +273,13 @@ export default function StoragePage() {
     try {
       await deleteStorageItemAPI(item._id, viewMode === "trash");
       showToast(
-        viewMode === "trash" ? "Đã xóa vĩnh viễn" : "Đã chuyển vào thùng rác",
+        viewMode === "trash" ? "Xóa vĩnh viễn dữ liệu hoàn tất" : "Chuyển dữ liệu vào thùng rác hoàn tất",
         "success",
       );
       fetchItems(viewMode === "trash" ? undefined : currentFolderId, viewMode);
       if (viewMode === "trash") fetchQuota();
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi thực thi dữ liệu lưu trữ", "error");
     }
   };
 
@@ -288,21 +288,21 @@ export default function StoragePage() {
       await updateStorageItemAPI(item._id, { is_public: !item.is_public });
       fetchItems(currentFolderId);
       showToast(
-        !item.is_public ? "Đã đặt thành công khai" : "Đã đặt thành riêng tư",
+        !item.is_public ? "Thiết lập phân quyền công khai hoàn tất" : "Thiết lập phân quyền riêng tư hoàn tất",
         "success",
       );
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi thiết lập phân quyền", "error");
     }
   };
 
   const handleRestore = async (item: StorageItem) => {
     try {
       await updateStorageItemAPI(item._id, { is_trashed: false });
-      showToast("Khôi phục thành công", "success");
+      showToast("Khôi phục dữ liệu lưu trữ hoàn tất", "success");
       fetchItems(undefined, "trash");
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi khôi phục dữ liệu lưu trữ", "error");
     }
   };
   const handleMove = async () => {
@@ -311,25 +311,25 @@ export default function StoragePage() {
       await updateStorageItemAPI(moveItem._id, {
         parent_id: (moveTargetId === undefined ? null : moveTargetId) as any,
       });
-      showToast("Đã chuyển", "success");
+      showToast("Di chuyển dữ liệu lưu trữ hoàn tất", "success");
       setMoveItem(null);
       setMoveTargetId(undefined);
       setMoveBreadcrumbs([{ id: "root", name: "Tất cả" }]);
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi di chuyển dữ liệu lưu trữ", "error");
     }
   };
   const handleRename = async () => {
     if (!renameItem || !newName.trim()) return;
     try {
       await updateStorageItemAPI(renameItem._id, { name: newName.trim() });
-      showToast("Đã đổi tên", "success");
+      showToast("Cập nhật định danh dữ liệu hoàn tất", "success");
       setRenameItem(null);
       setNewName("");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi cập nhật định danh dữ liệu", "error");
     }
   };
   const handleUpdateDesc = async () => {
@@ -338,12 +338,12 @@ export default function StoragePage() {
       await updateStorageItemAPI(descItem._id, {
         description: descValue.trim(),
       });
-      showToast("Đã lưu ghi chú", "success");
+      showToast("Cập nhật ghi chú dữ liệu hoàn tất", "success");
       setDescItem(null);
       setDescValue("");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi cập nhật ghi chú dữ liệu", "error");
     }
   };
   const handleUpdateTags = async () => {
@@ -355,23 +355,23 @@ export default function StoragePage() {
           .map((t) => t.trim())
           .filter(Boolean),
       });
-      showToast("Đã lưu nhãn", "success");
+      showToast("Cập nhật phân loại nhãn hoàn tất", "success");
       setTagsItem(null);
       setTagsValue("");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi cập nhật phân loại nhãn", "error");
     }
   };
   const handleUpdateColor = async () => {
     if (!colorItem) return;
     try {
       await updateStorageItemAPI(colorItem._id, { color: colorValue });
-      showToast("Đã đổi màu", "success");
+      showToast("Cập nhật nhãn màu hoàn tất", "success");
       setColorItem(null);
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi cập nhật nhãn màu", "error");
     }
   };
   const handleSearch = async (e: React.FormEvent) => {
@@ -406,7 +406,7 @@ export default function StoragePage() {
         );
       }
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi trích xuất bộ sưu tập tìm kiếm", "error");
     } finally {
       setLoading(false);
     }
@@ -414,19 +414,19 @@ export default function StoragePage() {
   const handleCopy = async (item: StorageItem) => {
     try {
       await copyStorageItemAPI(item._id, currentFolderId);
-      showToast("Đã sao chép", "success");
+      showToast("Nhân bản dữ liệu lưu trữ hoàn tất", "success");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi nhân bản dữ liệu lưu trữ", "error");
     }
   };
   const handleCreateShortcut = async (item: StorageItem) => {
     try {
       await createShortcutAPI(item._id, currentFolderId);
-      showToast("Đã tạo lối tắt", "success");
+      showToast("Khởi tạo liên kết truy cập nhanh hoàn tất", "success");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi khởi tạo liên kết truy cập nhanh", "error");
     }
   };
   const handleToggleStar = async (item: StorageItem) => {
@@ -434,46 +434,46 @@ export default function StoragePage() {
       await updateStorageItemAPI(item._id, { is_starred: !item.is_starred });
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi cập nhật trạng thái lưu trữ", "error");
     }
   };
   const handleTogglePublic = async (item: StorageItem) => {
     try {
       if (!item.is_public) {
         await updateStorageItemAPI(item._id, { is_public: true });
-        showToast("Đã bật chia sẻ công khai", "success");
+        showToast("Kích hoạt phân quyền chia sẻ công khai hoàn tất", "success");
         fetchItems(currentFolderId);
       } else {
         navigator.clipboard.writeText(
           `${window.location.origin}/storage/share/${item.share_token}`,
         );
-        showToast("Đã copy link", "success");
+        showToast("Sao chép liên kết chia sẻ vào bộ nhớ tạm hoàn tất", "success");
       }
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi kích hoạt phân quyền chia sẻ", "error");
     }
   };
   const handleShareSubmit = async () => {
     if (!shareItem || !shareEmail.trim()) return;
     try {
       await shareStorageItemAPI(shareItem._id, shareEmail.trim(), shareRole);
-      showToast("Đã chia sẻ", "success");
+      showToast("Cấp phát quyền chia sẻ dữ liệu hoàn tất", "success");
       setShareItem(null);
       setShareEmail("");
       setShareRole("viewer");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi cấp phát quyền chia sẻ dữ liệu", "error");
     }
   };
   const handleZipDownload = async () => {
     if (selectedIds.size === 0) return;
-    showToast("Đang tạo zip", "success");
+    showToast("Khởi tạo tiến trình nén dữ liệu", "success");
     try {
       await downloadZipAPI(Array.from(selectedIds));
       setSelectedIds(new Set());
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi tiến trình nén dữ liệu", "error");
     }
   };
   const toggleSelect = (id: string) => {
@@ -490,11 +490,11 @@ export default function StoragePage() {
     setUploading(true);
     try {
       await uploadFileVersionAPI(versionItem._id, files[0]);
-      showToast("Đã tải lên phiên bản mới", "success");
+      showToast("Cập nhật phiên bản dữ liệu hoàn tất", "success");
       setVersionItem(null);
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message, "error");
+      showToast(e.message || "Lỗi cập nhật phiên bản dữ liệu", "error");
     } finally {
       setUploading(false);
       if (versionInputRef.current) versionInputRef.current.value = "";
@@ -908,10 +908,10 @@ export default function StoragePage() {
                                               e.stopPropagation();
                                               try {
                                                 await lockDocumentAPI(item._id || item.id);
-                                                showToast("Đã thay đổi trạng thái bảo vệ", "success");
+                                                showToast("Cập nhật trạng thái bảo mật hoàn tất", "success");
                                                 fetchItems(undefined, "published");
                                               } catch (err: any) {
-                                                showToast(err.message, "error");
+                                                showToast(err.message || "Lỗi cập nhật trạng thái bảo mật", "error");
                                               }
                                               setOpenMenuId(null);
                                             }}
@@ -926,10 +926,10 @@ export default function StoragePage() {
                                               e.stopPropagation();
                                               try {
                                                 await deleteAuthorDocumentAPI(item._id || item.id);
-                                                showToast("Đã xóa tác phẩm", "success");
+                                                showToast("Xóa dữ liệu tác phẩm hoàn tất", "success");
                                                 fetchItems(undefined, "published");
                                               } catch (err: any) {
-                                                showToast(err.message, "error");
+                                                showToast(err.message || "Lỗi xóa dữ liệu tác phẩm", "error");
                                               }
                                               setOpenMenuId(null);
                                             }}

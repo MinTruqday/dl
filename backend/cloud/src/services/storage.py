@@ -334,7 +334,7 @@ class StorageService:
         )
         if result.modified_count == 0:
             return {"message": "Tệp tin đã được chia sẻ"}
-        return {"message": "Chia sẻ tệp thành công"}
+        return {"message": "Chia sẻ tệp hoàn tất"}
 
     @staticmethod
     @log_logic_execution

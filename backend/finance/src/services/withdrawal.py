@@ -203,7 +203,7 @@ class WithdrawalService:
 
             logger.info("Withdrawal request successfully registered and pending review")
             return {
-                "message": "Gửi yêu cầu khởi tạo giao dịch rút tiền thành công",
+                "message": "Gửi yêu cầu khởi tạo giao dịch rút tiền hoàn tất",
                 "withdrawal_id": withdrawal_id,
             }
         except HTTPException:
@@ -367,7 +367,7 @@ class WithdrawalService:
                 await session.commit_transaction()
 
             logger.info("Administrative verification of withdrawal request completed successfully")
-            return {"message": "Xử lý xác minh yêu cầu rút tiền thành công"}
+            return {"message": "Xử lý xác minh yêu cầu rút tiền hoàn tất"}
         except HTTPException:
             raise
         except Exception as e:
@@ -454,7 +454,7 @@ class WithdrawalService:
                 await session.commit_transaction()
 
             logger.info("Withdrawal request successfully cancelled and reserved funds restored")
-            return {"message": "Hủy yêu cầu rút tiền và hoàn trả số dư thành công"}
+            return {"message": "Hủy yêu cầu rút tiền và hoàn trả số dư hoàn tất"}
         except HTTPException:
             raise
         except Exception as e:

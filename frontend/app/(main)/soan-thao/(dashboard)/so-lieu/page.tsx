@@ -74,7 +74,7 @@ export default function StatsPage() {
       setRevenue(revData.data || revData);
       setStats(revData.data || revData);
     } catch {
-      showToast("Không thể tải số liệu thống kê", "error");
+      showToast("Lỗi trích xuất số liệu phân tích", "error");
     } finally {
       setLoading(false);
       requestAnimationFrame(() => setVisible(true));
@@ -96,7 +96,7 @@ export default function StatsPage() {
       setSelectedAnalytics(analyticsData?.data || analyticsData);
       setSelectedAcademic(academicData?.data || academicData);
     } catch {
-      showToast("Không thể tải chi tiết", "error");
+      showToast("Lỗi trích xuất báo cáo chi tiết", "error");
     } finally {
       setLoadingAnalytics(false);
     }
@@ -104,16 +104,16 @@ export default function StatsPage() {
 
   const handleSetPricing = async () => {
     if (newPrice < 0) {
-      showToast("Giá không hợp lệ", "error");
+      showToast("Lỗi sai lệch định dạng chuẩn giá trị", "error");
       return;
     }
     setSettingPrice(true);
     try {
       await setDocumentPricingAPI(pricingDocId, newPrice);
-      showToast("Thiết lập giá thành công", "success");
+      showToast("Cập nhật cấu hình định giá hoàn tất", "success");
       setShowPricingModal(false);
     } catch (e: any) {
-      showToast(e.message || "Thiết lập giá thất bại", "error");
+      showToast(e.message || "Lỗi cập nhật cấu hình định giá", "error");
     } finally {
       setSettingPrice(false);
     }
@@ -121,7 +121,7 @@ export default function StatsPage() {
 
   const handleWithdrawal = async () => {
     if (withdrawalAmount <= 0) {
-      showToast("Số tiền không hợp lệ", "error");
+      showToast("Lỗi giá trị giao dịch không hợp lệ", "error");
       return;
     }
     if (
@@ -129,17 +129,17 @@ export default function StatsPage() {
       !bankInfo.account_number ||
       !bankInfo.account_name
     ) {
-      showToast("Vui lòng nhập đủ thông tin ngân hàng", "error");
+      showToast("Lỗi thiếu hụt trường thông tin thanh toán", "error");
       return;
     }
     setRequestingWithdrawal(true);
     try {
       await requestWithdrawalAPI(withdrawalAmount, bankInfo);
-      showToast("Yêu cầu rút tiền đã được gửi", "success");
+      showToast("Khởi tạo tiến trình giao dịch tài chính hoàn tất", "success");
       setShowWithdrawalModal(false);
       fetchStatsData();
     } catch (e: any) {
-      showToast(e.message || "Yêu cầu rút tiền thất bại", "error");
+      showToast(e.message || "Lỗi khởi tạo tiến trình giao dịch tài chính", "error");
     } finally {
       setRequestingWithdrawal(false);
     }

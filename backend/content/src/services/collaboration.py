@@ -101,7 +101,7 @@ class CollaborationService:
         )
         logger.info("Collaboration invitation processed and sent successfully")
         return {
-            "message": "Xử lý và gửi lời mời tham gia cộng tác thành công",
+            "message": "Xử lý và gửi lời mời tham gia cộng tác hoàn tất",
             "invite_id": invite["_id"],
         }
 
@@ -152,7 +152,7 @@ class CollaborationService:
             "The recipient has officially registered their response to the pending editorial collaboration invitation",
         )
         logger.info("Collaboration invitation response processed successfully")
-        return {"message": "Ghi nhận trạng thái phản hồi lời mời cộng tác thành công"}
+        return {"message": "Ghi nhận trạng thái phản hồi lời mời cộng tác hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -329,7 +329,7 @@ class CollaborationService:
             "The primary administrative ownership rights of the document have been securely reassigned",
         )
         logger.info("Document ownership transferred successfully")
-        return {"message": "Cập nhật và chuyển giao quyền sở hữu tài liệu thành công"}
+        return {"message": "Cập nhật và chuyển giao quyền sở hữu tài liệu hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -344,7 +344,7 @@ class CollaborationService:
             },
             upsert=True,
         )
-        return {"message": "Đồng bộ hóa trạng thái hoạt động trực tuyến thành công"}
+        return {"message": "Đồng bộ hóa trạng thái hoạt động trực tuyến hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -401,7 +401,7 @@ class CollaborationService:
             "Update role",
             "The specific access privileges and system roles for the collaborator have been modified",
         )
-        return {"message": "Cập nhật cấu hình phân quyền cộng tác viên thành công"}
+        return {"message": "Cập nhật cấu hình phân quyền cộng tác viên hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -429,7 +429,7 @@ class CollaborationService:
             "timestamp": datetime.now(timezone.utc),
         }
         await CollaborationRepository.insert_memo(memo)
-        return {"message": "Phân phối tin nhắn cộng tác nội bộ thành công", "memo": memo}
+        return {"message": "Phân phối tin nhắn cộng tác nội bộ hoàn tất", "memo": memo}
 
     @staticmethod
     @log_logic_execution
@@ -497,7 +497,7 @@ class CollaborationService:
             "The core collaborative access permissions for the environment have been successfully adjusted",
         )
         return {
-            "message": "Cập nhật cấu hình mức độ quyền truy cập cộng tác thành công",
+            "message": "Cập nhật cấu hình mức độ quyền truy cập cộng tác hoàn tất",
             "collab_access_level": access_level,
         }
 
@@ -547,7 +547,7 @@ class CollaborationService:
             "Invitation revoked",
             "The active collaboration invitation token has been securely invalidated by the document owner",
         )
-        return {"message": "Hủy bỏ và thu hồi lời mời tham gia cộng tác thành công"}
+        return {"message": "Hủy bỏ và thu hồi lời mời tham gia cộng tác hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -612,7 +612,7 @@ class CollaborationService:
             "Create draft",
             "A structural milestone snapshot has been permanently recorded in the version control history",
         )
-        return {"message": "Lưu trữ bản chụp phiên bản tài liệu thành công", "snapshot": snapshot}
+        return {"message": "Lưu trữ bản chụp phiên bản tài liệu hoàn tất", "snapshot": snapshot}
 
     @staticmethod
     @log_logic_execution
@@ -701,7 +701,7 @@ class CollaborationService:
             "Document locked",
             "An exclusive access token has been acquired to prevent overlapping editorial modifications",
         )
-        return {"message": "Thiết lập khóa phiên chỉnh sửa tài liệu thành công"}
+        return {"message": "Thiết lập khóa phiên chỉnh sửa tài liệu hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -719,7 +719,7 @@ class CollaborationService:
                 "Unlock document",
                 "The previously acquired exclusive editorial lock has been safely released back into the available pool",
             )
-        return {"message": "Hủy khóa phiên chỉnh sửa tài liệu thành công"}
+        return {"message": "Hủy khóa phiên chỉnh sửa tài liệu hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -824,7 +824,7 @@ class CollaborationService:
             "The authenticated user has successfully claimed the invitation token and entered the editorial workspace",
         )
         return {
-            "message": "Tham gia không gian cộng tác tài liệu thành công",
+            "message": "Tham gia không gian cộng tác tài liệu hoàn tất",
             "document_id": document_id,
         }
 
@@ -936,7 +936,7 @@ class CollaborationService:
             "Update task",
             "The execution status of the designated collaborative task has been formally modified",
         )
-        return {"message": "Cập nhật trạng thái thực thi nhiệm vụ cộng tác thành công"}
+        return {"message": "Cập nhật trạng thái thực thi nhiệm vụ cộng tác hoàn tất"}
 
     @staticmethod
     @log_logic_execution

@@ -17,7 +17,7 @@ async def get_pinned_documents(
 ):
     return APIResponse(
         data=await PinService.get_pinned_documents(current_user),
-        message="Lấy danh sách tài liệu ghim thành công",
+        message="Trích xuất danh sách tài liệu ghim hoàn tất",
     )
 
 @router.post("/{document_id}", response_model=APIResponse[Any])
@@ -28,7 +28,7 @@ async def pin_document(
 ):
     return APIResponse(
         data=await PinService.pin_document(document_id, current_user),
-        message="Thêm tài liệu vào danh sách ghim thành công",
+        message="Thêm tài liệu vào danh sách ghim hoàn tất",
     )
 
 @router.delete("/{document_id}", response_model=APIResponse[Any])
@@ -39,7 +39,7 @@ async def unpin_document(
 ):
     return APIResponse(
         data=await PinService.unpin_document(document_id, current_user),
-        message="Xóa tài liệu khỏi danh sách ghim thành công",
+        message="Xóa tài liệu khỏi danh sách ghim hoàn tất",
     )
 
 @router.put("", response_model=APIResponse[Any])
@@ -52,5 +52,5 @@ async def set_pinned_documents(
         data=await PinService.set_pinned_documents(
             data.document_ids, current_user
         ),
-        message="Cập nhật sắp xếp tài liệu ghim thành công",
+        message="Cập nhật sắp xếp tài liệu ghim hoàn tất",
     )

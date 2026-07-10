@@ -51,7 +51,7 @@ export const createFolderAPI = async (name: string, parent_id?: string) => {
     body: JSON.stringify({ name, parent_id }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to create folder");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo cấu trúc thư mục lưu trữ");
   return mapItem(data.data);
 };
 
@@ -71,7 +71,7 @@ export const listStorageItemsAPI = async (
     },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch storage items");
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất danh sách thực thể lưu trữ");
   return data.data.map(mapItem) as StorageItem[];
 };
 
@@ -89,7 +89,7 @@ export const updateStorageItemAPI = async (
     body: JSON.stringify(updates),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to update item");
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật siêu dữ liệu thực thể lưu trữ");
   return mapItem(data.data);
 };
 
@@ -108,7 +108,7 @@ export const deleteStorageItemAPI = async (
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to delete item");
+  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ thực thể lưu trữ");
   return data.data;
 };
 
@@ -126,7 +126,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
   });
   const uploadData = await res.json();
   if (!res.ok)
-    throw new Error(uploadData.message || "Failed to upload file to storage");
+    throw new Error(uploadData.message || "Lỗi đẩy dữ liệu lên máy chủ lưu trữ phân tán");
 
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
 
@@ -147,7 +147,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
 
   const fileData = await registerRes.json();
   if (!registerRes.ok)
-    throw new Error(fileData.message || "Failed to register file");
+    throw new Error(fileData.message || "Lỗi đăng ký bản ghi dữ liệu vào hệ thống");
 
   return fileData.data;
 };
@@ -163,7 +163,7 @@ export const searchStorageItemsAPI = async (q: string, type?: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to search items");
+  if (!res.ok) throw new Error(data.message || "Lỗi thực thi truy vấn tìm kiếm thực thể");
   return data.data.map(mapItem) as StorageItem[];
 };
 
@@ -174,7 +174,7 @@ export const getRecentStorageItemsAPI = async (limit: number = 20) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch recent items");
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất danh sách truy cập gần đây");
   return data.data.map(mapItem) as StorageItem[];
 };
 
@@ -192,7 +192,7 @@ export const copyStorageItemAPI = async (
     body: JSON.stringify({ target_parent_id }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to copy item");
+  if (!res.ok) throw new Error(data.message || "Lỗi nhân bản thực thể lưu trữ");
   return mapItem(data.data);
 };
 
@@ -207,7 +207,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
     body: formData,
   });
   const uploadData = await res.json();
-  if (!res.ok) throw new Error(uploadData.message || "Failed to upload file");
+  if (!res.ok) throw new Error(uploadData.message || "Lỗi đẩy dữ liệu lên máy chủ lưu trữ phân tán");
 
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
 
@@ -225,7 +225,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
 
   const versionData = await versionRes.json();
   if (!versionRes.ok)
-    throw new Error(versionData.message || "Failed to add version");
+    throw new Error(versionData.message || "Lỗi khởi tạo siêu dữ liệu phiên bản mới");
   return versionData.data;
 };
 
@@ -244,7 +244,7 @@ export const shareStorageItemAPI = async (
     body: JSON.stringify({ email, role }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to share item");
+  if (!res.ok) throw new Error(data.message || "Lỗi phân quyền truy cập thực thể lưu trữ");
   return data.data;
 };
 
@@ -255,7 +255,7 @@ export const getStorageQuotaAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to get quota");
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất thông số dung lượng khả dụng");
   return data.data as { used: number; limit: number };
 };
 
@@ -273,7 +273,7 @@ export const createShortcutAPI = async (
     body: JSON.stringify({ target_parent_id }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to create shortcut");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo liên kết tham chiếu (Shortcut)");
   return mapItem(data.data) as StorageItem;
 };
 
@@ -289,7 +289,7 @@ export const downloadZipAPI = async (ids: string[]) => {
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Failed to download zip");
+    throw new Error(errorData.message || "Lỗi khởi chạy tiến trình nén và kết xuất dữ liệu (Zip)");
   }
 
   const blob = await res.blob();
@@ -320,7 +320,7 @@ export const translateStorageDocumentAPI = async (
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to translate document");
+  if (!res.ok) throw new Error(data.message || "Lỗi gọi API dịch thuật văn bản");
   return data.data;
 };
 
@@ -337,6 +337,6 @@ export const getRelatedStorageItemsAPI = async (id: string) => {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Failed to get related documents");
+    throw new Error(data.message || "Lỗi truy xuất bộ dữ liệu tài liệu liên quan");
   return data.data.map(mapItem) as StorageItem[];
 };

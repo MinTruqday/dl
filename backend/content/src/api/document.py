@@ -37,7 +37,7 @@ async def create_document(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.create_document(doc_in, current_user),
-        message="Khởi tạo tài liệu mới trên hệ thống thành công",
+        message="Khởi tạo tài liệu mới trên hệ thống hoàn tất",
         status=status.HTTP_201_CREATED,
     )
 
@@ -51,7 +51,7 @@ async def update_document_content(
         data=await DocumentService.update_document_content(
             document_id, content_in, current_user
         ),
-        message="Cập nhật dữ liệu nội dung tài liệu thành công",
+        message="Cập nhật dữ liệu nội dung tài liệu hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -65,7 +65,7 @@ async def update_document(
         data=await DocumentService.update_document(
             document_id, doc_update, current_user
         ),
-        message="Cập nhật dữ liệu siêu dữ liệu (metadata) tài liệu thành công",
+        message="Cập nhật dữ liệu siêu dữ liệu (metadata) tài liệu hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -82,7 +82,7 @@ async def list_documents(
         data=await DocumentService.list_documents(
             limit, cursor, q, sort_by, category, tag
         ),
-        message="Truy xuất danh mục tài liệu thành công",
+        message="Trích xuất danh mục tài liệu hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -95,7 +95,7 @@ async def get_folders(
     parent_id: Optional[str] = None, current_user: CurrentUser = Depends(get_current_user)
 ):
     folders = await DocumentService.get_folders(parent_id, current_user)
-    return APIResponse(data=folders, message="Truy xuất cấu trúc cây thư mục thành công")
+    return APIResponse(data=folders, message="Trích xuất cấu trúc cây thư mục hoàn tất")
 
 @router.post(
     "/thu-muc",
@@ -106,7 +106,7 @@ async def create_folder(
     req: FolderCreate, current_user: CurrentUser = Depends(get_current_user)
 ):
     folder_doc = await DocumentService.create_folder(req.name, req.parent_id, current_user)
-    return APIResponse(data=folder_doc, message="Khởi tạo không gian thư mục làm việc mới thành công")
+    return APIResponse(data=folder_doc, message="Khởi tạo không gian thư mục làm việc mới hoàn tất")
 
 @router.delete(
     "/thu-muc/{folder_id}",
@@ -135,7 +135,7 @@ async def get_my_documents(
 ):
     return APIResponse(
         data=await DocumentService.get_my_documents(current_user, q, cursor, limit),
-        message="Truy xuất danh sách tài liệu cá nhân thành công",
+        message="Trích xuất danh sách tài liệu cá nhân hoàn tất",
     )
 
 @router.get(
@@ -146,7 +146,7 @@ async def get_my_documents(
 async def get_trash(current_user: CurrentUser = Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.get_trash(current_user),
-        message="Truy xuất dữ liệu tài liệu trong thùng rác thành công",
+        message="Trích xuất dữ liệu tài liệu trong thùng rác hoàn tất",
     )
 
 @router.get("/{document_id}", response_model=APIResponse[DocumentResponse])
@@ -159,7 +159,7 @@ async def get_document_by_id(
         data=await DocumentService.get_document_by_id(
             document_id, current_user, password
         ),
-        message="Truy xuất thông tin chi tiết tài liệu thành công",
+        message="Trích xuất thông tin chi tiết tài liệu hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -169,7 +169,7 @@ async def get_document_by_slug(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.get_document_by_slug(slug, current_user),
-        message="Truy xuất tài liệu thành công",
+        message="Trích xuất tài liệu hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -179,7 +179,7 @@ async def get_document_decryption_key(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.get_document_decryption_key(document_id, current_user),
-        message="Trích xuất khóa giải mã tài liệu (decryption key) thành công",
+        message="Trích xuất khóa giải mã tài liệu (decryption key) hoàn tất",
         status=status.HTTP_200_OK,
     )
 
@@ -187,7 +187,7 @@ async def get_document_decryption_key(
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentService.get_document_preview(slug),
-        message="Truy xuất bản xem trước tài liệu công khai thành công",
+        message="Trích xuất bản xem trước tài liệu công khai hoàn tất",
     )
 
 @router.delete(
@@ -213,7 +213,7 @@ async def restore_document(
 ):
     return APIResponse(
         data=await DocumentService.restore_document(document_id, current_user),
-        message="Tài liệu đã được khôi phục thành công từ thùng rác",
+        message="Tài liệu đã được khôi phục hoàn tất từ thùng rác",
     )
 
 @router.post(
@@ -230,7 +230,7 @@ async def set_document_password(
         data=await DocumentService.set_document_password(
             document_id, req.password, current_user
         ),
-        message="Thiết lập mật khẩu bảo vệ truy cập tài liệu thành công",
+        message="Thiết lập mật khẩu bảo vệ truy cập tài liệu hoàn tất",
     )
 
 @router.get(
@@ -243,7 +243,7 @@ async def get_document_audit_logs(
 ):
     return APIResponse(
         data=await DocumentService.get_document_audit_logs(document_id, current_user),
-        message="Truy xuất nhật ký kiểm toán (audit log) của tài liệu thành công",
+        message="Trích xuất nhật ký kiểm toán (audit log) của tài liệu hoàn tất",
     )
 
 @router.post(
@@ -257,7 +257,7 @@ async def toggle_star_document(
     res = await DocumentService.toggle_star_document(document_id, current_user)
     return APIResponse(
         data=res,
-        message="Cập nhật trạng thái đánh dấu (star) ưu tiên của tài liệu thành công",
+        message="Cập nhật trạng thái đánh dấu (star) ưu tiên của tài liệu hoàn tất",
     )
 
 @router.post(
@@ -273,7 +273,7 @@ async def transfer_document(
     res = await DocumentService.transfer_document(document_id, new_owner_id, current_user)
     return APIResponse(
         data=res,
-        message="Chuyển giao quyền sở hữu tài liệu cho người dùng mới thành công",
+        message="Chuyển giao quyền sở hữu tài liệu cho người dùng mới hoàn tất",
     )
 
 @router.get("/{document_id}/thong-ke", response_model=APIResponse[Any])
@@ -283,7 +283,7 @@ async def get_document_analytics(
     res = await DocumentService.get_document_analytics(document_id, current_user)
     return APIResponse(
         data=res,
-        message="Truy xuất dữ liệu phân tích tương tác tài liệu (analytics) thành công",
+        message="Trích xuất dữ liệu phân tích tương tác tài liệu (analytics) hoàn tất",
     )
 
 @router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
@@ -293,7 +293,7 @@ async def get_document_academic(
     res = await DocumentService.get_document_academic(document_id, current_user)
     return APIResponse(
         data=res,
-        message="Truy xuất dữ liệu phân tích chỉ số học thuật của tài liệu thành công",
+        message="Trích xuất dữ liệu phân tích chỉ số học thuật của tài liệu hoàn tất",
     )
 
 @router.put(
@@ -309,7 +309,7 @@ async def update_tags(
     result = await DocumentService.update_document(
         document_id, DocumentUpdate(tags=req.tags), current_user
     )
-    return APIResponse(data=result, message="Cập nhật danh sách thẻ (tags) phân loại tài liệu thành công")
+    return APIResponse(data=result, message="Cập nhật danh sách thẻ (tags) phân loại tài liệu hoàn tất")
 
 @router.put(
     "/{document_id}/len-lich",
@@ -326,7 +326,7 @@ async def schedule_publish(
         DocumentUpdate(publish_at=req.publish_at, scheduled_publish_at=req.publish_at),
         current_user,
     )
-    return APIResponse(data=result, message="Thiết lập lịch trình xuất bản tự động cho tài liệu thành công")
+    return APIResponse(data=result, message="Thiết lập lịch trình xuất bản tự động cho tài liệu hoàn tất")
 
 @router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
 async def unlock_document(
@@ -339,6 +339,6 @@ async def unlock_document(
         data=await DocumentService.get_document_by_id(
             document_id, current_user, password
         ),
-        message="Xác thực quyền truy cập tài liệu thành công",
+        message="Xác thực quyền truy cập tài liệu hoàn tất",
         status=status.HTTP_200_OK,
     )

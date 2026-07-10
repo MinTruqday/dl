@@ -31,13 +31,13 @@ async def add_reaction(
     await publish_personal_message(
         {"type": "message_reaction", "data": result}, other_id
     )
-    return APIResponse(data=result, message="Ghi nhận tương tác tin nhắn thành công")
+    return APIResponse(data=result, message="Ghi nhận tương tác tin nhắn hoàn tất")
 
 @router.post("/{other_user_id}/chan", response_model=APIResponse[Any])
 async def block_user(other_user_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await InteractionService.block_user(other_user_id, current_user),
-        message="Thực hiện chặn tài khoản gửi tin nhắn thành công",
+        message="Thực hiện chặn tài khoản gửi tin nhắn hoàn tất",
     )
 
 @router.post("/{other_user_id}/bo-chan", response_model=APIResponse[Any])
@@ -56,13 +56,13 @@ async def get_blocked_status(
     )
     return APIResponse(
         data={"is_blocked": blocked},
-        message="Xác minh trạng thái hạn chế tương tác thành công",
+        message="Xác minh trạng thái hạn chế tương tác hoàn tất",
     )
 
 @router.post("/{other_user_id}/tat-thong-bao", response_model=APIResponse[Any])
 async def toggle_mute(other_user_id: str, current_user=Depends(get_current_user)):
     result = await InteractionService.toggle_mute(other_user_id, current_user)
     return APIResponse(
-        data=result, message="Cập nhật cấu hình thông báo cuộc trò chuyện thành công"
+        data=result, message="Cập nhật cấu hình thông báo cuộc trò chuyện hoàn tất"
     )
 

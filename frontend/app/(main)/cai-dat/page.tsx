@@ -107,7 +107,7 @@ export default function SettingsPage() {
         setPayoutInfo(user.settings.payout_info || "");
       }
     } catch (err: any) {
-      showToast("Lỗi đồng bộ", "error");
+      showToast("Lỗi đồng bộ dữ liệu cấu hình", "error");
     }
   }, [user, showToast]);
 
@@ -124,7 +124,7 @@ export default function SettingsPage() {
       refreshUser?.();
       return true;
     } catch (err: any) {
-      showToast("Lỗi cập nhật", "error");
+      showToast("Lỗi cập nhật thay đổi cấu hình", "error");
       return false;
     }
   };
@@ -136,16 +136,16 @@ export default function SettingsPage() {
         hide_reading_activity: hideActivity,
         hide_library: hideLibrary,
       });
-      showToast("Đã cập nhật quyền riêng tư", "success");
+      showToast("Cập nhật thiết lập quyền riêng tư hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi cập nhật riêng tư", "error");
+      showToast("Lỗi cập nhật thiết lập quyền riêng tư", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleApplyAuthor = async () => {
-    if (!motivation) return showToast("Nhập lý do", "error");
+    if (!motivation) return showToast("Dữ liệu lý do ứng tuyển không được để trống", "error");
     setLoading(true);
     try {
       const { API_URL, getToken } = await import("@/features/authentication/services/session.service");
@@ -157,13 +157,13 @@ export default function SettingsPage() {
         },
         body: JSON.stringify({ motivation, portfolio })
       });
-      if (!res.ok) throw new Error("Lỗi gửi đơn");
-      showToast("Gửi thành công", "success");
+      if (!res.ok) throw new Error("Lỗi gửi yêu cầu ứng tuyển tác giả");
+      showToast("Gửi yêu cầu ứng tuyển hoàn tất", "success");
       setMotivation("");
       setPortfolio("");
       refreshUser?.();
     } catch (err: any) {
-      showToast("Lỗi gửi đơn", "error");
+      showToast("Lỗi gửi yêu cầu ứng tuyển tác giả", "error");
     } finally {
       setLoading(false);
     }
@@ -175,12 +175,12 @@ export default function SettingsPage() {
       await toggleMaintenanceModeAPI(!maintenanceMode);
       setMaintenanceMode(!maintenanceMode);
       showToast(
-        !maintenanceMode ? "Đã bật bảo trì" : "Đã tắt bảo trì",
+        !maintenanceMode ? "Kích hoạt chế độ bảo trì hệ thống hoàn tất" : "Tắt chế độ bảo trì hệ thống hoàn tất",
         "success",
       );
       setConfirmModal(null);
     } catch (err: any) {
-      showToast("Lỗi thao tác", "error");
+      showToast("Lỗi cập nhật trạng thái bảo trì", "error");
     } finally {
       setLoading(false);
     }
@@ -194,12 +194,12 @@ export default function SettingsPage() {
       });
       setRegistrationEnabled(!registrationEnabled);
       showToast(
-        !registrationEnabled ? "Đã mở đăng ký" : "Đã đóng đăng ký",
+        !registrationEnabled ? "Kích hoạt đăng ký tài khoản hoàn tất" : "Vô hiệu hóa đăng ký tài khoản hoàn tất",
         "success",
       );
       setConfirmModal(null);
     } catch (err: any) {
-      showToast("Lỗi thao tác", "error");
+      showToast("Lỗi cập nhật trạng thái đăng ký", "error");
     } finally {
       setLoading(false);
     }
@@ -443,7 +443,7 @@ export default function SettingsPage() {
                       setLoading(true);
                       await handleUpdateGeneral({ payout_info: payoutInfo });
                       setLoading(false);
-                      showToast("Đã lưu", "success");
+                      showToast("Lưu cấu hình hệ thống hoàn tất", "success");
                     }}
                     className="pill-button"
                   >

@@ -41,7 +41,7 @@ async def verify_document_watermark(
     if user_id:
         return APIResponse(
             data={"user_id": user_id},
-            message="Trích xuất mã định danh ẩn trong tài liệu thành công",
+            message="Trích xuất mã định danh ẩn trong tài liệu hoàn tất",
             status=200
         )
     return APIResponse(

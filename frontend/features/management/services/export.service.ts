@@ -9,7 +9,7 @@ export async function exportDocumentPdfAPI(documentId: string) {
   });
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.message || "Xuất bản sao PDF thất bại");
+    throw new Error(data.message || "Lỗi kết xuất tài liệu định dạng PDF");
   }
   return res.blob();
 }
@@ -20,7 +20,7 @@ export async function exportDocumentDocxAPI(documentId: string) {
   });
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.message || "Xuất bản sao Word thất bại");
+    throw new Error(data.message || "Lỗi kết xuất tài liệu định dạng Word");
   }
   return res.blob();
 }

@@ -21,7 +21,7 @@ async def create_bookmark_folder(
         data=await BookmarkService.create_bookmark_folder(
             data.name, current_user
         ),
-        message="Khởi tạo thư mục dấu trang thành công",
+        message="Khởi tạo thư mục dấu trang hoàn tất",
         status=201,
     )
 
@@ -31,7 +31,7 @@ async def get_bookmark_folders(
 ):
     return APIResponse(
         data=await BookmarkService.get_bookmark_folders(current_user),
-        message="Truy xuất danh sách thư mục dấu trang thành công",
+        message="Trích xuất danh sách thư mục dấu trang hoàn tất",
     )
 
 @router.put("/thu-muc/{folder_id}", response_model=APIResponse[Any])
@@ -45,7 +45,7 @@ async def assign_bookmarks(
         data=await BookmarkService.assign_bookmarks_to_folder(
             folder_id, data.document_ids, current_user
         ),
-        message="Đồng bộ hóa thư mục dấu trang thành công",
+        message="Đồng bộ hóa thư mục dấu trang hoàn tất",
     )
 
 @router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any])
@@ -58,7 +58,7 @@ async def delete_bookmark_folder(
         data=await BookmarkService.delete_bookmark_folder(
             folder_id, current_user
         ),
-        message="Xóa bỏ hoàn toàn thư mục dấu trang thành công",
+        message="Hủy bỏ hoàn toàn thư mục dấu trang hoàn tất",
     )
 
 @router.post("/{document_id}", response_model=APIResponse[Any])
@@ -69,7 +69,7 @@ async def toggle_bookmark(
 ):
     return APIResponse(
         data=await BookmarkService.toggle_bookmark(document_id, current_user),
-        message="Xử lý thao tác dấu trang tài liệu thành công",
+        message="Xử lý thao tác dấu trang tài liệu hoàn tất",
         status=200,
     )
 
@@ -81,6 +81,6 @@ async def get_bookmarks(
 ):
     return APIResponse(
         data=await BookmarkService.get_bookmarks(current_user, limit),
-        message="Truy xuất danh sách dấu trang thành công",
+        message="Trích xuất danh sách dấu trang hoàn tất",
     )
 

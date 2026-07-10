@@ -34,7 +34,7 @@ async def translate_message(
             },
             other_id,
         )
-    return APIResponse(data=result, message="Dịch văn bản thành công")
+    return APIResponse(data=result, message="Dịch văn bản hoàn tất")
 
 @router.post("/{other_user_id}/tu-huy", response_model=APIResponse[Any])
 async def toggle_self_destruct(
@@ -51,5 +51,5 @@ async def toggle_self_destruct(
         },
         other_user_id,
     )
-    return APIResponse(data=result, message="Kích hoạt tính năng tự động hủy tin nhắn thành công")
+    return APIResponse(data=result, message="Kích hoạt tính năng tự động hủy tin nhắn hoàn tất")
 

@@ -84,7 +84,7 @@ class ActingAgent:
                     )
                     logger.exception("Data processing issue encountered, system is automatically retrying")
                     if attempt == 2:
-                        return "Thao tác thực hiện không thành công sau nhiều lần thử lại, vui lòng kiểm tra lại yêu cầu"
+                        return "Thao tác thực hiện không hoàn tất sau nhiều lần thử lại, vui lòng kiểm tra lại yêu cầu"
 
         except Exception as e:
             logger.exception("Execution process interrupted")

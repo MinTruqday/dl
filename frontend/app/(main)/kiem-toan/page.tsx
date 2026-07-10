@@ -30,7 +30,7 @@ export default function LogsPage() {
       const logsRes = await getModeratorActivityAPI();
       setActivityLogs(logsRes.data || logsRes || []);
     } catch (err: any) {
-      showToast("Không thể tải nhật ký hệ thống.", "error");
+      showToast("Lỗi trích xuất bản ghi nhật ký hệ thống", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);

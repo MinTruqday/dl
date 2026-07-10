@@ -87,7 +87,7 @@ export default function DocumentDetailsPage() {
           setDecryptedContent(fullText);
         } catch (err) {
           setDecryptedContent(
-            "Lỗi giải mã hoặc chứng thực bảo mật không thành công.",
+            "Lỗi giải mã hoặc chứng thực bảo mật không hoàn tất",
           );
         }
       };
@@ -108,10 +108,10 @@ export default function DocumentDetailsPage() {
         setDocData(data.data);
         setIsBookmarked(data.data.is_bookmarked || false);
       } else {
-        setError("Không thể truy xuất dữ liệu tài liệu");
+        setError("Lỗi trích xuất thông tin chi tiết tài liệu");
       }
     } catch (err: any) {
-      setError("Mất kết nối với hệ thống lưu trữ");
+      setError("Mất kết nối đến máy chủ lưu trữ dữ liệu");
     } finally {
       setLoading(false);
     }
@@ -129,34 +129,34 @@ export default function DocumentDetailsPage() {
   const handleBookmark = async () => {
     if (!docData) return;
     if (!user) {
-      showToast("Vui lòng đăng nhập để lưu", "error");
+      showToast("Yêu cầu xác thực tài khoản để thực hiện chức năng này", "error");
       return;
     }
     try {
       await toggleBookmarkAPI(docData._id || docData.id);
       setIsBookmarked(!isBookmarked);
       showToast(
-        isBookmarked ? "Đã gỡ khỏi dấu trang" : "Đã thêm vào dấu trang",
+        isBookmarked ? "Gỡ đánh dấu trang hoàn tất" : "Thêm đánh dấu trang hoàn tất",
         "success",
       );
     } catch (err: any) {
-      showToast("Cập nhật dấu trang thất bại", "error");
+      showToast("Lỗi cập nhật trạng thái dấu trang", "error");
     }
   };
 
   const handlePurchase = async () => {
     if (!docData) return;
     if (!user) {
-      showToast("Vui lòng đăng nhập để mua", "error");
+      showToast("Yêu cầu xác thực tài khoản để thực hiện giao dịch", "error");
       return;
     }
     setIsPurchasing(true);
     try {
       await purchaseDocumentAPI(docData._id || docData.id);
-      showToast("Mua tài liệu thành công!", "success");
+      showToast("Giao dịch thanh toán tài liệu hoàn tất", "success");
       setDocData({ ...docData, has_purchased: true });
     } catch (err: any) {
-      showToast(err.message || "Giao dịch thất bại", "error");
+      showToast(err.message || "Giao dịch thanh toán không hoàn tất", "error");
     } finally {
       setIsPurchasing(false);
     }
@@ -164,7 +164,7 @@ export default function DocumentDetailsPage() {
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    showToast("Đã sao chép liên kết", "success");
+    showToast("Sao chép liên kết vào bộ nhớ tạm hoàn tất", "success");
   };
 
   if (loading) return <PageLoader />;

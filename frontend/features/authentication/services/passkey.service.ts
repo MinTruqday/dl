@@ -10,7 +10,7 @@ export async function getPasskeyRegistrationOptionsAPI() {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "Không thể tải tùy chọn đăng ký khóa truy cập",
+      data.message || "Lỗi truy xuất tham số cấu hình đăng ký chứng thư số",
     );
   return data;
 }
@@ -23,7 +23,7 @@ export async function verifyPasskeyRegistrationAPI(attestationResponse: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Xác thực đăng ký khóa truy cập thất bại");
+    throw new Error(data.message || "Lỗi kiểm chứng kết quả đăng ký chứng thư số");
   return data;
 }
 
@@ -34,7 +34,7 @@ export async function getPasskeyLoginOptionsAPI(email: string) {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "Không thể tải tùy chọn đăng nhập khóa truy cập",
+      data.message || "Lỗi truy xuất tham số cấu hình đăng nhập chứng thư số",
     );
   return data;
 }
@@ -50,6 +50,6 @@ export async function verifyPasskeyLoginAPI(assertionResponse: any) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Đăng nhập bằng khóa truy cập thất bại");
+    throw new Error(data.message || "Lỗi kiểm chứng dữ liệu đăng nhập chứng thư số");
   return data;
 }

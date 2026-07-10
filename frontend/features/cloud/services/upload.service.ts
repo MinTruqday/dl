@@ -21,7 +21,7 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
   });
   
   const reqData = await reqRes.json();
-  if (!reqRes.ok) throw new Error(reqData.detail || reqData.message || "Không thể khởi tạo phiên tải lên");
+  if (!reqRes.ok) throw new Error(reqData.detail || reqData.message || "Lỗi cấp phát chuỗi xác thực (Presigned URL)");
   
   const { upload_url, file_path } = reqData.data;
 
@@ -34,7 +34,7 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
     body: file,
   });
   
-  if (!putRes.ok) throw new Error("Lỗi tải tệp trực tiếp lên máy chủ lưu trữ");
+  if (!putRes.ok) throw new Error("Lỗi đẩy luồng dữ liệu (Stream) lên máy chủ lưu trữ");
 
   // 3. Confirm upload
   const confirmRes = await fetch(`${API_URL}/tai-len/xac-nhan`, {
@@ -54,7 +54,7 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
   });
   
   const confirmData = await confirmRes.json();
-  if (!confirmRes.ok) throw new Error(confirmData.detail || confirmData.message || "Không thể xác nhận tải lên");
+  if (!confirmRes.ok) throw new Error(confirmData.detail || confirmData.message || "Lỗi đồng bộ trạng thái lưu trữ cuối cùng");
   
   return confirmData;
 }

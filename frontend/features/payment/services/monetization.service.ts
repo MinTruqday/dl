@@ -11,7 +11,7 @@ export async function purchaseDocumentAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Mua tài liệu thất bại");
+    throw new Error(data.detail || data.message || "Lỗi giao dịch mua tài liệu");
   }
   return data;
 }
@@ -25,7 +25,7 @@ export async function buyMembershipAPI(tier: "PRO" | "PREMIUM") {
   const data = await res.json();
   if (!res.ok) {
     throw new Error(
-      data.detail || data.message || "Failed to upgrade membership plan",
+      data.detail || data.message || "Lỗi xử lý yêu cầu nâng cấp gói dịch vụ",
     );
   }
   return data;
@@ -38,7 +38,7 @@ export async function getAuthorRevenueAPI() {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Lấy doanh thu thất bại");
+    throw new Error(data.detail || data.message || "Lỗi trích xuất số liệu doanh thu");
   }
   return data;
 }
@@ -59,7 +59,7 @@ export async function setDocumentPricingAPI(
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Thiết lập giá thất bại");
+    throw new Error(data.detail || data.message || "Lỗi cập nhật cấu hình định giá");
   }
   return data;
 }

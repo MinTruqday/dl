@@ -96,4 +96,4 @@ async def agent_summarize_long_document(document_id: str, config: dict) -> str:
     res = await map_reduce_app.ainvoke(
         {"document_text": text, "chunks": [], "summaries": [], "final_summary": ""}
     )
-    return f"Tiến trình tổng hợp tài liệu hoàn tất thành công\n\n{res['final_summary']}"
+    return f"Tiến trình tổng hợp tài liệu hoàn tất\n\n{res['final_summary']}"

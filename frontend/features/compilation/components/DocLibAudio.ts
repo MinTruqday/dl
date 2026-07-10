@@ -114,7 +114,7 @@ export default class DocLibAudio implements BlockTool {
               this.buildUI();
             })
             .catch((err) => {
-              console.error("Upload failed", err);
+              console.error("Lỗi đồng bộ luồng dữ liệu âm thanh", err);
               this.data.url = URL.createObjectURL(file);
 
               this.buildUI();
@@ -126,7 +126,7 @@ export default class DocLibAudio implements BlockTool {
 
       uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = prompt("Paste direct URL:");
+        const url = prompt("Vui lòng cung cấp đường dẫn truy cập tĩnh (Direct URL):");
         if (url) {
           this.data.url = url;
 

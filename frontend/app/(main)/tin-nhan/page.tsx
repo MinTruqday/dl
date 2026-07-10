@@ -255,7 +255,7 @@ export default function MessagesPage() {
       const res = await getConversationsAPI();
       setConversations(res.data || res || []);
     } catch (err: any) {
-      showToast("Lỗi đồng bộ danh sách hội thoại.", "error");
+      showToast("Lỗi đồng bộ danh sách phiên hội thoại", "error");
     } finally {
       setLoadingConv(false);
     }
@@ -457,7 +457,7 @@ export default function MessagesPage() {
         ),
       );
     } catch (err: any) {
-      showToast("Không thể truy xuất lịch sử", "error");
+      showToast("Lỗi trích xuất lịch sử phiên hội thoại", "error");
     } finally {
       setLoadingMsgs(false);
     }
@@ -465,7 +465,7 @@ export default function MessagesPage() {
 
   const handleSend = async () => {
     if (isBlocked) {
-      showToast("Không thể gửi khi bị chặn.", "error");
+      showToast("Không thể gửi tin nhắn do giới hạn bảo mật", "error");
       return;
     }
     if ((!newMessage.trim() && imageFiles.length === 0) || !selectedConv || sending) return;
@@ -486,7 +486,7 @@ export default function MessagesPage() {
         setEditingMsg(null);
         setNewMessage("");
       } catch (err: any) {
-        showToast("Chỉnh sửa thất bại.", "error");
+        showToast("Lỗi cập nhật nội dung tin nhắn", "error");
       } finally {
         setSending(false);
       }
@@ -541,7 +541,7 @@ export default function MessagesPage() {
       setImageFiles([]);
       await saveDraftAPI(selectedConv.other_user_id, "");
     } catch (err: any) {
-      showToast("Gửi thất bại.", "error");
+      showToast("Lỗi truyền tải dữ liệu tin nhắn", "error");
     } finally {
       setSending(false);
       setUploadingImage(false);
@@ -599,7 +599,7 @@ export default function MessagesPage() {
           setMessages((prev) => [...prev, msg]);
           updateConversationInPlace(selectedConv.other_user_id, msg);
         } catch (err) {
-          showToast("Lỗi gửi giọng nói.", "error");
+          showToast("Lỗi thực thi luồng dữ liệu âm thanh", "error");
         } finally {
           setSending(false);
         }
@@ -615,7 +615,7 @@ export default function MessagesPage() {
         1000,
       );
     } catch (err) {
-      showToast("Không thể ghi âm.", "error");
+      showToast("Lỗi kết nối đến thiết bị thu âm", "error");
     }
   };
 
@@ -662,7 +662,7 @@ export default function MessagesPage() {
         return newMsgs;
       });
     } catch (err: any) {
-      showToast("Ghim thất bại.", "error");
+      showToast("Lỗi cập nhật trạng thái ghim tin nhắn", "error");
     }
   };
 
@@ -676,9 +676,9 @@ export default function MessagesPage() {
             : m,
         ),
       );
-      showToast("Đã thu hồi.", "success");
+      showToast("Thu hồi tin nhắn hoàn tất", "success");
     } catch (err: any) {
-      showToast("Thu hồi thất bại.", "error");
+      showToast("Lỗi thực thi yêu cầu thu hồi tin nhắn", "error");
     }
   };
 
@@ -689,7 +689,7 @@ export default function MessagesPage() {
       // ignore API error — hide locally regardless
     }
     setMessages((prev) => prev.filter((m) => (m._id || m.id) !== messageId));
-    showToast("Đã xóa khỏi màn hình của bạn.", "success");
+    showToast("Xóa dữ liệu cục bộ hoàn tất", "success");
   };
 
   const handleSearchMessages = async (q: string) => {
@@ -731,7 +731,7 @@ export default function MessagesPage() {
         ),
       );
     } catch (err: any) {
-      showToast("Thất bại.", "error");
+      showToast("Lỗi thực thi thao tác phản hồi", "error");
     }
   };
 
@@ -752,10 +752,10 @@ export default function MessagesPage() {
       const newMsg = res.data || res;
       setMessages((prev) => [...prev, newMsg]);
       setShowShareDocModal(false);
-      showToast("Đã chia sẻ.", "success");
+      showToast("Chia sẻ tài liệu hoàn tất", "success");
       updateConversationInPlace(selectedConv.other_user_id, newMsg);
     } catch (err: any) {
-      showToast("Lỗi chia sẻ.", "error");
+      showToast("Lỗi khởi tạo liên kết chia sẻ tài liệu", "error");
     }
   };
 
@@ -765,14 +765,14 @@ export default function MessagesPage() {
       if (isBlocked) {
         await unblockUserAPI(selectedConv.other_user_id);
         setIsBlocked(false);
-        showToast("Đã bỏ chặn.", "success");
+        showToast("Gỡ chặn người dùng hoàn tất", "success");
       } else {
         await blockUserAPI(selectedConv.other_user_id);
         setIsBlocked(true);
-        showToast("Đã chặn.", "success");
+        showToast("Chặn người dùng hoàn tất", "success");
       }
     } catch (err: any) {
-      showToast("Thao tác thất bại.", "error");
+      showToast("Lỗi cập nhật trạng thái kết nối người dùng", "error");
     }
   };
 
@@ -780,10 +780,10 @@ export default function MessagesPage() {
     try {
       const res = await togglePinConversationAPI(otherId);
       const status = res.data || res;
-      showToast(status.is_pinned ? "Đã ghim." : "Đã bỏ ghim.", "success");
+      showToast(status.is_pinned ? "Ghim phiên hội thoại hoàn tất" : "Bỏ ghim phiên hội thoại hoàn tất", "success");
       setActiveConvMenuId(null);
     } catch (err: any) {
-      showToast("Không thể ghim.", "error");
+      showToast("Lỗi cấu hình ghim phiên hội thoại", "error");
     }
   };
 
@@ -797,7 +797,7 @@ export default function MessagesPage() {
       );
       setActiveConvMenuId(null);
     } catch (err) {
-      showToast("Không thể đánh dấu", "error");
+      showToast("Lỗi cập nhật trạng thái hiển thị", "error");
     }
   };
 
@@ -810,9 +810,9 @@ export default function MessagesPage() {
         prev.filter((c) => c.other_user_id !== otherUserId),
       );
       setActiveConvMenuId(null);
-      showToast("Đã xóa", "success");
+      showToast("Xóa phiên hội thoại hoàn tất", "success");
     } catch (err) {
-      showToast("Không thể xóa", "error");
+      showToast("Lỗi xóa dữ liệu phiên hội thoại", "error");
     }
   };
 
@@ -826,9 +826,9 @@ export default function MessagesPage() {
             : m,
         ),
       );
-      showToast("Đã dịch.", "success");
+      showToast("Dịch ngôn ngữ hoàn tất", "success");
     } catch (err: any) {
-      showToast("Không thể dịch.", "error");
+      showToast("Lỗi thực thi luồng dịch thuật tự động", "error");
     }
   };
 
@@ -838,11 +838,11 @@ export default function MessagesPage() {
       const res = await toggleMuteAPI(selectedConv.other_user_id);
       setIsMuted((res.data || res).is_muted);
       showToast(
-        (res.data || res).is_muted ? "Đã tắt âm." : "Đã bật âm.",
+        (res.data || res).is_muted ? "Tắt thông báo hoàn tất" : "Bật thông báo hoàn tất",
         "success",
       );
     } catch (err: any) {
-      showToast("Không thể điều chỉnh.", "error");
+      showToast("Lỗi thiết lập trạng thái âm thanh", "error");
     }
   };
 
@@ -853,11 +853,11 @@ export default function MessagesPage() {
       setSelfDestructSeconds(seconds);
       setShowSelfDestructMenu(false);
       showToast(
-        seconds > 0 ? `Đã đặt tự hủy sau ${seconds}s.` : "Đã tắt tự hủy.",
+        seconds > 0 ? `Cấu hình tự hủy sau ${seconds}s hoàn tất` : "Tắt chế độ tự hủy hoàn tất",
         "success",
       );
     } catch (err: any) {
-      showToast("Cài đặt thất bại.", "error");
+      showToast("Lỗi cập nhật cấu hình tự hủy", "error");
     }
   };
 
@@ -872,11 +872,11 @@ export default function MessagesPage() {
   };
 
   const handleCreateGroup = async () => {
-    if (!groupName.trim()) return showToast("Nhập tên nhóm.", "error");
+    if (!groupName.trim()) return showToast("Tên nhóm không được để trống", "error");
     try {
       const res = await createGroupAPI(groupName.trim(), selectedMembers);
       const created = res.data || res;
-      showToast("Tạo nhóm thành công.", "success");
+      showToast("Khởi tạo nhóm trò chuyện hoàn tất", "success");
       setShowGroupModal(false);
       setGroupName("");
       setSelectedMembers([]);
@@ -894,7 +894,7 @@ export default function MessagesPage() {
         unread_count: 0,
       });
     } catch (err: any) {
-      showToast("Tạo thất bại.", "error");
+      showToast("Lỗi thiết lập nhóm trò chuyện mới", "error");
     }
   };
 
@@ -906,7 +906,7 @@ export default function MessagesPage() {
       const res = await searchUsersAPI(q);
       setSearchResults(res.data || res || []);
     } catch (err: any) {
-      showToast("Tìm kiếm thất bại.", "error");
+      showToast("Lỗi trích xuất thông tin người dùng", "error");
     } finally {
       setSearching(false);
     }

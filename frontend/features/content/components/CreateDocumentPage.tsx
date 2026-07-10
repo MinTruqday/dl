@@ -63,7 +63,7 @@ export default function CreateDocumentPage() {
         author_name: authorName,
       });
       if (res) {
-        showToast("Khởi tạo tác phẩm thành công.", "success");
+        showToast("Khởi tạo dữ liệu tác phẩm hoàn tất", "success");
         setTimeout(() => {
           router.push(
             `/soan-thao?tai-lieu=${res.data?.id || res.data?._id || res.id || res._id}`,
@@ -71,7 +71,7 @@ export default function CreateDocumentPage() {
         }, 1000);
       }
     } catch (err: any) {
-      showToast(err.message || "Lỗi khởi tạo tài liệu.", "error");
+      showToast(err.message || "Lỗi khởi tạo dữ liệu tác phẩm", "error");
     } finally {
       setLoading(false);
     }

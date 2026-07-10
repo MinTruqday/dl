@@ -14,7 +14,7 @@ router = APIRouter(route_class=LoggingRoute, prefix="/xac-thuc/khoa-bao-mat")
 async def passkey_login_begin(payload: PasskeyRequest):
     return APIResponse(
         data=await PasskeyService.login_begin(payload.email),
-        message="Khởi tạo quy trình xác thực bằng mã bảo mật thành công",
+        message="Khởi tạo quy trình xác thực bằng mã bảo mật hoàn tất",
         status=200,
     )
 
@@ -24,7 +24,7 @@ async def passkey_login_finish(payload: PasskeyFinishRequest):
         data=await PasskeyService.login_finish(
             payload.email, payload.credential
         ),
-        message="Xác thực thông tin thông qua mã bảo mật thành công",
+        message="Xác thực thông tin thông qua mã bảo mật hoàn tất",
         status=200,
     )
 
@@ -32,7 +32,7 @@ async def passkey_login_finish(payload: PasskeyFinishRequest):
 async def passkey_register_begin(payload: PasskeyRequest):
     return APIResponse(
         data=await PasskeyService.register_begin(payload.email),
-        message="Khởi tạo quy trình đăng ký mã bảo mật thành công",
+        message="Khởi tạo quy trình đăng ký mã bảo mật hoàn tất",
         status=200,
     )
 
@@ -42,6 +42,6 @@ async def passkey_register_finish(payload: PasskeyFinishRequest):
         data=await PasskeyService.register_finish(
             payload.email, payload.credential
         ),
-        message="Thực hiện đăng ký mã bảo mật thành công",
+        message="Thực hiện đăng ký mã bảo mật hoàn tất",
         status=200,
     )

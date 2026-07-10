@@ -27,7 +27,7 @@ export default function AuthorAnalyticsPage() {
       setDocuments(docData.data || docData || []);
       setRevenue(null);
     } catch (err: any) {
-      showToast("Lỗi tải dữ liệu", "error");
+      showToast("Lỗi trích xuất bộ sưu tập phân tích", "error");
     } finally {
       setLoading(false);
     }

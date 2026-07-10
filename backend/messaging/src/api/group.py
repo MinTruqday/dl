@@ -23,6 +23,6 @@ async def create_group(req: dict, current_user=Depends(get_current_user)):
         return APIResponse(message="Tên nhóm cung cấp không hợp lệ", status=400)
     result = await GroupService.create_group(group_name, member_ids, current_user)
     return APIResponse(
-        data=result, message="Tạo nhóm trò chuyện thành công", status=201
+        data=result, message="Tạo nhóm trò chuyện hoàn tất", status=201
     )
 

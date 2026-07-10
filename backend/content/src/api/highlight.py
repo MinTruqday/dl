@@ -26,7 +26,7 @@ async def create_highlight(
         data=await HighlightService.create_highlight(
             document_id, data.model_dump(), current_user
         ),
-        message="Khởi tạo đoạn văn bản đánh dấu thành công",
+        message="Khởi tạo đoạn văn bản đánh dấu hoàn tất",
         status=201,
     )
 
@@ -38,7 +38,7 @@ async def get_highlights(
 ):
     return APIResponse(
         data=await HighlightService.get_highlights(document_id, current_user),
-        message="Truy xuất danh sách đoạn văn bản đánh dấu thành công",
+        message="Trích xuất danh sách đoạn văn bản đánh dấu hoàn tất",
         status=200,
     )
 
@@ -53,7 +53,7 @@ async def update_highlight_note(
         data=await HighlightService.update_highlight_note(
             highlight_id, data.note, current_user
         ),
-        message="Cập nhật nội dung ghi chú cho phần đánh dấu thành công",
+        message="Cập nhật nội dung ghi chú cho phần đánh dấu hoàn tất",
         status=200,
     )
 
@@ -65,7 +65,7 @@ async def delete_highlight(
 ):
     return APIResponse(
         data=await HighlightService.delete_highlight(highlight_id, current_user),
-        message="Hủy bỏ đoạn văn bản đánh dấu khỏi tài liệu thành công",
+        message="Hủy bỏ đoạn văn bản đánh dấu khỏi tài liệu hoàn tất",
         status=200,
     )
 
@@ -81,7 +81,7 @@ async def get_all_notes(
         data=await HighlightService.get_all_notes(
             current_user, cursor, limit, skip
         ),
-        message="Truy xuất danh sách toàn bộ ghi chú cá nhân thành công",
+        message="Trích xuất danh sách toàn bộ ghi chú cá nhân hoàn tất",
         status=200,
     )
 
@@ -95,6 +95,6 @@ async def export_highlights_markdown(
         data=await HighlightService.export_highlights_markdown(
             document_id, current_user
         ),
-        message="Kết xuất dữ liệu đoạn văn bản đánh dấu thành công",
+        message="Kết xuất dữ liệu đoạn văn bản đánh dấu hoàn tất",
         status=200,
     )

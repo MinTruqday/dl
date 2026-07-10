@@ -55,25 +55,25 @@ export default function ProfilePage() {
         avatar_url: avatarUrl,
       });
       if (res && (res.status === 200 || res.id)) {
-        showToast("Đã cập nhật hồ sơ", "success");
+        showToast("Cập nhật thông tin hồ sơ hoàn tất", "success");
       } else {
-        showToast("Cập nhật thất bại", "error");
+        showToast("Lỗi cập nhật thông tin hồ sơ", "error");
       }
     } catch (err: any) {
-      showToast("Lỗi hệ thống", "error");
+      showToast("Lỗi gián đoạn hệ thống", "error");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleApplyAuthor = async () => {
-    if (!motivation.trim()) return showToast("Vui lòng nhập lý do", "error");
+    if (!motivation.trim()) return showToast("Lỗi thiếu hụt nội dung giải trình", "error");
     setIsApplying(true);
     try {
-      showToast("Đã gửi đơn ứng tuyển", "success");
+      showToast("Khởi tạo yêu cầu cấp quyền hoàn tất", "success");
       setMotivation("");
     } catch (e: any) {
-      showToast("Ứng tuyển thất bại", "error");
+      showToast("Lỗi khởi tạo yêu cầu cấp quyền", "error");
     } finally {
       setIsApplying(false);
     }
@@ -82,10 +82,10 @@ export default function ProfilePage() {
   const handleBecomeAuthor = async () => {
     setIsSaving(true);
     try {
-      showToast("Đã trở thành tác giả", "success");
+      showToast("Cập nhật phân quyền tác giả hoàn tất", "success");
       window.location.reload();
     } catch (e: any) {
-      showToast("Nâng cấp thất bại", "error");
+      showToast("Lỗi cập nhật phân quyền tác giả", "error");
     } finally {
       setIsSaving(false);
     }
@@ -104,10 +104,10 @@ export default function ProfilePage() {
             ? res.data.url
             : `${API_URL}/storage/${res.data.url}`,
         );
-        showToast("Đã cập nhật ảnh đại diện", "success");
+        showToast("Lưu trữ tệp đa phương tiện hoàn tất", "success");
       }
     } catch (err: any) {
-      showToast("Lỗi tải ảnh", "error");
+      showToast("Lỗi truyền tải tệp đa phương tiện", "error");
     } finally {
       setIsSaving(false);
     }

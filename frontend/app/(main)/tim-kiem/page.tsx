@@ -88,7 +88,7 @@ function SearchResultsContent() {
 
       setResults(filtered);
     } catch (err: any) {
-      console.error("Search failed:", err);
+      console.error("Error executing document search query:", err);
     } finally {
       setLoading(false);
     }

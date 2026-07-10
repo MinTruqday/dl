@@ -88,7 +88,7 @@ export default function ConfigPage() {
       setFolders((foldersData as any).data || foldersData || []);
       if (list.length > 0) setSelectedDocumentId(list[0]._id || list[0].id);
     } catch {
-      showToast("Lỗi tải danh sách tác phẩm", "error");
+      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
     } finally {
       setLoadingDocs(false);
       requestAnimationFrame(() => setVisible(true));
@@ -129,7 +129,7 @@ export default function ConfigPage() {
           setNewTagInput("");
           fetchInitData();
         } catch {
-          showToast("Thêm thẻ thất bại", "error");
+          showToast("Lỗi cập nhật danh sách thẻ phân loại", "error");
         }
       }
     }
@@ -143,7 +143,7 @@ export default function ConfigPage() {
       setDocTags(newTags);
       fetchInitData();
     } catch {
-      showToast("Xóa thẻ thất bại", "error");
+      showToast("Lỗi gỡ bỏ thẻ phân loại", "error");
     }
   };
 
@@ -155,10 +155,10 @@ export default function ConfigPage() {
         disable_copy: drmCopy,
         hide_from_search: drmSearch,
       });
-      showToast("Đã cập nhật bảo vệ bản quyền", "success");
+      showToast("Cập nhật cấu hình bảo vệ bản quyền (DRM) hoàn tất", "success");
       fetchInitData();
     } catch {
-      showToast("Cập nhật DRM thất bại", "error");
+      showToast("Lỗi cập nhật cấu hình bảo vệ bản quyền (DRM)", "error");
     } finally {
       setSavingDrm(false);
     }
@@ -169,9 +169,9 @@ export default function ConfigPage() {
     setIsIngesting(true);
     try {
       await ingestDocumentAPI(selectedDocumentId);
-      showToast("AI đã cập nhật nội dung mới", "success");
+      showToast("Khởi tạo tiến trình đồng bộ vector AI hoàn tất", "success");
     } catch {
-      showToast("Đồng bộ AI thất bại", "error");
+      showToast("Lỗi khởi chạy tiến trình đồng bộ vector AI", "error");
     } finally {
       setIsIngesting(false);
     }
@@ -181,21 +181,21 @@ export default function ConfigPage() {
     if (!inviteEmail.trim() || !selectedDocumentId) return;
     try {
       await inviteCollaboratorAPI(selectedDocumentId, inviteEmail.trim());
-      showToast("Đã gửi lời mời cộng tác", "success");
+      showToast("Khởi tạo yêu cầu cấp quyền cộng tác hoàn tất", "success");
       setInviteEmail("");
       fetchCollaborators();
     } catch {
-      showToast("Gửi lời mời thất bại", "error");
+      showToast("Lỗi khởi tạo yêu cầu cấp quyền cộng tác", "error");
     }
   };
 
   const handleRemoveCollab = async (collabId: string) => {
     try {
       await removeCollaboratorAPI(collabId);
-      showToast("Đã xóa cộng tác viên", "success");
+      showToast("Thu hồi quyền truy cập cộng tác hoàn tất", "success");
       fetchCollaborators();
     } catch {
-      showToast("Xóa cộng tác viên thất bại", "error");
+      showToast("Lỗi thu hồi quyền truy cập cộng tác", "error");
     }
   };
 
@@ -204,12 +204,12 @@ export default function ConfigPage() {
     setTransferUserIdLoading(true);
     try {
       await transferDocumentAPI(selectedDocumentId, transferUserId.trim());
-      showToast("Đã chuyển nhượng tác phẩm", "success");
+      showToast("Chuyển giao quyền sở hữu tài liệu hoàn tất", "success");
       setTransferUserId("");
       setConfirmTransfer(false);
       fetchInitData();
     } catch {
-      showToast("Chuyển nhượng thất bại", "error");
+      showToast("Lỗi chuyển giao quyền sở hữu tài liệu", "error");
     } finally {
       setTransferUserIdLoading(false);
     }
@@ -325,10 +325,10 @@ export default function ConfigPage() {
                         await updateDocumentAPI(selectedDocumentId, {
                           folder_id: e.target.value || null,
                         });
-                        showToast("Đã di chuyển tác phẩm", "success");
+                        showToast("Cập nhật liên kết thư mục hoàn tất", "success");
                         fetchInitData();
                       } catch {
-                        showToast("Không thể di chuyển", "error");
+                        showToast("Lỗi cập nhật liên kết thư mục", "error");
                       }
                     }}
                     className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium rounded-[10px] outline-none bg-[#F5F5F7] focus:bg-white focus:border-[#0071E3] appearance-none transition-colors cursor-pointer"

@@ -106,7 +106,7 @@ export default function DocumentViewer() {
       const res = await getHighlightsAPI(id);
       setHighlights(Array.isArray(res) ? res : res.data || []);
     } catch {
-      showToast("Không thể đồng bộ nêu bật", "error");
+      showToast("Lỗi đồng bộ dữ liệu nêu bật tài liệu", "error");
     }
   }, [id, showToast]);
 
@@ -160,12 +160,12 @@ export default function DocumentViewer() {
             )
               .then((r) => r.json())
               .then((res) => setZipTree(res.data || []))
-              .catch(console.error);
+              .catch((err) => console.error("Error fetching zip tree for document ID:", id, err));
           }
         } else
           setError("Quyền truy cập của bạn bị giới hạn đối với tài liệu này");
       } catch {
-        setError("Mất kết nối với hệ thống");
+        setError("Mất kết nối đến máy chủ hệ thống");
       } finally {
         setLoading(false);
       }
@@ -184,7 +184,7 @@ export default function DocumentViewer() {
         setSessions(data.data || data || []);
       }
     } catch {
-      showToast("Không thể đồng bộ lịch sử", "error");
+      showToast("Lỗi đồng bộ dữ liệu lịch sử hội thoại", "error");
     }
   }, [id, showToast]);
 
@@ -255,7 +255,7 @@ export default function DocumentViewer() {
           setDecryptedContent(fullText);
         } catch {
           setDecryptedContent(
-            "Lỗi giải mã hoặc chứng thực bảo mật không thành công. Hãy thử tải lại trang.",
+            "Lỗi giải mã hoặc chứng thực bảo mật không hoàn tất",
           );
         }
       };
@@ -296,7 +296,7 @@ export default function DocumentViewer() {
           fetchSessions();
         }
       } catch {
-        showToast("Không thể khởi tạo phiên làm việc", "error");
+        showToast("Lỗi khởi tạo phiên hội thoại mới", "error");
         setAsking(false);
         return;
       }
@@ -319,7 +319,7 @@ export default function DocumentViewer() {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content:
-            res.data?.answer || res.answer || "Không thể trích xuất phản hồi.",
+            res.data?.answer || res.answer || "Lỗi trích xuất phản hồi",
         },
       ]);
     } catch (e: any) {
@@ -366,7 +366,7 @@ export default function DocumentViewer() {
       showToast(res.data?.translated_text || res.translated_text, "success");
       setSelection(null);
     } catch {
-      showToast("Không thể dịch thuật", "error");
+      showToast("Lỗi xử lý dịch thuật văn bản", "error");
     } finally {
       setTranslating(false);
     }
@@ -379,9 +379,9 @@ export default function DocumentViewer() {
       fetchHighlights();
       setSelection(null);
       window.getSelection()?.removeAllRanges();
-      showToast("Đã lưu nêu bật", "success");
+      showToast("Lưu dữ liệu nêu bật hoàn tất", "success");
     } catch {
-      showToast("Không thể lưu nêu bật", "error");
+      showToast("Lỗi lưu dữ liệu nêu bật", "error");
     }
   };
 
@@ -391,9 +391,9 @@ export default function DocumentViewer() {
       setHighlights((prev) =>
         prev.filter((h) => (h.id || h._id) !== highlightId),
       );
-      showToast("Đã xóa nêu bật", "success");
+      showToast("Xóa dữ liệu nêu bật hoàn tất", "success");
     } catch {
-      showToast("Không thể xóa nêu bật", "error");
+      showToast("Lỗi xóa dữ liệu nêu bật", "error");
     }
   };
 
@@ -402,11 +402,11 @@ export default function DocumentViewer() {
       await toggleBookmarkAPI(id);
       setIsBookmarked(!isBookmarked);
       showToast(
-        isBookmarked ? "Đã gỡ khỏi dấu trang" : "Đã thêm vào dấu trang",
+        isBookmarked ? "Gỡ đánh dấu trang hoàn tất" : "Thêm đánh dấu trang hoàn tất",
         "success",
       );
     } catch {
-      showToast("Cập nhật dấu trang thất bại", "error");
+      showToast("Lỗi cập nhật trạng thái dấu trang", "error");
     }
   };
 
@@ -907,7 +907,10 @@ export default function DocumentViewer() {
                             type: res.data?.type || "text",
                           }),
                         )
-                        .catch(() => showToast("Lỗi", "error"))
+                        .catch((err) => {
+                          console.error("Error fetching zip content for file:", item.path, err);
+                          showToast("Lỗi trích xuất mã nguồn tệp tin ZIP", "error");
+                        })
                         .finally(() => setZipLoading(false));
                     }
                   }}

@@ -22,7 +22,7 @@ async def purchase_document(
         data=await PurchaseService.purchase_document(
             req.document_id, current_user
         ),
-        message="Thực hiện giao dịch thanh toán mua tài liệu thành công",
+        message="Thực hiện giao dịch thanh toán mua tài liệu hoàn tất",
         status=200,
     )
 
@@ -34,7 +34,7 @@ async def buy_membership(
 ):
     return APIResponse(
         data=await PurchaseService.buy_ai_tier(req.tier, current_user),
-        message="Giao dịch nâng cấp gói thành viên thành công",
+        message="Giao dịch nâng cấp gói thành viên hoàn tất",
         status=200,
     )
 
@@ -42,7 +42,7 @@ async def buy_membership(
 async def get_pricing_config(db=Depends(get_db)):
     return APIResponse(
         data=await PricingService.get_pricing_config(),
-        message="Truy xuất thông tin cấu hình giá gói thành viên thành công",
+        message="Trích xuất thông tin cấu hình giá gói thành viên hoàn tất",
         status=200,
     )
 
@@ -51,7 +51,7 @@ async def get_author_revenue(current_user: CurrentUser = Depends(get_current_use
     revenue_data = await PurchaseService.get_revenue(current_user)
     return APIResponse(
         data=revenue_data,
-        message="Truy xuất dữ liệu thống kê doanh thu thành công",
+        message="Trích xuất dữ liệu thống kê doanh thu hoàn tất",
         status=200
     )
 
@@ -88,7 +88,7 @@ async def set_document_pricing(
 
     return APIResponse(
         data={"document_id": req.document_id, "price_dl": req.price_dl, "is_drm_protected": req.is_drm_protected},
-        message="Cập nhật cấu hình giá bán tài liệu thành công",
+        message="Cập nhật cấu hình giá bán tài liệu hoàn tất",
         status=200
     )
 

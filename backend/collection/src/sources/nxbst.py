@@ -206,7 +206,7 @@ class State:
                 metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Trích xuất tự động thành công",
+                    "description": "Trích xuất tự động hoàn tất",
                     "file_url": minio_url,
                     "tags": ["Nhà Xuất bản Chính trị quốc gia Sự thật", author],
                     "content": None,

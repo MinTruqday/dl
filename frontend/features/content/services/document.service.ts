@@ -10,7 +10,7 @@ export async function saveDocumentDraftAPI(
   format: string,
 ) {
   const token = getToken();
-  if (!token) throw new Error("Không có quyền truy cập");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
 
   const res = await fetch(`${API_URL}/tai-lieu/${documentId}/noi-dung`, {
     method: "PUT",
@@ -25,13 +25,13 @@ export async function saveDocumentDraftAPI(
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lưu bản nháp thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi lưu trữ dữ liệu bản thảo");
   return data;
 }
 
 export async function getDocumentDraftAPI(documentId: string) {
   const token = getToken();
-  if (!token) throw new Error("Không có quyền truy cập");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
 
   const res = await fetch(`${API_URL}/tai-lieu/${documentId}`, {
     method: "GET",
@@ -41,7 +41,7 @@ export async function getDocumentDraftAPI(documentId: string) {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Tải bản nháp thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi trích xuất dữ liệu bản thảo");
   return data;
 }
 
@@ -83,7 +83,7 @@ export async function getDocumentsAPI(
   });
 
   if (!res.ok)
-    throw new Error("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau");
+    throw new Error("Lỗi kết nối cơ sở dữ liệu hệ thống");
   return await res.json();
 }
 
@@ -100,7 +100,7 @@ export async function getDocumentBySlugAPI(slug: string) {
 
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.detail || "Không thể truy xuất dữ liệu tài liệu");
+    throw new Error(data.detail || "Lỗi trích xuất thông tin siêu dữ liệu tài liệu");
   return data;
 }
 
@@ -123,13 +123,13 @@ export async function getMyDocumentsAPI(
 
   const json = await res.json();
   if (!res.ok)
-    throw new Error(json.message || "Không thể lấy danh sách tài liệu của bạn");
+    throw new Error(json.message || "Lỗi trích xuất danh sách tài liệu cá nhân");
   return json.data || json;
 }
 
 export async function createDocumentAPI(data: any) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/tai-lieu`, {
     method: "POST",
     headers: {
@@ -140,13 +140,13 @@ export async function createDocumentAPI(data: any) {
   });
   const result = await res.json();
   if (!res.ok)
-    throw new Error(result.message || "Không thể khởi tạo tài liệu mới");
+    throw new Error(result.message || "Lỗi khởi tạo cấu trúc tài liệu mới");
   return result;
 }
 
 export async function updateDocumentAPI(id: string, data: any) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/tai-lieu/${id}`, {
     method: "PUT",
     headers: {
@@ -156,32 +156,32 @@ export async function updateDocumentAPI(id: string, data: any) {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể cập nhật tài liệu");
+  if (!res.ok) throw new Error(result.message || "Lỗi cập nhật siêu dữ liệu tài liệu");
   return result;
 }
 
 export async function deleteAuthorDocumentAPI(docId: string) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/tai-lieu/${docId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể xóa tài liệu");
+  if (!res.ok) throw new Error(result.message || "Lỗi xóa bỏ bản ghi tài liệu");
   return result;
 }
 
 export async function deleteAdminDocumentAPI(docId: string) {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/tai-lieu/${docId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
   const result = await res.json();
   if (!res.ok)
-    throw new Error(result.message || "Không thể xóa tài liệu hệ thống");
+    throw new Error(result.message || "Lỗi xóa bỏ bản ghi tài liệu cấp hệ thống");
   return result;
 }
 
@@ -191,7 +191,7 @@ export async function getTrashAPI() {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thùng rác");
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất danh sách thùng rác");
   return data;
 }
 
@@ -202,7 +202,7 @@ export async function restoreDocumentAPI(documentId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Khôi phục tài liệu thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi phục hồi bản ghi tài liệu");
   return data;
 }
 
@@ -213,13 +213,13 @@ export async function softDeleteDocumentAPI(documentId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xóa tài liệu thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi lưu trữ bản ghi tài liệu vào thùng rác");
   return data;
 }
 
 export const getFoldersAPI = async (parent_id?: string) => {
   const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const params = new URLSearchParams();
   if (parent_id) params.append("parent_id", parent_id);
 
@@ -228,7 +228,7 @@ export const getFoldersAPI = async (parent_id?: string) => {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách thư mục");
+    throw new Error(data.message || "Lỗi trích xuất cây cấu trúc thư mục");
   return data;
 };
 
@@ -246,7 +246,7 @@ export const createFolderAPI = async (
     body: JSON.stringify({ name, parent_id }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tạo thư mục mới");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo cấu trúc thư mục mới");
   return data;
 };
 
@@ -257,7 +257,7 @@ export const deleteFolderAPI = async (id: string) => {
     headers: { Authorization: "Bearer " + token },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xóa thư mục");
+  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ cấu trúc thư mục");
   return data;
 };
 
@@ -268,7 +268,7 @@ export const toggleStarDocumentAPI = async (id: string) => {
     headers: { Authorization: "Bearer " + token },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Thao tác thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi cập nhật trạng thái lưu trữ");
   return data;
 };
 
@@ -283,7 +283,7 @@ export const lockDocumentAPI = async (id: string, password: string) => {
     body: JSON.stringify({ password }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Thiết lập mật khẩu thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi cấu hình mật mã bảo vệ");
   return data;
 };
 
@@ -298,7 +298,7 @@ export const unlockDocumentAPI = async (id: string, password: string) => {
     body: JSON.stringify({ password }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Mật mã không chính xác");
+  if (!res.ok) throw new Error(data.message || "Lỗi xác thực mật mã bảo vệ");
   return data;
 };
 
@@ -313,7 +313,7 @@ export async function transferDocumentAPI(id: string, newOwnerId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.detail || "Chuyển nhượng quyền sở hữu thất bại");
+    throw new Error(data.detail || "Lỗi chuyển giao quyền sở hữu tài liệu");
   return data;
 }
 
@@ -355,7 +355,7 @@ export async function updateAuthorNoteAPI(
     body: JSON.stringify({ chapter_index: chapterIndex, note }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Cập nhật ghi chú thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi lưu trữ nội dung ghi chú");
   return data;
 }
 
@@ -373,7 +373,7 @@ export async function updateDRMSettingsAPI(
     body: JSON.stringify(settings),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Cập nhật DRM thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi cấu hình cơ chế bảo mật DRM");
   return data;
 }
 
@@ -388,7 +388,7 @@ export async function updateTagsAPI(documentId: string, tags: string[]) {
     body: JSON.stringify({ tags }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Cập nhật thẻ thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi cập nhật danh sách thẻ phân loại");
   return data;
 }
 
@@ -406,7 +406,7 @@ export async function schedulePublishAPI(
     body: JSON.stringify({ publish_at: publishAt }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lên lịch xuất bản thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi cấu hình lịch trình xuất bản");
   return data;
 }
 
@@ -428,7 +428,7 @@ export async function updateChapterPaywallAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Cập nhật trả phí thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi cấu hình mô hình thu phí");
   return data;
 }
 
@@ -439,7 +439,7 @@ export async function compileDocumentAPI(documentId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Biên dịch tài liệu thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi khởi chạy tiến trình biên dịch");
   return data;
 }
 
@@ -450,6 +450,6 @@ export async function publishDocumentAPI(documentId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Xuất bản tài liệu thất bại");
+  if (!res.ok) throw new Error(data.detail || "Lỗi khởi chạy tiến trình xuất bản");
   return data;
 }

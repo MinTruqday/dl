@@ -40,7 +40,7 @@ export default function PaymentResultPage() {
         const data = res.data || res;
         if (data) setPaymentInfo({ ...data, order_code: data.order_code || orderCode });
       } catch (err) {
-        console.warn("Could not fetch full payment info:", err);
+        console.warn("Error extracting transaction details from payment gateway:", err);
       }
       return;
     }
@@ -53,7 +53,7 @@ export default function PaymentResultPage() {
       else if (data.status === "CANCELLED") setStatus("cancelled");
       else setStatus("failed");
     } catch (err: any) {
-      console.error(err.message || err);
+      console.error("Error validating payment status:", err.message || err);
       setStatus("failed");
     }
   }, [searchParams]);
@@ -82,7 +82,7 @@ export default function PaymentResultPage() {
     },
     success: {
       icon: CheckCircle2,
-      title: "Nạp tiền thành công",
+      title: "Nạp tiền hoàn tất",
       description: (paymentInfo?.amount_paid || paymentInfo?.amount)
         ? `${Number(paymentInfo.amount_paid || paymentInfo.amount || 0).toLocaleString()} VNĐ đã được cộng vào ví`
         : "Số dư sẽ được cập nhật trong giây lát",
@@ -91,7 +91,7 @@ export default function PaymentResultPage() {
     },
     failed: {
       icon: XCircle,
-      title: "Giao dịch thất bại",
+      title: "Giao dịch lỗi",
       description: "Không thể xác nhận thanh toán. Vui lòng thử lại",
       color: "text-[#FF3B30]",
       bgClass: "bg-[#FFEBEB]",

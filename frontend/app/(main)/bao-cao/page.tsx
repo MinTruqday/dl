@@ -43,7 +43,7 @@ export default function ReportsManagementPage() {
     try {
       setReports([]);
     } catch (err: any) {
-      showToast("Không thể kết nối máy chủ", "error");
+      showToast("Lỗi gián đoạn kết nối máy chủ quản lý", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -63,7 +63,7 @@ export default function ReportsManagementPage() {
     try {
       setConfirmModal(null);
     } catch (err: any) {
-      showToast(err.message || "Lỗi xử lý", "error");
+      showToast(err.message || "Lỗi tiến trình xử lý báo cáo", "error");
     } finally {
       setIsProcessing(false);
     }

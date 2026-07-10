@@ -119,7 +119,7 @@ class NxbgdSource:
                 metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Trích xuất tự động thành công",
+                    "description": "Trích xuất tự động hoàn tất",
                     "file_url": minio_url,
                     "tags": ["Nhà Xuất bản Giáo dục Việt Nam", "Unknown"],
                     "content": None,

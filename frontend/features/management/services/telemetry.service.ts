@@ -9,7 +9,7 @@ export async function getSystemStatsAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải thống kê hệ thống");
+    throw new Error(data.message || "Lỗi trích xuất số liệu thống kê hệ thống");
   return data;
 }
 
@@ -19,7 +19,7 @@ export async function getSystemHealthAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể kiểm tra sức khỏe hệ thống");
+    throw new Error(data.message || "Lỗi giám sát trạng thái sức khỏe hệ thống");
   return data;
 }
 
@@ -29,7 +29,7 @@ export async function getAuditLogsAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải nhật ký hệ thống");
+    throw new Error(data.message || "Lỗi trích xuất nhật ký hoạt động hệ thống");
   return data;
 }
 
@@ -40,7 +40,7 @@ export async function getModeratorActivityAPI() {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "Không thể tải nhật ký hoạt động điều hành",
+      data.message || "Lỗi trích xuất nhật ký hoạt động kiểm duyệt",
     );
   return data;
 }

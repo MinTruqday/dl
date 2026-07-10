@@ -23,7 +23,7 @@ async def check_quota_internal(
     limits = await QuotaService.check_quota(user_id, role, ai_tier, feature)
     return APIResponse(
         data=limits.model_dump(),
-        message="Xác minh giới hạn tài nguyên thành công",
+        message="Xác minh giới hạn tài nguyên hoàn tất",
         status=200,
     )
 
@@ -40,7 +40,7 @@ async def get_my_quota(
     usage = await QuotaService.get_current_usage(
         str(current_user.id), role, ai_tier
     )
-    return APIResponse(data=usage, message="Truy xuất thông tin hạn mức sử dụng tài nguyên thành công")
+    return APIResponse(data=usage, message="Trích xuất thông tin hạn mức sử dụng tài nguyên hoàn tất")
 
 @router.put("/{role}/cau-hinh", response_model=APIResponse[Any])
 async def update_role_quota(
@@ -52,7 +52,7 @@ async def update_role_quota(
     await QuotaService.update_role_quota(role, limits.model_dump())
     return APIResponse(
         data={},
-        message="Cập nhật cấu hình giới hạn tài nguyên hệ thống thành công",
+        message="Cập nhật cấu hình giới hạn tài nguyên hệ thống hoàn tất",
     )
 
 @router.get("/cau-hinh", response_model=APIResponse[Any])
@@ -62,7 +62,7 @@ async def get_global_config(
     global_cfg = await QuotaService.get_global_config_from_db()
     return APIResponse(
         data=global_cfg,
-        message="Truy xuất cấu hình tài nguyên hệ thống thành công",
+        message="Trích xuất cấu hình tài nguyên hệ thống hoàn tất",
     )
 
 @router.post("/tieu-thu", response_model=APIResponse[Any], include_in_schema=False)
@@ -75,7 +75,7 @@ async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
             req.user_id, req.tokens, req.feature, req.req_reset_hours
         )
     return APIResponse(
-        data=None, message="Ghi nhận mức tiêu thụ tài nguyên hệ thống thành công", status=200
+        data=None, message="Ghi nhận mức tiêu thụ tài nguyên hệ thống hoàn tất", status=200
     )
 
 from src.schemas.quota import ConsumeUploadQuotaRequest
@@ -94,7 +94,7 @@ async def check_upload_quota_internal(
     await QuotaService.check_upload_quota(str(current_user.id), role, ai_tier, item_type)
     return APIResponse(
         data=None,
-        message="Xác minh dung lượng tải lên khả dụng thành công",
+        message="Xác minh dung lượng tải lên khả dụng hoàn tất",
         status=200,
     )
 
@@ -108,5 +108,5 @@ async def consume_upload_quota_internal(
         str(current_user.id), req.item_type, req.req_reset_hours
     )
     return APIResponse(
-        data=None, message="Ghi nhận mức tiêu thụ dung lượng tải lên thành công", status=200
+        data=None, message="Ghi nhận mức tiêu thụ dung lượng tải lên hoàn tất", status=200
     )

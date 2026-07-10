@@ -13,7 +13,7 @@ export async function compilePreviewAPI(
     body: JSON.stringify({ content, is_fragment: isFragment }),
   });
   if (!res.ok) {
-    let errMsg = "Biên dịch LaTeX thất bại";
+    let errMsg = "Lỗi thực thi tiến trình kết xuất LaTeX";
     try {
       const data = await res.json();
       errMsg = data.detail?.error || data.detail || errMsg;
@@ -32,7 +32,7 @@ export async function exportToWordAPI(content: string) {
     body: JSON.stringify({ content }),
   });
   if (!res.ok) {
-    let errMsg = "Xuất file Word thất bại";
+    let errMsg = "Lỗi khởi tạo luồng kết xuất định dạng Word";
     try {
       const data = await res.json();
       errMsg = data.detail || data.message || errMsg;
@@ -49,7 +49,7 @@ export async function syncKeystrokeBufferAPI(documentId: string, payload: any) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Đồng bộ thao tác thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi đồng bộ chuỗi sự kiện thao tác");
   return data;
 }
 
@@ -60,7 +60,7 @@ export async function addInlineSuggestionAPI(documentId: string, payload: any) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Thêm gợi ý nội dòng thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo khối dữ liệu đề xuất nội tuyến");
   return data;
 }
 
@@ -77,7 +77,7 @@ export async function resolveSuggestionAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xử lý gợi ý thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thực thi phản hồi quyết định khối đề xuất");
   return data;
 }
 
@@ -89,7 +89,7 @@ export async function syncPomodoroSessionAPI(payload: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Đồng bộ phiên Pomodoro thất bại");
+    throw new Error(data.message || "Lỗi đồng bộ trạng thái phiên làm việc Pomodoro");
   return data;
 }
 
@@ -103,7 +103,7 @@ export async function autoSaveDraftAPI(documentId: string, content: any) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tự động lưu bản nháp thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi đồng bộ hóa dữ liệu bản nháp tự động");
   return data;
 }
 
@@ -116,7 +116,7 @@ export async function submitForReviewAPI(documentId: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Gửi duyệt tài liệu thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo luồng yêu cầu xét duyệt tài liệu");
   return data;
 }
 
@@ -135,7 +135,7 @@ export async function globalFindReplaceAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Thay thế toàn cục thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi thực thi biểu thức thay thế chuỗi toàn cục");
   return data;
 }
 
@@ -152,7 +152,7 @@ export async function addInlineCommentAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Thêm nhận xét thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi lưu trữ dữ liệu phản hồi nội dung");
   return data.data;
 }
 
@@ -165,7 +165,7 @@ export async function resolveCommentAPI(commentId: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xử lý nhận xét thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái dữ liệu phản hồi");
   return data.data;
 }
 
@@ -187,7 +187,7 @@ export async function getVersionDiffAPI(
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lấy so sánh phiên bản thất bại");
+    throw new Error(data.message || "Lỗi truy xuất dữ liệu đối chiếu phiên bản");
   return data.data;
 }
 
@@ -201,7 +201,7 @@ export async function analyzeInternalPlagiarismAPI(
     body: JSON.stringify(content),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Phân tích đạo văn thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi chạy tiến trình phân tích tính nguyên bản");
   return data;
 }
 
@@ -212,7 +212,7 @@ export async function getAiSuggestionsAPI(documentId: string, context: string) {
     body: JSON.stringify({ context }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lấy gợi ý AI thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi truy xuất bộ dữ liệu mạng mô hình ngôn ngữ");
   return data.data;
 }
 
@@ -222,6 +222,6 @@ export async function summarizeDocumentAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tóm tắt tài liệu thất bại");
+  if (!res.ok) throw new Error(data.message || "Lỗi khởi chạy tiến trình cô đọng nội dung tài liệu");
   return data;
 }

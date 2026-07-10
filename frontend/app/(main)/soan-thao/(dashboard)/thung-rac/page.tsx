@@ -23,7 +23,7 @@ export default function TrashPage() {
       const data = await getTrashAPI();
       setTrash(data.data || data || []);
     } catch {
-      showToast("Không thể tải danh sách thùng rác", "error");
+      showToast("Lỗi trích xuất dữ liệu lưu trữ tạm", "error");
     } finally {
       setLoading(false);
     }
@@ -32,10 +32,10 @@ export default function TrashPage() {
   const handleRestoreDocument = async (docId: string) => {
     try {
       await restoreDocumentAPI(docId);
-      showToast("Đã khôi phục tài liệu thành công", "success");
+      showToast("Phục hồi dữ liệu tài liệu hoàn tất", "success");
       fetchTrash();
     } catch (e: any) {
-      showToast(e.message || "Lỗi khôi phục tài liệu", "error");
+      showToast(e.message || "Lỗi phục hồi dữ liệu tài liệu", "error");
     }
   };
 

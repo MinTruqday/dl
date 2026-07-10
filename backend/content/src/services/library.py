@@ -72,7 +72,7 @@ class LibraryService:
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy danh sách đọc yêu cầu")
-        return {"status": "success", "message": "Thêm tài liệu vào danh sách đọc cá nhân thành công"}
+        return {"status": "success", "message": "Thêm tài liệu vào danh sách đọc cá nhân hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -90,5 +90,5 @@ class LibraryService:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy danh sách đọc yêu cầu")
         return {
             "status": "success",
-            "message": "Xóa tài liệu khỏi danh sách đọc cá nhân thành công",
+            "message": "Xóa tài liệu khỏi danh sách đọc cá nhân hoàn tất",
         }

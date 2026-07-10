@@ -24,7 +24,7 @@ class PricingService:
         }
         await PricingRepository.update_document(document_id, {"$set": update})
         logger.info("Document pricing configuration successfully updated")
-        return {"message": "Cập nhật cấu hình giá bán tài liệu thành công"}
+        return {"message": "Cập nhật cấu hình giá bán tài liệu hoàn tất"}
 
     @staticmethod
     @log_logic_execution

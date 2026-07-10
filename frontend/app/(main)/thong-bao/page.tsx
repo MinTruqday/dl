@@ -36,7 +36,7 @@ export default function AnnouncementsPage() {
       const res = await getAnnouncementsAPI();
       setAnnouncements(Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []);
     } catch (err: any) {
-      showToast("Lỗi tải thông báo", "error");
+      showToast("Lỗi trích xuất bộ sưu tập thông báo", "error");
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +55,7 @@ export default function AnnouncementsPage() {
         ),
       );
     } catch (err: any) {
-      showToast("Lỗi xử lý", "error");
+      showToast("Lỗi cập nhật trạng thái thông báo", "error");
     }
   };
 
@@ -64,9 +64,9 @@ export default function AnnouncementsPage() {
     try {
       await markAllAnnouncementsReadAPI();
       setAnnouncements((p) => p.map((n) => ({ ...n, is_read: true })));
-      showToast("Đã đánh dấu tất cả đã đọc", "success");
+      showToast("Cập nhật trạng thái toàn bộ thông báo hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi xử lý", "error");
+      showToast("Lỗi cập nhật trạng thái toàn bộ thông báo", "error");
     } finally {
       setIsProcessing(false);
     }

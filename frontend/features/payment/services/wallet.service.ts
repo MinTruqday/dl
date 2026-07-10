@@ -8,7 +8,7 @@ export async function getWalletBalanceAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải số dư ví");
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất thông tin số dư ví điện tử");
   return data;
 }
 
@@ -18,7 +18,7 @@ export async function getWalletHistoryAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải lịch sử giao dịch");
+    throw new Error(data.message || "Lỗi trích xuất lịch sử giao dịch");
   return data;
 }
 
@@ -31,6 +31,6 @@ export async function getDetailedHistoryAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải lịch sử chi tiết");
+    throw new Error(data.message || "Lỗi trích xuất nhật ký giao dịch chi tiết");
   return data;
 }

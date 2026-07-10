@@ -113,7 +113,7 @@ class CompositionService:
             }
         )
         logger.info("New inline suggestion successfully registered")
-        return {"message": "Thực hiện ghi nhận thông tin đề xuất chỉnh sửa thành công"}
+        return {"message": "Thực hiện ghi nhận thông tin đề xuất chỉnh sửa hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -159,7 +159,7 @@ class CompositionService:
             },
         )
         logger.info("Inline suggestion successfully resolved")
-        return {"message": "Thực hiện xử lý đề xuất chỉnh sửa thành công"}
+        return {"message": "Thực hiện xử lý đề xuất chỉnh sửa hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -239,7 +239,7 @@ class CompositionService:
         except Exception as e:
             logger.exception("Failed to persist document draft to content management system")
         return {
-            "message": "Thực hiện thao tác lưu tự động bản nháp thành công",
+            "message": "Thực hiện thao tác lưu tự động bản nháp hoàn tất",
             "timestamp": str(datetime.now(timezone.utc)),
         }
 
@@ -257,7 +257,7 @@ class CompositionService:
         except Exception as e:
             logger.exception("Failed to submit document for administrative review")
         logger.info("Document successfully transitioned to pending review status")
-        return {"message": "Đưa tài liệu vào hàng đợi xét duyệt thành công"}
+        return {"message": "Đưa tài liệu vào hàng đợi xét duyệt hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -334,7 +334,7 @@ class CompositionService:
         
         logger.info("Global find and replace operation completed successfully")
         return {
-            "message": "Thao tác tìm kiếm và thay thế thành công",
+            "message": "Thao tác tìm kiếm và thay thế hoàn tất",
             "affected_fields": ["title", "description", "content"],
         }
 
@@ -356,7 +356,7 @@ class CompositionService:
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         await CompositionRepository.insert_comment(comment)
-        return {"_id": comment_id, "message": "Thực hiện thêm mới bình luận theo ngữ cảnh thành công"}
+        return {"_id": comment_id, "message": "Thực hiện thêm mới bình luận theo ngữ cảnh hoàn tất"}
 
     @staticmethod
     @log_logic_execution
@@ -417,7 +417,7 @@ class CompositionService:
                 }
             },
         )
-        return {"message": "Thực hiện đánh dấu giải quyết bình luận thành công"}
+        return {"message": "Thực hiện đánh dấu giải quyết bình luận hoàn tất"}
 
     @staticmethod
     @log_logic_execution
