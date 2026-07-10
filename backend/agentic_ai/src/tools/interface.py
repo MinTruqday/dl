@@ -74,7 +74,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
             "GET",
             f"{INTERNAL_API_URL}/vi-tien/so-du",
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -99,7 +99,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
             "GET",
             f"{INTERNAL_API_URL}/vi-tien/giao-dich",
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -131,7 +131,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
             "POST",
             json={"code": code.strip()},
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             res_data = response.json().get("data", {})
@@ -154,7 +154,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
             "GET",
             f"{INTERNAL_API_URL}/rut-tien/doanh-thu",
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -178,7 +178,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
             "GET",
             f"{INTERNAL_API_URL}/tai-lieu/ca-nhan",
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -208,7 +208,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
             "GET",
             f"{INTERNAL_API_URL}/tai-lieu/thung-rac",
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -236,7 +236,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
             "DELETE",
             f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             try:
@@ -265,7 +265,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
             "POST",
             f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc",
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             return "Your document has been successfully restored to its original state"
@@ -289,7 +289,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
             "GET",
             f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/bo-do",
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -307,7 +307,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
             "GET",
             f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
             headers={"Authorization": token},
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
@@ -329,7 +329,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=settings.DEFAULT_CHUNK_SIZE * 2, chunk_overlap=0
+        chunk_size=512 * 2, chunk_overlap=0
     )
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
@@ -350,7 +350,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=settings.DEFAULT_CHUNK_SIZE * 4, chunk_overlap=0
+        chunk_size=512 * 4, chunk_overlap=0
     )
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
@@ -373,7 +373,7 @@ async def agent_transform_tone(
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=settings.DEFAULT_CHUNK_SIZE * 2, chunk_overlap=0
+        chunk_size=512 * 2, chunk_overlap=0
     )
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
@@ -397,7 +397,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             f"{INTERNAL_API_URL}/nap-tien",
             json={"amount": amount},
             headers=headers,
-            timeout=settings.LONG_PROCESS_TIMEOUT,
+            timeout=30.0,
         )
         if response.status_code in [200, 201]:
             data = response.json().get("data", {})
@@ -446,7 +446,7 @@ async def create_document(
             "GET",
             f"{INTERNAL_API_URL}/ho-so/ca-nhan",
             headers=headers,
-            timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            timeout=10.0,
         )
         if res_profile.status_code == 200:
             profile_data = res_profile.json().get("data", {})

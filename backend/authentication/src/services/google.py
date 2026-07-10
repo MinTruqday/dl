@@ -28,7 +28,7 @@ class GoogleService:
         google_client_id = settings.GOOGLE_CLIENT_ID
         google_client_secret = settings.GOOGLE_CLIENT_SECRET
         redirect_uri = settings.GOOGLE_REDIRECT_URI
-        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             token_resp = await client.post(
                 settings.GOOGLE_TOKEN_URL,
                 data={
@@ -50,7 +50,7 @@ class GoogleService:
             google_user = user_resp.json()
         email = google_user.get("email")
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
                 )
@@ -65,7 +65,7 @@ class GoogleService:
                     detail="Tính năng đăng ký tài khoản mới tạm thời bị vô hiệu hóa trên hệ thống",
                 )
             try:
-                async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+                async with httpx.AsyncClient(timeout=10.0) as client:
                     resp = await client.post(
                         f"{settings.MANAGEMENT_URL}/nguoi-dung/",
                         json={
@@ -76,7 +76,7 @@ class GoogleService:
                             + secrets.token_hex(2),
                             "role": "READER",
                         },
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                        timeout=10.0,
                     )
                     if resp.status_code not in (200, 201):
                         raise HTTPException(

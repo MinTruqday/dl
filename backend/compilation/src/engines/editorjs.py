@@ -454,7 +454,7 @@ class EditorjsEngine:
                 limit=1024 * 1024 * 2,
             )
             await asyncio.wait_for(
-                process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT
+                process.communicate(), timeout=30.0
             )
 
             if not os.path.exists(pdf_path):
@@ -520,7 +520,7 @@ class EditorjsEngine:
                 limit=1024 * 1024 * 2,
             )
             await asyncio.wait_for(
-                process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT
+                process.communicate(), timeout=30.0
             )
 
             if not os.path.exists(out_path):

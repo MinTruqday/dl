@@ -32,6 +32,6 @@ resources:
   - ingress/ingress.yaml
 
 secretGenerator:
-  - name: doclib-env
+  - name: doclib-secrets
     envs:
       - .env

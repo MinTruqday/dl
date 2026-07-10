@@ -41,7 +41,7 @@ class ManagementMemory:
             history = await self.get_short_term(conversation_id)
             history.append(entry)
 
-            max_turns = settings.MEMORY_MAX_TURNS
+            max_turns = 10
             if len(history) > max_turns:
                 history = history[-max_turns:]
 

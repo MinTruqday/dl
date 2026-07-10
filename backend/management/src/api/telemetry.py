@@ -40,7 +40,7 @@ async def get_sys_health(db=Depends(get_db)):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_audit_logs(
-    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    limit: int = Query(default=20, le=100),
     offset: int = 0,
     db=Depends(get_db),
 ):

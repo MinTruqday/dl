@@ -71,7 +71,7 @@ async def update_document(
 
 @router.get("", response_model=APIResponse[List[DocumentResponse]])
 async def list_documents(
-    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    limit: int = Query(default=20, le=100),
     cursor: Optional[str] = None,
     q: Optional[str] = None,
     sort_by: str = "latest",

@@ -87,7 +87,7 @@ class DepositService:
         )
 
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.post(
                     settings.PAYOS_API_URL,
                     json=payload,
@@ -200,7 +200,7 @@ class DepositService:
             }
 
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
                     f"{settings.PAYOS_API_URL}/{order_code}",
                     headers={

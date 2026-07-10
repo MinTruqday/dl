@@ -7,8 +7,8 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-DEFAULT_TOOL_TIMEOUT_SECONDS = settings.TOOL_TIMEOUT_SECONDS
-DEFAULT_MAX_RETRIES = settings.TOOL_MAX_RETRIES
+DEFAULT_TOOL_TIMEOUT_SECONDS = 30.0
+DEFAULT_MAX_RETRIES = 2
 RETRY_BASE_DELAY_SECONDS = 0.5
 
 @dataclass

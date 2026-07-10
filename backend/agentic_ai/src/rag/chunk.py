@@ -57,7 +57,7 @@ class ChunkRag:
                 model_name = settings.EMBEDDING_MODEL
                 self.chunker = SemanticChunker(
                     embedding_model=model_name,
-                    chunk_size=settings.DEFAULT_CHUNK_SIZE,
+                    chunk_size=512,
                     similarity_threshold=0.5,
                 )
                 self.type = "chonkie_semantic"
@@ -66,8 +66,8 @@ class ChunkRag:
                 logger.exception("Semantic chunking tool initialization failed, falling back to standard mode")
                 try:
                     self.chunker = TokenChunker(
-                        chunk_size=settings.DEFAULT_CHUNK_SIZE,
-                        chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
+                        chunk_size=512,
+                        chunk_overlap=64,
                     )
                     self.type = "chonkie_token"
                     logger.info("Token chunker loaded successfully")
@@ -130,8 +130,8 @@ class ChunkRag:
             texts = [doc.page_content for doc in md_documents]
         except Exception:
             splitter = RecursiveCharacterTextSplitter(
-                chunk_size=settings.DEFAULT_CHUNK_SIZE,
-                chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
+                chunk_size=512,
+                chunk_overlap=64,
             )
             texts = splitter.split_text(text)
 

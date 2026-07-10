@@ -48,7 +48,7 @@ class BookmarkService:
     async def get_bookmarks(
         current_user,
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         ),
     ) -> list:
         profile = await ProfileRepository.get_profile(str(current_user.id))

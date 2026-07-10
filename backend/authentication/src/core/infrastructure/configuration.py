@@ -3,15 +3,20 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+def get_service_url(service_name_underscore: str) -> str:
+    override = os.getenv(f"{service_name_underscore.upper()}_URL")
+    if override: return override
+    k8s_host = os.getenv(f"{service_name_underscore.upper()}_SERVICE_HOST")
+    if k8s_host: return f"http://{k8s_host}:8000"
+    return f"http://{service_name_underscore.lower()}:8000"
+
 class Settings(BaseModel):
-    HUMANITY_URL: str = os.getenv("HUMANITY_URL")
     PROJECT_NAME: str = os.getenv("PROJECT_NAME")
     VERSION: str = os.getenv("VERSION")
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
     REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
-    PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     REDIS_URI: str = os.getenv("REDIS_URI")
     GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")
@@ -25,13 +30,12 @@ class Settings(BaseModel):
     PASSKEY_ALLOWED_ORIGINS: str = os.getenv("PASSKEY_ALLOWED_ORIGINS")
     SMTP_HOST: str = os.getenv("SMTP_HOST")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
-    DEFAULT_PAGE_LIMIT: int = int(os.getenv("DEFAULT_PAGE_LIMIT"))
-    MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
     SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
     SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
     SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")
     SENDER_NAME: Optional[str] = os.getenv("SENDER_NAME")
+    PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
+    HUMANITY_URL: str = get_service_url("HUMANITY")
     SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
-    DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT", "10.0"))
 
 settings = Settings()

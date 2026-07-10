@@ -36,7 +36,7 @@ COPY --chown=appuser:appuser worker/src/ ./src/
 
 USER appuser
 
-EXPOSE 8001
+EXPOSE 8000
 
-CMD ["gunicorn", "src.main:app", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8001"]
+CMD ["gunicorn", "src.main:app", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000"]
 

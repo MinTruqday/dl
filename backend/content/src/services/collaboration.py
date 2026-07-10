@@ -54,7 +54,7 @@ class CollaborationService:
             )
         invitee = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{invitee_email}",
                 )
@@ -178,7 +178,7 @@ class CollaborationService:
         )
         collaborators = []
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 for inv in invites:
                     user_info = None
                     try:
@@ -291,7 +291,7 @@ class CollaborationService:
             )
         target_user = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/{target_user_id}",
                 )

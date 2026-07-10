@@ -7,8 +7,8 @@ from langgraph.types import Send
 
 from src.core.infrastructure.configuration import settings
 
-BATCH_SIZE = settings.MAP_REDUCE_BATCH_SIZE
-MAX_CHUNKS = settings.MAP_REDUCE_MAX_CHUNKS
+BATCH_SIZE = 5
+MAX_CHUNKS = 40
 
 class MapReduceState(TypedDict):
     document_text: str
@@ -20,8 +20,8 @@ async def splitter_node(state: MapReduceState):
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=settings.DEFAULT_CHUNK_SIZE * 10,
-        chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP * 3,
+        chunk_size=512 * 10,
+        chunk_overlap=64 * 3,
     )
     chunks = splitter.split_text(state["document_text"])
     if len(chunks) > MAX_CHUNKS:

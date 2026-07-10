@@ -87,7 +87,7 @@ async def search_items(
 
 @router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(
-    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    limit: int = Query(default=20, le=100),
     current_user: CurrentUser = Depends(
         require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
     ),

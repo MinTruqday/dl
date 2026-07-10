@@ -25,7 +25,7 @@ class HealthService:
     @log_logic_execution
     async def get_all_users(
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         ),
         offset: int = 0,
         cursor: str = None,

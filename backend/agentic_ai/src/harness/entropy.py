@@ -13,7 +13,7 @@ ENTROPY_TOKEN_WEIGHT = 0.3
 ENTROPY_AGE_WEIGHT = 0.2
 ENTROPY_UNRESOLVED_WEIGHT = 0.2
 
-ENTROPY_RESET_THRESHOLD = float(settings.MAX_CONTEXT_TOKENS) / 4000
+ENTROPY_RESET_THRESHOLD = float(6000) / 4000
 ENTROPY_MAX_SESSION_AGE_SECONDS = 1800
 ENTROPY_MAX_MESSAGES = 30
 
@@ -60,7 +60,7 @@ class EntropyAuditor:
 
         message_score = min(message_count / ENTROPY_MAX_MESSAGES, 1.0)
         token_score = min(
-            estimated_tokens / settings.MAX_CONTEXT_TOKENS, 1.0
+            estimated_tokens / 6000, 1.0
         )
         age_score = min(age_seconds / ENTROPY_MAX_SESSION_AGE_SECONDS, 1.0)
         unresolved_score = min(unresolved / 5, 1.0)

@@ -13,8 +13,8 @@ from src.core.infrastructure.configuration import settings
 class EmbeddingRag:
     def __init__(self):
         self._model_name = settings.EMBEDDING_MODEL
-        self._dimensions = settings.EMBEDDING_DIMENSIONS
-        self._batch_size = settings.EMBEDDING_BATCH_SIZE
+        self._dimensions = 1024
+        self._batch_size = 32
         self._model = SentenceTransformer(self._model_name)
 
         redis_url = settings.REDIS_URI

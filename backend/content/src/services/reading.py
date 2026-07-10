@@ -18,7 +18,7 @@ class ReadingService:
         current_user,
         cursor: str = None,
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         ),
     ) -> list:
         match_stage = {"user_id": str(current_user.id)}

@@ -6,9 +6,9 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-CHARS_PER_TOKEN_APPROX = settings.CHARS_PER_TOKEN_APPROX
-DEFAULT_MAX_CONTEXT_TOKENS = settings.MAX_CONTEXT_TOKENS
-HISTORY_MAX_TURNS = settings.MEMORY_MAX_TURNS
+CHARS_PER_TOKEN_APPROX = 4
+DEFAULT_MAX_CONTEXT_TOKENS = 6000
+HISTORY_MAX_TURNS = 10
 
 @dataclass
 class AgentContext:

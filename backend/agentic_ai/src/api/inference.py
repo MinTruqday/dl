@@ -34,7 +34,7 @@ client = AsyncInferenceClient(token=settings.HF_TOKEN)
 async def _check_quota(current_user: CurrentUser):
     logger.info(f"Started AI quota verification for user_id={current_user.id}")
     try:
-        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
+        async with httpx.AsyncClient(timeout=10.0) as c:
             resp = await c.get(
                 f"{settings.USAGE_URL}/han-muc/xac-minh",
                 params={
@@ -61,7 +61,7 @@ async def _consume_quota(
 ):
     logger.info(f"Started AI quota consumption for user_id={current_user.id}, tokens={tokens}")
     try:
-        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
+        async with httpx.AsyncClient(timeout=10.0) as c:
             await c.post(
                 f"{settings.USAGE_URL}/han-muc/su-dung",
                 json={

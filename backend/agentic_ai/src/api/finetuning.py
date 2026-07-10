@@ -31,7 +31,7 @@ async def get_samples(
     dataset_id: str,
     user_id: str,
     skip: int = 0,
-    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    limit: int = Query(default=20, le=100),
 ):
     return await finetune_service.get_samples(dataset_id, user_id, skip, limit)
 

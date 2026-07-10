@@ -51,7 +51,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
         if rag_url:
             httpx.delete(
                 f"{rag_url}/inference/vector/{document_id}",
-                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                timeout=10.0,
             )
         logger.info("Hard deletion process for document completed successfully")
     except Exception as e:

@@ -49,7 +49,7 @@ class ConversationService:
         users_list = []
         if other_user_ids:
             try:
-                async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+                async with httpx.AsyncClient(timeout=10.0) as client:
                     resp = await client.post(
                         f"{settings.HUMANITY_URL}/nguoi-dung/hang-loat",
                         json=other_user_ids,

@@ -96,7 +96,7 @@ class DocumentService:
     @log_logic_execution
     async def get_trending_documents(
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         )
     ) -> List[dict]:
         
@@ -116,7 +116,7 @@ class DocumentService:
     async def get_text_search(
         query: str,
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         ),
     ) -> List[dict]:
         
@@ -158,7 +158,7 @@ class DocumentService:
         q: str = None,
         cursor: str = None,
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         ),
     ) -> list:
         
@@ -245,7 +245,7 @@ class DocumentService:
         )
         if settings.NOTIFICATION_URL:
             try:
-                async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+                async with httpx.AsyncClient(timeout=10.0) as client:
                     await client.post(
                         f"{settings.NOTIFICATION_URL}/thong-bao/kich-hoat",
                         json={
@@ -550,7 +550,7 @@ class DocumentService:
 
         target_user = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
                 )
@@ -636,7 +636,7 @@ class DocumentService:
 
         author = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/{document['creator_id']}",
                 )
@@ -813,7 +813,7 @@ class DocumentService:
     @log_logic_execution
     async def get_trending_tags(
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         )
     ) -> List[str]:
         
@@ -901,7 +901,7 @@ class DocumentService:
             )
         target = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/{new_owner_id}",
                 )
@@ -978,7 +978,7 @@ class DocumentService:
     @log_logic_execution
     async def get_suggested_documents(
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         )
     ) -> List[dict]:
         

@@ -341,7 +341,7 @@ class StorageService:
     async def get_recent_items(
         owner_id: str,
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         ),
     ) -> List[StorageItemInDB]:
         query = {

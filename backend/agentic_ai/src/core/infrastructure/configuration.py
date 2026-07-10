@@ -3,12 +3,20 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+
+def get_service_url(service_name_underscore: str) -> str:
+    override = os.getenv(f"{service_name_underscore.upper()}_URL")
+    if override: return override
+    k8s_host = os.getenv(f"{service_name_underscore.upper()}_SERVICE_HOST")
+    if k8s_host: return f"http://{k8s_host}:8000"
+    return f"http://{service_name_underscore.lower()}:8000"
+
 class Settings(BaseModel):
     PROJECT_NAME: str = os.getenv("PROJECT_NAME")
     VERSION: str = os.getenv("VERSION")
+    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS")
-    PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     REDIS_URI: str = os.getenv("REDIS_URI")
     RABBITMQ_URI: str = os.getenv("RABBITMQ_URI")
@@ -16,15 +24,13 @@ class Settings(BaseModel):
     QDRANT_HOST: str = os.getenv("QDRANT_HOST")
     QDRANT_PORT: int = int(os.getenv("QDRANT_PORT"))
     PAYOS_API_URL: str = os.getenv("PAYOS_API_URL")
-    TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
     MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT")
     MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY")
     MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY")
-    MINIO_PRIVATE_BUCKET: str = os.getenv("MINIO_PRIVATE_BUCKET", "doclib-private")
-    MINIO_PUBLIC_BUCKET: str = os.getenv("MINIO_PUBLIC_BUCKET", "doclib-public")
     MINIO_REGION: str = os.getenv("MINIO_REGION")
     MINIO_PUBLIC_URL: Optional[str] = os.getenv("MINIO_PUBLIC_URL")
     MIN_FILE_SIZE_BYTES: int = int(os.getenv("MIN_FILE_SIZE_BYTES"))
+    TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
     HF_TOKEN: str = os.getenv("HF_TOKEN")
     LLAMA_MODEL: str = os.getenv("LLAMA_MODEL")
     QWEN_MODEL: str = os.getenv("QWEN_MODEL")
@@ -32,28 +38,11 @@ class Settings(BaseModel):
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL")
     NLLB_MODEL: str = os.getenv("NLLB_MODEL")
     NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME")
-
-    HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA"))
-    EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS"))
-    EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE"))
-    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS"))
-    MAP_REDUCE_BATCH_SIZE: int = int(os.getenv("MAP_REDUCE_BATCH_SIZE"))
-    MAP_REDUCE_MAX_CHUNKS: int = int(os.getenv("MAP_REDUCE_MAX_CHUNKS"))
-    TOOL_TIMEOUT_SECONDS: float = float(os.getenv("TOOL_TIMEOUT_SECONDS"))
-    TOOL_MAX_RETRIES: int = int(os.getenv("TOOL_MAX_RETRIES"))
-    CIRCUIT_BREAKER_THRESHOLD: int = int(os.getenv("CIRCUIT_BREAKER_THRESHOLD"))
-    CIRCUIT_BREAKER_RESET_SECONDS: float = float(os.getenv("CIRCUIT_BREAKER_RESET_SECONDS"))
-    MAX_CONTEXT_TOKENS: int = int(os.getenv("MAX_CONTEXT_TOKENS"))
-    CHARS_PER_TOKEN_APPROX: int = int(os.getenv("CHARS_PER_TOKEN_APPROX"))
-    DEFAULT_CHUNK_SIZE: int = int(os.getenv("DEFAULT_CHUNK_SIZE"))
-    DEFAULT_CHUNK_OVERLAP: int = int(os.getenv("DEFAULT_CHUNK_OVERLAP"))
-    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
-    MANAGEMENT_URL: str = os.getenv("MANAGEMENT_URL")
-    USAGE_URL: str = os.getenv("USAGE_URL", "http://usage:8000")
-    DEFAULT_PAGE_LIMIT: int = int(os.getenv("DEFAULT_PAGE_LIMIT"))
-    MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
-    DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT"))
-    LONG_PROCESS_TIMEOUT: float = float(os.getenv("LONG_PROCESS_TIMEOUT"))
+    PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
+    MINIO_PRIVATE_BUCKET: str = os.getenv("MINIO_PRIVATE_BUCKET")
+    MINIO_PUBLIC_BUCKET: str = os.getenv("MINIO_PUBLIC_BUCKET")
+    MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
+    USAGE_URL: str = get_service_url("USAGE")
     SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
 
 settings = Settings()

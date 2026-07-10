@@ -38,7 +38,7 @@ class EmailService:
                 msg["Subject"] = subject
                 msg.attach(MIMEText(html_body, "html", "utf-8"))
                 server = smtplib.SMTP(
-                    smtp_host, smtp_port, timeout=settings.DEFAULT_HTTP_TIMEOUT
+                    smtp_host, smtp_port, timeout=10.0
                 )
                 server.starttls()
                 server.login(smtp_user, smtp_pass)

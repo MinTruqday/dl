@@ -9,7 +9,7 @@ class CircuitBreakerOpenException(Exception):
 
 class InternalHttpClient:
     def __init__(self):
-        self._client = httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT)
+        self._client = httpx.AsyncClient(timeout=10.0)
 
     @retry(
         stop=stop_after_attempt(3),

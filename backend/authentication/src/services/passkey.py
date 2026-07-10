@@ -127,10 +127,10 @@ class PasskeyService:
             logger.exception("Failed to clear expired authentication challenge from cache layer")
         user_doc = None
         try:
-            async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
                     f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
-                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                    timeout=10.0,
                 )
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")

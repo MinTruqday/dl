@@ -23,7 +23,7 @@ async def get_tags_categories(db=Depends(get_db)):
 @router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
 async def smart_search(
     query: str,
-    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    limit: int = Query(default=20, le=100),
     current_user: CurrentUser = Depends(get_current_user_optional),
     db=Depends(get_db),
 ):
@@ -43,7 +43,7 @@ async def smart_search(
         )
 
     try:
-        async with httpx.AsyncClient(timeout=smart_settings.LONG_PROCESS_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{rag_url}/chat",
                 json={
@@ -70,7 +70,7 @@ async def smart_search(
 
 @router.get("/goi-y-ai", response_model=APIResponse[Any])
 async def get_ai_recommendations(
-    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    limit: int = Query(default=20, le=100),
     current_user: CurrentUser = Depends(get_current_user_optional),
     db=Depends(get_db),
 ):

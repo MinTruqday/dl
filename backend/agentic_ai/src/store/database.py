@@ -93,7 +93,7 @@ class DatabaseStore:
         query_vector: List[float],
         document_ids: Optional[List[str]] = None,
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         ),
     ) -> List[Dict]:
         query_filter = None

@@ -44,7 +44,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                         "GET",
                         f"{INTERNAL_API_URL}/tai-lieu/{doc_id}",
                         headers={"Authorization": f"Bearer {req.token}"},
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                        timeout=10.0,
                     )
                     if doc_res.status_code not in [200, 201]:
                         logger.warning(f"Document {doc_id} access denied or not found")
@@ -134,7 +134,7 @@ async def _check_upload_quota(req: ChatRequest):
         if is_admin or ai_tier != "BASIC":
             return True, ""
 
-        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
+        async with httpx.AsyncClient(timeout=10.0) as c:
             resp = await c.get(
                 f"{settings.USAGE_URL}/han-muc/tai-len/xac-minh",
                 params={"item_type": item_type},
@@ -169,7 +169,7 @@ async def _consume_upload_quota(req: ChatRequest):
         if is_admin or ai_tier != "BASIC":
             return
 
-        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as c:
+        async with httpx.AsyncClient(timeout=10.0) as c:
             await c.post(
                 f"{settings.USAGE_URL}/han-muc/tai-len/tieu-thu",
                 json={"user_id": req.user_id, "item_type": item_type, "req_reset_hours": 24},
@@ -226,7 +226,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             "GET",
                             f"{INTERNAL_API_URL}/tai-lieu/{doc_id}",
                             headers={"Authorization": f"Bearer {req.token}"},
-                            timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                            timeout=10.0,
                         )
                         if doc_res.status_code not in [200, 201]:
                             logger.warning(f"Document {doc_id} access denied or not found")

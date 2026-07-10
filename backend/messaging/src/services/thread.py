@@ -138,7 +138,7 @@ class ThreadService:
         other_user_id: str,
         current_user,
         limit: int = Query(
-            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+            default=20, le=100
         ),
         cursor: str = None,
     ):

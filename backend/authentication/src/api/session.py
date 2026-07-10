@@ -28,10 +28,10 @@ async def read_users_me(
     try:
         from src.core.infrastructure.configuration import settings
         import httpx
-        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
                 f"{settings.HUMANITY_URL}/nguoi-dung/{current_user.id}",
-                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                timeout=10.0,
             )
             if resp.status_code == 200:
                 user_doc = resp.json().get("data")
@@ -47,10 +47,10 @@ async def read_users_me(
     try:
         from src.core.infrastructure.configuration import settings
         import httpx
-        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             resp_usage = await client.get(
                 f"http://doclib_traefik:8000/su-dung/goi-cuoc/{current_user.id}",
-                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                timeout=10.0,
             )
             if resp_usage.status_code == 200:
                 usage_doc = resp_usage.json().get("data", {})

@@ -87,7 +87,7 @@ class InterpreterAgent:
 
                 try:
                     stdout, stderr = await asyncio.wait_for(
-                        proc.communicate(), timeout=settings.DEFAULT_HTTP_TIMEOUT
+                        proc.communicate(), timeout=10.0
                     )
                 except asyncio.TimeoutError:
                     proc.kill()
