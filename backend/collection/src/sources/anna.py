@@ -288,6 +288,7 @@ class AnnaSource:
                     )
                     links = await page.evaluate(
                         "Array.from(document.querySelectorAll('a, button')).map(el => el.innerText.trim()).filter(t => t.length > 0)"
+                    )
                     logger.warning("[AnnaSource] Recording page elements for debugging")
                     await page.close()
                     raise RuntimeError("Download link not found")

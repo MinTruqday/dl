@@ -9,7 +9,7 @@ from src.services.bookmark import BookmarkService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(route_class=LoggingRoute, prefix="/danh-dau")
+router = APIRouter(route_class=LoggingRoute, prefix="/dau-trang")
 
 @router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(

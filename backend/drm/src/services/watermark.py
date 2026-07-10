@@ -10,17 +10,12 @@ from src.repositories.license import LicenseRepository
 
 try:
     import PyPDF2
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.utils import simpleSplit
-    from reportlab.pdfgen import canvas
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
 except ImportError as e:
-    logger.exception("Document rendering toolkit (ReportLab) import failed")
+    logger.exception("Document rendering toolkit (PyPDF2) import failed")
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
+
 
 class WatermarkService:
 
@@ -89,87 +84,105 @@ class WatermarkService:
                 "reason": "Admin exported premium document",
                 "timestamp": datetime.datetime.now(datetime.timezone.utc)
             })
-        watermark_text = (
-            "Tài liệu được bảo vệ bản quyền - Chỉ cấp phép cho mục đích sử dụng cá nhân"
-        )
+        content_format = document.get("content_format", "json")
+        raw_content = str(document.get("content", ""))
 
         def encode_watermark(payload: str) -> str:
             binary = "".join(format(b, "08b") for b in payload.encode("utf-8"))
             zero_width = binary.replace("0", "\u200B").replace("1", "\u200C")
             return f"\u200D{zero_width}\u200D"
 
-        def generate_pdf_sync():
+
+        if content_format == "latex":
             try:
-                raw_pdf_buffer = io.BytesIO()
-                c = canvas.Canvas(raw_pdf_buffer, pagesize=A4)
-                
+                from src.compilation.engines.latex import LatexEngine
+                pdf_data_pre = await LatexEngine.compile_to_pdf(raw_content)
+            except ImportError:
+                try:
+                    import urllib.request as _ur
+                    req = _ur.Request(
+                        f"{settings.INTERNAL_API_URL}/ket-xuat/latex-pdf",
+                        data=raw_content.encode("utf-8"),
+                        method="POST",
+                        headers={"Content-Type": "application/octet-stream", "X-Internal-Token": settings.SECRET_KEY},
+                    )
+                    with _ur.urlopen(req, timeout=settings.DEFAULT_HTTP_TIMEOUT) as r:
+                        pdf_data_pre = r.read()
+                except Exception as e:
+                    logger.exception("Failed to compile LaTeX content for DRM export")
+                    raise HTTPException(status_code=500, detail="Đã xảy ra lỗi trong quá trình biên dịch tài liệu LaTeX")
+        else:
+            try:
+                import urllib.request as _ur
+                import json as _json
+                payload = _json.dumps({"content": raw_content, "format": "pdf"}).encode("utf-8")
+                req = _ur.Request(
+                    f"{settings.INTERNAL_API_URL}/ket-xuat/editorjs-pdf",
+                    data=payload,
+                    method="POST",
+                    headers={"Content-Type": "application/json", "X-Internal-Token": settings.SECRET_KEY},
+                )
+                with _ur.urlopen(req, timeout=settings.DEFAULT_HTTP_TIMEOUT) as r:
+                    pdf_data_pre = r.read()
+            except Exception:
+                try:
+                    from src.compilation.engines.editorjs import EditorjsEngine
+                    pdf_data_pre = await EditorjsEngine.compile_to_pdf(raw_content)
+                except Exception as e:
+                    logger.exception("Failed to render EditorJS content for DRM export")
+                    raise HTTPException(status_code=500, detail="Đã xảy ra lỗi trong quá trình kết xuất nội dung tài liệu")
+
+        def apply_watermark_to_pdf(source_pdf_bytes: bytes) -> bytes:
+            try:
                 import os
+                from reportlab.lib.pagesizes import A4
+                from reportlab.pdfgen import canvas
+                from reportlab.pdfbase import pdfmetrics
+                from reportlab.pdfbase.ttfonts import TTFont
+
                 font_path = os.path.join(os.path.dirname(__file__), "Roboto-Regular.ttf")
                 if not os.path.exists(font_path):
                     raise RuntimeError("Missing Roboto-Regular.ttf font file. Cannot apply watermark")
-                
-                pdfmetrics.registerFont(TTFont('Roboto-Regular', font_path))
-                font_name = "Roboto-Regular"
-                font_name_regular = "Roboto-Regular"
-                
-                c.setFont(font_name, 16)
-                c.drawString(50, 800, document.get("title", "Anonymous work"))
-                c.setFont(font_name_regular, 12)
-                y_pos = 750
-                content = str(
-                    document.get("content", "Creative content pending review")
-                )
-                
+
+                pdfmetrics.registerFont(TTFont("Roboto-Regular", font_path))
+
+                wm_buffer = io.BytesIO()
+                c = canvas.Canvas(wm_buffer, pagesize=A4)
                 c.saveState()
-                c.setFont(font_name, 60)
+                c.setFont("Roboto-Regular", 60)
                 c.setFillColorRGB(0.9, 0.9, 0.9, alpha=0.3)
-                c.translate(A4[0]/2, A4[1]/2)
+                c.translate(A4[0] / 2, A4[1] / 2)
                 c.rotate(45)
                 c.drawCentredString(0, 0, user_email)
                 c.restoreState()
+                c.save()
+                wm_buffer.seek(0)
 
                 zw_watermark = encode_watermark(user_id)
-                lines = content.split("\n")
-                for para in lines:
-                    if not para.strip():
-                        continue
-                    para = para.strip() + zw_watermark
-                    wrapped_lines = simpleSplit(para, font_name_regular, 12, 450)
-                    for line in wrapped_lines:
-                        c.drawString(50, y_pos, line)
-                        y_pos -= 18
-                        if y_pos < 50:
-                            c.showPage()
-                            c.saveState()
-                            c.setFont(font_name, 60)
-                            c.setFillColorRGB(0.9, 0.9, 0.9, alpha=0.3)
-                            c.translate(A4[0]/2, A4[1]/2)
-                            c.rotate(45)
-                            c.drawCentredString(0, 0, user_email)
-                            c.restoreState()
-                            c.setFont(font_name_regular, 12)
-                            y_pos = 800
-                c.save()
-                raw_pdf_buffer.seek(0)
 
-                output_pdf = PyPDF2.PdfWriter()
-                raw_pdf = PyPDF2.PdfReader(raw_pdf_buffer)
-                for page_num in range(len(raw_pdf.pages)):
-                    page = raw_pdf.pages[page_num]
-                    output_pdf.add_page(page)
-                
-                metadata = raw_pdf.metadata if raw_pdf.metadata else {}
-                output_pdf.add_metadata(metadata)
-                
+                source_reader = PyPDF2.PdfReader(io.BytesIO(source_pdf_bytes))
+                wm_reader = PyPDF2.PdfReader(wm_buffer)
+                wm_page = wm_reader.pages[0]
+
+                writer = PyPDF2.PdfWriter()
+                for page in source_reader.pages:
+                    page.merge_page(wm_page)
+                    writer.add_page(page)
+
+                writer.add_metadata({
+                    "/Producer": f"DocLib E-DRM\x00{zw_watermark}",
+                    "/Creator": "DocLib",
+                })
+
                 final_buffer = io.BytesIO()
-                output_pdf.write(final_buffer)
+                writer.write(final_buffer)
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.exception("PDF rendering process failed during watermark generation")
+                logger.exception("PDF watermark overlay process failed")
                 return None
 
-        pdf_data = await asyncio.to_thread(generate_pdf_sync)
+        pdf_data = await asyncio.to_thread(apply_watermark_to_pdf, pdf_data_pre)
         if pdf_data is None:
             raise HTTPException(
                 status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình kết xuất tài liệu bảo mật"

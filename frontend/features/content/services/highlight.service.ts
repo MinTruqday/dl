@@ -24,7 +24,7 @@ export async function createHighlightAPI(
     };
   }
 
-  const res = await fetch(`${API_URL}/danh-dau/tai-lieu/${documentId}`, {
+  const res = await fetch(`${API_URL}/noi-bat/tai-lieu/${documentId}`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(bodyData),
@@ -35,7 +35,7 @@ export async function createHighlightAPI(
 }
 
 export async function getHighlightsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/danh-dau/tai-lieu/${documentId}`, {
+  const res = await fetch(`${API_URL}/noi-bat/tai-lieu/${documentId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -48,7 +48,7 @@ export async function updateHighlightNoteAPI(
   highlightId: string,
   note: string,
 ) {
-  const res = await fetch(`${API_URL}/danh-dau/${highlightId}/ghi-chu`, {
+  const res = await fetch(`${API_URL}/noi-bat/${highlightId}/ghi-chu`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ note }),
@@ -60,7 +60,7 @@ export async function updateHighlightNoteAPI(
 }
 
 export async function deleteHighlightAPI(highlightId: string) {
-  const res = await fetch(`${API_URL}/danh-dau/${highlightId}`, {
+  const res = await fetch(`${API_URL}/noi-bat/${highlightId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -71,7 +71,7 @@ export async function deleteHighlightAPI(highlightId: string) {
 
 export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
   const res = await fetch(
-    `${API_URL}/danh-dau/ghi-chu?skip=${skip}&limit=${limit}`,
+    `${API_URL}/noi-bat/ghi-chu?skip=${skip}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },
@@ -111,7 +111,7 @@ export async function updateReadingPreferencesAPI(data: {
 }
 
 export async function exportHighlightsMarkdownAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/danh-dau/tai-lieu/${documentId}/xuat`, {
+  const res = await fetch(`${API_URL}/noi-bat/tai-lieu/${documentId}/xuat`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

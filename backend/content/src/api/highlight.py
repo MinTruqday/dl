@@ -13,7 +13,7 @@ from src.services.highlight import HighlightService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(route_class=LoggingRoute, prefix="/danh-dau")
+router = APIRouter(route_class=LoggingRoute, prefix="/noi-bat")
 
 @router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def create_highlight(

@@ -11,7 +11,6 @@ from src.api.library import router as library
 from src.api.pin import router as pin
 from src.api.publication import router as publication
 from src.api.reading import router as reading
-from src.api.discovery import router as review
 from src.api.version import router as version
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
@@ -42,7 +41,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(document)
-app.include_router(review)
 app.include_router(version)
 app.include_router(reading)
 app.include_router(bookmark)

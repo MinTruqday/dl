@@ -34,7 +34,7 @@ export async function updateReadingProgressAPI(data: {
 }
 
 export async function getPinnedDocumentsAPI() {
-  const res = await fetch(`${API_URL}/danh-dau`, {
+  const res = await fetch(`${API_URL}/dau-trang`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -43,7 +43,7 @@ export async function getPinnedDocumentsAPI() {
 }
 
 export async function pinDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/danh-dau/${documentId}`, {
+  const res = await fetch(`${API_URL}/dau-trang/${documentId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -53,7 +53,7 @@ export async function pinDocumentAPI(documentId: string) {
 }
 
 export async function unpinDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/danh-dau/${documentId}`, {
+  const res = await fetch(`${API_URL}/dau-trang/${documentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

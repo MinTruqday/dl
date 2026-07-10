@@ -433,6 +433,17 @@ class DocumentService:
         except ImportError:
             pass
 
+        try:
+            from src.core.infrastructure.mongo import mongo
+            drm_doc = await mongo.find_one("document_drm_settings", {"document_id": document["_id"]})
+            if drm_doc:
+                document["drm_settings"] = {
+                    "disable_copy": drm_doc.get("disable_copy", False),
+                    "hide_from_search": drm_doc.get("hide_from_search", False),
+                }
+        except Exception:
+            pass
+
         if document.get("content"):
             if user_id != document.get("creator_id"):
                 document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
