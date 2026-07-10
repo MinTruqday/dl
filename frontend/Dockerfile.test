@@ -1,0 +1,18 @@
+FROM mcr.microsoft.com/playwright:v1.44.0-jammy
+
+WORKDIR /app
+
+# Enable corepack for pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+
+# Copy the monorepo root to get packages/api-client
+COPY . .
+
+WORKDIR /app/frontend
+
+# Install dependencies and add testing libs
+RUN rm -rf node_modules
+RUN pnpm install --no-frozen-lockfile
+RUN pnpm add -D jest @types/jest ts-jest jest-environment-jsdom @testing-library/dom @playwright/test
+
+CMD ["pnpm", "jest", "--passWithNoTests"]

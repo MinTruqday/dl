@@ -137,7 +137,9 @@ class EditorjsEngine:
             return f'<p style="font-family:monospace;text-align:center">{_html.escape(s(d.get("formula", d.get("math", d.get("text", "")))))}</p>'
 
         if t == "mermaid":
-            return f'<pre style="background:#f4f4f4;padding:1em;font-family:monospace;font-size:9pt">[Mermaid]\n{_html.escape(s(d.get("code", "")))}</pre>'
+            import html as _html
+            code = _html.escape(s(d.get("code", "")))
+            return f'<div class="mermaid" style="text-align:center; margin: 15px 0; background:#f4f4f4; padding:10px;">{code}</div>'
 
         if t in ("image", "simpleImage", "imageCrop", "imageWithLink"):
             url = san(s(d.get("file", {}).get("url", d.get("url", ""))))
@@ -278,7 +280,36 @@ class EditorjsEngine:
             "thesaurus", "versionHistory", "compatibilityChecker", "protectDocument", "trackChanges", "macroButton",
             "printPreview", "combineDocuments", "masterDocument", "subdocument", "pageBorder", "pageColor",
             "bordersAndShading", "hyphenation", "quickParts", "diffViewer", "colorPalette", "lineNumbers", "linkPreview",
-            "outlineLevel", "textDirection", "textHighlight", "translation"
+            "outlineLevel", "textDirection", "textHighlight", "translation",
+            "readAloud", "focusMode", "gridlines", "accessibilityChecker", "restrictEditing", "textEffects",
+            "focusLine", "typewriterMode", "editorScore", "smartPaste", "revealFormatting", "widowOrphanControl",
+            "autoCorrect", "shrinkToFit", "clearFormatting", "goTo", "tabStops",
+            "doubleStrikethrough", "smallCaps", "hiddenText", "characterSpacing", "textScaling",
+            "splitWindow", "synchronousScrolling",
+            "outlineView", "draftView", "webLayout", "ruler",
+            "hyphenationZone", "gutterMargin", "firstLineIndent", "printLayout", "readMode",
+            "navigationPane", "balloons", "documentInspector",
+            "immersiveReader", "researcher", "selectionPane", "wrapText", "bringForward",
+            "removeBackground", "artisticEffects", "pasteSpecial", "keepWithNext", "ligatures",
+            "reflection", "glow", "softEdges", "textOutline", "textFill",
+            "groupShapes", "alignObjects", "compressPictures", "lineFocus",
+            "pageMovement", "resumeAssistant", "autoFormatAsYouType",
+            "mailMergeRecipients", "citationStyle", "kerningForFonts",
+            "orientation", "paperSize", "verticalAlignment", "blankPage", "pageBreakBefore",
+            "keepLinesTogether", "suppressLineNumbers", "dontHyphenate", "zoom", "onePage",
+            "multiplePages", "pageWidth", "newWindow", "viewSideBySide", "switchWindows",
+            "drawTable", "eraser", "mergeCells", "splitCells", "splitTable",
+            "autoFit", "distributeRows", "distributeColumns", "cellMargins", "sortTable",
+            "repeatHeaderRows", "tableFormula", "viewGridlinesTable", "insertAbove", "insertBelow",
+            "3DRotation", "bevel", "pictureCorrections", "pictureColor", "changePicture",
+            "resetPicture", "pictureBorder", "pictureLayout", "cropToShape", "cropAspectRatio",
+            "screenshot", "symbol", "textFromFile", "dropCapLinesToDrop", "showFormattingMarks",
+            "richTextContentControl", "plainTextContentControl", "pictureContentControl", "buildingBlockGallery", "comboBoxContentControl",
+            "dropDownListControl", "datePickerControl", "checkBoxControl", "designMode", "controlProperties",
+            "groupControls", "documentTemplate", "cOMAddIns", "wordAddIns", "xMLMappingPane",
+            "editRecipientList", "highlightMergeFields", "mailMergeRules", "matchFields", "updateLabels",
+            "previewResults", "findRecipient", "autoCheckForErrors", "finishAndMerge", "markCitation",
+            "markEntry", "updateTable", "addTextToTOC", "altText", "smartLookup"
         ):
             return ""
 
@@ -352,7 +383,7 @@ class EditorjsEngine:
 
         if t in ("smartArtCycle", "smartArtHierarchy", "smartArtList", "smartArtMatrix", "smartArtProcess", "smartArtPyramid", "smartArtRelationship", "wordArt", "shape", "drawing"):
             title = san(s(d.get("title", d.get("text", t))))
-            return f'<div style="border:2px solid #aaa;padding:20px;margin:15px 0;text-align:center;background:#fafafa;border-radius:5px;"><h4 style="margin:0;">{title}</h4><div style="font-size:0.8em;color:#888;">Hinh khoi so do</div></div>'
+            return f'<div style="border:2px solid #2b6cb0;padding:30px;margin:20px 0;text-align:center;background:linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);border-radius:8px;box-shadow: 2px 2px 5px rgba(0,0,0,0.1);"><h3 style="margin:0;color:#2b6cb0;">{title}</h3></div>'
 
         if t in ("addressBlock", "greetingLine", "envelope", "labelConfig", "letterhead"):
             return f'<div style="border-left: 2px solid #ccc; padding-left: 10px; font-family: monospace; color: #555; margin: 10px 0;">{san(s(d.get("text", d.get("name", ""))))}</div>'
@@ -389,6 +420,31 @@ class EditorjsEngine:
         if t == "equationArray":
             import html as _html
             return f'<p style="font-family:monospace;text-align:center">{_html.escape(s(d.get("formula", d.get("math", d.get("text", "")))))}</p>'
+
+        if t == "field":
+            return f'<span style="background: #f0f0f0; padding: 2px 4px; border: 1px dashed #ccc; font-family: monospace;">{{{san(s(d.get("content", d.get("name", ""))))}}}</span>'
+
+        if t == "sparklines":
+            return f'<table style="width: 100px; display: inline-table; margin: 0 5px; border-collapse: collapse;"><tr><td style="height: 20px; background: linear-gradient(to right, #4CAF50 0%, #4CAF50 40%, #ddd 40%, #ddd 100%); border: 1px solid #aaa;"></td></tr></table>'
+
+        if t == "oleObject":
+            name = san(s(d.get("name", d.get("title", "Embedded Object"))))
+            return f'<div style="border: 2px solid #555; padding: 15px; background: #f9f9f9; width: 250px; text-align: center; margin: 20px auto; border-radius: 8px;"><div style="font-size: 3em;">&#128196;</div><strong>{name}</strong><br/><small style="color:#666;">Double-click to open</small></div>'
+
+        if t in ("convertTextToTable", "convertTableToText", "tableAutoFormat"):
+            content = san(s(d.get("content", "")))
+            return f'<div style="margin: 10px 0; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc;">{content}</div>'
+
+        if t == "digitalSignatureLine":
+            name = san(s(d.get("content", d.get("name", ".............................."))))
+            return f'<div style="width: 300px; margin: 40px auto; text-align: center;"><div style="font-size: 2em; float: left; margin-top: -15px; font-family: monospace;">X</div><hr style="border-top: 2px solid #000; margin-bottom: 5px; clear: both;" /><strong>{name}</strong></div>'
+
+        if t == "phoneticGuide":
+            ruby = san(s(d.get("ruby", d.get("content", ""))))
+            base = san(s(d.get("base", "")))
+            if ruby and base:
+                return f'<ruby>{base}<rt>{ruby}</rt></ruby>'
+            return f'<span>{ruby or base}</span>'
 
         logger.warning("Invalid block content skipped during rendering")
         return ""
