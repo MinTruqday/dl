@@ -21,6 +21,6 @@ class Settings(BaseModel):
     REDIS_URI: str = os.getenv("REDIS_URI")
     RABBITMQ_URI: str = os.getenv("RABBITMQ_URI")
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    NOTIFICATION_DB_NAME: str = os.getenv("NOTIFICATION_DB_NAME")
 
 settings = Settings()

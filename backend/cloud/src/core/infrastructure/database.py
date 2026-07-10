@@ -29,7 +29,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = database.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.CLOUD_DB_NAME]
 
         await db["storage_items"].create_index([("owner_id", 1), ("parent_id", 1), ("is_trashed", 1)], background=True)
         await db["storage_items"].create_index([("shared_with.user_id", 1), ("parent_id", 1), ("is_trashed", 1)], background=True)

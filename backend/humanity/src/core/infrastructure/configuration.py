@@ -21,6 +21,6 @@ class Settings(BaseModel):
     REDIS_URI: str = os.getenv("REDIS_URI")
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     IMAGE_GEN_MODEL: str = os.getenv("IMAGE_GEN_MODEL")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    HUMANITY_DB_NAME: str = os.getenv("HUMANITY_DB_NAME")
 
 settings = Settings()

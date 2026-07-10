@@ -28,7 +28,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = database.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.MESSAGING_DB_NAME]
 
         await db["conversations"].create_index([("participants", 1), ("updated_at", -1)], background=True)
 

@@ -86,7 +86,7 @@ async def upload_chat_attachment(
     from src.core.infrastructure.configuration import settings
     from datetime import datetime, timezone, timedelta
 
-    user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": current_user.id})
+    user = await database.mongodb[settings.CLOUD_DB_NAME].users.find_one({"_id": current_user.id})
     if not user:
         raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng tương ứng")
     
@@ -110,7 +110,7 @@ async def upload_chat_attachment(
 
     if ai_tier == "BASIC" and not is_admin:
         expires_at = datetime.now(timezone.utc) + timedelta(days=14)
-        await database.mongodb[settings.SERVICE_DB_NAME].temp_chat_files.insert_one({
+        await database.mongodb[settings.CLOUD_DB_NAME].temp_chat_files.insert_one({
             "owner_id": current_user.id,
             "url": file_url,
             "original_filename": file.filename,
@@ -151,7 +151,7 @@ async def get_presigned_url_for_upload(
     from src.core.infrastructure.database import database
     from src.core.infrastructure.configuration import settings
 
-    user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": current_user.id})
+    user = await database.mongodb[settings.CLOUD_DB_NAME].users.find_one({"_id": current_user.id})
     ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
     is_admin = user.get("role") == "admin" if user else False
 
@@ -192,13 +192,13 @@ async def confirm_upload(
     from src.core.infrastructure.configuration import settings
     from datetime import datetime, timezone, timedelta
     
-    user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": current_user.id})
+    user = await database.mongodb[settings.CLOUD_DB_NAME].users.find_one({"_id": current_user.id})
     ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
     is_admin = user.get("role") == "admin" if user else False
 
     if req.is_message_attachment and ai_tier == "BASIC" and not is_admin:
         expires_at = datetime.now(timezone.utc) + timedelta(days=14)
-        await database.mongodb[settings.SERVICE_DB_NAME].temp_chat_files.insert_one({
+        await database.mongodb[settings.CLOUD_DB_NAME].temp_chat_files.insert_one({
             "owner_id": current_user.id,
             "url": req.file_path,
             "original_filename": req.filename,

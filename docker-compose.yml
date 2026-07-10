@@ -137,8 +137,6 @@ services:
       - traefik.http.services.finance.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_finance
     depends_on:
       - mongodb
       - redis
@@ -162,8 +160,6 @@ services:
       - traefik.http.services.notification.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_notification
     depends_on:
       - mongodb
       - redis
@@ -188,9 +184,6 @@ services:
       - traefik.http.services.ai.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_agentic_ai
-      - USAGE_URL=http://usage:8014
     depends_on:
       - mongodb
       - redis
@@ -243,8 +236,6 @@ services:
     ports:
       - 3001:3000
     environment:
-      - SERVICE_DB_NAME=doclib_agentic_ai
-      - USAGE_URL=http://usage:8014
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
@@ -268,8 +259,6 @@ services:
       - traefik.http.services.collector.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_collection
     depends_on:
       - mongodb
       - redis
@@ -295,8 +284,6 @@ services:
       - traefik.http.services.editor.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_compilation
     depends_on:
       - mongodb
       - redis
@@ -321,8 +308,6 @@ services:
       - traefik.http.services.authentication.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_authentication
     depends_on:
       - mongodb
       - redis
@@ -345,8 +330,6 @@ services:
       - traefik.http.services.humanity.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_humanity
     depends_on:
       - mongodb
       - redis
@@ -370,8 +353,6 @@ services:
       - traefik.http.services.usage.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_usage
     depends_on:
       - mongodb
       - redis
@@ -395,8 +376,6 @@ services:
       - traefik.http.services.management.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_management
     depends_on:
       - mongodb
       - redis
@@ -420,8 +399,6 @@ services:
       - traefik.http.services.realtime.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_websocket
     depends_on:
       - redis
     volumes:
@@ -444,8 +421,6 @@ services:
       - traefik.http.services.messaging.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_messaging
     depends_on:
       - mongodb
       - redis
@@ -477,9 +452,6 @@ services:
       - traefik.http.services.content.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_content
-      - USAGE_URL=http://usage:8014
     depends_on:
       - mongodb
       - redis
@@ -504,9 +476,6 @@ services:
       - traefik.http.services.cloud.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_cloud
-      - USAGE_URL=http://usage:8014
     depends_on:
       - mongodb
       - redis
@@ -532,8 +501,6 @@ services:
       - traefik.http.services.drm.loadbalancer.server.port=8000
     env_file:
       - .env
-    environment:
-      - SERVICE_DB_NAME=doclib_drm
     depends_on:
       - mongodb
       - redis

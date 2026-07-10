@@ -24,9 +24,6 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     IMAGE_GEN_MODEL: str = os.getenv("IMAGE_GEN_MODEL")
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
-    MONGO_URL: str = os.getenv("MONGO_URL", "http://doclib_database:8800/co-so-du-lieu")
-    QUEUE_URL: str = os.getenv("QUEUE_URL", "http://doclib_queue:8802/hang-doi")
-    CACHE_URL: str = os.getenv("CACHE_URL", "http://doclib_cache:8801")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    WORKER_DB_NAME: str = os.getenv("WORKER_DB_NAME")
 
 settings = Settings()

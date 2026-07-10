@@ -36,6 +36,6 @@ class Settings(BaseModel):
     SENDER_NAME: Optional[str] = os.getenv("SENDER_NAME")
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     HUMANITY_URL: str = get_service_url("HUMANITY")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    AUTHENTICATION_DB_NAME: str = os.getenv("AUTHENTICATION_DB_NAME")
 
 settings = Settings()

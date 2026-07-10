@@ -28,7 +28,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = database.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.USAGE_DB_NAME]
 
         await db["reports"].create_index([("status", 1)], background=True)
         await db["reports"].create_index([("created_at", -1)], background=True)

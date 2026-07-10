@@ -29,7 +29,7 @@ class CopyrightService:
     @staticmethod
     @log_logic_execution
     async def update_drm_settings(document_id: str, disable_copy: bool, hide_from_search: bool, current_user) -> dict:
-        db = database.mongodb.get_database(settings.SERVICE_DB_NAME)
+        db = database.mongodb.get_database(settings.DRM_DB_NAME)
         await mongo.update_one("document_drm_settings", 
             {"document_id": document_id},
             {

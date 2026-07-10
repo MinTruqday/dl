@@ -20,6 +20,6 @@ class Settings(BaseModel):
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     REDIS_URI: str = os.getenv("REDIS_URI")
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    DRM_DB_NAME: str = os.getenv("DRM_DB_NAME")
 
 settings = Settings()

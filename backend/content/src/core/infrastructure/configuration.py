@@ -27,6 +27,6 @@ class Settings(BaseModel):
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
     USAGE_URL: str = get_service_url("USAGE")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    CONTENT_DB_NAME: str = os.getenv("CONTENT_DB_NAME")
 
 settings = Settings()

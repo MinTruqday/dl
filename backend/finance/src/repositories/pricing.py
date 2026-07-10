@@ -6,7 +6,7 @@ from src.core.infrastructure.configuration import settings
 class PricingRepository:
     @staticmethod
     def _get_db():
-        return database.mongodb.get_database(settings.SERVICE_DB_NAME if hasattr(settings, "SERVICE_DB_NAME") else "doclib")
+        return database.mongodb.get_database(settings.FINANCE_DB_NAME if hasattr(settings, 'FINANCE_DB_NAME') else "doclib")
 
     @classmethod
     async def get_document(cls, document_id: str, creator_id: str = None) -> Optional[Dict[str, Any]]:

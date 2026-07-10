@@ -22,6 +22,6 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     COMPILATION_URL: str = get_service_url("COMPILATION")
     CONTENT_URL: str = get_service_url("CONTENT")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    COMPILATION_DB_NAME: str = os.getenv("COMPILATION_DB_NAME")
 
 settings = Settings()

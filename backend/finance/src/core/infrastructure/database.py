@@ -44,7 +44,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = database.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.FINANCE_DB_NAME]
 
         await db["transactions"].create_index([("user_id", 1)], background=True)
 

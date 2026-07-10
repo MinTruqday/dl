@@ -8,7 +8,7 @@ from src.core.infrastructure.configuration import settings
 
 class StorageService:
     def __init__(self):
-        endpoint = settings.MINIO_ENDPOINT or "minio:9000"
+        endpoint = settings.MINIO_ENDPOINT
         if not endpoint.startswith("http"):
             endpoint = f"http://{endpoint}"
 

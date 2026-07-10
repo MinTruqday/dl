@@ -97,7 +97,7 @@ async def startup_event():
         await init_db()
         if settings.MONGODB_URI:
             from src.core.infrastructure.database import database
-            db = database.mongodb[settings.SERVICE_DB_NAME]
+            db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
             await db["finetune_datasets"].create_index(
                 [("user_id", 1), ("created_at", -1)], background=True
             )

@@ -127,7 +127,7 @@ async def _check_upload_quota(req: ChatRequest):
         
     try:
         from src.core.infrastructure.database import database
-        user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": req.user_id})
+        user = await database.mongodb[settings.AGENTIC_AI_DB_NAME].users.find_one({"_id": req.user_id})
         ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
         is_admin = user.get("role") == "admin" if user else False
         
@@ -162,7 +162,7 @@ async def _consume_upload_quota(req: ChatRequest):
         
     try:
         from src.core.infrastructure.database import database
-        user = await database.mongodb[settings.SERVICE_DB_NAME].users.find_one({"_id": req.user_id})
+        user = await database.mongodb[settings.AGENTIC_AI_DB_NAME].users.find_one({"_id": req.user_id})
         ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
         is_admin = user.get("role") == "admin" if user else False
         

@@ -24,6 +24,6 @@ class Settings(BaseModel):
     HUMANITY_URL: str = get_service_url("HUMANITY")
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    MESSAGING_DB_NAME: str = os.getenv("MESSAGING_DB_NAME")
 
 settings = Settings()

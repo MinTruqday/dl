@@ -6,7 +6,7 @@ from src.core.infrastructure.configuration import settings
 class CollaborationRepository:
     @staticmethod
     def _get_db():
-        db_name = settings.SERVICE_DB_NAME if hasattr(settings, 'SERVICE_DB_NAME') else 'doclib'
+        db_name = settings.CONTENT_DB_NAME if hasattr(settings, 'CONTENT_DB_NAME') else 'doclib'
         return database.mongodb.get_database(db_name)
 
     @classmethod

@@ -28,7 +28,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = database.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.AUTHENTICATION_DB_NAME]
 
         await db["users"].create_index([("followers_count", -1)], background=True)
         await db["users"].create_index([("email", 1)], unique=True, background=True)

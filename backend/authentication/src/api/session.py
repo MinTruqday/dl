@@ -49,7 +49,7 @@ async def read_users_me(
         import httpx
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp_usage = await client.get(
-                f"http://doclib_traefik:8000/su-dung/goi-cuoc/{current_user.id}",
+                f"{settings.USAGE_URL}/goi-cuoc/{current_user.id}",
                 timeout=10.0,
             )
             if resp_usage.status_code == 200:

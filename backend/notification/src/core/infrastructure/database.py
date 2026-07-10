@@ -44,7 +44,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = database.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.NOTIFICATION_DB_NAME]
 
         logger.info("MongoDB index creation completed")
     except Exception as e:

@@ -44,7 +44,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = database.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.COLLECTION_DB_NAME]
 
         await db["status_updates"].create_index([("created_at", -1)], background=True)
         await db["status_updates"].create_index([("user_id", 1)], background=True)

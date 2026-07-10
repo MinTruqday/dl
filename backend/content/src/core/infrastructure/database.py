@@ -44,7 +44,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = database.mongodb[settings.SERVICE_DB_NAME]
+        db = database.mongodb[settings.CONTENT_DB_NAME]
 
         await db["documents"].create_index([("title", "text"), ("description", "text"), ("author", "text")], background=True)
         await db["documents"].create_index([("creator_id", 1)], background=True)

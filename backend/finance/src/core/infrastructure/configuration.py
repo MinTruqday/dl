@@ -28,6 +28,6 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
-    SERVICE_DB_NAME: str = os.getenv("SERVICE_DB_NAME")
+    FINANCE_DB_NAME: str = os.getenv("FINANCE_DB_NAME")
 
 settings = Settings()

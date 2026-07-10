@@ -12,7 +12,7 @@ except ImportError:
 
 class MongoClient:
     def __init__(self):
-        self.db_name = settings.SERVICE_DB_NAME
+        self.db_name = settings.CLOUD_DB_NAME
 
     def get_db(self):
         if not database.mongodb:
