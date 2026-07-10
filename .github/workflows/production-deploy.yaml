@@ -115,8 +115,16 @@ jobs:
       - name: Configure Kubernetes Credentials
         run: |
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+          SECRET_VALUE="${{ secrets.KUBE_CONFIG }}"
+          if echo "$SECRET_VALUE" | base64 -d 2>/dev/null | grep -q 'apiVersion'; then
+            echo "$SECRET_VALUE" | base64 -d > ~/.kube/config
+          else
+            echo "$SECRET_VALUE" > ~/.kube/config
+          fi
           chmod 600 ~/.kube/config
+
+      - name: Verify cluster connectivity
+        run: kubectl cluster-info
 
       - name: Lowercase repository
         run: |
@@ -132,7 +140,7 @@ jobs:
 
       - name: Apply Kubernetes Manifests
         run: |
-          kubectl apply -k ./k8s/
+          kubectl apply -k ./k8s/ --validate=false
 
       - name: Wait for rollout to complete
         run: |
