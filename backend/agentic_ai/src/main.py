@@ -28,6 +28,7 @@ from src.api.inference import router as inference
 from src.api.ingestion import router as ingest
 from src.api.events import router as events
 from src.api.hill_climbing import router as hill_climbing
+from src.api.drm import router as drm_router
 
 app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="agentic_ai")
@@ -63,6 +64,7 @@ app.include_router(finetune)
 app.include_router(history)
 app.include_router(events)
 app.include_router(hill_climbing)
+app.include_router(drm_router)
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}

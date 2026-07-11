@@ -1,7 +1,7 @@
 from typing import Any
 
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Depends, Response, HTTPException
+from fastapi import APIRouter, Depends, Response, HTTPException, Request
 from src.core.dependency import get_current_user, get_db
 
 from src.services.watermark import WatermarkService
@@ -14,11 +14,13 @@ router = APIRouter(route_class=LoggingRoute, prefix="/ket-xuat")
 @router.get("/{document_id}/drm")
 async def export_document_pdf(
     document_id: str,
+    request: Request,
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
+    client_ip = request.client.host if request.client else "127.0.0.1"
     file_content, ext, mime_type = await WatermarkService.export_document_pdf_watermarked(
-        document_id, current_user
+        document_id, current_user, client_ip
     )
     headers = {
         "Content-Disposition": f'attachment; filename="TaiLieuBaoMat.{ext}"'

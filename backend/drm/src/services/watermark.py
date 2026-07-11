@@ -20,8 +20,67 @@ else:
 class WatermarkService:
 
     @staticmethod
+    def encode_uid_to_zws(user_id: str) -> str:
+        binary = "".join(format(ord(c), "08b") for c in user_id)
+        zero_width_payload = binary.replace("0", "\u200B").replace("1", "\u200C")
+        return f"\u200D{zero_width_payload}\u200D"
+
+    @staticmethod
+    def inject_structural_watermark_editorjs(raw_json_content: str, user_id: str) -> str:
+        import json
+        try:
+            content_dict = json.loads(raw_json_content)
+            blocks = content_dict.get("blocks", [])
+            stealth_payload = WatermarkService.encode_uid_to_zws(user_id)
+            text_block_types = ["paragraph", "header", "quote", "warning"]
+            for block in blocks:
+                b_type = block.get("type")
+                if b_type in text_block_types:
+                    original_text = block.get("data", {}).get("text", "")
+                    if original_text:
+                        block["data"]["text"] = f"{original_text}{stealth_payload}"
+                elif b_type == "list":
+                    items = block.get("data", {}).get("items", [])
+                    for i in range(len(items)):
+                        items[i] = f"{items[i]}{stealth_payload}"
+            return json.dumps(content_dict, ensure_ascii=False)
+        except Exception as e:
+            logger.error(f"Lỗi khi tiêm thủy vân vào EditorJS AST: {e}")
+            return raw_json_content
+
+    @staticmethod
+    def inject_structural_watermark_latex(raw_latex: str, user_id: str) -> str:
+        import re
+        try:
+            stealth_payload = WatermarkService.encode_uid_to_zws(user_id)
+            if r"\end{document}" in raw_latex:
+                raw_latex = raw_latex.replace(r"\end{document}", f"{stealth_payload}\n\\end{{document}}")
+            else:
+                raw_latex += stealth_payload
+
+            blocks = raw_latex.split('\n\n')
+            watermarked_blocks = []
+            unsafe_markers = [r"\begin", r"\end", r"$$", r"\[", r"\]", r"\item", r"\section", r"\chapter"]
+            
+            for block in blocks:
+                if any(marker in block for marker in unsafe_markers):
+                    watermarked_blocks.append(block)
+                    continue
+                
+                stripped_block = block.strip()
+                if re.search(r'[a-zA-Z0-9]', stripped_block) and re.search(r'[.!?]$', stripped_block):
+                    block = stripped_block + stealth_payload
+                watermarked_blocks.append(block)
+
+            return '\n\n'.join(watermarked_blocks)
+            
+        except Exception as e:
+            logger.error(f"Lỗi khi tiêm thủy vân vào LaTeX: {e}")
+            return raw_latex
+
+    @staticmethod
     @log_logic_execution
-    async def export_document_pdf_watermarked(document_id: str, current_user):
+    async def export_document_pdf_watermarked(document_id: str, current_user, client_ip: str = "127.0.0.1"):
         if not REPORTLAB_AVAILABLE:
             raise HTTPException(
                 status_code=500,
@@ -39,7 +98,6 @@ class WatermarkService:
         from src.core.infrastructure.configuration import settings
         
         user_id = str(current_user.id)
-        
         user_tier = current_user.tier
         try:
             url = f"{settings.INTERNAL_API_URL}/su-dung/goi-cuoc/{current_user.id}"
@@ -52,12 +110,39 @@ class WatermarkService:
         except Exception as e:
             logger.warning(f"Failed to fetch user tier information {e}")
 
-        if user_tier == "BASIC" and (not hasattr(current_user, "role") or current_user.role != "admin"):
-            raise HTTPException(
-                status_code=403,
-                detail="Gói cước hiện tại không hỗ trợ tính năng kết xuất tài liệu bảo mật. Vui lòng nâng cấp để sử dụng",
-            )
+        # Agentic AI Policy Evaluation
+        try:
+            async with httpx.AsyncClient() as client:
+                agent_res = await client.post(
+                    f"{settings.INTERNAL_API_URL}/drm-ai/evaluate",
+                    json={
+                        "user_id": user_id,
+                        "document_id": str(document["_id"]),
+                        "client_ip": client_ip,
+                        "user_tier": user_tier,
+                        "document_type": "premium" if document.get("is_premium") else "standard"
+                    },
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
+                    timeout=5.0
+                )
+                if agent_res.status_code == 200:
+                    policy_data = agent_res.json().get("data", {})
+                    decision = policy_data.get("decision", "LEVEL_2")
+                    if decision == "BLOCKED":
+                        raise HTTPException(status_code=403, detail="Hành vi truy cập bị từ chối bởi hệ thống bảo mật thông minh")
+                    
+                    enable_visual = policy_data.get("enable_visual_watermark", True)
+                    enable_micro = policy_data.get("enable_micro_dots", True)
+                    enable_aes = policy_data.get("enable_aes_encryption", True)
+                else:
+                    enable_visual, enable_micro, enable_aes = True, True, True
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning("Failed to evaluate DRM policy via Agentic AI, falling back to LEVEL_2")
+            enable_visual, enable_micro, enable_aes = True, True, True
 
+        # Ensure premium access
         if (
             document.get("is_premium")
             and document.get("creator_id") != user_id
@@ -69,33 +154,21 @@ class WatermarkService:
                     status_code=403,
                     detail="Tài liệu yêu cầu quyền truy cập đặc biệt hoặc xác nhận mua hàng",
                 )
-        
-        if (
-            document.get("is_premium")
-            and document.get("creator_id") != user_id
-            and hasattr(current_user, "role") and current_user.role == "admin"
-        ):
-            import datetime
-            await LicenseRepository.record_audit_log({
-                "action": "ADMIN_FORCE_EXPORT_PREMIUM",
-                "actor_id": user_id,
-                "document_id": str(document["_id"]),
-                "reason": "Admin exported premium document",
-                "timestamp": datetime.datetime.now(datetime.timezone.utc)
-            })
+
         content_format = document.get("content_format", "json")
         raw_content = str(document.get("content", ""))
 
         if content_format == "latex":
+            watermarked_latex = WatermarkService.inject_structural_watermark_latex(raw_content, user_id) if enable_micro else raw_content
             try:
                 from src.compilation.engines.latex import LatexEngine
-                pdf_data_pre = await LatexEngine.compile_to_pdf(raw_content)
+                pdf_data_pre = await LatexEngine.compile_to_pdf(watermarked_latex)
             except ImportError:
                 try:
                     async with httpx.AsyncClient() as client:
                         r = await client.post(
                             f"{settings.INTERNAL_API_URL}/ket-xuat/latex-pdf",
-                            content=raw_content.encode("utf-8"),
+                            content=watermarked_latex.encode("utf-8"),
                             headers={"Content-Type": "application/octet-stream", "X-Internal-Token": settings.SECRET_KEY},
                             timeout=10.0
                         )
@@ -105,11 +178,12 @@ class WatermarkService:
                     logger.exception("Failed to compile LaTeX content for DRM export")
                     raise HTTPException(status_code=500, detail="Đã xảy ra lỗi trong quá trình biên dịch tài liệu LaTeX")
         else:
+            watermarked_raw_content = WatermarkService.inject_structural_watermark_editorjs(raw_content, user_id) if enable_micro else raw_content
             try:
                 async with httpx.AsyncClient() as client:
                     r = await client.post(
                         f"{settings.INTERNAL_API_URL}/ket-xuat/editorjs-pdf",
-                        json={"content": raw_content, "format": "pdf"},
+                        json={"content": watermarked_raw_content, "format": "pdf"},
                         headers={"X-Internal-Token": settings.SECRET_KEY},
                         timeout=10.0
                     )
@@ -118,12 +192,15 @@ class WatermarkService:
             except Exception:
                 try:
                     from src.compilation.engines.editorjs import EditorjsEngine
-                    pdf_data_pre = await EditorjsEngine.compile_to_pdf(raw_content)
+                    pdf_data_pre = await EditorjsEngine.compile_to_pdf(watermarked_raw_content)
                 except Exception as e:
                     logger.exception("Failed to render EditorJS content for DRM export")
                     raise HTTPException(status_code=500, detail="Đã xảy ra lỗi trong quá trình kết xuất nội dung tài liệu")
 
         def apply_watermark_to_pdf(source_pdf_bytes: bytes) -> bytes:
+            if not enable_visual and not enable_micro:
+                return source_pdf_bytes
+
             try:
                 import fitz
                 import io
@@ -135,48 +212,49 @@ class WatermarkService:
                     rect = page.rect
                     width, height = rect.width, rect.height
                     
-                    page.insert_text(
-                        fitz.Point(width / 4, height / 2),
-                        user_email,
-                        fontsize=60,
-                        fontname="helv",
-                        color=(0.7, 0.7, 0.7),
-                        fill_opacity=0.2,
-                        rotate=45,
-                        overlay=True
-                    )
+                    if enable_visual:
+                        page.insert_text(
+                            fitz.Point(width / 4, height / 2),
+                            user_email,
+                            fontsize=60,
+                            fontname="helv",
+                            color=(0.7, 0.7, 0.7),
+                            fill_opacity=0.2,
+                            rotate=45,
+                            overlay=True
+                        )
+                        page.insert_text(
+                            fitz.Point(10, height - 10),
+                            f"DOCLIB_UID_{user_id}",
+                            fontsize=1,
+                            color=(1, 1, 1),
+                            fill_opacity=0.01,
+                            overlay=True
+                        )
 
-                    page.draw_circle(fitz.Point(20, 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
-                    page.draw_circle(fitz.Point(width - 20, 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
-                    page.draw_circle(fitz.Point(20, height - 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
+                    if enable_micro:
+                        page.draw_circle(fitz.Point(20, 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
+                        page.draw_circle(fitz.Point(width - 20, 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
+                        page.draw_circle(fitz.Point(20, height - 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
 
-                    dot_color = (0.95, 0.95, 0.9) 
-                    x_start, y_start = 20, 20
-                    dot_spacing = 12
-                    
-                    idx = 0
-                    for i in range(len(binary_id)):
-                        if binary_id[i] == '1':
-                            x = x_start + (idx * dot_spacing) % (width - 40)
-                            y = y_start + ((idx * dot_spacing) // int(width - 40)) * dot_spacing
-                            
-                            page.draw_circle(
-                                fitz.Point(x, y), 
-                                0.5, 
-                                color=dot_color, 
-                                fill=dot_color, 
-                                fill_opacity=0.4
-                            )
-                        idx += 1
-
-                    page.insert_text(
-                        fitz.Point(10, height - 10),
-                        f"DOCLIB_UID_{user_id}",
-                        fontsize=1,
-                        color=(1, 1, 1),
-                        fill_opacity=0.01,
-                        overlay=True
-                    )
+                        dot_color = (0.95, 0.95, 0.9) 
+                        x_start, y_start = 20, 20
+                        dot_spacing = 12
+                        
+                        idx = 0
+                        for i in range(len(binary_id)):
+                            if binary_id[i] == '1':
+                                x = x_start + (idx * dot_spacing) % (width - 40)
+                                y = y_start + ((idx * dot_spacing) // int(width - 40)) * dot_spacing
+                                
+                                page.draw_circle(
+                                    fitz.Point(x, y), 
+                                    0.5, 
+                                    color=dot_color, 
+                                    fill=dot_color, 
+                                    fill_opacity=0.4
+                                )
+                            idx += 1
 
                 final_buffer = io.BytesIO()
                 doc.save(final_buffer, garbage=4, deflate=True)
@@ -192,8 +270,8 @@ class WatermarkService:
                 status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình kết xuất tài liệu bảo mật"
             )
             
-        if user_tier == "PRO" and (not hasattr(current_user, "role") or current_user.role != "admin"):
-            logger.info("Document exported successfully without E-DRM (PRO tier)")
+        if not enable_aes:
+            logger.info("Document exported successfully without AES encryption (Dynamic DRM Policy)")
             return pdf_data, "pdf", "application/pdf"
             
         import os
