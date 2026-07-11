@@ -1,12 +1,16 @@
 import asyncio
 import json
 import uuid
+import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum
 from typing import Any, Callable, Coroutine, Dict, List, Optional
 
 from loguru import logger
+
+from src.memory.mem0 import mem0_manager
+from src.repositories.chat import ChatRepository
 
 
 
@@ -349,3 +353,80 @@ _heartbeat_schedule = CronSchedule(
     payload_template={"check_hill_climbing": True},
 )
 cron_scheduler.register(_heartbeat_schedule)
+
+
+def _is_valuable_message(content: str) -> bool:
+    if not content:
+        return False
+        
+    text = content.strip().lower()
+    
+    if "?" in text:
+        return True
+        
+    words = text.split()
+    if len(text) < 10 or len(words) < 3:
+        return False
+        
+    clean_text = re.sub(r'[^\w\s]', '', text).strip()
+    unique_words = set(clean_text.split())
+    
+    if len(unique_words) <= 2:
+        return False
+        
+    return True
+
+
+async def _handle_nightly_memory_extraction(event: AgentEvent) -> Optional[str]:
+    logger.info("Started nightly memory extraction process into Mem0")
+    
+    cutoff_time = datetime.now(timezone.utc) - timedelta(days=1)
+    sessions = await ChatRepository.find_ai_sessions(
+        {"updated_at": {"$gte": cutoff_time}}
+    )
+
+    if not sessions:
+        return "No new conversations found in the last 24 hours"
+
+    processed_count = 0
+    for session in sessions:
+        session_id = session.get("_id")
+        user_id = session.get("user_id")
+        if not user_id or user_id == "guess_user":
+            continue
+
+        messages = await ChatRepository.find_ai_messages(
+            {"session_id": session_id}
+        ).sort("created_at", 1)
+
+        formatted_messages = []
+        for msg in messages:
+            content = msg.get("content", "")
+            
+            if msg["role"] == "assistant" or (msg["role"] == "user" and _is_valuable_message(content)):
+                formatted_messages.append(
+                    {"role": msg["role"], "content": content}
+                )
+
+        if len(formatted_messages) > 1:
+            await mem0_manager.add_memory(formatted_messages, user_id)
+            processed_count += 1
+
+    return f"Extracted and stored memories for {processed_count} sessions"
+
+
+event_driven_loop.register_handler(EventHandler(
+    event_type=EventType.CRON,
+    handler=_handle_nightly_memory_extraction,
+    description="Extract and compress conversation memory to Mem0 nightly",
+))
+
+_nightly_memory_schedule = CronSchedule(
+    schedule_id="nightly_memory_extraction",
+    name="Nightly Memory Extraction",
+    cron_expression="0 0 * * *", 
+    interval_seconds=86400,
+    event_type=EventType.CRON,
+    payload_template={"action": "extract_memories"}
+)
+cron_scheduler.register(_nightly_memory_schedule)

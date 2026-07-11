@@ -38,7 +38,8 @@ async def summarize_node(state: SummarizeState):
     from langchain_core.messages import HumanMessage
     from src.agents.plan import llm
 
-    prompt = f"Summarize the following document segment in detail:\n\n{state['chunk']}"
+    from src.core.registry import registry, PromptType
+    prompt = registry.get(PromptType.REDUCTION_SEGMENT_SUMMARY).format(chunk=state['chunk'])
     res = await llm.ainvoke([HumanMessage(content=prompt)])
     return {"summaries": [res.content]}
 
@@ -54,7 +55,8 @@ async def hierarchical_reduce_node(state: MapReduceState):
     mid_summaries = []
     for batch in batches:
         combined = "\n\n---\n\n".join(batch)
-        prompt = f"Briefly summarize the following passages into a single paragraph of no more than 300 words:\n\n{combined}"
+        from src.core.registry import registry, PromptType
+        prompt = registry.get(PromptType.REDUCTION_FINAL_SUMMARY).format(combined=combined)
         try:
             res = await llm.ainvoke([HumanMessage(content=prompt)])
             mid_summaries.append(res.content)
@@ -62,10 +64,8 @@ async def hierarchical_reduce_node(state: MapReduceState):
             mid_summaries.extend(batch[:2])
 
     final_combined = "\n\n---\n\n".join(mid_summaries)
-    final_prompt = (
-        "Based on the component summaries below, synthesize them into a complete summary, "
-        f"coherent and comprehensive summary:\n\n{final_combined}"
-    )
+    from src.core.registry import registry, PromptType
+    final_prompt = registry.get(PromptType.REDUCTION_SYNTHESIS_SUMMARY).format(final_combined=final_combined)
     res = await llm.ainvoke([HumanMessage(content=final_prompt)])
     return {"final_summary": res.content}
 

@@ -8,7 +8,7 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-MODEL_ID = "datalab-to/chandra-ocr-2"
+MODEL_ID = settings.CHANDRA_MODEL
 MAX_OUTPUT_TOKENS = 12384
 
 class _ChandraModel:

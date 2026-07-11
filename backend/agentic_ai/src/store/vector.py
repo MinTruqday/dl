@@ -18,7 +18,7 @@ from qdrant_client.http.models import (
 
 from src.core.infrastructure.configuration import settings
 
-class DatabaseStore:
+class VectorStore:
     def __init__(self):
         self.client = AsyncQdrantClient(
             url=settings.QDRANT_URL,
@@ -140,4 +140,4 @@ class DatabaseStore:
             logger.exception("Search index deletion error")
             raise
 
-vector_store = DatabaseStore()
+vector_store = VectorStore()

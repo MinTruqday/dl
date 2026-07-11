@@ -47,7 +47,9 @@ class PlanAgent:
         query = req_data.get("query", "")
         context = req_data.get("context", "None")
 
-        prompt = f"Recent conversation history\n{history_str}\n\nLatest request {query}\nCurrent context {context}"
+        prompt = registry.get(PromptType.PLAN_USER_REQUEST).format(
+            history_str=history_str, query=query, context=context
+        )
 
         try:
             format_instructions = self.parser.get_format_instructions()

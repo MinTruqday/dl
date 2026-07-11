@@ -52,32 +52,39 @@ class ResponseLengthGrader(BaseGrader):
         text = response.strip()
         if not text:
             return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                feedback="Nội dung phản hồi trống. Vui lòng cung cấp thông tin có ý nghĩa")
+                feedback="Empty response content. Please provide meaningful information")
         if len(text) < self.min_length:
             return GraderResult(grader_name=self.name, passed=False,
                 score=len(text) / self.min_length,
-                feedback=f"Nội dung phản hồi không đạt độ dài tối thiểu ({len(text)}/{self.min_length} ký tự)")
+                feedback=f"Response does not meet minimum length requirement ({len(text)}/{self.min_length} characters)")
         if len(text) > self.max_length:
             return GraderResult(grader_name=self.name, passed=False, score=0.5,
-                feedback=f"Nội dung phản hồi vượt quá giới hạn cho phép ({len(text)}/{self.max_length} ký tự)")
+                feedback=f"Response exceeds maximum length limit ({len(text)}/{self.max_length} characters)")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class ErrorPrefixGrader(BaseGrader):
-    ERROR_MARKERS = [
-        "error:", "loi:", "exception:", "traceback", "raise ",
-        "failed to", "cannot ", "unable to",
-    ]
-
     @property
     def name(self) -> str:
         return "error_prefix"
 
     async def grade(self, response: str, context: dict) -> GraderResult:
-        lower = response.lower().strip()
-        for marker in self.ERROR_MARKERS:
-            if lower.startswith(marker):
+        from src.workflow.graph import llm
+        from pydantic import BaseModel, Field
+
+        class ErrorMessageJudgment(BaseModel):
+            is_error_message: bool = Field(description="True if the response is an error warning, exception traceback, or system failure message instead of a valid output")
+            reason: str = Field(description="Explanation of the judgment")
+
+        try:
+            evaluator = llm.with_structured_output(ErrorMessageJudgment)
+            from src.core.registry import registry, PromptType
+            prompt = registry.get(PromptType.RUBRIC_ERROR_JUDGE).format(response=response[:500])
+            result = await evaluator.ainvoke(prompt)
+            if result.is_error_message:
                 return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                    feedback=f"Phát hiện chuỗi cảnh báo lỗi '{marker}' ở đầu phản hồi. Vui lòng cung cấp kết quả xử lý hợp lệ")
+                    feedback=f"Detected error warning in the response: {result.reason}")
+        except Exception:
+            pass
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class ToolResultGrader(BaseGrader):
@@ -89,7 +96,7 @@ class ToolResultGrader(BaseGrader):
         tool_error = context.get("tool_error")
         if tool_error:
             return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                feedback=f"Tiến trình thực thi công cụ thất bại: {str(tool_error)[:200]}. Vui lòng thay đổi tham số đầu vào hoặc chuyển đổi công cụ")
+                feedback=f"Tool execution failed: {str(tool_error)[:200]}. Please adjust input parameters or switch tools.")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class KeywordPresenceGrader(BaseGrader):
@@ -111,7 +118,7 @@ class KeywordPresenceGrader(BaseGrader):
         if missing:
             return GraderResult(grader_name=self.name, passed=False,
                 score=1.0 - len(missing) / len(self.required_keywords),
-                feedback=f"Nội dung phản hồi bị thiếu các từ khóa bắt buộc: {', '.join(missing)}")
+                feedback=f"Response is missing required keywords: {', '.join(missing)}")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class HallucinationGrader(BaseGrader):
@@ -132,16 +139,15 @@ class HallucinationGrader(BaseGrader):
 
             evaluator = llm.with_structured_output(HallucinationJudgment)
             query = context.get("query", "user query")
-            prompt = (
-                f"Evaluate this AI response for hallucination or inappropriate refusal.\n"
-                f"User query: {query[:200]}\nAI response: {response[:500]}\n"
-                f"Judge: is the response refusing to answer, stating ignorance, or making up information?"
+            from src.core.registry import registry, PromptType
+            prompt = registry.get(PromptType.RUBRIC_HALLUCINATION_JUDGE).format(
+                query=query[:200], response=response[:500]
             )
             result: HallucinationJudgment = await evaluator.ainvoke(prompt)
             if result.is_hallucination_or_refusal and result.confidence > 0.7:
                 return GraderResult(grader_name=self.name, passed=False,
                     score=1.0 - result.confidence,
-                    feedback=f"Hệ thống phát hiện dấu hiệu ảo giác dữ liệu (mức độ tin cậy: {result.confidence:.2f}): {result.explanation}. Vui lòng cung cấp phản hồi dựa trên thông tin đã được kiểm chứng")
+                    feedback=f"System detected signs of data hallucination (confidence: {result.confidence:.2f}): {result.explanation}. Please provide responses based on verified information.")
         except Exception as e:
             logger.warning(f"HallucinationGrader error, skipping {e}")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
@@ -166,16 +172,15 @@ class RelevanceGrader(BaseGrader):
                 feedback: str = PydanticField(description="What's missing or good")
 
             evaluator = llm.with_structured_output(RelevanceJudgment)
-            prompt = (
-                f"Judge if this AI response is relevant to the user's query.\n"
-                f"Query: {query[:300]}\nResponse: {response[:500]}\n"
-                f"Assess if the response directly answers the query."
+            from src.core.registry import registry, PromptType
+            prompt = registry.get(PromptType.RUBRIC_RELEVANCE_JUDGE).format(
+                query=query[:300], response=response[:500]
             )
             result: RelevanceJudgment = await evaluator.ainvoke(prompt)
             if not result.is_relevant or result.relevance_score < 0.5:
                 return GraderResult(grader_name=self.name, passed=False,
                     score=result.relevance_score,
-                    feedback=f"Mức độ liên quan của phản hồi không đạt yêu cầu (điểm đánh giá: {result.relevance_score:.2f}): {result.feedback}")
+                    feedback=f"Response relevance is insufficient (score: {result.relevance_score:.2f}): {result.feedback}")
             return GraderResult(grader_name=self.name, passed=True, score=result.relevance_score)
         except Exception as e:
             logger.warning(f"RelevanceGrader error, skipping {e}")
@@ -257,7 +262,7 @@ class RubricMiddleware:
                 last_response = await agent_callable(*current_args, **current_kwargs)
             except Exception as e:
                 logger.exception(f"Agent callable failed on attempt {attempt} {e}")
-                last_response = f"Lỗi thực thi {e}"
+                last_response = f"Execution error: {e}"
 
             rubric_result = await self.rubric.evaluate(
                 response=last_response, context=context, attempt=attempt)

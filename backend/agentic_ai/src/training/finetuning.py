@@ -6,9 +6,11 @@ from pathlib import Path
 from datasets import Dataset
 from loguru import logger
 
-MODELS_DIR = Path("/tmp/doclib_finetune/models")
-ADAPTERS_DIR = Path("/tmp/doclib_finetune/adapters")
-GGUF_DIR = Path("/tmp/doclib_finetune/gguf")
+from src.core.infrastructure.configuration import settings
+
+MODELS_DIR = Path(settings.FINETUNE_MODELS_DIR)
+ADAPTERS_DIR = Path(settings.FINETUNE_ADAPTERS_DIR)
+GGUF_DIR = Path(settings.FINETUNE_GGUF_DIR)
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 ADAPTERS_DIR.mkdir(parents=True, exist_ok=True)
 GGUF_DIR.mkdir(parents=True, exist_ok=True)

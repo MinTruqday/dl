@@ -40,9 +40,13 @@ class Settings(BaseModel):
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL")
     NLLB_MODEL: str = os.getenv("NLLB_MODEL")
     NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME")
+    CHANDRA_MODEL: str = os.getenv("CHANDRA_MODEL")
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
     USAGE_URL: str = get_service_url("USAGE")
     AGENTIC_AI_DB_NAME: str = os.getenv("AGENTIC_AI_DB_NAME")
+    FINETUNE_MODELS_DIR: str = os.getenv("FINETUNE_MODELS_DIR")
+    FINETUNE_ADAPTERS_DIR: str = os.getenv("FINETUNE_ADAPTERS_DIR")
+    FINETUNE_GGUF_DIR: str = os.getenv("FINETUNE_GGUF_DIR")
 
 settings = Settings()

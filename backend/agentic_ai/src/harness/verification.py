@@ -34,13 +34,13 @@ def _check_response_not_empty(response: str) -> CheckResult:
         return CheckResult(
             name="response_not_empty",
             status="failed",
-            reason="Nội dung phản hồi trống",
+            reason="Empty response content",
         )
     if len(response.strip()) < 10:
         return CheckResult(
             name="response_not_empty",
             status="failed",
-            reason="Nội dung phản hồi không đạt độ dài tiêu chuẩn",
+            reason="Response length below standard",
         )
     return CheckResult(name="response_not_empty", status="passed")
 
@@ -54,13 +54,14 @@ async def _check_no_hallucination_markers(response: str) -> CheckResult:
 
     try:
         evaluator = llm.with_structured_output(HallucinationGrade)
-        prompt = f"Evaluate this AI response: '{response[:500]}'. Is it refusing to answer or stating it doesn't know?"
+        from src.core.registry import registry, PromptType
+        prompt = registry.get(PromptType.VERIFICATION_HALLUCINATION).format(response=response[:500])
         result = await evaluator.ainvoke(prompt)
         if result.is_refusal_or_hallucination:
             return CheckResult(
                 name="no_hallucination_markers",
                 status="failed",
-                reason=f"Phát hiện dấu hiệu từ chối phản hồi hoặc ảo giác dữ liệu: {result.reason}",
+                reason=f"Detected signs of refusal to respond or data hallucination: {result.reason}",
             )
     except Exception as e:
         if len(response) < 15 and "?" not in response:
@@ -73,14 +74,14 @@ def _check_plan_fully_executed(steps: List[Dict], current_step_index: int) -> Ch
         return CheckResult(
             name="plan_fully_executed",
             status="skipped",
-            reason="Không tìm thấy cấu trúc kế hoạch thực thi",
+            reason="Execution plan structure not found",
         )
     total = len(steps)
     if current_step_index < total:
         return CheckResult(
             name="plan_fully_executed",
             status="failed",
-            reason=f"Tiến độ thực thi kế hoạch chưa hoàn tất ({current_step_index}/{total} bước)",
+            reason=f"Plan execution incomplete ({current_step_index}/{total} steps)",
         )
     return CheckResult(name="plan_fully_executed", status="passed")
 
@@ -89,33 +90,37 @@ def _check_tool_result_valid(tool_result: Any) -> CheckResult:
         return CheckResult(
             name="tool_result_valid",
             status="failed",
-            reason="Kết quả trả về từ công cụ trống (None)",
+            reason="Tool result is empty (None)",
         )
     if isinstance(tool_result, dict) and tool_result.get("error"):
         return CheckResult(
             name="tool_result_valid",
             status="failed",
-            reason=f"Tiến trình thực thi công cụ phát sinh lỗi: {str(tool_result.get('error', ''))[:100]}",
+            reason=f"Tool execution resulted in an error: {str(tool_result.get('error', ''))[:100]}",
         )
     return CheckResult(name="tool_result_valid", status="passed")
 
-def _check_no_error_prefix(response: str) -> CheckResult:
-    error_prefixes = [
-        "error:",
-        "lỗi:",
-        "exception:",
-        "traceback",
-        "raise ",
-        "failed to",
-    ]
-    lower = response.lower()
-    for prefix in error_prefixes:
-        if lower.startswith(prefix):
+async def _check_no_error_prefix(response: str) -> CheckResult:
+    from src.workflow.graph import llm
+    from pydantic import BaseModel, Field
+
+    class ErrorMessageJudgment(BaseModel):
+        is_error_message: bool = Field(description="True if the response is an error warning, exception traceback, or system failure message instead of a valid output")
+        reason: str = Field(description="Explanation of the judgment")
+
+    try:
+        evaluator = llm.with_structured_output(ErrorMessageJudgment)
+        from src.core.registry import registry, PromptType
+        prompt = registry.get(PromptType.VERIFICATION_ERROR_JUDGE).format(response=response[:500])
+        result = await evaluator.ainvoke(prompt)
+        if result.is_error_message:
             return CheckResult(
                 name="no_error_prefix",
                 status="failed",
-                reason=f"Phát hiện cảnh báo lỗi '{prefix}' trong nội dung phản hồi",
+                reason=f"Detected error warning in the response content: {result.reason}",
             )
+    except Exception:
+        pass
     return CheckResult(name="no_error_prefix", status="passed")
 
 class VerificationHarness:
@@ -134,7 +139,7 @@ class VerificationHarness:
         checks = [
             _check_response_not_empty(response),
             await _check_no_hallucination_markers(response),
-            _check_no_error_prefix(response),
+            await _check_no_error_prefix(response),
         ]
 
         if steps is not None and current_step_index is not None:

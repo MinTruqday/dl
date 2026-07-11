@@ -163,8 +163,9 @@ async def trimmer_node(state: ActingState):
             from src.workflow.graph import llm
 
             combined = "\n\n".join(str(r) for r in results)
-            summary_prompt = (
-                f"Summarize concisely preserving facts IDs data:\n\n{combined[:20000]}"
+            from src.core.registry import registry, PromptType
+            summary_prompt = registry.get(PromptType.ORCHESTRATOR_TRIMMER).format(
+                combined=combined[:20000]
             )
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()

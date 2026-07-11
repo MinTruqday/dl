@@ -40,6 +40,18 @@ class PromptType(Enum):
     EVAL_JUDGE = "eval_judge"
     STORAGE_FILE_ANALYSIS = "storage_file_analysis"
     SECURITY_SCAN = "security_scan"
+    TRACE_ANALYSIS = "trace_analysis"
+    RUBRIC_HALLUCINATION_JUDGE = "rubric_hallucination_judge"
+    RUBRIC_RELEVANCE_JUDGE = "rubric_relevance_judge"
+    VERIFICATION_HALLUCINATION = "verification_hallucination"
+    RUBRIC_ERROR_JUDGE = "rubric_error_judge"
+    VERIFICATION_ERROR_JUDGE = "verification_error_judge"
+    ORCHESTRATOR_TRIMMER = "orchestrator_trimmer"
+    FINETUNE_QA_GENERATION = "finetune_qa_generation"
+    REDUCTION_SEGMENT_SUMMARY = "reduction_segment_summary"
+    REDUCTION_FINAL_SUMMARY = "reduction_final_summary"
+    REDUCTION_SYNTHESIS_SUMMARY = "reduction_synthesis_summary"
+    PLAN_USER_REQUEST = "plan_user_request"
 
 class RegistryCore:
     _prompts = {
@@ -421,6 +433,46 @@ RULES
 - If there is PII or credentials, redact them in 'sanitized_text' using [REDACTED]
 
 TEXT {text}""",
+        PromptType.TRACE_ANALYSIS: """SYSTEM IDENTITY The Core Artificial Intelligence System Analyst Engine
+OBJECTIVE Analyze these agent execution traces and identify systemic issues
+
+AGGREGATE STATS
+{stats_str}
+
+SAMPLE TRACES
+{sample_str}
+
+Identify: (1) recurring tool failures, (2) prompt quality issues, (3) routing errors, (4) hallucination patterns, (5) performance bottlenecks. Be specific and actionable.""",
+        PromptType.RUBRIC_HALLUCINATION_JUDGE: """SYSTEM IDENTITY The Core Artificial Intelligence System Hallucination Judge Engine
+OBJECTIVE Evaluate this AI response for hallucination or inappropriate refusal.
+
+USER QUERY: {query}
+AI RESPONSE: {response}
+
+Judge: is the response refusing to answer, stating ignorance, or making up information?""",
+        PromptType.RUBRIC_RELEVANCE_JUDGE: """SYSTEM IDENTITY The Core Artificial Intelligence System Relevance Judge Engine
+OBJECTIVE Judge if this AI response is relevant to the user's query.
+
+QUERY: {query}
+RESPONSE: {response}
+
+Assess if the response directly answers the query.""",
+        PromptType.VERIFICATION_HALLUCINATION: """SYSTEM IDENTITY The Core Artificial Intelligence System Verification Engine
+OBJECTIVE Evaluate this AI response: '{response}'. Is it refusing to answer or stating it doesn't know?""",
+        PromptType.RUBRIC_ERROR_JUDGE: """SYSTEM IDENTITY The Core Artificial Intelligence System Error Judge Engine
+OBJECTIVE Evaluate if this AI response is an error warning, exception traceback, or system failure message.
+
+AI RESPONSE: {response}
+
+Judge: is the response an error message rather than a valid output?""",
+        PromptType.VERIFICATION_ERROR_JUDGE: """SYSTEM IDENTITY The Core Artificial Intelligence System Verification Engine
+OBJECTIVE Evaluate this AI response: '{response}'. Is it an error warning, exception traceback, or system failure message?""",
+        PromptType.ORCHESTRATOR_TRIMMER: "Summarize concisely preserving facts IDs data:\n\n{combined}",
+        PromptType.FINETUNE_QA_GENERATION: "Create 3 question-answer pairs from the following text. Return a JSON array with keys 'instruction', 'input' (empty), 'output'.\n\nText:\n{chunk}\n\nJSON:",
+        PromptType.REDUCTION_SEGMENT_SUMMARY: "Summarize the following document segment in detail:\n\n{chunk}",
+        PromptType.REDUCTION_FINAL_SUMMARY: "Briefly summarize the following passages into a single paragraph of no more than 300 words:\n\n{combined}",
+        PromptType.REDUCTION_SYNTHESIS_SUMMARY: "Based on the component summaries below, synthesize them into a complete summary, coherent and comprehensive summary:\n\n{final_combined}",
+        PromptType.PLAN_USER_REQUEST: "Recent conversation history\n{history_str}\n\nLatest request {query}\nCurrent context {context}",
     }
 
     @classmethod

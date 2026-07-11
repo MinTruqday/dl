@@ -72,3 +72,13 @@ class SecurityEvaluation(BaseModel):
     has_credentials: bool = Field(description="True if the input contains credentials, API keys, or passwords")
     sanitized_text: str = Field(description="The input text with all PII and sensitive credentials redacted")
     reason: str = Field(description="Explanation of the detection result")
+
+class FinetuneJobUpdate(BaseModel):
+    progress: Optional[float] = None
+    current_epoch: Optional[int] = None
+    current_loss: Optional[float] = None
+    status: Optional[str] = None
+    adapter_path: Optional[str] = None
+    merged_model_name: Optional[str] = None
+    error_message: Optional[str] = None
+    best_loss: Optional[float] = None

@@ -111,14 +111,9 @@ class TraceAnalysisAgent:
             sample_str = json.dumps(traces_sample[:3], default=str, indent=2)[:2000]
             stats_str = json.dumps(stats, indent=2)
 
-            prompt = (
-                f"You are an expert AI system analyst. Analyze these agent execution traces "
-                f"and identify systemic issues.\n\n"
-                f"Aggregate Stats:\n{stats_str}\n\n"
-                f"Sample Traces:\n{sample_str}\n\n"
-                f"Identify: (1) recurring tool failures, (2) prompt quality issues, "
-                f"(3) routing errors, (4) hallucination patterns, (5) performance bottlenecks. "
-                f"Be specific and actionable."
+            from src.core.registry import registry, PromptType
+            prompt = registry.get(PromptType.TRACE_ANALYSIS).format(
+                stats_str=stats_str, sample_str=sample_str
             )
             result = await llm.ainvoke(prompt)
             return result.content.strip()

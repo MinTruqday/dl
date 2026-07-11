@@ -18,22 +18,11 @@ from src.repositories.chat import ChatRepository
 
 active_jobs = {}
 
+from src.schemas.model import FinetuneJobUpdate
+
 @log_logic_execution
 async def report_progress(job_id: str, data: dict):
-    
-    update_fields = {}
-    for key in [
-        "progress",
-        "current_epoch",
-        "current_loss",
-        "status",
-        "adapter_path",
-        "merged_model_name",
-        "error_message",
-        "best_loss",
-    ]:
-        if key in data:
-            update_fields[key] = data[key]
+    update_fields = FinetuneJobUpdate(**data).model_dump(exclude_none=True)
     if data.get("status") == "completed":
         update_fields["completed_at"] = datetime.now(timezone.utc)
         update_fields["progress"] = 100.0
@@ -336,7 +325,8 @@ async def import_documents(req: dict):
                 client = AsyncInferenceClient(
                     model=settings.LLAMA_MODEL, token=hf_token
                 )
-                prompt = "Create 3 question-answer pairs from the following text. Return a JSON array with keys 'instruction', 'input' (empty), 'output'.\n\nText:\n{chunk}\n\nJSON:"
+                from src.core.registry import registry, PromptType
+                prompt = registry.get(PromptType.FINETUNE_QA_GENERATION).format(chunk=chunk)
                 messages = [{"role": "user", "content": prompt}]
                 resp = await client.chat_completion(
                     messages=messages, max_tokens=1024, temperature=0.3
