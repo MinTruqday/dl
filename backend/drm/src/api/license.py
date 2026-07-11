@@ -10,11 +10,12 @@ from src.repositories.license import LicenseRepository
 
 router = APIRouter(route_class=LoggingRoute, prefix="/drm")
 
+from fastapi import Request
 from src.core.dependency import CurrentUser, get_current_user
 from src.schemas.license import Acquisition, Token
 
 @router.post("/kiem-tra", response_model=Token)
-async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(get_current_user)):
+async def acquire_license(req: Acquisition, request: Request, current_user: CurrentUser = Depends(get_current_user)):
     try:
         license_doc = await LicenseRepository.find_license_by_file_id(req.file_id)
         if not license_doc:
@@ -27,6 +28,25 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
             raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập và giải mã tài liệu này")
             
         user_id = str(current_user.id)
+
+        stored_hw_sig = license_doc.get("hardware_signature")
+        if not stored_hw_sig:
+            await LicenseRepository.update_license(license_doc["_id"], {"$set": {"hardware_signature": req.hardware_signature}})
+        elif stored_hw_sig != req.hardware_signature:
+            raise HTTPException(status_code=403, detail="Giấy phép bản quyền không khớp với thiết bị hiện tại")
+
+        recent_accesses = license_doc.get("recent_accesses", [])
+        current_time = datetime.datetime.now(datetime.timezone.utc)
+        one_min_ago = current_time - datetime.timedelta(minutes=1)
+        
+        valid_accesses = [acc for acc in recent_accesses if acc.get("time") and acc["time"].replace(tzinfo=datetime.timezone.utc) > one_min_ago]
+        client_ip = request.client.host if request.client else "0.0.0.0"
+        valid_accesses.append({"time": current_time, "ip": client_ip})
+        
+        unique_ips = set(acc["ip"] for acc in valid_accesses)
+        if len(valid_accesses) > 5 and len(unique_ips) > 1:
+            await LicenseRepository.update_license(license_doc["_id"], {"$set": {"status": "REVOKED"}})
+            raise HTTPException(status_code=403, detail="Giấy phép bản quyền tài liệu đã bị thu hồi do hành vi truy cập bất thường")
         
         document = await LicenseRepository.get_document(license_doc["document_id"])
         if document and document.get("is_premium") and document.get("creator_id") != user_id:
@@ -38,7 +58,13 @@ async def acquire_license(req: Acquisition, current_user: CurrentUser = Depends(
 
         await LicenseRepository.update_license(
             license_doc["_id"],
-            {"$inc": {"open_count": 1}, "$set": {"last_opened_at": datetime.datetime.now(datetime.timezone.utc)}}
+            {
+                "$inc": {"open_count": 1}, 
+                "$set": {
+                    "last_opened_at": current_time,
+                    "recent_accesses": valid_accesses
+                }
+            }
         )
         
         from cryptography.hazmat.primitives.asymmetric import padding

@@ -1,7 +1,8 @@
 import asyncio
 import os
-import tempfile
+import re
 
+import docker
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from src.core.registry import PromptType, registry
@@ -10,117 +11,59 @@ from src.core.infrastructure.configuration import settings
 
 class InterpreterAgent:
     def __init__(self):
-        pass
+        try:
+            self.docker_client = docker.from_env()
+        except Exception as e:
+            logger.error(f"Docker daemon initialization failed with error {e}")
+            self.docker_client = None
 
     async def execute(self, task_desc: str) -> str:
-        import sys
-        logger.info("System is actively processing your request, please wait")
-
+        logger.info("Initializing ephemeral sandbox for code execution")
         try:
             from src.agents.plan import llm
 
             system_prompt = (
                 registry.get(PromptType.CODE_INTERPRETER_SYSTEM) + "\\n"
-                "OBJECTIVE: Generate pure, executable Python code to fulfill the user's task.\n"
-                "OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\n"
+                "OBJECTIVE: Generate pure, executable Python code to fulfill the task.\n"
                 "RULES:\n"
                 "- Output ONLY valid Python code wrapped in ```python code_here ``` tags.\n"
-                "- Do NOT include any conversational text or explanations.\n"
-                "- Use the `print` function to output results.\n"
-                "- Assume a standard Python {sys.version_info.major}.{sys.version_info.minor} environment with standard libraries only"
+                "- Do NOT include any explanations. Use `print` to output results."
             )
-            messages = [
+            
+            response = await llm.ainvoke([
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=task_desc),
-            ]
-            response = await llm.ainvoke(messages)
+            ])
+            
             content = response.content.strip()
-
-            import re
-
             match = re.search(r"```[pP]ython(.*?)```", content, re.DOTALL)
-            if match:
-                code = match.group(1).strip()
-            else:
-                match = re.search(r"```(.*?)```", content, re.DOTALL)
-                if match:
-                    code = match.group(1).strip()
-                else:
-                    code = content.strip()
+            code = match.group(1).strip() if match else content.replace("```", "").strip()
 
-            def write_temp_script(content):
-                import tempfile
-
-                f = tempfile.NamedTemporaryFile(
-                    suffix=".py", delete=False, mode="w", encoding="utf-8"
-                )
-                f.write(content)
-                f.close()
-                return f.name
-
-            script_path = await asyncio.to_thread(write_temp_script, code)
-            import psutil
-            import sys
-            
-            total_ram_mb = psutil.virtual_memory().total / (1024 * 1024)
-            allocated_ram = int(max(128, min(1024, total_ram_mb * 0.05)))
-            ram_str = f"{allocated_ram}m"
-            
-            total_cpus = psutil.cpu_count(logical=True) or 1
-            allocated_cpus = max(0.5, min(2.0, total_cpus * 0.1))
-            cpu_str = f"{allocated_cpus:.1f}"
-            
-            py_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-            image_str = f"python:{py_version}-slim"
-            
-            try:
-                cmd = [
-                    sys.executable,
-                    script_path,
-                ]
-
-                proc = await asyncio.create_subprocess_exec(
-                    *cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-
+            def _run_sandbox(code_str: str) -> str:
+                if not self.docker_client:
+                    return "The execution environment is currently unavailable"
                 try:
-                    stdout, stderr = await asyncio.wait_for(
-                        proc.communicate(), timeout=10.0
+                    container = self.docker_client.containers.run(
+                        "python:3.11-slim",
+                        command=["python", "-c", code_str],
+                        mem_limit="128m",
+                        nano_cpus=1000000000,
+                        network_mode="none",
+                        detach=True,
+                        remove=False
                     )
-                except asyncio.TimeoutError:
-                    proc.kill()
-                    await proc.communicate()
-                    return "The execution process took too long and was forcibly terminated to protect system resources"
+                    container.wait(timeout=10)
+                    logs = container.logs().decode('utf-8', errors='replace')
+                    container.remove(force=True)
+                    return f"Thực thi mã thành công. Output:\n{logs[:10240]}"
+                except Exception as ex:
+                    return f"The execution process was terminated due to an error or timeout {ex}"
 
-                MAX_OUTPUT = 512 * 1024
-                if proc.returncode == 0:
-                    out = stdout[:MAX_OUTPUT]
-                    final_res = f"The execution completed with the following output\n{out.decode(errors='replace')}\n"
-                    if len(stdout) > MAX_OUTPUT:
-                        final_res += "\nThe output was truncated due to exceeding the maximum allowed size limit"
-                else:
-                    err = stderr[:MAX_OUTPUT]
-                    final_res = f"The execution encountered the following issues\n{err.decode(errors='replace')}\n"
-
-            finally:
-
-                def remove_if_exists(path):
-                    if os.path.exists(path):
-                        try:
-                            os.remove(path)
-                        except Exception:
-                            pass
-
-                await asyncio.to_thread(remove_if_exists, script_path)
-
-            if not final_res.strip():
-                final_res = "The execution process completed successfully without producing any output"
-
+            final_res = await asyncio.to_thread(_run_sandbox, code)
             return final_res
+
         except Exception as e:
-            logger.exception("Internal system execution error")
+            logger.exception("Interpreter system execution error")
             return f"An error occurred during command execution, please try again in a moment {e}"
 
 interpreter = InterpreterAgent()

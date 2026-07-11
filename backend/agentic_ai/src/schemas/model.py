@@ -5,9 +5,12 @@ class PlanStep(BaseModel):
     agent: str = Field(description="The name of the execution agent")
     task: str = Field(description="Detailed task description")
 
+class PlanStepGroup(BaseModel):
+    parallel_steps: List[PlanStep] = Field(description="Tasks that can be executed in parallel")
+
 class ExecutionPlan(BaseModel):
     reasoning: str = Field(description="Reasoning chain before breaking down steps")
-    steps: List[PlanStep] = Field(description="List of execution steps")
+    steps: List[PlanStepGroup] = Field(description="List of step groups. Groups run sequentially, but steps within a group run in parallel.")
 
 class IngestRequest(BaseModel):
     document_id: str

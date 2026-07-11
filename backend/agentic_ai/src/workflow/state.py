@@ -71,7 +71,7 @@ class ActingState(TypedDict):
     current_step_index: int
     consolidated_results: Annotated[list, reduce_consolidated_results]
     final_answer: str
-    next_node: str
+    next_nodes: List[str]
     error: str
     replan_count: int
     start_time: float

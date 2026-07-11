@@ -46,11 +46,15 @@ class HFInferenceChat(BaseChatModel):
                 role = "assistant"
             hf_messages.append({"role": role, "content": msg.content})
 
-        response = await self.client.chat_completion(
-            messages=hf_messages,
-            max_tokens=kwargs.get("max_tokens", 1024),
-            temperature=kwargs.get("temperature", 0.1),
-        )
+        chat_kwargs = {
+            "messages": hf_messages,
+            "max_tokens": kwargs.get("max_tokens", 1024),
+            "temperature": kwargs.get("temperature", 0.1),
+        }
+        if "response_format" in kwargs:
+            chat_kwargs["response_format"] = kwargs["response_format"]
+
+        response = await self.client.chat_completion(**chat_kwargs)
         content = response.choices[0].message.content
         return ChatResult(
             generations=[ChatGeneration(message=AIMessage(content=content))]
@@ -103,13 +107,8 @@ class HFInferenceChat(BaseChatModel):
         
         def extract_and_parse(text: str):
             try:
-                start = text.find('{')
-                end = text.rfind('}')
-                if start != -1 and end != -1:
-                    json_str = text[start:end+1]
-                    data = json.loads(json_str)
-                    return schema(**data)
-                return schema()
+                data = json.loads(text.strip())
+                return schema(**data)
             except Exception:
                 return schema()
                 
@@ -117,6 +116,9 @@ class HFInferenceChat(BaseChatModel):
             schema_json = schema.schema_json()
             sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
+            
+            kwargs_inner["response_format"] = {"type": "json_object"}
+            
             res = await self.ainvoke(msgs, **kwargs_inner)
             return extract_and_parse(res.content)
             
@@ -124,6 +126,7 @@ class HFInferenceChat(BaseChatModel):
             schema_json = schema.schema_json()
             sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
+            kwargs_inner["response_format"] = {"type": "json_object"}
             res = self.invoke(msgs, **kwargs_inner)
             return extract_and_parse(res.content)
             

@@ -355,6 +355,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 
                 try:
                     from src.services.history import HistoryService
+                    from src.memory.mem0 import mem0_manager
                     
                     user_msg = {
                         "user_id": user_id,
@@ -370,6 +371,13 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         "role": "assistant",
                         "content": final_answer
                     })
+
+                    mem_data = [
+                        {"role": "user", "content": req.query},
+                        {"role": "assistant", "content": final_answer}
+                    ]
+                    asyncio.create_task(mem0_manager.add_memory(mem_data, user_id))
+
                 except Exception as e:
                     logger.exception("Chat history persistence to database error")
 

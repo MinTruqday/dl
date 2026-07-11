@@ -25,7 +25,7 @@ async def supervisor_node(state: ActingState):
     if time.time() - start_time > 45:
         logger.exception("AI task execution exceeded hard timeout")
         return {
-            "next_node": "trimmer",
+            "next_nodes": ["trimmer"],
             "error": "Hệ thống đã tự động dừng tiến trình do vượt quá thời gian xử lý cho phép",
         }
 
@@ -37,7 +37,7 @@ async def supervisor_node(state: ActingState):
         return {
             "steps": steps,
             "current_step_index": len(steps),
-            "next_node": "trimmer",
+            "next_nodes": ["trimmer"],
             "error": "Tiến trình bị hủy do vượt quá giới hạn số bước lập kế hoạch",
         }
 
@@ -50,16 +50,15 @@ async def supervisor_node(state: ActingState):
         return {
             "steps": steps,
             "current_step_index": len(steps),
-            "next_node": "trimmer",
+            "next_nodes": ["trimmer"],
             "start_time": start_time,
         }
 
     if idx >= len(steps):
-        return {"steps": steps, "current_step_index": idx, "next_node": "trimmer"}
+        return {"steps": steps, "current_step_index": idx, "next_nodes": ["trimmer"]}
 
-    current_step = steps[idx]
-    agent_name = current_step.get("agent", "Action")
-
+    current_group = steps[idx]
+    
     route_map = {
         "InterpreterAgent": "interpreter",
         "EngineAgent": "search_engine",
@@ -68,73 +67,76 @@ async def supervisor_node(state: ActingState):
         "Reasoning": "reasoning",
     }
 
-    next_node = route_map.get(agent_name, "action")
-    return {"steps": steps, "current_step_index": idx, "next_node": next_node}
+    next_nodes = list(set([route_map.get(s.get("agent", "Action"), "action") for s in current_group]))
+    return {"steps": steps, "current_step_index": idx, "next_nodes": next_nodes}
 
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
+    import asyncio
     idx = state.get("current_step_index", 0)
     steps = state.get("steps", [])
 
     if idx >= len(steps):
         return {"current_step_index": idx + 1}
 
-    step = steps[idx]
-    current_task = step.get("task", "")
+    current_group = steps[idx]
+    my_tasks = [s for s in current_group if s.get("agent", "Action") == agent_name]
     req_data = state.get("req_data", {})
 
-    try:
-        from src.workflow.graph import llm
+    async def _exec_task(task_obj):
+        current_task = task_obj.get("task", "")
+        try:
+            from src.workflow.graph import llm
+            evaluator_llm = llm.with_structured_output(TaskEvaluation)
 
-        evaluator_llm = llm.with_structured_output(TaskEvaluation)
+            replan_count = 0
+            final_res = ""
 
-        replan_count = 0
-        final_res = ""
-
-        while replan_count < 3:
-            if agent_name == "Action":
-                token = req_data.get("token")
-                user_id = req_data.get("user_id")
-                res = await tool_callable.execute(current_task, {}, user_id, token)
-            elif agent_name == "Knowledge":
-                res = await tool_callable.execute(req_data)
-            else:
-                res = await tool_callable.execute(current_task)
-
-            from src.core.registry import PromptType, registry
-
-            prompt_template = registry.get(PromptType.SELF_REFLECTION)
-            prompt = prompt_template.format(res=res)
-
-            try:
-                eval_res = await evaluator_llm.ainvoke(prompt)
-
-                if eval_res.status == "FAIL":
-                    replan_count += 1
-                    logger.warning("Self-reflection failed, initiating replan sequence")
-                    current_task = eval_res.revised_task or current_task
-                    final_res = res
+            while replan_count < 3:
+                if agent_name == "Action":
+                    token = req_data.get("token")
+                    user_id = req_data.get("user_id")
+                    res = await tool_callable.execute(current_task, {}, user_id, token)
+                elif agent_name == "Knowledge":
+                    res = await tool_callable.execute(req_data)
                 else:
+                    res = await tool_callable.execute(current_task)
+
+                from src.core.registry import PromptType, registry
+
+                prompt_template = registry.get(PromptType.SELF_REFLECTION)
+                prompt = prompt_template.format(res=res)
+
+                try:
+                    eval_res = await evaluator_llm.ainvoke(prompt)
+
+                    if eval_res.status == "FAIL":
+                        replan_count += 1
+                        logger.warning("Self-reflection failed, initiating replan sequence")
+                        current_task = eval_res.revised_task or current_task
+                        final_res = res
+                    else:
+                        final_res = res
+                        break
+                except Exception as e:
+                    logger.exception("Evaluation result parsing error")
                     final_res = res
                     break
-            except Exception as e:
-                logger.exception("Evaluation result parsing error")
-                final_res = res
-                break
 
-        if replan_count >= 3:
-            final_res = "The agent was unable to complete the task"
+            if replan_count >= 3:
+                final_res = "The agent was unable to complete the task"
+            return final_res
 
-        return {
-            "current_step_index": idx + 1,
-            "consolidated_results": [f"[{agent_name} - Step {idx+1}]:\n{final_res}"],
-            "last_agent_result": final_res,
-        }
-    except Exception as e:
-        logger.exception("Execution server internal error")
-        return {
-            "consolidated_results": ["The execution step failed"],
-            "error": "Internal processing error",
-        }
+        except Exception as e:
+            logger.exception("Execution server internal error")
+            return "The execution step failed"
+
+    task_results = await asyncio.gather(*[_exec_task(t) for t in my_tasks])
+    
+    return {
+        "current_step_index": idx + 1,
+        "consolidated_results": [f"[{agent_name} - Step {idx+1}]:\n{res}" for res in task_results],
+        "last_agent_result": task_results[-1] if task_results else "Completed",
+    }
 
 async def code_interpreter_node(state: ActingState):
     return await execute_tool_node(state, interpreter, "InterpreterAgent")
@@ -154,7 +156,7 @@ async def reasoner_agent_node(state: ActingState):
 async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])
     if not results:
-        return {"next_node": "aggregator"}
+        return {"next_nodes": ["aggregator"]}
 
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
@@ -172,21 +174,21 @@ async def trimmer_node(state: ActingState):
         except Exception as e:
             logger.exception("Summary trimmer execution error")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
-        return {"consolidated_results": [trimmed], "next_node": "aggregator"}
+        return {"consolidated_results": [trimmed], "next_nodes": ["aggregator"]}
 
-    return {"next_node": "aggregator"}
+    return {"next_nodes": ["aggregator"]}
 
 def trimmer_router(state: ActingState):
-    return state.get("next_node", "aggregator")
+    return state.get("next_nodes", ["aggregator"])
 
 async def sanitizer_node(state: ActingState):
-    return {"next_node": "trimmer"}
+    return {"next_nodes": ["trimmer"]}
 
 async def aggregator_node(state: ActingState):
     return {"final_answer": ""}
 
 def router(state: ActingState):
-    return state.get("next_node", "aggregator")
+    return state.get("next_nodes", ["aggregator"])
 
 workflow = StateGraph(ActingState)
 workflow.add_node("supervisor", supervisor_node)
@@ -232,7 +234,7 @@ class OrchestrationWorkflow:
             "current_step_index": 0,
             "consolidated_results": [],
             "final_answer": "",
-            "next_node": "",
+            "next_nodes": [],
             "error": "",
             "replan_count": 0,
         }

@@ -65,23 +65,26 @@ class PlanAgent:
             response = await self._invoke_llm(messages)
             parsed_result = self.parser.invoke(response)
 
-            steps = [
-                {"agent": step["agent"], "task": step["task"]}
-                for step in parsed_result.get("steps", [])
-            ]
+            steps = []
+            for step_group in parsed_result.get("steps", []):
+                group = [{"agent": s["agent"], "task": s["task"]} for s in step_group.get("parallel_steps", [])]
+                if group:
+                    steps.append(group)
 
             if not steps:
                 steps = [
-                    {
-                        "agent": "Knowledge",
-                        "task": "Inform user request exceeds capabilities",
-                    }
+                    [
+                        {
+                            "agent": "Knowledge",
+                            "task": "Inform user request exceeds capabilities",
+                        }
+                    ]
                 ]
 
             return steps
 
         except Exception as e:
             logger.exception("Plan generation error")
-            return [{"agent": "Knowledge", "task": f"Inform user about analysis failure {e}"}]
+            return [[{"agent": "Knowledge", "task": f"Inform user about analysis failure {e}"}]]
 
 planner = PlanAgent()

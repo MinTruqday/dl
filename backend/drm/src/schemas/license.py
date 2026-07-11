@@ -11,6 +11,7 @@ class Confirmation(BaseModel):
 class Acquisition(BaseModel):
     file_id: str
     client_public_key: str
+    hardware_signature: str
 
 class Token(BaseModel):
     encrypted_aes_key: str

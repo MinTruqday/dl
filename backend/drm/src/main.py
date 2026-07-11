@@ -26,7 +26,8 @@ from fastapi.responses import JSONResponse
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
-        if token != settings.SECRET_KEY:
+        import hmac
+        if not token or not hmac.compare_digest(token, settings.SECRET_KEY):
             return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
     return await call_next(request)
 

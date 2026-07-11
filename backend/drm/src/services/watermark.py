@@ -9,9 +9,9 @@ from src.core.infrastructure.database import database
 from src.repositories.license import LicenseRepository
 
 try:
-    import PyPDF2
+    import fitz
 except ImportError as e:
-    logger.exception("Document rendering toolkit (PyPDF2) import failed")
+    logger.exception("Document rendering toolkit (PyMuPDF) import failed")
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
@@ -35,8 +35,7 @@ class WatermarkService:
             if hasattr(current_user, "email") and current_user.email
             else str(current_user.id)
         )
-        import urllib.request
-        import json
+        import httpx
         from src.core.infrastructure.configuration import settings
         
         user_id = str(current_user.id)
@@ -44,10 +43,10 @@ class WatermarkService:
         user_tier = current_user.tier
         try:
             url = f"{settings.INTERNAL_API_URL}/su-dung/goi-cuoc/{current_user.id}"
-            req = urllib.request.Request(url, method="GET")
-            with urllib.request.urlopen(req, timeout=10.0) as response:
-                if response.status == 200:
-                    data = json.loads(response.read().decode())
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, timeout=10.0)
+                if response.status_code == 200:
+                    data = response.json()
                     tier_data = data.get("data") or {}
                     user_tier = tier_data.get("ai_tier", "BASIC")
         except Exception as e:
@@ -87,43 +86,35 @@ class WatermarkService:
         content_format = document.get("content_format", "json")
         raw_content = str(document.get("content", ""))
 
-        def encode_watermark(payload: str) -> str:
-            binary = "".join(format(b, "08b") for b in payload.encode("utf-8"))
-            zero_width = binary.replace("0", "\u200B").replace("1", "\u200C")
-            return f"\u200D{zero_width}\u200D"
-
-
         if content_format == "latex":
             try:
                 from src.compilation.engines.latex import LatexEngine
                 pdf_data_pre = await LatexEngine.compile_to_pdf(raw_content)
             except ImportError:
                 try:
-                    import urllib.request as _ur
-                    req = _ur.Request(
-                        f"{settings.INTERNAL_API_URL}/ket-xuat/latex-pdf",
-                        data=raw_content.encode("utf-8"),
-                        method="POST",
-                        headers={"Content-Type": "application/octet-stream", "X-Internal-Token": settings.SECRET_KEY},
-                    )
-                    with _ur.urlopen(req, timeout=10.0) as r:
-                        pdf_data_pre = r.read()
+                    async with httpx.AsyncClient() as client:
+                        r = await client.post(
+                            f"{settings.INTERNAL_API_URL}/ket-xuat/latex-pdf",
+                            content=raw_content.encode("utf-8"),
+                            headers={"Content-Type": "application/octet-stream", "X-Internal-Token": settings.SECRET_KEY},
+                            timeout=10.0
+                        )
+                        r.raise_for_status()
+                        pdf_data_pre = r.content
                 except Exception as e:
                     logger.exception("Failed to compile LaTeX content for DRM export")
                     raise HTTPException(status_code=500, detail="Đã xảy ra lỗi trong quá trình biên dịch tài liệu LaTeX")
         else:
             try:
-                import urllib.request as _ur
-                import json as _json
-                payload = _json.dumps({"content": raw_content, "format": "pdf"}).encode("utf-8")
-                req = _ur.Request(
-                    f"{settings.INTERNAL_API_URL}/ket-xuat/editorjs-pdf",
-                    data=payload,
-                    method="POST",
-                    headers={"Content-Type": "application/json", "X-Internal-Token": settings.SECRET_KEY},
-                )
-                with _ur.urlopen(req, timeout=10.0) as r:
-                    pdf_data_pre = r.read()
+                async with httpx.AsyncClient() as client:
+                    r = await client.post(
+                        f"{settings.INTERNAL_API_URL}/ket-xuat/editorjs-pdf",
+                        json={"content": raw_content, "format": "pdf"},
+                        headers={"X-Internal-Token": settings.SECRET_KEY},
+                        timeout=10.0
+                    )
+                    r.raise_for_status()
+                    pdf_data_pre = r.content
             except Exception:
                 try:
                     from src.compilation.engines.editorjs import EditorjsEngine
@@ -134,52 +125,65 @@ class WatermarkService:
 
         def apply_watermark_to_pdf(source_pdf_bytes: bytes) -> bytes:
             try:
-                import os
-                from reportlab.lib.pagesizes import A4
-                from reportlab.pdfgen import canvas
-                from reportlab.pdfbase import pdfmetrics
-                from reportlab.pdfbase.ttfonts import TTFont
+                import fitz
+                import io
+                
+                doc = fitz.open("pdf", source_pdf_bytes)
+                binary_id = ''.join(format(ord(c), '08b') for c in user_id)
+                
+                for page in doc:
+                    rect = page.rect
+                    width, height = rect.width, rect.height
+                    
+                    page.insert_text(
+                        fitz.Point(width / 4, height / 2),
+                        user_email,
+                        fontsize=60,
+                        fontname="helv",
+                        color=(0.7, 0.7, 0.7),
+                        fill_opacity=0.2,
+                        rotate=45,
+                        overlay=True
+                    )
 
-                font_path = os.path.join(os.path.dirname(__file__), "Roboto-Regular.ttf")
-                if not os.path.exists(font_path):
-                    raise RuntimeError("Missing Roboto-Regular.ttf font file. Cannot apply watermark")
+                    page.draw_circle(fitz.Point(20, 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
+                    page.draw_circle(fitz.Point(width - 20, 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
+                    page.draw_circle(fitz.Point(20, height - 20), 2, color=(0.9, 0.9, 0.9), fill=(0.9, 0.9, 0.9), fill_opacity=0.5)
 
-                pdfmetrics.registerFont(TTFont("Roboto-Regular", font_path))
+                    dot_color = (0.95, 0.95, 0.9) 
+                    x_start, y_start = 20, 20
+                    dot_spacing = 12
+                    
+                    idx = 0
+                    for i in range(len(binary_id)):
+                        if binary_id[i] == '1':
+                            x = x_start + (idx * dot_spacing) % (width - 40)
+                            y = y_start + ((idx * dot_spacing) // int(width - 40)) * dot_spacing
+                            
+                            page.draw_circle(
+                                fitz.Point(x, y), 
+                                0.5, 
+                                color=dot_color, 
+                                fill=dot_color, 
+                                fill_opacity=0.4
+                            )
+                        idx += 1
 
-                wm_buffer = io.BytesIO()
-                c = canvas.Canvas(wm_buffer, pagesize=A4)
-                c.saveState()
-                c.setFont("Roboto-Regular", 60)
-                c.setFillColorRGB(0.9, 0.9, 0.9, alpha=0.3)
-                c.translate(A4[0] / 2, A4[1] / 2)
-                c.rotate(45)
-                c.drawCentredString(0, 0, user_email)
-                c.restoreState()
-                c.save()
-                wm_buffer.seek(0)
-
-                zw_watermark = encode_watermark(user_id)
-
-                source_reader = PyPDF2.PdfReader(io.BytesIO(source_pdf_bytes))
-                wm_reader = PyPDF2.PdfReader(wm_buffer)
-                wm_page = wm_reader.pages[0]
-
-                writer = PyPDF2.PdfWriter()
-                for page in source_reader.pages:
-                    page.merge_page(wm_page)
-                    writer.add_page(page)
-
-                writer.add_metadata({
-                    "/Producer": f"DocLib E-DRM\x00{zw_watermark}",
-                    "/Creator": "DocLib",
-                })
+                    page.insert_text(
+                        fitz.Point(10, height - 10),
+                        f"DOCLIB_UID_{user_id}",
+                        fontsize=1,
+                        color=(1, 1, 1),
+                        fill_opacity=0.01,
+                        overlay=True
+                    )
 
                 final_buffer = io.BytesIO()
-                writer.write(final_buffer)
-                final_buffer.seek(0)
-                return final_buffer.read()
+                doc.save(final_buffer, garbage=4, deflate=True)
+                return final_buffer.getvalue()
+                
             except Exception as e:
-                logger.exception("PDF watermark overlay process failed")
+                logger.exception("Watermarking process using PyMuPDF failed")
                 return None
 
         pdf_data = await asyncio.to_thread(apply_watermark_to_pdf, pdf_data_pre)
@@ -193,6 +197,7 @@ class WatermarkService:
             return pdf_data, "pdf", "application/pdf"
             
         import os
+        import hashlib
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         from src.services.license import LicenseService
         import uuid
@@ -209,7 +214,8 @@ class WatermarkService:
             ciphertext = aesgcm.encrypt(nonce, pdf_data, None)
             
             file_id_bytes = uuid.UUID(file_id).bytes 
-            final_doclib_data = file_id_bytes + nonce + ciphertext
+            file_hash = hashlib.sha256(pdf_data).digest()
+            final_doclib_data = file_id_bytes + file_hash + nonce + ciphertext
         except Exception as e:
             logger.exception("AES encryption failed for document content")
             raise HTTPException(status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình mã hóa tài liệu")
