@@ -33,8 +33,8 @@ class SecurityHarness:
         violations = []
         sanitized = text
         try:
-            client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
-            llm = HFInferenceChat(client=client, model=settings.LLAMA_MODEL)
+            client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
+            llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
             structured_llm = llm.with_structured_output(SecurityEvaluation)
             
             prompt = registry.get(PromptType.SECURITY_SCAN).format(text=text)

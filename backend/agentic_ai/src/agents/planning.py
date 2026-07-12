@@ -14,7 +14,7 @@ from src.core.infrastructure.configuration import settings
 
 _hf_endpoint = HuggingFaceEndpoint(
     task="conversational",
-    repo_id=settings.LLAMA_MODEL,
+    repo_id=settings.LLM_MODEL,
     huggingfacehub_api_token=settings.HF_TOKEN,
     temperature=0.1,
 )

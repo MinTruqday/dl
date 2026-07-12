@@ -12,7 +12,7 @@ from src.store.vector import vector_store
 from src.core.infrastructure.configuration import settings
 
 _hf = HuggingFaceEndpoint(
-    repo_id=settings.LLAMA_MODEL,
+    repo_id=settings.LLM_MODEL,
     huggingfacehub_api_token=settings.HF_TOKEN,
     temperature=0.1,
     task="conversational",

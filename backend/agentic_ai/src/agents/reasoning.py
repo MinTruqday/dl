@@ -10,7 +10,7 @@ from src.schemas.evaluation import QualityEvaluation
 
 class ReasoningAgent:
     def __init__(self):
-        self._model = settings.LLAMA_MODEL
+        self._model = settings.LLM_MODEL
         self._hf_token = settings.HF_TOKEN
 
     async def execute(self, task: str) -> str:

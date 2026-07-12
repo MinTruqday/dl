@@ -65,22 +65,20 @@ class EngineAgent:
             formatted += f"- {res.get('title')} {res.get('content')}\n  Source link {res.get('url')}\n"
         return formatted
 
-    async def _duckduckgo_search(self, query: str) -> str:
-        try:
-            from duckduckgo_search import DDGS
-
-            results = await asyncio.to_thread(
-                lambda: list(DDGS().text(query, max_results=5))
-            )
-            if not results:
-                return ""
-            formatted = ""
-            for res in results:
-                formatted += f"- {res.get('title')} {res.get('body')}\n  Source link {res.get('href')}\n"
-            return formatted
-        except Exception as e:
-            logger.exception("Search process using backup tool failed")
-            return ""
+    async def _tavily_image_search(self, query: str) -> list:
+        response = await asyncio.to_thread(
+            self.client.search, query=query, search_depth="advanced", max_results=4, include_images=True
+        )
+        images = response.get("images", [])
+        import json
+        formatted_images = []
+        for img_url in images[:4]:
+            formatted_images.append({
+                "url": img_url,
+                "width": 800,
+                "height": 600
+            })
+        return json.dumps(formatted_images)
 
     async def execute(self, query: str) -> str:
         logger.info("Searching for information")
@@ -94,14 +92,26 @@ class EngineAgent:
                 result = await self._tavily_search(query)
                 if result:
                     return result
-                logger.warning("Switching to alternative search tool")
             except Exception as e:
-                logger.exception("Primary search system encountered a connection issue, automatically switching to backup servers")
-
-        result = await self._duckduckgo_search(query)
-        if result:
-            return result
+                logger.exception("Primary search system encountered an issue")
 
         return "The system could not extract any valuable information from the search data sources"
+
+    async def image_search(self, query: str) -> str:
+        logger.info("Searching for images")
+
+        if _is_ssrf_attempt(query):
+            logger.warning("Blocked unauthorized network request")
+            return "Request rejected due to severe violation of information security rules"
+
+        if self.api_key_valid:
+            try:
+                result = await self._tavily_image_search(query)
+                if result and result != "[]":
+                    return result
+            except Exception as e:
+                logger.exception("Primary image search system encountered an issue")
+
+        return "[]"
 
 search_engine = EngineAgent()

@@ -29,7 +29,7 @@ class Mem0Memory:
                     "llm": {
                         "provider": "litellm",
                         "config": {
-                            "model": f"huggingface/{settings.LLAMA_MODEL}",
+                            "model": f"huggingface/{settings.LLM_MODEL}",
                             "temperature": 0,
                             "api_key": settings.HF_TOKEN,
                         },

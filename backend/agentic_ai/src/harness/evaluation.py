@@ -74,7 +74,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     )
     try:
         client = AsyncInferenceClient(
-            model=settings.LLAMA_MODEL, token=settings.HF_TOKEN
+            model=settings.LLM_MODEL, token=settings.HF_TOKEN
         )
         resp = await client.chat_completion(
             messages=[{"role": "user", "content": prompt}],

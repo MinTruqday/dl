@@ -13,16 +13,16 @@ from src.schemas.routing import RouteDecision
 
 class RouteAgent:
     def __init__(self):
-        llama_model = settings.LLAMA_MODEL
+        llama_model = settings.LLM_MODEL
         if not llama_model:
             raise ValueError("System is not fully configured for the AI language model")
 
         self.llama_client = AsyncInferenceClient(
-            model=settings.LLAMA_MODEL,
+            model=settings.LLM_MODEL,
             token=settings.HF_TOKEN,
         )
         self.router_llm = HFInferenceChat(
-            client=self.llama_client, model=settings.LLAMA_MODEL
+            client=self.llama_client, model=settings.LLM_MODEL
         )
 
     async def execute(self, query: str) -> dict:

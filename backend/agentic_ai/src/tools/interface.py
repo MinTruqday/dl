@@ -948,6 +948,385 @@ async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
     except Exception as e:
         return f"Cannot initialize and export the new translated document file {e}"
 
+@tool
+async def agent_draft_with_memory(prompt: str, config: RunnableConfig) -> str:
+    """
+    Draft a document using the user's stored memory/preferences (communication style, tone preferences, role) to make the draft highly personalized.
+    
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks to draft, write, or create a document based on a short prompt, and implies they want it tailored to their style or memory.
+    """
+    token = config.get("configurable", {}).get("token")
+    try:
+        from src.schemas.inference import DraftWithMemoryRequest
+        req = DraftWithMemoryRequest(prompt=prompt)
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/nhap-van-ban-voi-ky-uc",
+            headers={"Authorization": token},
+            json=req.model_dump(),
+            timeout=180.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return f"Here is the personalized draft:\n\n{data.get('draft', '')}"
+        return f"Failed to generate draft: {response.status_code} - {response.text}"
+    except Exception as e:
+        logger.exception("Failed to draft with memory")
+        raise Exception(f"An unexpected error occurred {e}")
+
+@tool
+async def agent_extract_to_artifacts(document_id: str, extraction_goals: list[str], config: RunnableConfig) -> str:
+    """
+    Extract structured data (like Action Items, Leaderboards, Timelines) from a complex document and save it to the persistent Artifacts Storage.
+    
+    WHEN TO USE THIS TOOL:
+    - Use this when the user wants to extract specific structured info from a document and save it persistently.
+    """
+    token = config.get("configurable", {}).get("token")
+    try:
+        from src.schemas.inference import ExtractToStorageRequest
+        text = await _get_doc_text(document_id, token)
+        if not text:
+            return "The actual content of the document is currently unavailable"
+        req = ExtractToStorageRequest(text=text, extraction_goals=extraction_goals)
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/trich-xuat-luu-tru",
+            headers={"Authorization": token},
+            json=req.model_dump(),
+            timeout=180.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return f"Data successfully extracted and stored in artifacts:\n\n{data.get('summary', '')}"
+        return f"Failed to extract to storage: {response.status_code} - {response.text}"
+    except Exception as e:
+        logger.exception("Failed to extract to storage")
+        raise Exception(f"An unexpected error occurred {e}")
+
+@tool
+async def agent_web_fact_check(document_id: str, config: RunnableConfig) -> str:
+    """
+    Fact-check the claims in a document using Web Search to verify facts, especially those occurring after January 2026.
+    
+    WHEN TO USE THIS TOOL:
+    - Use this to verify or fact-check a document against recent real-world events.
+    """
+    token = config.get("configurable", {}).get("token")
+    try:
+        from src.schemas.inference import WebFactCheckRequest
+        text = await _get_doc_text(document_id, token)
+        if not text:
+            return "The actual content of the document is currently unavailable"
+        req = WebFactCheckRequest(text=text)
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/kiem-chung-su-that",
+            headers={"Authorization": token},
+            json=req.model_dump(),
+            timeout=180.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return f"Fact-checking results:\n\n{data.get('fact_check_report', '')}"
+        return f"Failed to fact check: {response.status_code} - {response.text}"
+    except Exception as e:
+        logger.exception("Failed to fact check")
+        raise Exception(f"An unexpected error occurred {e}")
+
+@tool
+async def agent_compliance_screener(document_id: str, config: RunnableConfig) -> str:
+    """
+    Scan a document for compliance, checking for child-safety risks, grooming, and financial/legal advice disclaimers.
+    
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks to review a document for safety, compliance, legal risks, or appropriate tone before publishing.
+    """
+    token = config.get("configurable", {}).get("token")
+    try:
+        from src.schemas.inference import ComplianceScreenRequest
+        text = await _get_doc_text(document_id, token)
+        if not text:
+            return "The actual content of the document is currently unavailable"
+        req = ComplianceScreenRequest(text=text)
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/kiem-duyet-an-toan",
+            headers={"Authorization": token},
+            json=req.model_dump(),
+            timeout=180.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return f"Compliance screening results:\n\n{data.get('compliance_report', '')}"
+        return f"Failed to screen document: {response.status_code} - {response.text}"
+    except Exception as e:
+        logger.exception("Failed to screen document")
+        raise Exception(f"An unexpected error occurred {e}")
+
+@tool
+async def agent_semantic_diff(document_id_1: str, document_id_2: str, config: RunnableConfig) -> str:
+    """
+    Perform a semantic comparison between two documents to explain how viewpoints, arguments, or clauses have changed conceptually.
+    
+    WHEN TO USE THIS TOOL:
+    - Use this when the user wants to understand the meaning or conceptual difference between two documents or versions.
+    """
+    token = config.get("configurable", {}).get("token")
+    try:
+        from src.schemas.inference import SemanticDiffRequest
+        text1 = await _get_doc_text(document_id_1, token)
+        text2 = await _get_doc_text(document_id_2, token)
+        if not text1 or not text2:
+            return "The actual content of the documents is currently unavailable"
+        req = SemanticDiffRequest(text1=text1, text2=text2)
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/so-sanh-ngu-nghia",
+            headers={"Authorization": token},
+            json=req.model_dump(),
+            timeout=180.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return f"Semantic differences:\n\n{data.get('diff_report', '')}"
+        return f"Failed to compare documents: {response.status_code} - {response.text}"
+    except Exception as e:
+        logger.exception("Failed to compare documents")
+        raise Exception(f"An unexpected error occurred {e}")
+
+@tool
+async def conversation_search(query: str, config: RunnableConfig) -> str:
+    """
+    Search past conversations by topic keywords.
+    
+    WHEN TO USE THIS TOOL:
+    - When the user references a specific past conversation by topic, project name, or keyword (e.g., "the bug we discussed", "my project").
+    - Use content nouns (the topic, the proper noun, the project name), not meta-words like "discussed" or "yesterday". Keep it to a few distinctive terms.
+    """
+    user_id = config.get("configurable", {}).get("user_id")
+    if not user_id:
+        return "Lỗi hệ thống: Cần có định danh người dùng để tìm kiếm cuộc trò chuyện"
+    try:
+        from src.services.history import HistoryService
+        sessions = await HistoryService.search_by_keyword(user_id, query)
+        if not sessions:
+            return "Không tìm thấy cuộc trò chuyện nào phù hợp"
+        
+        result = "Hệ thống đã tìm thấy các cuộc trò chuyện liên quan sau:\\n"
+        for s in sessions:
+            title = s.get("title", "Không có tiêu đề")
+            updated = s.get("updated_at", "")
+            result += f"- {title} (Cập nhật lần cuối: {updated})\\n"
+        return result
+    except Exception as e:
+        logger.exception("Failed to search conversations")
+        return f"Lỗi hệ thống khi tìm kiếm cuộc trò chuyện: {str(e)}"
+
+@tool
+async def recent_chats(days: int, config: RunnableConfig) -> str:
+    """
+    Find past conversations by time window.
+    
+    WHEN TO USE THIS TOOL:
+    - When the anchor is temporal (e.g., "yesterday," "last week," "my first chats").
+    """
+    user_id = config.get("configurable", {}).get("user_id")
+    if not user_id:
+        return "Lỗi hệ thống: Cần có định danh người dùng để lấy lịch sử trò chuyện"
+    try:
+        from src.services.history import HistoryService
+        sessions = await HistoryService.get_recent_chats(user_id, days)
+        if not sessions:
+            return "Không tìm thấy cuộc trò chuyện nào trong khoảng thời gian này"
+        
+        result = f"Hệ thống đã tìm thấy các cuộc trò chuyện gần đây (trong {days} ngày qua):\\n"
+        for s in sessions:
+            title = s.get("title", "Không có tiêu đề")
+            updated = s.get("updated_at", "")
+            result += f"- {title} (Cập nhật lần cuối: {updated})\\n"
+        return result
+    except Exception as e:
+        logger.exception("Failed to fetch recent conversations")
+        return f"Lỗi hệ thống khi truy xuất lịch sử trò chuyện: {str(e)}"
+
+@tool
+async def memory_user_edits(action: str, content: str, config: RunnableConfig, memory_id: str = None) -> str:
+    """
+    Manage user edits to memory (e.g., "remember this", "forget that").
+    
+    WHEN TO USE THIS TOOL:
+    - If a person asks you to remember or forget something, you MUST use memory_user_edits.
+    - ALWAYS use the tool BEFORE confirming any memory action. DO NOT just acknowledge conversationally.
+    
+    Args:
+        action (str): The action to perform. Valid options: 'add', 'update', 'delete'.
+        content (str): The content to remember or update.
+        memory_id (str, optional): The ID of the memory to update or delete.
+    """
+    user_id = config.get("configurable", {}).get("user_id")
+    if not user_id:
+        return "Lỗi hệ thống: Cần có định danh người dùng để quản lý trí nhớ"
+    try:
+        from src.memory.mem0 import mem0_manager
+        if action == "add":
+            await mem0_manager.add_memory([{"role": "user", "content": content}], user_id=user_id)
+            return "Hệ thống đã ghi nhớ thông tin thành công"
+        elif action == "update" and memory_id:
+            await mem0_manager.update_memory(memory_id=memory_id, new_content=content)
+            return "Hệ thống đã cập nhật trí nhớ thành công"
+        elif action == "delete" and memory_id:
+            await mem0_manager.delete_memory(memory_id=memory_id)
+            return "Hệ thống đã xóa trí nhớ thành công"
+        else:
+            return "Yêu cầu không hợp lệ hoặc thiếu mã định danh trí nhớ"
+    except Exception as e:
+        logger.exception("Failed to edit memory")
+        return f"Lỗi hệ thống khi xử lý trí nhớ: {str(e)}"
+
+@tool
+async def visualizer(code: str, type: str, config: RunnableConfig) -> str:
+    """
+    Stream inline SVG diagrams, illustrations, and HTML interactive widgets into the conversation.
+    
+    WHEN TO USE THIS TOOL:
+    - Use when a visual genuinely aids understanding more than text alone (e.g., spatial relationships, data shape, system structure, process flow).
+    - Triggered by phrases like: "show me," "visualize," "diagram," "chart," "illustrate," "draw," "graph."
+    - DO NOT use this tool if the user wants to create a file or save to disk.
+    
+    Args:
+        code (str): The raw SVG or HTML code to render.
+        type (str): The type of code ('svg' or 'html').
+    """
+    return "Hình ảnh trực quan đã được hiển thị thành công cho người dùng"
+
+@tool
+async def search_mcp_registry(query: str, config: RunnableConfig) -> str:
+    """
+    Search the MCP registry for available third-party apps and connectors.
+    
+    WHEN TO USE THIS TOOL:
+    - When the user asks to connect to an external app (e.g., "connect my calendar", "find a hike on HikeService").
+    - Use this BEFORE calling suggest_connectors to find the relevant directoryUuid.
+    """
+    try:
+        from src.services.mcp import MCPService
+        import json
+        results = await MCPService.search_registry(query)
+        if not results:
+            return "Hệ thống không tìm thấy ứng dụng bên thứ ba nào phù hợp"
+        return f"Hệ thống đã tìm thấy các ứng dụng sau:\\n{json.dumps(results, indent=2)}"
+    except Exception as e:
+        logger.exception("Failed to search MCP registry")
+        return f"Lỗi hệ thống khi tìm kiếm danh mục ứng dụng: {str(e)}"
+
+@tool
+async def suggest_connectors(uuids: list[str], config: RunnableConfig) -> str:
+    """
+    Suggest MCP connectors for the user to authorize/connect.
+    
+    WHEN TO USE THIS TOOL:
+    - After searching the registry and finding a relevant but unconnected app, use this to prompt the user to connect it.
+    - NEVER call an unconnected [third_party_mcp_app] directly without suggesting it first.
+    """
+    try:
+        from src.services.mcp import MCPService
+        import json
+        result = await MCPService.suggest_connector(uuids)
+        return f"Hệ thống đã gửi đề xuất kết nối cho người dùng:\\n{json.dumps(result, indent=2)}"
+    except Exception as e:
+        logger.exception("Failed to suggest connectors")
+        return f"Lỗi hệ thống khi đề xuất kết nối: {str(e)}"
+
+@tool
+async def execute_mcp_tool(directory_uuid: str, tool_name: str, arguments: dict, config: RunnableConfig) -> str:
+    """
+    Execute a tool provided by a connected third-party MCP app.
+    
+    WHEN TO USE THIS TOOL:
+    - Only after verifying the app is connected.
+    - Pass the correct directory_uuid of the MCP server, the target tool_name, and required arguments as a dictionary.
+    """
+    try:
+        from src.services.mcp import MCPService
+        result = await MCPService.execute_tool(directory_uuid, tool_name, arguments)
+        
+        # result is an mcp.types.CallToolResult. Let's serialize it.
+        # In the MCP SDK, CallToolResult has 'content' (list of text/image) and 'isError'.
+        text_content = ""
+        for c in result.content:
+            if c.type == "text":
+                text_content += c.text + "\\n"
+        
+        status = "Thất bại" if result.isError else "Thành công"
+        return f"Kết quả thực thi công cụ '{tool_name}' trên MCP Server ({status}):\\n{text_content}"
+    except Exception as e:
+        logger.exception("Failed to execute MCP tool")
+        return f"Lỗi hệ thống khi thực thi công cụ MCP: {str(e)}"
+
+@tool
+async def find_location(config: RunnableConfig) -> str:
+    """
+    Find the user's current location and timezone.
+    
+    WHEN TO USE THIS TOOL:
+    - When the user asks location/time queries (e.g., "what's the weather like here?", "what time is it for me?").
+    """
+    try:
+        import httpx
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://ip-api.com/json/")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("status") == "success":
+                    return (
+                        f"Vị trí hiện tại: {data.get('city')}, {data.get('regionName')}, {data.get('country')}\\n"
+                        f"Múi giờ: {data.get('timezone')}\\n"
+                        f"Tọa độ: {data.get('lat')}, {data.get('lon')}"
+                    )
+        return "Hệ thống không thể xác định vị trí hiện tại"
+    except Exception as e:
+        logger.exception("Failed to find location")
+        return f"Lỗi hệ thống khi xác định vị trí: {str(e)}"
+
+@tool
+async def web_search(query: str, config: RunnableConfig) -> str:
+    """
+    Search for current information on the web.
+
+    WHEN TO USE THIS TOOL:
+    - Finding recent events or news.
+    - Looking up current information beyond the AI's knowledge cutoff.
+    - Researching topics that require up-to-date data.
+    - Fact-checking or verifying information.
+    """
+    from src.agents.engine import search_engine
+    try:
+        result = await search_engine.execute(query)
+        return result
+    except Exception as e:
+        logger.exception("Web search execution failed")
+        return f"Hệ thống không thể thực hiện tìm kiếm web vào lúc này: {str(e)}"
+
+@tool
+async def image_search(query: str, config: RunnableConfig) -> str:
+    """
+    Search and find images on the web, returning them along with their dimensions.
+
+    WHEN TO USE THIS TOOL:
+    - When the user asks to see what something looks like, or asks for visual references.
+    
+    CRITICAL: Keep queries specific (3-6 words).
+    """
+    from src.agents.engine import search_engine
+    try:
+        result = await search_engine.image_search(query)
+        return result
+    except Exception as e:
+        logger.exception("Image search execution failed")
+        return f"Hệ thống không thể tìm kiếm hình ảnh vào lúc này: {str(e)}"
+
 tools = [
     agent_summarize_long_document,
     get_user_balance,
@@ -968,9 +1347,24 @@ tools = [
     create_deposit_link,
     translate_document,
     inspect_ui_components,
+    agent_draft_with_memory,
+    agent_extract_to_artifacts,
+    agent_web_fact_check,
+    agent_compliance_screener,
+    agent_semantic_diff,
+    conversation_search,
+    recent_chats,
+    memory_user_edits,
+    visualizer,
+    search_mcp_registry,
+    suggest_connectors,
+    execute_mcp_tool,
+    find_location,
+    web_search,
+    image_search,
 ]
 
-llama_model = settings.LLAMA_MODEL
+llama_model = settings.LLM_MODEL
 hf_token = settings.HF_TOKEN
 
 _hf_endpoint = HuggingFaceEndpoint(

@@ -65,7 +65,7 @@ class PipelineRag:
                 from langchain_core.prompts import PromptTemplate
                 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
-                llama_model = settings.LLAMA_MODEL
+                llama_model = settings.LLM_MODEL
                 hf_token = settings.HF_TOKEN
 
                 _hf = HuggingFaceEndpoint(

@@ -24,6 +24,11 @@ from src.schemas.inference import (
     TranslationRequest,
     GlossaryRequest,
     StyleImitationRequest,
+    DraftWithMemoryRequest,
+    ExtractToStorageRequest,
+    WebFactCheckRequest,
+    ComplianceScreenRequest,
+    SemanticDiffRequest,
 )
 from src.core.dependency import CurrentUser, Role
 
@@ -78,7 +83,7 @@ async def _chat_direct(
     messages: List[dict],
     max_tokens: int = 500,
     temperature: float = 0.3,
-    model: str = settings.LLAMA_MODEL,
+    model: str = settings.LLM_MODEL,
 ) -> str:
     import asyncio
     
@@ -659,4 +664,100 @@ async def imitate_style(
         return {"result": result}
     except Exception as e:
         logger.exception("Style imitation error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+
+@router.post("/nhap-van-ban-voi-ky-uc")
+async def draft_with_memory(
+    req: DraftWithMemoryRequest, current_user: CurrentUser = Depends(get_current_user)
+):
+    logger.info(f"Started draft_with_memory API request for user_id={current_user.id}")
+    try:
+        prompt = f"Using my stored memory and preferences, draft a document about: {req.prompt}"
+        result = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.5,
+        )
+        logger.info(f"Completed draft_with_memory API request for user_id={current_user.id}")
+        return {"draft": result}
+    except Exception as e:
+        logger.exception("draft_with_memory error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+
+@router.post("/trich-xuat-luu-tru")
+async def extract_to_storage(
+    req: ExtractToStorageRequest, current_user: CurrentUser = Depends(get_current_user)
+):
+    logger.info(f"Started extract_to_storage API request for user_id={current_user.id}")
+    try:
+        prompt = f"Extract the following goals: {', '.join(req.extraction_goals)} from this text and return ONLY a JSON dictionary:\n{req.text[:3000]}"
+        result = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1500,
+            temperature=0.1,
+        )
+        data = _extract_json(result)
+        logger.info(f"Completed extract_to_storage API request for user_id={current_user.id}")
+        return {"summary": json.dumps(data, ensure_ascii=False) if data else "{}"}
+    except Exception as e:
+        logger.exception("extract_to_storage error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+
+@router.post("/kiem-chung-su-that")
+async def web_fact_check(
+    req: WebFactCheckRequest, current_user: CurrentUser = Depends(get_current_user)
+):
+    logger.info(f"Started web_fact_check API request for user_id={current_user.id}")
+    try:
+        prompt = f"Fact-check the following text using web search context (if available) and return a report:\n{req.text[:3000]}"
+        result = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.2,
+        )
+        logger.info(f"Completed web_fact_check API request for user_id={current_user.id}")
+        return {"fact_check_report": result}
+    except Exception as e:
+        logger.exception("web_fact_check error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+
+@router.post("/kiem-duyet-an-toan")
+async def compliance_screen(
+    req: ComplianceScreenRequest, current_user: CurrentUser = Depends(get_current_user)
+):
+    logger.info(f"Started compliance_screen API request for user_id={current_user.id}")
+    try:
+        prompt = f"Screen this text for child safety, legal, and financial compliance risks. Return a compliance report:\n{req.text[:3000]}"
+        result = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.2,
+        )
+        logger.info(f"Completed compliance_screen API request for user_id={current_user.id}")
+        return {"compliance_report": result}
+    except Exception as e:
+        logger.exception("compliance_screen error")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+
+@router.post("/so-sanh-ngu-nghia")
+async def semantic_diff(
+    req: SemanticDiffRequest, current_user: CurrentUser = Depends(get_current_user)
+):
+    logger.info(f"Started semantic_diff API request for user_id={current_user.id}")
+    try:
+        prompt = f"Perform a semantic comparison between these two versions and summarize the conceptual changes.\n\nVersion 1:\n{req.text1[:2000]}\n\nVersion 2:\n{req.text2[:2000]}"
+        result = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.3,
+        )
+        logger.info(f"Completed semantic_diff API request for user_id={current_user.id}")
+        return {"diff_report": result}
+    except Exception as e:
+        logger.exception("semantic_diff error")
         raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")

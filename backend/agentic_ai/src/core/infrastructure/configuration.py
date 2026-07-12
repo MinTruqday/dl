@@ -34,7 +34,7 @@ class Settings(BaseModel):
     MIN_FILE_SIZE_BYTES: int = int(os.getenv("MIN_FILE_SIZE_BYTES"))
     TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
     HF_TOKEN: str = os.getenv("HF_TOKEN")
-    LLAMA_MODEL: str = os.getenv("LLAMA_MODEL")
+    LLM_MODEL: str = os.getenv("LLM_MODEL")
     QWEN_MODEL: str = os.getenv("QWEN_MODEL")
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL")
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL")

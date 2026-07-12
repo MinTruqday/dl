@@ -119,7 +119,7 @@ class ActingAgent:
                 selected_tool = self.tool_map[tool_name]
                 try:
                     tool_result = await selected_tool.ainvoke(
-                        tool_params, config={"configurable": {"token": token}}
+                        tool_params, config={"configurable": {"token": token, "user_id": state.get("user_id")}}
                     )
                     return str(tool_result)
                 except Exception as e:

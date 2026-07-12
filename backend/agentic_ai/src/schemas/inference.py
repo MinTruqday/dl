@@ -60,3 +60,25 @@ class StyleImitationRequest(BaseModel):
     text: str
     style_sample: str
     target_length: Optional[int] = None
+
+class DraftWithMemoryRequest(BaseModel):
+    prompt: str
+
+class ExtractToStorageRequest(BaseModel):
+    text: str
+    extraction_goals: List[str]
+
+class WebFactCheckRequest(BaseModel):
+    text: str
+
+class ComplianceScreenRequest(BaseModel):
+    text: str
+
+class SemanticDiffRequest(BaseModel):
+    text1: str
+    text2: str
+
+class MemoryUserEditsRequest(BaseModel):
+    action: str  # add, update, delete
+    content: str
+    memory_id: Optional[str] = None

@@ -77,10 +77,10 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 from src.core.infrastructure.configuration import settings
 
                 llama_client = AsyncInferenceClient(
-                    model=settings.LLAMA_MODEL, token=settings.HF_TOKEN
+                    model=settings.LLM_MODEL, token=settings.HF_TOKEN
                 )
                 chat_llm = HFInferenceChat(
-                    client=llama_client, model=settings.LLAMA_MODEL
+                    client=llama_client, model=settings.LLM_MODEL
                 )
 
                 text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(
@@ -268,10 +268,10 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     from src.core.infrastructure.configuration import settings
 
                     llama_client = AsyncInferenceClient(
-                        model=settings.LLAMA_MODEL, token=settings.HF_TOKEN
+                        model=settings.LLM_MODEL, token=settings.HF_TOKEN
                     )
                     chat_llm = HFInferenceChat(
-                        client=llama_client, model=settings.LLAMA_MODEL
+                        client=llama_client, model=settings.LLM_MODEL
                     )
 
                     text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(

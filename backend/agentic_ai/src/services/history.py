@@ -112,3 +112,34 @@ class HistoryService:
             {"$set": {"updated_at": datetime.now(timezone.utc)}},
         )
         return {"status": "success"}
+    @staticmethod
+    @log_logic_execution
+    async def search_by_keyword(user_id: str, keyword: str) -> List[Dict[str, Any]]:
+        regex = {"$regex": keyword, "$options": "i"}
+        matching_msgs = await ChatRepository.find_ai_messages(
+            {"user_id": user_id, "content": regex},
+            {"session_id": 1}
+        )
+        session_ids = list(set([m["session_id"] for m in matching_msgs]))
+        
+        query = {
+            "user_id": user_id,
+            "$or": [
+                {"title": regex},
+                {"_id": {"$in": session_ids}}
+            ]
+        }
+        cursor = ChatRepository.find_ai_sessions(query).sort("updated_at", -1).limit(10)
+        return await cursor
+
+    @staticmethod
+    @log_logic_execution
+    async def get_recent_chats(user_id: str, days: int = 7) -> List[Dict[str, Any]]:
+        from datetime import timedelta
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+        query = {
+            "user_id": user_id,
+            "updated_at": {"$gte": cutoff_date}
+        }
+        cursor = ChatRepository.find_ai_sessions(query).sort("updated_at", -1).limit(20)
+        return await cursor

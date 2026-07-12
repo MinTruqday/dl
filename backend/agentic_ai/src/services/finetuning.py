@@ -58,7 +58,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
     try:
         sync_update({"status": "running", "progress": 5})
 
-        base_model_name = config.get("base_model", settings.LLAMA_MODEL)
+        base_model_name = config.get("base_model", settings.LLM_MODEL)
         hf_token = settings.HF_TOKEN
         epochs = config.get("epochs", 3)
         batch_size = config.get("batch_size", 4)
@@ -118,16 +118,12 @@ async def create_dataset(req: dict):
 
 @log_logic_execution
 async def list_datasets(user_id: str):
-    return (
-        await get_db()["finetune_datasets"]
-        .find({"user_id": user_id})
-        .sort("created_at", -1)
-        .execute()
-    )
+    cursor = mongo.find("finetune_datasets", {"user_id": user_id}).sort("created_at", -1)
+    return await cursor
 
 @log_logic_execution
 async def get_dataset(dataset_id: str, user_id: str):
-    doc = await get_db()["finetune_datasets"].find_one(
+    doc = await mongo.find_one("finetune_datasets", 
         {"_id": dataset_id, "user_id": user_id}
     )
     if not doc:
@@ -190,14 +186,8 @@ async def get_samples(
         {"_id": dataset_id, "user_id": user_id}
     ):
         raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
-    return (
-        await FinetuneSampleRepository
-        .find({"dataset_id": dataset_id})
-        .sort("created_at", 1)
-        .skip(int(skip))
-        .limit(int(limit))
-        .execute()
-    )
+    cursor = mongo.find("finetune_samples", {"dataset_id": dataset_id}).sort("created_at", 1).skip(int(skip)).limit(int(limit))
+    return await cursor
 
 @log_logic_execution
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
@@ -225,11 +215,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
 async def import_feedback(req: dict):
     
     user_id = req.get("user_id")
-    feedbacks = (
-        await AgenticAIRepository.get("rag_feedback")
-        .find({"user_id": user_id, "vote_type": "up"})
-        .execute()
-    )
+    feedbacks = await mongo.find("rag_feedback", {"user_id": user_id, "vote_type": "up"})
     if not feedbacks:
         return {"imported": 0}
     ds_id = str(uuid7())
@@ -323,7 +309,7 @@ async def import_documents(req: dict):
         for chunk in chunks:
             try:
                 client = AsyncInferenceClient(
-                    model=settings.LLAMA_MODEL, token=hf_token
+                    model=settings.LLM_MODEL, token=hf_token
                 )
                 from src.core.registry import registry, PromptType
                 prompt = registry.get(PromptType.FINETUNE_QA_GENERATION).format(chunk=chunk)
@@ -404,11 +390,7 @@ async def start_job(job_id: str, req: dict):
         raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
     if job_id in active_jobs:
         return {"error": "Tiến trình huấn luyện này đang được thực thi"}
-    samples = (
-        await FinetuneSampleRepository
-        .find({"dataset_id": job["dataset_id"]})
-        .execute()
-    )
+    samples = await mongo.find("finetune_samples", {"dataset_id": job["dataset_id"]})
     config = {
         "base_model": job.get("base_model"),
         "epochs": job.get("epochs", 3),
@@ -426,7 +408,7 @@ async def start_job(job_id: str, req: dict):
         ],
     }
     loop = asyncio.get_event_loop()
-    thread = threading.ThreadService(
+    thread = threading.Thread(
         target=_run_training_sync, args=(job_id, config, loop), daemon=True
     )
     active_jobs[job_id] = thread
@@ -439,12 +421,8 @@ async def start_job(job_id: str, req: dict):
 
 @log_logic_execution
 async def list_jobs(user_id: str):
-    return (
-        await get_db()["finetune_jobs"]
-        .find({"user_id": user_id})
-        .sort("created_at", -1)
-        .execute()
-    )
+    cursor = mongo.find("finetune_jobs", {"user_id": user_id}).sort("created_at", -1)
+    return await cursor
 
 @log_logic_execution
 async def get_job(job_id: str, user_id: str):

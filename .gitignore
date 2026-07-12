@@ -6,6 +6,4 @@ frontend/.next/
 frontend/public/
 backend/logs/
 backend/.venv/
-DESIGN.md
-rule.md
-
+*.md

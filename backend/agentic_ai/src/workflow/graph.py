@@ -52,10 +52,10 @@ from huggingface_hub import AsyncInferenceClient
 from src.utils.huggingface import HFInferenceChat
 
 llama_client = AsyncInferenceClient(
-    model=settings.LLAMA_MODEL,
+    model=settings.LLM_MODEL,
     token=settings.HF_TOKEN,
 )
-llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
+llm = HFInferenceChat(client=llama_client, model=settings.LLM_MODEL)
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 

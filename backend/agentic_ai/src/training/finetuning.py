@@ -249,7 +249,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
         logging_steps=1,
         bf16=torch.cuda.is_available(),
         optim="adamw_8bit" if torch.cuda.is_available() else "adamw_torch",
-        max_seq_length=2048,
+        max_length=2048,
         dataset_text_field="text",
     )
 
@@ -268,7 +268,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
 
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=dataset,
         args=training_args,
         callbacks=[_ProgressCB()],
