@@ -2,8 +2,8 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class PlanStep(BaseModel):
-    agent: str = Field(description="The precise name of the execution agent assigned to this step. Must be a valid registered agent (e.g., 'planner', 'writer', 'researcher').")
-    task: str = Field(description="Detailed, actionable task description. Must clearly state what needs to be done, expected inputs, and format of the desired output.")
+    agent: str = Field(description="The precise name of the execution agent assigned to this step. CRITICAL: MUST be a valid registered agent (e.g., 'planner', 'writer', 'researcher').")
+    task: str = Field(description="Detailed, actionable task description. CRITICAL: MUST clearly state what needs to be done, expected inputs, and format of the desired output.")
 
 class PlanStepGroup(BaseModel):
     parallel_steps: List[PlanStep] = Field(description="List of tasks that have no inter-dependencies and must be executed in parallel to save time. Minimum 1 step.")
@@ -20,7 +20,7 @@ class FeedbackRequest(BaseModel):
     message_id: str
     user_id: str
     vote_type: str = Field(
-        ..., description="Must be exactly one of: 'like', 'dislike', or 'report_issue'. Use this to categorize the user's feedback intent."
+        ..., description="CRITICAL: MUST be exactly one of: 'like', 'dislike', or 'report_issue'. Use this to categorize the user's feedback intent."
     )
     comment: Optional[str] = ""
 
@@ -36,7 +36,7 @@ class ContextQuery(BaseModel):
 
 class GraphRoute(BaseModel):
     route: Literal["rag", "direct"] = Field(
-        description="Must be 'rag' if the user needs factual knowledge, documents, or data retrieval. Must be 'direct' if it's a casual conversation, greeting, or can be answered strictly from generic knowledge without external context."
+        description="CRITICAL: MUST be 'rag' if the user needs factual knowledge, documents, or data retrieval. MUST be 'direct' if it's a casual conversation, greeting, or can be answered strictly from generic knowledge without external context."
     )
 
 class RetrievalStrategy(BaseModel):
@@ -49,7 +49,7 @@ class QueryOptimization(BaseModel):
     question: str = Field(description="The optimal, search-engine-friendly query string stripped of conversational fluff.")
 
 class DocumentGrade(BaseModel):
-    is_relevant: bool = Field(description="Set to True ONLY if the document explicitly contains information that directly helps answer the user's query. Otherwise, False.")
+    is_relevant: bool = Field(description="CRITICAL: Set to True ONLY if the document explicitly contains information that directly helps answer the user's query. Otherwise, False.")
 
 class RouteDecision(BaseModel):
     reasoning: str = Field(description="A short explanation (1-2 sentences) of why this specific route was chosen based on the user's intent.")
@@ -60,7 +60,7 @@ class RouteDecision(BaseModel):
 
 class QualityEvaluation(BaseModel):
     is_hallucination: bool = Field(
-        description="Set to True if the response contains unverified claims, fabricated facts, or information directly contradicting the retrieved context."
+        description="CRITICAL: Set to True if the response contains unverified claims, fabricated facts, or information directly contradicting the retrieved context."
     )
     feedback: str = Field(description="Specific, actionable feedback pointing out exactly which part of the response is flawed and how to fix it.")
 
@@ -85,5 +85,4 @@ class FinetuneJobUpdate(BaseModel):
     merged_model_name: Optional[str] = None
     error_message: Optional[str] = None
     best_loss: Optional[float] = None
-
 
