@@ -8,6 +8,7 @@ from src.core.infrastructure.database import close_db, init_db
 from src.api.license import router as license_router
 from src.api.watermark import router as watermark_router
 from src.api.copyright import router as copyright_router
+from src.api.protection import router as protection_router
 from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 logger.remove()
 logger.add(
@@ -42,6 +43,7 @@ app.add_middleware(
 app.include_router(license_router)
 app.include_router(watermark_router)
 app.include_router(copyright_router)
+app.include_router(protection_router)
 @app.on_event("startup")
 async def startup_event():
     logger.info("DRM service initialized successfully")

@@ -7,14 +7,8 @@ from src.core.infrastructure.configuration import settings
 
 router = APIRouter(prefix="/drm-ai")
 
-class DRMContextRequest(BaseModel):
-    user_id: str
-    document_id: str
-    client_ip: str
-    user_tier: Optional[str] = "BASIC"
-    document_type: Optional[str] = "standard"
-
-@router.post("/evaluate")
+from src.schemas.drm import DRMContextRequest
+@router.post("/danh-gia")
 async def evaluate_drm_request(
     request: DRMContextRequest,
     x_internal_token: Optional[str] = Header(default=None),

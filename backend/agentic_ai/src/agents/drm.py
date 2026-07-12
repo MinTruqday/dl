@@ -6,8 +6,7 @@ from src.tools.interface import llm
 from src.tools.drm import check_network_anomaly, get_user_trust_profile, analyze_document_risk
 import asyncio
 from src.core.registry import registry, PromptType
-
-from src.schemas.model import DRMPolicyOutput
+from src.schemas.drm import DRMPolicyOutput
 
 SYSTEM_PROMPT = registry.get(PromptType.DRM_POLICY)
 
@@ -17,7 +16,6 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 def _build_chain():
-    """Build LLM chain with structured output if supported, else plain LLM."""
     if hasattr(llm, "with_structured_output"):
         try:
             return prompt | llm.with_structured_output(DRMPolicyOutput)
@@ -26,8 +24,6 @@ def _build_chain():
     return prompt | llm
 
 async def evaluate_drm_policy(user_id: str, document_id: str, client_ip: str, user_tier: str, document_type: str) -> Dict[str, Any]:
-    """Execute the DRM Agent DAG to gather context and evaluate policy."""
-    # 1. Gather context concurrently
     network_task = check_network_anomaly.ainvoke({"user_id": user_id, "client_ip": client_ip})
     trust_task = get_user_trust_profile.ainvoke({"user_id": user_id, "user_tier": user_tier})
     risk_task = analyze_document_risk.ainvoke({"document_id": document_id, "document_type": document_type})
@@ -39,8 +35,6 @@ async def evaluate_drm_policy(user_id: str, document_id: str, client_ip: str, us
         "user_trust": trust_ctx,
         "document_risk": risk_ctx
     }
-    
-    # 2. Evaluate with LLM
     try:
         chain = _build_chain()
         result = await chain.ainvoke({"context_data": str(context_data)})
@@ -50,7 +44,6 @@ async def evaluate_drm_policy(user_id: str, document_id: str, client_ip: str, us
         elif isinstance(result, dict):
             return result
         else:
-            # Parse raw text output from plain LLM
             import json, re
             content = result.content if hasattr(result, "content") else str(result)
             match = re.search(r'\{.*\}', content, re.DOTALL)

@@ -16,8 +16,9 @@ async def check_network_anomaly(user_id: str, client_ip: str) -> dict:
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{settings.DRM_URL}/api/v1/network-anomaly",
+                f"{settings.DRM_URL}/bao-ve/kiem-tra-bat-thuong-mang",
                 params={"user_id": user_id, "client_ip": client_ip},
+                headers={"X-Internal-Token": settings.SECRET_KEY},
                 timeout=5.0
             )
             response.raise_for_status()
@@ -37,8 +38,9 @@ async def get_user_trust_profile(user_id: str, user_tier: str = "BASIC") -> dict
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{settings.DRM_URL}/api/v1/trust-profile",
+                f"{settings.DRM_URL}/bao-ve/ho-so-tin-cay",
                 params={"user_id": user_id, "user_tier": user_tier},
+                headers={"X-Internal-Token": settings.SECRET_KEY},
                 timeout=5.0
             )
             response.raise_for_status()
@@ -60,8 +62,9 @@ async def analyze_document_risk(document_id: str, document_type: str = "standard
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{settings.DRM_URL}/api/v1/document-risk",
+                f"{settings.DRM_URL}/bao-ve/rui-ro-tai-lieu",
                 params={"document_id": document_id, "document_type": document_type},
+                headers={"X-Internal-Token": settings.SECRET_KEY},
                 timeout=5.0
             )
             response.raise_for_status()
