@@ -6,7 +6,7 @@ from src.core.registry import PromptType, registry
 
 from src.core.infrastructure.configuration import settings
 
-from src.schemas.model import QualityEvaluation
+from src.schemas.evaluation import QualityEvaluation
 
 class ReasoningAgent:
     def __init__(self):

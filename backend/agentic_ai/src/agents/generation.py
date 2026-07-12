@@ -22,7 +22,7 @@ class GenerationAgent:
 
         try:
             from langchain_core.messages import HumanMessage
-            from src.agents.plan import llm
+            from src.agents.planning import llm
 
             gathered_data = "\n\n".join(consolidated_results)
             if len(gathered_data) > 12000:

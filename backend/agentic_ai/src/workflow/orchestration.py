@@ -7,7 +7,7 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from src.agents.acting import actor
 from src.agents.interpreter import interpreter
-from src.agents.plan import planner
+from src.agents.planning import planner
 from src.agents.reasoning import reasoner
 from src.agents.analysis import researcher
 from src.agents.generation import response_generator
@@ -15,7 +15,7 @@ from src.agents.engine import search_engine
 from src.workflow.state import ActingState
 from uuid6 import uuid7
 
-from src.schemas.model import TaskEvaluation
+from src.schemas.evaluation import TaskEvaluation
 
 async def supervisor_node(state: ActingState):
     start_time = state.get("start_time")

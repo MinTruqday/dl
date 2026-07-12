@@ -5,7 +5,7 @@ from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from loguru import logger
-from src.agents.route import semantic_router
+from src.agents.routing import semantic_router
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.harness.agentops import agentops

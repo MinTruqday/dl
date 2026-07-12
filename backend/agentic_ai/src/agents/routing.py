@@ -9,7 +9,7 @@ from src.utils.huggingface import HFInferenceChat
 
 from src.core.infrastructure.configuration import settings
 
-from src.schemas.model import RouteDecision
+from src.schemas.routing import RouteDecision
 
 class RouteAgent:
     def __init__(self):

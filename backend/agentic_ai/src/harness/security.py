@@ -27,7 +27,7 @@ class SecurityHarness:
         from langchain_core.messages import HumanMessage
         from src.utils.huggingface import HFInferenceChat
         from src.core.infrastructure.configuration import settings
-        from src.schemas.model import SecurityEvaluation
+        from src.schemas.security import SecurityEvaluation
         from src.core.registry import PromptType, registry
         
         violations = []

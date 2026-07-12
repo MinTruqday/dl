@@ -18,7 +18,7 @@ from src.repositories.chat import ChatRepository
 
 active_jobs = {}
 
-from src.schemas.model import FinetuneJobUpdate
+from src.schemas.finetuning import FinetuneJobUpdate
 
 @log_logic_execution
 async def report_progress(job_id: str, data: dict):

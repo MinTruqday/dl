@@ -59,13 +59,8 @@ llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
-from src.schemas.model import (
-    ContextQuery,
-    GraphRoute,
-    RetrievalStrategy,
-    QueryOptimization,
-    DocumentGrade,
-)
+from src.schemas.routing import ContextQuery, GraphRoute, RetrievalStrategy, QueryOptimization
+from src.schemas.evaluation import DocumentGrade
 
 async def contextualize_question(state: AgentState):
     question = state["question"]

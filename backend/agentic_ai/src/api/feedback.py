@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from src.schemas.model import FeedbackRequest
+from src.schemas.feedback import FeedbackRequest
 
 from src.core.infrastructure.configuration import settings
 

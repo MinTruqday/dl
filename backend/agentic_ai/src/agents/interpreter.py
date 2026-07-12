@@ -20,7 +20,7 @@ class InterpreterAgent:
     async def execute(self, task_desc: str) -> str:
         logger.info("Initializing ephemeral sandbox for code execution")
         try:
-            from src.agents.plan import llm
+            from src.agents.planning import llm
 
             system_prompt = registry.get(PromptType.CODE_INTERPRETER_SYSTEM)
             

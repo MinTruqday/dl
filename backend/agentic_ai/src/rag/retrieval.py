@@ -56,7 +56,7 @@ class RetrievalRag:
             try:
                 from pydantic import BaseModel, Field
 
-                from src.schemas.model import MultiQueryOutput
+                from src.schemas.routing import MultiQueryOutput
 
                 structured_llm = self.llm.with_structured_output(MultiQueryOutput)
                 response = structured_llm.invoke(prompt.format(question=question))
