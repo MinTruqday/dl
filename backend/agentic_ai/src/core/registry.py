@@ -52,6 +52,7 @@ class PromptType(Enum):
     REDUCTION_FINAL_SUMMARY = "reduction_final_summary"
     REDUCTION_SYNTHESIS_SUMMARY = "reduction_synthesis_summary"
     PLAN_USER_REQUEST = "plan_user_request"
+    DRM_POLICY = "drm_policy"
 
 class RegistryCore:
     _prompts = {
@@ -473,6 +474,24 @@ OBJECTIVE Evaluate this AI response: '{response}'. Is it an error warning, excep
         PromptType.REDUCTION_FINAL_SUMMARY: "Briefly summarize the following passages into a single paragraph of no more than 300 words:\n\n{combined}",
         PromptType.REDUCTION_SYNTHESIS_SUMMARY: "Based on the component summaries below, synthesize them into a complete summary, coherent and comprehensive summary:\n\n{final_combined}",
         PromptType.PLAN_USER_REQUEST: "Recent conversation history\n{history_str}\n\nLatest request {query}\nCurrent context {context}",
+        PromptType.DRM_POLICY: """SYSTEM IDENTITY The Core Artificial Intelligence System DRM Policy Enforcer Engine
+OBJECTIVE Evaluate the risk of a document export request and dictate the optimal Digital Rights Management (DRM) configuration
+OUTPUT_LANGUAGE You must output ONLY a valid JSON object
+
+CONTEXT
+A user is attempting to export or view a document. Evaluate the risk based on the user's trust profile, the document's sensitivity, and the current network context.
+User and Context Data:
+{context_data}
+
+RULES
+1. Analyze the combined risk factors.
+2. Determine the 'DRM_LEVEL' based on this matrix:
+    - LEVEL_0 (No DRM): Public documents requested by high-trust or PRO users.
+    - LEVEL_1 (Visual Only): Standard documents. Apply visual watermark only.
+    - LEVEL_2 (Standard E-DRM): Sensitive documents. Apply visual watermark, micro-dot steganography, and AES-GCM encryption.
+    - LEVEL_3 (High Security E-DRM): Highly sensitive documents (e.g., exams). Apply Level 2 + disable copy/paste + bind license strictly to hardware signature.
+    - BLOCKED: Suspicious network activity (e.g., multiple IPs in 1 minute) or severe violations.
+3. You MUST respond with a valid JSON object ONLY matching the schema. No conversational text.""",
     }
 
     @classmethod
