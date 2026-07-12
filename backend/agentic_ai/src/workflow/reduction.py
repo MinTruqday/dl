@@ -83,7 +83,14 @@ map_reduce_app = mr_graph.compile()
 
 @tool
 async def agent_summarize_long_document(document_id: str, config: dict) -> str:
-    """Use this tool to read and summarize an entire large document (Map-Reduce)"""
+    """
+    Use this tool to read and summarize an entire large document using a Map-Reduce workflow.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks for a comprehensive summary, overview, or tl;dr of a very long document where simple reading might exceed token limits.
+
+    CRITICAL: Requires the exact document ID.
+    """
     from src.tools.interface import _get_doc_text
 
     token = config.get("configurable", {}).get("token")

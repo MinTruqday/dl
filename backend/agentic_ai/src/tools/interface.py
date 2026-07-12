@@ -64,7 +64,14 @@ INTERNAL_API_URL = settings.INTERNAL_API_URL
 
 @tool
 async def get_user_balance(config: RunnableConfig) -> str:
-    """Get the current user's DocLib wallet balance in dl currency"""
+    """
+    Get the current user's DocLib wallet balance in dl currency.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks about their remaining credits, balance, or how much money they have.
+
+    CRITICAL: Requires authentication. If unauthorized, prompt the user to log in.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "High security operation, please log in to your account and try again"
@@ -89,7 +96,14 @@ async def get_user_balance(config: RunnableConfig) -> str:
 
 @tool
 async def get_transaction_history(config: RunnableConfig) -> str:
-    """View recent financial transaction history including deposit and payments"""
+    """
+    View recent financial transaction history including deposit and payments.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks for a history of their deposits, top-ups, payments, or where their money went.
+
+    CRITICAL: Only shows recent transactions. Requires authentication.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Please authenticate your account to view transaction history details"
@@ -119,7 +133,14 @@ async def get_transaction_history(config: RunnableConfig) -> str:
 
 @tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
-    """Redeem a gift voucher code to add funds to the account"""
+    """
+    Redeem a gift voucher code to add funds to the account.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user explicitly provides a voucher code or promo code and asks to redeem it.
+
+    CRITICAL: The code must be a non-empty string.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Valid account login is required to use a gift voucher"
@@ -144,7 +165,13 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
 
 @tool
 async def get_revenue_report(config: RunnableConfig) -> str:
-    """View revenue report from document sales, intended for authors"""
+    """
+    View revenue report from document sales, intended for authors.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when a document author asks about their earnings, total revenue, or pending withdrawals.
+    </when_to_use>
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "For security reasons, please log in before viewing the revenue report"
@@ -168,7 +195,14 @@ async def get_revenue_report(config: RunnableConfig) -> str:
 
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
-    """List all personal documents owned or published by the current user"""
+    """
+    <overview>
+    List all personal documents owned or published by the current user.
+    </overview>
+    <when_to_use>
+    Use this when the user asks to see their documents, what they have written, or their library.
+    </when_to_use>
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Please log into the system to browse your document library"
@@ -195,7 +229,15 @@ async def get_my_documents(config: RunnableConfig) -> str:
 
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
-    """View deleted documents currently in the trash bin"""
+    """
+    <overview>
+    View deleted documents currently in the trash bin.
+    </overview>
+    <when_to_use>
+    Use this when the user asks about deleted files, trash bin, or recovering a deleted document.
+
+    CRITICAL: Requires authentication. Only shows files deleted by this user.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "You need to authenticate your identity to continue"
@@ -225,7 +267,14 @@ async def get_trash_documents(config: RunnableConfig) -> str:
 
 @tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
-    """Delete a document by ID, moving it to the trash bin"""
+    """
+    Delete a document by ID, moving it to the trash bin.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user explicitly requests to delete, remove, or trash a specific document.
+
+    CRITICAL: Requires the exact document ID.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "The system requires you to log in to confirm ownership before deleting a document"
@@ -254,7 +303,14 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
 
 @tool
 async def restore_document(document_id: str, config: RunnableConfig) -> str:
-    """Restore a document from the trash bin by its ID"""
+    """
+    Restore a document from the trash bin by its ID.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks to recover, undelete, or restore a previously deleted document.
+
+    CRITICAL: Requires the exact document ID of a deleted document.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "You need to authenticate your identity to continue"
@@ -276,7 +332,14 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
 
 @tool
 async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
-    """View detailed analytics including read count and drop-off rate for a document"""
+    """
+    View detailed analytics including read count and drop-off rate for a document.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks how well their document is performing, how many reads it has, or its drop-off rate.
+
+    CRITICAL: Requires the exact document ID.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "You need to authenticate your identity to continue"
@@ -321,7 +384,14 @@ from src.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 
 @tool
 async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> str:
-    """Suggest academic citations for a document by its ID"""
+    """
+    Suggest academic citations for a document by its ID.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks to generate, find, or suggest citations (APA, MLA, etc.) for a specific document.
+
+    CRITICAL: Requires the exact document ID. Only works if the document has readable text.
+    """
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
@@ -342,7 +412,14 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
 
 @tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
-    """Perform a peer review of a document, evaluating strengths and weaknesses"""
+    """
+    Perform an automated AI peer review of a document, evaluating strengths, weaknesses, and academic quality.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks for feedback, critique, peer review, or an evaluation of their document.
+
+    CRITICAL: Requires the exact document ID. Provides a detailed critique report.
+    """
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
@@ -365,7 +442,14 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
 async def agent_transform_tone(
     document_id: str, tone: str, config: RunnableConfig
 ) -> str:
-    """Transform the writing tone of a document, e.g. academic, professional, casual"""
+    """
+    Transform the writing tone of a document (e.g., to academic, professional, casual, enthusiastic).
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks to rewrite, rephrase, or change the tone/style of a document.
+
+    CRITICAL: Requires the exact document ID and a specific 'tone' string (e.g., 'academic'). Returns the transformed text.
+    """
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
@@ -386,7 +470,14 @@ async def agent_transform_tone(
 
 @tool
 async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
-    """Create a deposit link to top up the dl wallet. Amount is in VND. Returns a payment URL"""
+    """
+    Create a deposit link to top up the user's dl wallet. Returns a payment URL.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user explicitly asks to top up, deposit money, or add funds to their account.
+
+    CRITICAL: Requires an integer amount in VND. Requires user authentication.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "You need to authenticate your account before proceeding with a deposit"
@@ -416,13 +507,15 @@ from src.workflow.reduction import agent_summarize_long_document
 async def create_document(
     title: str, description: str, content: str, format: str, config: RunnableConfig
 ) -> str:
-    """Create a new document.
-    format: must be 'json' (for Standard Editor) or 'latex' (for LaTeX Editor).
-    title: The title of the document.
-    description: A short summary.
-    content: The main body of the document.
-             For 'latex', this MUST be a full valid LaTeX document (including \\documentclass, \\usepackage, etc.).
-             For 'json', this MUST be a valid JSON string representing EditorJS data, containing a 'blocks' array. Example: {"blocks": [{"type": "header", "data": {"text": "Title", "level": 2}}, {"type": "paragraph", "data": {"text": "Hello"}}]}
+    """
+    Create a new document in the user's library.
+
+    WHEN TO USE THIS TOOL:
+    - Use this tool ONLY when the user explicitly asks to create, write, or generate a new file, report, blog, or long-form content. Do NOT use this for short conversational responses (<= 20 lines) or quick lists.
+
+    CRITICAL: - format MUST be either 'json' (for EditorJS) or 'latex' (for Math/Science).
+    - If format is 'latex', content MUST include standard LaTeX boilerplate (\\documentclass, \\begin{document}).
+    - If format is 'json', content MUST be a valid EditorJS JSON string with a 'blocks' array. Example: {"blocks": [{"type": "paragraph", "data": {"text": "Hello"}}]}
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -514,7 +607,14 @@ async def create_document(
 
 @tool
 async def read_document(document_id: str, config: RunnableConfig) -> str:
-    """Read the content of a document by its ID. Use this before updating a document so you know its current content"""
+    """
+    Read the content of a document by its ID.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when you need to know the current content of a document before modifying it, or when the user asks you to read or summarize a specific document by its ID.
+
+    CRITICAL: Requires the exact document ID. Returns the raw content format.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "You need to authenticate your identity to continue"
@@ -548,7 +648,13 @@ async def update_document(
     description: str = None,
     config: RunnableConfig = None,
 ) -> str:
-    """Update an existing document's content, title, or description by its ID. Only provide the fields you want to update.
+    """
+    Update an existing document's content, title, or description by its ID.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks to edit, modify, append, or change an existing document. ALWAYS read the document first using read_document before calling this to ensure you don't accidentally erase existing content.
+
+    CRITICAL: Only provide the fields you want to update.
     - If format is 'json', new_content MUST be a valid EditorJS JSON string (with "blocks" array).
     - If format is 'latex', new_content MUST be the full LaTeX source code.
     """
@@ -628,7 +734,14 @@ async def update_document(
 async def translate_document(
     document_id: str, target_language: str, config: RunnableConfig
 ) -> str:
-    """Translate an existing document to a target language. If language is not specified, default to English. Creates a new translated document"""
+    """
+    Translate an existing document to a target language. This operation creates a new translated document rather than overwriting the original.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks to translate, convert language, or localize a specific document.
+
+    CRITICAL: If language is not specified, default to English. Requires the exact document ID.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "You need to authenticate your identity to continue"
@@ -765,8 +878,13 @@ async def translate_document(
 
 @tool
 async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
-    """Dynamically search and read custom EditorJS blocks from the project's source code.
-    Use this to understand the required JSON schema for specific components (e.g., query='Chart', 'Kanban', 'Mermaid').
+    """
+    <overview>
+    Dynamically search and read custom EditorJS blocks from the project's source code.
+    </overview>
+    <when_to_use>
+    Use this to understand the required JSON schema for specific UI components before creating a document (e.g., query='Chart', 'Kanban', 'Mermaid').
+    </when_to_use>
     """
     import os
     import glob

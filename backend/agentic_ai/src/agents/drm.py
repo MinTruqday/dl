@@ -7,26 +7,7 @@ from src.tools.drm import check_network_anomaly, get_user_trust_profile, analyze
 import asyncio
 from src.core.registry import registry, PromptType
 
-class DRMPolicyOutput(BaseModel):
-    """Schema for the final DRM enforcement decision."""
-    decision: str = Field(
-        description="Must be exactly one of: LEVEL_0, LEVEL_1, LEVEL_2, LEVEL_3, or BLOCKED"
-    )
-    reasoning: str = Field(
-        description="A short, one-sentence technical justification for this decision."
-    )
-    enable_visual_watermark: bool = Field(
-        description="Set to true if visual deterrence is required."
-    )
-    enable_micro_dots: bool = Field(
-        description="Set to true if steganography forensic tracking is needed."
-    )
-    enable_aes_encryption: bool = Field(
-        description="Set to true to wrap the document in a .doclib AES-GCM container."
-    )
-    hardware_binding_strict: bool = Field(
-        description="Set to true to lock the decryption key strictly to the client's hardware signature."
-    )
+from src.schemas.model import DRMPolicyOutput
 
 SYSTEM_PROMPT = registry.get(PromptType.DRM_POLICY)
 

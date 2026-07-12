@@ -22,13 +22,7 @@ class InterpreterAgent:
         try:
             from src.agents.plan import llm
 
-            system_prompt = (
-                registry.get(PromptType.CODE_INTERPRETER_SYSTEM) + "\\n"
-                "OBJECTIVE: Generate pure, executable Python code to fulfill the task.\n"
-                "RULES:\n"
-                "- Output ONLY valid Python code wrapped in ```python code_here ``` tags.\n"
-                "- Do NOT include any explanations. Use `print` to output results."
-            )
+            system_prompt = registry.get(PromptType.CODE_INTERPRETER_SYSTEM)
             
             response = await llm.ainvoke([
                 SystemMessage(content=system_prompt),

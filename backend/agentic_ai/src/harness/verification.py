@@ -49,8 +49,8 @@ async def _check_no_hallucination_markers(response: str) -> CheckResult:
     from pydantic import BaseModel, Field
     
     class HallucinationGrade(BaseModel):
-        is_refusal_or_hallucination: bool = Field(description="True if the response is a refusal to answer, states 'I do not know', or uses AI identity markers like 'As an AI'")
-        reason: str = Field(description="Reason for the grade")
+        is_refusal_or_hallucination: bool = Field(description="Set to True if the response refuses the prompt, states ignorance, or uses artificial identity markers ('As an AI language model...'). Set to False if it is a normal, helpful response.")
+        reason: str = Field(description="A concise 1-sentence reason explaining why the response was graded as a refusal/hallucination or a valid response.")
 
     try:
         evaluator = llm.with_structured_output(HallucinationGrade)
@@ -105,8 +105,8 @@ async def _check_no_error_prefix(response: str) -> CheckResult:
     from pydantic import BaseModel, Field
 
     class ErrorMessageJudgment(BaseModel):
-        is_error_message: bool = Field(description="True if the response is an error warning, exception traceback, or system failure message instead of a valid output")
-        reason: str = Field(description="Explanation of the judgment")
+        is_error_message: bool = Field(description="Set to True if the text contains a raw stack trace, HTTP error code, unhandled exception, Python/JS traceback, or a system failure message. Set to False if it is a natural language response.")
+        reason: str = Field(description="A specific, 1-2 sentence explanation of why this was classified as an error message or a valid output.")
 
     try:
         evaluator = llm.with_structured_output(ErrorMessageJudgment)

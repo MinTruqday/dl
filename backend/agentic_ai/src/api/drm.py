@@ -19,7 +19,6 @@ async def evaluate_drm_request(
     request: DRMContextRequest,
     x_internal_token: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
-    # Only allow calls with valid internal token
     if x_internal_token != settings.SECRET_KEY:
         raise HTTPException(status_code=403, detail="Forbidden: invalid internal token")
     try:
