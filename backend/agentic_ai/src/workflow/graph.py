@@ -304,12 +304,12 @@ async def generate(state: AgentState):
         documents.append(f"[Attached Folder Context]\n{state['folder_data'][:6000]}")
 
     citation_instruction = (
-        "- Use inline source citations when referencing documents"
+        "CRITICAL: Cite your sources inline by referencing the document title or source name whenever you make a factual claim drawn from the reference documents. Do NOT cite without a corresponding source."
         if documents
-        else "- Do NOT use any citations as no relevant documents were found"
+        else "CRITICAL: Do NOT include any citations or references — no relevant documents were retrieved for this query. All factual claims must come from your training knowledge only."
     )
     thought_instruction = (
-        "- You MUST present your reasoning, analysis, and outline inside <think></think> tags at the beginning of your response, before delivering the final answer"
+        "CRITICAL: You MUST enclose your full reasoning process, analysis, and outline inside <think></think> tags at the very beginning of your response, BEFORE the final answer. The <think> block must be substantive — not a placeholder."
         if state.get("use_smart")
         else ""
     )

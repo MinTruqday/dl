@@ -170,6 +170,8 @@ async def get_revenue_report(config: RunnableConfig) -> str:
 
     WHEN TO USE THIS TOOL:
     - Use this when a document author asks about their earnings, total revenue, or pending withdrawals.
+
+    CRITICAL: This report is for document authors only. Requires authentication. Returns aggregated revenue and pending withdrawal amounts.
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -199,6 +201,8 @@ async def get_my_documents(config: RunnableConfig) -> str:
 
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to see their documents, what they have written, or their library.
+
+    CRITICAL: Returns an empty-library message if no documents exist. Requires authentication.
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -490,7 +494,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             data = response.json().get("data", {})
             checkout_url = data.get("checkout_url") or data.get("payment_url")
             if checkout_url:
-                return f"Yêu cầu nạp {amount} currency units has been created please visit the following link to proceed with the payment [Pay here]({checkout_url}/)"
+                return f"A deposit request for {amount} currency units has been created. Please visit the following link to proceed with the payment: [Pay here]({checkout_url}/)"
             return "The system cannot generate a secure payment link at this time"
         return "A critical error occurred while starting the payment transaction process"
     except Exception as e:
@@ -875,12 +879,12 @@ async def translate_document(
 @tool
 async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
     """
-    <overview>
-    Dynamically search and read custom EditorJS blocks from the project's source code.
-    </overview>
-    <when_to_use>
-    Use this to understand the required JSON schema for specific UI components before creating a document (e.g., query='Chart', 'Kanban', 'Mermaid').
-    </when_to_use>
+    Dynamically search and read the source code of custom EditorJS blocks from the project's frontend.
+
+    WHEN TO USE THIS TOOL:
+    - Use this BEFORE calling create_document or update_document whenever you need to generate content for a specific custom block type (e.g., 'Chart', 'Kanban', 'Mermaid', 'Table'). Query for the component name to retrieve its TypeScript source and infer the exact JSON schema.
+
+    CRITICAL: Calling this tool is a required first step before creating any document with custom UI blocks. Do NOT guess the JSON schema — read the source to confirm the exact structure.
     """
     import os
     import glob

@@ -2,7 +2,9 @@ from typing import List, Literal
 from pydantic import BaseModel, Field
 
 class ContextQuery(BaseModel):
-    question: str = Field(description="The rewritten, context-independent version of the user's question, replacing pronouns (it, they) with exact subjects from conversation history.")
+    question: str = Field(
+        description="CRITICAL: The rewritten, fully self-contained version of the user's question. MUST resolve ALL pronouns (it, they, that) and implicit references into explicit subject names drawn from the conversation history."
+    )
 
 class GraphRoute(BaseModel):
     route: Literal["rag", "direct"] = Field(
@@ -11,9 +13,11 @@ class GraphRoute(BaseModel):
 
 class RetrievalStrategy(BaseModel):
     is_simple: bool = Field(
-        description="Set to True if a single search query is enough. Set to False if the question is complex, multi-part, or requires aggregating information from multiple distinct topics."
+        description="CRITICAL: Set to True ONLY if a single vector search query is sufficient to retrieve the answer. Set to False if the question is multi-part, comparative, or requires aggregating from multiple distinct topics."
     )
-    queries: List[str] = Field(description="A list of 1 to 5 optimal search queries. Keep them concise and keyword-focused for vector search. Do not use full sentences.")
+    queries: List[str] = Field(
+        description="CRITICAL: A list of 1 to 5 highly optimized search queries. MUST be concise (3-8 keywords) and focused for vector similarity search. Do NOT use full conversational sentences."
+    )
 
 class QueryOptimization(BaseModel):
     question: str = Field(description="The optimal, search-engine-friendly query string stripped of conversational fluff.")
