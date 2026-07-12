@@ -44,6 +44,7 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
     USAGE_URL: str = get_service_url("USAGE")
+    DRM_URL: str = get_service_url("DRM")
     AGENTIC_AI_DB_NAME: str = os.getenv("AGENTIC_AI_DB_NAME")
     FINETUNE_MODELS_DIR: str = os.getenv("FINETUNE_MODELS_DIR")
     FINETUNE_ADAPTERS_DIR: str = os.getenv("FINETUNE_ADAPTERS_DIR")
