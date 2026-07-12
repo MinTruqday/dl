@@ -87,7 +87,7 @@ async def harness_status():
 @app.on_event("startup")
 async def startup_event():
     logger.info("Agentic AI system initialized successfully")
-    from src.store.database import vector_store
+    from src.store.vector import vector_store
     from src.core.infrastructure.configuration import settings
     try:
         await vector_store.ensure_collection()

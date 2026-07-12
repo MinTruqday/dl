@@ -289,7 +289,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
         )
         if response.status_code == 200:
             try:
-                from src.store.database import vector_store
+                from src.store.vector import vector_store
 
                 await vector_store.delete_by_document(document_id)
                 logger.info("Document index cleanup completed successfully")
@@ -377,9 +377,6 @@ async def _get_doc_text(document_id: str, token: str) -> str:
     except Exception as e:
         logger.exception("Failed to load document content")
     return ""
-
-from src.api.inference import peer_review, suggest_citations, transform_tone
-
 from src.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 
 @tool
@@ -404,8 +401,17 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = CitationRequest(text=safe_text, style="APA")
-        data = await suggest_citations(req)
-        return f"Here are the suggested citations for the document:\n\n{data.get('citations', '')}"
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/trich-dan-thong-minh",
+            headers={"Authorization": token},
+            json=req.model_dump(),
+            timeout=180.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return f"Here are the suggested citations for the document:\n\n{data.get('citations', '')}"
+        return "Failed to generate citation suggestions from the inference service."
     except Exception as e:
         logger.exception("Failed to generate citation suggestions")
         raise Exception(f"An unexpected error occurred, please try again {e}")
@@ -432,8 +438,17 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = ReviewRequest(text=safe_text)
-        data = await peer_review(req)
-        return f"Here is the peer review report for the document:\n\n{data.get('review_report', '')}"
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/kiem-duyet-noi-dung",
+            headers={"Authorization": token},
+            json=req.model_dump(),
+            timeout=180.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return f"Here is the peer review report for the document:\n\n{data.get('review_report', '')}"
+        return "Failed to generate peer review report from the inference service."
     except Exception as e:
         logger.exception("Peer review process failed")
         raise Exception(f"An unexpected error occurred, please try again {e}")
@@ -462,8 +477,17 @@ async def agent_transform_tone(
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = ToneRequest(text=safe_text, tone=tone, expansion=False)
-        data = await transform_tone(req)
-        return f"Here is the text transformed to the requested tone:\n\n{data.get('transformed_text', '')}"
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/bien-doi-van-ban",
+            headers={"Authorization": token},
+            json=req.model_dump(),
+            timeout=180.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return f"Here is the text transformed to the requested tone:\n\n{data.get('transformed_text', '')}"
+        return "Failed to transform tone using the inference service."
     except Exception as e:
         logger.exception("Tone transformation failed")
         raise Exception(f"An unexpected error occurred, please try again {e}")
@@ -591,7 +615,7 @@ async def create_document(
         }
         res_create = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/tai-lieu/",
+            f"{INTERNAL_API_URL}/tai-lieu",
             headers=headers,
             json=create_payload,
         )
@@ -601,7 +625,7 @@ async def create_document(
             if doc_id:
                 return f"New document created successfully. [View Document](/editor?document_id={doc_id})"
             return "The document was successfully initialized but its identifier could not be retrieved"
-        return "An issue occurred while creating and storing the new document"
+        return f"An issue occurred while creating and storing the new document: Status {res_create.status_code} - {res_create.text}"
     except Exception as e:
         raise Exception(f"An abnormal error occurred during data flow processing {e}")
 
@@ -674,11 +698,24 @@ async def update_document(
     except Exception as e:
         raise Exception(f"Error loading document {e}")
 
-    payload = {}
+    meta_payload = {}
     if title:
-        payload["title"] = title
+        meta_payload["title"] = title
     if description:
-        payload["description"] = description
+        meta_payload["description"] = description
+
+    if meta_payload:
+        try:
+            res_meta = await _make_api_request(
+                "PUT",
+                f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
+                headers=headers,
+                json=meta_payload,
+            )
+            if res_meta.status_code not in [200, 201]:
+                return f"Error updating document metadata. API returned {res_meta.status_code}"
+        except Exception as e:
+            raise Exception(f"Error during metadata update {e}")
 
     if new_content:
         format = doc_data.get("content_format", "json")
@@ -712,23 +749,28 @@ async def update_document(
             final_content = new_content
         else:
             final_content = new_content
-        payload["content"] = final_content
+            
+        content_payload = {
+            "content": final_content,
+            "content_format": format
+        }
+        
+        try:
+            res_content = await _make_api_request(
+                "PUT",
+                f"{INTERNAL_API_URL}/tai-lieu/{document_id}/noi-dung",
+                headers=headers,
+                json=content_payload,
+            )
+            if res_content.status_code not in [200, 201]:
+                return f"Error updating document content. API returned {res_content.status_code}"
+        except Exception as e:
+            raise Exception(f"Error during content update {e}")
 
-    if not payload:
+    if not meta_payload and not new_content:
         return "No content changes were recorded for this document"
 
-    try:
-        res_update = await _make_api_request(
-            "PUT",
-            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
-            headers=headers,
-            json=payload,
-        )
-        if res_update.status_code in [200, 201]:
-            return f"Document updated successfully. [View Document](/editor?document_id={document_id})"
-        raise Exception("Error updating document")
-    except Exception as e:
-        raise Exception(f"An abnormal error occurred during data flow processing {e}")
+    return f"Document updated successfully. [View Document](/editor?document_id={document_id})"
 
 @tool
 async def translate_document(

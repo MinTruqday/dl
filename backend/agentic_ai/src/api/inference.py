@@ -80,22 +80,26 @@ async def _chat_direct(
     temperature: float = 0.3,
     model: str = settings.LLAMA_MODEL,
 ) -> str:
-    try:
-        response = await client.chat_completion(
-            model=model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
-        msg = response.choices[0].message
-        content = msg.content or ""
-        reasoning = getattr(msg, "reasoning", None)
-        if reasoning:
-            return f"<think>\n{reasoning}\n</think>\n{content}"
-        return content
-    except Exception as e:
-        logger.exception("AI text generation execution error")
-        raise Exception("Hệ thống gặp sự cố bất ngờ, vui lòng thử lại sau")
+    import asyncio
+    
+    last_exception = None
+    for attempt in range(4):
+        try:
+            response = await client.chat_completion(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+            msg = response.choices[0].message
+            content = msg.content or ""
+            reasoning = getattr(msg, "reasoning", None)
+            if reasoning:
+                return f"<think>\n{reasoning}\n</think>\n{content}"
+            return content
+        except Exception as e:
+            logger.exception("AI text generation execution error")
+            raise Exception("Hệ thống gặp sự cố bất ngờ, vui lòng thử lại sau")
 
 async def _run_ai_with_quota(
     current_user: CurrentUser,
@@ -252,9 +256,9 @@ async def check_plagiarism(
             )
 
         from src.rag.embedding import embedder
-        from src.store.database import vector_store
+        from src.store.vector import vector_store
 
-        query_vector = await embedding.embed_query(req.text[:2000])
+        query_vector = await embedder.embed_query(req.text[:2000])
         matches = await vector_store.query(query_vector=query_vector, limit=5)
 
         significant_matches = [m for m in matches if m["score"] > 0.75]
@@ -399,9 +403,9 @@ async def suggest_citations(
             )
 
         from src.rag.embedding import embedder
-        from src.store.database import vector_store
+        from src.store.vector import vector_store
 
-        query_vector = await embedding.embed_query(req.text[:500])
+        query_vector = await embedder.embed_query(req.text[:500])
         matches = await vector_store.query(query_vector=query_vector, limit=3)
 
         sources = []
@@ -507,9 +511,9 @@ async def multi_doc_synthesis(
     logger.info(f"Started multi-document synthesis API request for user_id={current_user.id}")
     try:
         from src.rag.embedding import embedder
-        from src.store.database import vector_store
+        from src.store.vector import vector_store
 
-        query_vector = await embedding.embed_query(req.query)
+        query_vector = await embedder.embed_query(req.query)
 
         all_context = []
         for doc_id in req.document_ids:
@@ -598,7 +602,7 @@ async def analyze_document(
 async def delete_vector_document(document_id: str):
     logger.info(f"Started vector index deletion for document {document_id}")
     try:
-        from src.store.database import vector_store
+        from src.store.vector import vector_store
 
         await vector_store.delete_by_document(document_id)
         logger.info(f"Completed vector index deletion for document {document_id}")

@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from loguru import logger
 from src.rag.pipeline import ingestion_pipeline
 from src.schemas.ingestion import IngestRequest
-from src.store.database import vector_store
+from src.store.vector import vector_store
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tiep-nap")
 

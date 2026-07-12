@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from src.core.registry import PromptType, registry
-from src.store.database import vector_store
+from src.store.vector import vector_store
 
 from src.core.infrastructure.configuration import settings
 

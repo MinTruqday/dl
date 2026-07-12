@@ -171,12 +171,11 @@ class DocumentService:
         if cursor:
             query["_id"] = {"$lt": cursor}
 
-        docs = (
-            await DocumentRepository
+        docs = await (
+            DocumentRepository
             .find(query)
             .sort("_id", -1)
-            .limit(limit)
-            .execute()
+            .to_list(length=limit)
         )
         return [
             {
@@ -493,11 +492,11 @@ class DocumentService:
     @log_logic_execution
     async def get_trash(current_user) -> list:
         
-        docs = (
-            await DocumentRepository
+        docs = await (
+            DocumentRepository
             .find({"creator_id": str(current_user.id), "is_deleted": True})
             .sort("deleted_at", -1)
-            .execute()
+            .to_list(length=100)
         )
         return [
             {

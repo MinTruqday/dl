@@ -192,6 +192,7 @@ services:
       - qdrant
     volumes:
       - ./backend/agentic_ai/src:/app/src
+      - ./backend/agentic_ai/tests:/app/tests
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
       - doclib_network

@@ -1385,6 +1385,7 @@ Analyze the user intent and select the appropriate system tool for execution. Ma
 3. If no available tool matches the request, clearly state this rather than forcing a poor match.
 4. Extract and validate parameters from the user's request before dispatching.
 5. For destructive operations (delete, modify, transfer), ensure all required confirmation parameters are present.
+6. CRITICAL: When invoking a tool, your arguments MUST be formatted as a SINGLE valid JSON object (a dictionary), NOT a JSON array/list.
 </rules>""",
 
         PromptType.CODE_INTERPRETER_SYSTEM: """<system_identity>

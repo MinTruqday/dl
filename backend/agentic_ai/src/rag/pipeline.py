@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.rag.chunk import chunker
 from src.rag.embedding import embedder
-from src.store.database import vector_store
+from src.store.vector import vector_store
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings

@@ -15,7 +15,7 @@ from src.memory.management import memory_manager
 
 from src.rag.embedding import embedder
 from src.rag.retrieval import retriever
-from src.store.database import vector_store
+from src.store.vector import vector_store
 from src.utils.processing import extract_text_from_base64
 from src.workflow.state import AgentState
 
