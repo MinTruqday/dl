@@ -170,7 +170,6 @@ async def get_revenue_report(config: RunnableConfig) -> str:
 
     WHEN TO USE THIS TOOL:
     - Use this when a document author asks about their earnings, total revenue, or pending withdrawals.
-    </when_to_use>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -196,12 +195,10 @@ async def get_revenue_report(config: RunnableConfig) -> str:
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
     """
-    <overview>
     List all personal documents owned or published by the current user.
-    </overview>
-    <when_to_use>
-    Use this when the user asks to see their documents, what they have written, or their library.
-    </when_to_use>
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks to see their documents, what they have written, or their library.
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -230,11 +227,10 @@ async def get_my_documents(config: RunnableConfig) -> str:
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
     """
-    <overview>
     View deleted documents currently in the trash bin.
-    </overview>
-    <when_to_use>
-    Use this when the user asks about deleted files, trash bin, or recovering a deleted document.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks about deleted files, trash bin, or recovering a deleted document.
 
     CRITICAL: Requires authentication. Only shows files deleted by this user.
     """

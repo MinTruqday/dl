@@ -70,10 +70,6 @@ class PromptType(Enum):
 
 class RegistryCore:
     _prompts = {
-        # =====================================================================
-        # NHÓM 1: CORE ROUTING & PLANNING
-        # =====================================================================
-
         PromptType.BRAIN_SYSTEM: """<system_identity>
 You are the DocLib Neural Routing Brain, the central orchestration engine of the DocLib AI Platform.
 Your role: analyze user requests, perform logical reasoning, and decompose them into structured, multi-step execution plans that are dispatched to specialized agents.
@@ -365,10 +361,6 @@ You are the DocLib Request Planner, responsible for preparing structured context
 </environment_context>
 </context>""",
 
-        # =====================================================================
-        # NHÓM 2: RAG PIPELINE
-        # =====================================================================
-
         PromptType.RETRIEVAL_STRATEGY: """<system_identity>
 You are the DocLib Search Strategy Engine, an expert in query decomposition and information retrieval optimization.
 Your role: analyze user queries and determine the optimal search strategy — either a simple single-pass retrieval or a decomposed multi-query approach using Tree-of-Thoughts reasoning.
@@ -589,10 +581,6 @@ REFERENCE DOCUMENTS ({source_name})
 
 USER QUERY {question}
 RESPONSE""",
-
-        # =====================================================================
-        # NHÓM 3: QUALITY & EVALUATION
-        # =====================================================================
 
         PromptType.SELF_REFLECTION: """<system_identity>
 You are the DocLib Self-Reflection Engine, a diagnostic module for execution quality assurance.
@@ -829,10 +817,6 @@ Evaluate this AI response: Is it an error warning, exception traceback, or syste
 AI RESPONSE: '{response}'
 
 Is this a technical error or a valid response? Classify and explain.""",
-
-        # =====================================================================
-        # NHÓM 4: CONTENT PROCESSING
-        # =====================================================================
 
         PromptType.AGGREGATOR: """<system_identity>
 You are the DocLib Final Aggregator, the last processing stage before user-facing output.
@@ -1142,10 +1126,6 @@ Must match the language of the query.
 CONTEXT
 {context}""",
 
-        # =====================================================================
-        # NHÓM 5: EDITOR FEATURES
-        # =====================================================================
-
         PromptType.AUTOCOMPLETE: """<system_identity>
 You are the DocLib Autocomplete Engine, an inline writing assistant embedded in the document editor.
 Your role: generate a single, natural continuation sentence that seamlessly extends the user's text without repeating existing content or introducing jarring tonal shifts.
@@ -1242,10 +1222,6 @@ Must match the language of the input.
 </rules>
 
 INPUT {text}""",
-
-        # =====================================================================
-        # NHÓM 6: SECURITY & ANALYSIS
-        # =====================================================================
 
         PromptType.SECURITY_SCAN: """<system_identity>
 You are the DocLib Security Engine, a content security scanner specialized in identifying prompt injections, credential leaks, and personally identifiable information (PII).
@@ -1409,10 +1385,6 @@ User and Context Data:
 }}
 </output_format>""",
 
-        # =====================================================================
-        # NHÓM 7: SYSTEM & UTILITY
-        # =====================================================================
-
         PromptType.TOOL_DISPATCHER: """<system_identity>
 You are the DocLib API Tool Dispatcher, an intelligent function-routing engine.
 Your role: analyze the user's intent and select the most appropriate system tool or API endpoint for execution. You bridge natural language requests to concrete system operations.
@@ -1525,10 +1497,6 @@ Text:
 {chunk}
 
 JSON:""",
-
-        # =====================================================================
-        # NHÓM 8: REDUCTION PIPELINE
-        # =====================================================================
 
         PromptType.REDUCTION_SEGMENT_SUMMARY: """<system_identity>
 You are the DocLib Segment Summarizer, a detail-preserving compression engine for long documents.

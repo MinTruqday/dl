@@ -9,8 +9,9 @@ class CreateDocument(BaseModel):
             "The main body of the document. "
             "For JSON format: MUST be a valid JSON STRING representing an ARRAY of Editor blocks. "
             "For LaTeX format: MUST be raw LaTeX body content ONLY (no documentclass or begin document). "
-            "CRITICAL: The workspace has over 200 custom EditorJS blocks (e.g. DocLibChart, DocLibKanban). If you need to generate advanced UI blocks, "
-            "YOU MUST CALL the `inspect_ui_components` tool (e.g., query='Chart') BEFOREHAND to read its TypeScript source code and infer the exact JSON schema. Do not guess. "
+            "Calling the `inspect_ui_components` tool is a required first step before generating advanced UI blocks. "
+            "For any document that includes custom EditorJS blocks (e.g. DocLibChart, DocLibKanban), first call `inspect_ui_components` to read its TypeScript source code. "
+            "This is mandatory because the workspace has over 200 custom blocks with specific JSON schemas that must be followed exactly. "
             "For LaTeX, the workspace supports over 1000 macros via Tectonic compilation."
         )
     )
@@ -22,7 +23,7 @@ class UpdateDocument(BaseModel):
             "The new content for the document. "
             "For JSON format: MUST be a valid JSON string of an array containing FULL Editor block objects. "
             "For LaTeX format: MUST be valid raw LaTeX code. "
-            "CRITICAL: If generating advanced UI blocks, YOU MUST CALL the `inspect_ui_components` tool first "
-            "to read the frontend source code and ensure you use the exact formats supported by this workspace. Do not guess."
+            "Calling the `inspect_ui_components` tool is a required first step before generating advanced UI blocks. "
+            "This is mandatory to read the frontend source code and ensure you use the exact formats supported by this workspace."
         )
     )
