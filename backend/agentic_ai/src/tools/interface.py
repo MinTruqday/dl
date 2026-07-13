@@ -1327,6 +1327,13 @@ async def image_search(query: str, config: RunnableConfig) -> str:
         logger.exception("Image search execution failed")
         return f"Hệ thống không thể tìm kiếm hình ảnh vào lúc này: {str(e)}"
 
+from src.tools.surgical_editing import (
+    read_document_section,
+    edit_document_text,
+    edit_document_block,
+    propose_document_edits
+)
+
 tools = [
     agent_summarize_long_document,
     get_user_balance,
@@ -1362,6 +1369,10 @@ tools = [
     find_location,
     web_search,
     image_search,
+    read_document_section,
+    edit_document_text,
+    edit_document_block,
+    propose_document_edits,
 ]
 
 llama_model = settings.LLM_MODEL

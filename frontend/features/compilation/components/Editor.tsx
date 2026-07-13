@@ -118,7 +118,22 @@ export default function Editor({
     try {
       ws = new WebSocket(wsUrl);
       ws.onmessage = (e) => {
-        setOnlineUsers((prev) => prev);
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === "DOCUMENT_UPDATED") {
+            if (contentFormat === "latex") {
+              latexValueRef.current = data.content;
+              setLocalText(data.content);
+            } else if (editorRef.current) {
+              const parsedContent = typeof data.content === "string" ? JSON.parse(data.content) : data.content;
+              editorRef.current.render(parsedContent);
+            }
+            // Temporarily ignore user count logic or extract it if necessary
+          }
+        } catch (err) {
+          // Fallback for non-JSON messages (like raw user count bytes)
+          setOnlineUsers((prev) => prev);
+        }
       };
       ws.onopen = () => setOnlineUsers(2);
       ws.onclose = () => setOnlineUsers(1);
