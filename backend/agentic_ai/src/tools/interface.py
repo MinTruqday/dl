@@ -1334,7 +1334,11 @@ from src.tools.surgical_editing import (
     propose_document_edits
 )
 
+from src.tools.search import glob_search, grep_search
+
 tools = [
+    glob_search,
+    grep_search,
     agent_summarize_long_document,
     get_user_balance,
     get_transaction_history,
