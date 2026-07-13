@@ -25,7 +25,7 @@ export default class DocLibDifferentOddAndEvenPages implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Different Odd And Even Pages";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

@@ -25,7 +25,7 @@ export default class DocLibEquationLargeOperator implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Equation Large Operator";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

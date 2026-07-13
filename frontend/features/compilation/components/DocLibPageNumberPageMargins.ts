@@ -25,7 +25,7 @@ export default class DocLibPageNumberPageMargins implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Page Number Page Margins";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

@@ -25,7 +25,7 @@ export default class DocLibResetPicture implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Reset Picture";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

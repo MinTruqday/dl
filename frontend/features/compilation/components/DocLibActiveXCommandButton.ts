@@ -25,7 +25,7 @@ export default class DocLibActiveXCommandButton implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Active X Command Button";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

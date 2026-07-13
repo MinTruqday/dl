@@ -25,7 +25,7 @@ export default class DocLibUpdateStyleToMatch implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Update Style To Match";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

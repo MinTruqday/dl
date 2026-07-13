@@ -85,8 +85,8 @@ class DocumentService:
             {"$group": {"_id": "$categories"}},
             {"$sort": {"_id": 1}},
         ]
-        tags_list = await docs_col.aggregate(pipeline_tags).execute()
-        categories_list = await docs_col.aggregate(pipeline_categories).execute()
+        tags_list = await docs_col.aggregate(pipeline_tags).to_list(length=None)
+        categories_list = await docs_col.aggregate(pipeline_categories).to_list(length=None)
         return {
             "tags": [tag["_id"] for tag in tags_list],
             "categories": [category["_id"] for category in categories_list],
@@ -361,7 +361,7 @@ class DocumentService:
                 query["_id"] = {"$lt": cursor}
 
         cursor_db = docs_collection.find(query).sort(sort_field, sort_dir).limit(limit)
-        documents = await cursor_db.execute()
+        documents = await cursor_db.to_list(length=limit)
         return [serialize_document(d) for d in documents]
 
     @staticmethod

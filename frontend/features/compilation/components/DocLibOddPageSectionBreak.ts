@@ -25,7 +25,7 @@ export default class DocLibOddPageSectionBreak implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Odd Page Section Break";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

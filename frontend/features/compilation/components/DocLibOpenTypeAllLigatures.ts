@@ -25,7 +25,7 @@ export default class DocLibOpenTypeAllLigatures implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Open Type All Ligatures";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

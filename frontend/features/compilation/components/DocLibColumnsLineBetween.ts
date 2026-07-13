@@ -25,7 +25,7 @@ export default class DocLibColumnsLineBetween implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Columns Line Between";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

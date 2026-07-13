@@ -25,7 +25,7 @@ export default class DocLibWordAddIns implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Word Add Ins";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

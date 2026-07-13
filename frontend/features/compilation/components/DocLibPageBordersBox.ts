@@ -25,7 +25,7 @@ export default class DocLibPageBordersBox implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Page Borders Box";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

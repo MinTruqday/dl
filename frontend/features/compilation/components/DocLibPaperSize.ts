@@ -25,7 +25,7 @@ export default class DocLibPaperSize implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Paper Size";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

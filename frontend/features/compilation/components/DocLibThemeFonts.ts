@@ -25,7 +25,7 @@ export default class DocLibThemeFonts implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Theme Fonts";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

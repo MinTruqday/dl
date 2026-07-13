@@ -25,7 +25,7 @@ export default class DocLibXMLMappingPane implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib X M L Mapping Pane";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

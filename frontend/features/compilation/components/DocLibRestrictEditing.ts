@@ -25,7 +25,7 @@ export default class DocLibRestrictEditing implements BlockTool {
     this.wrapper.dataset.placeholder = "Restricted content";
 
     this.wrapper.addEventListener("input", () => {
-      this.data?.content = this.wrapper!.innerHTML;
+      this.data.content = this.wrapper!.innerHTML;
     });
 
     return this.wrapper;

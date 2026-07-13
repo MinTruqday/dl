@@ -25,7 +25,7 @@ export default class DocLibTableCellAlignmentBottomRight implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Table Cell Alignment Bottom Right";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

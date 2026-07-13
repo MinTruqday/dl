@@ -25,7 +25,7 @@ export default class DocLibWrapTextBehindText implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Wrap Text Behind Text";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

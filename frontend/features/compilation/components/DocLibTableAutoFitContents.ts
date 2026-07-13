@@ -25,7 +25,7 @@ export default class DocLibTableAutoFitContents implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Table Auto Fit Contents";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

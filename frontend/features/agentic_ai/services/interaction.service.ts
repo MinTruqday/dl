@@ -10,7 +10,7 @@ export async function processTextAPI(
   context: string = "",
   targetLang: string = "Vietnamese",
 ) {
-  const res = await fetch(`${API_URL}/suy-luan/tao-noi-dung`, {
+  const res = await fetch(`${API_URL}/suy-luan/hanh-dong`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, action, context, target_lang: targetLang }),
@@ -23,7 +23,7 @@ export async function processTextAPI(
 
 export async function smartSearchAIAPI(query: string) {
   const res = await fetch(
-    `${API_URL}/suy-luan/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`,
+    `${API_URL}/kham-pha/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`,
     {
       headers: getAuthHeaders(),
     },
@@ -123,7 +123,14 @@ export async function translateTextAPI(
   text: string,
   targetLang: string = "vi",
 ) {
-  return await processTextAPI(text, "translate", "", targetLang);
+  const res = await fetch(`${API_URL}/suy-luan/dich-thuat`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ text, target_lang: targetLang }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Translation inference failed");
+  return data;
 }
 
 export async function suggestCitationsAPI(text: string, style: string = "APA") {

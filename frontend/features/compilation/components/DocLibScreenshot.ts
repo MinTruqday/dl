@@ -25,7 +25,7 @@ export default class DocLibScreenshot implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Screenshot";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

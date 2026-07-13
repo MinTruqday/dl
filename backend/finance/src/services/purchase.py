@@ -29,7 +29,7 @@ class PurchaseService:
             {"$match": {"document_id": {"$in": doc_ids}, "status": {"$ne": "CANCELLED"}}},
             {"$group": {"_id": "$document_id", "revenue": {"$sum": "$price"}, "purchases": {"$sum": 1}}}
         ]
-        revenue_res = await mongo.aggregate(collection="purchases", pipeline=pipeline).execute()
+        revenue_res = await mongo.aggregate(collection="purchases", pipeline=pipeline).to_list(length=None)
         
         revenue_map = {item["_id"]: {"revenue": item["revenue"], "purchases": item["purchases"]} for item in revenue_res}
         total_revenue = sum(item["revenue"] for item in revenue_res)

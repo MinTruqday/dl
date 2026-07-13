@@ -25,7 +25,7 @@ export default class DocLibCharacterSpacingCondensed implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Character Spacing Condensed";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

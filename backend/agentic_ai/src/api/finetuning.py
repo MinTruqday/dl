@@ -1,7 +1,8 @@
 import asyncio
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends
 import src.services.finetuning as finetune_service
+from src.core.dependency import get_current_user, CurrentUser
 from src.core.infrastructure.configuration import settings
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tinh-chinh")
@@ -11,16 +12,16 @@ async def create_dataset(req: dict):
     return await finetune_service.create_dataset(req)
 
 @router.get("/tap-du-lieu")
-async def list_datasets(user_id: str):
-    return await finetune_service.list_datasets(user_id)
+async def list_datasets(current_user: CurrentUser = Depends(get_current_user)):
+    return await finetune_service.list_datasets(str(current_user.id))
 
 @router.get("/tap-du-lieu/{dataset_id}")
-async def get_dataset(dataset_id: str, user_id: str):
-    return await finetune_service.get_dataset(dataset_id, user_id)
+async def get_dataset(dataset_id: str, current_user: CurrentUser = Depends(get_current_user)):
+    return await finetune_service.get_dataset(dataset_id, str(current_user.id))
 
 @router.delete("/tap-du-lieu/{dataset_id}")
-async def delete_dataset(dataset_id: str, user_id: str):
-    return await finetune_service.delete_dataset(dataset_id, user_id)
+async def delete_dataset(dataset_id: str, current_user: CurrentUser = Depends(get_current_user)):
+    return await finetune_service.delete_dataset(dataset_id, str(current_user.id))
 
 @router.post("/tap-du-lieu/{dataset_id}/mau-thu")
 async def add_samples(dataset_id: str, req: dict):
@@ -29,15 +30,15 @@ async def add_samples(dataset_id: str, req: dict):
 @router.get("/tap-du-lieu/{dataset_id}/mau-thu")
 async def get_samples(
     dataset_id: str,
-    user_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
     skip: int = 0,
     limit: int = Query(default=20, le=100),
 ):
-    return await finetune_service.get_samples(dataset_id, user_id, skip, limit)
+    return await finetune_service.get_samples(dataset_id, str(current_user.id), skip, limit)
 
 @router.delete("/tap-du-lieu/{dataset_id}/mau-thu/{sample_id}")
-async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
-    return await finetune_service.delete_sample(dataset_id, sample_id, user_id)
+async def delete_sample(dataset_id: str, sample_id: str, current_user: CurrentUser = Depends(get_current_user)):
+    return await finetune_service.delete_sample(dataset_id, sample_id, str(current_user.id))
 
 @router.post("/dau-vao/phan-hoi")
 async def import_feedback(req: dict):
@@ -56,12 +57,12 @@ async def start_job(job_id: str, req: dict):
     return await finetune_service.start_job(job_id, req)
 
 @router.get("/tien-trinh")
-async def list_jobs(user_id: str):
-    return await finetune_service.list_jobs(user_id)
+async def list_jobs(current_user: CurrentUser = Depends(get_current_user)):
+    return await finetune_service.list_jobs(str(current_user.id))
 
 @router.get("/tien-trinh/{job_id}")
-async def get_job(job_id: str, user_id: str):
-    return await finetune_service.get_job(job_id, user_id)
+async def get_job(job_id: str, current_user: CurrentUser = Depends(get_current_user)):
+    return await finetune_service.get_job(job_id, str(current_user.id))
 
 @router.post("/tien-trinh/{job_id}/huy-bo")
 async def cancel_job(job_id: str, req: dict):

@@ -25,7 +25,7 @@ export default class DocLibStyleInspector implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Style Inspector";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

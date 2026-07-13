@@ -12,6 +12,8 @@ import {
   exportToWordAPI,
   compilePreviewAPI
 } from "@/features/compilation/services/editorjs.service";
+import { compileDocumentAPI } from "@/features/compilation/services/composition.service";
+import { publishDocumentAPI } from "@/features/content/services/publication.service";
 import { API_URL, getAuthHeaders } from "@/features/authentication/services/session.service";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";

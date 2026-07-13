@@ -25,7 +25,7 @@ export default class DocLibGoToSection implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Go To Section";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

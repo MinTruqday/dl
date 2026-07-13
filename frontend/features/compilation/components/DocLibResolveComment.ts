@@ -25,7 +25,7 @@ export default class DocLibResolveComment implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Resolve Comment";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

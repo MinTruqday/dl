@@ -25,7 +25,7 @@ export default class DocLibLineNumbersRestartEachPage implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Line Numbers Restart Each Page";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

@@ -25,7 +25,7 @@ export default class DocLibShowMarkupReviewers implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Show Markup Reviewers";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

@@ -26,7 +26,7 @@ export default class DocLibPhoneticGuide {
 
   render() {
     this.button = document.createElement("button");
-    this.button.type = "button";
+    (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M4 5h16M12 5v14"/></svg>';
     return this.button;

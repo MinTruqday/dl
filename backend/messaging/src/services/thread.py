@@ -159,7 +159,7 @@ class ThreadService:
             .find(query)
             .sort("_id", -1)
             .limit(limit)
-            .execute()
+            .to_list(length=limit)
         )
         participant_key = (
             other_user_id

@@ -36,8 +36,8 @@ export default class DocLibColumns implements BlockTool {
           : ["", ""],
     };
 
-    while (this.data?.contents.length < this.data.cols)
-      this.data?.contents.push("");
+    while (this.data.contents.length < this.data.cols)
+      this.data.contents.push("");
   }
 
   render() {
@@ -71,8 +71,8 @@ export default class DocLibColumns implements BlockTool {
       btn.innerHTML = `<b>${cols}</b> Columns`;
       btn.addEventListener("click", () => {
         this.data.cols = cols;
-        while (this.data?.contents.length < cols) this.data?.contents.push("");
-        this.data?.contents.length = cols;
+        while (this.data.contents.length < cols) this.data.contents.push("");
+        this.data.contents.length = cols;
         this.buildUI();
       });
       wrapper.appendChild(btn);
@@ -95,7 +95,7 @@ export default class DocLibColumns implements BlockTool {
       col.innerHTML = this.data?.contents[i] || "";
       col.addEventListener(
         "input",
-        () => (this.data?.contents[i] = col.innerHTML),
+        () => (this.data.contents[i] = col.innerHTML),
       );
       container.appendChild(col);
     }

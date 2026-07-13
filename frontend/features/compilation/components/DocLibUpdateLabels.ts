@@ -25,7 +25,7 @@ export default class DocLibUpdateLabels implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Update Labels";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

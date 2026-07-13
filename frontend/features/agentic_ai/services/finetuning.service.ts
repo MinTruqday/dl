@@ -57,7 +57,7 @@ export const deleteDatasetAPI = async (datasetId: string) => {
 
 export const addSamplesAPI = async (datasetId: string, samples: any[]) => {
   const res = await fetch(
-    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/sample`,
+    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/mau-thu`,
     {
       method: "POST",
       headers: authHeaders(),
@@ -75,7 +75,7 @@ export const getSamplesAPI = async (
   limit: number = 50,
 ) => {
   const res = await fetch(
-    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/sample?skip=${skip}&limit=${limit}`,
+    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/mau-thu?skip=${skip}&limit=${limit}`,
     { headers: authHeaders() },
   );
   const data = await res.json();
@@ -85,7 +85,7 @@ export const getSamplesAPI = async (
 
 export const deleteSampleAPI = async (datasetId: string, sampleId: string) => {
   const res = await fetch(
-    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/sample/${sampleId}`,
+    `${API_URL}/tinh-chinh/tap-du-lieu/${datasetId}/mau-thu/${sampleId}`,
     { method: "DELETE", headers: authHeaders() },
   );
   const data = await res.json();
@@ -126,7 +126,7 @@ export const createJobAPI = async (config: any) => {
 };
 
 export const startTrainingAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/start`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/bat-dau`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -154,7 +154,7 @@ export const getJobAPI = async (jobId: string) => {
 };
 
 export const cancelJobAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/huy`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/huy-bo`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -164,7 +164,7 @@ export const cancelJobAPI = async (jobId: string) => {
 };
 
 export const deployModelAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/deploy`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/trien-khai`, {
     method: "POST",
     headers: authHeaders(),
   });

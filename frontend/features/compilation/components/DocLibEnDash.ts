@@ -25,7 +25,7 @@ export default class DocLibEnDash implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib En Dash";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

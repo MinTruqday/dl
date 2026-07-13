@@ -25,7 +25,7 @@ export default class DocLibCOMAddIns implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib C O M Add Ins";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

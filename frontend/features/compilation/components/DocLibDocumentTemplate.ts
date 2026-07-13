@@ -25,7 +25,7 @@ export default class DocLibDocumentTemplate implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Document Template";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

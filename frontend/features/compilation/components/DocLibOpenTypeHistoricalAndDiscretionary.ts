@@ -25,7 +25,7 @@ export default class DocLibOpenTypeHistoricalAndDiscretionary implements BlockTo
     this.wrapper.dataset.placeholder = "DocLib Open Type Historical And Discretionary";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

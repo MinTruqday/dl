@@ -25,7 +25,7 @@ export default class DocLibPictureEffects3DRotation implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Picture Effects3 D Rotation";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

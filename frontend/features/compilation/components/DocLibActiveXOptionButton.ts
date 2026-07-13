@@ -25,7 +25,7 @@ export default class DocLibActiveXOptionButton implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Active X Option Button";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

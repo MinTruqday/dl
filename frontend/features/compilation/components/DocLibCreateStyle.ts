@@ -25,7 +25,7 @@ export default class DocLibCreateStyle implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Create Style";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

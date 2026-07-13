@@ -25,7 +25,7 @@ export default class DocLibDropCapInMargin implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Drop Cap In Margin";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

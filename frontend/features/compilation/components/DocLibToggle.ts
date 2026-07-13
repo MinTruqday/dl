@@ -92,7 +92,7 @@ export default class DocLibToggle implements BlockTool {
     content.innerHTML = this.data?.content;
     content.addEventListener(
       "input",
-      () => (this.data?.content = content.innerHTML),
+      () => (this.data.content = content.innerHTML),
     );
 
     details.appendChild(summary);

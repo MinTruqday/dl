@@ -25,7 +25,7 @@ export default class DocLibNumberFormsLining implements BlockTool {
     this.wrapper.dataset.placeholder = "DocLib Number Forms Lining";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

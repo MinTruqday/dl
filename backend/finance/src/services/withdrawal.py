@@ -39,7 +39,7 @@ class WithdrawalService:
                     {"$group": {"_id": None, "pending": {"$sum": "$amount"}}},
                 ]
             )
-            .execute()
+            .to_list(length=None)
         )
         pending_withdrawal = withdrawal_res[0]["pending"] if withdrawal_res else 0
         return {
@@ -242,7 +242,7 @@ class WithdrawalService:
             {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
         ]
         withdrawal = (
-            await mongo.aggregate(collection="withdrawal_requests", pipeline=pipeline).execute()
+            await mongo.aggregate(collection="withdrawal_requests", pipeline=pipeline).to_list(length=None)
         )
         result = []
         for p in withdrawal:

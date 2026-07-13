@@ -25,7 +25,7 @@ export default class DocLibMarkEntry implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Mark Entry";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;

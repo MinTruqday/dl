@@ -127,7 +127,7 @@ export default class DocLibTable implements BlockTool {
   private saveData() {
     if (!this.tbody) return;
     const rows = Array.from(this.tbody.querySelectorAll("tr"));
-    this.data?.content = rows.map((tr) => {
+    this.data.content = rows.map((tr) => {
       return Array.from(tr.querySelectorAll("td")).map((td) => td.innerHTML);
     });
   }

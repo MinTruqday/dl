@@ -25,7 +25,7 @@ export default class DocLibSaveSelectionToQuickPart implements BlockTool {
     this.wrapper.dataset.placeholder = "Doc Lib Save Selection To Quick Part";
 
     this.wrapper.addEventListener("input", (e: any) => {
-      this.data?.content = e.target.innerHTML;
+      this.data.content = e.target.innerHTML;
     });
 
     return this.wrapper;
