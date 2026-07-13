@@ -640,27 +640,28 @@ export default function TroChuyenPage() {
     <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <div className="flex flex-1 min-h-0 gap-6">
         <aside className="w-full lg:w-[320px] bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none flex flex-col overflow-hidden shrink-0 hidden lg:flex">
-          <div className="p-6 md:px-0 md:pt-6 pb-4 shrink-0">
-            <button
-              onClick={() => (window.location.href = "/nang-cap")}
-              className="pill-button w-full"
-            >
-              Nâng cấp gói DocLib Metis
-            </button>
-          </div>
-          <div className="px-6 md:px-0 pb-4 flex items-center justify-between shrink-0">
+          <div className="px-6 md:px-0 pt-6 pb-4 flex items-center justify-between shrink-0">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
               Lịch sử
             </h2>
-            <button
-              onClick={() => {
-                setCurrentSessionId(null);
-                setMessages([]);
-              }}
-              className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
-            >
-              <PlusIcon className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => (window.location.href = "/nang-cap")}
+                className="px-3 py-1.5 text-[13px] font-medium bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] transition-colors shadow-sm"
+              >
+                Nâng cấp
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentSessionId(null);
+                  setMessages([]);
+                }}
+                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                title="Cuộc trò chuyện mới"
+              >
+                <PlusIcon className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className="overflow-y-auto px-6 md:px-0 pb-6 flex flex-col gap-2 shrink custom-scrollbar">
             {sessions.length === 0 ? (
@@ -882,6 +883,7 @@ export default function TroChuyenPage() {
                     .filter((s) => s.trim() !== "");
                   
                   const isLastAssistant = idx === messages.length - 1 && msg.role === "assistant";
+                  const hasSystemThoughts = Array.isArray(msg.thoughts) && msg.thoughts.length > 0;
                   const showThinkingBlock = hasSystemThoughts || (isSending && isLastAssistant);
 
                   return (
@@ -1128,11 +1130,11 @@ export default function TroChuyenPage() {
               )}
 
               <form onSubmit={handleSubmit} className="flex gap-2 items-end">
-                <div className="flex-1 min-h-[48px] bg-transparent flex items-end px-2 gap-2 pb-1.5">
+                <div className="flex-1 bg-transparent flex items-end gap-2">
                   <button
                     type="button"
                     onClick={handleAttach}
-                    className="text-[#6E6E73] shrink-0 rounded-full p-2 mb-1.5 hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
+                    className="text-[#6E6E73] shrink-0 rounded-full w-10 h-10 flex items-center justify-center mb-1 hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
                   >
                     <PlusIcon className="w-5 h-5" />
                   </button>
@@ -1155,11 +1157,11 @@ export default function TroChuyenPage() {
                     placeholder=""
                     disabled={isSending}
                     rows={1}
-                    className="flex-1 min-w-0 py-3 text-[17px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73] resize-none overflow-y-auto custom-scrollbar"
+                    className="flex-1 min-w-0 py-3 text-[17px] leading-[24px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73] resize-none overflow-y-auto custom-scrollbar"
                     style={{ maxHeight: "150px" }}
                   />
                   <label
-                    className={`flex items-center gap-2 mb-3.5 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-3 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}
+                    className={`flex h-12 items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-3 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}
                   >
                     <span className="text-[14px] font-medium text-[#6E6E73] select-none">
                       Suy nghĩ
@@ -1192,9 +1194,9 @@ export default function TroChuyenPage() {
                   type="submit"
                   disabled={
                     isSending ||
-                    (!input.trim() && !selectedImage && !selectedFile)
+                    (!input.trim() && !selectedImage && !selectedFile && !selectedFolder)
                   }
-                  className="w-12 h-[48px] mb-[6px] shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-[#0077ED]"
+                  className="w-12 h-12 shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-[#0077ED]"
                 >
                   {isSending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
