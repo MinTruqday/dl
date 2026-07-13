@@ -22,7 +22,12 @@ class GenerationAgent:
 
         try:
             from langchain_core.messages import HumanMessage
-            from src.agents.planning import llm
+            from huggingface_hub import AsyncInferenceClient
+            from src.utils.huggingface import HFInferenceChat
+            from src.core.infrastructure.configuration import settings
+
+            client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
+            llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
 
             gathered_data = "\n\n".join(consolidated_results)
             if len(gathered_data) > 12000:

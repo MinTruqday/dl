@@ -67,9 +67,12 @@ class PlanAgent:
 
             steps = []
             for step_group in parsed_result.get("steps", []):
-                group = [{"agent": s["agent"], "task": s["task"]} for s in step_group.get("parallel_steps", [])]
-                if group:
-                    steps.append(group)
+                if isinstance(step_group, dict):
+                    group = [{"agent": s.get("agent", "Knowledge"), "task": s.get("task", "Analyze")} for s in step_group.get("parallel_steps", []) if isinstance(s, dict)]
+                    if group:
+                        steps.append(group)
+                elif isinstance(step_group, str):
+                    steps.append([{"agent": "Knowledge", "task": step_group}])
 
             if not steps:
                 steps = [

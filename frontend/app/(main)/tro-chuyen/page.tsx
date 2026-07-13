@@ -222,6 +222,7 @@ export default function TroChuyenPage() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -252,6 +253,7 @@ export default function TroChuyenPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mirrorRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth() as any;
 
   const fetchHistory = async () => {
@@ -400,10 +402,9 @@ export default function TroChuyenPage() {
     try {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "", thoughts: [] },
+        { role: "assistant", content: thinking ? "<think>\n" : "", thoughts: [] },
       ]);
 
-      // Upload file to server first to count quota
       let uploadedFileUrl = "";
       if (selectedImage?.fileObj) {
         try {
@@ -883,50 +884,18 @@ export default function TroChuyenPage() {
                     .filter((s) => s.trim() !== "");
                   
                   const isLastAssistant = idx === messages.length - 1 && msg.role === "assistant";
-                  const hasSystemThoughts = Array.isArray(msg.thoughts) && msg.thoughts.length > 0;
-                  const showThinkingBlock = hasSystemThoughts || (isSending && isLastAssistant);
 
                   return (
                     <div key={idx} className="flex justify-start">
                       <div className="w-full">
                         <div className="py-2 w-full relative group">
-                          {showThinkingBlock && (
-                            <div className="mb-3">
-                              <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]" open={isSending && isLastAssistant}>
-                                <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
-                                  <div className="flex-1 flex items-center gap-2">
-                                    <Activity className={`w-4 h-4 text-[#0071E3] ${isSending && isLastAssistant ? "animate-pulse" : ""}`} />
-                                    <span className="text-[14px] font-semibold text-[#1D1D1F]">
-                                      <ThoughtTimer isRunning={isSending && isLastAssistant} />
-                                    </span>
-                                  </div>
-                                  <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
-                                </summary>
-                                <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] space-y-2 border-t border-[#E8E8ED]">
-                                  {hasSystemThoughts ? msg.thoughts!.map((t, i) => (
-                                    <div key={i} className="flex items-start gap-2">
-                                      <span className="text-[#0071E3] mt-0.5 font-bold">•</span>
-                                      <span className="leading-relaxed">{t}</span>
-                                    </div>
-                                  )) : (
-                                    <div className="flex gap-1.5 items-center">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "0ms" }} />
-                                      <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "150ms" }} />
-                                      <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "300ms" }} />
-                                    </div>
-                                  )}
-                                </div>
-                              </details>
-                            </div>
-                          )}
-
                           {segments.map((segment, sIdx) => {
                             if (segment.startsWith("<think>")) {
                               const thinkContent = segment.replace(/^<think>/, "").replace(/<\/think>$/, "").trim();
-                              if (!thinkContent) return null;
+                              
                               return (
                                 <div key={sIdx} className="mb-3 mt-1">
-                                  <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]">
+                                  <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]" open={isSending && idx === messages.length - 1 && sIdx === segments.length - 1}>
                                     <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
                                       <div className="flex-1 flex items-center gap-2">
                                         <Activity className="w-4 h-4 text-[#0071E3]" />
@@ -937,14 +906,22 @@ export default function TroChuyenPage() {
                                       <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
                                     </summary>
                                     <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] border-t border-[#E8E8ED]">
-                                      <div className="prose prose-sm max-w-none prose-zinc prose-p:leading-relaxed">
-                                        <ReactMarkdown
-                                          remarkPlugins={[remarkGfm, remarkMath]}
-                                          rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                                        >
-                                          {thinkContent}
-                                        </ReactMarkdown>
-                                      </div>
+                                      {thinkContent ? (
+                                        <div className="prose prose-sm max-w-none prose-zinc prose-p:leading-relaxed">
+                                          <ReactMarkdown
+                                            remarkPlugins={[remarkGfm, remarkMath]}
+                                            rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                          >
+                                            {thinkContent}
+                                          </ReactMarkdown>
+                                        </div>
+                                      ) : (
+                                        <div className="flex gap-1.5 items-center">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "0ms" }} />
+                                          <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "150ms" }} />
+                                          <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "300ms" }} />
+                                        </div>
+                                      )}
                                     </div>
                                   </details>
                                 </div>
@@ -1007,7 +984,7 @@ export default function TroChuyenPage() {
             )}
           </div>
 
-          <div className="shrink-0 p-6 md:px-0 pt-2">
+          <div className="shrink-0 px-6 pb-6 pt-2 md:px-0 md:pb-0">
             <div className="w-full relative bg-white border border-[#D2D2D7] focus-within:border-[#0071E3] transition-colors rounded-[24px] p-2">
               <input
                 type="file"
@@ -1129,82 +1106,129 @@ export default function TroChuyenPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="flex gap-2 items-end">
-                <div className="flex-1 bg-transparent flex items-end gap-2">
-                  <button
-                    type="button"
-                    onClick={handleAttach}
-                    className="text-[#6E6E73] shrink-0 rounded-full w-10 h-10 flex items-center justify-center mb-1 hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
-                  >
-                    <PlusIcon className="w-5 h-5" />
-                  </button>
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => {
-                      setInput(e.target.value);
-                      e.target.style.height = "auto";
-                      e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        if (!isSending && (input.trim() || selectedImage || selectedFile)) {
-                          handleSubmit(e as any);
-                        }
+              <form onSubmit={handleSubmit} className="relative flex w-full">
+                {/* Mirror textarea for perfect synchronous height measurement without CSS transition interference */}
+                <textarea
+                  ref={mirrorRef}
+                  className="absolute top-0 left-0 w-full min-h-[56px] text-[17px] leading-[24px] font-medium font-sans opacity-0 invisible pointer-events-none -z-10 resize-none"
+                  aria-hidden="true"
+                  rows={1}
+                  tabIndex={-1}
+                  readOnly
+                />
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    setInput(newValue);
+                    const el = e.target;
+                    const mirror = mirrorRef.current;
+                    if (!mirror) return;
+                    
+                    mirror.value = newValue;
+                    
+                    // Measure single-line wrap WITHOUT transitions
+                    const baseClass = "absolute top-0 left-0 w-full min-h-[56px] text-[17px] leading-[24px] font-medium font-sans opacity-0 invisible pointer-events-none -z-10 resize-none";
+                    mirror.className = `${baseClass} py-[16px] pl-[56px] pr-[180px]`;
+                    mirror.style.height = "auto";
+                    
+                    const singleLineScrollHeight = mirror.scrollHeight;
+                    const multiLine = singleLineScrollHeight > 56;
+                    const shouldExpand = multiLine || newValue.includes('\n');
+                    
+                    setIsExpanded(shouldExpand);
+                    
+                    if (shouldExpand) {
+                       // Measure expanded height WITHOUT transitions
+                       mirror.className = `${baseClass} px-4 pt-4 pb-[56px]`;
+                       mirror.style.height = "auto";
+                       el.style.height = `${Math.min(mirror.scrollHeight, 200)}px`;
+                    } else {
+                       el.style.height = "56px";
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (!isSending && (input.trim() || selectedImage || selectedFile)) {
+                        handleSubmit(e as any);
                       }
-                    }}
-                    placeholder=""
-                    disabled={isSending}
-                    rows={1}
-                    className="flex-1 min-w-0 py-3 text-[17px] leading-[24px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73] resize-none overflow-y-auto custom-scrollbar"
-                    style={{ maxHeight: "150px" }}
-                  />
-                  <label
-                    className={`flex h-12 items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-3 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}
-                  >
-                    <span className="text-[14px] font-medium text-[#6E6E73] select-none">
-                      Suy nghĩ
-                    </span>
-                    <div className="relative inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={thinking}
-                        onChange={handleToggleThinking}
-                        disabled={
-                          user?.ai_tier !== "PREMIUM" && user?.role !== "admin"
-                        }
-                        className="sr-only"
-                      />
-                      <div 
-                        className={`w-11 h-6 rounded-full transition-colors duration-200 flex items-center px-[2px] shrink-0 outline-none select-none ${
-                          thinking ? "bg-[#34C759]" : "bg-[#D2D2D7]"
-                        }`}
-                      >
-                        <div 
-                          className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                            thinking ? "translate-x-5" : "translate-x-0"
-                          }`} 
+                    }
+                  }}
+                  placeholder=""
+                  disabled={isSending}
+                  rows={1}
+                  className={`w-full min-h-[56px] text-[17px] leading-[24px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73] resize-none overflow-y-auto custom-scrollbar transition-all duration-200 ${
+                    isExpanded
+                      ? "px-4 pt-4 pb-[56px]"
+                      : "py-[16px] pl-[56px] pr-[180px]"
+                  }`}
+                  style={{ maxHeight: "200px" }}
+                />
+                
+                <div className="absolute bottom-0 left-0 right-0 h-[56px] px-1 flex items-center justify-between pointer-events-none">
+                  <div className="pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={handleAttach}
+                      className="text-[#6E6E73] shrink-0 rounded-full w-10 h-10 flex items-center justify-center hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 pointer-events-auto">
+                    <label
+                      className={`flex h-10 items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 select-none`}
+                    >
+                      <span className="text-[14px] font-medium text-[#6E6E73] select-none">
+                        Suy nghĩ
+                      </span>
+                      <div className="relative inline-flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={thinking}
+                          onChange={handleToggleThinking}
+                          disabled={
+                            user?.ai_tier !== "PREMIUM" && user?.role !== "admin"
+                          }
+                          className="sr-only"
                         />
+                        <div 
+                          className={`w-11 h-6 rounded-full transition-colors duration-200 flex items-center px-[2px] shrink-0 outline-none select-none ${
+                            thinking ? "bg-[#34C759]" : "bg-[#D2D2D7]"
+                          }`}
+                        >
+                          <div 
+                            className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                              thinking ? "translate-x-5" : "translate-x-0"
+                            }`} 
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </label>
+                    </label>
+                    <button
+                      type="submit"
+                      disabled={
+                        isSending ||
+                        (!input.trim() && !selectedImage && !selectedFile && !selectedFolder)
+                      }
+                      className="w-10 h-10 shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-[#0077ED]"
+                    >
+                      {isSending ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <ArrowRight className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="submit"
-                  disabled={
-                    isSending ||
-                    (!input.trim() && !selectedImage && !selectedFile && !selectedFolder)
-                  }
-                  className="w-12 h-12 shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-[#0077ED]"
-                >
-                  {isSending ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <ArrowRight className="w-5 h-5" />
-                  )}
-                </button>
               </form>
+            </div>
+            <div className="mt-1 text-center mb-1">
+              <span className="text-[12px] italic text-[#86868B]">
+                * DocLib Metis là trí tuệ nhân tạo và có thể mắc sai lầm
+              </span>
             </div>
           </div>
         </main>
