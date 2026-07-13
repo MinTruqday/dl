@@ -49,7 +49,7 @@ async def smart_search(
                 json={
                     "query": f"Searching for documents related to the requested criteria",
                     "user_id": str(current_user.id),
-                    "useSmart": True,
+                    "thinking": True,
                 },
             )
             if resp.status_code == 200:

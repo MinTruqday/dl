@@ -60,7 +60,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                     }
 
         route_data = await semantic_router.execute(req.query)
-        if req.useSmart:
+        if req.thinking:
             route = "supervisor"
         else:
             route = "chat"
@@ -248,10 +248,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             req.conversation_history = ctx.chat_history
 
             route_data = await semantic_router.execute(req.query)
-            if req.useSmart:
+            if req.thinking:
                 route = "supervisor"
             else:
-                route = "chat"
+                route = route_data.get("route", "knowledge")
+                if route == "action":
+                    route = "supervisor"
                 
             final_answer = ""
 
@@ -291,6 +293,48 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         if chunk.content:
                             final_answer += chunk.content
                             yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"
+
+            elif route == "knowledge":
+                # Router classify là knowledge/math/analysis → gọi LLM trực tiếp với CHAT_ASSISTANT
+                # (CHAT_ASSISTANT đã có rule cho phép giải toán, phân tích, viết code, v.v.)
+                from huggingface_hub import AsyncInferenceClient
+                from langchain_core.messages import HumanMessage, SystemMessage
+                from src.utils.huggingface import HFInferenceChat
+
+                llama_client = AsyncInferenceClient(
+                    model=settings.LLM_MODEL, token=settings.HF_TOKEN
+                )
+                knowledge_llm = HFInferenceChat(
+                    client=llama_client, model=settings.LLM_MODEL
+                )
+
+                system_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(
+                    query=req.query
+                )
+
+                # Thêm context lịch sử hội thoại nếu có
+                messages = [SystemMessage(content=system_prompt)]
+                if req.conversation_history:
+                    from langchain_core.messages import AIMessage
+                    for turn in req.conversation_history[-6:]:  # giữ 6 turns gần nhất
+                        if turn.get("role") == "user":
+                            messages.append(HumanMessage(content=turn["content"]))
+                        elif turn.get("role") == "assistant":
+                            messages.append(AIMessage(content=turn["content"]))
+
+                if req.image_data:
+                    final_msg_content = [
+                        {"type": "text", "text": req.query},
+                        {"type": "image_url", "image_url": {"url": req.image_data}},
+                    ]
+                else:
+                    final_msg_content = req.query
+                messages.append(HumanMessage(content=final_msg_content))
+
+                async for chunk in knowledge_llm.astream(messages):
+                    if chunk.content:
+                        final_answer += chunk.content
+                        yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"
 
             else:
                 import asyncio

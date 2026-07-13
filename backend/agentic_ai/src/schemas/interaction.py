@@ -7,7 +7,7 @@ class ChatRequest(BaseModel):
     user_id: str
     document_ids: Optional[list] = []
     useWeb: bool = False
-    useSmart: bool = False
+    thinking: bool = False
     image_data: Optional[str] = None
     file_data: Optional[str] = None
     folder_data: Optional[str] = None

@@ -209,12 +209,12 @@ const ThoughtTimer = ({ isRunning }: { isRunning: boolean }) => {
 
   if (!isRunning && seconds === 0) return <span>Đã suy nghĩ xong</span>;
   if (!isRunning) return <span>Đã suy nghĩ trong {seconds} giây</span>;
-  return <span>Đang suy nghĩ... {seconds} giây</span>;
+  return <span>Đang suy nghĩ trong {seconds} giây</span>;
 };
 
 export default function TroChuyenPage() {
   const [view, setView] = useState<"chat" | "history">("chat");
-  const [useSmart, setUseSmart] = useState(false);
+  const [thinking, setThinking] = useState(false);
   const [messages, setMessages] = useState<
     { id?: string; role: string; content: string; thoughts?: string[]; attachments?: { image?: string; file?: string; folder?: string } }[]
   >([]);
@@ -286,8 +286,8 @@ export default function TroChuyenPage() {
     setShowAttachments(!showAttachments);
   };
 
-  const handleToggleSmart = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUseSmart(e.target.checked);
+  const handleToggleThinking = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setThinking(e.target.checked);
     if (!e.target.checked) {
       setSelectedFile(null);
       setSelectedImage(null);
@@ -435,7 +435,7 @@ export default function TroChuyenPage() {
 
       const res = await streamAiChatAPI({
         query: userMessage,
-        useSmart,
+        thinking,
         session_id: sessionId,
         conversation_history: messages.slice(-8),
         user_id: user?.id || user?._id || "guest",
@@ -881,31 +881,38 @@ export default function TroChuyenPage() {
                     .split(/(<think>[\s\S]*?(?:<\/think>|$))/g)
                     .filter((s) => s.trim() !== "");
                   
-                  const hasSystemThoughts = msg.thoughts && msg.thoughts.length > 0;
+                  const isLastAssistant = idx === messages.length - 1 && msg.role === "assistant";
+                  const showThinkingBlock = hasSystemThoughts || (isSending && isLastAssistant);
 
                   return (
                     <div key={idx} className="flex justify-start">
                       <div className="w-full">
                         <div className="py-2 w-full relative group">
-                          {hasSystemThoughts && (
+                          {showThinkingBlock && (
                             <div className="mb-3">
-                              <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]">
+                              <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]" open={isSending && isLastAssistant}>
                                 <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
                                   <div className="flex-1 flex items-center gap-2">
-                                    <Activity className="w-4 h-4 text-[#0071E3]" />
+                                    <Activity className={`w-4 h-4 text-[#0071E3] ${isSending && isLastAssistant ? "animate-pulse" : ""}`} />
                                     <span className="text-[14px] font-semibold text-[#1D1D1F]">
-                                      Đang suy nghĩ
+                                      <ThoughtTimer isRunning={isSending && isLastAssistant} />
                                     </span>
                                   </div>
                                   <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
                                 </summary>
                                 <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] space-y-2 border-t border-[#E8E8ED]">
-                                  {msg.thoughts!.map((t, i) => (
+                                  {hasSystemThoughts ? msg.thoughts!.map((t, i) => (
                                     <div key={i} className="flex items-start gap-2">
                                       <span className="text-[#0071E3] mt-0.5 font-bold">•</span>
                                       <span className="leading-relaxed">{t}</span>
                                     </div>
-                                  ))}
+                                  )) : (
+                                    <div className="flex gap-1.5 items-center">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "0ms" }} />
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "150ms" }} />
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "300ms" }} />
+                                    </div>
+                                  )}
                                 </div>
                               </details>
                             </div>
@@ -1160,8 +1167,8 @@ export default function TroChuyenPage() {
                     <div className="relative inline-flex items-center">
                       <input
                         type="checkbox"
-                        checked={useSmart}
-                        onChange={handleToggleSmart}
+                        checked={thinking}
+                        onChange={handleToggleThinking}
                         disabled={
                           user?.ai_tier !== "PREMIUM" && user?.role !== "admin"
                         }
@@ -1169,12 +1176,12 @@ export default function TroChuyenPage() {
                       />
                       <div 
                         className={`w-11 h-6 rounded-full transition-colors duration-200 flex items-center px-[2px] shrink-0 outline-none select-none ${
-                          useSmart ? "bg-[#34C759]" : "bg-[#D2D2D7]"
+                          thinking ? "bg-[#34C759]" : "bg-[#D2D2D7]"
                         }`}
                       >
                         <div 
                           className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                            useSmart ? "translate-x-5" : "translate-x-0"
+                            thinking ? "translate-x-5" : "translate-x-0"
                           }`} 
                         />
                       </div>

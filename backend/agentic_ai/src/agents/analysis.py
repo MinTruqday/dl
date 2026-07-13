@@ -12,7 +12,7 @@ class AnalysisAgent:
                 query = req.get("query", "")
                 user_id = req.get("user_id", "")
                 document_ids = req.get("document_ids", [])
-                use_smart = req.get("use_smart", False) or req.get("useSmart", False)
+                use_smart = req.get("thinking", False) or req.get("use_smart", False)
                 use_web = req.get("use_web", False) or req.get("useWeb", False)
                 chat_history = req.get("chat_history", []) or req.get(
                     "conversation_history", []
@@ -23,7 +23,7 @@ class AnalysisAgent:
                 query = getattr(req, "query", "")
                 user_id = getattr(req, "user_id", "")
                 document_ids = getattr(req, "document_ids", [])
-                use_smart = getattr(req, "useSmart", False) or getattr(
+                use_smart = getattr(req, "thinking", False) or getattr(
                     req, "use_smart", False
                 )
                 use_web = getattr(req, "useWeb", False) or getattr(

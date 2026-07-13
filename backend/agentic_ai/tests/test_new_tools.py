@@ -5,11 +5,11 @@ from bson import ObjectId
 
 @pytest.mark.asyncio
 async def test_smart_agent_tool_trigger(api_client: httpx.AsyncClient):
-    # Test useSmart=True để LLM tự chọn tool
+    # Test thinking=True để LLM tự chọn tool
     req_data = {
         "query": "Tìm vị trí hiện tại của tôi xem thời tiết thế nào",
         "user_id": "test_user_id",
-        "useSmart": True
+        "thinking": True
     }
     response = await api_client.post("/tro-chuyen", json=req_data, timeout=180.0)
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"

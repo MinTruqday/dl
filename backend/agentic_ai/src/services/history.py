@@ -58,7 +58,6 @@ class HistoryService:
             await ChatRepository
             .find_ai_messages({"session_id": session_id})
             .sort("created_at", 1)
-            .execute()
         )
         session["messages"] = messages
         return session

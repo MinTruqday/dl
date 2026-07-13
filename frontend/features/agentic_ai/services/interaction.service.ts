@@ -101,7 +101,7 @@ export async function streamAiChatAPI(payload: any) {
 export async function queryRagAPI(
   documentId: string,
   query: string,
-  useSmart: boolean = false,
+  thinking: boolean = false,
   sessionId?: string,
 ) {
   const res = await fetch(`${API_URL}/tro-chuyen`, {
@@ -110,7 +110,7 @@ export async function queryRagAPI(
     body: JSON.stringify({
       document_id: documentId,
       query,
-      useSmart,
+      thinking,
       session_id: sessionId,
     }),
   });

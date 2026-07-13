@@ -67,7 +67,7 @@ export default function DocumentViewer() {
   const [messages, setMessages] = useState<any[]>([]);
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
-  const [useSmart, setUseSmart] = useState(false);
+  const [thinking, setThinking] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<
     "chat" | "highlights" | "thumbnails" | "history" | "zip"
   >("chat");
@@ -308,7 +308,7 @@ export default function DocumentViewer() {
     setQuestion("");
     try {
       const res: any = await Promise.race([
-        queryRagAPI(id, textToSubmit, useSmart, sessionId || undefined),
+        queryRagAPI(id, textToSubmit, thinking, sessionId || undefined),
         new Promise((_, r) =>
           setTimeout(() => r(new Error("AI_TIMEOUT")), 20000),
         ),

@@ -20,7 +20,7 @@ export default function ExplorePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [useSmart, setUseSmart] = useState(false);
+  const [thinking, setThinking] = useState(false);
 
   const { user } = useAuth();
 
@@ -41,7 +41,7 @@ export default function ExplorePage() {
     setLoading(true);
     try {
       let data;
-      if (useSmart && searchQuery.trim()) {
+      if (thinking && searchQuery.trim()) {
         data = await smartSearchAPI(searchQuery);
       } else {
         data = await getDocumentsAPI(
@@ -56,7 +56,7 @@ export default function ExplorePage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, searchQuery, useSmart, showToast]);
+  }, [selectedCategory, searchQuery, thinking, showToast]);
 
   useEffect(() => {
     loadInitialData();
