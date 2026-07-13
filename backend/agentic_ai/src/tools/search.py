@@ -14,12 +14,12 @@ def glob_search(pattern: str, path: str = ".") -> str:
     It answers the question: "Which files exist whose path matches this pattern?"
     
     WHEN TO USE THIS TOOL:
-    - Locating files by name or extension (e.g. all `*.test.ts` files).
-    - Discovering the structure/layout of a codebase before diving in.
+    - Locating files by name or extension (e.g. all `*.py` or `*.tex` files).
+    - Discovering the structure/layout of a codebase or document library before diving in.
     - Finding the most recently modified files matching a pattern.
     
     Parameters:
-    - pattern: The glob pattern to match files against (e.g. `**/*.js`, `src/**/*.{ts,tsx}`).
+    - pattern: The glob pattern to match files against (e.g. `**/*.json`, `src/**/*.{py,tex}`).
     - path: The directory to search within. Defaults to the current working directory.
     
     Returns:
@@ -84,8 +84,8 @@ def grep_search(
     Parameters:
     - pattern: A regular expression to search for.
     - path: File or directory to search in. Defaults to the current working directory.
-    - glob_pattern: Glob pattern to filter which files are searched (e.g. `*.js`).
-    - file_type: File type to search (e.g. `js`, `py`, `rust`).
+    - glob_pattern: Glob pattern to filter which files are searched (e.g. `*.docx`, `*.pdf`).
+    - file_type: File type to search (e.g. `py`, `json`, `tex`).
     - output_mode: One of `content`, `files_with_matches` (default), or `count`.
     - case_insensitive: Case-insensitive search.
     - show_line_numbers: Show line numbers. Only applies when `output_mode` is `content`.

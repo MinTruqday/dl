@@ -1,9 +1,10 @@
 import asyncio
 from unittest.mock import patch, MagicMock
 import json
-
+import pytest
 dummy_config = {"configurable": {"token": "dummy_token"}}
 
+@pytest.mark.asyncio
 async def test_complex_editorjs_text_replace():
     print("Running test_complex_editorjs_text_replace...")
     complex_json = {
@@ -53,6 +54,7 @@ async def test_complex_editorjs_text_replace():
             print("test_complex_editorjs_text_replace passed!")
 
 
+@pytest.mark.asyncio
 async def test_complex_editorjs_block_replace():
     print("Running test_complex_editorjs_block_replace...")
     complex_json = {
@@ -100,6 +102,7 @@ async def test_complex_editorjs_block_replace():
             mock_post.assert_called_once()
             print("test_complex_editorjs_block_replace passed!")
 
+@pytest.mark.asyncio
 async def test_complex_latex_text_replace():
     print("Running test_complex_latex_text_replace...")
     latex_content = "\\begin{tabular}{|c|c|}\n\\hline\nA & B \\\\\n\\hline\n\\end{tabular}"
