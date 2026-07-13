@@ -28,5 +28,5 @@ RUN useradd -m doclibuser && \
     chown -R doclibuser:doclibuser /home/doclibuser /app
 USER doclibuser
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 

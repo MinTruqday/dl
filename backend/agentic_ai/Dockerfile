@@ -32,8 +32,5 @@ RUN mkdir -p /tmp/doclib_finetune/models /tmp/doclib_finetune/adapters /tmp/docl
 COPY --chown=appuser:appuser agentic_ai/src/ ./src/
 
 USER appuser
-
-
-
-CMD ["bash", "-c", "gunicorn src.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 --timeout 1200"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
