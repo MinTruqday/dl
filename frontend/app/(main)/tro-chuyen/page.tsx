@@ -33,6 +33,7 @@ import {
   ArrowRight,
   Activity,
   Folder,
+  ChevronDown,
 } from "lucide-react";
 import { usePayOS } from "@payos/payos-checkout";
 import {
@@ -193,6 +194,22 @@ const UserMessage = ({ content }: { content: string }) => {
       )}
     </div>
   );
+};
+
+const ThoughtTimer = ({ isRunning }: { isRunning: boolean }) => {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    let interval: any;
+    if (isRunning) {
+      interval = setInterval(() => setSeconds(s => s + 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning]);
+
+  if (!isRunning && seconds === 0) return <span>Đã suy nghĩ xong</span>;
+  if (!isRunning) return <span>Đã suy nghĩ trong {seconds} giây</span>;
+  return <span>Đang suy nghĩ... {seconds} giây</span>;
 };
 
 export default function TroChuyenPage() {
@@ -656,7 +673,7 @@ export default function TroChuyenPage() {
               sessions.map((s) => (
                 <div
                   key={s._id}
-                  className={`p-3 mx-2 mt-2 rounded-[14px] cursor-pointer transition-colors ${currentSessionId === s._id ? "bg-white border border-transparent" : "border border-transparent hover:bg-[#E8E8ED]"}`}
+                  className={`p-3 rounded-[14px] cursor-pointer transition-colors ${currentSessionId === s._id ? "bg-white border border-transparent shadow-[0_1px_2px_rgba(0,0,0,0.05)]" : "border border-transparent hover:bg-[#E8E8ED]"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div
@@ -672,12 +689,14 @@ export default function TroChuyenPage() {
                           );
                           if (res.ok) {
                             const data = await res.json();
-                            const mapped = (data.data.messages || []).map(
+                            const msgs = data.data ? data.data.messages : data.messages;
+                            const mapped = (msgs || []).map(
                               (m: any) => ({
                                 id: m.id || m._id || Math.random().toString(),
                                 role: m.role || "user",
                                 content: m.content || "",
                                 thoughts: m.thoughts || [],
+                                attachments: m.attachments || {},
                               }),
                             );
                             setMessages(mapped);
@@ -857,17 +876,107 @@ export default function TroChuyenPage() {
                     );
                   }
 
-                  const cleanText = msg.content
-                    .replace(/<think>[\s\S]*?<\/think>/g, "")
-                    .replace(/<think>[\s\S]*$/, "")
-                    .trim();
+                  const cleanText = msg.content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, "").trim();
+                  const segments = msg.content
+                    .split(/(<think>[\s\S]*?(?:<\/think>|$))/g)
+                    .filter((s) => s.trim() !== "");
+                  
+                  const hasSystemThoughts = msg.thoughts && msg.thoughts.length > 0;
 
                   return (
                     <div key={idx} className="flex justify-start">
                       <div className="w-full">
                         <div className="py-2 w-full relative group">
+                          {hasSystemThoughts && (
+                            <div className="mb-3">
+                              <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]">
+                                <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
+                                  <div className="flex-1 flex items-center gap-2">
+                                    <Activity className="w-4 h-4 text-[#0071E3]" />
+                                    <span className="text-[14px] font-semibold text-[#1D1D1F]">
+                                      Đang suy nghĩ
+                                    </span>
+                                  </div>
+                                  <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
+                                </summary>
+                                <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] space-y-2 border-t border-[#E8E8ED]">
+                                  {msg.thoughts!.map((t, i) => (
+                                    <div key={i} className="flex items-start gap-2">
+                                      <span className="text-[#0071E3] mt-0.5 font-bold">•</span>
+                                      <span className="leading-relaxed">{t}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            </div>
+                          )}
 
-                          {!cleanText && (
+                          {segments.map((segment, sIdx) => {
+                            if (segment.startsWith("<think>")) {
+                              const thinkContent = segment.replace(/^<think>/, "").replace(/<\/think>$/, "").trim();
+                              if (!thinkContent) return null;
+                              return (
+                                <div key={sIdx} className="mb-3 mt-1">
+                                  <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]">
+                                    <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
+                                      <div className="flex-1 flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-[#0071E3]" />
+                                        <span className="text-[14px] font-semibold text-[#1D1D1F]">
+                                          <ThoughtTimer isRunning={isSending && idx === messages.length - 1 && sIdx === segments.length - 1} />
+                                        </span>
+                                      </div>
+                                      <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
+                                    </summary>
+                                    <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] border-t border-[#E8E8ED]">
+                                      <div className="prose prose-sm max-w-none prose-zinc prose-p:leading-relaxed">
+                                        <ReactMarkdown
+                                          remarkPlugins={[remarkGfm, remarkMath]}
+                                          rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                        >
+                                          {thinkContent}
+                                        </ReactMarkdown>
+                                      </div>
+                                    </div>
+                                  </details>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <ReactMarkdown
+                                key={sIdx}
+                                remarkPlugins={[remarkGfm, remarkMath]}
+                                rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                className="prose prose-sm max-w-none prose-zinc prose-p:text-[15px] prose-p:text-[#1D1D1F] prose-p:leading-relaxed prose-code:bg-[#F5F5F7] prose-code:text-[#FF3B30] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-[6px] prose-pre:bg-[#1D1D1F] prose-pre:rounded-[14px]"
+                                components={{
+                                  a: ({ href, children, ...props }) => {
+                                    if (
+                                      href &&
+                                      (href.includes("payos.vn") ||
+                                        href.includes("pay.payos.vn"))
+                                    ) {
+                                      return <PayOSEmbedded checkoutUrl={href} />;
+                                    }
+                                    return (
+                                      <a
+                                        href={href}
+                                        className="text-[#0071E3] font-medium hover:underline"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        {...props}
+                                      >
+                                        {children}
+                                      </a>
+                                    );
+                                  },
+                                }}
+                              >
+                                {segment}
+                              </ReactMarkdown>
+                            );
+                          })}
+
+                          {!cleanText && segments.length === 0 && (
                             <div className="flex gap-1.5 h-6 items-center">
                               <div className="w-2 h-2 rounded-full bg-[#C7C7CC] animate-pulse" />
                               <div
@@ -879,38 +988,6 @@ export default function TroChuyenPage() {
                                 style={{ animationDelay: "0.4s" }}
                               />
                             </div>
-                          )}
-
-                          {cleanText && (
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm, remarkMath]}
-                              rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                              className="prose prose-sm max-w-none prose-zinc prose-p:text-[15px] prose-p:text-[#1D1D1F] prose-p:leading-relaxed prose-code:bg-[#F5F5F7] prose-code:text-[#FF3B30] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-[6px] prose-pre:bg-[#1D1D1F] prose-pre:rounded-[14px]"
-                              components={{
-                                a: ({ href, children, ...props }) => {
-                                  if (
-                                    href &&
-                                    (href.includes("payos.vn") ||
-                                      href.includes("pay.payos.vn"))
-                                  ) {
-                                    return <PayOSEmbedded checkoutUrl={href} />;
-                                  }
-                                  return (
-                                    <a
-                                      href={href}
-                                      className="text-[#0071E3] font-medium hover:underline"
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      {...props}
-                                    >
-                                      {children}
-                                    </a>
-                                  );
-                                },
-                              }}
-                            >
-                              {cleanText}
-                            </ReactMarkdown>
                           )}
                         </div>
                       </div>
@@ -1043,12 +1120,12 @@ export default function TroChuyenPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="flex gap-2">
-                <div className="flex-1 min-h-[48px] bg-transparent flex items-center px-2 gap-2">
+              <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+                <div className="flex-1 min-h-[48px] bg-transparent flex items-end px-2 gap-2 pb-1.5">
                   <button
                     type="button"
                     onClick={handleAttach}
-                    className="text-[#6E6E73] shrink-0 rounded-full p-2 hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
+                    className="text-[#6E6E73] shrink-0 rounded-full p-2 mb-1.5 hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
                   >
                     <PlusIcon className="w-5 h-5" />
                   </button>
@@ -1075,7 +1152,7 @@ export default function TroChuyenPage() {
                     style={{ maxHeight: "150px" }}
                   />
                   <label
-                    className={`flex items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-3 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}
+                    className={`flex items-center gap-2 mb-3.5 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-3 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}
                   >
                     <span className="text-[14px] font-medium text-[#6E6E73] select-none">
                       Suy nghĩ
@@ -1110,7 +1187,7 @@ export default function TroChuyenPage() {
                     isSending ||
                     (!input.trim() && !selectedImage && !selectedFile)
                   }
-                  className="w-12 h-[48px] shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-[#0077ED]"
+                  className="w-12 h-[48px] mb-[6px] shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-[#0077ED]"
                 >
                   {isSending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

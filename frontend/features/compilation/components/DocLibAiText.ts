@@ -12,7 +12,7 @@ export default class DocLibAiText implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib ",
+      title: "DocLib AI Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path><circle cx="12" cy="12" r="3"></circle></svg>',
     };
   }
@@ -78,7 +78,7 @@ export default class DocLibAiText implements BlockTool {
     header.classList.add("doclib-ai-header");
     header.innerHTML = `
           <svg class="doclib-ai-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          DocLib Metis Assistant
+          DocLib AI Assistant
       `;
     container.appendChild(header);
 
