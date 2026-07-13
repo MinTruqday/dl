@@ -165,6 +165,36 @@ const nodeDescriptions: Record<string, string> = {
   chat: "Trò chuyện trực tiếp",
 };
 
+const UserMessage = ({ content }: { content: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = content.length > 400 || content.split('\n').length > 8;
+  
+  let displayContent = content;
+  if (!expanded && isLong) {
+    displayContent = content.split('\n').slice(0, 8).join('\n');
+    if (displayContent.length > 400) {
+      displayContent = displayContent.slice(0, 400);
+    }
+    displayContent += "...";
+  }
+
+  return (
+    <div className="bg-[#0071E3] text-white px-5 py-3.5 rounded-[20px] rounded-tr-[4px]">
+      <p className="text-[15px] whitespace-pre-wrap leading-relaxed min-w-0 break-words">
+        {displayContent}
+      </p>
+      {isLong && (
+        <button 
+          onClick={() => setExpanded(!expanded)} 
+          className="mt-2 text-[13px] text-white/80 hover:text-white font-medium underline"
+        >
+          {expanded ? "Thu gọn" : "Xem thêm"}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export default function TroChuyenPage() {
   const [view, setView] = useState<"chat" | "history">("chat");
   const [useSmart, setUseSmart] = useState(false);
@@ -204,6 +234,7 @@ export default function TroChuyenPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth() as any;
 
   const fetchHistory = async () => {
@@ -344,6 +375,7 @@ export default function TroChuyenPage() {
       },
     ]);
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsSending(true);
     setEditingMessageId(null);
     setShowAttachments(false);
@@ -596,7 +628,7 @@ export default function TroChuyenPage() {
               onClick={() => (window.location.href = "/nang-cap")}
               className="pill-button w-full"
             >
-              Nâng cấp gói DocLib AI
+              Nâng cấp gói DocLib Metis
             </button>
           </div>
           <div className="px-6 md:px-0 pb-4 flex items-center justify-between shrink-0">
@@ -635,7 +667,7 @@ export default function TroChuyenPage() {
                         setView("chat");
                         try {
                           const res = await fetch(
-                            `${API_URL}/lich-su/${s._id}`,
+                            `${API_URL}/lich-su/${s._id}?user_id=${user?.id || user?._id}`,
                             { headers: { Authorization: `Bearer ${token}` } },
                           );
                           if (res.ok) {
@@ -668,7 +700,7 @@ export default function TroChuyenPage() {
                               try {
                                 const token = getToken();
                                 const res = await fetch(
-                                  `${API_URL}/lich-su/${s._id}/tieu-de`,
+                                  `${API_URL}/lich-su/${s._id}/tieu-de?user_id=${user?.id || user?._id}`,
                                   {
                                     method: "PUT",
                                     headers: {
@@ -741,7 +773,7 @@ export default function TroChuyenPage() {
                                   try {
                                     const token = getToken();
                                     const res = await fetch(
-                                      `${API_URL}/lich-su/${s._id}`,
+                                      `${API_URL}/lich-su/${s._id}?user_id=${user?.id || user?._id}`,
                                       {
                                         method: "DELETE",
                                         headers: {
@@ -819,13 +851,7 @@ export default function TroChuyenPage() {
                               </span>
                             </div>
                           )}
-                          {msg.content && (
-                            <div className="bg-[#0071E3] text-white px-5 py-3.5 rounded-[20px] rounded-tr-[4px]">
-                              <p className="text-[15px] whitespace-pre-wrap leading-relaxed min-w-0">
-                                {msg.content}
-                              </p>
-                            </div>
-                          )}
+                          {msg.content && <UserMessage content={msg.content} />}
                         </div>
                       </div>
                     );
@@ -838,7 +864,7 @@ export default function TroChuyenPage() {
 
                   return (
                     <div key={idx} className="flex justify-start">
-                      <div className="w-full max-w-[85%]">
+                      <div className="w-full">
                         <div className="py-2 w-full relative group">
 
                           {!cleanText && (
@@ -1026,13 +1052,27 @@ export default function TroChuyenPage() {
                   >
                     <PlusIcon className="w-5 h-5" />
                   </button>
-                  <input
-                    type="text"
+                  <textarea
+                    ref={textareaRef}
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 150)}px`;
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (!isSending && (input.trim() || selectedImage || selectedFile)) {
+                          handleSubmit(e as any);
+                        }
+                      }
+                    }}
                     placeholder=""
                     disabled={isSending}
-                    className="flex-1 min-w-0 h-full py-3 text-[17px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73]"
+                    rows={1}
+                    className="flex-1 min-w-0 py-3 text-[17px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73] resize-none overflow-y-auto custom-scrollbar"
+                    style={{ maxHeight: "150px" }}
                   />
                   <label
                     className={`flex items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 pl-3 border-l border-[#E8E8ED] [-webkit-tap-highlight-color:transparent] select-none`}

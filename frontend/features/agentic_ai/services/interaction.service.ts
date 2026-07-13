@@ -91,6 +91,7 @@ export async function streamAiChatAPI(payload: any) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Accept": "text/event-stream",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
