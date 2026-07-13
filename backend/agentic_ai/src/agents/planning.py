@@ -29,8 +29,8 @@ class PlanAgent:
     async def _invoke_llm(self, messages):
         return await self.llm.ainvoke(messages)
 
-    async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
-        logger.info("Executing execution planning")
+    async def stream_plan(self, req_data: Dict[str, Any]):
+        logger.info("Executing execution planning with streaming")
 
         from src.core.registry import PromptType, registry
 
@@ -62,8 +62,36 @@ class PlanAgent:
                 HumanMessage(content=prompt),
             ]
 
-            response = await self._invoke_llm(messages)
-            parsed_result = self.parser.invoke(response)
+            accumulated_json = ""
+            think_ended = False
+
+            async for chunk in self.llm.astream(messages):
+                if not chunk.content:
+                    continue
+                content = chunk.content
+
+                if think_ended:
+                    accumulated_json += content
+                else:
+                    if "</think>" in content or "```json" in content:
+                        think_ended = True
+                        split_str = "</think>" if "</think>" in content else "```json"
+                        parts = content.split(split_str)
+                        if parts[0]:
+                            yield {"type": "message", "chunk": parts[0] + ("</think>\n" if split_str == "</think>" else "")}
+                        if len(parts) > 1:
+                            accumulated_json += ("```json" if split_str == "```json" else "") + parts[1]
+                    else:
+                        yield {"type": "message", "chunk": content}
+
+            if not accumulated_json.strip():
+                # fallback if no clear separation found
+                parsed_result = {"steps": []}
+            else:
+                try:
+                    parsed_result = self.parser.invoke(AIMessage(content=accumulated_json))
+                except Exception:
+                    parsed_result = {"steps": []}
 
             steps = []
             for step_group in parsed_result.get("steps", []):
@@ -84,10 +112,17 @@ class PlanAgent:
                     ]
                 ]
 
-            return steps
+            yield {"type": "plan", "steps": steps}
 
         except Exception as e:
             logger.exception("Plan generation error")
-            return [[{"agent": "Knowledge", "task": f"Inform user about analysis failure {e}"}]]
+            yield {"type": "plan", "steps": [[{"agent": "Knowledge", "task": f"Inform user about analysis failure {e}"}]]}
+
+    async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
+        steps = []
+        async for chunk in self.stream_plan(req_data):
+            if chunk["type"] == "plan":
+                steps = chunk["steps"]
+        return steps
 
 planner = PlanAgent()

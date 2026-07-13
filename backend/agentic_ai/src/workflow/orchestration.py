@@ -230,7 +230,7 @@ class OrchestrationWorkflow:
 
         initial_state = {
             "req_data": req_data,
-            "steps": [],
+            "steps": req_data.get("plan", []),
             "current_step_index": 0,
             "consolidated_results": [],
             "final_answer": "",

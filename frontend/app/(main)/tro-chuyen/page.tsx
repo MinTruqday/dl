@@ -907,7 +907,7 @@ export default function TroChuyenPage() {
                                     </summary>
                                     <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] border-t border-[#E8E8ED]">
                                       {thinkContent ? (
-                                        <div className="prose prose-sm max-w-none prose-zinc prose-p:leading-relaxed">
+                                        <div className="prose prose-sm max-w-none prose-zinc prose-p:leading-relaxed text-[#6E6E73]">
                                           <ReactMarkdown
                                             remarkPlugins={[remarkGfm, remarkMath]}
                                             rehypePlugins={[rehypeKatex, rehypeHighlight]}
@@ -916,10 +916,11 @@ export default function TroChuyenPage() {
                                           </ReactMarkdown>
                                         </div>
                                       ) : (
-                                        <div className="flex gap-1.5 items-center">
-                                          <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "0ms" }} />
-                                          <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "150ms" }} />
-                                          <div className="w-1.5 h-1.5 rounded-full bg-[#0071E3] animate-bounce" style={{ animationDelay: "300ms" }} />
+                                        <div className="flex gap-2 items-center py-1">
+                                          <Loader2 className="w-4 h-4 text-[#0071E3] animate-spin" />
+                                          <span className="text-[14px] text-[#6E6E73] font-medium animate-pulse">
+                                            Đang kích hoạt không gian suy luận...
+                                          </span>
                                         </div>
                                       )}
                                     </div>
@@ -1159,7 +1160,7 @@ export default function TroChuyenPage() {
                   placeholder=""
                   disabled={isSending}
                   rows={1}
-                  className={`w-full min-h-[56px] text-[17px] leading-[24px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73] resize-none overflow-y-auto custom-scrollbar transition-all duration-200 ${
+                  className={`w-full min-h-[56px] text-[17px] leading-[24px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73] resize-none overflow-y-auto custom-scrollbar transition-colors duration-200 ${
                     isExpanded
                       ? "px-4 pt-4 pb-[56px]"
                       : "py-[16px] pl-[56px] pr-[180px]"

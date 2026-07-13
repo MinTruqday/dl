@@ -251,9 +251,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             if req.thinking:
                 route = "supervisor"
             else:
-                route = route_data.get("route", "knowledge")
-                if route == "action":
-                    route = "supervisor"
+                route = "chat"
                 
             final_answer = ""
 
@@ -349,8 +347,20 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 hb_task = asyncio.create_task(heartbeat_sender())
 
                 async def drain_supervisor():
+                    req_dict = req.model_dump()
+                    
+                    # 1. Stream the real planner thoughts first!
+                    from src.agents.planning import planner
+                    async for chunk in planner.stream_plan(req_dict):
+                        if chunk["type"] == "message":
+                            await heartbeat_queue.put({"type": "message", "chunk": chunk["chunk"]})
+                        elif chunk["type"] == "plan":
+                            req_dict["plan"] = chunk["steps"]
+                            await heartbeat_queue.put({"type": "plan", "steps": chunk["steps"]})
+                    
+                    # 2. Now run the rest of the supervisor orchestration!
                     async for event in orchestration.run(
-                        supervisor.execute_plan, req.model_dump(), session_id
+                        supervisor.execute_plan, req_dict, session_id
                     ):
                         await heartbeat_queue.put(event)
                     await heartbeat_queue.put({"type": "__done__"})
@@ -367,7 +377,8 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         elif event_type == "heartbeat":
                             yield "event: heartbeat\ndata: {}\n\n"
                         elif event_type == "status":
-                            yield f"event: status\ndata: {json.dumps({'node': event['node']})}\n\n"
+                            node_msg = event.get('node', '')
+                            yield f"event: status\ndata: {json.dumps({'node': node_msg})}\n\n"
                         elif event_type == "plan":
                             yield f"event: plan\ndata: {json.dumps({'steps': event['steps']})}\n\n"
                         elif event_type == "tool_result":
@@ -377,7 +388,8 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                                 duration_ms=0,
                                 success=True,
                             )
-                            yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Completed')})}\n\n"
+                            agent_name = event.get('agent', 'unknown')
+                            yield f"event: tool\ndata: {json.dumps({'agent': agent_name, 'result': event.get('content', 'Completed')})}\n\n"
                         elif event_type == "message":
                             final_answer += event["chunk"]
                             yield f"event: message\ndata: {json.dumps({'chunk': event['chunk']})}\n\n"
