@@ -17,7 +17,7 @@ class MCPService:
                 ]
             }
         cursor = MCPRepository.search_connectors(query, limit=10)
-        connectors = await cursor
+        connectors = await cursor.to_list(length=None)
         
         result = []
         for c in connectors:

@@ -89,6 +89,10 @@ class QueryBuilder:
         return self
 
     async def execute(self):
-        return await self.client.find(self.collection, self._query, sort=self._sort, skip=self._skip, limit=self._limit)
+        cursor = self.client.find(self.collection, self._query, sort=self._sort, skip=self._skip, limit=self._limit)
+        return await cursor.to_list(length=None)
+
+    def __await__(self):
+        return self.execute().__await__()
 
 mongo = MongoClient()

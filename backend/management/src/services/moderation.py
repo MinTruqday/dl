@@ -13,11 +13,11 @@ class ModerationService:
     @log_logic_execution
     async def request_data_takeout(current_user):
         user_id = str(current_user.id)
-        documents = (
-            await mongo.find(collection="documents", query={"creator_id": user_id}, limit=1000)
+        documents = await (
+            mongo.find(collection="documents", query={"creator_id": user_id}, limit=1000).to_list(length=None)
         )
-        reactions = (
-            await mongo.find(collection="reactions", query={"user_id": user_id}, limit=1000)
+        reactions = await (
+            mongo.find(collection="reactions", query={"user_id": user_id}, limit=1000).to_list(length=None)
         )
         takeout_payload = {
             "profile": current_user.model_dump(exclude={"password_hash"}),

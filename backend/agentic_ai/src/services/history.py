@@ -44,7 +44,7 @@ class HistoryService:
             .find_ai_sessions(query, {"messages": 0})
             .sort("updated_at", -1)
         )
-        return await cursor 
+        return await cursor.to_list(length=None)
 
     @staticmethod
     @log_logic_execution
@@ -54,10 +54,11 @@ class HistoryService:
         )
         if not session:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy lịch sử cuộc trò chuyện yêu cầu")
-        messages = (
-            await ChatRepository
+        messages = await (
+            ChatRepository
             .find_ai_messages({"session_id": session_id})
             .sort("created_at", 1)
+            .to_list(length=None)
         )
         session["messages"] = messages
         return session
@@ -115,9 +116,11 @@ class HistoryService:
     @log_logic_execution
     async def search_by_keyword(user_id: str, keyword: str) -> List[Dict[str, Any]]:
         regex = {"$regex": keyword, "$options": "i"}
-        matching_msgs = await ChatRepository.find_ai_messages(
-            {"user_id": user_id, "content": regex},
-            {"session_id": 1}
+        matching_msgs = await (
+            ChatRepository.find_ai_messages(
+                {"user_id": user_id, "content": regex},
+                {"session_id": 1}
+            ).to_list(length=None)
         )
         session_ids = list(set([m["session_id"] for m in matching_msgs]))
         
@@ -129,7 +132,7 @@ class HistoryService:
             ]
         }
         cursor = ChatRepository.find_ai_sessions(query).sort("updated_at", -1).limit(10)
-        return await cursor
+        return await cursor.to_list(length=None)
 
     @staticmethod
     @log_logic_execution
@@ -141,4 +144,4 @@ class HistoryService:
             "updated_at": {"$gte": cutoff_date}
         }
         cursor = ChatRepository.find_ai_sessions(query).sort("updated_at", -1).limit(20)
-        return await cursor
+        return await cursor.to_list(length=None)

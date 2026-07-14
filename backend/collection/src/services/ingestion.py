@@ -87,7 +87,7 @@ async def stop_collection():
 async def get_active_jobs():
     active_collectors = await mongo.find(
         "collection_jobs", {"status": {"$in": ["running", "pending"]}}
-    )
+    ).to_list(length=None)
     jobs = [
         {"id": str(j["_id"]), "progress": j.get("progress", 0), "status": j["status"]}
         for j in active_collectors
@@ -100,7 +100,7 @@ async def get_collector_stats():
     total_assets = await ArchiveRepository.count_documents({})
     recent_crawls = await mongo.find(
         "documents", {}, {"created_at": 1}, sort=[("created_at", -1)], limit=1
-    )
+    ).to_list(length=None)
     last_crawl = (
         recent_crawls[0]["created_at"].isoformat()
         if recent_crawls and len(recent_crawls) > 0 and isinstance(recent_crawls[0].get("created_at"), datetime)

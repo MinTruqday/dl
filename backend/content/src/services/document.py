@@ -823,7 +823,7 @@ class DocumentService:
             {"$sort": {"count": -1}},
             {"$limit": limit},
         ]
-        results = await docs_col.aggregate(pipeline).execute()
+        results = await docs_col.aggregate(pipeline).to_list(length=None)
         return [r["_id"] for r in results]
 
     @staticmethod

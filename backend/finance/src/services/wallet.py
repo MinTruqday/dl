@@ -38,7 +38,7 @@ class WalletService:
                 }
             except Exception as e:
                 logger.exception("Invalid pagination cursor format provided")
-        txs = await mongo.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit)
+        txs = await mongo.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit).to_list(length=None)
         type_translations = {
             "topup": "Deposit",
             "purchase": "Document Purchase",

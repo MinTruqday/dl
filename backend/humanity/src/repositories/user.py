@@ -8,7 +8,7 @@ class UserRepository:
 
     @staticmethod
     async def get_users_by_ids(user_ids: List[str]) -> List[Dict[str, Any]]:
-        return await mongo.find(collection="users", query={"_id": {"$in": user_ids}}).execute()
+        return await mongo.find(collection="users", query={"_id": {"$in": user_ids}}).to_list(length=None)
 
     @staticmethod
     async def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:

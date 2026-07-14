@@ -119,7 +119,7 @@ async def create_dataset(req: dict):
 @log_logic_execution
 async def list_datasets(user_id: str):
     cursor = mongo.find("finetune_datasets", {"user_id": user_id}).sort("created_at", -1)
-    return await cursor
+    return await cursor.to_list(length=None)
 
 @log_logic_execution
 async def get_dataset(dataset_id: str, user_id: str):
@@ -187,7 +187,7 @@ async def get_samples(
     ):
         raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
     cursor = mongo.find("finetune_samples", {"dataset_id": dataset_id}).sort("created_at", 1).skip(int(skip)).limit(int(limit))
-    return await cursor
+    return await cursor.to_list(length=None)
 
 @log_logic_execution
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
@@ -215,7 +215,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
 async def import_feedback(req: dict):
     
     user_id = req.get("user_id")
-    feedbacks = await mongo.find("rag_feedback", {"user_id": user_id, "vote_type": "up"})
+    feedbacks = await mongo.find("rag_feedback", {"user_id": user_id, "vote_type": "up"}).to_list(length=None)
     if not feedbacks:
         return {"imported": 0}
     ds_id = str(uuid7())
@@ -390,7 +390,7 @@ async def start_job(job_id: str, req: dict):
         raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
     if job_id in active_jobs:
         return {"error": "Tiến trình huấn luyện này đang được thực thi"}
-    samples = await mongo.find("finetune_samples", {"dataset_id": job["dataset_id"]})
+    samples = await mongo.find("finetune_samples", {"dataset_id": job["dataset_id"]}).to_list(length=None)
     config = {
         "base_model": job.get("base_model"),
         "epochs": job.get("epochs", 3),
@@ -422,7 +422,7 @@ async def start_job(job_id: str, req: dict):
 @log_logic_execution
 async def list_jobs(user_id: str):
     cursor = mongo.find("finetune_jobs", {"user_id": user_id}).sort("created_at", -1)
-    return await cursor
+    return await cursor.to_list(length=None)
 
 @log_logic_execution
 async def get_job(job_id: str, user_id: str):

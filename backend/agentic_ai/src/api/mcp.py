@@ -25,7 +25,7 @@ async def register_mcp_server(req: RegisterServerRequest):
 @router.get("/servers")
 async def list_mcp_servers():
     cursor = MCPRepository.search_connectors({}, limit=100)
-    docs = await cursor
+    docs = await cursor.to_list(length=None)
     for d in docs:
         d["_id"] = str(d["_id"])
     return {"status": "success", "servers": docs}
