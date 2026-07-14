@@ -36,6 +36,12 @@ class SessionMetrics:
 PROMETHEUS_PREFIX = "system_agent"
 
 class AgentopsHarness:
+    """
+    <module_purpose>
+    <purpose>Provides observability and telemetry for all agent interactions.</purpose>
+    <metis_behavior>Traces LLM calls transparently. Strictly avoids logging PII or secure tokens.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self._sessions: dict[str, SessionMetrics] = {}
         self._db_client = None

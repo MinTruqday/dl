@@ -232,6 +232,12 @@ def create_financial_rubric() -> Rubric:
 AgentCallable = Callable[..., Coroutine[Any, Any, str]]
 
 class RubricMiddleware:
+    """
+    <module_purpose>
+    <purpose>Applies deterministic evaluation rubrics to LLM outputs.</purpose>
+    <metis_behavior>Rejects outputs strictly based on configured policies without leniency.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self, rubric: Rubric, max_retries: int = 3, retry_delay_seconds: float = 0.5):
         self.rubric = rubric
         self.max_retries = max_retries

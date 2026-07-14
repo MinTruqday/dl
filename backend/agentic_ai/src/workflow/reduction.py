@@ -11,6 +11,12 @@ BATCH_SIZE = 5
 MAX_CHUNKS = 40
 
 class MapReduceState(TypedDict):
+    """
+    <schema_definition>
+    <purpose>Maintains the chunking and aggregation state for the Metis long-document summarizer.</purpose>
+    <metis_constraint>Enforces batch limits explicitly to prevent out-of-memory errors on massive texts.</metis_constraint>
+    </schema_definition>
+    """
     document_text: str
     chunks: List[str]
     summaries: Annotated[list, operator.add]
@@ -84,12 +90,11 @@ map_reduce_app = mr_graph.compile()
 @tool
 async def agent_summarize_long_document(document_id: str, config: dict) -> str:
     """
-    Use this tool to read and summarize an entire large document using a Map-Reduce workflow.
-
-    WHEN TO USE THIS TOOL:
-    - Use this when the user asks for a comprehensive summary, overview, or tl;dr of a very long document where simple reading might exceed token limits.
-
-    CRITICAL: Requires the exact document ID.
+    <tool_definition>
+    <purpose>Use this tool to read and summarize an entire large document using a Map-Reduce workflow.</purpose>
+    <trigger>Use this when the user asks for a comprehensive summary, overview, or tl;dr of a very long document where simple reading might exceed token limits.</trigger>
+    <critical_instructions>Requires the exact document ID.</critical_instructions>
+    </tool_definition>
     """
     from src.tools.interface import _get_doc_text
 

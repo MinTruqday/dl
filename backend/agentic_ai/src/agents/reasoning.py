@@ -9,6 +9,12 @@ from src.core.infrastructure.configuration import settings
 from src.schemas.evaluation import QualityEvaluation
 
 class ReasoningAgent:
+    """
+    <module_purpose>
+    <purpose>Provides deep analytical reasoning for complex logical queries.</purpose>
+    <metis_behavior>Operates as an analytical engine, strictly evaluating data without taking external actions.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self._model = settings.LLM_MODEL
         self._hf_token = settings.HF_TOKEN

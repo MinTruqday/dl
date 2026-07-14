@@ -51,6 +51,12 @@ class HttpCore:
         return max(0.0, self._reset_seconds - (time.monotonic() - self._tripped_at))
 
 class OrchestrationHarness:
+    """
+    <module_purpose>
+    <purpose>Coordinates the harness testing framework for multi-agent validation.</purpose>
+    <metis_behavior>Forces strict boundaries during testing. Does not permit network access for mock nodes.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self._sessions: dict[str, SessionState] = {}
         self._circuit_breaker = HttpCore(

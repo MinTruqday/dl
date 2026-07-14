@@ -9,6 +9,12 @@ from src.repositories.chat import ChatRepository
 from src.repositories.chat import ChatRepository
 
 class HistoryService:
+    """
+    <module_purpose>
+    <purpose>Manages chat history state and persistence for LLM memory.</purpose>
+    <metis_behavior>Enforces absolute data integrity. Logs logic execution transparently via decorators.</metis_behavior>
+    </module_purpose>
+    """
     @staticmethod
     @log_logic_execution
     async def create_session(data: dict) -> Dict[str, Any]:

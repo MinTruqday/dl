@@ -3,17 +3,17 @@ from typing import Any, List, Optional
 from pydantic import BaseModel
 
 class GenerationRequest(BaseModel):
-    prompt: str
-    max_tokens: int = 500
-    temperature: float = 0.3
+    prompt: str = Field(description="<input_context>The exact user request to be processed by Metis.</input_context>")
+    max_tokens: int = Field(default=500, description="<constraints>Maximum token limit. Metis must enforce this strictly to prevent overflow.</constraints>")
+    temperature: float = Field(default=0.3, description="<constraints>Temperature controls randomness. Keep low (0.0-0.3) for logic, higher (0.7) for creativity.</constraints>")
 
 class TranslationRequest(BaseModel):
-    text: str
-    target_lang: str
+    text: str = Field(description="<input_context>The source text requiring translation.</input_context>")
+    target_lang: str = Field(description="<constraints>The target ISO language code. Metis must translate with native fluency.</constraints>")
 
 class CodeRequest(BaseModel):
-    prompt: str
-    language: str = "python"
+    prompt: str = Field(description="<input_context>The coding task specification.</input_context>")
+    language: str = Field(default="python", description="<constraints>The target programming language. Must follow idiomatic standards.</constraints>")
 
 class GrammarRequest(BaseModel):
     text: str

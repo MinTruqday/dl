@@ -19,6 +19,12 @@ from qdrant_client.http.models import (
 from src.core.infrastructure.configuration import settings
 
 class VectorStore:
+    """
+    <module_purpose>
+    <purpose>Abstracts interaction with the Qdrant vector database.</purpose>
+    <metis_behavior>Handles asynchronous high-dimensional vector searches efficiently. Defaults to empty results gracefully on connection failures.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self.client = AsyncQdrantClient(
             url=settings.QDRANT_URL,

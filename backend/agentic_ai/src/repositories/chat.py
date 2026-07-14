@@ -4,6 +4,12 @@ from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 
 class ChatRepository:
+    """
+    <module_purpose>
+    <purpose>Handles direct MongoDB interactions for AI messaging data.</purpose>
+    <metis_behavior>Isolates database logic from business rules. Fails safely on disconnected databases.</metis_behavior>
+    </module_purpose>
+    """
     @staticmethod
     def _get_db():
         db_name = settings.AGENTIC_AI_DB_NAME if hasattr(settings, 'AGENTIC_AI_DB_NAME') else 'doclib'

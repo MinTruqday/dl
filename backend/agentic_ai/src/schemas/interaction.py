@@ -3,6 +3,12 @@ from typing import Optional
 from pydantic import BaseModel
 
 class ChatRequest(BaseModel):
+    """
+    <schema_definition>
+    <purpose>Defines the payload for incoming chat requests to Metis.</purpose>
+    <metis_constraint>Must capture the complete state of the conversation, including multi-modal attachments and session context.</metis_constraint>
+    </schema_definition>
+    """
     query: str
     user_id: str
     document_ids: Optional[list] = []

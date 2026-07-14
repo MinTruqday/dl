@@ -13,6 +13,12 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 
 class PipelineRag:
+    """
+    <module_purpose>
+    <purpose>Manages the end-to-end data ingestion and vector indexing pipeline.</purpose>
+    <metis_behavior>Extracts raw data robustly across formats. Never drops exceptions silently; routes errors to system logs.</metis_behavior>
+    </module_purpose>
+    """
     _mongo_client = None
 
     def __init__(self):

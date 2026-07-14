@@ -12,6 +12,12 @@ from src.core.infrastructure.configuration import settings
 from src.schemas.routing import RouteDecision
 
 class RouteAgent:
+    """
+    <module_purpose>
+    <purpose>Acts as the central traffic controller, routing user intents to the correct sub-agent.</purpose>
+    <metis_behavior>Relies exclusively on the HuggingFace Inference API to make deterministic routing decisions.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         llama_model = settings.LLM_MODEL
         if not llama_model:

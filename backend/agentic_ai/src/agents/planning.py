@@ -21,6 +21,12 @@ _hf_endpoint = HuggingFaceEndpoint(
 llm = ChatHuggingFace(llm=_hf_endpoint)
 
 class PlanAgent:
+    """
+    <module_purpose>
+    <purpose>Decomposes complex requests into parallel and sequential execution plans.</purpose>
+    <metis_behavior>Employs exponential backoff and retry mechanisms to guarantee structural validity of the plan.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self.llm = llm
         self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)

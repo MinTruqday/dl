@@ -66,6 +66,12 @@ class AgentState(TypedDict):
     folder_data: str
 
 class ActingState(TypedDict):
+    """
+    <schema_definition>
+    <purpose>Defines the global state representation for the Metis orchestration workflow.</purpose>
+    <metis_constraint>Must be rigidly passed between nodes. Lists must use operator.add for continuous appending.</metis_constraint>
+    </schema_definition>
+    """
     req_data: Dict[str, Any]
     steps: List[Dict[str, str]]
     current_step_index: int

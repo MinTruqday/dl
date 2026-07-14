@@ -12,6 +12,12 @@ from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResu
 from pydantic import Field
 
 class HFInferenceChat(BaseChatModel):
+    """
+    <module_purpose>
+    <purpose>LangChain wrapper for connecting to HuggingFace Inference Endpoints.</purpose>
+    <metis_behavior>Manages token streaming and retry logic robustly. Never leaks the HF_TOKEN to logs.</metis_behavior>
+    </module_purpose>
+    """
     client: Any = Field(default=None)
     model: str = Field(default="")
 

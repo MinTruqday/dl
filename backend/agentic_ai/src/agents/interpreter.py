@@ -10,6 +10,12 @@ from src.core.registry import PromptType, registry
 from src.core.infrastructure.configuration import settings
 
 class InterpreterAgent:
+    """
+    <module_purpose>
+    <purpose>Executes dynamically generated code in a secure Docker sandbox.</purpose>
+    <metis_behavior>Never executes code on the host machine. Fails gracefully if the Docker daemon is unreachable.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         try:
             self.docker_client = docker.from_env()

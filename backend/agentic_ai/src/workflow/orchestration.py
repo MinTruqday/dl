@@ -221,6 +221,12 @@ memory = MemorySaver()
 supervisor_app = workflow.compile(checkpointer=memory, interrupt_before=["action"])
 
 class OrchestrationWorkflow:
+    """
+    <module_purpose>
+    <purpose>Orchestrates the continuous event loop for the Metis main reasoning graph.</purpose>
+    <metis_behavior>Streams events strictly in real-time. Yields formalized JSON outputs and suppresses internal stack traces.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self.app = supervisor_app
 

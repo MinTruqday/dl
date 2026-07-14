@@ -4,6 +4,12 @@ from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 
 class AgentRepository:
+    """
+    <module_purpose>
+    <purpose>Persists agent execution traces for evaluation and auditing.</purpose>
+    <metis_behavior>Ensures high-throughput async inserts to prevent blocking the main orchestration loop.</metis_behavior>
+    </module_purpose>
+    """
     @staticmethod
     def _get_db():
         db_name = settings.AGENTIC_AI_DB_NAME if hasattr(settings, 'AGENTIC_AI_DB_NAME') else 'doclib'

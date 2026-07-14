@@ -37,6 +37,12 @@ def _truncate_history(history: list, budget_tokens: int) -> list:
     return trimmed
 
 class ContextHarness:
+    """
+    <module_purpose>
+    <purpose>Manages shared context windows for multi-agent interactions.</purpose>
+    <metis_behavior>Strictly isolates context boundaries between different user sessions.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self._redis_client = None
 

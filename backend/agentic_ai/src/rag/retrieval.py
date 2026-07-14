@@ -20,6 +20,12 @@ _hf = HuggingFaceEndpoint(
 _llm = ChatHuggingFace(llm=_hf)
 
 class RetrievalRag:
+    """
+    <module_purpose>
+    <purpose>Handles advanced multi-dimensional and cross-document vector retrieval.</purpose>
+    <metis_behavior>Employs Lost-in-the-Middle reordering and strict contextual bounds to eliminate hallucination vectors.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self.llm = _llm
         self._reranker = None

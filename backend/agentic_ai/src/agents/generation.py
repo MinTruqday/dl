@@ -8,6 +8,12 @@ from src.core.registry import PromptType, registry
 from src.harness.security import security
 
 class GenerationAgent:
+    """
+    <module_purpose>
+    <purpose>Handles the final text generation for search results.</purpose>
+    <metis_behavior>Aggregates findings into formal Vietnamese output and aborts immediately if security scans fail.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         pass
 

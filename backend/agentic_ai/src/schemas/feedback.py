@@ -6,6 +6,6 @@ class FeedbackRequest(BaseModel):
     message_id: str
     user_id: str
     vote_type: str = Field(
-        ..., description="CRITICAL: MUST be exactly one of: 'like', 'dislike', or 'report_issue'. Use this to categorize the user's feedback intent."
+        ..., description="<critical_instructions>MUST be exactly one of: 'like', 'dislike', or 'report_issue'. Use this to categorize the user's feedback intent.</critical_instructions>"
     )
     comment: Optional[str] = ""

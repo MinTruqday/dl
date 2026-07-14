@@ -103,6 +103,12 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
         }
 
 class EvaluationHarness:
+    """
+    <module_purpose>
+    <purpose>Executes offline batch evaluation of model traces and agent logic.</purpose>
+    <metis_behavior>Scores deterministically based on defined rubrics. Maintains brutal objectivity.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         self._reports: list[EvaluationReport] = []
         self._dataset: list[dict] = []

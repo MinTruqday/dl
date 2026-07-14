@@ -2,6 +2,12 @@ from loguru import logger
 from src.workflow.graph import knowledge_app
 
 class AnalysisAgent:
+    """
+    <module_purpose>
+    <purpose>Parses raw user requests and prepares them for execution.</purpose>
+    <metis_behavior>Extracts and sanitizes metadata fields prior to dispatching to the orchestration engine.</metis_behavior>
+    </module_purpose>
+    """
     def __init__(self):
         pass
 
