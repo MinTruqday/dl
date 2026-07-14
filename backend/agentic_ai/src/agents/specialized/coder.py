@@ -2,12 +2,9 @@ from typing import Any
 from src.agents.swarm import SwarmState
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 from pydantic import BaseModel, Field
+from src.schemas.coder import CoderOutput
 from loguru import logger
 from src.core.registry import PromptType, registry
-
-class CoderOutput(BaseModel):
-    code_implementation: str = Field(..., description="The generated Python code.")
-    explanation: str = Field(..., description="Brief explanation of the logic.")
 
 class CoderAgent:
     """

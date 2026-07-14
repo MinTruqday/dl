@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 
 from loguru import logger
+from src.schemas.evaluation import HallucinationGrade, ErrorMessageJudgment
 
 CheckStatus = Literal["passed", "failed", "skipped"]
 
@@ -47,10 +48,6 @@ def _check_response_not_empty(response: str) -> CheckResult:
 async def _check_no_hallucination_markers(response: str) -> CheckResult:
     from src.workflow.graph import llm
     from pydantic import BaseModel, Field
-    
-    class HallucinationGrade(BaseModel):
-        is_refusal_or_hallucination: bool = Field(description="Set to True if the response refuses the prompt, states ignorance, or uses artificial identity markers ('As an AI language model...'). Set to False if it is a normal, helpful response.")
-        reason: str = Field(description="A concise 1-sentence reason explaining why the response was graded as a refusal/hallucination or a valid response.")
 
     try:
         evaluator = llm.with_structured_output(HallucinationGrade)
@@ -103,10 +100,6 @@ def _check_tool_result_valid(tool_result: Any) -> CheckResult:
 async def _check_no_error_prefix(response: str) -> CheckResult:
     from src.workflow.graph import llm
     from pydantic import BaseModel, Field
-
-    class ErrorMessageJudgment(BaseModel):
-        is_error_message: bool = Field(description="Set to True if the text contains a raw stack trace, HTTP error code, unhandled exception, Python/JS traceback, or a system failure message. Set to False if it is a natural language response.")
-        reason: str = Field(description="A specific, 1-2 sentence explanation of why this was classified as an error message or a valid output.")
 
     try:
         evaluator = llm.with_structured_output(ErrorMessageJudgment)

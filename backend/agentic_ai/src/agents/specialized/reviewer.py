@@ -2,12 +2,9 @@ from typing import Any
 from src.agents.swarm import SwarmState
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 from pydantic import BaseModel, Field
+from src.schemas.reviewer import ReviewerEvaluation
 from loguru import logger
 from src.core.registry import PromptType, registry
-
-class ReviewerEvaluation(BaseModel):
-    is_approved: bool = Field(..., description="True if code meets architectural standards.")
-    feedback: str = Field(..., description="Detailed feedback or reasons for rejection.")
 
 class ReviewerAgent:
     """

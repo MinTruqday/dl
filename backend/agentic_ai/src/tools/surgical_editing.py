@@ -29,10 +29,14 @@ async def read_document_section(
     config: RunnableConfig = None
 ) -> str:
     """
+    <tool_definition>
+    
     Read a specific section of a document by its ID to avoid overwhelming context.
     
     WHEN TO USE THIS TOOL:
     - Use this when working with large documents and you only need to read a specific portion (by block index for EditorJS, or line numbers for LaTeX).
+    
+    </tool_definition>
     """
     token = config.get("configurable", {}).get("token")
     if not token: return "Authentication token is missing or invalid"
@@ -75,11 +79,15 @@ async def edit_document_text(
     config: RunnableConfig = None
 ) -> str:
     """
+    <tool_definition>
+    
     Surgically replace exact text in a document without rewriting the entire structure.
     
     WHEN TO USE THIS TOOL:
     - Use this to fix typos, change specific words, or rewrite small portions of text precisely.
     - old_string must exactly match a sequence of characters in the document.
+    
+    </tool_definition>
     """
     token = config.get("configurable", {}).get("token")
     if not token: return "Authentication token is missing or invalid"
@@ -124,12 +132,16 @@ async def edit_document_block(
     config: RunnableConfig = None
 ) -> str:
     """
+    <tool_definition>
+    
     Surgically insert, replace, or delete a specific block in an EditorJS document.
     
     WHEN TO USE THIS TOOL:
     - Use this for EditorJS documents ONLY (format='json').
     - action must be 'insert' (inserts before index), 'replace' (replaces block at index), or 'delete' (removes block at index).
     - new_block_json is required for 'insert' and 'replace' and must be a valid JSON string for a single EditorJS block (e.g. '{"type":"paragraph","data":{"text":"..."}}').
+    
+    </tool_definition>
     """
     token = config.get("configurable", {}).get("token")
     if not token: return "Authentication token is missing or invalid"
@@ -200,10 +212,14 @@ async def propose_document_edits(
     config: RunnableConfig = None
 ) -> str:
     """
+    <tool_definition>
+    
     Propose substantive edits (rewording, additions) for the user to review before applying directly.
     
     WHEN TO USE THIS TOOL:
     - Use this for substantive meaning changes (legal text, specific wording) where Track Changes / suggestions are preferred over direct edits.
+    
+    </tool_definition>
     """
     token = config.get("configurable", {}).get("token")
     if not token: return "Authentication token is missing or invalid"

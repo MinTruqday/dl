@@ -4,16 +4,9 @@ from pydantic import BaseModel
 
 from src.repositories.mcp import MCPRepository
 from src.core.logging_route import LoggingRoute
+from src.schemas.mcp import RegisterServerRequest
 
 router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
-
-class RegisterServerRequest(BaseModel):
-    name: str
-    description: str
-    server_type: str
-    url: str = None
-    command: str = None
-    args: List[str] = []
 
 @router.post("/servers")
 async def register_mcp_server(req: RegisterServerRequest):

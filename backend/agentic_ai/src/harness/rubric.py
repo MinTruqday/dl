@@ -2,7 +2,8 @@ import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Coroutine, List, Optional
+from typing import Any, Callable, Coroutine, Dict, List, Optional
+from src.schemas.evaluation import ErrorMessageJudgment, HallucinationJudgment, RelevanceJudgment
 
 from loguru import logger
 
@@ -71,10 +72,6 @@ class ErrorPrefixGrader(BaseGrader):
         from src.workflow.graph import llm
         from pydantic import BaseModel, Field
 
-        class ErrorMessageJudgment(BaseModel):
-            is_error_message: bool = Field(description="Set to True if the text contains a raw stack trace, HTTP error code, unhandled exception, Python/JS traceback, or a system failure message. Set to False if it is a natural language response (even if it politely apologizes).")
-            reason: str = Field(description="A specific, 1-2 sentence explanation of why this was classified as an error message or a valid output.")
-
         try:
             evaluator = llm.with_structured_output(ErrorMessageJudgment)
             from src.core.registry import registry, PromptType
@@ -131,12 +128,6 @@ class HallucinationGrader(BaseGrader):
             from pydantic import BaseModel, Field as PydanticField
             from src.workflow.graph import llm
 
-            class HallucinationJudgment(BaseModel):
-                is_hallucination_or_refusal: bool = PydanticField(
-                    description="Set to True if the response refuses the prompt (e.g. 'I cannot do this'), states 'I do not know', uses AI-identity disclaimers ('As an AI...'), or contains hallucinated unverified facts.")
-                confidence: float = PydanticField(description="Confidence score between 0.0 and 1.0 representing how certain you are of this judgment.")
-                explanation: str = PydanticField(description="Detailed explanation of the exact claims that are hallucinated or why the refusal was detected.")
-
             evaluator = llm.with_structured_output(HallucinationJudgment)
             query = context.get("query", "user query")
             from src.core.registry import registry, PromptType
@@ -165,11 +156,6 @@ class RelevanceGrader(BaseGrader):
         try:
             from pydantic import BaseModel, Field as PydanticField
             from src.workflow.graph import llm
-
-            class RelevanceJudgment(BaseModel):
-                is_relevant: bool = PydanticField(description="Set to True if the response directly addresses the core intent of the user's query without unnecessary pivoting.")
-                relevance_score: float = PydanticField(description="A continuous score from 0.0 to 1.0. Use 1.0 for perfect answers, 0.5 for partial answers, and 0.0 for completely unrelated garbage.")
-                feedback: str = PydanticField(description="Actionable critique on what information is missing, hallucinatory, or well-executed regarding relevance.")
 
             evaluator = llm.with_structured_output(RelevanceJudgment)
             from src.core.registry import registry, PromptType

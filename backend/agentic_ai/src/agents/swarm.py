@@ -4,26 +4,7 @@ from langgraph.graph import StateGraph, END
 from pydantic import BaseModel, Field
 from loguru import logger
 from src.core.registry import PromptType, registry
-
-class SwarmState(BaseModel):
-    """
-    <schema_definition>
-    <purpose>Maintains the global state of the Multi-Agent Swarm execution.</purpose>
-    <metis_constraint>Must be strictly typed and validated at every state transition.</metis_constraint>
-    </schema_definition>
-    """
-    task: str
-    context: Dict[str, Any] = Field(default_factory=dict)
-    messages: List[BaseMessage] = Field(default_factory=list)
-    current_agent: str = "supervisor"
-    artifacts: Dict[str, Any] = Field(default_factory=dict)
-    is_complete: bool = False
-
-class RouteDecision(BaseModel):
-    next_agent: Literal["coder", "secops", "reviewer", "finish"] = Field(
-        ..., description="The next agent to route the task to, or 'finish' if complete."
-    )
-    reasoning: str = Field(..., description="Why this route was chosen.")
+from src.schemas.swarm import SwarmState, SwarmRouteDecision
 
 class SupervisorAgent:
     """
@@ -49,7 +30,7 @@ class SupervisorAgent:
 
         
         try:
-            structured_llm = self.llm.with_structured_output(RouteDecision)
+            structured_llm = self.llm.with_structured_output(SwarmRouteDecision)
             messages = [SystemMessage(content=system_prompt), HumanMessage(content="Determine the next route.")]
             decision = await structured_llm.ainvoke(messages)
             

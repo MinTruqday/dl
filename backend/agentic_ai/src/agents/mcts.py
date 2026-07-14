@@ -1,6 +1,7 @@
 import math
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field
+from src.schemas.mcts import MCTSThoughts, MCTSEvaluation, ThoughtBranch
 from langchain_core.messages import SystemMessage, HumanMessage
 from loguru import logger
 from src.core.registry import PromptType, registry
@@ -25,16 +26,6 @@ class MCTSNode:
         exploitation = self.value / self.visits
         exploration = exploration_weight * math.sqrt(math.log(self.parent.visits) / self.visits)
         return exploitation + exploration
-
-class ThoughtBranch(BaseModel):
-    approach_name: str = Field(..., description="Name of the approach.")
-    implementation: str = Field(..., description="The code implementation for this approach.")
-
-class MCTSThoughts(BaseModel):
-    branches: List[ThoughtBranch] = Field(..., description="Exactly 3 different approaches.")
-
-class MCTSEvaluation(BaseModel):
-    score: float = Field(..., description="Score from 0.0 to 1.0 evaluating the implementation quality.")
 
 class MCTSGenerator:
     """

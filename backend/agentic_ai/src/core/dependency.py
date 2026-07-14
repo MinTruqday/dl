@@ -10,37 +10,7 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-from enum import Enum
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-
-class Role(str, Enum):
-    GUEST = "guest"
-    READER = "reader"
-    AUTHOR = "author"
-    ADMIN = "admin"
-
-class CurrentUser(BaseModel):
-    id: str = Field(alias="_id")
-    email: str
-    role: Role = Role.READER
-    permissions: List[str] = []
-    is_active: bool = True
-    full_name: str = ""
-    slug: str = ""
-    is_premium: bool = False
-    
-    from pydantic import field_validator
-    @field_validator("role", mode="before")
-    @classmethod
-    def validate_role_case(cls, v: Any):
-        if isinstance(v, str):
-            return v.lower()
-        return v
-    
-    class Config:
-        populate_by_name = True
-        extra = "ignore"
+from src.schemas.auth import Role, CurrentUser
 
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY

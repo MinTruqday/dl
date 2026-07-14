@@ -10,6 +10,8 @@ import shlex
 @tool
 def glob_search(pattern: str, path: str = ".") -> str:
     """
+    <tool_definition>
+    
     The Glob Tool: A fast filename / path matching tool.
     It answers the question: "Which files exist whose path matches this pattern?"
     
@@ -24,6 +26,8 @@ def glob_search(pattern: str, path: str = ".") -> str:
     
     Returns:
     - A JSON list of matching file paths, sorted by modification time (most recent first).
+    
+    </tool_definition>
     """
     try:
         if not path:
@@ -74,6 +78,8 @@ def grep_search(
     head_limit: int = 0
 ) -> str:
     """
+    <tool_definition>
+    
     The Grep Tool: A powerful content search tool built on top of ripgrep (rg).
     It answers the question: "Which files contain text matching this pattern, and what are the matching lines?"
     
@@ -94,6 +100,8 @@ def grep_search(
     - context_both: Lines of context to show before and after each match.
     - multiline: Enable multiline mode so `.` matches newlines.
     - head_limit: Limit output to the first N lines/entries.
+    
+    </tool_definition>
     """
     try:
         cmd = ["rg"]

@@ -2,12 +2,9 @@ from typing import Any, List
 from src.agents.swarm import SwarmState
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 from pydantic import BaseModel, Field
+from src.schemas.secops import SecOpsEvaluation
 from loguru import logger
 from src.core.registry import PromptType, registry
-
-class SecOpsEvaluation(BaseModel):
-    is_secure: bool = Field(..., description="True if no critical vulnerabilities found.")
-    vulnerability_summary: str = Field(..., description="Summary of vulnerabilities.")
 
 class SecOpsAgent:
     """

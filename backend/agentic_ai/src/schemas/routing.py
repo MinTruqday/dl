@@ -20,7 +20,7 @@ class RetrievalStrategy(BaseModel):
     )
 
 class QueryOptimization(BaseModel):
-    question: str = Field(description="The optimal, search-engine-friendly query string stripped of conversational fluff.")
+    question: str = Field(description="<input_context>The optimal, search-engine-friendly query string stripped of conversational fluff.</input_context>")
 
 class RouteDecision(BaseModel):
     reasoning: str = Field(description="<internal_thought>A short explanation (1-2 sentences) of why this specific route was chosen based on the user's intent.</internal_thought>")
@@ -31,5 +31,5 @@ class RouteDecision(BaseModel):
 
 class MultiQueryOutput(BaseModel):
     queries: List[str] = Field(
-        description="Exactly 3 diverse, distinct phrasings of the original query to maximize retrieval recall from the vector database."
+        description="<critical_instructions>Exactly 3 diverse, distinct phrasings of the original query to maximize retrieval recall from the vector database.</critical_instructions>"
     )
