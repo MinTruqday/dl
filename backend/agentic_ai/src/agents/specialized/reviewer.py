@@ -37,7 +37,8 @@ class ReviewerAgent:
             
             review_msg = f"Code evaluation completed. Approved: {eval_result.is_approved}. Feedback: {eval_result.feedback}"
             state.messages.append(AIMessage(content=review_msg))
-            
+            state.artifacts["review"] = eval_result.feedback
+
             if eval_result.is_approved:
                 state.is_complete = True
             logger.info("Reviewer LLM evaluation completed successfully")

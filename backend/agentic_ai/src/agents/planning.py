@@ -24,12 +24,20 @@ class PlanAgent:
     """
     <module_purpose>
     <purpose>Decomposes complex requests into parallel and sequential execution plans.</purpose>
-    <metis_behavior>Employs exponential backoff and retry mechanisms to guarantee structural validity of the plan.</metis_behavior>
+    <metis_behavior>Employs exponential backoff, retry mechanisms, and Redis semantic plan caching to guarantee structural validity and efficiency of the plan.</metis_behavior>
     </module_purpose>
     """
+
     def __init__(self):
         self.llm = llm
         self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
+        self._redis = None
+        try:
+            import redis as redis_lib
+            self._redis = redis_lib.from_url(settings.REDIS_URI, decode_responses=True)
+            self._redis.ping()
+        except Exception:
+            logger.exception("Planner Redis connection failed")
 
     @with_retry(max_retries=3, base_wait=2, max_wait=10)
     async def _invoke_llm(self, messages):
@@ -125,10 +133,39 @@ class PlanAgent:
             yield {"type": "plan", "steps": [[{"agent": "Knowledge", "task": f"Inform user about analysis failure {e}"}]]}
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
+        import hashlib
+        import json as _json
+
+        if req_data.get("dry_run"):
+            steps = []
+            async for chunk in self.stream_plan(req_data):
+                if chunk["type"] == "plan":
+                    steps = chunk["steps"]
+            return steps
+
+        query = req_data.get("query", "")
+        cache_key = f"plan:{hashlib.sha256(query.encode()).hexdigest()}"
+
+        if self._redis:
+            try:
+                cached = self._redis.get(cache_key)
+                if cached:
+                    logger.info("Planner cache hit for query")
+                    return _json.loads(cached)
+            except Exception:
+                logger.exception("Planner cache read failed")
+
         steps = []
         async for chunk in self.stream_plan(req_data):
             if chunk["type"] == "plan":
                 steps = chunk["steps"]
+
+        if steps and self._redis:
+            try:
+                self._redis.setex(cache_key, 3600, _json.dumps(steps))
+            except Exception:
+                logger.exception("Planner cache write failed")
+
         return steps
 
 planner = PlanAgent()

@@ -203,6 +203,8 @@ After your reasoning, produce a strictly valid JSON execution plan that assigns 
 - EngineAgent: Performs web searches to retrieve external information from the internet. Use when the user's question requires real-time or external data not in the library.
 - GenerationAgent: Generates drafts, writes emails, formats text into Markdown or LaTeX. Use for any content creation or formatting task.
 - Reasoning: Performs deep logical analysis, evaluates quality, and handles complex multi-step reasoning problems.
+- SwarmAgent: A specialized multi-agent swarm (Coder, Reviewer, SecOps) used specifically for writing, reviewing, and securing complex code or software features. Use for major coding tasks.
+- MCTSAgent: Monte Carlo Tree Search agent. Use when a complex logic problem requires generating and evaluating multiple solution branches (e.g., when a previous approach failed and needs re-evaluation).
 </available_agents>
 
 <rules>

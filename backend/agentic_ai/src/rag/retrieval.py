@@ -3,13 +3,14 @@ import json
 import re
 from typing import Dict, List, Optional
 
-from langchain_core.prompts import PromptTemplate
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
+
+from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.store.vector import vector_store
 
-from src.core.infrastructure.configuration import settings
 
 _hf = HuggingFaceEndpoint(
     repo_id=settings.LLM_MODEL,
@@ -19,13 +20,15 @@ _hf = HuggingFaceEndpoint(
 )
 _llm = ChatHuggingFace(llm=_hf)
 
+
 class RetrievalRag:
     """
     <module_purpose>
     <purpose>Handles advanced multi-dimensional and cross-document vector retrieval.</purpose>
-    <metis_behavior>Employs Lost-in-the-Middle reordering and strict contextual bounds to eliminate hallucination vectors.</metis_behavior>
+    <metis_behavior>Employs HyDE query expansion, Lost-in-the-Middle reordering, citation tracking, and strict contextual bounds to eliminate hallucination vectors.</metis_behavior>
     </module_purpose>
     """
+
     def __init__(self):
         self.llm = _llm
         self._reranker = None
@@ -35,9 +38,8 @@ class RetrievalRag:
         if self._reranker is None:
             try:
                 from sentence_transformers import CrossEncoder
-
                 self._reranker = CrossEncoder(settings.RERANKER_MODEL)
-            except Exception as e:
+            except Exception:
                 logger.exception("AI ranking model loading error")
                 self._reranker = False
         return self._reranker
@@ -51,36 +53,64 @@ class RetrievalRag:
             return json.loads(match.group(0))
         return []
 
+    async def _generate_hypothetical_document(self, question: str) -> str:
+        system_prompt = (
+            "You are a document generation assistant. "
+            "Given a question, write a short, factual passage (2-3 sentences) that directly answers it. "
+            "Output only the passage text, no preamble."
+        )
+        try:
+            messages = [SystemMessage(content=system_prompt), HumanMessage(content=question)]
+            response = await self.llm.ainvoke(messages)
+            return response.content.strip()
+        except Exception:
+            logger.exception("HyDE document generation failed")
+            return question
+
+    def get_citations(self, results: List[Dict]) -> List[str]:
+        seen = set()
+        citations = []
+        for doc in results:
+            meta = doc.get("metadata", {})
+            doc_id = meta.get("document_id") or meta.get("source", "")
+            title = meta.get("title", "")
+            chunk_idx = meta.get("chunk_index", "")
+            if doc_id and doc_id not in seen:
+                seen.add(doc_id)
+                label = f"{title} (ID: {doc_id}, chunk {chunk_idx})" if title else f"ID: {doc_id}, chunk {chunk_idx}"
+                citations.append(label)
+        return citations
+
     async def multi_query_retrieve(
         self, question: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
-        prompt = PromptTemplate(
-            template=registry.get(PromptType.MULTI_QUERY),
-            input_variables=["question"],
-        )
+        from src.rag.embedding import embedder
+
+        hypothetical_doc = await self._generate_hypothetical_document(question)
+        hyde_vector = await asyncio.to_thread(embedder.embed_query, hypothetical_doc)
+
         try:
-            try:
-                from pydantic import BaseModel, Field
-
-                from src.schemas.routing import MultiQueryOutput
-
-                structured_llm = self.llm.with_structured_output(MultiQueryOutput)
-                response = structured_llm.invoke(prompt.format(question=question))
-                queries = [q.strip() for q in response.queries if q.strip()]
-            except Exception:
-                response = self.llm.invoke(prompt.format(question=question))
-                queries = self._extract_json_array(response.content)
-
-            queries = [q for q in queries if q]
-            queries.append(question)
-        except Exception as e:
+            from src.schemas.routing import MultiQueryOutput
+            structured_llm = self.llm.with_structured_output(MultiQueryOutput)
+            prompt = registry.get(PromptType.MULTI_QUERY)
+            response = await asyncio.to_thread(structured_llm.invoke, prompt.format(question=question) if "{question}" in prompt else question)
+            queries = [q.strip() for q in response.queries if q.strip()]
+        except Exception:
             logger.exception("Multi-dimensional query generation error")
-            queries = [question]
+            queries = []
+
+        queries = [q for q in queries if q]
+        queries.append(question)
 
         all_documents = []
         for q in queries:
-            documents = await self.retrieve(q, document_ids, k=3)
-            all_documents.extend(documents)
+            docs = await self.retrieve(q, document_ids, k=3, query_vector_override=None)
+            all_documents.extend(docs)
+
+        hyde_docs = await vector_store.query(
+            query_vector=hyde_vector, document_ids=document_ids, limit=3
+        )
+        all_documents.extend(hyde_docs)
 
         seen_texts = set()
         unique_documents = []
@@ -92,11 +122,18 @@ class RetrievalRag:
         return unique_documents[:k]
 
     async def retrieve(
-        self, query: str, document_ids: Optional[List[str]] = None, k: int = 5
+        self,
+        query: str,
+        document_ids: Optional[List[str]] = None,
+        k: int = 5,
+        query_vector_override: Optional[List[float]] = None,
     ) -> List[Dict]:
         from src.rag.embedding import embedder
 
-        query_vector = embedding.embed_query(query)
+        if query_vector_override is not None:
+            query_vector = query_vector_override
+        else:
+            query_vector = await asyncio.to_thread(embedder.embed_query, query)
 
         current_reranker = self.reranker
         fetch_limit = k * 3 if current_reranker else k
@@ -111,11 +148,9 @@ class RetrievalRag:
         try:
             pairs = [[query, doc.get("text", "")] for doc in documents]
             scores = await asyncio.to_thread(current_reranker.predict, pairs)
-            scored_documents = list(zip(documents, scores))
-            scored_documents.sort(key=lambda x: x[1], reverse=True)
-            reranked_documents = [doc for doc, score in scored_documents]
-            return reranked_documents[:k]
-        except Exception as e:
+            scored_documents = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
+            return [doc for doc, _ in scored_documents[:k]]
+        except Exception:
             logger.exception("Search result sorting error")
             return documents[:k]
 
@@ -138,7 +173,7 @@ class RetrievalRag:
             parsed = self._extract_json_array(res.content)
             if isinstance(parsed, list) and len(parsed) == len(document_ids):
                 sub_queries = parsed
-        except Exception as e:
+        except Exception:
             logger.exception("Cross-document query analysis error")
 
         tasks = [
@@ -175,5 +210,6 @@ class RetrievalRag:
                 result[right] = doc
                 right -= 1
         return [d for d in result if d is not None]
+
 
 retriever = RetrievalRag()

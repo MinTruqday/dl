@@ -47,3 +47,5 @@ redis==5.2.1
 tenacity>=8.0.0
 docker>=7.0.0
 mcp>=1.2.0
+bandit>=1.7.9
+semgrep>=1.80.0

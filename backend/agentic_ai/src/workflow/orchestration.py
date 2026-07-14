@@ -43,6 +43,8 @@ async def supervisor_node(state: ActingState):
 
     if not steps:
         steps = await planner.create_plan(state["req_data"])
+        from src.agents.routing import plan_validator
+        steps = plan_validator.validate_plan(steps)
         idx = 0
 
     if state.get("error"):
@@ -65,6 +67,8 @@ async def supervisor_node(state: ActingState):
         "Action": "action",
         "Knowledge": "knowledge",
         "Reasoning": "reasoning",
+        "SwarmAgent": "swarm",
+        "MCTSAgent": "mcts"
     }
 
     next_nodes = list(set([route_map.get(s.get("agent", "Action"), "action") for s in current_group]))
@@ -72,6 +76,7 @@ async def supervisor_node(state: ActingState):
 
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     import asyncio
+    import re
     idx = state.get("current_step_index", 0)
     steps = state.get("steps", [])
 
@@ -81,6 +86,12 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     current_group = steps[idx]
     my_tasks = [s for s in current_group if s.get("agent", "Action") == agent_name]
     req_data = state.get("req_data", {})
+
+    def _extract_code_block(text: str) -> str:
+        match = re.search(r"```(?:python)?\s*\n(.*?)```", text, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        return ""
 
     async def _exec_task(task_obj):
         current_task = task_obj.get("task", "")
@@ -101,6 +112,29 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 else:
                     res = await tool_callable.execute(current_task)
 
+                code_block = _extract_code_block(str(res))
+                if code_block and agent_name in ("InterpreterAgent", "Action"):
+                    from src.harness.sandbox import CodeSandbox
+                    sandbox = CodeSandbox(use_docker=False)
+                    sandbox_retry = 0
+                    while sandbox_retry < 2:
+                        success, stdout, stderr = sandbox.execute_code(code_block)
+                        if success:
+                            res = f"{res}\n\n[Sandbox Output]\n{stdout.strip()}"
+                            break
+                        else:
+                            sandbox_retry += 1
+                            if sandbox_retry < 2:
+                                current_task = f"{current_task}\n\n[Previous code failed with error]\n{stderr}\nFix the code and retry."
+                                if agent_name == "Action":
+                                    res = await tool_callable.execute(current_task, {}, req_data.get("user_id"), req_data.get("token"))
+                                else:
+                                    res = await tool_callable.execute(current_task)
+                                code_block = _extract_code_block(str(res))
+                            else:
+                                res = f"{res}\n\n[Sandbox Error]\n{stderr.strip()}"
+                    sandbox.cleanup()
+
                 from src.core.registry import PromptType, registry
 
                 prompt_template = registry.get(PromptType.SELF_REFLECTION)
@@ -117,7 +151,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                     else:
                         final_res = res
                         break
-                except Exception as e:
+                except Exception:
                     logger.exception("Evaluation result parsing error")
                     final_res = res
                     break
@@ -126,12 +160,12 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 final_res = "The agent was unable to complete the task"
             return final_res
 
-        except Exception as e:
+        except Exception:
             logger.exception("Execution server internal error")
             return "The execution step failed"
 
     task_results = await asyncio.gather(*[_exec_task(t) for t in my_tasks])
-    
+
     return {
         "current_step_index": idx + 1,
         "consolidated_results": [f"[{agent_name} - Step {idx+1}]:\n{res}" for res in task_results],
@@ -152,6 +186,99 @@ async def researcher_agent_node(state: ActingState):
 
 async def reasoner_agent_node(state: ActingState):
     return await execute_tool_node(state, reasoner, "Reasoning")
+
+async def swarm_node(state: ActingState):
+    idx = state.get("current_step_index", 0)
+    steps = state.get("steps", [])
+
+    if idx >= len(steps):
+        return {"current_step_index": idx + 1}
+
+    current_group = steps[idx]
+    my_tasks = [s for s in current_group if s.get("agent", "Action") == "SwarmAgent"]
+    
+    from src.workflow.graph import llm
+    from src.agents.swarm import create_swarm_workflow
+    from src.agents.specialized.coder import CoderAgent
+    from src.agents.specialized.reviewer import ReviewerAgent
+    from src.agents.specialized.secops import SecOpsAgent
+    import asyncio
+    
+    specialized_agents = {
+        "coder": CoderAgent(llm),
+        "reviewer": ReviewerAgent(llm),
+        "secops": SecOpsAgent(llm)
+    }
+    swarm_app = create_swarm_workflow(llm, specialized_agents)
+    
+    async def _run_swarm(task_obj):
+        current_task = task_obj.get("task", "")
+        init_state = {
+            "task": current_task,
+            "is_complete": False,
+            "current_agent": "supervisor",
+            "messages": [],
+            "artifacts": {}
+        }
+        final_artifacts = {}
+        final_messages = []
+
+        async for output in swarm_app.astream(init_state, {"recursion_limit": 15}):
+            for node_name, state_update in output.items():
+                if "artifacts" in state_update:
+                    final_artifacts.update(state_update["artifacts"])
+                if "messages" in state_update:
+                    final_messages = state_update["messages"]
+
+        parts = []
+        if final_artifacts.get("code"):
+            parts.append(f"[Generated Code]\n{final_artifacts['code']}")
+        if final_artifacts.get("review"):
+            parts.append(f"[Code Review]\n{final_artifacts['review']}")
+        if final_artifacts.get("security_report"):
+            parts.append(f"[Security Report]\n{final_artifacts['security_report']}")
+        if not parts and final_messages:
+            parts = [msg.content for msg in final_messages if hasattr(msg, "content")]
+
+        return "\n\n".join(parts) if parts else "Swarm produced no output"
+
+    task_results = await asyncio.gather(*[_run_swarm(t) for t in my_tasks])
+    
+    return {
+        "current_step_index": idx + 1,
+        "consolidated_results": [f"[SwarmAgent - Step {idx+1}]:\n{res}" for res in task_results],
+        "last_agent_result": task_results[-1] if task_results else "Completed",
+    }
+
+async def mcts_node(state: ActingState):
+    idx = state.get("current_step_index", 0)
+    steps = state.get("steps", [])
+
+    if idx >= len(steps):
+        return {"current_step_index": idx + 1}
+
+    current_group = steps[idx]
+    my_tasks = [s for s in current_group if s.get("agent", "Action") == "MCTSAgent"]
+    
+    from src.workflow.graph import llm
+    from src.agents.mcts import MCTSGenerator
+    import asyncio
+    
+    mcts_agent = MCTSGenerator(llm=llm, evaluator_llm=llm, max_iterations=3)
+    
+    async def _run_mcts(task_obj):
+        current_task = task_obj.get("task", "")
+        init_state = {"task": current_task, "code": "", "approach": ""}
+        best_state = await mcts_agent.search(init_state)
+        return f"MCTS approach '{best_state.get('approach', '')}' produced code:\n{best_state.get('code', '')}"
+
+    task_results = await asyncio.gather(*[_run_mcts(t) for t in my_tasks])
+    
+    return {
+        "current_step_index": idx + 1,
+        "consolidated_results": [f"[MCTSAgent - Step {idx+1}]:\n{res}" for res in task_results],
+        "last_agent_result": task_results[-1] if task_results else "Completed",
+    }
 
 async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])
@@ -197,6 +324,8 @@ workflow.add_node("search_engine", search_engine_node)
 workflow.add_node("action", actor_agent_node)
 workflow.add_node("knowledge", researcher_agent_node)
 workflow.add_node("reasoning", reasoner_agent_node)
+workflow.add_node("swarm", swarm_node)
+workflow.add_node("mcts", mcts_node)
 workflow.add_node("trimmer", trimmer_node)
 workflow.add_node("sanitizer", sanitizer_node)
 workflow.add_node("aggregator", aggregator_node)
@@ -231,8 +360,19 @@ class OrchestrationWorkflow:
         self.app = supervisor_app
 
     async def execute_plan(self, req_data):
+        from src.memory.global_state import global_state
         logger.info("Initializing orchestration execution stream")
         yield {"type": "status", "node": "Hệ thống đang tiến hành phân tích yêu cầu"}
+
+        session_id = req_data.get("session_id", str(uuid7()))
+
+        project_context = await global_state.get_project_context_async(session_id)
+        if project_context:
+            req_data["global_context"] = project_context
+
+        recent_episodes = await global_state.get_recent_episodes(k=3)
+        if recent_episodes:
+            req_data["episodic_context"] = "\n---\n".join(recent_episodes)
 
         initial_state = {
             "req_data": req_data,
@@ -246,7 +386,6 @@ class OrchestrationWorkflow:
         }
 
         final_results = []
-        session_id = req_data.get("session_id", str(uuid7()))
         config = {
             "configurable": {"thread_id": session_id},
             "recursion_limit": 25,
@@ -267,14 +406,14 @@ class OrchestrationWorkflow:
                     "action",
                     "knowledge",
                     "reasoning",
+                    "swarm",
+                    "mcts",
                 ]:
                     if not state_update.get("error"):
                         yield {
                             "type": "tool_result",
                             "agent": node_name,
-                            "content": state_update.get(
-                                "last_agent_result", "Completed"
-                            ),
+                            "content": state_update.get("last_agent_result", "Completed"),
                         }
 
                 elif node_name == "aggregator":
@@ -284,7 +423,19 @@ class OrchestrationWorkflow:
             final_results = ["Unable to locate data"]
 
         query = req_data.get("query", "")
+        full_response_chunks = []
         async for chunk in response_generator.aggregate_stream(query, final_results):
+            full_response_chunks.append(chunk.get("chunk", "") if isinstance(chunk, dict) else str(chunk))
             yield {"type": "message", "chunk": chunk}
+
+        try:
+            combined = " ".join(full_response_chunks)
+            if combined.strip():
+                await global_state.add_episodic_memory(
+                    session_id=session_id,
+                    summary=f"Query: {query[:200]}\nResponse summary: {combined[:500]}",
+                )
+        except Exception:
+            logger.exception("Episodic memory storage failed")
 
 supervisor = OrchestrationWorkflow()

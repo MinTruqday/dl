@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class GenerationRequest(BaseModel):
     prompt: str = Field(description="<input_context>The exact user request to be processed by Metis.</input_context>")
