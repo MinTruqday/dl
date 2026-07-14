@@ -71,18 +71,19 @@ class SecurityHarness:
         sanitized, violations = await self._adetect_security_issues(text)
         
         injection_violations = [v for v in violations if "prompt_injection" in v]
+        credential_violations = [v for v in violations if "credential_leak" in v]
         pii_violations = [v for v in violations if "pii" in v]
         
         anomaly = self._anomaly_score(text)
         injection_score = min(len(injection_violations) * 0.4, 1.0)
         risk_score = min(injection_score + anomaly * 0.2, 1.0)
 
-        if injection_violations:
-            logger.warning("Malicious command blocked successfully")
+        if injection_violations or credential_violations:
+            logger.warning("Malicious command or credential leak blocked successfully")
             return ScanResult(
                 passed=False,
                 blocked=True,
-                risk_score=risk_score,
+                risk_score=1.0,
                 sanitized_text=sanitized,
                 violations=violations,
             )

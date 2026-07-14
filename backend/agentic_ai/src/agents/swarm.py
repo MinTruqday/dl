@@ -62,6 +62,13 @@ def create_swarm_workflow(supervisor_llm, specialized_agents: Dict[str, Any]) ->
             return END
         return state.current_agent
 
+    def agent_router(state: SwarmState):
+        if state.is_complete:
+            return END
+        if state.current_agent in specialized_agents:
+            return state.current_agent
+        return "supervisor"
+
     workflow.add_conditional_edges(
         "supervisor",
         router,
@@ -69,6 +76,10 @@ def create_swarm_workflow(supervisor_llm, specialized_agents: Dict[str, Any]) ->
     )
     
     for name in specialized_agents.keys():
-        workflow.add_edge(name, "supervisor")
+        workflow.add_conditional_edges(
+            name,
+            agent_router,
+            {k: k for k in specialized_agents.keys()} | {"supervisor": "supervisor", END: END}
+        )
         
     return workflow.compile()

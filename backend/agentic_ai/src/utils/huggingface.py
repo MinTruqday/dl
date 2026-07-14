@@ -10,6 +10,8 @@ from langchain_core.messages import (
 )
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from pydantic import Field
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from loguru import logger
 
 class HFInferenceChat(BaseChatModel):
     """
@@ -35,6 +37,13 @@ class HFInferenceChat(BaseChatModel):
         nest_asyncio.apply()
         return asyncio.run(self._agenerate(messages, stop, run_manager, **kwargs))
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type(Exception),
+        reraise=True,
+        before_sleep=lambda retry_state: logger.warning(f"Retrying _agenerate due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})")
+    )
     async def _agenerate(
         self,
         messages: List[BaseMessage],
@@ -54,7 +63,7 @@ class HFInferenceChat(BaseChatModel):
 
         chat_kwargs = {
             "messages": hf_messages,
-            "max_tokens": kwargs.get("max_tokens", 1024),
+            "max_tokens": kwargs.get("max_tokens", 512),
             "temperature": kwargs.get("temperature", 0.1),
         }
         if "response_format" in kwargs:
@@ -66,6 +75,13 @@ class HFInferenceChat(BaseChatModel):
             generations=[ChatGeneration(message=AIMessage(content=content))]
         )
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type(Exception),
+        reraise=True,
+        before_sleep=lambda retry_state: logger.warning(f"Retrying _astream due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})")
+    )
     async def _astream(
         self,
         messages: List[BaseMessage],
@@ -85,7 +101,7 @@ class HFInferenceChat(BaseChatModel):
 
         stream = await self.client.chat_completion(
             messages=hf_messages,
-            max_tokens=kwargs.get("max_tokens", 1024),
+            max_tokens=kwargs.get("max_tokens", 512),
             temperature=kwargs.get("temperature", 0.1),
             stream=True,
         )
@@ -113,11 +129,24 @@ class HFInferenceChat(BaseChatModel):
         
         def extract_and_parse(text: str):
             try:
+                # Handle cases where model wraps JSON in markdown blocks
+                if "```json" in text:
+                    text = text.split("```json")[1].split("```")[0]
+                elif "```" in text:
+                    text = text.split("```")[1].split("```")[0]
                 data = json.loads(text.strip())
                 return schema(**data)
-            except Exception:
-                return schema()
+            except Exception as e:
+                # Raise so tenacity can retry
+                raise ValueError(f"Failed to parse structured output: {e}. Raw text: {text}")
                 
+        @retry(
+            stop=stop_after_attempt(3),
+            wait=wait_exponential(multiplier=1, min=2, max=10),
+            retry=retry_if_exception_type(Exception),
+            reraise=True,
+            before_sleep=lambda retry_state: logger.warning(f"Retrying _ainvoke structured output due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})")
+        )
         async def _ainvoke(messages, **kwargs_inner):
             schema_json = schema.schema_json()
             sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")

@@ -1,3 +1,6 @@
+import os
+import subprocess
+import tempfile
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -21,6 +24,31 @@ class CoderAgent:
     def __init__(self, llm):
         self.llm = llm
 
+    def _verify_code(self, code: str) -> str:
+        error_msg = ""
+        fd, path = tempfile.mkstemp(suffix=".py")
+        try:
+            with os.fdopen(fd, 'w') as f:
+                f.write(code)
+            
+            result = subprocess.run(
+                ["python", path],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode != 0:
+                error_msg = result.stderr or result.stdout or "Unknown execution error"
+        except subprocess.TimeoutExpired:
+            error_msg = "Execution timed out after 5 seconds. Possible infinite loop."
+        except Exception as e:
+            error_msg = f"Sandbox verification failed: {str(e)}"
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
+                
+        return error_msg
+
     async def execute(self, state: SwarmState) -> SwarmState:
         logger.info("Coder execution started via LLM")
 
@@ -39,16 +67,34 @@ class CoderAgent:
                 return state
 
         system_prompt = registry.get(PromptType.SWARM_CODER)
-        human_msg = f"Task: {task}\nContext: {state.context}"
+        human_msg_content = f"Task: {task}\nContext: {state.context}"
 
         try:
             structured_llm = self.llm.with_structured_output(CoderOutput)
-            messages = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
-            response = await structured_llm.ainvoke(messages)
-
-            response_content = f"Implementation generated.\nExplanation: {response.explanation}"
+            
+            max_retries = 2
+            final_code = ""
+            final_logic = ""
+            
+            for attempt in range(max_retries + 1):
+                messages = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg_content)]
+                response = await structured_llm.ainvoke(messages)
+                
+                final_code = response.code
+                final_logic = response.logic_explanation
+                
+                verification_error = self._verify_code(final_code)
+                if not verification_error:
+                    logger.info("Coder verification passed successfully")
+                    break
+                    
+                logger.warning(f"Coder verification failed on attempt {attempt+1}: {verification_error[:100]}...")
+                if attempt < max_retries:
+                    human_msg_content += f"\n\nYour previous code failed with this error:\n{verification_error}\nPlease fix the code."
+                
+            response_content = f"Implementation generated.\nExplanation: {final_logic}"
             state.messages.append(AIMessage(content=response_content))
-            state.artifacts["code"] = response.code_implementation
+            state.artifacts["code"] = final_code
             logger.info("Coder execution completed successfully")
         except Exception:
             logger.exception("Coder LLM generation failed")

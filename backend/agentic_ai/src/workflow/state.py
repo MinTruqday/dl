@@ -21,17 +21,22 @@ def reduce_chat_history(left: list, right: list) -> list:
         else:
             res.append(m)
 
-    if len(res) > 15:
-        system_msgs = [m for m in res if isinstance(m, SystemMessage)]
-        recent_msgs = (
-            res[-(15 - len(system_msgs)) :] if len(system_msgs) < 15 else res[-15:]
-        )
+    recent_msgs = []
+    for m in res:
+        if isinstance(m, SystemMessage):
+            recent_msgs.append(m)
+        else:
+            content = str(m.content)
+            if len(content) > 1500:
+                m.content = f"{content[:500]}\n[REDACTED COMPRESSED CONTENT]\n{content[-500:]}"
+            recent_msgs.append(m)
+            
+    if len(recent_msgs) > 15:
+        system_msgs = [m for m in recent_msgs if isinstance(m, SystemMessage)]
+        other_msgs = [m for m in recent_msgs if not isinstance(m, SystemMessage)]
+        recent_msgs = system_msgs + other_msgs[-(15 - len(system_msgs)):] if len(system_msgs) < 15 else system_msgs
 
-        if system_msgs and system_msgs[0] not in recent_msgs:
-            return system_msgs + recent_msgs
-        return recent_msgs
-
-    return res
+    return recent_msgs
 
 def reduce_consolidated_results(left: list, right: list) -> list:
     if left is None:

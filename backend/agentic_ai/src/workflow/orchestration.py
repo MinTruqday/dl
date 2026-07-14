@@ -309,7 +309,23 @@ def trimmer_router(state: ActingState):
     return state.get("next_nodes", ["aggregator"])
 
 async def sanitizer_node(state: ActingState):
-    return {"next_nodes": ["trimmer"]}
+    from src.core.security.governance import enforce_resource_limits, sanitize_output
+    from loguru import logger
+    
+    results = state.get("consolidated_results", [])
+    if not results:
+        return {"next_nodes": ["aggregator"]}
+        
+    is_valid, error_msg = enforce_resource_limits(results)
+    if not is_valid:
+        logger.warning(f"Governance enforcement failed: {error_msg}")
+        return {
+            "error": "Phát hiện rủi ro an toàn tài nguyên. Tiến trình bị hệ thống bảo mật tự động ngắt kết nối.",
+            "next_nodes": ["aggregator"]
+        }
+        
+    sanitized_results = sanitize_output(results)
+    return {"consolidated_results": sanitized_results, "next_nodes": ["aggregator"]}
 
 async def aggregator_node(state: ActingState):
     return {"final_answer": ""}

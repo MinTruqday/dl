@@ -4,6 +4,8 @@ import json
 import re
 from typing import List, Optional
 
+from pydantic import BaseModel, Field
+
 import redis
 from loguru import logger
 
@@ -154,13 +156,43 @@ class EngineAgent:
             logger.warning("Blocked unauthorized network request")
             return "Request rejected due to severe violation of information security rules"
 
-        if self.api_key_valid:
-            try:
-                result = await self._tavily_search(query)
-                if result:
-                    return result
-            except Exception:
-                logger.exception("Primary search system encountered an issue")
+        if not self.api_key_valid:
+            return "The system could not extract any valuable information from the search data sources"
+
+        try:
+            from huggingface_hub import AsyncInferenceClient
+            from langchain_core.messages import HumanMessage
+            from src.utils.huggingface import HFInferenceChat
+            
+            class SubQueries(BaseModel):
+                queries: List[str] = Field(description="List of up to 3 sub-queries to search. If the original query is simple, return just one query.")
+            
+            client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
+            llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
+            structured_llm = llm.with_structured_output(SubQueries)
+            
+            prompt = f"Break down this query into up to 3 distinct search queries to gather comprehensive information: '{query}'"
+            response = await structured_llm.ainvoke([HumanMessage(content=prompt)])
+            
+            search_queries = response.queries if response.queries else [query]
+            if query not in search_queries:
+                search_queries.append(query)
+                
+            search_queries = search_queries[:3]
+            logger.info(f"Agentic RAG generated sub-queries: {search_queries}")
+            
+            tasks = [self._tavily_search(q) for q in search_queries]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            combined_text = ""
+            for res in results:
+                if isinstance(res, str) and res:
+                    combined_text += res + "\n"
+                    
+            if combined_text:
+                return combined_text
+        except Exception:
+            logger.exception("Agentic RAG search system encountered an issue")
 
         return "The system could not extract any valuable information from the search data sources"
 

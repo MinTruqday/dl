@@ -18,6 +18,13 @@ class SpawnedAgent:
         self.role = role
         self.system_prompt = system_prompt
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.llm = None
+        self.system_prompt = None
+
     async def run(self, task: str) -> str:
         logger.info(f"Spawned agent '{self.role}' execution started")
         messages = [
@@ -46,11 +53,8 @@ class AgentSpawner:
 
     async def _generate_system_prompt(self, role: str) -> str:
         logger.info(f"Generating system prompt for spawned role: {role}")
-        meta_prompt = (
-            f"You are a prompt engineer. Write a concise, professional system prompt for an AI agent "
-            f"with the role: '{role}'. The agent must be highly focused, expert-level, and produce "
-            f"structured, actionable outputs. Output only the system prompt text."
-        )
+        from src.core.registry import PromptType, registry
+        meta_prompt = registry.get(PromptType.SPAWNER_SYSTEM).format(role=role)
         try:
             response = await self.llm.ainvoke([HumanMessage(content=meta_prompt)])
             return response.content.strip()
@@ -60,5 +64,5 @@ class AgentSpawner:
 
     async def spawn(self, role: str, task: str) -> str:
         system_prompt = await self._generate_system_prompt(role)
-        agent = SpawnedAgent(llm=self.llm, role=role, system_prompt=system_prompt)
-        return await agent.run(task)
+        async with SpawnedAgent(llm=self.llm, role=role, system_prompt=system_prompt) as agent:
+            return await agent.run(task)

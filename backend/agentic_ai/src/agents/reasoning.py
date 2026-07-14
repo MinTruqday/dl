@@ -29,7 +29,13 @@ class ReasoningAgent:
             client = AsyncInferenceClient(model=self._model, token=self._hf_token)
             llm = HFInferenceChat(client=client, model=self._model)
             result = await llm.ainvoke([HumanMessage(content=prompt)])
-            return result.content.strip()
+            content = result.content.strip()
+            
+            if "</thought>" in content:
+                final_answer = content.split("</thought>")[-1].strip()
+                if final_answer:
+                    return final_answer
+            return content
         except Exception as e:
             logger.exception("Reasoning task execution error")
             return f"Mô hình AI đang gặp trục trặc trong quá trình tư duy và suy luận, vui lòng thử lại sau {e}"
