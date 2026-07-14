@@ -66,6 +66,16 @@ def _estimate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
 
 class GovernanceHarness:
+    """
+    <module_purpose>
+    DocLib Governance Harness for enforcing role-based access control and quota limits on agent sessions.
+    </module_purpose>
+    <contract>
+    - Precondition: Valid session and user role attributes.
+    - Postcondition: Grants or denies tool execution and token usage based on configured policies.
+    - Error Handling: Defaults to guest policy restrictions if the role is unknown.
+    </contract>
+    """
     def __init__(self):
         self._sessions: dict[str, SessionGovernanceState] = {}
 

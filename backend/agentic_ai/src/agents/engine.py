@@ -49,11 +49,14 @@ def _is_ssrf_attempt(query: str) -> bool:
 
 class EngineAgent:
     """
-    <agent_role>
-    <identity>Search Engine Agent</identity>
-    <responsibility>Retrieves real-time external information using Tavily, with Redis caching and semantic re-ranking.</responsibility>
-    <metis_behavior>Caches results for 30 minutes per query hash. Re-ranks results by semantic relevance before returning.</metis_behavior>
-    </agent_role>
+    <module_purpose>
+    DocLib Engine Agent for real-time external information retrieval with caching and semantic re-ranking.
+    </module_purpose>
+    <contract>
+    - Precondition: Tavily API key and Redis connection configured.
+    - Postcondition: Returns re-ranked search results as formatted strings.
+    - Error Handling: Returns safe fallback strings if dependencies fail. Does not crash.
+    </contract>
     """
 
     def __init__(self):
@@ -164,14 +167,12 @@ class EngineAgent:
             from langchain_core.messages import HumanMessage
             from src.utils.huggingface import HFInferenceChat
             
-            class SubQueries(BaseModel):
-                queries: List[str] = Field(description="List of up to 3 sub-queries to search. If the original query is simple, return just one query.")
-            
+            from src.schemas.engine import SubQueries
             client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
             llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
             structured_llm = llm.with_structured_output(SubQueries)
-            
-            prompt = f"Break down this query into up to 3 distinct search queries to gather comprehensive information: '{query}'"
+            from src.core.registry import registry, PromptType
+            prompt = registry.get(PromptType.ENGINE_SUBQUERIES).format(query=query)
             response = await structured_llm.ainvoke([HumanMessage(content=prompt)])
             
             search_queries = response.queries if response.queries else [query]

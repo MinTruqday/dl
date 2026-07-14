@@ -65,16 +65,18 @@ INTERNAL_API_URL = settings.INTERNAL_API_URL
 @tool
 async def get_user_balance(config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Get the current user's DocLib wallet balance in dl currency.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks about their remaining credits, balance, or how much money they have.
 
     CRITICAL: Requires authentication. If unauthorized, prompt the user to log in.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -101,16 +103,18 @@ async def get_user_balance(config: RunnableConfig) -> str:
 @tool
 async def get_transaction_history(config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     View recent financial transaction history including deposit and payments.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks for a history of their deposits, top-ups, payments, or where their money went.
 
     CRITICAL: Only shows recent transactions. Requires authentication.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -142,16 +146,18 @@ async def get_transaction_history(config: RunnableConfig) -> str:
 @tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Redeem a gift voucher code to add funds to the account.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user explicitly provides a voucher code or promo code and asks to redeem it.
 
     CRITICAL: The code must be a non-empty string.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -178,16 +184,18 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
 @tool
 async def get_revenue_report(config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     View revenue report from document sales, intended for authors.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when a document author asks about their earnings, total revenue, or pending withdrawals.
 
     CRITICAL: This report is for document authors only. Requires authentication. Returns aggregated revenue and pending withdrawal amounts.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -213,16 +221,18 @@ async def get_revenue_report(config: RunnableConfig) -> str:
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     List all personal documents owned or published by the current user.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to see their documents, what they have written, or their library.
 
     CRITICAL: Returns an empty-library message if no documents exist. Requires authentication.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -251,16 +261,18 @@ async def get_my_documents(config: RunnableConfig) -> str:
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     View deleted documents currently in the trash bin.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks about deleted files, trash bin, or recovering a deleted document.
 
     CRITICAL: Requires authentication. Only shows files deleted by this user.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -292,16 +304,18 @@ async def get_trash_documents(config: RunnableConfig) -> str:
 @tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Delete a document by ID, moving it to the trash bin.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user explicitly requests to delete, remove, or trash a specific document.
 
     CRITICAL: Requires the exact document ID.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -332,16 +346,18 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
 @tool
 async def restore_document(document_id: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Restore a document from the trash bin by its ID.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to recover, undelete, or restore a previously deleted document.
 
     CRITICAL: Requires the exact document ID of a deleted document.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -365,16 +381,18 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
 @tool
 async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     View detailed analytics including read count and drop-off rate for a document.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks how well their document is performing, how many reads it has, or its drop-off rate.
 
     CRITICAL: Requires the exact document ID.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -418,16 +436,18 @@ from src.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 @tool
 async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Suggest academic citations for a document by its ID.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to generate, find, or suggest citations (APA, MLA, etc.) for a specific document.
 
     CRITICAL: Requires the exact document ID. Only works if the document has readable text.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
@@ -459,16 +479,18 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
 @tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Perform an automated AI peer review of a document, evaluating strengths, weaknesses, and academic quality.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks for feedback, critique, peer review, or an evaluation of their document.
 
     CRITICAL: Requires the exact document ID. Provides a detailed critique report.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
@@ -502,16 +524,18 @@ async def agent_transform_tone(
     document_id: str, tone: str, config: RunnableConfig
 ) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Transform the writing tone of a document (e.g., to academic, professional, casual, enthusiastic).
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to rewrite, rephrase, or change the tone/style of a document.
 
     CRITICAL: Requires the exact document ID and a specific 'tone' string (e.g., 'academic'). Returns the transformed text.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
@@ -543,16 +567,18 @@ async def agent_transform_tone(
 @tool
 async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Create a deposit link to top up the user's dl wallet. Returns a payment URL.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user explicitly asks to top up, deposit money, or add funds to their account.
 
     CRITICAL: Requires an integer amount in VND. Requires user authentication.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -584,10 +610,12 @@ async def create_document(
     title: str, description: str, content: str, format: str, config: RunnableConfig
 ) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Create a new document in the user's library.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this tool ONLY when the user explicitly asks to create, write, or generate a new file, report, blog, or long-form content. Do NOT use this for short conversational responses (<= 20 lines) or quick lists.
 
@@ -595,7 +623,7 @@ async def create_document(
     - If format is 'latex', content MUST include standard LaTeX boilerplate (\\documentclass, \\begin{document}).
     - If format is 'json', content MUST be a valid EditorJS JSON string with a 'blocks' array. Example: {"blocks": [{"type": "paragraph", "data": {"text": "Hello"}}]}
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -688,16 +716,18 @@ async def create_document(
 @tool
 async def read_document(document_id: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Read the content of a document by its ID.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when you need to know the current content of a document before modifying it, or when the user asks you to read or summarize a specific document by its ID.
 
     CRITICAL: Requires the exact document ID. Returns the raw content format.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -733,10 +763,12 @@ async def update_document(
     config: RunnableConfig = None,
 ) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Update an existing document's content, title, or description by its ID.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to edit, modify, append, or change an existing document. ALWAYS read the document first using read_document before calling this to ensure you don't accidentally erase existing content.
 
@@ -744,7 +776,7 @@ async def update_document(
     - If format is 'json', new_content MUST be a valid EditorJS JSON string (with "blocks" array).
     - If format is 'latex', new_content MUST be the full LaTeX source code.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -841,16 +873,18 @@ async def translate_document(
     document_id: str, target_language: str, config: RunnableConfig
 ) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Translate an existing document to a target language. This operation creates a new translated document rather than overwriting the original.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to translate, convert language, or localize a specific document.
 
     CRITICAL: If language is not specified, default to English. Requires the exact document ID.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -989,16 +1023,18 @@ async def translate_document(
 @tool
 async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Dynamically search and read the source code of custom EditorJS blocks from the project's frontend.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this BEFORE calling create_document or update_document whenever you need to generate content for a specific custom block type (e.g., 'Chart', 'Kanban', 'Mermaid', 'Table'). Query for the component name to retrieve its TypeScript source and infer the exact JSON schema.
 
     CRITICAL: Calling this tool is a required first step before creating any document with custom UI blocks. Do NOT guess the JSON schema — read the source to confirm the exact structure.
     
-    </tool_definition>
+    </contract>
     """
     import os
     import glob
@@ -1023,14 +1059,16 @@ async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
 @tool
 async def agent_draft_with_memory(prompt: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Draft a document using the user's stored memory/preferences (communication style, tone preferences, role) to make the draft highly personalized.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to draft, write, or create a document based on a short prompt, and implies they want it tailored to their style or memory.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     try:
@@ -1054,14 +1092,16 @@ async def agent_draft_with_memory(prompt: str, config: RunnableConfig) -> str:
 @tool
 async def agent_extract_to_artifacts(document_id: str, extraction_goals: list[str], config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Extract structured data (like Action Items, Leaderboards, Timelines) from a complex document and save it to the persistent Artifacts Storage.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user wants to extract specific structured info from a document and save it persistently.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     try:
@@ -1088,14 +1128,16 @@ async def agent_extract_to_artifacts(document_id: str, extraction_goals: list[st
 @tool
 async def agent_web_fact_check(document_id: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Fact-check the claims in a document using Web Search to verify facts, especially those occurring after January 2026.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this to verify or fact-check a document against recent real-world events.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     try:
@@ -1122,14 +1164,16 @@ async def agent_web_fact_check(document_id: str, config: RunnableConfig) -> str:
 @tool
 async def agent_compliance_screener(document_id: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Scan a document for compliance, checking for child-safety risks, grooming, and financial/legal advice disclaimers.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user asks to review a document for safety, compliance, legal risks, or appropriate tone before publishing.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     try:
@@ -1156,14 +1200,16 @@ async def agent_compliance_screener(document_id: str, config: RunnableConfig) ->
 @tool
 async def agent_semantic_diff(document_id_1: str, document_id_2: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Perform a semantic comparison between two documents to explain how viewpoints, arguments, or clauses have changed conceptually.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use this when the user wants to understand the meaning or conceptual difference between two documents or versions.
     
-    </tool_definition>
+    </contract>
     """
     token = config.get("configurable", {}).get("token")
     try:
@@ -1191,15 +1237,17 @@ async def agent_semantic_diff(document_id_1: str, document_id_2: str, config: Ru
 @tool
 async def conversation_search(query: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Search past conversations by topic keywords.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - When the user references a specific past conversation by topic, project name, or keyword (e.g., "the bug we discussed", "my project").
     - Use content nouns (the topic, the proper noun, the project name), not meta-words like "discussed" or "yesterday". Keep it to a few distinctive terms.
     
-    </tool_definition>
+    </contract>
     """
     user_id = config.get("configurable", {}).get("user_id")
     if not user_id:
@@ -1223,14 +1271,16 @@ async def conversation_search(query: str, config: RunnableConfig) -> str:
 @tool
 async def recent_chats(days: int, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Find past conversations by time window.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - When the anchor is temporal (e.g., "yesterday," "last week," "my first chats").
     
-    </tool_definition>
+    </contract>
     """
     user_id = config.get("configurable", {}).get("user_id")
     if not user_id:
@@ -1254,10 +1304,12 @@ async def recent_chats(days: int, config: RunnableConfig) -> str:
 @tool
 async def memory_user_edits(action: str, content: str, config: RunnableConfig, memory_id: str = None) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Manage user edits to memory (e.g., "remember this", "forget that").
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - If a person asks you to remember or forget something, you MUST use memory_user_edits.
     - ALWAYS use the tool BEFORE confirming any memory action. DO NOT just acknowledge conversationally.
@@ -1267,7 +1319,7 @@ async def memory_user_edits(action: str, content: str, config: RunnableConfig, m
         content (str): The content to remember or update.
         memory_id (str, optional): The ID of the memory to update or delete.
     
-    </tool_definition>
+    </contract>
     """
     user_id = config.get("configurable", {}).get("user_id")
     if not user_id:
@@ -1292,10 +1344,12 @@ async def memory_user_edits(action: str, content: str, config: RunnableConfig, m
 @tool
 async def visualizer(code: str, type: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Stream inline SVG diagrams, illustrations, and HTML interactive widgets into the conversation.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Use when a visual genuinely aids understanding more than text alone (e.g., spatial relationships, data shape, system structure, process flow).
     - Triggered by phrases like: "show me," "visualize," "diagram," "chart," "illustrate," "draw," "graph."
@@ -1305,22 +1359,24 @@ async def visualizer(code: str, type: str, config: RunnableConfig) -> str:
         code (str): The raw SVG or HTML code to render.
         type (str): The type of code ('svg' or 'html').
     
-    </tool_definition>
+    </contract>
     """
     return "Hình ảnh trực quan đã được hiển thị thành công cho người dùng"
 
 @tool
 async def search_mcp_registry(query: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Search the MCP registry for available third-party apps and connectors.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - When the user asks to connect to an external app (e.g., "connect my calendar", "find a hike on HikeService").
     - Use this BEFORE calling suggest_connectors to find the relevant directoryUuid.
     
-    </tool_definition>
+    </contract>
     """
     try:
         from src.services.mcp import MCPService
@@ -1336,15 +1392,17 @@ async def search_mcp_registry(query: str, config: RunnableConfig) -> str:
 @tool
 async def suggest_connectors(uuids: list[str], config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Suggest MCP connectors for the user to authorize/connect.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - After searching the registry and finding a relevant but unconnected app, use this to prompt the user to connect it.
     - NEVER call an unconnected [third_party_mcp_app] directly without suggesting it first.
     
-    </tool_definition>
+    </contract>
     """
     try:
         from src.services.mcp import MCPService
@@ -1358,15 +1416,17 @@ async def suggest_connectors(uuids: list[str], config: RunnableConfig) -> str:
 @tool
 async def execute_mcp_tool(directory_uuid: str, tool_name: str, arguments: dict, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Execute a tool provided by a connected third-party MCP app.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Only after verifying the app is connected.
     - Pass the correct directory_uuid of the MCP server, the target tool_name, and required arguments as a dictionary.
     
-    </tool_definition>
+    </contract>
     """
     try:
         from src.services.mcp import MCPService
@@ -1388,14 +1448,16 @@ async def execute_mcp_tool(directory_uuid: str, tool_name: str, arguments: dict,
 @tool
 async def find_location(config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Find the user's current location and timezone.
     
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - When the user asks location/time queries (e.g., "what's the weather like here?", "what time is it for me?").
     
-    </tool_definition>
+    </contract>
     """
     try:
         import httpx
@@ -1417,17 +1479,19 @@ async def find_location(config: RunnableConfig) -> str:
 @tool
 async def web_search(query: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Search for current information on the web.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - Finding recent events or news.
     - Looking up current information beyond the AI's knowledge cutoff.
     - Researching topics that require up-to-date data.
     - Fact-checking or verifying information.
     
-    </tool_definition>
+    </contract>
     """
     from src.agents.engine import search_engine
     try:
@@ -1440,16 +1504,18 @@ async def web_search(query: str, config: RunnableConfig) -> str:
 @tool
 async def image_search(query: str, config: RunnableConfig) -> str:
     """
-    <tool_definition>
+    <module_purpose>
     
     Search and find images on the web, returning them along with their dimensions.
 
+    </module_purpose>
+    <contract>
     WHEN TO USE THIS TOOL:
     - When the user asks to see what something looks like, or asks for visual references.
     
     CRITICAL: Keep queries specific (3-6 words).
     
-    </tool_definition>
+    </contract>
     """
     from src.agents.engine import search_engine
     try:

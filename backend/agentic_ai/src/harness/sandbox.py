@@ -7,9 +7,13 @@ from loguru import logger
 class CodeSandbox:
     """
     <module_purpose>
-    <purpose>Executes generated code in a restricted, isolated environment.</purpose>
-    <metis_behavior>Monitors resource utilization. Fails immediately on timeouts or unauthorized I/O attempts.</metis_behavior>
+    DocLib Code Sandbox for executing dynamically generated code in a restricted, isolated environment.
     </module_purpose>
+    <contract>
+    - Precondition: Executable code snippet and runtime constraints (timeout, memory).
+    - Postcondition: Returns execution outputs (stdout, stderr) or timeout errors.
+    - Error Handling: Fails immediately and cleans up resources on timeouts or unauthorized I/O attempts.
+    </contract>
     """
     def __init__(self, use_docker: bool = False):
         """

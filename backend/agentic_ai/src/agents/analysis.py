@@ -4,9 +4,13 @@ from src.workflow.graph import knowledge_app
 class AnalysisAgent:
     """
     <module_purpose>
-    <purpose>Parses raw user requests and prepares them for execution.</purpose>
-    <metis_behavior>Extracts and sanitizes metadata fields prior to dispatching to the orchestration engine.</metis_behavior>
+    DocLib Analysis Agent for parsing raw user requests and preparing them for execution.
     </module_purpose>
+    <contract>
+    - Precondition: Receives a raw request object (dict or object).
+    - Postcondition: Extracts and sanitizes metadata fields prior to orchestration dispatch.
+    - Error Handling: Employs safe attribute and key lookups.
+    </contract>
     """
     def __init__(self):
         pass

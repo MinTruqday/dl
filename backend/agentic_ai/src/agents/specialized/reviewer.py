@@ -8,11 +8,14 @@ from src.core.registry import PromptType, registry
 
 class ReviewerAgent:
     """
-    <agent_role>
-    <identity>Swarm Peer Reviewer</identity>
-    <responsibility>Critiques generated code against architectural standards and coding conventions.</responsibility>
-    <metis_behavior>Provides blunt, highly objective feedback. Never softens criticism with filler words.</metis_behavior>
-    </agent_role>
+    <module_purpose>
+    DocLib Reviewer Agent for critiquing generated code against architectural standards.
+    </module_purpose>
+    <contract>
+    - Precondition: Valid code artifact available in Swarm state.
+    - Postcondition: Outputs structured evaluation with approval status and feedback.
+    - Error Handling: Returns missing artifact message if code is absent.
+    </contract>
     """
     def __init__(self, llm):
         self.llm = llm

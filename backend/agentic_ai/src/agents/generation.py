@@ -10,9 +10,13 @@ from src.harness.security import security
 class GenerationAgent:
     """
     <module_purpose>
-    <purpose>Handles the final text generation for search results.</purpose>
-    <metis_behavior>Aggregates findings into formal Vietnamese output and aborts immediately if security scans fail.</metis_behavior>
+    DocLib Generation Agent for handling final text generation from search results.
     </module_purpose>
+    <contract>
+    - Precondition: Consolidated search results and an unblocked user query.
+    - Postcondition: Aggregates findings into formal output streamed back to the user.
+    - Error Handling: Aborts immediately with a safety message if security scans fail.
+    </contract>
     """
     def __init__(self):
         pass

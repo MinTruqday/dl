@@ -23,9 +23,13 @@ llm = ChatHuggingFace(llm=_hf_endpoint)
 class PlanAgent:
     """
     <module_purpose>
-    <purpose>Decomposes complex requests into parallel and sequential execution plans.</purpose>
-    <metis_behavior>Employs exponential backoff, retry mechanisms, and Redis semantic plan caching to guarantee structural validity and efficiency of the plan.</metis_behavior>
+    DocLib Plan Agent for decomposing complex requests into execution plans.
     </module_purpose>
+    <contract>
+    - Precondition: Complex user query requiring multi-step execution.
+    - Postcondition: Produces parallel and sequential structured execution plans.
+    - Error Handling: Employs exponential backoff, retry mechanisms, and Redis caching to ensure plan structural validity.
+    </contract>
     """
 
     def __init__(self):

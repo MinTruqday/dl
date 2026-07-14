@@ -6,12 +6,8 @@ from src.core.infrastructure.configuration import settings
 @tool
 async def check_network_anomaly(user_id: str, client_ip: str) -> dict:
     """
-    Check network behavior for anomalies (e.g. rate-limiting, IP hopping) within the last minute.
-
-    WHEN TO USE THIS TOOL:
-    Use this when you suspect a user might be performing suspicious activities, sending too many requests, or sharing accounts.
-
-    CRITICAL: Requires the exact user_id and client_ip. Returns a dict containing anomaly flags.
+    <module_purpose>Check network behavior for anomalies (e.g. rate-limiting, IP hopping) within the last minute. Use this when you suspect a user might be performing suspicious activities, sending too many requests, or sharing accounts.</module_purpose>
+    <contract>Requires the exact user_id and client_ip. Returns a dict containing anomaly flags.</contract>
     """
     try:
         async with httpx.AsyncClient() as client:
@@ -30,10 +26,8 @@ async def check_network_anomaly(user_id: str, client_ip: str) -> dict:
 @tool
 async def get_user_trust_profile(user_id: str, user_tier: str = "BASIC") -> dict:
     """
-    Retrieve the trust profile of the user (e.g., trust score based on user tier).
-
-    WHEN TO USE THIS TOOL:
-    Use this when evaluating whether a user should be permitted to perform a sensitive action (like mass exporting, bulk downloading, or modifying critical data).
+    <module_purpose>Retrieve the trust profile of the user (e.g., trust score based on user tier). Use this when evaluating whether a user should be permitted to perform a sensitive action (like mass exporting, bulk downloading, or modifying critical data).</module_purpose>
+    <contract>Requires user_id. Optionally accepts user_tier. Returns the user's trust profile.</contract>
     """
     try:
         async with httpx.AsyncClient() as client:
@@ -52,12 +46,8 @@ async def get_user_trust_profile(user_id: str, user_tier: str = "BASIC") -> dict
 @tool
 async def analyze_document_risk(document_id: str, document_type: str = "standard") -> dict:
     """
-    Analyze the risk level of the document (e.g. 'sensitive', 'exam', 'premium').
-
-    WHEN TO USE THIS TOOL:
-    Use this when a user is trying to access or manipulate a document, and you need to verify if the document's risk level permits the requested action.
-
-    CRITICAL: Returns 'HIGH' or 'LOW' risk level.
+    <module_purpose>Analyze the risk level of the document (e.g. 'sensitive', 'exam', 'premium'). Use this when a user is trying to access or manipulate a document, and you need to verify if the document's risk level permits the requested action.</module_purpose>
+    <contract>Requires document_id. Returns a dictionary with risk_level being 'HIGH' or 'LOW'.</contract>
     """
     try:
         async with httpx.AsyncClient() as client:

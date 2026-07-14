@@ -1,10 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class IngestRequest(BaseModel):
     """
-    <schema_definition>
-    <purpose>Trigger asynchronous ingestion of a document into the RAG vector store.</purpose>
-    <metis_constraint>The document_id MUST be a valid, existing document in the primary database.</metis_constraint>
-    </schema_definition>
+    Trigger asynchronous ingestion of a document into the RAG vector store.
+    Constraint: Requires document_id mapping to the external document storage DB.
     """
-    document_id: str
+    document_id: str = Field(description="<critical_instructions>The ID of the document to ingest.</critical_instructions>")

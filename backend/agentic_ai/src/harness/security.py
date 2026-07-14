@@ -19,6 +19,16 @@ class ScanResult:
     violations: List[str] = field(default_factory=list)
 
 class SecurityHarness:
+    """
+    <module_purpose>
+    DocLib Security Harness for runtime prompt injection detection and content sanitization.
+    </module_purpose>
+    <contract>
+    - Precondition: Raw input text from users or external sources.
+    - Postcondition: Returns a sanitized string and scan result indicating if it was blocked.
+    - Error Handling: Defaults to strict blocking if the security analysis engine fails.
+    </contract>
+    """
     def __init__(self):
         pass
 

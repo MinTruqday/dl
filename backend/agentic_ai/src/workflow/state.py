@@ -54,6 +54,16 @@ def reduce_consolidated_results(left: list, right: list) -> list:
     return combined
 
 class AgentState(TypedDict):
+    """
+    <module_purpose>
+    DocLib Agent State defining the graph state schema for the primary RAG and Agentic workflow.
+    </module_purpose>
+    <contract>
+    - Precondition: Initialized at the start of the LangGraph execution.
+    - Postcondition: Accumulates messages, search results, and execution metadata.
+    - Error Handling: Uses custom reducers to prevent memory bloat and context limit exhaustion.
+    </contract>
+    """
     chat_history: Annotated[list, reduce_chat_history]
     question: str
     generation: str
@@ -72,10 +82,14 @@ class AgentState(TypedDict):
 
 class ActingState(TypedDict):
     """
-    <schema_definition>
-    <purpose>Defines the global state representation for the Metis orchestration workflow.</purpose>
-    <metis_constraint>Must be rigidly passed between nodes. Lists must use operator.add for continuous appending.</metis_constraint>
-    </schema_definition>
+    <module_purpose>
+    DocLib Acting State defining the minimal state payload for Tool execution graphs.
+    </module_purpose>
+    <contract>
+    - Precondition: Tool execution requests containing req_data.
+    - Postcondition: Persists data across execution nodes.
+    - Error Handling: Relies on external validators before state instantiation.
+    </contract>
     """
     req_data: Dict[str, Any]
     steps: List[Dict[str, str]]

@@ -199,7 +199,8 @@ class EvaluationHarness:
             instruction = sample.get("instruction", "")
             inp = sample.get("input", "")
             expected = sample.get("output", "")
-            prompt = f"{instruction}\n{inp}".strip()
+            from src.core.registry import registry, PromptType
+            prompt = registry.get(PromptType.EVALUATION_HARNESS_PROMPT).format(instruction=instruction, inp=inp).strip()
             try:
                 resp = await client.chat_completion(
                     messages=[{"role": "user", "content": prompt}],

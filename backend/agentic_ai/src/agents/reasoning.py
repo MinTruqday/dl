@@ -11,9 +11,15 @@ from src.schemas.evaluation import QualityEvaluation
 class ReasoningAgent:
     """
     <module_purpose>
-    <purpose>Provides deep analytical reasoning for complex logical queries.</purpose>
-    <metis_behavior>Operates as an analytical engine, strictly evaluating data without taking external actions.</metis_behavior>
+        <purpose>Provide deep analytical reasoning and critical assessment for complex logical queries.</purpose>
+        <context>Invoked by the orchestration layer when a user query requires multi-step deduction (Zero-Shot CoT), quality evaluation, or deep thought.</context>
     </module_purpose>
+    
+    <contract>
+        <input>Takes natural language tasks or context-augmented queries.</input>
+        <output>Returns reasoned conclusions (str) or structured quality evaluations (Dict).</output>
+        <exceptions>Returns an error string starting with MODULE REASONING_AGENT if LLM invocation fails.</exceptions>
+    </contract>
     """
     def __init__(self):
         self._model = settings.LLM_MODEL

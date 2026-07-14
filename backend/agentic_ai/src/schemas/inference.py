@@ -79,6 +79,6 @@ class SemanticDiffRequest(BaseModel):
     text2: str
 
 class MemoryUserEditsRequest(BaseModel):
-    action: str  # add, update, delete
+    action: str
     content: str
     memory_id: Optional[str] = None

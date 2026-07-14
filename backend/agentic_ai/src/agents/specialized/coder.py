@@ -14,11 +14,14 @@ from src.schemas.coder import CoderOutput
 
 class CoderAgent:
     """
-    <agent_role>
-    <identity>Swarm Coder</identity>
-    <responsibility>Generates robust, idiomatic Python code based on the user's task. Delegates to spawned sub-agents when the task requires a specialized role.</responsibility>
-    <metis_behavior>Writes strictly compliant code. Refuses requests to write malware or obfuscated scripts. Supports dynamic sub-agent spawning via [SPAWN:role] task prefix.</metis_behavior>
-    </agent_role>
+    <module_purpose>
+    DocLib Coder Agent for generating robust Python code within a Multi-Agent Swarm.
+    </module_purpose>
+    <contract>
+    - Precondition: Receives a validated task from the Swarm Supervisor.
+    - Postcondition: Returns executable code and an explanation.
+    - Error Handling: Refuses to generate malware. Delegates via [SPAWN:role] if a specialized sub-agent is required.
+    </contract>
     """
 
     def __init__(self, llm):

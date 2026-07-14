@@ -2,43 +2,23 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 class TaskEvaluation(BaseModel):
-    status: Literal["PASS", "FAIL"] = Field(
-        ...,
-        description="<critical_instructions>MUST be exactly 'PASS' if the agent's output is flawlessly coherent, usable, and safe. MUST be 'FAIL' if it contains ANY errors, hallucinations, violations of system rules, or is clearly suboptimal.</critical_instructions>"
-    )
-    feedback: str = Field(
-        ...,
-        description="<metis_behavior>Brutally objective, highly specific actionable feedback explaining the PASS/FAIL verdict. If FAIL, pinpoint the exact logical flaw or line number. Do not use polite conversational filler. MUST NOT be empty.</metis_behavior>"
-    )
-    revised_task: str = Field(
-        default="",
-        description="<conditional_output>If status is 'FAIL', provide a meticulously revised, corrected version of the task instruction to strictly guide the next retry. Leave completely empty if status is 'PASS'.</conditional_output>"
-    )
+    status: Literal["PASS", "FAIL"] = Field(..., description="<critical_instructions>MUST be exactly 'PASS' if the agent's output is flawlessly coherent, usable, and safe. MUST be 'FAIL' if it contains ANY errors, hallucinations, violations of system rules, or is clearly suboptimal.</critical_instructions>")
+    feedback: str = Field(..., description="<metis_behavior>Brutally objective, highly specific actionable feedback explaining the PASS/FAIL verdict. If FAIL, pinpoint the exact logical flaw or line number. Do not use polite conversational filler. MUST NOT be empty.</metis_behavior>")
+    revised_task: str = Field(default="", description="<conditional_output>If status is 'FAIL', provide a meticulously revised, corrected version of the task instruction to strictly guide the next retry. Leave completely empty if status is 'PASS'.</conditional_output>")
 
 class DocumentGrade(BaseModel):
-    is_relevant: bool = Field(
-        ...,
-        description="<critical_instructions>Set to True ONLY if the document explicitly and directly contains factual information that resolves the user's query. Set to False if it is only tangentially related or lacks concrete answers.</critical_instructions>"
-    )
+    is_relevant: bool = Field(..., description="<critical_instructions>Set to True ONLY if the document explicitly and directly contains factual information that resolves the user's query. Set to False if it is only tangentially related or lacks concrete answers.</critical_instructions>")
 
 class QualityEvaluation(BaseModel):
-    is_hallucination: bool = Field(
-        ...,
-        description="<critical_instructions>Set to True if the response contains ANY unverified claims, fabricated facts, hallucinated APIs, or information directly contradicting the retrieved context.</critical_instructions>"
-    )
-    feedback: str = Field(
-        ...,
-        description="<output_format>Specific, actionable feedback pointing out exactly which part of the response is flawed and outlining the explicit logical steps required to fix it.</output_format>"
-    )
+    is_hallucination: bool = Field(..., description="<critical_instructions>Set to True if the response contains ANY unverified claims, fabricated facts, hallucinated APIs, or information directly contradicting the retrieved context.</critical_instructions>")
+    feedback: str = Field(..., description="<output_format>Specific, actionable feedback pointing out exactly which part of the response is flawed and outlining the explicit logical steps required to fix it.</output_format>")
 
 class ErrorMessageJudgment(BaseModel):
     is_error_message: bool = Field(description="<critical_instructions>Set to True if the text contains a raw stack trace, HTTP error code, unhandled exception, Python/JS traceback, or a system failure message. Set to False if it is a natural language response (even if it politely apologizes).</critical_instructions>")
     reason: str = Field(description="<critical_instructions>A specific, 1-2 sentence explanation of why this was classified as an error message or a valid output.</critical_instructions>")
 
 class HallucinationJudgment(BaseModel):
-    is_hallucination_or_refusal: bool = Field(
-        description="Set to True if the response refuses the prompt (e.g. 'I cannot do this'), states 'I do not know', uses AI-identity disclaimers ('As an AI...'), or contains hallucinated unverified facts."
-    )
+    is_hallucination_or_refusal: bool = Field(description="Set to True if the response refuses the prompt (e.g. 'I cannot do this'), states 'I do not know', uses AI-identity disclaimers ('As an AI...'), or contains hallucinated unverified facts.")
     confidence: float = Field(description="<critical_instructions>Confidence score between 0.0 and 1.0 representing how certain you are of this judgment.</critical_instructions>")
     explanation: str = Field(description="<critical_instructions>Detailed explanation of the exact claims that are hallucinated or why the refusal was detected.</critical_instructions>")
 

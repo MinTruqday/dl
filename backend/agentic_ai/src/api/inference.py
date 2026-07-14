@@ -672,7 +672,8 @@ async def draft_with_memory(
 ):
     logger.info(f"Started draft_with_memory API request for user_id={current_user.id}")
     try:
-        prompt = f"Using my stored memory and preferences, draft a document about: {req.prompt}"
+        from src.core.registry import registry, PromptType
+        prompt = registry.get(PromptType.DRAFT_WITH_MEMORY).format(prompt=req.prompt)
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
@@ -691,7 +692,8 @@ async def extract_to_storage(
 ):
     logger.info(f"Started extract_to_storage API request for user_id={current_user.id}")
     try:
-        prompt = f"Extract the following goals: {', '.join(req.extraction_goals)} from this text and return ONLY a JSON dictionary:\n{req.text[:3000]}"
+        from src.core.registry import registry, PromptType
+        prompt = registry.get(PromptType.EXTRACT_TO_ARTIFACTS).format(goals=', '.join(req.extraction_goals), text=req.text[:3000])
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
@@ -711,7 +713,8 @@ async def web_fact_check(
 ):
     logger.info(f"Started web_fact_check API request for user_id={current_user.id}")
     try:
-        prompt = f"Fact-check the following text using web search context (if available) and return a report:\n{req.text[:3000]}"
+        from src.core.registry import registry, PromptType
+        prompt = registry.get(PromptType.WEB_FACT_CHECK).format(text=req.text[:3000])
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
@@ -730,7 +733,8 @@ async def compliance_screen(
 ):
     logger.info(f"Started compliance_screen API request for user_id={current_user.id}")
     try:
-        prompt = f"Screen this text for child safety, legal, and financial compliance risks. Return a compliance report:\n{req.text[:3000]}"
+        from src.core.registry import registry, PromptType
+        prompt = registry.get(PromptType.COMPLIANCE_SCREENER).format(text=req.text[:3000])
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
@@ -749,7 +753,8 @@ async def semantic_diff(
 ):
     logger.info(f"Started semantic_diff API request for user_id={current_user.id}")
     try:
-        prompt = f"Perform a semantic comparison between these two versions and summarize the conceptual changes.\n\nVersion 1:\n{req.text1[:2000]}\n\nVersion 2:\n{req.text2[:2000]}"
+        from src.core.registry import registry, PromptType
+        prompt = registry.get(PromptType.SEMANTIC_DIFF).format(text1=req.text1[:2000], text2=req.text2[:2000])
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],

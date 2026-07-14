@@ -368,9 +368,15 @@ supervisor_app = workflow.compile(checkpointer=memory, interrupt_before=["action
 class OrchestrationWorkflow:
     """
     <module_purpose>
-    <purpose>Orchestrates the continuous event loop for the Metis main reasoning graph.</purpose>
-    <metis_behavior>Streams events strictly in real-time. Yields formalized JSON outputs and suppresses internal stack traces.</metis_behavior>
+        <purpose>Orchestrate the continuous event loop for the Metis main reasoning graph (LangGraph).</purpose>
+        <context>Acts as the central nervous system, managing state transitions, agent delegation, and real-time streaming of events back to the client.</context>
     </module_purpose>
+    
+    <contract>
+        <input>Takes an initial request data dictionary containing user_id, query, and optional token.</input>
+        <output>Yields an asynchronous stream of structured dicts representing plan updates, tool results, and final synthesized answers.</output>
+        <exceptions>Swallows internal agent exceptions to prevent crash cascades, returning safe localized error messages.</exceptions>
+    </contract>
     """
     def __init__(self):
         self.app = supervisor_app

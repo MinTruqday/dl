@@ -41,10 +41,8 @@ OWASP_PATTERNS: Dict[str, List[str]] = {
 
 class SASTScanner:
     """
-    <module_purpose>
-    <purpose>Runs Static Application Security Testing against code artifacts using Bandit, Semgrep, and OWASP Top 10 pattern matching.</purpose>
-    <metis_behavior>Acts as the deterministic backbone for the SecOpsAgent. Returns full, actionable scan output including severity levels and line references.</metis_behavior>
-    </module_purpose>
+    <module_purpose>Runs Static Application Security Testing against code artifacts using Bandit, Semgrep, and OWASP Top 10 pattern matching.</module_purpose>
+    <contract>Acts as the deterministic backbone for the SecOpsAgent. Returns full, actionable scan output including severity levels and line references.</contract>
     """
 
     @staticmethod
@@ -151,20 +149,17 @@ class SASTScanner:
         semgrep_result = cls.run_semgrep_on_code(code)
         owasp_result = cls.run_owasp_patterns(code)
         return (
-            f"=== Bandit ===\n{bandit_result}\n\n"
-            f"=== Semgrep ===\n{semgrep_result}\n\n"
-            f"=== OWASP Top 10 ===\n{owasp_result}"
+            f"Bandit: \n{bandit_result}\n\n"
+            f"Semgrep: \n{semgrep_result}\n\n"
+            f"OWASP Top 10: \n{owasp_result}"
         )
 
 
 @tool
 def tool_scan_code_bandit(target_path: str) -> str:
     """
-    <tool_definition>
-    <purpose>Executes the Bandit security scanner to find common security issues in Python code.</purpose>
-    <input_params>target_path: The filesystem path to scan.</input_params>
-    <return_value>Full scan output including severity, confidence, and line numbers.</return_value>
-    </tool_definition>
+    <module_purpose>Runs the Bandit SAST tool on the provided target path to find common security issues in Python code.</module_purpose>
+    <contract>Accepts a target path string. Returns the standard output of the Bandit scan.</contract>
     """
     return SASTScanner.run_bandit(target_path)
 
@@ -172,10 +167,7 @@ def tool_scan_code_bandit(target_path: str) -> str:
 @tool
 def tool_scan_code_semgrep(target_path: str) -> str:
     """
-    <tool_definition>
-    <purpose>Executes the Semgrep security scanner to find advanced semantic security issues in code.</purpose>
-    <input_params>target_path: The filesystem path to scan.</input_params>
-    <return_value>Full scan output with rule IDs and locations.</return_value>
-    </tool_definition>
+    <module_purpose>Executes the Semgrep security scanner to find advanced semantic security issues in code.</module_purpose>
+    <contract>Accepts a target path string. Returns the full scan output with rule IDs and locations.</contract>
     """
     return SASTScanner.run_semgrep(target_path)

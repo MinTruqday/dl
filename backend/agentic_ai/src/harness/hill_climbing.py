@@ -230,9 +230,9 @@ class HarnessImprover:
                     "prompt_type": "BRAIN_SYSTEM",
                     "action": "append_suffix",
                     "suffix": (
-                        "\n\nIMPORTANT: If you are uncertain about how to proceed, "
+                        "\n\n<critical_instructions>\nIMPORTANT: If you are uncertain about how to proceed, "
                         "choose the Knowledge agent to gather more information before acting. "
-                        "Never leave a response empty or say 'I cannot help with this'."
+                        "Never leave a response empty or say 'I cannot help with this'.\n</critical_instructions>"
                     ),
                 },
                 impact_score=0.7,

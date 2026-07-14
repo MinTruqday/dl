@@ -23,6 +23,16 @@ def _get_redis_client() -> Optional[redis.Redis]:
 
 
 class MCTSNode:
+    """
+    <module_purpose>
+    DocLib MCTS Node representing a specific state within the Monte Carlo Tree Search.
+    </module_purpose>
+    <contract>
+    - Precondition: Valid node state dictionary.
+    - Postcondition: Manages its children, visits, and value for tree search logic.
+    - Error Handling: Automatically garbage-collected when tree is dropped.
+    </contract>
+    """
     def __init__(self, state: Dict[str, Any], parent: Optional["MCTSNode"] = None):
         self.state = state
         self.parent = parent
@@ -44,11 +54,14 @@ class MCTSNode:
 
 class MCTSGenerator:
     """
-    <agent_role>
-    <identity>MCTS Thought Branch Generator</identity>
-    <responsibility>Generates diverse, parallel solution branches for complex logical tasks.</responsibility>
-    <metis_behavior>Employs strict heuristic evaluation, alpha-beta pruning, and Redis caching to traverse the optimal execution path efficiently.</metis_behavior>
-    </agent_role>
+    <module_purpose>
+    DocLib MCTS Generator for generating distinct implementation approaches to solve a task.
+    </module_purpose>
+    <contract>
+    - Precondition: Specific coding task description.
+    - Postcondition: Returns exactly 3 distinct structural implementations.
+    - Error Handling: Retries safely on malformed JSON outputs.
+    </contract>
     """
 
     def __init__(self, llm, evaluator_llm, max_iterations: int = 5):

@@ -1,3 +1,13 @@
+"""
+<module_purpose>
+DocLib Orchestration Graph configuring the state machine nodes, edges, and conditions for the LangGraph workflow.
+</module_purpose>
+<contract>
+- Precondition: All necessary tools and models properly initialized.
+- Postcondition: Exposes a compiled LangGraph app ready for invocation.
+- Error Handling: Implements safety nets, fallback loops, and hallucination checks within the graph topology.
+</contract>
+"""
 import asyncio
 import os
 from typing import Annotated, List, Literal, Optional, Sequence, TypedDict

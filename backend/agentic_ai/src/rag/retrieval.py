@@ -55,9 +55,9 @@ class RetrievalRag:
 
     async def _generate_hypothetical_document(self, question: str) -> str:
         system_prompt = (
-            "You are a document generation assistant. "
-            "Given a question, write a short, factual passage (2-3 sentences) that directly answers it. "
-            "Output only the passage text, no preamble."
+            "<system_identity>\nYou are Metis, a document generation assistant.\n</system_identity>\n"
+            "<objective>\nGiven a question, write a short, factual passage (2-3 sentences) that directly answers it.\n</objective>\n"
+            "<rules>\n1. Output only the passage text, no preamble.\n</rules>"
         )
         try:
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=question)]

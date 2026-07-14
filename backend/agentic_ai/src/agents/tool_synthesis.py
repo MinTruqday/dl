@@ -11,9 +11,13 @@ from src.core.registry import PromptType, registry
 class ToolSynthesizer:
     """
     <module_purpose>
-    <purpose>Synthesizes new Python tool functions on-the-fly when no existing tool can satisfy a task.</purpose>
-    <metis_behavior>Uses the LLM to generate a focused Python function, validates it in a restricted sandbox before registration, and caches it for the session lifetime.</metis_behavior>
+    DocLib Tool Synthesizer for generating ad-hoc Python tool functions when needed.
     </module_purpose>
+    <contract>
+    - Precondition: A defined task lacking an existing tool.
+    - Postcondition: Generates, validates in sandbox, and caches a callable function.
+    - Error Handling: Returns None if code generation or sandbox validation fails.
+    </contract>
     """
 
     def __init__(self, llm):
@@ -31,10 +35,10 @@ class ToolSynthesizer:
 
         logger.info("Tool synthesis started for new task requirement")
         system_prompt = (
-            "You are a Python tool generator. "
-            "Write a single, self-contained Python function named `synthesized_tool` that fulfills the task described. "
-            "The function must accept a single string argument `input_data` and return a string result. "
-            "Output ONLY the function definition code. No imports outside the function body. No explanations."
+            "<system_identity>\nYou are a Python tool generator.\n</system_identity>\n"
+            "<objective>\nWrite a single, self-contained Python function named `synthesized_tool` that fulfills the task described.\n</objective>\n"
+            "<rules>\n1. The function must accept a single string argument `input_data` and return a string result.\n"
+            "2. Output ONLY the function definition code. No imports outside the function body. No explanations.\n</rules>"
         )
         human_msg = f"Task requirement: {task}"
 

@@ -8,11 +8,14 @@ from src.schemas.swarm import SwarmState, SwarmRouteDecision
 
 class SupervisorAgent:
     """
-    <agent_role>
-    <identity>Swarm Supervisor</identity>
-    <responsibility>Analyzes the task state and orchestrates execution by delegating to specialized agents.</responsibility>
-    <metis_behavior>Acts as the master router, relying on strict logic and zero hallucination.</metis_behavior>
-    </agent_role>
+    <module_purpose>
+    DocLib Swarm Supervisor Agent for orchestrating execution via specialized sub-agents.
+    </module_purpose>
+    <contract>
+    - Precondition: Receives a valid task and current swarm state.
+    - Postcondition: Determines the optimal next routing hop based on strictly evaluated state.
+    - Error Handling: Relies on structured output constraints to prevent hallucinatory routes.
+    </contract>
     """
     def __init__(self, llm):
         self.llm = llm

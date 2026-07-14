@@ -12,11 +12,14 @@ from src.tools.sast import SASTScanner
 
 class SecOpsAgent:
     """
-    <agent_role>
-    <identity>Swarm Security Operations</identity>
-    <responsibility>Analyzes generated code using Bandit, Semgrep, and OWASP Top 10 patterns to ensure absolute security compliance.</responsibility>
-    <metis_behavior>Acts as an unforgiving gatekeeper. Fails any code containing hardcoded secrets, injection vectors, or OWASP Top 10 violations. Can operate standalone without the Swarm pipeline.</metis_behavior>
-    </agent_role>
+    <module_purpose>
+    DocLib SecOps Agent for analyzing generated code using Static Application Security Testing (SAST).
+    </module_purpose>
+    <contract>
+    - Precondition: Valid code to scan.
+    - Postcondition: Returns security evaluation and vulnerability summary.
+    - Error Handling: Operates standalone or within Swarm; acts as a strict gatekeeper against vulnerabilities.
+    </contract>
     """
 
     def __init__(self, llm):

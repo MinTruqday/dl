@@ -6,11 +6,16 @@ from loguru import logger
 
 class SpawnedAgent:
     """
-    <agent_role>
-    <identity>Dynamically spawned sub-agent</identity>
-    <responsibility>Executes a highly specific task using a custom system prompt generated at runtime.</responsibility>
-    <metis_behavior>Acts as a stateless worker. Receives a task, executes it via LLM with a role-specific system prompt, and returns the result as a string artifact.</metis_behavior>
-    </agent_role>
+    <module_purpose>
+        <purpose>Execute a highly specific, short-lived task using a custom system prompt generated at runtime.</purpose>
+        <context>Instantiated on-the-fly by AgentSpawner when a swarm needs a specialized, temporary role (e.g., specific framework expert) that is not part of the standard core agents.</context>
+    </module_purpose>
+    
+    <contract>
+        <input>Requires an instantiated LLM client, a role description (str), and a specialized system_prompt (str).</input>
+        <output>Executes tasks and returns text artifacts.</output>
+        <exceptions>Returns an error string starting with MODULE SPAWNED_AGENT if LLM invocation fails.</exceptions>
+    </contract>
     """
 
     def __init__(self, llm, role: str, system_prompt: str):
@@ -43,9 +48,15 @@ class SpawnedAgent:
 class AgentSpawner:
     """
     <module_purpose>
-    <purpose>Enables SwarmAgent to create new specialized sub-agents at runtime based on the task requirement.</purpose>
-    <metis_behavior>Generates a role-specific system prompt via LLM, instantiates a SpawnedAgent, executes the task, and returns the result as a string. Does not persist agent instances beyond the call.</metis_behavior>
+        <purpose>Enable SwarmAgent to dynamically create and orchestrate new, specialized sub-agents at runtime.</purpose>
+        <context>Used by SwarmAgent or other orchestrators when they encounter a task requiring domain expertise not covered by statically defined agents.</context>
     </module_purpose>
+    
+    <contract>
+        <input>Requires an instantiated LLM client.</input>
+        <output>Manages the lifecycle of SpawnedAgent instances, ensuring clean memory release via async context managers.</output>
+        <exceptions>None directly; delegates execution errors to SpawnedAgent output.</exceptions>
+    </contract>
     """
 
     def __init__(self, llm):
@@ -60,7 +71,7 @@ class AgentSpawner:
             return response.content.strip()
         except Exception:
             logger.exception("System prompt generation for spawned agent failed")
-            return f"You are a highly specialized expert in {role}. Complete the given task with precision and depth."
+            return f"<system_identity>\nYou are a highly specialized expert in {role}.\n</system_identity>\n<objective>\nComplete the given task with precision and depth.\n</objective>"
 
     async def spawn(self, role: str, task: str) -> str:
         system_prompt = await self._generate_system_prompt(role)

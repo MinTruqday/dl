@@ -30,6 +30,16 @@ def _is_transient_error(exc: Exception) -> bool:
 
 
 class ActingAgent:
+    """
+    <module_purpose>
+    DocLib Acting Agent for executing registered tools based on LLM decisions.
+    </module_purpose>
+    <contract>
+    - Precondition: Tool name and validated arguments. User authentication for sensitive tools.
+    - Postcondition: Executes the tool and returns the result string.
+    - Error Handling: Handles exceptions locally and communicates failures contextually.
+    </contract>
+    """
     def __init__(self):
         self.base_url = settings.INTERNAL_API_URL
         self.tool_map = {t.name: t for t in tools}
