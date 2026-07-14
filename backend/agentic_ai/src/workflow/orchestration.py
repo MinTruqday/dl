@@ -223,12 +223,18 @@ async def swarm_node(state: ActingState):
         final_artifacts = {}
         final_messages = []
 
-        async for output in swarm_app.astream(init_state, {"recursion_limit": 15}):
-            for node_name, state_update in output.items():
-                if "artifacts" in state_update:
-                    final_artifacts.update(state_update["artifacts"])
-                if "messages" in state_update:
-                    final_messages = state_update["messages"]
+        from langgraph.errors import GraphRecursionError
+        from langchain_core.messages import AIMessage
+        try:
+            async for output in swarm_app.astream(init_state, {"recursion_limit": 15}):
+                for node_name, state_update in output.items():
+                    if "artifacts" in state_update:
+                        final_artifacts.update(state_update["artifacts"])
+                    if "messages" in state_update:
+                        final_messages = state_update["messages"]
+        except GraphRecursionError:
+            logger.warning("Swarm recursion limit reached. Halting swarm execution.")
+            final_messages.append(AIMessage(content="MODULE GOVERNANCE: Mã nguồn vi phạm chính sách bảo mật hoặc rơi vào vòng lặp vô tận. Bị hệ thống bảo mật tự động ngắt kết nối."))
 
         parts = []
         if final_artifacts.get("code"):

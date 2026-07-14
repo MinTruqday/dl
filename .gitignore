@@ -7,3 +7,4 @@ frontend/public/
 backend/logs/
 backend/.venv/
 *.md
+.gitignore

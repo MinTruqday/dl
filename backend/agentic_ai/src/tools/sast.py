@@ -38,26 +38,68 @@ OWASP_PATTERNS: Dict[str, List[str]] = {
     ],
 }
 
+class OWASPASTVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.findings = []
+
+    def visit_Call(self, node):
+        # Command Injection
+        if isinstance(node.func, ast.Attribute):
+            func_name = node.func.attr
+            if func_name == "system" and isinstance(node.func.value, ast.Name) and node.func.value.id == "os":
+                self.findings.append(f"Command Injection (os.system) at line {node.lineno}")
+            elif func_name == "call" and isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess":
+                for kw in node.keywords:
+                    if kw.arg == "shell" and isinstance(kw.value, ast.Constant) and kw.value.value is True:
+                        self.findings.append(f"Command Injection (subprocess.call with shell=True) at line {node.lineno}")
+            # Insecure Deserialization
+            elif func_name == "loads" and isinstance(node.func.value, ast.Name) and node.func.value.id == "pickle":
+                self.findings.append(f"Insecure Deserialization (pickle.loads) at line {node.lineno}")
+            elif func_name == "load" and isinstance(node.func.value, ast.Name) and node.func.value.id == "yaml":
+                self.findings.append(f"Insecure Deserialization (yaml.load) at line {node.lineno}")
+            # SQL Injection
+            elif func_name == "execute":
+                for arg in node.args:
+                    if isinstance(arg, ast.JoinedStr) or isinstance(arg, ast.BinOp):
+                        self.findings.append(f"Possible SQL Injection (execute with dynamic string) at line {node.lineno}")
+        elif isinstance(node.func, ast.Name):
+            func_name = node.func.id
+            if func_name == "eval":
+                self.findings.append(f"Command Injection (eval) at line {node.lineno}")
+
+        self.generic_visit(node)
+
+    def visit_Assign(self, node):
+        # Hardcoded Secrets
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                var_name = target.id.lower()
+                if any(sec in var_name for sec in ["password", "secret", "api_key", "token"]):
+                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str) and len(node.value.value) >= 4:
+                        self.findings.append(f"Hardcoded Secret ({var_name}) at line {node.lineno}")
+        self.generic_visit(node)
 
 class SASTScanner:
     """
-    <module_purpose>Runs Static Application Security Testing against code artifacts using Bandit, Semgrep, and OWASP Top 10 pattern matching.</module_purpose>
+    <module_purpose>Runs Static Application Security Testing against code artifacts using Bandit, Semgrep, and AST-based OWASP Top 10 pattern matching.</module_purpose>
     <contract>Acts as the deterministic backbone for the SecOpsAgent. Returns full, actionable scan output including severity levels and line references.</contract>
     """
 
     @staticmethod
     def run_owasp_patterns(code: str) -> str:
-        import re
-        findings = []
-        for category, patterns in OWASP_PATTERNS.items():
-            for pattern in patterns:
-                matches = [(m.start(), m.group()) for m in re.finditer(pattern, code, re.IGNORECASE)]
-                for pos, match in matches:
-                    line_num = code[:pos].count("\n") + 1
-                    findings.append(f"[OWASP {category}] Line {line_num}: {match.strip()[:80]}")
-        if not findings:
-            return "OWASP Top 10 check: No obvious patterns detected"
-        return "\n".join(findings)
+        try:
+            tree = ast.parse(code)
+            visitor = OWASPASTVisitor()
+            visitor.visit(tree)
+            if not visitor.findings:
+                return "OWASP Top 10 check: No obvious patterns detected"
+            
+            return "\n".join([f"[OWASP AST] {finding}" for finding in visitor.findings])
+        except SyntaxError:
+            return "OWASP Top 10 check: Code contains syntax errors, cannot parse AST."
+        except Exception as e:
+            logger.exception("AST parsing failed")
+            return f"OWASP Top 10 check: Error during AST analysis: {e}"
 
     @staticmethod
     def run_bandit_on_code(code: str) -> str:
