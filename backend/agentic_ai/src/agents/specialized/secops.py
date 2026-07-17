@@ -26,7 +26,7 @@ class SecOpsAgent:
         self.llm = llm
 
     async def scan_standalone(self, code: str) -> str:
-        sast_output = SASTScanner.full_scan(code)
+        sast_output = await SASTScanner.full_scan(code)
         system_prompt = registry.get(PromptType.SWARM_SECOPS)
         human_msg = f"Code:\n{code}\n\nSAST Results:\n{sast_output}"
         try:
@@ -51,7 +51,7 @@ class SecOpsAgent:
             state.current_agent = "supervisor"
             return state
 
-        sast_output = SASTScanner.full_scan(code_to_review)
+        sast_output = await SASTScanner.full_scan(code_to_review)
 
         system_prompt = registry.get(PromptType.SWARM_SECOPS)
         human_msg = f"Code:\n{code_to_review}\n\nSAST Results:\n{sast_output}"

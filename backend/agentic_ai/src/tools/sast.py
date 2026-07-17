@@ -7,77 +7,6 @@ from langchain_core.tools import tool
 from loguru import logger
 
 
-OWASP_PATTERNS: Dict[str, List[str]] = {
-    "SQL Injection": [
-        r"execute\s*\(\s*[\"'].*%s",
-        r"cursor\.execute\s*\(.*\+",
-        r"f[\"'].*SELECT.*{",
-    ],
-    "Command Injection": [
-        r"os\.system\s*\(",
-        r"subprocess\.call\s*\(.*shell=True",
-        r"eval\s*\(.*input",
-    ],
-    "Path Traversal": [
-        r"\.\./",
-        r"open\s*\(.*request\.",
-    ],
-    "Hardcoded Secrets": [
-        r"password\s*=\s*[\"'][^\"']{4,}",
-        r"api_key\s*=\s*[\"'][^\"']{8,}",
-        r"secret\s*=\s*[\"'][^\"']{4,}",
-        r"token\s*=\s*[\"'][A-Za-z0-9+/]{20,}",
-    ],
-    "XSS": [
-        r"render_template_string\s*\(.*request\.",
-        r"innerHTML\s*=.*user",
-    ],
-    "Insecure Deserialization": [
-        r"pickle\.loads\s*\(",
-        r"yaml\.load\s*\([^)]*Loader",
-    ],
-}
-
-class OWASPASTVisitor(ast.NodeVisitor):
-    def __init__(self):
-        self.findings = []
-
-    def visit_Call(self, node):
-        # Command Injection
-        if isinstance(node.func, ast.Attribute):
-            func_name = node.func.attr
-            if func_name == "system" and isinstance(node.func.value, ast.Name) and node.func.value.id == "os":
-                self.findings.append(f"Command Injection (os.system) at line {node.lineno}")
-            elif func_name == "call" and isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess":
-                for kw in node.keywords:
-                    if kw.arg == "shell" and isinstance(kw.value, ast.Constant) and kw.value.value is True:
-                        self.findings.append(f"Command Injection (subprocess.call with shell=True) at line {node.lineno}")
-            # Insecure Deserialization
-            elif func_name == "loads" and isinstance(node.func.value, ast.Name) and node.func.value.id == "pickle":
-                self.findings.append(f"Insecure Deserialization (pickle.loads) at line {node.lineno}")
-            elif func_name == "load" and isinstance(node.func.value, ast.Name) and node.func.value.id == "yaml":
-                self.findings.append(f"Insecure Deserialization (yaml.load) at line {node.lineno}")
-            # SQL Injection
-            elif func_name == "execute":
-                for arg in node.args:
-                    if isinstance(arg, ast.JoinedStr) or isinstance(arg, ast.BinOp):
-                        self.findings.append(f"Possible SQL Injection (execute with dynamic string) at line {node.lineno}")
-        elif isinstance(node.func, ast.Name):
-            func_name = node.func.id
-            if func_name == "eval":
-                self.findings.append(f"Command Injection (eval) at line {node.lineno}")
-
-        self.generic_visit(node)
-
-    def visit_Assign(self, node):
-        # Hardcoded Secrets
-        for target in node.targets:
-            if isinstance(target, ast.Name):
-                var_name = target.id.lower()
-                if any(sec in var_name for sec in ["password", "secret", "api_key", "token"]):
-                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str) and len(node.value.value) >= 4:
-                        self.findings.append(f"Hardcoded Secret ({var_name}) at line {node.lineno}")
-        self.generic_visit(node)
 
 class SASTScanner:
     """
@@ -86,20 +15,29 @@ class SASTScanner:
     """
 
     @staticmethod
-    def run_owasp_patterns(code: str) -> str:
+    async def run_owasp_patterns(code: str) -> str:
+        from src.core.registry import PromptType, registry
+        from src.utils.huggingface import HFInferenceChat
+        from huggingface_hub import AsyncInferenceClient
+        from src.core.infrastructure.configuration import settings
+        from langchain_core.messages import HumanMessage, SystemMessage
+
         try:
-            tree = ast.parse(code)
-            visitor = OWASPASTVisitor()
-            visitor.visit(tree)
-            if not visitor.findings:
-                return "OWASP Top 10 check: No obvious patterns detected"
+            client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
+            llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
             
-            return "\n".join([f"[OWASP AST] {finding}" for finding in visitor.findings])
-        except SyntaxError:
-            return "OWASP Top 10 check: Code contains syntax errors, cannot parse AST."
+            system_prompt = registry.get(PromptType.SAST_OWASP_SCAN).replace("{{code}}", code)
+            
+            messages = [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content="Please analyze the code for OWASP vulnerabilities.")
+            ]
+            
+            response = await llm.ainvoke(messages, max_tokens=1024, temperature=0.1)
+            return response.content.strip()
         except Exception as e:
-            logger.exception("AST parsing failed")
-            return f"OWASP Top 10 check: Error during AST analysis: {e}"
+            logger.exception("LLM OWASP analysis failed")
+            return f"OWASP Top 10 check: Error during LLM analysis: {e}"
 
     @staticmethod
     def run_bandit_on_code(code: str) -> str:
@@ -186,10 +124,10 @@ class SASTScanner:
             return "Semgrep execution failed"
 
     @classmethod
-    def full_scan(cls, code: str) -> str:
+    async def full_scan(cls, code: str) -> str:
         bandit_result = cls.run_bandit_on_code(code)
         semgrep_result = cls.run_semgrep_on_code(code)
-        owasp_result = cls.run_owasp_patterns(code)
+        owasp_result = await cls.run_owasp_patterns(code)
         return (
             f"Bandit: \n{bandit_result}\n\n"
             f"Semgrep: \n{semgrep_result}\n\n"
