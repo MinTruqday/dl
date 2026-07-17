@@ -16,10 +16,11 @@ class PipelineRag:
     """
     <module_purpose>
     <purpose>Manages the end-to-end data ingestion and vector indexing pipeline.</purpose>
-    <metis_behavior>Extracts raw data robustly across formats. Never drops exceptions silently; routes errors to system logs.</metis_behavior>
+    <metis_behavior>Extracts raw data robustly across formats. Never drops exceptions silently; routes errors to system logs. Integrates Neo4j for GraphRAG entity extraction.</metis_behavior>
     </module_purpose>
     """
     _mongo_client = None
+    _neo4j_driver = None
 
     def __init__(self):
         mongo_uri = settings.MONGODB_URI
@@ -33,6 +34,63 @@ class PipelineRag:
         self._minio_base = minio_endpoint.rstrip("/")
         self._minio_private_bucket = settings.MINIO_PRIVATE_BUCKET
         self._minio_public_bucket = settings.MINIO_PUBLIC_BUCKET
+        
+        if PipelineRag._neo4j_driver is None:
+            try:
+                from neo4j import AsyncGraphDatabase
+                PipelineRag._neo4j_driver = AsyncGraphDatabase.driver(
+                    settings.NEO4J_URI, 
+                    auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD)
+                )
+            except Exception as e:
+                logger.error(f"Neo4j Graph Database connection failed: {e}")
+        self._neo4j = PipelineRag._neo4j_driver
+
+    async def _extract_entities_and_relations(self, text: str, document_id: str):
+        if not self._neo4j:
+            return
+            
+        try:
+            from langchain_core.prompts import PromptTemplate
+            from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+            
+            from src.core.registry import registry, PromptType
+            
+            _hf = HuggingFaceEndpoint(
+                task="conversational",
+                repo_id=settings.LLM_MODEL,
+                huggingfacehub_api_token=settings.HF_TOKEN,
+                temperature=0.1,
+            )
+            llm = ChatHuggingFace(llm=_hf)
+            prompt_template = registry.get(PromptType.GRAPHRAG_ENTITY_EXTRACTION)
+            prompt = PromptTemplate(
+                template=prompt_template,
+                input_variables=["text"]
+            )
+            response = await llm.ainvoke(prompt.format(text=text[:3000]))
+            
+            import json
+            import re
+            match = re.search(r"\[.*\]", response.content.strip(), re.DOTALL)
+            if match:
+                relations = json.loads(match.group(0))
+                
+                async def _write_tx(tx, rel):
+                    query = (
+                        "MERGE (s:Entity {name: $source}) "
+                        "MERGE (t:Entity {name: $target}) "
+                        "MERGE (s)-[r:RELATES_TO {type: $relation, doc_id: $doc_id}]->(t)"
+                    )
+                    await tx.run(query, source=rel.get("source"), target=rel.get("target"), relation=rel.get("relation"), doc_id=document_id)
+                
+                async with self._neo4j.session() as session:
+                    for rel in relations:
+                        await session.execute_write(_write_tx, rel)
+                logger.info(f"GraphRAG extracted {len(relations)} relations to Neo4j")
+                
+        except Exception as e:
+            logger.exception("GraphRAG entity extraction failed")
 
     async def ingest_document(self, document_id: str) -> Dict:
         document = await self._db.documents.find_one(
@@ -138,6 +196,9 @@ class PipelineRag:
 
             extracted_chunks = await chunker.chunk_document(raw_text, metadata)
             chunks.extend(extracted_chunks)
+            
+            # Extract GraphRAG entities from the summary portion
+            await self._extract_entities_and_relations(first_few_pages, document_id)
 
         if not chunks:
             raise ValueError("Lỗi phân mảnh tài liệu")

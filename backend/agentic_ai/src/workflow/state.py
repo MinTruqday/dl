@@ -79,6 +79,8 @@ class AgentState(TypedDict):
     image_data: str
     file_data: str
     folder_data: str
+    thread_id: str
+    current_node: str
 
 class ActingState(TypedDict):
     """

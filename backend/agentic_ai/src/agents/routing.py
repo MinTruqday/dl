@@ -84,64 +84,69 @@ class SemanticRouterValidator:
         logger.info(f"Semantic fallback routed to {best_agent} (score {best_score:.3f})")
         return best_agent
 
-    def validate_plan(self, steps: List[List[Dict]]) -> List[List[Dict]]:
+    def validate_plan(self, nodes: List[Dict]) -> List[Dict]:
         validated = []
-        for group in steps:
-            validated_group = []
-            for step in group:
-                agent = step.get("agent", "Knowledge")
-                if agent not in VALID_AGENTS:
-                    corrected = self.find_closest_agent(step.get("task", ""))
-                    logger.warning(f"Invalid agent '{agent}' corrected to '{corrected}'")
-                    step = {**step, "agent": corrected}
-                validated_group.append(step)
-            validated.append(validated_group)
+        for node in nodes:
+            agent = node.get("agent", "Knowledge")
+            if agent not in VALID_AGENTS:
+                corrected = self.find_closest_agent(node.get("task", ""))
+                logger.warning(f"Invalid agent '{agent}' corrected to '{corrected}'")
+                node = {**node, "agent": corrected}
+            validated.append(node)
         return validated
 
+
+INTENTS = {
+    "chat": "Conversational, summarize, explain, casual talk, greeting",
+    "action": "Create file, edit code, run command, system modification, delete",
+    "knowledge": "Search documents, read file, lookup guidelines, retrieve internal data"
+}
 
 class RouteAgent:
     """
     <module_purpose>
     <purpose>Acts as the central traffic controller, routing user intents to the correct sub-agent.</purpose>
-    <metis_behavior>Relies exclusively on the HuggingFace Inference API to make deterministic routing decisions. All LLM-produced routes are validated by SemanticRouterValidator before entering the pipeline.</metis_behavior>
+    <metis_behavior>Uses Vector Embeddings for fast, deterministic intent classification with a confidence threshold, falling back to LLM or Knowledge route if uncertain.</metis_behavior>
     </module_purpose>
     """
-
     def __init__(self):
-        llama_model = settings.LLM_MODEL
-        if not llama_model:
-            raise ValueError("System is not fully configured for the AI language model")
+        self._intent_vecs = None
 
-        self.llama_client = AsyncInferenceClient(
-            model=settings.LLM_MODEL,
-            token=settings.HF_TOKEN,
-        )
-        self.router_llm = HFInferenceChat(
-            client=self.llama_client, model=settings.LLM_MODEL
-        )
-        self.validator = SemanticRouterValidator()
+    def _get_embedder(self):
+        from src.rag.embedding import embedder
+        return embedder
+
+    def _get_intent_vecs(self):
+        if self._intent_vecs is None:
+            embedder = self._get_embedder()
+            self._intent_vecs = {}
+            for intent, desc in INTENTS.items():
+                self._intent_vecs[intent] = embedder.embed_query(desc)
+        return self._intent_vecs
 
     async def execute(self, query: str) -> dict:
-        prompt = PromptTemplate(
-            template=registry.get(PromptType.PRIMARY_ROUTER),
-            input_variables=["question"],
-        )
+        embedder = self._get_embedder()
         try:
-            structured_llm = self.router_llm.with_structured_output(RouteDecision)
-            res: RouteDecision = await structured_llm.ainvoke(
-                prompt.format(question=query)
-            )
+            query_vec = embedder.embed_query(query)
+            best_route = "knowledge"
+            best_score = -1.0
+            
+            for intent, vec in self._get_intent_vecs().items():
+                score = _cosine_similarity(query_vec, vec)
+                if score > best_score:
+                    best_score = score
+                    best_route = intent
 
-            route = res.route.lower()
-            if route not in ["chat", "action", "knowledge"]:
-                route = "knowledge"
-
-            return {"route": route, "answer": res.answer}
-
+            if best_score > 0.85:
+                logger.info(f"Intent classified as {best_route} with confidence {best_score:.3f}")
+                return {"route": best_route, "answer": ""}
+            else:
+                logger.warning(f"Low confidence intent ({best_score:.3f}). Defaulting to knowledge.")
+                return {"route": "knowledge", "answer": ""}
+                
         except Exception:
             logger.exception("Semantic routing error")
             return {"route": "knowledge", "answer": ""}
-
 
 semantic_router = RouteAgent()
 plan_validator = SemanticRouterValidator()

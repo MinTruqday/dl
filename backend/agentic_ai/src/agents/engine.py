@@ -166,32 +166,55 @@ class EngineAgent:
             from huggingface_hub import AsyncInferenceClient
             from langchain_core.messages import HumanMessage
             from src.utils.huggingface import HFInferenceChat
-            
             from src.schemas.engine import SubQueries
+            from src.core.registry import registry, PromptType
+            
             client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
             llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
             structured_llm = llm.with_structured_output(SubQueries)
-            from src.core.registry import registry, PromptType
-            prompt = registry.get(PromptType.ENGINE_SUBQUERIES).format(query=query)
-            response = await structured_llm.ainvoke([HumanMessage(content=prompt)])
             
-            search_queries = response.queries if response.queries else [query]
-            if query not in search_queries:
-                search_queries.append(query)
+            max_iterations = 3
+            accumulated_results = ""
+            current_query = query
+            
+            for i in range(max_iterations):
+                prompt = registry.get(PromptType.ENGINE_SUBQUERIES).format(query=current_query)
+                response = await structured_llm.ainvoke([HumanMessage(content=prompt)])
                 
-            search_queries = search_queries[:3]
-            logger.info(f"Agentic RAG generated sub-queries: {search_queries}")
-            
-            tasks = [self._tavily_search(q) for q in search_queries]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            combined_text = ""
-            for res in results:
-                if isinstance(res, str) and res:
-                    combined_text += res + "\n"
+                search_queries = response.queries if response.queries else [current_query]
+                if current_query not in search_queries:
+                    search_queries.append(current_query)
                     
-            if combined_text:
-                return combined_text
+                search_queries = search_queries[:3]
+                logger.info(f"Agentic RAG Iteration {i+1} - Sub-queries: {search_queries}")
+                
+                tasks = [self._tavily_search(q) for q in search_queries]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                iteration_text = ""
+                for res in results:
+                    if isinstance(res, str) and res:
+                        iteration_text += res + "\n"
+                        
+                accumulated_results += iteration_text
+                
+                if not accumulated_results.strip():
+                    break
+
+                eval_prompt_template = registry.get(PromptType.AGENTIC_SEARCH_EVALUATION)
+                eval_prompt = eval_prompt_template.format(query=query, information=accumulated_results[:5000])
+                eval_response = await llm.ainvoke([HumanMessage(content=eval_prompt)])
+                
+                if "YES" in eval_response.content.upper():
+                    logger.info("Sufficient information gathered.")
+                    break
+                else:
+                    logger.info("Insufficient information. Re-formulating query...")
+                    current_query = f"{query} details and deeper context"
+                    
+            if accumulated_results:
+                return accumulated_results
+                
         except Exception:
             logger.exception("Agentic RAG search system encountered an issue")
 

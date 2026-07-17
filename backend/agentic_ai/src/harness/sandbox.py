@@ -62,24 +62,44 @@ class CodeSandbox:
             return False, "", str(e)
             
     def _run_docker(self, code_file: str, dependencies: list = None) -> Tuple[bool, str, str]:
-        logger.info("Docker container execution started")
-        deps_cmd = f"pip install {' '.join(dependencies)} &&" if dependencies else ""
-        
-        cmd = [
-            "docker", "run", "--rm", 
-            "-v", f"{self.temp_dir}:/sandbox",
-            "-w", "/sandbox",
-            "python:3.10-alpine",
-            "sh", "-c",
-            f"{deps_cmd} python script.py"
-        ]
+        logger.info("Docker container execution started via SDK")
+        import docker
+        from src.core.infrastructure.configuration import settings
         
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=45)
-            return result.returncode == 0, result.stdout, result.stderr
-        except subprocess.TimeoutExpired:
-            return False, "", "Docker execution timeout exceeded"
+            client = docker.DockerClient(base_url=settings.DOCKER_HOST)
+            deps_cmd = f"pip install {' '.join(dependencies)} &&" if dependencies else ""
+            cmd_str = f"{deps_cmd} python script.py"
+
+            volumes = {self.temp_dir: {'bind': '/sandbox', 'mode': 'rw'}}
+            
+            container = client.containers.run(
+                "python:3.10-alpine",
+                command=["sh", "-c", cmd_str],
+                volumes=volumes,
+                working_dir="/sandbox",
+                detach=True,
+                remove=False,
+                mem_limit="128m",
+                network_mode="none"
+            )
+            
+            try:
+                result = container.wait(timeout=45)
+                logs = container.logs().decode('utf-8')
+                success = result.get('StatusCode', 1) == 0
+                
+                if not success:
+                    return False, "", logs
+                return True, logs, ""
+                
+            except Exception as wait_e:
+                return False, "", f"Docker wait timeout/error: {str(wait_e)}"
+            finally:
+                container.remove(force=True)
+                
         except Exception as e:
+            logger.error(f"Docker sandbox execution failed: {e}")
             return False, "", str(e)
             
     def cleanup(self):

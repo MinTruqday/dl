@@ -103,7 +103,6 @@ class PlanAgent:
                         yield {"type": "message", "chunk": content}
 
             if not accumulated_json.strip():
-                # fallback if no clear separation found
                 parsed_result = {"steps": []}
             else:
                 try:
@@ -111,41 +110,43 @@ class PlanAgent:
                 except Exception:
                     parsed_result = {"steps": []}
 
-            steps = []
-            for step_group in parsed_result.get("steps", []):
-                if isinstance(step_group, dict):
-                    group = [{"agent": s.get("agent", "Knowledge"), "task": s.get("task", "Analyze")} for s in step_group.get("parallel_steps", []) if isinstance(s, dict)]
-                    if group:
-                        steps.append(group)
-                elif isinstance(step_group, str):
-                    steps.append([{"agent": "Knowledge", "task": step_group}])
+            nodes = parsed_result.get("nodes", [])
+            valid_nodes = []
+            for n in nodes:
+                if isinstance(n, dict):
+                    valid_nodes.append({
+                        "id": n.get("id", f"node_{len(valid_nodes)}"),
+                        "agent": n.get("agent", "Knowledge"),
+                        "task": n.get("task", "Analyze"),
+                        "dependencies": n.get("dependencies", [])
+                    })
 
-            if not steps:
-                steps = [
-                    [
-                        {
-                            "agent": "Knowledge",
-                            "task": "Inform user request exceeds capabilities",
-                        }
-                    ]
+            if not valid_nodes:
+                valid_nodes = [
+                    {
+                        "id": "fallback_1",
+                        "agent": "Knowledge",
+                        "task": "Inform user request exceeds capabilities",
+                        "dependencies": []
+                    }
                 ]
 
-            yield {"type": "plan", "steps": steps}
+            yield {"type": "plan", "nodes": valid_nodes}
 
         except Exception as e:
             logger.exception("Plan generation error")
-            yield {"type": "plan", "steps": [[{"agent": "Knowledge", "task": f"Inform user about analysis failure {e}"}]]}
+            yield {"type": "plan", "nodes": [{"id": "fallback", "agent": "Knowledge", "task": f"Inform user about analysis failure {e}", "dependencies": []}]}
 
-    async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
+    async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         import hashlib
         import json as _json
 
         if req_data.get("dry_run"):
-            steps = []
+            nodes = []
             async for chunk in self.stream_plan(req_data):
                 if chunk["type"] == "plan":
-                    steps = chunk["steps"]
-            return steps
+                    nodes = chunk["nodes"]
+            return nodes
 
         query = req_data.get("query", "")
         cache_key = f"plan:{hashlib.sha256(query.encode()).hexdigest()}"
@@ -159,18 +160,18 @@ class PlanAgent:
             except Exception:
                 logger.exception("Planner cache read failed")
 
-        steps = []
+        nodes = []
         async for chunk in self.stream_plan(req_data):
             if chunk["type"] == "plan":
-                steps = chunk["steps"]
+                nodes = chunk["nodes"]
 
-        if steps and self._redis:
+        if nodes and self._redis:
             try:
-                self._redis.setex(cache_key, 3600, _json.dumps(steps))
+                self._redis.setex(cache_key, 3600, _json.dumps(nodes))
             except Exception:
                 logger.exception("Planner cache write failed")
 
-        return steps
+        return nodes
 
     async def replan(self, current_plan: Dict[str, Any], failed_step: Dict[str, Any], error_message: str) -> Dict[str, Any]:
         logger.info(f"Generating revised plan due to failure in step: {failed_step.get('action')}")

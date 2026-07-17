@@ -1,9 +1,11 @@
 import time
 from typing import Any, Dict, List, Literal
 
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.mongodb.aio import AsyncMongoDBSaver
+from motor.motor_asyncio import AsyncIOMotorClient
 from langgraph.graph import END, StateGraph
 from loguru import logger
+from src.core.infrastructure.configuration import settings
 from pydantic import BaseModel, Field
 from src.agents.acting import actor
 from src.agents.interpreter import interpreter
@@ -42,9 +44,36 @@ async def supervisor_node(state: ActingState):
         }
 
     if not steps:
-        steps = await planner.create_plan(state["req_data"])
+        nodes = await planner.create_plan(state["req_data"])
         from src.agents.routing import plan_validator
-        steps = plan_validator.validate_plan(steps)
+        nodes = plan_validator.validate_plan(nodes)
+        
+        # Topological Sort DAG into parallel steps
+        in_degree = {n["id"]: 0 for n in nodes}
+        adj = {n["id"]: [] for n in nodes}
+        node_map = {n["id"]: n for n in nodes}
+        
+        for n in nodes:
+            for dep in n.get("dependencies", []):
+                if dep in adj:
+                    adj[dep].append(n["id"])
+                    in_degree[n["id"]] += 1
+                    
+        queue = [nid for nid in in_degree if in_degree[nid] == 0]
+        steps = []
+        
+        while queue:
+            current_group = []
+            next_queue = []
+            for nid in queue:
+                current_group.append(node_map[nid])
+                for neighbor in adj[nid]:
+                    in_degree[neighbor] -= 1
+                    if in_degree[neighbor] == 0:
+                        next_queue.append(neighbor)
+            steps.append(current_group)
+            queue = next_queue
+            
         idx = 0
 
     if state.get("error"):
@@ -115,7 +144,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 code_block = _extract_code_block(str(res))
                 if code_block and agent_name in ("InterpreterAgent", "Action"):
                     from src.harness.sandbox import CodeSandbox
-                    sandbox = CodeSandbox(use_docker=False)
+                    sandbox = CodeSandbox(use_docker=True)
                     sandbox_retry = 0
                     while sandbox_retry < 2:
                         success, stdout, stderr = sandbox.execute_code(code_block)
@@ -368,8 +397,9 @@ workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregator": "saniti
 workflow.add_edge("sanitizer", "aggregator")
 workflow.add_edge("aggregator", END)
 
-memory = MemorySaver()
-supervisor_app = workflow.compile(checkpointer=memory, interrupt_before=["action"])
+# Memory checkpoint will be bound at execution time
+# memory = MemorySaver()
+# supervisor_app = workflow.compile(checkpointer=memory, interrupt_before=["action"])
 
 class OrchestrationWorkflow:
     """
@@ -385,7 +415,8 @@ class OrchestrationWorkflow:
     </contract>
     """
     def __init__(self):
-        self.app = supervisor_app
+        self.workflow = workflow
+        self.client = AsyncIOMotorClient(settings.MONGODB_URI)
 
     async def execute_plan(self, req_data):
         from src.memory.global_state import global_state
@@ -419,10 +450,12 @@ class OrchestrationWorkflow:
             "recursion_limit": 25,
         }
 
-        async for output in self.app.astream(initial_state, config=config):
-            for node_name, state_update in output.items():
-                if "consolidated_results" in state_update:
-                    final_results = state_update["consolidated_results"]
+        async with AsyncMongoDBSaver(self.client) as checkpointer:
+            app = self.workflow.compile(checkpointer=checkpointer, interrupt_before=["action"])
+            async for output in app.astream(initial_state, config=config):
+                for node_name, state_update in output.items():
+                    if "consolidated_results" in state_update:
+                        final_results = state_update["consolidated_results"]
 
                 if node_name == "supervisor":
                     steps = state_update.get("steps")
