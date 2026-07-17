@@ -1525,7 +1525,7 @@ async def image_search(query: str, config: RunnableConfig) -> str:
         logger.exception("Image search execution failed")
         return f"Hệ thống không thể tìm kiếm hình ảnh vào lúc này: {str(e)}"
 
-from src.tools.surgical_editing import (
+from src.tools.editing import (
     read_document_section,
     edit_document_text,
     edit_document_block,

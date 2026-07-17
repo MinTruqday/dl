@@ -172,4 +172,37 @@ class PlanAgent:
 
         return steps
 
+    async def replan(self, current_plan: Dict[str, Any], failed_step: Dict[str, Any], error_message: str) -> Dict[str, Any]:
+        logger.info(f"Generating revised plan due to failure in step: {failed_step.get('action')}")
+        from src.core.registry import PromptType, registry
+        import json
+        
+        system_prompt = registry.get(PromptType.BRAIN_SYSTEM)
+        format_instructions = self.parser.get_format_instructions()
+        
+        replan_prompt = registry.get(PromptType.PLAN_REPLAN).format(
+            current_plan=json.dumps(current_plan, ensure_ascii=False),
+            failed_step=json.dumps(failed_step, ensure_ascii=False),
+            error_message=error_message
+        )
+        
+        messages = [
+            SystemMessage(content=system_prompt.format(format_instructions=format_instructions)),
+            HumanMessage(content=replan_prompt)
+        ]
+        
+        try:
+            response = await self._invoke_llm(messages)
+            content_str = response.content
+            if "</think>" in content_str:
+                content_str = content_str.split("</think>")[-1].strip()
+            if "```json" in content_str:
+                content_str = content_str.split("```json")[1].split("```")[0].strip()
+            
+            parsed_plan = self.parser.parse(content_str)
+            return parsed_plan
+        except Exception as e:
+            logger.exception("Replanning failed")
+            return current_plan
+
 planner = PlanAgent()

@@ -124,7 +124,7 @@ class ConversionRag:
 
     def _get_chandra(self) -> _ChandraModel:
         if self._chandra is None:
-            logger.info("Loading Chandra OCR 2 (8-bit) model")
+            logger.info("Loading Chandra OCR 2 model")
             self._chandra = _ChandraModel()
             logger.info("Chandra OCR 2 model loaded successfully")
         return self._chandra
@@ -132,7 +132,16 @@ class ConversionRag:
     def _run_chandra_on_images(self, images: List) -> List[str]:
         chandra = self._get_chandra()
         conversations = [_build_conversation(img) for img in images]
-        return chandra.generate(conversations)
+        
+        BATCH_SIZE = 4
+        results = []
+        for i in range(0, len(conversations), BATCH_SIZE):
+            batch = conversations[i:i+BATCH_SIZE]
+            logger.info(f"Processing RAG batch {i//BATCH_SIZE + 1}/{(len(conversations)-1)//BATCH_SIZE + 1} with size {len(batch)}")
+            batch_results = chandra.generate(batch)
+            results.extend(batch_results)
+            
+        return results
 
     async def parse_document(self, file_url: str) -> Dict:
         file_bytes, file_ext = await self._download_from_minio(file_url)

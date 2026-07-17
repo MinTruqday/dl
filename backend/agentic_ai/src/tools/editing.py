@@ -4,10 +4,12 @@ from langchain_core.tools import tool
 from loguru import logger
 import requests
 
+from src.core.infrastructure.configuration import settings
+
 def _broadcast_update(document_id: str, new_content: str):
     try:
         requests.post(
-            "http://websocket:8000/ws/broadcast",
+            f"{settings.WEBSOCKET_URL}/ws/broadcast",
             json={
                 "document_id": document_id,
                 "message": {
@@ -102,12 +104,28 @@ async def edit_document_text(
     content = doc_data.get("content", "")
     
     if old_string not in content:
-        return "Exact old_string not found in document content due to mismatch"
+        import difflib
+        lines = content.splitlines()
+        best_match = None
+        highest_ratio = 0.0
         
-    if replace_all:
-        new_content = content.replace(old_string, new_string)
+        for i in range(len(lines)):
+            ratio = difflib.SequenceMatcher(None, old_string, lines[i]).ratio()
+            if ratio > highest_ratio:
+                highest_ratio = ratio
+                best_match = lines[i]
+                
+        if highest_ratio > 0.8 and best_match:
+            logger.info(f"Fuzzy match used. Ratio: {highest_ratio}")
+            content = content.replace(best_match, new_string, 1) if not replace_all else content.replace(best_match, new_string)
+            new_content = content
+        else:
+            return f"Exact old_string not found and no close fuzzy match (highest ratio: {highest_ratio})"
     else:
-        new_content = content.replace(old_string, new_string, 1)
+        if replace_all:
+            new_content = content.replace(old_string, new_string)
+        else:
+            new_content = content.replace(old_string, new_string, 1)
         
     content_payload = {"content": new_content, "content_format": format}
     try:
@@ -124,9 +142,10 @@ async def edit_document_text(
 @tool
 async def edit_document_block(
     document_id: str,
-    block_index: int,
-    action: str,
+    block_index: int = -1,
+    action: str = "replace",
     new_block_json: str = None,
+    block_id: str = None,
     config: RunnableConfig = None
 ) -> str:
     """
@@ -154,7 +173,7 @@ async def edit_document_block(
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
     
-    if format != "json":
+    if format not in ["json", "doclib"]:
         return "Tool applicability restricted to JSON EditorJS documents"
         
     try:
@@ -169,6 +188,13 @@ async def edit_document_block(
         except:
             return "Provided new_block_json is not a valid JSON string"
             
+    if block_id:
+        target_index = next((i for i, b in enumerate(blocks) if b.get("id") == block_id), -1)
+        if target_index != -1:
+            block_index = target_index
+        else:
+            return f"Block ID {block_id} not found"
+
     if action == "delete":
         if 0 <= block_index < len(blocks):
             blocks.pop(block_index)
@@ -176,6 +202,8 @@ async def edit_document_block(
             return "Target block_index is out of bounds"
     elif action == "replace":
         if 0 <= block_index < len(blocks):
+            if "id" not in new_block and "id" in blocks[block_index]:
+                new_block["id"] = blocks[block_index]["id"]
             blocks[block_index] = new_block
         else:
             return "Target block_index is out of bounds"

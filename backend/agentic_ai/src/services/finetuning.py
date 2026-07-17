@@ -76,7 +76,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
 
         sync_update({"progress": 98, "current_loss": round(final_loss, 6)})
 
-        model_name = f"model-ft-{job_id[:8]}"
+        model_name = "DocLib Metis"
 
         merged_path = result.get("merged_path", "")
         gguf_path = result.get("gguf_path", "")

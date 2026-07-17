@@ -5,6 +5,10 @@ from loguru import logger
 from src.tools.interface import llm
 from src.tools.drm import check_network_anomaly, get_user_trust_profile, analyze_document_risk
 import asyncio
+from src.core.infrastructure.configuration import settings
+import json
+import redis
+
 from src.core.registry import registry, PromptType
 from src.schemas.drm import DRMPolicyOutput
 
@@ -24,6 +28,18 @@ def _build_chain():
     return prompt | llm
 
 async def evaluate_drm_policy(user_id: str, document_id: str, client_ip: str, user_tier: str, document_type: str) -> Dict[str, Any]:
+
+    try:
+        redis_client = redis.from_url(settings.REDIS_URI, decode_responses=True)
+        cache_key = f"drm_policy:{document_id}:{user_id}"
+        cached_result = redis_client.get(cache_key)
+        if cached_result:
+            logger.info("DRM Policy found in cache")
+            return json.loads(cached_result)
+    except Exception as e:
+        logger.warning(f"DRM Cache read failed: {e}")
+        redis_client = None
+
     network_task = check_network_anomaly.ainvoke({"user_id": user_id, "client_ip": client_ip})
     trust_task = get_user_trust_profile.ainvoke({"user_id": user_id, "user_tier": user_tier})
     risk_task = analyze_document_risk.ainvoke({"document_id": document_id, "document_type": document_type})
@@ -40,16 +56,25 @@ async def evaluate_drm_policy(user_id: str, document_id: str, client_ip: str, us
         result = await chain.ainvoke({"context_data": str(context_data)})
         
         if isinstance(result, DRMPolicyOutput):
-            return result.model_dump()
+            final_dict = result.model_dump()
         elif isinstance(result, dict):
-            return result
+            final_dict = result
         else:
             import json, re
-            content = result.content if hasattr(result, "content") else str(result)
-            match = re.search(r'\{.*\}', content, re.DOTALL)
+            content_str = result.content if hasattr(result, "content") else str(result)
+            match = re.search(r'\{.*\}', content_str, re.DOTALL)
             if match:
-                return json.loads(match.group(0))
-            raise ValueError(f"Could not parse LLM output: {content[:200]}")
+                final_dict = json.loads(match.group(0))
+            else:
+                raise ValueError(f"Could not parse LLM output: {content_str[:200]}")
+                
+        if redis_client:
+            try:
+                redis_client.setex(cache_key, 3600, json.dumps(final_dict))
+            except Exception as e:
+                logger.warning(f"DRM Cache write failed: {e}")
+                
+        return final_dict
             
     except Exception as e:
         logger.warning(f"DRM Agent LLM evaluation failed, using LEVEL_2 fallback: {e}")

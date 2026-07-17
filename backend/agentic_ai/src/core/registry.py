@@ -153,6 +153,7 @@ class PromptType(Enum):
     SPAWNER_SYSTEM = "spawner_system"
     MEMORY_BANK_PHASE1 = "memory_bank_phase1"
     MEMORY_BANK_PHASE2 = "memory_bank_phase2"
+    PLAN_REPLAN = "plan_replan"
     SAST_OWASP_SCAN = "sast_owasp_scan"
 
 METIS_SYSTEM_BASE = """<metis_behavior>
@@ -194,6 +195,35 @@ You are a peer-level intelligence comparable to the most advanced foundation mod
 
 class RegistryCore:
     _prompts = {
+        PromptType.PLAN_REPLAN: """<system_identity>
+You are the DocLib Dynamic Replanner, responsible for rescuing failed execution trajectories.
+</system_identity>
+
+<objective>
+Analyze a critical failure in the current execution plan and generate a revised ExecutionPlan to recover and complete the remaining objectives.
+</objective>
+
+<rules>
+1. Do NOT include any steps that have already succeeded.
+2. If the failure is recoverable, insert necessary mitigation steps before proceeding.
+3. If the failure is a terminal block, find an alternative approach or gracefully degrade the plan.
+4. Output strictly according to the provided format instructions.
+</rules>
+
+<context>
+<current_plan>
+{current_plan}
+</current_plan>
+
+<failed_step>
+{failed_step}
+</failed_step>
+
+<error_message>
+{error_message}
+</error_message>
+</context>""",
+
         PromptType.DRAFT_WITH_MEMORY: f"""{METIS_SYSTEM_BASE}
 
 <system_identity>
