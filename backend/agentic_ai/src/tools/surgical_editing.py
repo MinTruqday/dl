@@ -48,10 +48,10 @@ async def read_document_section(
     except Exception as e:
         raise Exception(f"Error loading document {e}")
 
-    format = doc_data.get("content_format", "json")
+    format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
     
-    if format == "json":
+    if format == "doclib":
         try:
             parsed = json.loads(content)
             blocks = parsed.get("blocks", [])
@@ -59,7 +59,7 @@ async def read_document_section(
             return f"Document section retrieved successfully with blocks {start_index} to {start_index + len(sliced_blocks) - 1} out of {len(blocks)}\n" + json.dumps(sliced_blocks, ensure_ascii=False, indent=2)
         except:
             return "Document format is JSON but content parsing failed"
-    elif format == "latex":
+    elif format == "doclibx":
         lines = content.splitlines()
         sliced_lines = lines[start_index:start_index + limit]
         res_str = f"Showing lines {start_index} to {start_index + len(sliced_lines) - 1} out of {len(lines)}:\n"
@@ -98,7 +98,7 @@ async def edit_document_text(
     except Exception as e:
         raise Exception(f"Error loading document {e}")
 
-    format = doc_data.get("content_format", "json")
+    format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
     
     if old_string not in content:
@@ -151,7 +151,7 @@ async def edit_document_block(
     except Exception as e:
         raise Exception(f"Error loading document {e}")
 
-    format = doc_data.get("content_format", "json")
+    format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
     
     if format != "json":
@@ -228,10 +228,10 @@ async def propose_document_edits(
     except Exception as e:
         raise Exception(f"Error loading document {e}")
 
-    format = doc_data.get("content_format", "json")
+    format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
     
-    if format == "json":
+    if format == "doclib":
         try:
             parsed = json.loads(content)
             blocks = parsed.get("blocks", [])
@@ -243,7 +243,7 @@ async def propose_document_edits(
             new_content = json.dumps(parsed)
         except:
             return "Document parsing failed during proposal generation"
-    elif format == "latex":
+    elif format == "doclibx":
         new_content = content + f"\n\n% PROPOSED EDIT:\n% {proposed_text}\n"
     else:
         new_content = content + f"\n\n[PROPOSED EDIT]: {proposed_text}"

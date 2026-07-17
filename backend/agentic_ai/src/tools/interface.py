@@ -619,9 +619,9 @@ async def create_document(
     WHEN TO USE THIS TOOL:
     - Use this tool ONLY when the user explicitly asks to create, write, or generate a new file, report, blog, or long-form content. Do NOT use this for short conversational responses (<= 20 lines) or quick lists.
 
-    CRITICAL: - format MUST be either 'json' (for EditorJS) or 'latex' (for Math/Science).
-    - If format is 'latex', content MUST include standard LaTeX boilerplate (\\documentclass, \\begin{document}).
-    - If format is 'json', content MUST be a valid EditorJS JSON string with a 'blocks' array. Example: {"blocks": [{"type": "paragraph", "data": {"text": "Hello"}}]}
+    CRITICAL: - format MUST be either 'doclib' (for EditorJS) or 'doclibx' (for Math/Science).
+    - If format is 'doclibx', content MUST include standard LaTeX boilerplate (\\documentclass, \\begin{document}).
+    - If format is 'doclib', content MUST be a valid EditorJS JSON string with a 'blocks' array. Example: {"blocks": [{"type": "paragraph", "data": {"text": "Hello"}}]}
     
     </contract>
     """
@@ -657,11 +657,11 @@ async def create_document(
     except Exception as e:
         logger.exception("Failed to load user profile for author information")
 
-    if format == "latex":
+    if format == "doclibx":
         if "\\documentclass" not in content:
             month_year = datetime.datetime.now().strftime("%B %Y")
             content = f"\\documentclass[12pt,a4paper]{{article}}\n\\usepackage{{graphicx}}\n\\usepackage{{amsmath}}\n\\title{{{title}}}\n\\author{{{user_name}}}\n\\date{{{month_year}}}\n\\begin{{document}}\n\\maketitle\n\n{content}\n\\end{{document}}"
-    elif format == "json":
+    elif format == "doclib":
         import json
 
         try:
@@ -744,13 +744,13 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
     except Exception as e:
         raise Exception(f"Error loading document {e}")
 
-    format = doc_data.get("content_format", "json")
+    format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
 
-    if format == "json":
-        return f"The document uses the standard format with the following content:\n{content}"
-    elif format == "latex":
-        return f"The document uses the mathematical format with the following content:\n{content}"
+    if format == "doclib":
+        return f"The document uses the standard .doclib format with the following content:\n{content}"
+    elif format == "doclibx":
+        return f"The document uses the mathematical .doclibx format with the following content:\n{content}"
     else:
         return f"The document uses an alternative format with the following content:\n{content}"
 
@@ -773,8 +773,8 @@ async def update_document(
     - Use this when the user asks to edit, modify, append, or change an existing document. ALWAYS read the document first using read_document before calling this to ensure you don't accidentally erase existing content.
 
     CRITICAL: Only provide the fields you want to update.
-    - If format is 'json', new_content MUST be a valid EditorJS JSON string (with "blocks" array).
-    - If format is 'latex', new_content MUST be the full LaTeX source code.
+    - If format is 'doclib', new_content MUST be a valid EditorJS JSON string (with "blocks" array).
+    - If format is 'doclibx', new_content MUST be the full LaTeX source code.
     
     </contract>
     """
@@ -814,8 +814,8 @@ async def update_document(
             raise Exception(f"Error during metadata update {e}")
 
     if new_content:
-        format = doc_data.get("content_format", "json")
-        if format == "json":
+        format = doc_data.get("content_format", "doclib")
+        if format == "doclib":
             import datetime
             import json
 
@@ -841,7 +841,7 @@ async def update_document(
                         "version": "2.29.1",
                     }
                 )
-        elif format == "latex":
+        elif format == "doclibx":
             final_content = new_content
         else:
             final_content = new_content
@@ -903,7 +903,7 @@ async def translate_document(
         raise Exception(f"Error loading document {e}")
 
     original_content = doc_data.get("content", "")
-    format = doc_data.get("content_format", "json")
+    format = doc_data.get("content_format", "doclib")
     original_title = doc_data.get("title", "Document")
 
     if not original_content:
@@ -912,7 +912,7 @@ async def translate_document(
     import json
 
     text_to_translate = ""
-    if format == "json":
+    if format == "doclib":
         try:
             parsed = json.loads(original_content)
             blocks = parsed.get("blocks", [])
@@ -949,7 +949,7 @@ async def translate_document(
 
     new_title = f"[Translation {target_language}] {original_title}"
 
-    if format == "json":
+    if format == "doclib":
         new_blocks = []
         for p in translated_text.split("\n\n"):
             if p.strip():
@@ -967,7 +967,7 @@ async def translate_document(
                 "version": "2.29.1",
             }
         )
-    elif format == "latex":
+    elif format == "doclibx":
         if "\\end{document}" in translated_text:
             new_content = translated_text.replace(
                 "\\end{document}",

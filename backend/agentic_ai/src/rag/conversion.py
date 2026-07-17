@@ -143,8 +143,48 @@ class ConversionRag:
             tmp.write(file_bytes)
             tmp_path = Path(tmp.name)
 
+
         try:
+            if file_ext in [".doclib", ".doclibx"]:
+                if len(file_bytes) < 60:
+                    return {"error": "Tệp tin DocLib bị hỏng hoặc không hợp lệ"}
+                
+                import uuid
+                import base64
+                from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+                from motor.motor_asyncio import AsyncIOMotorClient
+                from src.core.infrastructure.configuration import settings
+                
+                file_id_bytes = file_bytes[:16]
+                nonce = file_bytes[48:60]
+                ciphertext = file_bytes[60:]
+                file_id = str(uuid.UUID(bytes=file_id_bytes))
+                
+                mongo_client = AsyncIOMotorClient(settings.MONGODB_URI)
+                db = mongo_client.doclib
+                license_doc = await db.drm_licenses.find_one({"file_id": file_id})
+                
+                if not license_doc or not license_doc.get("aes_key"):
+                    return {"error": "Không tìm thấy giấy phép giải mã cho tài liệu này"}
+                    
+                aes_key = base64.b64decode(license_doc.get("aes_key"))
+                try:
+                    aesgcm = AESGCM(aes_key)
+                    decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
+                    raw_text = decrypted_data.decode("utf-8")
+                except Exception:
+                    return {"error": "Giải mã tài liệu thất bại"}
+                    
+                chunks = self._split_markdown_to_chunks(raw_text)
+                return {
+                    "markdown": raw_text,
+                    "chunks": chunks,
+                    "chunk_count": len(chunks),
+                    "page_count": 1
+                }
+
             image_exts = [".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"]
+
             if file_ext in image_exts:
                 return await self._parse_image_with_chandra(tmp_path)
             return await self._parse_pdf_with_chandra(tmp_path)

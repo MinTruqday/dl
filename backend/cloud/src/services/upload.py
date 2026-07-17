@@ -49,8 +49,6 @@ class UploadService:
     async def upload_document(file, owner_id: str = None, is_system: bool = False, is_message_attachment: bool = False):
         allowed_extensions = [
             "pdf",
-            "epub",
-            "mobi",
             "docx",
             "doc",
             "xlsx",
@@ -67,11 +65,8 @@ class UploadService:
             "jpeg",
             "webp",
             "webm",
-            "mp3",
-            "wav",
-            "m4a",
-            "ogg",
-            "mp4",
+            "doclib",
+            "doclibx",
         ]
         ext = file.filename.split(".")[-1].lower()
         if ext == "svg" or "svg" in file.content_type.lower():

@@ -15,13 +15,13 @@ class DocumentStatus(str, Enum):
     ARCHIVED = "archived"
 
 class DocumentContentFormat(str, Enum):
-    LATEX = "latex"
+    DOCLIBX = "doclibx"
     MARKDOWN = "markdown"
     CUSTOM = "custom"
     PDF = "pdf"
     ZIP = "zip"
     HTML = "html"
-    JSON = "json"
+    DOCLIB = "doclib"
 
 class DocumentBase(BaseModel):
     title: str
@@ -31,7 +31,7 @@ class DocumentBase(BaseModel):
     file_url: Optional[str] = None
     tags: List[str] = []
     content: Optional[Any] = None
-    content_format: Optional[DocumentContentFormat] = DocumentContentFormat.JSON
+    content_format: Optional[DocumentContentFormat] = DocumentContentFormat.DOCLIB
     price_dl: int = 0
     visibility: str = "public"
     password: Optional[str] = None

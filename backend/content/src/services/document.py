@@ -131,6 +131,64 @@ class DocumentService:
         documents = await cursor 
         return [serialize_document(d) for d in documents]
 
+
+    @staticmethod
+    @log_logic_execution
+    async def import_document_from_file(file, current_user) -> dict:
+        import hashlib
+        import uuid
+        import base64
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        from src.core.infrastructure.mongo import mongo
+        
+        content_bytes = await file.read()
+        if len(content_bytes) < 60:
+            raise ValueError("Tệp tin không hợp lệ hoặc bị hỏng")
+            
+        file_id_bytes = content_bytes[:16]
+        file_hash = content_bytes[16:48]
+        nonce = content_bytes[48:60]
+        ciphertext = content_bytes[60:]
+        
+        file_id = str(uuid.UUID(bytes=file_id_bytes))
+        
+        # Verify license
+        license_doc = await mongo.find_one("drm_licenses", {"file_id": file_id})
+        if not license_doc:
+            raise ValueError("Không tìm thấy giấy phép hợp lệ cho tài liệu này")
+            
+        if license_doc.get("user_id") != current_user.id and current_user.role != "ADMIN":
+            raise ValueError("Bạn không có quyền truy cập tài liệu này")
+            
+        encoded_key = license_doc.get("aes_key")
+        if not encoded_key:
+            raise ValueError("Giấy phép tài liệu bị hỏng (thiếu khóa giải mã)")
+            
+        aes_key = base64.b64decode(encoded_key)
+        
+        try:
+            aesgcm = AESGCM(aes_key)
+            decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
+        except Exception as e:
+            raise ValueError("Giải mã tài liệu thất bại, tệp tin có thể đã bị can thiệp")
+            
+        if hashlib.sha256(decrypted_data).digest() != file_hash:
+            raise ValueError("Dữ liệu tài liệu không toàn vẹn")
+            
+        raw_content = decrypted_data.decode("utf-8")
+        ext = file.filename.split(".")[-1].lower() if file.filename else "doclib"
+        content_format = "doclibx" if ext == "doclibx" else "doclib"
+        
+        from src.schemas.document import DocumentCreate
+        
+        doc_in = DocumentCreate(
+            title=file.filename.split(".")[0] if file.filename else "Imported Document",
+            content=raw_content,
+            content_format=content_format
+        )
+        return await DocumentService.create_document(doc_in, current_user)
+
+
     @staticmethod
     @log_logic_execution
     async def create_document(doc_in: DocumentCreate, current_user):
@@ -183,7 +241,7 @@ class DocumentService:
                 "title": b.get("title", ""),
                 "slug": b.get("slug", ""),
                 "status": b.get("status", "draft"),
-                "content_format": b.get("content_format", "json"),
+                "content_format": b.get("content_format", "doclib"),
                 "cover_url": b.get("cover_url"),
                 "views": b.get("views", 0),
                 "created_at": (

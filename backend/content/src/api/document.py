@@ -31,6 +31,25 @@ from src.core.dependency import CurrentUser, Role
 router = APIRouter(route_class=LoggingRoute, prefix="/tai-lieu")
 
 @router.post("", response_model=APIResponse[DocumentResponse])
+
+@router.post("/import", response_model=APIResponse)
+async def import_document_from_file(
+    file: UploadFile = File(...),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    try:
+        data = await DocumentService.import_document_from_file(file, current_user)
+        return APIResponse(
+            message="Tác vụ trích xuất và nhập tài liệu bảo mật thành công",
+            data=data,
+            status=status.HTTP_201_CREATED,
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.exception("Failed to import document")
+        raise HTTPException(status_code=500, detail="Hệ thống không thể xử lý tác vụ giải mã tài liệu")
+
 async def create_document(
     doc_in: DocumentCreate,
     current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN])),

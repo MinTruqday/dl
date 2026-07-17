@@ -155,10 +155,10 @@ class WatermarkService:
                     detail="Tài liệu yêu cầu quyền truy cập đặc biệt hoặc xác nhận mua hàng",
                 )
 
-        content_format = document.get("content_format", "json")
+        content_format = document.get("content_format", "doclib")
         raw_content = str(document.get("content", ""))
 
-        if content_format == "latex":
+        if content_format == "doclibx":
             watermarked_latex = WatermarkService.inject_structural_watermark_latex(raw_content, user_id) if enable_micro else raw_content
             try:
                 from src.compilation.engines.latex import LatexEngine
@@ -289,17 +289,18 @@ class WatermarkService:
         try:
             aesgcm = AESGCM(aes_key)
             nonce = os.urandom(12)
-            ciphertext = aesgcm.encrypt(nonce, pdf_data, None)
+            content_bytes = raw_content.encode("utf-8")
+            ciphertext = aesgcm.encrypt(nonce, content_bytes, None)
             
             file_id_bytes = uuid.UUID(file_id).bytes 
-            file_hash = hashlib.sha256(pdf_data).digest()
+            file_hash = hashlib.sha256(content_bytes).digest()
             final_doclib_data = file_id_bytes + file_hash + nonce + ciphertext
         except Exception as e:
             logger.exception("AES encryption failed for document content")
             raise HTTPException(status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình mã hóa tài liệu")
 
         logger.info(f"Successfully exported E-DRM document, file_id={file_id}")
-        return final_doclib_data, "doclib", "application/octet-stream"
+        return final_doclib_data, content_format, "application/octet-stream"
 
     @staticmethod
     @log_logic_execution

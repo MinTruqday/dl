@@ -126,7 +126,7 @@ function StudioContent() {
     let currentUrl: string | null = null;
     if (
       editorMode === "preview" &&
-      selectedDocument?.content_format === "latex"
+      selectedDocument?.content_format === "doclibx"
     ) {
       setIsPreviewCompiling(true);
       compileLatexPreviewAPI(content, false)
@@ -190,7 +190,7 @@ function StudioContent() {
         await saveDocumentDraftAPI(
           selectedDocumentId,
           content,
-          selectedDocument?.content_format || "json",
+          selectedDocument?.content_format || "doclib",
         );
         setStatusMsg("Đã lưu bản nháp");
         setTimeout(() => setStatusMsg("Sẵn sàng"), 2000);
@@ -209,7 +209,7 @@ function StudioContent() {
       await saveDocumentDraftAPI(
         selectedDocumentId,
         content,
-        selectedDocument?.content_format || "json",
+        selectedDocument?.content_format || "doclib",
       );
       showToast("Lưu trữ bản thảo hoàn tất", "success");
     } catch (err: any) {
@@ -240,7 +240,7 @@ function StudioContent() {
     setStatusMsg("Đang kết xuất PDF");
     try {
       let blob;
-      if (selectedDocument?.content_format === "latex") {
+      if (selectedDocument?.content_format === "doclibx") {
         blob = await exportLatexAPI(content, "pdf");
       } else {
         blob = await compilePreviewAPI(content, false);
@@ -269,7 +269,7 @@ function StudioContent() {
     setStatusMsg("Đang kết xuất DOCX");
     try {
       let blob;
-      if (selectedDocument?.content_format === "latex") {
+      if (selectedDocument?.content_format === "doclibx") {
         blob = await exportLatexAPI(content, "docx");
       } else {
         blob = await exportToWordAPI(content);
@@ -395,13 +395,13 @@ function StudioContent() {
                 <Editor
                   documentId={selectedDocumentId}
                   initialContent={content}
-                  contentFormat={selectedDocument?.content_format || "json"}
+                  contentFormat={selectedDocument?.content_format || "doclib"}
                   onSave={(val) => setContent(val)}
                 />
               </div>
             ) : editorMode === "preview" ? (
               <div className="min-h-full max-w-[800px] mx-auto">
-                {selectedDocument?.content_format === "latex" ? (
+                {selectedDocument?.content_format === "doclibx" ? (
                   isPreviewCompiling ? (
                     <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                       <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73] mb-4" />
@@ -463,7 +463,7 @@ function StudioContent() {
           >
             Định dạng PDF (.pdf)
           </button>
-          {selectedDocument?.content_format !== "latex" && (
+          {selectedDocument?.content_format !== "doclibx" && (
             <button
               onClick={() => { setShowExportModal(false); handleExportDOCX(); }}
               className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"
