@@ -1,10 +1,10 @@
-from src.memory.proactive_bank import (
+from src.proactive.bank import (
     MemoryBank,
     MemoryEntry,
     ProactiveMemoryBank,
     proactive_memory_bank,
 )
-from src.memory.proactive_agent import ProactiveMemoryAgent, proactive_memory_agent
+from src.proactive.agent import ProactiveMemoryAgent, proactive_memory_agent
 
 __all__ = [
     "MemoryBank",

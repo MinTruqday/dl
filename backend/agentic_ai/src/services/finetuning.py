@@ -519,7 +519,7 @@ async def deploy_model(job_id: str, req: dict):
 
 @log_logic_execution
 async def evaluate_model(job_id: str, req: dict):
-    from src.harness.evaluation import evaluation
+    from src.loop.evaluation import evaluation
 
     job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}

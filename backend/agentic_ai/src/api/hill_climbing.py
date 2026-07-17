@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Body, HTTPException
 from loguru import logger
 
-from src.harness.hill_climbing import hill_climbing_loop
+from src.loop.hill_climbing import hill_climbing_loop
 
 router = APIRouter(prefix="/toi-uu")
 

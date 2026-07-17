@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
-from src.memory.proactive_agent import proactive_memory_agent
+from src.proactive.agent import proactive_memory_agent
 
 _TRIGGER_INTERVAL = 5
 _MEMORY_CONTEXT_WRAP_OPEN = "<memory_context>"

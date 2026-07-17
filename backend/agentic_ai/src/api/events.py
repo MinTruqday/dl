@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, HTTPException, Request
 from loguru import logger
 from pydantic import BaseModel
 
-from src.harness.event_loop import (
+from src.loop.event import (
     AgentEvent,
     CronSchedule,
     EventType,

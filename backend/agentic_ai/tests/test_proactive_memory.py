@@ -28,7 +28,7 @@ def session_id() -> str:
 
 @pytest.fixture
 async def bank(redis_client):
-    from src.memory.proactive_bank import ProactiveMemoryBank
+    from src.proactive.bank import ProactiveMemoryBank
     instance = ProactiveMemoryBank()
     instance._redis = redis_client
     return instance
@@ -163,7 +163,7 @@ class TestSessionIsolation:
 
 class TestPhase1Parsing:
     def test_parse_single_tool_call(self):
-        from src.memory.proactive_agent import _parse_phase1_tool_calls
+        from src.proactive.agent import _parse_phase1_tool_calls
         raw = '<tool_call>{"name": "memory_save_knowledge", "args": {"id": "req_auth", "content": "JWT required", "category": "task_fact"}}</tool_call>'
         calls = _parse_phase1_tool_calls(raw)
         assert len(calls) == 1
@@ -171,7 +171,7 @@ class TestPhase1Parsing:
         assert calls[0]["args"]["id"] == "req_auth"
 
     def test_parse_multiple_tool_calls(self):
-        from src.memory.proactive_agent import _parse_phase1_tool_calls
+        from src.proactive.agent import _parse_phase1_tool_calls
         raw = (
             '<tool_call>{"name": "memory_update_status", "args": {"status": "Step 2"}}</tool_call>\n'
             '<tool_call>{"name": "memory_save_procedural", "args": {"id": "fail_001", "content": "pip failed", "category": "bug"}}</tool_call>\n'
@@ -183,11 +183,11 @@ class TestPhase1Parsing:
         assert {"memory_update_status", "memory_save_procedural", "memory_delete"} == names
 
     def test_parse_no_tool_calls_returns_empty(self):
-        from src.memory.proactive_agent import _parse_phase1_tool_calls
+        from src.proactive.agent import _parse_phase1_tool_calls
         assert _parse_phase1_tool_calls("Nothing new to save.") == []
 
     def test_malformed_json_skipped_gracefully(self):
-        from src.memory.proactive_agent import _parse_phase1_tool_calls
+        from src.proactive.agent import _parse_phase1_tool_calls
         raw = (
             '<tool_call>{"name": "memory_save_knowledge", "args": {"id": "ok", "content": "valid", "category": "task_fact"}}</tool_call>\n'
             '<tool_call>{not valid json at all</tool_call>'
@@ -199,66 +199,66 @@ class TestPhase1Parsing:
 
 class TestPhase2Parsing:
     def test_parse_intervention_with_context(self):
-        from src.memory.proactive_agent import _parse_phase2_output
+        from src.proactive.agent import _parse_phase2_output
         raw = "<context_for_action>\nReminder: JWT required (req_auth) before any tool call.\n</context_for_action>"
         result = _parse_phase2_output(raw)
         assert result is not None
         assert "JWT" in result
 
     def test_parse_no_intervention_tag(self):
-        from src.memory.proactive_agent import _parse_phase2_output
+        from src.proactive.agent import _parse_phase2_output
         assert _parse_phase2_output("<no_intervention/>") is None
 
     def test_parse_no_intervention_with_whitespace(self):
-        from src.memory.proactive_agent import _parse_phase2_output
+        from src.proactive.agent import _parse_phase2_output
         assert _parse_phase2_output("\n  <no_intervention/>  \n") is None
 
     def test_parse_empty_context_tag_returns_none(self):
-        from src.memory.proactive_agent import _parse_phase2_output
+        from src.proactive.agent import _parse_phase2_output
         assert _parse_phase2_output("<context_for_action>   </context_for_action>") is None
 
     def test_parse_garbage_output_returns_none(self):
-        from src.memory.proactive_agent import _parse_phase2_output
+        from src.proactive.agent import _parse_phase2_output
         assert _parse_phase2_output("I think the agent is fine.") is None
 
 
 class TestTrajectoryFormatting:
     def test_window_truncates_to_last_k(self):
-        from src.memory.proactive_agent import _format_trajectory_window
+        from src.proactive.agent import _format_trajectory_window
         trajectory = [{"role": "user", "content": f"message {i}"} for i in range(20)]
         lines = [l for l in _format_trajectory_window(trajectory, window=8).split("\n") if l.startswith("[TURN")]
         assert len(lines) == 8
 
     def test_long_content_is_truncated(self):
-        from src.memory.proactive_agent import _format_trajectory_window
+        from src.proactive.agent import _format_trajectory_window
         result = _format_trajectory_window([{"role": "assistant", "content": "x" * 2000}], window=8)
         assert "[...TRUNCATED...]" in result
 
     def test_empty_trajectory(self):
-        from src.memory.proactive_agent import _format_trajectory_window
+        from src.proactive.agent import _format_trajectory_window
         assert _format_trajectory_window([], window=8) == "(no trajectory)"
 
 
 class TestMiddlewareTriggerLogic:
     def test_triggers_on_step_1(self):
-        from src.workflow.memory_middleware import _should_trigger
+        from src.proactive.middleware import _should_trigger
         assert _should_trigger(1) is True
 
     def test_triggers_on_interval(self):
-        from src.workflow.memory_middleware import _should_trigger
+        from src.proactive.middleware import _should_trigger
         assert all(_should_trigger(s) for s in [5, 10, 15, 20])
 
     def test_does_not_trigger_on_non_interval(self):
-        from src.workflow.memory_middleware import _should_trigger
+        from src.proactive.middleware import _should_trigger
         assert all(not _should_trigger(s) for s in [2, 3, 6, 7, 11])
 
     def test_triggers_on_force_failure(self):
-        from src.workflow.memory_middleware import _should_trigger
+        from src.proactive.middleware import _should_trigger
         assert _should_trigger(3, force_on_failure=True) is True
         assert _should_trigger(7, force_on_failure=True) is True
 
     def test_wrap_memory_context_format(self):
-        from src.workflow.memory_middleware import wrap_memory_context
+        from src.proactive.middleware import wrap_memory_context
         wrapped = wrap_memory_context("JWT required")
         assert "<memory_context>" in wrapped
         assert "JWT required" in wrapped
@@ -268,7 +268,7 @@ class TestMiddlewareTriggerLogic:
 class TestMiddlewarePipelineIntegration:
     @pytest.mark.asyncio
     async def test_returns_none_on_non_trigger_step(self, session_id):
-        from src.workflow.memory_middleware import MemoryMiddleware
+        from src.proactive.middleware import MemoryMiddleware
         result = await MemoryMiddleware().process(
             session_id=session_id,
             trajectory=[{"role": "user", "content": "hello"}],
@@ -279,10 +279,10 @@ class TestMiddlewarePipelineIntegration:
 
     @pytest.mark.asyncio
     async def test_calls_agent_on_trigger_step(self, session_id):
-        from src.workflow.memory_middleware import MemoryMiddleware
+        from src.proactive.middleware import MemoryMiddleware
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value="JWT is required before proceeding")
-        with patch("src.workflow.memory_middleware.proactive_memory_agent", mock_agent):
+        with patch("src.proactive.middleware.proactive_memory_agent", mock_agent):
             result = await MemoryMiddleware().process(
                 session_id=session_id,
                 trajectory=[{"role": "user", "content": "do something"}],
@@ -295,10 +295,10 @@ class TestMiddlewarePipelineIntegration:
 
     @pytest.mark.asyncio
     async def test_returns_none_when_agent_silent(self, session_id):
-        from src.workflow.memory_middleware import MemoryMiddleware
+        from src.proactive.middleware import MemoryMiddleware
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(return_value=None)
-        with patch("src.workflow.memory_middleware.proactive_memory_agent", mock_agent):
+        with patch("src.proactive.middleware.proactive_memory_agent", mock_agent):
             result = await MemoryMiddleware().process(
                 session_id=session_id,
                 trajectory=[{"role": "user", "content": "task"}],
@@ -309,10 +309,10 @@ class TestMiddlewarePipelineIntegration:
 
     @pytest.mark.asyncio
     async def test_fault_tolerant_on_agent_crash(self, session_id):
-        from src.workflow.memory_middleware import MemoryMiddleware
+        from src.proactive.middleware import MemoryMiddleware
         mock_agent = MagicMock()
         mock_agent.run = AsyncMock(side_effect=RuntimeError("Simulated LLM crash"))
-        with patch("src.workflow.memory_middleware.proactive_memory_agent", mock_agent):
+        with patch("src.proactive.middleware.proactive_memory_agent", mock_agent):
             result = await MemoryMiddleware().process(
                 session_id=session_id,
                 trajectory=[{"role": "user", "content": "task"}],
@@ -326,7 +326,7 @@ class TestProactiveAgentWithMockLLM:
     @pytest.mark.asyncio
     async def test_phase1_dispatches_all_tool_types(self, bank, session_id):
         from langchain_core.messages import AIMessage
-        from src.memory.proactive_agent import ProactiveMemoryAgent
+        from src.proactive.agent import ProactiveMemoryAgent
 
         llm_out = (
             '<tool_call>{"name": "memory_update_status", "args": {"status": "Auth flow in progress"}}</tool_call>\n'
@@ -350,7 +350,7 @@ class TestProactiveAgentWithMockLLM:
     @pytest.mark.asyncio
     async def test_phase2_returns_intervention_string(self, bank, session_id):
         from langchain_core.messages import AIMessage
-        from src.memory.proactive_agent import ProactiveMemoryAgent
+        from src.proactive.agent import ProactiveMemoryAgent
 
         await bank.save_knowledge(session_id, "req_jwt_check", "JWT required on every request", "task_fact")
         current_bank = await bank.get_bank(session_id)
@@ -372,7 +372,7 @@ class TestProactiveAgentWithMockLLM:
     @pytest.mark.asyncio
     async def test_phase2_returns_none_when_silent(self, bank, session_id):
         from langchain_core.messages import AIMessage
-        from src.memory.proactive_agent import ProactiveMemoryAgent
+        from src.proactive.agent import ProactiveMemoryAgent
 
         await bank.save_knowledge(session_id, "env_port", "Service runs on port 8080", "env_fact")
         current_bank = await bank.get_bank(session_id)
@@ -390,7 +390,7 @@ class TestProactiveAgentWithMockLLM:
 
     @pytest.mark.asyncio
     async def test_phase1_llm_failure_does_not_crash(self, bank, session_id):
-        from src.memory.proactive_agent import ProactiveMemoryAgent
+        from src.proactive.agent import ProactiveMemoryAgent
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(side_effect=RuntimeError("HF endpoint timeout"))
         agent = ProactiveMemoryAgent(bank=bank)
@@ -406,7 +406,7 @@ class TestProactiveAgentWithMockLLM:
     @pytest.mark.asyncio
     async def test_phase2_llm_failure_returns_none(self, bank, session_id):
         from langchain_core.messages import AIMessage
-        from src.memory.proactive_agent import ProactiveMemoryAgent
+        from src.proactive.agent import ProactiveMemoryAgent
 
         await bank.save_knowledge(session_id, "k1", "some fact", "task_fact")
         current_bank = await bank.get_bank(session_id)
@@ -425,7 +425,7 @@ class TestProactiveAgentWithMockLLM:
     @pytest.mark.asyncio
     async def test_full_run_end_to_end(self, bank, session_id):
         from langchain_core.messages import AIMessage
-        from src.memory.proactive_agent import ProactiveMemoryAgent
+        from src.proactive.agent import ProactiveMemoryAgent
 
         trajectory = [
             {"role": "user", "content": "Implement auth using JWT tokens"},

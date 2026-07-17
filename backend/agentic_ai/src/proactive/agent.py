@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
-from src.memory.proactive_bank import MemoryBank, ProactiveMemoryBank, proactive_memory_bank
+from src.proactive.bank import MemoryBank, ProactiveMemoryBank, proactive_memory_bank
 
 
 _WINDOW_SIZE = 8

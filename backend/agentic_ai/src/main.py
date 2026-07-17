@@ -18,7 +18,7 @@ logger.add(
 )
 from fastapi.middleware.cors import CORSMiddleware
 from src.harness.agentops import agentops
-from src.harness.evaluation import evaluation
+from src.loop.evaluation import evaluation
 from src.harness.orchestration import orchestration
 from src.api.interaction import router as chat
 from src.api.feedback import router as feedback
@@ -120,7 +120,7 @@ async def startup_event():
     except Exception as e:
         logger.exception("MongoDB indexing error")
     try:
-        from src.harness.event_loop import cron_scheduler, event_driven_loop
+        from src.loop.event import cron_scheduler, event_driven_loop
         await event_driven_loop.start_worker()
         await cron_scheduler.start()
         logger.info("Event-driven loop started successfully")
@@ -129,7 +129,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     try:
-        from src.harness.event_loop import cron_scheduler, event_driven_loop
+        from src.loop.event import cron_scheduler, event_driven_loop
         await cron_scheduler.stop()
         await event_driven_loop.stop_worker()
     except Exception:

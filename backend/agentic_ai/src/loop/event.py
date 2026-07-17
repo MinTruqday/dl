@@ -301,7 +301,7 @@ async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
     payload = event.payload
     if payload.get("check_hill_climbing", False):
         try:
-            from src.harness.hill_climbing import hill_climbing_loop
+            from src.loop.hill_climbing import hill_climbing_loop
             asyncio.create_task(hill_climbing_loop.analyze_and_improve())
         except Exception as e:
             logger.warning(f"Heartbeat hill climbing trigger failed {e}")
