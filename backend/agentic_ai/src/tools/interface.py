@@ -1431,9 +1431,6 @@ async def execute_mcp_tool(directory_uuid: str, tool_name: str, arguments: dict,
     try:
         from src.services.mcp import MCPService
         result = await MCPService.execute_tool(directory_uuid, tool_name, arguments)
-        
-        # result is an mcp.types.CallToolResult. Let's serialize it.
-        # In the MCP SDK, CallToolResult has 'content' (list of text/image) and 'isError'.
         text_content = ""
         for c in result.content:
             if c.type == "text":

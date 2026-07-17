@@ -110,7 +110,6 @@ class WatermarkService:
         except Exception as e:
             logger.warning(f"Failed to fetch user tier information {e}")
 
-        # Agentic AI Policy Evaluation
         try:
             async with httpx.AsyncClient() as client:
                 agent_res = await client.post(
@@ -142,7 +141,6 @@ class WatermarkService:
             logger.warning("Failed to evaluate DRM policy via Agentic AI, falling back to LEVEL_2")
             enable_visual, enable_micro, enable_aes = True, True, True
 
-        # Ensure premium access
         if (
             document.get("is_premium")
             and document.get("creator_id") != user_id

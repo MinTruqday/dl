@@ -7,7 +7,6 @@ from src.core.infrastructure.configuration import settings
 
 _MAX_ATTEMPTS = 3
 
-# Tools that require explicit user approval before execution
 _REQUIRES_APPROVAL_TOOLS = frozenset({
     "delete_document",
     "restore_document",
@@ -124,7 +123,6 @@ class ActingAgent:
                 if tool_name in _REQUIRES_APPROVAL_TOOLS and not auto_approve:
                     return "Thao tác này yêu cầu xác nhận ủy quyền trực tiếp từ bạn"
 
-                # ── Step 4: Execute the tool ──────────────────────────────────
                 logger.info("Initializing utility")
                 selected_tool = self.tool_map[tool_name]
                 try:
