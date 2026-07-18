@@ -3,6 +3,23 @@ import subprocess
 import tempfile
 from typing import Tuple
 from loguru import logger
+import queue
+import atexit
+
+kernel_manager = None
+client = None
+
+def get_jupyter_client():
+    global kernel_manager, client
+    if client is None:
+        try:
+            from jupyter_client.manager import start_new_kernel
+            kernel_manager, client = start_new_kernel(kernel_name='python3')
+            atexit.register(kernel_manager.shutdown_kernel)
+            logger.info("Persistent Jupyter Kernel started.")
+        except ImportError:
+            logger.warning("jupyter_client not installed, cannot start kernel.")
+    return client
 
 class CodeSandbox:
     """
@@ -37,10 +54,45 @@ class CodeSandbox:
         with open(code_file, "w", encoding="utf-8") as f:
             f.write(code)
             
+        # We now use Stateful Jupyter execution when use_docker=False
         if self.use_docker:
+            # We'll keep docker stateless for security, or we can use Jupyter locally for logic testing
             return self._run_docker(code_file, dependencies)
         else:
-            return self._run_venv(code_file, dependencies)
+            return self._run_jupyter(code)
+            
+    def _run_jupyter(self, code: str) -> Tuple[bool, str, str]:
+        jc = get_jupyter_client()
+        if not jc:
+            return False, "", "Jupyter client not available"
+        
+        try:
+            msg_id = jc.execute(code)
+            stdout = ""
+            stderr = ""
+            while True:
+                try:
+                    msg = jc.get_iopub_msg(timeout=30)
+                    msg_type = msg['header']['msg_type']
+                    content = msg['content']
+                    
+                    if msg_type == 'stream':
+                        if content['name'] == 'stdout':
+                            stdout += content['text']
+                        elif content['name'] == 'stderr':
+                            stderr += content['text']
+                    elif msg_type == 'error':
+                        stderr += "\n".join(content['traceback'])
+                    elif msg_type == 'execute_result':
+                        stdout += str(content['data'].get('text/plain', ''))
+                    elif msg_type == 'status' and content['execution_state'] == 'idle':
+                        break
+                except queue.Empty:
+                    return False, stdout, stderr + "\nExecution timeout exceeded"
+                    
+            return len(stderr) == 0, stdout, stderr
+        except Exception as e:
+            return False, "", str(e)
             
     def _run_venv(self, code_file: str, dependencies: list = None) -> Tuple[bool, str, str]:
         try:

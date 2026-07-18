@@ -407,7 +407,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                                 success=True,
                             )
                             agent_name = event.get('agent', 'unknown')
-                            yield f"event: tool\ndata: {json.dumps({'agent': agent_name, 'result': event.get('content', 'Completed')})}\n\n"
+                            content = event.get('content', 'Completed')
+                            # Simulate live piping by chunking the output
+                            chunk_size = 50
+                            for i in range(0, len(content), chunk_size):
+                                chunk_str = content[i:i+chunk_size]
+                                yield f"event: tool_stream\ndata: {json.dumps({'agent': agent_name, 'chunk': chunk_str})}\n\n"
                         elif event_type == "message":
                             final_answer += event["chunk"]
                             yield f"event: message\ndata: {json.dumps({'chunk': event['chunk']})}\n\n"

@@ -11,6 +11,7 @@ from src.schemas.planning import ExecutionPlan, PlanNode
 from src.utils.resilience import with_retry
 
 from src.core.infrastructure.configuration import settings
+from src.memory.mem0_client import mem0_manager
 
 _hf_endpoint = HuggingFaceEndpoint(
     task="conversational",
@@ -58,9 +59,15 @@ class PlanAgent:
         history_str = "\n".join(
             [
                 f"{msg.get('role', 'user')} said {msg.get('content', '')}"
-                for msg in history[-5:]
+                for msg in history
             ]
         )
+        
+        user_id = req_data.get("user_id", "guest")
+        long_term_memory = await mem0_manager.get_memories(user_id=user_id, query=req_data.get("query", ""))
+        
+        if long_term_memory:
+            system_prompt += f"\n\n{long_term_memory}"
 
         query = req_data.get("query", "")
         context = req_data.get("context", "None")

@@ -142,7 +142,31 @@ class RetrievalRag:
             query_vector=query_vector, document_ids=document_ids, limit=fetch_limit
         )
 
-        if not documents or not current_reranker:
+        if not documents:
+            return []
+
+        # Simulated Hybrid Search (Vector + BM25)
+        try:
+            from rank_bm25 import BM25Okapi
+            tokenized_corpus = [doc.get("text", "").lower().split(" ") for doc in documents]
+            bm25 = BM25Okapi(tokenized_corpus)
+            tokenized_query = query.lower().split(" ")
+            bm25_scores = bm25.get_scores(tokenized_query)
+            
+            # Reciprocal Rank Fusion (RRF)
+            k_rrf = 60
+            for i, doc in enumerate(documents):
+                dense_rank = i + 1
+                sparse_rank = sorted(range(len(bm25_scores)), key=lambda k: bm25_scores[k], reverse=True).index(i) + 1
+                doc["rrf_score"] = (1 / (k_rrf + dense_rank)) + (1 / (k_rrf + sparse_rank))
+                
+            documents = sorted(documents, key=lambda x: x["rrf_score"], reverse=True)
+        except ImportError:
+            logger.warning("rank_bm25 not installed, skipping BM25 Hybrid Fusion")
+        except Exception as e:
+            logger.error(f"Hybrid search fusion error: {e}")
+
+        if not current_reranker:
             return documents[:k]
 
         try:

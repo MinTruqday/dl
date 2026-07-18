@@ -30,7 +30,18 @@ class SecurityHarness:
     </contract>
     """
     def __init__(self):
-        pass
+        self.analyzer = None
+        self.anonymizer = None
+        try:
+            from presidio_analyzer import AnalyzerEngine
+            from presidio_anonymizer import AnonymizerEngine
+            self.analyzer = AnalyzerEngine()
+            self.anonymizer = AnonymizerEngine()
+            logger.info("Presidio Security Engines initialized successfully.")
+        except ImportError:
+            logger.warning("Presidio not installed. Falling back to LLM/Regex for PII scanning.")
+        except Exception as e:
+            logger.error(f"Failed to initialize Presidio: {e}")
 
     async def _adetect_security_issues(self, text: str) -> tuple[str, List[str]]:
         from huggingface_hub import AsyncInferenceClient
@@ -42,6 +53,19 @@ class SecurityHarness:
         
         violations = []
         sanitized = text
+        
+        # 1. Fast PII Scanning via Presidio (Offline / Rule-based)
+        if self.analyzer and self.anonymizer:
+            try:
+                results = self.analyzer.analyze(text=text, entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"], language='en')
+                if results:
+                    violations.append("pii_detected")
+                    anonymized_result = self.anonymizer.anonymize(text=text, analyzer_results=results)
+                    sanitized = anonymized_result.text
+            except Exception as e:
+                logger.error(f"Presidio scan error: {e}")
+                
+        # 2. LLM Scanning for Prompt Injection
         try:
             client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
             llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
@@ -54,10 +78,11 @@ class SecurityHarness:
                 violations.append(f"prompt_injection:{result.reason[:60]}")
             if result.has_credentials:
                 violations.append("credential_leak")
-            if result.has_pii:
+            # If presidio failed to catch it but LLM caught it
+            if result.has_pii and "pii_detected" not in violations:
                 violations.append("pii_detected")
-            
-            sanitized = result.sanitized_text or text
+                if result.sanitized_text:
+                    sanitized = result.sanitized_text
         except Exception as e:
             logger.exception("AI security tracing failed")
             

@@ -51,3 +51,8 @@ mcp>=1.2.0
 bandit>=1.7.9
 semgrep>=1.80.0
 playwright>=1.40.0
+mem0ai
+presidio-analyzer
+jupyter_client
+ipykernel
+rank_bm25

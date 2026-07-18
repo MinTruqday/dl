@@ -140,7 +140,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 code_block = _extract_code_block(str(res))
                 if code_block and agent_name in ("InterpreterAgent", "Action"):
                     from src.harness.sandbox import CodeSandbox
-                    sandbox = CodeSandbox(use_docker=True)
+                    sandbox = CodeSandbox(use_docker=False)
                     sandbox_retry = 0
                     while sandbox_retry < 2:
                         success, stdout, stderr = sandbox.execute_code(code_block)
@@ -171,6 +171,17 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                     if eval_res.status == "FAIL":
                         replan_count += 1
                         logger.warning("Self-reflection failed, initiating replan sequence")
+                        try:
+                            from src.memory.mem0_client import mem0_manager
+                            import asyncio
+                            user_id = req_data.get("user_id", "guest")
+                            mem_data = [
+                                {"role": "system", "content": "I attempted a task but failed. I must learn from this mistake for future reasoning."},
+                                {"role": "user", "content": f"Task: {current_task}\nFailed Output: {res}\nFeedback: {eval_res.feedback}\nRevised Task for next time: {eval_res.revised_task}"}
+                            ]
+                            asyncio.create_task(mem0_manager.add_memory(mem_data, user_id))
+                        except Exception as e:
+                            logger.error(f"Failed to inject procedural memory: {e}")
                         current_task = eval_res.revised_task or current_task
                         final_res = res
                     else:
