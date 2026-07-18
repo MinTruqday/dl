@@ -103,4 +103,26 @@ class ManagementMemory:
             / max(len(history), 1),
         }
 
+    async def save_memory_history(self, memory_id: str, action: str, old_text: Optional[str], new_text: Optional[str]):
+        if not self._redis:
+            return
+            
+        key = f"memory:history:{memory_id}"
+        try:
+            entry = {
+                "action": action,
+                "old_text": old_text,
+                "new_text": new_text,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            existing = await self._redis.get(key)
+            history = json.loads(existing) if existing else []
+            history.append(entry)
+            
+            await self._redis.setex(
+                key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
+            )
+        except Exception:
+            logger.exception(f"Error saving memory history for {memory_id}")
+
 memory_manager = ManagementMemory()

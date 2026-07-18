@@ -9,3 +9,4 @@ backend/.venv/
 *.md
 .gitignore
 test_*.py
+mem0-main
