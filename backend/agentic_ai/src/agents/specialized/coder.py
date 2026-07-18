@@ -101,7 +101,7 @@ class CoderAgent:
             logger.info("Coder execution completed successfully")
         except Exception:
             logger.exception("Coder LLM generation failed")
-            state.messages.append(AIMessage(content="MODULE CODER: LLM generation failed"))
+            state.messages.append(AIMessage(content="LLM generation failed"))
 
         state.current_agent = "supervisor"
         return state

@@ -50,7 +50,7 @@ class ReviewerAgent:
             logger.info("Reviewer LLM evaluation completed successfully")
         except Exception as e:
             logger.exception("Reviewer LLM evaluation failed")
-            state.messages.append(AIMessage(content="MODULE REVIEWER: LLM evaluation failed"))
+            state.messages.append(AIMessage(content="LLM evaluation failed"))
             state.is_complete = True
             state.current_agent = "supervisor"
             

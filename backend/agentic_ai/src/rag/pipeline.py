@@ -97,14 +97,14 @@ class PipelineRag:
             {"_id": __import__("bson").ObjectId(document_id)}
         )
         if not document:
-            raise ValueError("Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise ValueError("Document not found or access denied")
 
         file_url = document.get("file_url", "")
         title = document.get("title", "Untitled")
         author = document.get("author", "Unknown")
 
         if not file_url:
-            raise ValueError("Thiếu tham số vị trí tệp tin")
+            raise ValueError("Missing file path parameter")
 
         logger.info("Initializing document ingestion process")
 
@@ -187,7 +187,7 @@ class PipelineRag:
         else:
             raw_text = await self._extract_text(file_url)
             if not raw_text or len(raw_text.strip()) < 100:
-                raise ValueError("Không đủ văn bản trích xuất để tiếp tục")
+                raise ValueError("Insufficient extracted text to proceed")
 
             first_few_pages = raw_text[:15000]
             summary_chunk = await get_summary_chunk(first_few_pages, "local")
@@ -201,7 +201,7 @@ class PipelineRag:
             await self._extract_entities_and_relations(first_few_pages, document_id)
 
         if not chunks:
-            raise ValueError("Lỗi phân mảnh tài liệu")
+            raise ValueError("Document chunking error")
 
         texts = [c["text"] for c in chunks]
         embeddings = await embedder.embed_batch(texts)

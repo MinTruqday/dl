@@ -104,7 +104,7 @@ async def _chat_direct(
             return content
         except Exception as e:
             logger.exception("AI text generation execution error")
-            raise Exception("Hệ thống gặp sự cố bất ngờ, vui lòng thử lại sau")
+            raise Exception("Unexpected error during execution")
 
 async def _run_ai_with_quota(
     current_user: CurrentUser,
@@ -598,7 +598,7 @@ async def analyze_document(
             return json_mod.loads(json_match.group())
         else:
             logger.warning("LLM returned malformed JSON response during document analysis")
-            raise ValueError("Mô hình ngôn ngữ trả về sai định dạng")
+            raise ValueError("Language model returned invalid format")
     except Exception as e:
         logger.exception("Document analysis error")
         raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình phân tích tài liệu, vui lòng thử lại sau")

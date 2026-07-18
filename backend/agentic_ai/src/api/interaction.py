@@ -19,7 +19,7 @@ router = APIRouter(route_class=LoggingRoute, prefix="/tro-chuyen")
 
 @router.post("")
 async def chat_endpoint(req: ChatRequest, request: Request):
-    logger.info(f"Started Chat streaming process. Input data {req.model_dump(exclude={'token', 'user_id'})}")
+    logger.info(f"Started Chat streaming process for user_id={req.user_id} with query length={len(req.query)}")
     token = request.headers.get("Authorization")
     if token:
         req.token = token.replace("Bearer ", "")
@@ -180,7 +180,7 @@ async def _consume_upload_quota(req: ChatRequest):
 
 @router.post("/phat-truc-tiep")
 async def stream_endpoint(req: ChatRequest, request: Request):
-    logger.info(f"Started Server-Sent Events stream. Input data {req.model_dump(exclude={'token', 'user_id'})}")
+    logger.info(f"Started Server-Sent Events stream for user_id={req.user_id} with query length={len(req.query)}")
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
 

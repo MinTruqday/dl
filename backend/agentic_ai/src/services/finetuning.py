@@ -499,7 +499,7 @@ async def deploy_model(job_id: str, req: dict):
                 )
             else:
                 logger.warning("Model output directory not found")
-                raise Exception("Hệ thống không tìm thấy thư mục chứa mô hình")
+                raise Exception("Model directory not found")
 
         model_name = repo_id
         await FinetuneRepository.update_job(

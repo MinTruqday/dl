@@ -70,7 +70,7 @@ class SecOpsAgent:
 
         code_to_review = state.artifacts.get("code", "")
         if not code_to_review:
-            state.messages.append(AIMessage(content="MODULE SECOPS: Missing code artifact for scanning"))
+            state.messages.append(AIMessage(content="Missing code artifact for scanning"))
             state.current_agent = "supervisor"
             return state
 
@@ -86,7 +86,7 @@ class SecOpsAgent:
             eval_result = await structured_llm.ainvoke(messages)
 
             scan_results = (
-                f"MODULE SECOPS: Security evaluation completed. "
+                f"Security evaluation completed. "
                 f"Secure: {eval_result.is_secure}. "
                 f"Details: {eval_result.vulnerability_summary}\n\n"
                 f"SAST Output:\n{sast_output}"
@@ -96,7 +96,7 @@ class SecOpsAgent:
             logger.info("SecOps LLM evaluation completed successfully")
         except Exception:
             logger.exception("SecOps LLM evaluation failed")
-            state.messages.append(AIMessage(content=f"MODULE SECOPS: LLM evaluation failed. SAST raw output:\n{sast_output}"))
+            state.messages.append(AIMessage(content=f"LLM evaluation failed. SAST raw output:\n{sast_output}"))
             state.artifacts["security_report"] = f"Raw SAST output:\n{sast_output}"
 
         state.current_agent = "supervisor"

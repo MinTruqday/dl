@@ -31,7 +31,7 @@ class AgenticFirewall:
             
         for pattern in cls.SUSPICIOUS_PATTERNS:
             if pattern.search(text):
-                logger.error(f"MODULE AGENTIC_AI: Firewall blocked a potential prompt injection attack. Pattern matched: {pattern.pattern}")
+                logger.error(f"Firewall blocked a potential prompt injection attack. Pattern matched: {pattern.pattern}")
                 raise HTTPException(
                     status_code=403,
                     detail="Hệ thống phát hiện nội dung độc hại hoặc yêu cầu thao túng (Prompt Injection) trong dữ liệu đầu vào. Hành động đã bị chặn"

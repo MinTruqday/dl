@@ -87,12 +87,27 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
             logger.exception(f"Memory extraction execution failed. Input length: {len(messages)} messages. Error: {str(e)}")
             return MemoryOperation()
 
-    def _build_filter(self, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None) -> Filter:
+    def _build_filter(self, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None, filters: Optional[Dict] = None) -> Filter:
         conditions = [FieldCondition(key="user_id", match=MatchValue(value=user_id))]
         if agent_id:
             conditions.append(FieldCondition(key="agent_id", match=MatchValue(value=agent_id)))
         if run_id:
             conditions.append(FieldCondition(key="run_id", match=MatchValue(value=run_id)))
+            
+        if filters:
+            for k, v in filters.items():
+                if isinstance(v, dict):
+                    # Advanced operators (simplified handling for Qdrant)
+                    if "$gt" in v:
+                        conditions.append(FieldCondition(key=k, range=Range(gt=v["$gt"])))
+                    elif "$lt" in v:
+                        conditions.append(FieldCondition(key=k, range=Range(lt=v["$lt"])))
+                    elif "$gte" in v:
+                        conditions.append(FieldCondition(key=k, range=Range(gte=v["$gte"])))
+                    elif "$lte" in v:
+                        conditions.append(FieldCondition(key=k, range=Range(lte=v["$lte"])))
+                else:
+                    conditions.append(FieldCondition(key=k, match=MatchValue(value=v)))
             
         current_time = datetime.now(timezone.utc).isoformat()
         conditions.append(
@@ -195,10 +210,7 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
 
     async def get_all(self, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None, limit: int = 100, filters: Optional[Dict] = None) -> List[Dict]:
         try:
-            query_filter = self._build_filter(user_id, agent_id, run_id)
-            if filters:
-                for k, v in filters.items():
-                    query_filter.must.append(FieldCondition(key=k, match=MatchValue(value=v)))
+            query_filter = self._build_filter(user_id, agent_id, run_id, filters)
                     
             records, _ = await self.client.scroll(
                 collection_name=self.collection_name,
@@ -226,10 +238,7 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
             return []
             
         try:
-            query_filter = self._build_filter(user_id, agent_id, run_id)
-            if filters:
-                for k, v in filters.items():
-                    query_filter.must.append(FieldCondition(key=k, match=MatchValue(value=v)))
+            query_filter = self._build_filter(user_id, agent_id, run_id, filters)
                     
             vector = await asyncio.to_thread(self.embedder.embed_query, query)
             results = await self.client.search(
@@ -330,10 +339,7 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
     
     async def delete_all(self, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None, filters: Optional[Dict] = None):
         try:
-            query_filter = self._build_filter(user_id, agent_id, run_id)
-            if filters:
-                for k, v in filters.items():
-                    query_filter.must.append(FieldCondition(key=k, match=MatchValue(value=v)))
+            query_filter = self._build_filter(user_id, agent_id, run_id, filters)
                     
             await self.client.delete(
                 collection_name=self.collection_name,
@@ -358,6 +364,25 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
 
     async def get_context(self, query: str, user_id: str) -> str:
         return await self.get_memories(user_id, query)
+
+    async def chat(self, query: str, user_id: str) -> str:
+        context = await self.get_context(query, user_id)
+        system_prompt = f"You are a helpful assistant. Use the following memory context to answer the user's question:\n{context}\n\nIf the answer is not in the context, just use your general knowledge."
+        try:
+            msg = [SystemMessage(content=system_prompt), HumanMessage(content=query)]
+            response = await self.llm.ainvoke(msg)
+            return response.content
+        except Exception as e:
+            logger.exception(f"Chat execution failed for user '{user_id}'. Error: {str(e)}")
+            return "I'm sorry, I encountered an error while accessing my memory."
+
+    @property
+    def project(self):
+        return None
+
+    @property
+    def entity_store(self):
+        return None
 
     async def reset(self):
         try:

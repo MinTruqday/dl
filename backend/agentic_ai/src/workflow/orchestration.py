@@ -181,7 +181,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                             ]
                             asyncio.create_task(mem0_manager.add_memory(mem_data, user_id))
                         except Exception as e:
-                            logger.error(f"Failed to inject procedural memory: {e}")
+                            logger.exception("Failed to inject procedural memory")
                         current_task = eval_res.revised_task or current_task
                         final_res = res
                     else:
@@ -275,7 +275,7 @@ async def swarm_node(state: ActingState):
                         final_messages = state_update["messages"]
         except GraphRecursionError:
             logger.warning("Swarm recursion limit reached. Halting swarm execution.")
-            final_messages.append(AIMessage(content="MODULE GOVERNANCE: Mã nguồn vi phạm chính sách bảo mật hoặc rơi vào vòng lặp vô tận. Bị hệ thống bảo mật tự động ngắt kết nối."))
+            final_messages.append(AIMessage(content="Mã nguồn vi phạm chính sách bảo mật hoặc rơi vào vòng lặp vô tận. Bị hệ thống bảo mật tự động ngắt kết nối."))
 
         parts = []
         if final_artifacts.get("code"):
@@ -443,7 +443,7 @@ class OrchestrationWorkflow:
 
     async def execute_plan(self, req_data):
         from src.memory.global_state import global_state
-        logger.info("Initializing orchestration execution stream")
+        logger.info(f"Initializing orchestration execution stream for query length {len(req_data.get('query', ''))}")
         yield {"type": "status", "node": "Hệ thống đang tiến hành phân tích yêu cầu"}
 
         session_id = req_data.get("session_id", str(uuid7()))

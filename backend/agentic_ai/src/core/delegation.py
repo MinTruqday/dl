@@ -33,8 +33,8 @@ class ToolDelegator:
         except Exception as e:
             await pubsub.unsubscribe(channel)
             await pubsub.close()
-            logger.error(f"MODULE AGENTIC_AI: Failed to broadcast delegation: {e}")
-            raise Exception("Hệ thống mất kết nối với giao diện máy khách")
+            logger.error(f"Failed to broadcast delegation: {e}")
+            raise Exception("Lost connection to client interface")
 
         try:
             async def _wait_for_message():
@@ -45,10 +45,10 @@ class ToolDelegator:
             result = await asyncio.wait_for(_wait_for_message(), timeout=timeout)
             return result
         except asyncio.TimeoutError:
-            logger.warning(f"MODULE AGENTIC_AI: Delegation {action} timed out after {timeout}s")
+            logger.warning(f"Delegation {action} timed out after {timeout}s")
             return f"Lỗi thực thi: Không nhận được phản hồi từ trình duyệt sau {timeout} giây."
         except Exception as e:
-            logger.error(f"MODULE AGENTIC_AI: Delegation error: {e}")
+            logger.error(f"Delegation error: {e}")
             return "Lỗi hệ thống khi chờ kết quả xử lý."
         finally:
             await pubsub.unsubscribe(channel)
