@@ -144,6 +144,23 @@ class EngineAgent:
         self._save_cache(query, formatted)
         return formatted
 
+    async def _playwright_scrape(self, url: str) -> str:
+        try:
+            from playwright.async_api import async_playwright
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                page = await browser.new_page()
+                await page.goto(url, timeout=10000)
+                content = await page.evaluate("() => document.body.innerText")
+                await browser.close()
+                return content[:5000]
+        except ImportError:
+            logger.warning("Playwright not installed. Fallback failed")
+            return ""
+        except Exception:
+            logger.exception("Playwright scrape failed")
+            return ""
+
     async def _tavily_image_search(self, query: str) -> list:
         response = await asyncio.to_thread(
             self.client.search, query=query, search_depth="advanced", max_results=4, include_images=True
@@ -206,10 +223,19 @@ class EngineAgent:
                 eval_response = await llm.ainvoke([HumanMessage(content=eval_prompt)])
                 
                 if "YES" in eval_response.content.upper():
-                    logger.info("Sufficient information gathered.")
+                    logger.info("Self-evaluation: Sufficient information gathered.")
                     break
                 else:
-                    logger.info("Insufficient information. Re-formulating query...")
+                    logger.info("Self-evaluation: Insufficient information. Re-formulating query...")
+                    
+                    # Try playwright fallback on the top URL if available
+                    urls = re.findall(r"Source link (https?://[^\s]+)", accumulated_results)
+                    if urls:
+                        logger.info(f"Triggering Playwright fallback on {urls[0]}")
+                        scraped = await self._playwright_scrape(urls[0])
+                        if scraped:
+                            accumulated_results += f"\n\n[Playwright Deep Scrape of {urls[0]}]\n{scraped}\n"
+                            
                     current_query = f"{query} details and deeper context"
                     
             if accumulated_results:

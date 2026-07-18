@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY worker/requirements.txt .
 
-RUN pip install --user --no-cache-dir -r requirements.txt gunicorn uvicorn[standard]
+RUN pip install -q --user --no-cache-dir -r requirements.txt gunicorn uvicorn[standard]
 
 FROM python:3.12-slim
 

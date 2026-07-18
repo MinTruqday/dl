@@ -20,6 +20,7 @@ VALID_AGENTS = {
     "Reasoning": "Performs deep logical analysis, reasoning, evaluation, and multi-step problem solving",
     "SwarmAgent": "Writes, reviews, and secures complex software code using a multi-agent team",
     "MCTSAgent": "Solves complex logic problems by exploring multiple solution branches via Monte Carlo Tree Search",
+    "MCPAgent": "Interacts with external services and third-party software (Jira, GitHub, Slack) via Model Context Protocol"
 }
 
 
@@ -88,10 +89,20 @@ class SemanticRouterValidator:
         validated = []
         for node in nodes:
             agent = node.get("agent", "Knowledge")
+            task_desc = node.get("task", "")
             if agent not in VALID_AGENTS:
-                corrected = self.find_closest_agent(node.get("task", ""))
+                corrected = self.find_closest_agent(task_desc)
                 logger.warning(f"Invalid agent '{agent}' corrected to '{corrected}'")
                 node = {**node, "agent": corrected}
+                agent = corrected
+                
+            if agent == "MCTSAgent":
+                complex_keywords = ["algorithm", "optimize", "complex", "performance", "tree", "graph", "dynamic programming"]
+                is_complex = any(k in task_desc.lower() for k in complex_keywords) or len(task_desc) > 150
+                if not is_complex:
+                    logger.info("MCTSAgent downgraded to SwarmAgent due to low task complexity")
+                    node = {**node, "agent": "SwarmAgent"}
+            
             validated.append(node)
         return validated
 

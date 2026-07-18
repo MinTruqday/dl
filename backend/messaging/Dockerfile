@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 COPY messaging/requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY messaging/src/ ./src/
 

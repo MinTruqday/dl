@@ -8,7 +8,7 @@ ENV PYTHONPATH=/app
 
 COPY management/requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY management/src/ ./src/
 

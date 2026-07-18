@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY agentic_ai/requirements.txt .
-RUN pip install --no-cache-dir torch>=2.2.0
-RUN pip install --no-cache-dir -r requirements.txt
+
+RUN pip install -q --no-cache-dir -r requirements.txt
 
 FROM python:3.11-slim
 
@@ -25,8 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
-
-RUN pip install --no-cache-dir bandit>=1.7.9 semgrep>=1.80.0
 
 RUN useradd -m -s /bin/bash appuser
 RUN mkdir -p /home/appuser/.cache/huggingface && chown -R appuser:appuser /home/appuser/.cache

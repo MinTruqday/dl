@@ -94,8 +94,10 @@ class ActingState(TypedDict):
     </contract>
     """
     req_data: Dict[str, Any]
-    steps: List[Dict[str, str]]
+    steps: List[Any]
     current_step_index: int
+    completed_tasks: list
+    task_status: Dict[str, str]
     consolidated_results: Annotated[list, reduce_consolidated_results]
     final_answer: str
     next_nodes: List[str]

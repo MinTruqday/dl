@@ -1,7 +1,7 @@
 import time
 from typing import Any, Dict, List, Literal
 
-from langgraph.checkpoint.mongodb.aio import AsyncMongoDBSaver
+from langgraph.checkpoint.mongodb import MongoDBSaver
 from motor.motor_asyncio import AsyncIOMotorClient
 from langgraph.graph import END, StateGraph
 from loguru import logger
@@ -32,13 +32,12 @@ async def supervisor_node(state: ActingState):
         }
 
     steps = state.get("steps", [])
-    idx = state.get("current_step_index", 0)
+    completed_tasks = state.get("completed_tasks", [])
+    task_status = state.get("task_status", {})
     replan_count = state.get("replan_count", 0)
 
     if replan_count > 6:
         return {
-            "steps": steps,
-            "current_step_index": len(steps),
             "next_nodes": ["trimmer"],
             "error": "Tiến trình bị hủy do vượt quá giới hạn số bước lập kế hoạch",
         }
@@ -48,48 +47,36 @@ async def supervisor_node(state: ActingState):
         from src.agents.routing import plan_validator
         nodes = plan_validator.validate_plan(nodes)
         
-        # Topological Sort DAG into parallel steps
-        in_degree = {n["id"]: 0 for n in nodes}
-        adj = {n["id"]: [] for n in nodes}
-        node_map = {n["id"]: n for n in nodes}
-        
-        for n in nodes:
-            for dep in n.get("dependencies", []):
-                if dep in adj:
-                    adj[dep].append(n["id"])
-                    in_degree[n["id"]] += 1
-                    
-        queue = [nid for nid in in_degree if in_degree[nid] == 0]
-        steps = []
-        
-        while queue:
-            current_group = []
-            next_queue = []
-            for nid in queue:
-                current_group.append(node_map[nid])
-                for neighbor in adj[nid]:
-                    in_degree[neighbor] -= 1
-                    if in_degree[neighbor] == 0:
-                        next_queue.append(neighbor)
-            steps.append(current_group)
-            queue = next_queue
-            
-        idx = 0
+        steps = nodes
+        task_status = {n["id"]: "pending" for n in steps}
+        completed_tasks = []
 
     if state.get("error"):
         logger.warning("Skipping subsequent plan steps due to previous node error")
         return {
             "steps": steps,
-            "current_step_index": len(steps),
             "next_nodes": ["trimmer"],
             "start_time": start_time,
         }
 
-    if idx >= len(steps):
-        return {"steps": steps, "current_step_index": idx, "next_nodes": ["trimmer"]}
-
-    current_group = steps[idx]
+    ready_tasks = []
+    for n in steps:
+        if task_status.get(n["id"]) == "pending":
+            deps = n.get("dependencies", [])
+            if all(dep in completed_tasks for dep in deps):
+                ready_tasks.append(n)
+                task_status[n["id"]] = "running"
     
+    if not ready_tasks:
+        if all(status == "completed" for status in task_status.values()):
+            return {"steps": steps, "task_status": task_status, "completed_tasks": completed_tasks, "next_nodes": ["trimmer"]}
+        else:
+            is_running = any(status == "running" for status in task_status.values())
+            if not is_running:
+                logger.error("DAG Deadlock detected!")
+                return {"next_nodes": ["trimmer"], "error": "DAG Deadlock detected"}
+            return {"steps": steps, "task_status": task_status, "next_nodes": []}
+
     route_map = {
         "InterpreterAgent": "interpreter",
         "EngineAgent": "search_engine",
@@ -97,23 +84,31 @@ async def supervisor_node(state: ActingState):
         "Knowledge": "knowledge",
         "Reasoning": "reasoning",
         "SwarmAgent": "swarm",
-        "MCTSAgent": "mcts"
+        "MCTSAgent": "mcts",
+        "MCPAgent": "mcp_client"
     }
 
-    next_nodes = list(set([route_map.get(s.get("agent", "Action"), "action") for s in current_group]))
-    return {"steps": steps, "current_step_index": idx, "next_nodes": next_nodes}
+    next_nodes = list(set([route_map.get(s.get("agent", "Action"), "action") for s in ready_tasks]))
+    
+    return {
+        "steps": steps, 
+        "task_status": task_status,
+        "completed_tasks": completed_tasks,
+        "next_nodes": next_nodes
+    }
 
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     import asyncio
     import re
-    idx = state.get("current_step_index", 0)
+    
     steps = state.get("steps", [])
+    task_status = state.get("task_status", {})
+    completed_tasks = state.get("completed_tasks", [])
 
-    if idx >= len(steps):
-        return {"current_step_index": idx + 1}
+    my_tasks = [s for s in steps if task_status.get(s["id"]) == "running" and s.get("agent", "Action") == agent_name]
+    if not my_tasks:
+        return {}
 
-    current_group = steps[idx]
-    my_tasks = [s for s in current_group if s.get("agent", "Action") == agent_name]
     req_data = state.get("req_data", {})
 
     def _extract_code_block(text: str) -> str:
@@ -195,9 +190,15 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
 
     task_results = await asyncio.gather(*[_exec_task(t) for t in my_tasks])
 
+    for t in my_tasks:
+        task_status[t["id"]] = "completed"
+        if t["id"] not in completed_tasks:
+            completed_tasks.append(t["id"])
+
     return {
-        "current_step_index": idx + 1,
-        "consolidated_results": [f"[{agent_name} - Step {idx+1}]:\n{res}" for res in task_results],
+        "task_status": task_status,
+        "completed_tasks": completed_tasks,
+        "consolidated_results": [f"[{agent_name} - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)],
         "last_agent_result": task_results[-1] if task_results else "Completed",
     }
 
@@ -217,14 +218,13 @@ async def reasoner_agent_node(state: ActingState):
     return await execute_tool_node(state, reasoner, "Reasoning")
 
 async def swarm_node(state: ActingState):
-    idx = state.get("current_step_index", 0)
     steps = state.get("steps", [])
+    task_status = state.get("task_status", {})
+    completed_tasks = state.get("completed_tasks", [])
 
-    if idx >= len(steps):
-        return {"current_step_index": idx + 1}
-
-    current_group = steps[idx]
-    my_tasks = [s for s in current_group if s.get("agent", "Action") == "SwarmAgent"]
+    my_tasks = [s for s in steps if task_status.get(s["id"]) == "running" and s.get("agent", "Action") == "SwarmAgent"]
+    if not my_tasks:
+        return {}
     
     from src.workflow.graph import llm
     from src.agents.swarm import create_swarm_workflow
@@ -279,21 +279,26 @@ async def swarm_node(state: ActingState):
 
     task_results = await asyncio.gather(*[_run_swarm(t) for t in my_tasks])
     
+    for t in my_tasks:
+        task_status[t["id"]] = "completed"
+        if t["id"] not in completed_tasks:
+            completed_tasks.append(t["id"])
+
     return {
-        "current_step_index": idx + 1,
-        "consolidated_results": [f"[SwarmAgent - Step {idx+1}]:\n{res}" for res in task_results],
+        "task_status": task_status,
+        "completed_tasks": completed_tasks,
+        "consolidated_results": [f"[SwarmAgent - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)],
         "last_agent_result": task_results[-1] if task_results else "Completed",
     }
 
 async def mcts_node(state: ActingState):
-    idx = state.get("current_step_index", 0)
     steps = state.get("steps", [])
+    task_status = state.get("task_status", {})
+    completed_tasks = state.get("completed_tasks", [])
 
-    if idx >= len(steps):
-        return {"current_step_index": idx + 1}
-
-    current_group = steps[idx]
-    my_tasks = [s for s in current_group if s.get("agent", "Action") == "MCTSAgent"]
+    my_tasks = [s for s in steps if task_status.get(s["id"]) == "running" and s.get("agent", "Action") == "MCTSAgent"]
+    if not my_tasks:
+        return {}
     
     from src.workflow.graph import llm
     from src.agents.mcts import MCTSGenerator
@@ -309,9 +314,15 @@ async def mcts_node(state: ActingState):
 
     task_results = await asyncio.gather(*[_run_mcts(t) for t in my_tasks])
     
+    for t in my_tasks:
+        task_status[t["id"]] = "completed"
+        if t["id"] not in completed_tasks:
+            completed_tasks.append(t["id"])
+
     return {
-        "current_step_index": idx + 1,
-        "consolidated_results": [f"[MCTSAgent - Step {idx+1}]:\n{res}" for res in task_results],
+        "task_status": task_status,
+        "completed_tasks": completed_tasks,
+        "consolidated_results": [f"[MCTSAgent - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)],
         "last_agent_result": task_results[-1] if task_results else "Completed",
     }
 
@@ -450,9 +461,9 @@ class OrchestrationWorkflow:
             "recursion_limit": 25,
         }
 
-        async with AsyncMongoDBSaver(self.client) as checkpointer:
-            app = self.workflow.compile(checkpointer=checkpointer, interrupt_before=["action"])
-            async for output in app.astream(initial_state, config=config):
+        checkpointer = MongoDBSaver(self.client)
+        app = self.workflow.compile(checkpointer=checkpointer, interrupt_before=["action"])
+        async for output in app.astream(initial_state, config=config):
                 for node_name, state_update in output.items():
                     if "consolidated_results" in state_update:
                         final_results = state_update["consolidated_results"]

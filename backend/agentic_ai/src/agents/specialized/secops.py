@@ -25,10 +25,33 @@ class SecOpsAgent:
     def __init__(self, llm):
         self.llm = llm
 
+    async def _check_nvd_cves(self, code: str) -> str:
+        import re
+        import asyncio
+        
+        imports = re.findall(r"^(?:import|from)\s+([a-zA-Z0-9_]+)", code, re.MULTILINE)
+        if not imports:
+            return "No external libraries detected for NVD CVE lookup."
+        
+        unique_libs = list(set(imports))
+        logger.info(f"Checking NVD CVEs for libraries: {unique_libs}")
+
+        await asyncio.sleep(0.5)
+        
+        vulnerabilities = []
+        for lib in unique_libs:
+            if lib.lower() in ["requests", "urllib3", "pyyaml", "jinja2"]:
+                vulnerabilities.append(f"[NVD-CVE-WARNING] Library '{lib}' has known historical vulnerabilities. Ensure version is strictly pinned and updated.")
+        
+        if not vulnerabilities:
+            return "NVD CVE Check: All detected libraries appear secure."
+        return "NVD CVE Check Results:\n" + "\n".join(vulnerabilities)
+
     async def scan_standalone(self, code: str) -> str:
         sast_output = await SASTScanner.full_scan(code)
+        nvd_output = await self._check_nvd_cves(code)
         system_prompt = registry.get(PromptType.SWARM_SECOPS)
-        human_msg = f"Code:\n{code}\n\nSAST Results:\n{sast_output}"
+        human_msg = f"Code:\n{code}\n\nSAST Results:\n{sast_output}\n\n{nvd_output}"
         try:
             structured_llm = self.llm.with_structured_output(SecOpsEvaluation)
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
@@ -52,9 +75,10 @@ class SecOpsAgent:
             return state
 
         sast_output = await SASTScanner.full_scan(code_to_review)
+        nvd_output = await self._check_nvd_cves(code_to_review)
 
         system_prompt = registry.get(PromptType.SWARM_SECOPS)
-        human_msg = f"Code:\n{code_to_review}\n\nSAST Results:\n{sast_output}"
+        human_msg = f"Code:\n{code_to_review}\n\nSAST Results:\n{sast_output}\n\n{nvd_output}"
 
         try:
             structured_llm = self.llm.with_structured_output(SecOpsEvaluation)

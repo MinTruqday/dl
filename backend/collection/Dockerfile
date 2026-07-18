@@ -8,7 +8,8 @@ ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1
 
 COPY collection/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+RUN pip install -q --no-cache-dir -r requirements.txt
 
 RUN playwright install chromium
 
