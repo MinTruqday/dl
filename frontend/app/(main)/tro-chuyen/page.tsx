@@ -216,7 +216,7 @@ export default function TroChuyenPage() {
   const [view, setView] = useState<"chat" | "history">("chat");
   const [thinking, setThinking] = useState(false);
   const [messages, setMessages] = useState<
-    { id?: string; role: string; content: string; thoughts?: string[]; attachments?: { image?: string; file?: string; folder?: string } }[]
+    { id?: string; role: string; content: string; thoughts?: string[]; attachments?: { image?: string; file?: string; folder?: string }; isThinkingEnabled?: boolean }[]
   >([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -402,7 +402,7 @@ export default function TroChuyenPage() {
     try {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: thinking ? "<think>\n" : "", thoughts: [] },
+        { role: "assistant", content: thinking ? "<think>\n" : "", thoughts: [], isThinkingEnabled: thinking },
       ]);
 
       let uploadedFileUrl = "";
@@ -476,7 +476,7 @@ export default function TroChuyenPage() {
       const reader = res.body?.getReader();
       if (!reader) return;
       const decoder = new TextDecoder("utf-8");
-      let fullText = "";
+      let fullText = thinking ? "<think>\n" : "";
       let isDone = false;
       let buffer = "";
 
@@ -699,6 +699,7 @@ export default function TroChuyenPage() {
                                 content: m.content || "",
                                 thoughts: m.thoughts || [],
                                 attachments: m.attachments || {},
+                                isThinkingEnabled: m.isThinkingEnabled !== undefined ? m.isThinkingEnabled : ((m.thoughts && m.thoughts.length > 0) || (m.content && m.content.startsWith("<think>"))),
                               }),
                             );
                             setMessages(mapped);
@@ -878,8 +879,9 @@ export default function TroChuyenPage() {
                     );
                   }
 
-                  const cleanText = msg.content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, "").trim();
-                  const segments = msg.content
+                  const displayContent = msg.isThinkingEnabled ? msg.content : msg.content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, "");
+                  const cleanText = displayContent.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, "").trim();
+                  const segments = displayContent
                     .split(/(<think>[\s\S]*?(?:<\/think>|$))/g)
                     .filter((s) => s.trim() !== "");
                   
@@ -889,6 +891,35 @@ export default function TroChuyenPage() {
                     <div key={idx} className="flex justify-start">
                       <div className="w-full">
                         <div className="py-2 w-full relative group">
+                          {msg.isThinkingEnabled && msg.thoughts && msg.thoughts.length > 0 && (
+                            <div className="mb-3 mt-1">
+                              <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]" open={isSending && idx === messages.length - 1}>
+                                <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
+                                  <div className="flex-1 flex items-center gap-2">
+                                    <Activity className="w-4 h-4 text-[#0071E3]" />
+                                    <span className="text-[14px] font-semibold text-[#1D1D1F]">
+                                      Quá trình xử lý
+                                    </span>
+                                  </div>
+                                  <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
+                                </summary>
+                                <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] border-t border-[#E8E8ED] flex flex-col gap-2">
+                                  {msg.thoughts.map((t, tIdx) => (
+                                    <div key={tIdx} className="flex gap-2 items-start">
+                                      <div className="mt-1">
+                                        {(isSending && idx === messages.length - 1 && tIdx === msg.thoughts!.length - 1) ? (
+                                          <Loader2 className="w-3.5 h-3.5 text-[#0071E3] animate-spin" />
+                                        ) : (
+                                          <div className="w-1.5 h-1.5 rounded-full bg-[#34C759] mt-1" />
+                                        )}
+                                      </div>
+                                      <span className="text-[14px] text-[#1D1D1F] leading-relaxed">{t}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            </div>
+                          )}
                           {segments.map((segment, sIdx) => {
                             if (segment.startsWith("<think>")) {
                               const thinkContent = segment.replace(/^<think>/, "").replace(/<\/think>$/, "").trim();

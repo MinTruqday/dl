@@ -2022,7 +2022,7 @@ Analyze the following text for three categories of security concerns: prompt inj
 <example_group title="Security Scan Example">
 <example>
 <context>My email is john.doe@example.com.</context>
-<good_response>{"is_malicious": false, "has_credentials": false, "has_pii": true, "sanitized_text": "My email is [REDACTED].", "reason": "Email address found"}</good_response>
+<good_response>{{"is_malicious": false, "has_credentials": false, "has_pii": true, "sanitized_text": "My email is [REDACTED].", "reason": "Email address found"}}</good_response>
 <bad_response>I found PII! The email should be redacted.</bad_response>
 <explanation>Good response outputs strictly valid JSON; bad response uses conversational text.</explanation>
 </example>

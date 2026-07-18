@@ -285,16 +285,23 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     else:
                         content = text_prompt
 
-                    async for chunk in chat_llm.astream(
-                        [HumanMessage(content=content)]
-                    ):
-                        if chunk.content:
-                            final_answer += chunk.content
-                            yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"
+                    try:
+                        async for chunk in chat_llm.astream(
+                            [HumanMessage(content=content)]
+                        ):
+                            if chunk.content:
+                                final_answer += chunk.content
+                                yield "event: message\ndata: " + json.dumps({'chunk': chunk.content}) + "\n\n"
+                    except RuntimeError as e:
+                        if "StopIteration" in str(e):
+                            logger.warning("StopIteration during LLM chat stream")
+                            yield "event: message\ndata: " + json.dumps({'chunk': 'Hệ thống đang gặp lỗi khi kết nối mô hình ngôn ngữ'}) + "\n\n"
+                        else:
+                            logger.exception("RuntimeError during LLM chat stream")
+                    except Exception:
+                        logger.exception("Unexpected error during LLM chat stream")
 
             elif route == "knowledge":
-                # Router classify là knowledge/math/analysis → gọi LLM trực tiếp với CHAT_ASSISTANT
-                # (CHAT_ASSISTANT đã có rule cho phép giải toán, phân tích, viết code, v.v.)
                 from huggingface_hub import AsyncInferenceClient
                 from langchain_core.messages import HumanMessage, SystemMessage
                 from src.utils.huggingface import HFInferenceChat
@@ -310,7 +317,6 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     query=req.query
                 )
 
-                # Thêm context lịch sử hội thoại nếu có
                 messages = [SystemMessage(content=system_prompt)]
                 if req.conversation_history:
                     from langchain_core.messages import AIMessage
@@ -329,10 +335,19 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     final_msg_content = req.query
                 messages.append(HumanMessage(content=final_msg_content))
 
-                async for chunk in knowledge_llm.astream(messages):
-                    if chunk.content:
-                        final_answer += chunk.content
-                        yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"
+                try:
+                    async for chunk in knowledge_llm.astream(messages):
+                        if chunk.content:
+                            final_answer += chunk.content
+                            yield "event: message\ndata: " + json.dumps({'chunk': chunk.content}) + "\n\n"
+                except RuntimeError as e:
+                    if "StopIteration" in str(e):
+                        logger.warning("StopIteration during knowledge LLM stream")
+                        yield "event: message\ndata: " + json.dumps({'chunk': 'Hệ thống đang gặp trục trặc kỹ thuật khi truy xuất dữ liệu'}) + "\n\n"
+                    else:
+                        logger.exception("RuntimeError during knowledge LLM stream")
+                except Exception:
+                    logger.exception("Unexpected error during knowledge LLM stream")
 
             else:
                 import asyncio
@@ -347,23 +362,26 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 hb_task = asyncio.create_task(heartbeat_sender())
 
                 async def drain_supervisor():
-                    req_dict = req.model_dump()
-                    
-                    # 1. Stream the real planner thoughts first!
-                    from src.agents.planning import planner
-                    async for chunk in planner.stream_plan(req_dict):
-                        if chunk["type"] == "message":
-                            await heartbeat_queue.put({"type": "message", "chunk": chunk["chunk"]})
-                        elif chunk["type"] == "plan":
-                            req_dict["plan"] = chunk["steps"]
-                            await heartbeat_queue.put({"type": "plan", "steps": chunk["steps"]})
-                    
-                    # 2. Now run the rest of the supervisor orchestration!
-                    async for event in orchestration.run(
-                        supervisor.execute_plan, req_dict, session_id
-                    ):
-                        await heartbeat_queue.put(event)
-                    await heartbeat_queue.put({"type": "__done__"})
+                    try:
+                        req_dict = req.model_dump()
+
+                        from src.agents.planning import planner
+                        async for chunk in planner.stream_plan(req_dict):
+                            if chunk["type"] == "message":
+                                await heartbeat_queue.put({"type": "message", "chunk": chunk["chunk"]})
+                            elif chunk["type"] == "plan":
+                                req_dict["plan"] = chunk["nodes"]
+                                await heartbeat_queue.put({"type": "plan", "steps": chunk["nodes"]})
+
+                        async for event in orchestration.run(
+                            supervisor.execute_plan, req_dict, session_id
+                        ):
+                            await heartbeat_queue.put(event)
+                    except Exception as e:
+                        logger.exception("Error in drain_supervisor")
+                        await heartbeat_queue.put({"type": "error", "message": str(e)})
+                    finally:
+                        await heartbeat_queue.put({"type": "__done__"})
 
                 exec_task = asyncio.create_task(drain_supervisor())
 

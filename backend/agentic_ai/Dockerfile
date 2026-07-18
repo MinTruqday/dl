@@ -29,8 +29,12 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 RUN useradd -m -s /bin/bash appuser
 RUN mkdir -p /home/appuser/.cache/huggingface && chown -R appuser:appuser /home/appuser/.cache
 RUN mkdir -p /tmp/doclib_finetune/models /tmp/doclib_finetune/adapters /tmp/doclib_finetune/gguf && chown -R appuser:appuser /tmp/doclib_finetune
+
+RUN git clone https://github.com/ggerganov/llama.cpp.git /app/llama.cpp && \
+    pip install --no-cache-dir -r /app/llama.cpp/requirements.txt && \
+    chown -R appuser:appuser /app/llama.cpp
+
 COPY --chown=appuser:appuser agentic_ai/src/ ./src/
 
 USER appuser
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-

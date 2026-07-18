@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Literal
 
 from langgraph.checkpoint.mongodb import MongoDBSaver
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 from langgraph.graph import END, StateGraph
 from loguru import logger
 from src.core.infrastructure.configuration import settings
@@ -427,7 +428,7 @@ class OrchestrationWorkflow:
     """
     def __init__(self):
         self.workflow = workflow
-        self.client = AsyncIOMotorClient(settings.MONGODB_URI)
+        self.sync_client = MongoClient(settings.MONGODB_URI)
 
     async def execute_plan(self, req_data):
         from src.memory.global_state import global_state
@@ -461,7 +462,7 @@ class OrchestrationWorkflow:
             "recursion_limit": 25,
         }
 
-        checkpointer = MongoDBSaver(self.client)
+        checkpointer = MongoDBSaver(self.sync_client)
         app = self.workflow.compile(checkpointer=checkpointer, interrupt_before=["action"])
         async for output in app.astream(initial_state, config=config):
                 for node_name, state_update in output.items():

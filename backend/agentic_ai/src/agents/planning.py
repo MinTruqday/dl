@@ -83,24 +83,32 @@ class PlanAgent:
             accumulated_json = ""
             think_ended = False
 
-            async for chunk in self.llm.astream(messages):
-                if not chunk.content:
-                    continue
-                content = chunk.content
+            try:
+                async for chunk in self.llm.astream(messages):
+                    if not chunk.content:
+                        continue
+                    content = chunk.content
 
-                if think_ended:
-                    accumulated_json += content
-                else:
-                    if "</think>" in content or "```json" in content:
-                        think_ended = True
-                        split_str = "</think>" if "</think>" in content else "```json"
-                        parts = content.split(split_str)
-                        if parts[0]:
-                            yield {"type": "message", "chunk": parts[0] + ("</think>\n" if split_str == "</think>" else "")}
-                        if len(parts) > 1:
-                            accumulated_json += ("```json" if split_str == "```json" else "") + parts[1]
+                    if think_ended:
+                        accumulated_json += content
                     else:
-                        yield {"type": "message", "chunk": content}
+                        if "</think>" in content or "```json" in content:
+                            think_ended = True
+                            split_str = "</think>" if "</think>" in content else "```json"
+                            parts = content.split(split_str)
+                            if parts[0]:
+                                yield {"type": "message", "chunk": parts[0] + ("</think>\n" if split_str == "</think>" else "")}
+                            if len(parts) > 1:
+                                accumulated_json += ("```json" if split_str == "```json" else "") + parts[1]
+                        else:
+                            yield {"type": "message", "chunk": content}
+            except RuntimeError as e:
+                if "StopIteration" in str(e):
+                    logger.warning("Stream ended unexpectedly with StopIteration")
+                else:
+                    logger.exception("Runtime error during LLM stream")
+            except Exception:
+                logger.exception("Unexpected error during LLM stream")
 
             if not accumulated_json.strip():
                 parsed_result = {"steps": []}

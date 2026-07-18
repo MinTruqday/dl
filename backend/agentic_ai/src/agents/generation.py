@@ -47,9 +47,16 @@ class GenerationAgent:
                 query=query, gathered_data=gathered_data
             )
 
-            async for chunk in llm.astream([HumanMessage(content=final_prompt)]):
-                if chunk.content:
-                    yield chunk.content
+            try:
+                async for chunk in llm.astream([HumanMessage(content=final_prompt)]):
+                    if chunk.content:
+                        yield chunk.content
+            except RuntimeError as e:
+                if "StopIteration" in str(e):
+                    logger.warning("StopIteration during final generation")
+                    yield "Hệ thống đang gặp lỗi khi tạo phản hồi"
+                else:
+                    raise
 
         except Exception as e:
             logger.exception("Error generating response content")
