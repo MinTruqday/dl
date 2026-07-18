@@ -164,6 +164,8 @@ class PlanAgent:
         async for chunk in self.stream_plan(req_data):
             if chunk["type"] == "plan":
                 nodes = chunk["nodes"]
+                
+        nodes = await critic.review_plan(nodes)
 
         if nodes and self._redis:
             try:
@@ -206,4 +208,48 @@ class PlanAgent:
             logger.exception("Replanning failed")
             return current_plan
 
+class CriticAgent:
+    """
+    <module_purpose>
+    DocLib Critic Agent for reviewing and optimizing execution plans.
+    </module_purpose>
+    <contract>
+    - Precondition: Receives a parsed execution plan from PlanAgent.
+    - Postcondition: Returns an optimized execution plan or raises alerts for flaws.
+    </contract>
+    """
+    def __init__(self):
+        self.llm = llm
+        
+    async def review_plan(self, nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not nodes:
+            return nodes
+            
+        logger.info("Critic Agent is reviewing the generated plan")
+        try:
+            import json
+            messages = [
+                SystemMessage(content="You are a Critic Agent. Review the provided execution plan JSON. Optimize it by combining redundant steps or fixing logical flaws. Output ONLY valid JSON containing the revised list of nodes. Do not wrap in markdown unless it's a standard json block."),
+                HumanMessage(content=json.dumps(nodes, ensure_ascii=False))
+            ]
+            response = await self.llm.ainvoke(messages)
+            content = response.content.strip()
+            
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].strip()
+                
+            reviewed_nodes = json.loads(content)
+            if isinstance(reviewed_nodes, list) and all(isinstance(n, dict) for n in reviewed_nodes):
+                logger.info("Critic Agent approved and optimized the plan")
+                return reviewed_nodes
+            else:
+                logger.warning("Critic Agent returned invalid structure, falling back to original plan")
+                return nodes
+        except Exception as e:
+            logger.exception("Critic Agent review failed, using original plan")
+            return nodes
+
+critic = CriticAgent()
 planner = PlanAgent()

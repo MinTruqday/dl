@@ -6,6 +6,10 @@ from src.repositories.mcp import MCPRepository
 from src.core.logging_route import LoggingRoute
 from src.schemas.mcp import RegisterServerRequest
 
+class CallbackRequest(BaseModel):
+    task_id: str
+    result: str
+
 router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
 
 @router.post("/servers")
@@ -22,3 +26,9 @@ async def list_mcp_servers():
     for d in docs:
         d["_id"] = str(d["_id"])
     return {"status": "success", "servers": docs}
+
+@router.post("/callback")
+async def mcp_callback(req: CallbackRequest):
+    from src.core.infrastructure.redis import redis
+    await redis.publish(f"tool_result:{req.task_id}", req.result)
+    return {"status": "success"}
