@@ -81,6 +81,8 @@ class AgentState(TypedDict):
     folder_data: str
     thread_id: str
     current_node: str
+    artifacts: Dict[str, Any]
+    dynamic_injections: List[Any]
 
 class ActingState(TypedDict):
     """
@@ -104,3 +106,5 @@ class ActingState(TypedDict):
     error: str
     replan_count: int
     start_time: float
+    artifacts: Dict[str, Any]
+    dynamic_injections: List[Any]

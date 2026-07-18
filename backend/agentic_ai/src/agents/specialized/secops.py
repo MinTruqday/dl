@@ -25,6 +25,16 @@ class SecOpsAgent:
     def __init__(self, llm):
         self.llm = llm
 
+    async def _invoke_slm(self, messages) -> SecOpsEvaluation:
+        # Architecture 5.0: Logic separated for easy drop-in of a local SLM (e.g., Ollama).
+        # Currently using the main LLM as requested by the user, but encapsulated.
+        try:
+            structured_llm = self.llm.with_structured_output(SecOpsEvaluation)
+            return await structured_llm.ainvoke(messages)
+        except Exception as e:
+            logger.exception("SLM execution error")
+            raise e
+
     async def _check_nvd_cves(self, code: str) -> str:
         import re
         import asyncio
@@ -53,9 +63,8 @@ class SecOpsAgent:
         system_prompt = registry.get(PromptType.SWARM_SECOPS)
         human_msg = f"Code:\n{code}\n\nSAST Results:\n{sast_output}\n\n{nvd_output}"
         try:
-            structured_llm = self.llm.with_structured_output(SecOpsEvaluation)
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
-            eval_result = await structured_llm.ainvoke(messages)
+            eval_result = await self._invoke_slm(messages)
             return (
                 f"Secure: {eval_result.is_secure}\n"
                 f"Summary: {eval_result.vulnerability_summary}\n\n"
@@ -81,9 +90,8 @@ class SecOpsAgent:
         human_msg = f"Code:\n{code_to_review}\n\nSAST Results:\n{sast_output}\n\n{nvd_output}"
 
         try:
-            structured_llm = self.llm.with_structured_output(SecOpsEvaluation)
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
-            eval_result = await structured_llm.ainvoke(messages)
+            eval_result = await self._invoke_slm(messages)
 
             scan_results = (
                 f"Security evaluation completed. "

@@ -36,6 +36,7 @@ async def supervisor_node(state: ActingState):
     completed_tasks = state.get("completed_tasks", [])
     task_status = state.get("task_status", {})
     replan_count = state.get("replan_count", 0)
+    dynamic_injections = state.get("dynamic_injections", [])
 
     if replan_count > 6:
         return {
@@ -51,6 +52,13 @@ async def supervisor_node(state: ActingState):
         steps = nodes
         task_status = {n["id"]: "pending" for n in steps}
         completed_tasks = []
+
+    if dynamic_injections:
+        for new_node in dynamic_injections:
+            if new_node["id"] not in task_status:
+                steps.append(new_node)
+                task_status[new_node["id"]] = "pending"
+        dynamic_injections = []
 
     if state.get("error"):
         logger.warning("Skipping subsequent plan steps due to previous node error")
@@ -95,7 +103,8 @@ async def supervisor_node(state: ActingState):
         "steps": steps, 
         "task_status": task_status,
         "completed_tasks": completed_tasks,
-        "next_nodes": next_nodes
+        "next_nodes": next_nodes,
+        "dynamic_injections": dynamic_injections
     }
 
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
@@ -143,9 +152,12 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                     sandbox = CodeSandbox(use_docker=False)
                     sandbox_retry = 0
                     while sandbox_retry < 2:
-                        success, stdout, stderr = sandbox.execute_code(code_block)
+                        success, stdout, stderr, artifacts = sandbox.execute_code(code_block)
                         if success:
-                            res = f"{res}\n\n[Sandbox Output]\n{stdout.strip()}"
+                            artifact_str = ""
+                            if artifacts:
+                                artifact_str = f"\n[Generated Artifacts]\n" + "\n".join(artifacts)
+                            res = f"{res}\n\n[Sandbox Output]\n{stdout.strip()}{artifact_str}"
                             break
                         else:
                             sandbox_retry += 1

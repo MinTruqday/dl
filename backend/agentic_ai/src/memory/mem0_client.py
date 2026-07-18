@@ -15,6 +15,60 @@ from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.schemas.memory import MemoryItem, MemoryOperation
 from src.memory.management import memory_manager
+import json
+
+class EntityStore:
+    def __init__(self, memory_manager_ref):
+        self.mm = memory_manager_ref
+
+    async def _upsert_entity(self, entity_text: str, entity_type: str, memory_id: str, user_id: str):
+        edge_data = json.dumps({"source_id": memory_id, "text": entity_text, "type": entity_type, "created_at": datetime.now(timezone.utc).isoformat()})
+        await memory_manager._redis.sadd(f"entity:graph:{user_id}:edges", edge_data)
+        logger.info(f"Upserted entity '{entity_text}' of type '{entity_type}'")
+
+    async def _link_entities_for_memory(self, memory_id: str, text: str, user_id: str):
+        system_prompt = registry.get(PromptType.GRAPHRAG_ENTITY_EXTRACTION)
+        try:
+            from pydantic import BaseModel, Field
+            class EntityRelation(BaseModel):
+                source: str = Field(..., description="Source entity name")
+                relation: str = Field(..., description="Action or relationship verb")
+                target: str = Field(..., description="Target entity name")
+            class ExtractedGraph(BaseModel):
+                relations: List[EntityRelation]
+                
+            structured_llm = self.mm.llm.with_structured_output(ExtractedGraph)
+            res = await structured_llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=text)])
+            for rel in res.relations:
+                await self._upsert_entity(rel.source, rel.relation, memory_id, user_id)
+                await self._upsert_entity(rel.target, "TARGET_NODE", memory_id, user_id)
+        except Exception as e:
+            logger.exception(f"Entity extraction failed: {e}")
+
+    async def search(self, query: str, user_id: str) -> List[Dict]:
+        try:
+            edges = await memory_manager._redis.smembers(f"entity:graph:{user_id}:edges")
+            results = []
+            for e in edges:
+                data = json.loads(e)
+                if query.lower() in data.get("text", "").lower():
+                    results.append(data)
+            return results
+        except Exception as e:
+            logger.exception(f"Entity search failed: {e}")
+            return []
+
+class ProjectStore:
+    def __init__(self, memory_manager_ref):
+        self.mm = memory_manager_ref
+
+    async def get_project(self, project_id: str) -> Optional[Dict]:
+        data = await memory_manager._redis.get(f"project:{project_id}")
+        return json.loads(data) if data else None
+
+    async def add_project(self, project_id: str, name: str, org_id: str):
+        data = json.dumps({"id": project_id, "name": name, "org_id": org_id})
+        await memory_manager._redis.set(f"project:{project_id}", data)
 
 class MemoryManager:
     """
@@ -39,6 +93,8 @@ class MemoryManager:
         self._init_task = asyncio.create_task(self._ensure_collection())
         from src.rag.embedding import embedder
         self.embedder = embedder
+        self._entity_store = EntityStore(self)
+        self._project_store = ProjectStore(self)
 
     async def _ensure_collection(self):
         try:
@@ -60,12 +116,7 @@ class MemoryManager:
             return None
             
         existing_text = "\n".join([f"ID: {m.get('id', 'N/A')} - {m.get('text', '')}" for m in existing])
-        prompt = f"""You are a memory manager. A new fact has been extracted: "{new_content}".
-Existing memories:
-{existing_text}
-
-Determine if this new fact conflicts with, updates, or supersedes any existing memory.
-Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' lists."""
+        prompt = registry.get(PromptType.MEMORY_CONFLICT_RESOLUTION).format(new_content=new_content, existing_text=existing_text)
 
         try:
             structured_llm = self.llm.with_structured_output(MemoryOperation)
@@ -87,12 +138,18 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
             logger.exception(f"Memory extraction execution failed. Input length: {len(messages)} messages. Error: {str(e)}")
             return MemoryOperation()
 
-    def _build_filter(self, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None, filters: Optional[Dict] = None) -> Filter:
-        conditions = [FieldCondition(key="user_id", match=MatchValue(value=user_id))]
+    def _build_filter(self, user_id: Optional[str] = None, agent_id: Optional[str] = None, run_id: Optional[str] = None, org_id: Optional[str] = None, project_id: Optional[str] = None, filters: Optional[Dict] = None) -> Filter:
+        conditions = []
+        if user_id:
+            conditions.append(FieldCondition(key="user_id", match=MatchValue(value=user_id)))
         if agent_id:
             conditions.append(FieldCondition(key="agent_id", match=MatchValue(value=agent_id)))
         if run_id:
             conditions.append(FieldCondition(key="run_id", match=MatchValue(value=run_id)))
+        if org_id:
+            conditions.append(FieldCondition(key="org_id", match=MatchValue(value=org_id)))
+        if project_id:
+            conditions.append(FieldCondition(key="project_id", match=MatchValue(value=project_id)))
             
         if filters:
             for k, v in filters.items():
@@ -121,12 +178,31 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
         ) # We'll do post-filtering for TTL to avoid Qdrant strict index errors.
         return Filter(must=conditions)
 
-    async def add(self, messages: List[Dict], user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None, memory_scope: str = "user"):
-        if not user_id or user_id == "guess_user":
+    async def _create_procedural_memory(self, messages: List[Dict]) -> MemoryOperation:
+        prompt_type = PromptType.AGENT_MEMORY_EXTRACTION
+        system_prompt = registry.get(prompt_type)
+        system_prompt += "\nExtract ONLY procedural lessons and systemic instructions (code snippets, error workarounds). Set memory_type to 'procedural'."
+        chat_text = "\n".join([f"{m.get('role', 'user')}: {m.get('content', '')}" for m in messages])
+        try:
+            structured_llm = self.llm.with_structured_output(MemoryOperation)
+            msg = [SystemMessage(content=system_prompt), HumanMessage(content=chat_text)]
+            return await structured_llm.ainvoke(msg)
+        except Exception as e:
+            logger.exception(f"Procedural memory extraction failed. Error: {str(e)}")
+            return MemoryOperation()
+
+    async def add(self, messages: List[Dict], user_id: Optional[str] = None, agent_id: Optional[str] = None, run_id: Optional[str] = None, org_id: Optional[str] = None, project_id: Optional[str] = None, memory_scope: str = "user"):
+        if not user_id and not org_id and not project_id:
             user_id = "default"
             
         await self._ensure_collection()
         operations = await self._extract_operations(messages, memory_scope=memory_scope)
+        if memory_scope == "agent":
+            proc_ops = await self._create_procedural_memory(messages)
+            operations.add.extend(proc_ops.add)
+            operations.update.extend(proc_ops.update)
+            operations.delete.extend(proc_ops.delete)
+            
         points = []
         
         existing_hashes = set()
@@ -164,17 +240,21 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
                 payload = {
                     "text": item.content,
                     "category": getattr(item, "category", "fact"),
-                    "memory_type": getattr(item, "memory_type", "semantic"),
-                    "user_id": user_id,
+                    "memory_type": getattr(item, "memory_type", "semantic") if getattr(item, "memory_type", "semantic") else "semantic",
+                    "user_id": user_id or "",
+                    "org_id": org_id or "",
+                    "project_id": project_id or "",
                     "hash": content_hash,
-                    "agent_id": agent_id,
-                    "run_id": run_id,
+                    "agent_id": agent_id or "",
+                    "run_id": run_id or "",
                     "expires_at": getattr(item, "expires_at", None),
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
                 points.append(PointStruct(id=item_id, vector=vector, payload=payload))
                 asyncio.create_task(memory_manager.save_memory_history(item_id, "ADD", None, item.content))
+                if user_id:
+                    asyncio.create_task(self._entity_store._link_entities_for_memory(item_id, item.content, user_id))
             except Exception as e:
                 logger.exception(f"Failed to generate embedding or create PointStruct for memory. Content hash: {content_hash}. Error: {str(e)}")
 
@@ -208,9 +288,9 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
             logger.exception("Memory get error")
         return None
 
-    async def get_all(self, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None, limit: int = 100, filters: Optional[Dict] = None) -> List[Dict]:
+    async def get_all(self, user_id: Optional[str] = None, agent_id: Optional[str] = None, run_id: Optional[str] = None, org_id: Optional[str] = None, project_id: Optional[str] = None, limit: int = 100, filters: Optional[Dict] = None) -> List[Dict]:
         try:
-            query_filter = self._build_filter(user_id, agent_id, run_id, filters)
+            query_filter = self._build_filter(user_id, agent_id, run_id, org_id, project_id, filters)
                     
             records, _ = await self.client.scroll(
                 collection_name=self.collection_name,
@@ -233,12 +313,12 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
         except:
             return False
 
-    async def search(self, query: str, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None, limit: int = 10, filters: Optional[Dict] = None) -> List[Dict]:
-        if not user_id or user_id == "guess_user":
+    async def search(self, query: str, user_id: Optional[str] = None, agent_id: Optional[str] = None, run_id: Optional[str] = None, org_id: Optional[str] = None, project_id: Optional[str] = None, limit: int = 10, filters: Optional[Dict] = None) -> List[Dict]:
+        if not user_id and not org_id and not project_id:
             return []
             
         try:
-            query_filter = self._build_filter(user_id, agent_id, run_id, filters)
+            query_filter = self._build_filter(user_id, agent_id, run_id, org_id, project_id, filters)
                     
             vector = await asyncio.to_thread(self.embedder.embed_query, query)
             results = await self.client.search(
@@ -337,9 +417,9 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
             
     delete_memory = delete
     
-    async def delete_all(self, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None, filters: Optional[Dict] = None):
+    async def delete_all(self, user_id: Optional[str] = None, agent_id: Optional[str] = None, run_id: Optional[str] = None, org_id: Optional[str] = None, project_id: Optional[str] = None, filters: Optional[Dict] = None):
         try:
-            query_filter = self._build_filter(user_id, agent_id, run_id, filters)
+            query_filter = self._build_filter(user_id, agent_id, run_id, org_id, project_id, filters)
                     
             await self.client.delete(
                 collection_name=self.collection_name,
@@ -367,7 +447,7 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
 
     async def chat(self, query: str, user_id: str) -> str:
         context = await self.get_context(query, user_id)
-        system_prompt = f"You are a helpful assistant. Use the following memory context to answer the user's question:\n{context}\n\nIf the answer is not in the context, just use your general knowledge."
+        system_prompt = registry.get(PromptType.MEMORY_CHAT_ASSISTANT).format(context=context)
         try:
             msg = [SystemMessage(content=system_prompt), HumanMessage(content=query)]
             response = await self.llm.ainvoke(msg)
@@ -378,11 +458,11 @@ Return JSON mapping to MemoryOperation schema with 'add', 'update', or 'delete' 
 
     @property
     def project(self):
-        return None
+        return self._project_store
 
     @property
     def entity_store(self):
-        return None
+        return self._entity_store
 
     async def reset(self):
         try:

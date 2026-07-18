@@ -368,4 +368,27 @@ class PipelineRag:
             logger.exception("Data analysis error")
             return ""
 
+    async def _extract_entities_and_relations(self, text: str, document_id: str):
+        from src.core.registry import PromptType, registry
+        from src.workflow.graph import llm
+        from src.memory.management import memory_manager
+        import json
+        from langchain_core.messages import SystemMessage, HumanMessage
+        
+        logger.info(f"Extracting GraphRAG entities for document {document_id}")
+        system_prompt = registry.get(PromptType.AGENT_MEMORY_EXTRACTION) # Re-using memory prompt for entities
+        human_msg = f"Extract key entities and their relationships from the following text as a JSON list of dictionaries with 'source', 'target', and 'relation' keys:\n\n{text[:8000]}"
+        
+        try:
+            msg = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
+            # For simplicity, we just invoke and let the LLM return JSON or text
+            response = await llm.ainvoke(msg)
+            # In a full implementation, we'd use structured output. Here we simulate storing to RedisGraph
+            if memory_manager._redis:
+                edge_data = json.dumps({"document_id": document_id, "relations": str(response.content)})
+                await memory_manager._redis.sadd(f"graphrag:edges:{document_id}", edge_data)
+                logger.info("Successfully pushed entities to GraphRAG store")
+        except Exception as e:
+            logger.exception("GraphRAG entity extraction failed")
+
 ingestion_pipeline = PipelineRag()

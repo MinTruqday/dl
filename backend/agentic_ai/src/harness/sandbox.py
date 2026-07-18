@@ -1,7 +1,8 @@
 import os
 import subprocess
 import tempfile
-from typing import Tuple
+from typing import Tuple, List
+import glob
 from loguru import logger
 import queue
 import atexit
@@ -49,17 +50,22 @@ class CodeSandbox:
         subprocess.run(["python3", "-m", "venv", venv_path], check=True, capture_output=True)
         return os.path.join(venv_path, "bin", "python")
         
-    def execute_code(self, code: str, dependencies: list = None) -> Tuple[bool, str, str]:
+    def execute_code(self, code: str, dependencies: list = None) -> Tuple[bool, str, str, List[str]]:
         code_file = os.path.join(self.temp_dir, "script.py")
         with open(code_file, "w", encoding="utf-8") as f:
             f.write(code)
             
-        # We now use Stateful Jupyter execution when use_docker=False
         if self.use_docker:
-            # We'll keep docker stateless for security, or we can use Jupyter locally for logic testing
-            return self._run_docker(code_file, dependencies)
+            success, stdout, stderr = self._run_docker(code_file, dependencies)
         else:
-            return self._run_jupyter(code)
+            success, stdout, stderr = self._run_jupyter(code)
+            
+        artifacts = []
+        for file in glob.glob(os.path.join(self.temp_dir, "*")):
+            if not file.endswith("script.py") and not file.endswith("venv"):
+                artifacts.append(file)
+                
+        return success, stdout, stderr, artifacts
             
     def _run_jupyter(self, code: str) -> Tuple[bool, str, str]:
         jc = get_jupyter_client()
