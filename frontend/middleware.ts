@@ -15,6 +15,7 @@ export function middleware(request: NextRequest) {
 
   const isPublicRoute =
     pathname === "/" ||
+    pathname.startsWith("/kham-pha") ||
     pathname.startsWith("/discovery") ||
     pathname.startsWith("/search") ||
     pathname.startsWith("/document") ||

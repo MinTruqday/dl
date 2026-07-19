@@ -12,6 +12,7 @@ export default function MainLayout({
 
   const isPublic = () => {
     if (pathname === "/") return true;
+    if (pathname.startsWith("/kham-pha")) return true;
 
     if (pathname.startsWith("/author")) return true;
     if (pathname.startsWith("/search")) return true;
