@@ -17,25 +17,27 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 
-export default function ProvisionLayout({
+export default function SoanThaoLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const documentId = searchParams.get("tai-lieu") || "";
   const { user } = useAuth() as any;
   const isAdminOrMod = user?.role === "admin";
 
-  const navItems = [
-    { id: "step1", label: "Khởi tạo", href: "/soan-thao" },
-    { id: "step2", label: "Bản nháp", href: "/soan-thao/ban-thao" },
+  const steps = [
+    { id: "step1", label: "Khởi tạo", href: "/soan-thao/khoi-tao" },
+    { id: "step2", label: "Soạn thảo", href: `/soan-thao?tai-lieu=${documentId}` },
     { id: "step5", label: "Lịch sử", href: "/soan-thao/lich-su" },
     { id: "step7", label: "Thùng rác", href: "/soan-thao/thung-rac" },
   ];
 
   const isActive = (href: string) => {
-    if (href === "/soan-thao") return pathname === "/soan-thao";
-    return pathname.startsWith(href);
+    if (href === "/soan-thao/khoi-tao") return pathname === "/soan-thao/khoi-tao";
+    return pathname.startsWith(href.split('?')[0]);
   };
 
   return (

@@ -16,7 +16,7 @@ import {
 import { useToast } from "@/shared/contexts/ToastContext";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 
-export default function CreateDocumentPage() {
+export default function Page() {
   const router = useRouter();
   const { user } = useAuth() as any;
   const { showToast } = useToast();

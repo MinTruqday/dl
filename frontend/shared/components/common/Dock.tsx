@@ -34,7 +34,7 @@ export const MENU_ITEMS = [
   { id: "profile", label: "Hồ sơ", href: "/ho-so", icon: User, requireAuth: true, group: "ca_nhan" },
   { id: "wallet", label: "Ví tiền", href: "/vi-tien", icon: Wallet, requireAuth: true, group: "ca_nhan" },
   { id: "settings", label: "Cài đặt", href: "/cai-dat", icon: Settings, requireAuth: true, group: "ca_nhan" },
-  { id: "provision", label: "Soạn thảo", href: "/soan-thao", icon: PenTool, roles: ["author", "admin"], group: "sang_tac" },
+  { id: "provision", label: "Khởi tạo", href: "/soan-thao/khoi-tao", icon: PenTool, roles: ["author", "admin"], group: "sang_tac" },
   { id: "documents", label: "Tài liệu", href: "/tai-lieu", icon: Files, roles: ["author", "admin"], group: "sang_tac" },
   { id: "collaboration", label: "Cộng tác", href: "/cong-tac", icon: Users, roles: ["author", "admin"], group: "sang_tac" },
   { id: "storage", label: "Lưu trữ", href: "/luu-tru", icon: FolderOpen, roles: ["author", "admin"], group: "sang_tac" },
