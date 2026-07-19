@@ -95,10 +95,10 @@ async def get_user_balance(config: RunnableConfig) -> str:
             return f"Your current account balance is {balance} credits"
         elif response.status_code == 401:
             return "Your session has expired. Please log in again"
-        raise Exception("Failed to load account balance
+        raise Exception("Failed to load account balance")
     except Exception as e:
         logger.exception("Failed to access balance data")
-        raise Exception(f"An unexpected error occurred, please try again {e}
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 
 @tool
 async def get_transaction_history(config: RunnableConfig) -> str:
@@ -141,8 +141,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         return "System is experiencing issues retrieving your payment transaction history"
     except Exception as e:
         logger.exception("Failed to retrieve payment transaction history")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     """
@@ -179,8 +178,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         return "The system cannot process the gift voucher redemption request at this time"
     except Exception as e:
         logger.exception("Failed to process reward redemption request")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def get_revenue_report(config: RunnableConfig) -> str:
     """
@@ -216,8 +214,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
         return "Unable to retrieve financial revenue statistics"
     except Exception as e:
         logger.exception("Failed to load revenue report")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
     """
@@ -256,8 +253,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
         return "Encountered difficulties loading the document list from the database"
     except Exception as e:
         logger.exception("Failed to load document list from MongoDB")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
     """
@@ -299,8 +295,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         return "Connection to trash bin data is currently experiencing issues"
     except Exception as e:
         logger.exception("Failed to load deleted items list")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
     """
@@ -341,8 +336,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
         return "Document deletion failed due to a system error"
     except Exception as e:
         logger.exception("Document deletion failed due to system error")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def restore_document(document_id: str, config: RunnableConfig) -> str:
     """
@@ -376,8 +370,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
         return "Document restoration from the trash bin failed"
     except Exception as e:
         logger.exception("Document restoration from trash failed")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
     """
@@ -416,8 +409,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
         return "Error aggregating and exporting statistical report data"
     except Exception as e:
         logger.exception("Failed to retrieve analytics data")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
         res = await _make_api_request(
@@ -474,8 +466,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         return "Failed to generate citation suggestions from the inference service."
     except Exception as e:
         logger.exception("Failed to generate citation suggestions")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     """
@@ -517,8 +508,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         return "Failed to generate peer review report from the inference service."
     except Exception as e:
         logger.exception("Peer review process failed")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def agent_transform_tone(
     document_id: str, tone: str, config: RunnableConfig
@@ -562,8 +552,7 @@ async def agent_transform_tone(
         return "Failed to transform tone using the inference service."
     except Exception as e:
         logger.exception("Tone transformation failed")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
     """
@@ -601,8 +590,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         return "A critical error occurred while starting the payment transaction process"
     except Exception as e:
         logger.exception("Failed to process deposit request")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 from src.workflow.reduction import agent_summarize_long_document
 
 @tool
@@ -711,8 +699,7 @@ async def create_document(
             return "The document was successfully initialized but its identifier could not be retrieved"
         return f"An issue occurred while creating and storing the new document: Status {res_create.status_code} - {res_create.text}"
     except Exception as e:
-        raise Exception(f"An abnormal error occurred during data flow processing {e}
-
+        raise Exception(f"An abnormal error occurred during data flow processing {e}")
 @tool
 async def read_document(document_id: str, config: RunnableConfig) -> str:
     """
@@ -742,8 +729,7 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
             return "Cannot extract detailed information data of the document"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Error loading document {e}
-
+        raise Exception(f"Error loading document {e}")
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
 
@@ -792,8 +778,7 @@ async def update_document(
             return "Operation not permitted: Due to security restrictions or the document no longer exists"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Error loading document {e}
-
+        raise Exception(f"Error loading document {e}")
     meta_payload = {}
     if title:
         meta_payload["title"] = title
@@ -811,8 +796,7 @@ async def update_document(
             if res_meta.status_code not in [200, 201]:
                 return f"Error updating document metadata. API returned {res_meta.status_code}"
         except Exception as e:
-            raise Exception(f"Error during metadata update {e}
-
+            raise Exception(f"Error during metadata update {e}")
     if new_content:
         format = doc_data.get("content_format", "doclib")
         if format == "doclib":
@@ -861,8 +845,7 @@ async def update_document(
             if res_content.status_code not in [200, 201]:
                 return f"Error updating document content. API returned {res_content.status_code}"
         except Exception as e:
-            raise Exception(f"Error during content update {e}
-
+            raise Exception(f"Error during content update {e}")
     if not meta_payload and not new_content:
         return "No content changes were recorded for this document"
 
@@ -900,8 +883,7 @@ async def translate_document(
             return "Cannot extract detailed information data of the document"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Error loading document {e}
-
+        raise Exception(f"Error loading document {e}")
     original_content = doc_data.get("content", "")
     format = doc_data.get("content_format", "doclib")
     original_title = doc_data.get("title", "Document")
@@ -1018,8 +1000,7 @@ async def translate_document(
         return "Translation process completed but encountered an issue saving the result to the server"
     except Exception as e:
         logger.exception("Failed to create translated document")
-        raise Exception(f"An unexpected error occurred, please try again {e}
-
+        raise Exception(f"An unexpected error occurred, please try again {e}")
 @tool
 async def inspect_ui_components(query: str, config: RunnableConfig) -> str:
     """
@@ -1087,8 +1068,7 @@ async def agent_draft_with_memory(prompt: str, config: RunnableConfig) -> str:
         return f"Failed to generate draft: {response.status_code} - {response.text}"
     except Exception as e:
         logger.exception("Failed to draft with memory")
-        raise Exception(f"An unexpected error occurred {e}
-
+        raise Exception(f"An unexpected error occurred {e}")
 @tool
 async def agent_extract_to_artifacts(document_id: str, extraction_goals: list[str], config: RunnableConfig) -> str:
     """
@@ -1123,8 +1103,7 @@ async def agent_extract_to_artifacts(document_id: str, extraction_goals: list[st
         return f"Failed to extract to storage: {response.status_code} - {response.text}"
     except Exception as e:
         logger.exception("Failed to extract to storage")
-        raise Exception(f"An unexpected error occurred {e}
-
+        raise Exception(f"An unexpected error occurred {e}")
 @tool
 async def agent_web_fact_check(document_id: str, config: RunnableConfig) -> str:
     """
@@ -1159,8 +1138,7 @@ async def agent_web_fact_check(document_id: str, config: RunnableConfig) -> str:
         return f"Failed to fact check: {response.status_code} - {response.text}"
     except Exception as e:
         logger.exception("Failed to fact check")
-        raise Exception(f"An unexpected error occurred {e}
-
+        raise Exception(f"An unexpected error occurred {e}")
 @tool
 async def agent_compliance_screener(document_id: str, config: RunnableConfig) -> str:
     """
@@ -1195,8 +1173,7 @@ async def agent_compliance_screener(document_id: str, config: RunnableConfig) ->
         return f"Failed to screen document: {response.status_code} - {response.text}"
     except Exception as e:
         logger.exception("Failed to screen document")
-        raise Exception(f"An unexpected error occurred {e}
-
+        raise Exception(f"An unexpected error occurred {e}")
 @tool
 async def agent_semantic_diff(document_id_1: str, document_id_2: str, config: RunnableConfig) -> str:
     """
@@ -1232,8 +1209,7 @@ async def agent_semantic_diff(document_id_1: str, document_id_2: str, config: Ru
         return f"Failed to compare documents: {response.status_code} - {response.text}"
     except Exception as e:
         logger.exception("Failed to compare documents")
-        raise Exception(f"An unexpected error occurred {e}
-
+        raise Exception(f"An unexpected error occurred {e}")
 @tool
 async def conversation_search(query: str, config: RunnableConfig) -> str:
     """

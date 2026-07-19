@@ -50,14 +50,14 @@ class MCPService:
 
         connector = await MCPRepository.find_connector({"_id": ObjectId(directory_uuid)})
         if not connector:
-            raise Exception("MCP Connector not found
+            raise Exception("MCP Connector not found")
 
         server_type = connector.get("server_type", "stdio")
         if server_type == "stdio":
             command = connector.get("command")
             args = connector.get("args", [])
             if not command:
-                raise Exception("Missing command for stdio MCP server
+                raise Exception("Missing command for stdio MCP server")
 
             server_params = StdioServerParameters(command=command, args=args)
             try:
@@ -67,12 +67,12 @@ class MCPService:
                         result = await session.call_tool(tool_name, arguments=arguments)
                         return result
             except Exception as e:
-                raise Exception(f"Failed to execute MCP tool via stdio: {str(e)}
+                raise Exception(f"Failed to execute MCP tool via stdio: {str(e)}")
         elif server_type == "sse":
             from mcp.client.sse import sse_client
             url = connector.get("url")
             if not url:
-                raise Exception("Missing URL for sse MCP server
+                raise Exception("Missing URL for sse MCP server")
             try:
                 async with sse_client(url) as streams:
                     async with ClientSession(streams[0], streams[1]) as session:
@@ -80,6 +80,6 @@ class MCPService:
                         result = await session.call_tool(tool_name, arguments=arguments)
                         return result
             except Exception as e:
-                raise Exception(f"Failed to execute MCP tool via sse: {str(e)}
+                raise Exception(f"Failed to execute MCP tool via sse: {str(e)}")
         else:
-            raise Exception("Unsupported MCP server type
+            raise Exception("Unsupported MCP server type")

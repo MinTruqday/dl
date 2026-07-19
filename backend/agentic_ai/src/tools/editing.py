@@ -48,7 +48,7 @@ async def read_document_section(
         if res.status_code != 200: return "Document detailed information extraction failed"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Error loading document {e}
+        raise Exception(f"Error loading document {e}")
 
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
@@ -98,7 +98,7 @@ async def edit_document_text(
         if res.status_code != 200: return "Document detailed information extraction failed"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Error loading document {e}
+        raise Exception(f"Error loading document {e}")
 
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
@@ -135,7 +135,7 @@ async def edit_document_text(
         if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
         _broadcast_update(document_id, new_content)
     except Exception as e:
-        raise Exception(f"Error during content update {e}
+        raise Exception(f"Error during content update {e}")
         
     return "Document text replaced successfully"
 
@@ -168,7 +168,7 @@ async def edit_document_block(
         if res.status_code != 200: return "Document detailed information extraction failed"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Error loading document {e}
+        raise Exception(f"Error loading document {e}")
 
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
@@ -226,7 +226,7 @@ async def edit_document_block(
         if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
         _broadcast_update(document_id, new_content)
     except Exception as e:
-        raise Exception(f"Error during content update {e}
+        raise Exception(f"Error during content update {e}")
         
     return f"Document block {action} operation completed successfully"
 
@@ -254,7 +254,7 @@ async def propose_document_edits(
         if res.status_code != 200: return "Document detailed information extraction failed"
         doc_data = res.json().get("data", {})
     except Exception as e:
-        raise Exception(f"Error loading document {e}
+        raise Exception(f"Error loading document {e}")
 
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
@@ -284,6 +284,6 @@ async def propose_document_edits(
         if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
         _broadcast_update(document_id, new_content)
     except Exception as e:
-        raise Exception(f"Error during content update {e}
+        raise Exception(f"Error during content update {e}")
         
     return "Proposed edits added to document successfully"

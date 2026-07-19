@@ -751,7 +751,16 @@ export default function StoragePage() {
                                 >
                                   {item.name || item.title}
                                 </button>
-                              ) : (item.name || item.title)?.endsWith('.doclib') || viewMode === "published" ? (
+                              ) : viewMode === "published" ? (
+                                <a
+                                  href={`/tai-lieu/xem-truoc/${item._id || item.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  target="_blank"
+                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
+                                >
+                                  {item.name || item.title}
+                                </a>
+                              ) : (item.name || item.title)?.endsWith('.doclib') ? (
                                 <a
                                   href={`/soan-thao?tai-lieu=${item._id || item.id}`}
                                   onClick={(e) => e.stopPropagation()}
@@ -762,7 +771,7 @@ export default function StoragePage() {
                                 </a>
                               ) : item.url ? (
                                 <a
-                                  href={item.url}
+                                  href={`/tai-lieu/xem-truoc/${item._id || item.id}?url=${encodeURIComponent(item.url)}&name=${encodeURIComponent(item.name || item.title || "")}`}
                                   target="_blank"
                                   className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
                                 >

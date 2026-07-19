@@ -45,7 +45,7 @@ async def startup_event():
     from src.core.storage import initialize_bucket
     await initialize_bucket()
 
-@app.get("/storage/{file_path:path}")
+@app.get("/luu-tru/{file_path:path}")
 async def get_storage_file(file_path: str):
     url_data = await UploadService.get_presigned_url(file_path)
     return RedirectResponse(url=url_data["download_url"], status_code=302)

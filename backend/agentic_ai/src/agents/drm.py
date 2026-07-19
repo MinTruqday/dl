@@ -66,8 +66,7 @@ async def evaluate_drm_policy(user_id: str, document_id: str, client_ip: str, us
             if match:
                 final_dict = json.loads(match.group(0))
             else:
-                raise ValueError(f"Could not parse LLM output: {content_str[:200]}
-                
+                raise ValueError(f"Could not parse LLM output: {content_str[:200]}")
         if redis_client:
             try:
                 redis_client.setex(cache_key, 3600, json.dumps(final_dict))

@@ -137,9 +137,7 @@ class HFInferenceChat(BaseChatModel):
                 data = json.loads(text.strip())
                 return schema(**data)
             except Exception as e:
-                # Raise so tenacity can retry
-                raise ValueError(f"Failed to parse structured output: {e}. Raw text: {text}
-                
+                raise ValueError(f"Failed to parse structured output: {e}. Raw text: {text}")
         @retry(
             stop=stop_after_attempt(3),
             wait=wait_exponential(multiplier=1, min=2, max=10),

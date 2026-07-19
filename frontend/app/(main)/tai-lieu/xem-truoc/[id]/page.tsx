@@ -2,7 +2,7 @@
 
 import { useToast } from "@/shared/contexts/ToastContext";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   getToken,
   API_URL,
@@ -55,6 +55,9 @@ import EmptyState from "@/shared/components/common/EmptyState";
 export default function DocumentViewer() {
   const { showToast } = useToast();
   const { id } = useParams() as { id: string };
+  const searchParams = useSearchParams();
+  const rawUrl = searchParams?.get("url");
+  const rawName = searchParams?.get("name");
   const router = useRouter();
   const [document, setDocument] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -123,6 +126,16 @@ export default function DocumentViewer() {
   const fetchDocument = useCallback(
     async (pwd?: string) => {
       setLoading(true);
+      if (rawUrl) {
+        setDocument({
+          _id: id,
+          title: rawName || "Tài liệu",
+          content_format: "raw",
+          file_url: `${API_URL.replace("/api/v1", "")}/luu-tru/${rawUrl}`,
+        });
+        setLoading(false);
+        return;
+      }
       try {
         const token = getToken();
         if (!token) {
@@ -520,6 +533,17 @@ export default function DocumentViewer() {
               </div>
             )}
           </div>
+        </div>
+      );
+    }
+    if (document?.content_format === "raw") {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-[#F5F5F7] rounded-[18px] overflow-hidden">
+          <iframe
+            src={document.file_url}
+            className="w-full h-full border-none bg-white"
+            title={document.title}
+          />
         </div>
       );
     }

@@ -442,7 +442,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.content.rule=PathPrefix(`/cong-tac`)
-        || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`)
+        || PathPrefix(`/dau-trang`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`)
         || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`)
         || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`)
         || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`)

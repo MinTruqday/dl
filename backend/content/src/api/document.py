@@ -3,7 +3,7 @@ from typing import Any, List, Optional
 
 from bson import ObjectId
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status, File, UploadFile
 from pydantic import BaseModel
 from src.api.dependency import (
     get_current_user,
