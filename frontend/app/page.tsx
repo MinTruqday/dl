@@ -220,7 +220,7 @@ export default function IntroSplash() {
         alignItems:"center", justifyContent:"center",
         pointerEvents: showBtn ? "auto" : "none",
       }}>
-        <div style={{ height:"220px" }} />
+        <div style={{ height:"200px" }} />
 
         <button
           onClick={() => router.push("/kham-pha")}
