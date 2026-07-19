@@ -123,7 +123,7 @@ export default function DocumentDetailsPage() {
 
   const handleRead = () => {
     if (!docData) return;
-    router.push(`/tai-lieu/viewer/${docData._id || docData.id}`);
+    router.push(`/tai-lieu/xem-truoc/${docData._id || docData.id}`);
   };
 
   const handleBookmark = async () => {

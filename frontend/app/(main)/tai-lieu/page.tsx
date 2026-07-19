@@ -360,7 +360,7 @@ export default function DocumentsPage() {
     e.preventDefault();
     if (!shareModal?.docId) return;
     setPublicUrl(
-      `${window.location.origin}/tai-lieu/viewer/${shareModal.docId}${sharePassword ? `?pwd=${sharePassword}` : ""}`,
+      `${window.location.origin}/tai-lieu/xem-truoc/${shareModal.docId}${sharePassword ? `?pwd=${sharePassword}` : ""}`,
     );
     showToast("Khởi tạo liên kết chia sẻ hoàn tất", "success");
   };
@@ -572,7 +572,7 @@ export default function DocumentsPage() {
                       {documents.map((doc) => (
                         <tr
                           key={doc._id || doc.id}
-                          onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, "_blank")}
+                          onClick={() => window.open(`/tai-lieu/xem-truoc/${doc._id || doc.id}`, "_blank")}
                           className="hover:bg-[#E8E8ED]/60 transition-colors cursor-pointer group border-b border-[#F5F5F7] last:border-0"
                         >
                           <td className="py-3 px-6 max-w-[300px]">
@@ -680,7 +680,7 @@ export default function DocumentsPage() {
                 {documents.map((doc) => (
                   <div
                     key={doc._id || doc.id}
-                    onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, "_blank")}
+                    onClick={() => window.open(`/tai-lieu/xem-truoc/${doc._id || doc.id}`, "_blank")}
                     className="group bg-white border border-[#E8E8ED] hover:border-[#0071E3] hover:shadow-sm rounded-[18px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-[3/4] relative"
                   >
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1 z-10">
