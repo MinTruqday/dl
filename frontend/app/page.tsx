@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const easeOutExpo = (t: number) => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const clamp       = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
-// Multilingual greetings (cycling after main animation)
 const GREETINGS = [
   "Xin chào,", "Hello,", "Bonjour,", "你好,", "Hola,",
   "こんにちは,", "안녕하세요,", "Ciao,", "Olá,", "Hallo,",
@@ -32,10 +32,8 @@ const GREETINGS = [
 ];
 const HOLD_MS = 900, FADE_MS = 280, LANG_MS = FADE_MS + HOLD_MS + FADE_MS;
 
-// Code to type out
 const CODE = "const explore = () => router.push('/kham-pha')";
 
-// Syntax tokens for the code
 const CODE_TOKENS = [
   { str: "const ",           color: "#BF5AF2" },
   { str: "explore",          color: "#0071E3" },
@@ -66,19 +64,16 @@ export default function IntroSplash() {
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const router     = useRouter();
 
-  // UI phases after canvas animation
   const [codeText,    setCodeText]    = useState("");
   const [codePhase,   setCodePhase]   = useState<"hidden"|"typing"|"done"|"button">("hidden");
   const [blink, setBlink] = useState(true);
 
-  // Cursor blink effect
   useEffect(() => {
     if (codePhase !== "typing") return;
     const id = setInterval(() => setBlink(b => !b), 530);
     return () => clearInterval(id);
   }, [codePhase]);
 
-  // Canvas engine
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx    = canvas.getContext("2d")!;
@@ -94,7 +89,6 @@ export default function IntroSplash() {
     const cy = H / 2, cx = W / 2;
     const FS   = Math.min(W * 0.08, 72);
     const FONT = `bold ${FS}px -apple-system,"SF Pro Display","Noto Sans",BlinkMacSystemFont,sans-serif`;
-    const FONT_SM = `${FS * 0.34}px -apple-system,BlinkMacSystemFont,sans-serif`;
 
     ctx.font = FONT;
     const HELLO = "Xin chào, ", METIS = "Metis", EXCL = "!", DOCLIB = "DocLib";
@@ -124,7 +118,6 @@ export default function IntroSplash() {
     let bx = wordXM;
     for (const ch of metisChars) { metisCharX.push(bx); bx += ctx.measureText(ch).width; }
 
-    // Typewriter schedule
     const TW: Array<{at:number;text:string}> = [];
     let t = 400;
     const HW = HELLO + "Thế giới!";
@@ -138,12 +131,11 @@ export default function IntroSplash() {
 
     const MS=90, MD=450;
     const T_MORPH=t, T_MORPH_END=t+MS*5+MD+200;
-    const SWEEP_DUR=800;
-    const T_SWEEP_E=T_MORPH_END+1600, T_SWEEP_W=T_SWEEP_E+SWEEP_DUR+300;
+    const SWEEP_DUR=1000;
+    const T_SWEEP_E=T_MORPH_END+1600, T_SWEEP_W=T_SWEEP_E+SWEEP_DUR+200;
     const T_SWEEP_DONE=T_SWEEP_W+SWEEP_DUR;
-    const T_LANG_START=T_SWEEP_DONE; // start immediately after sweep, no pause
+    const T_LANG_START=T_SWEEP_DONE;
     const T_LANG_END=T_LANG_START+GREETINGS.length*LANG_MS;
-    // Code starts typing simultaneously when lang phase starts
     const T_DONE=T_LANG_START;
 
     const SLOTS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -157,7 +149,6 @@ export default function IntroSplash() {
       ctx.clearRect(0,0,W,H);
       ctx.font=FONT; ctx.textBaseline="middle";
 
-      // Phase 1&2: Typewriter
       if (now<T_MORPH) {
         for (const s of TW) { if(now>=s.at) typedText=s.text; }
         cursorTick+=16; if(cursorTick>530){cursorVis=!cursorVis;cursorTick=0;}
@@ -168,7 +159,6 @@ export default function IntroSplash() {
         rafId=requestAnimationFrame(draw); return;
       }
 
-      // Phase 3: Morph DocLib→Metis
       if (now<T_MORPH_END) {
         const mp=Math.min(1,(now-T_MORPH)/(T_MORPH_END-T_MORPH)), mep=easeOutExpo(mp);
         ctx.fillStyle="#1D1D1F"; ctx.globalAlpha=1;
@@ -194,25 +184,21 @@ export default function IntroSplash() {
         rafId=requestAnimationFrame(draw); return;
       }
 
-      // Phase 4+: Sweep & Metis
       const sweepE=now>=T_SWEEP_E&&now<T_SWEEP_W;
       const sweepW=now>=T_SWEEP_W&&now<T_SWEEP_DONE;
       const afterSweep=now>=T_SWEEP_DONE;
       let exX=exclXM;
-      if(sweepE) exX=exclXM+(wordXM-exclXM)*clamp((now-T_SWEEP_E)/SWEEP_DUR,0,1);
-      else if(sweepW) exX=wordXM+(exclXM-wordXM)*clamp((now-T_SWEEP_W)/SWEEP_DUR,0,1);
+      if(sweepE) exX=exclXM+(wordXM-exclXM)*easeInOutCubic(clamp((now-T_SWEEP_E)/SWEEP_DUR,0,1));
+      else if(sweepW) exX=wordXM+(exclXM-wordXM)*easeInOutCubic(clamp((now-T_SWEEP_W)/SWEEP_DUR,0,1));
 
-      // Smooth sine-based color (no seam at wrap point)
       const sinColor = (i: number) => {
         const t = now * 0.0006 + i * 0.4;
         const h = 210 + (Math.sin(t) * 0.5 + 0.5) * 130;
         return `hsl(${h},75%,60%)`;
       };
 
-      // Multilingual cycling (Phase 5) — infinite loop
       if (now >= T_LANG_START) {
         const elapsed = now - T_LANG_START;
-        // Offset by FADE_MS so first greeting starts already in HOLD phase (no blank flash)
         const adj = elapsed + FADE_MS;
         const li  = Math.floor(adj / LANG_MS) % GREETINGS.length;
         const g   = GREETINGS[li];
@@ -236,13 +222,11 @@ export default function IntroSplash() {
         ctx.fillStyle = "#1D1D1F"; ctx.fillText(EXCL, mxLang + metisW + 4, cy);
         ctx.globalAlpha = 1;
 
-        // Trigger code typing once (no cancelAnimationFrame - canvas keeps running)
         if (!done) { done = true; setTimeout(() => setCodePhase("typing"), 800); }
 
         rafId = requestAnimationFrame(draw); return;
       }
 
-      // Sweep + settled Metis (before lang phase)
       for (let i=0;i<metisChars.length;i++) {
         const lx=metisCharX[i], cw=metisCharW[i];
         let a=1, color="#1D1D1F";
@@ -265,7 +249,6 @@ export default function IntroSplash() {
     return () => cancelAnimationFrame(rafId);
   }, []);
 
-  // Type code char by char
   useEffect(() => {
     if (codePhase !== "typing") return;
     let i = 0;
@@ -274,7 +257,6 @@ export default function IntroSplash() {
       setCodeText(CODE.substring(0, i));
       if (i >= CODE.length) {
         clearInterval(interval);
-        // After typing done: pause, then morph to button
         setTimeout(() => setCodePhase("done"), 400);
         setTimeout(() => setCodePhase("button"), 900);
       }
@@ -286,7 +268,6 @@ export default function IntroSplash() {
     <div style={{ position:"fixed", inset:0, background:"#fff", overflow:"hidden" }}>
       <canvas ref={canvasRef} style={{ display:"block" }} />
 
-      {/* Code line → Button overlay */}
       {codePhase !== "hidden" && (
         <div style={{
           position:"absolute", inset:0,
@@ -294,7 +275,6 @@ export default function IntroSplash() {
           alignItems:"center", justifyContent:"center",
           pointerEvents: codePhase === "button" ? "auto" : "none",
         }}>
-          {/* Push below canvas text */}
           <div style={{ height:"180px" }} />
 
           <div style={{
@@ -302,7 +282,6 @@ export default function IntroSplash() {
             display:"flex", alignItems:"center", justifyContent:"center",
             height:"56px", minWidth:"300px",
           }}>
-            {/* Code text */}
             <div style={{
               position:"absolute",
               opacity: codePhase === "button" ? 0 : 1,
@@ -326,11 +305,10 @@ export default function IntroSplash() {
                   marginLeft:"10px", color:"#30D158",
                   fontFamily:'"SF Mono","Fira Code",monospace',
                   fontSize:"12px",
-                }}>▶ running...</span>
+                }}>▶ Running</span>
               )}
             </div>
 
-            {/* Button */}
             <button
               onClick={() => router.push("/kham-pha")}
               style={{
