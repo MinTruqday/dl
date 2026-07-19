@@ -41,7 +41,7 @@ export default function Workspace({
     <div className="h-[100dvh] bg-[#FFFFFF] md:bg-[#F5F5F7] text-[#1D1D1F] font-sans selection:bg-[#0071E3] selection:text-white flex flex-col overflow-hidden relative">
       <Navigation />
 
-      <main className="flex-1 flex flex-col items-center min-h-0 pt-[56px] pb-24 md:pb-0 relative lg:pl-[72px]">
+      <main className="flex-1 flex flex-col items-center min-h-0 pt-[56px] pb-24 md:pb-0 relative lg:pl-[56px]">
         <div className="w-full max-w-[1200px] mx-auto px-4 md:px-6 py-6 flex-1 flex flex-col min-h-0 overflow-hidden">
           {children}
         </div>

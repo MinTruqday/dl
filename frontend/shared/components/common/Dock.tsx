@@ -83,8 +83,8 @@ export default function Dock() {
 
   return (
     <>
-      <aside className="fixed left-0 top-[56px] bottom-0 w-[72px] bg-white/80 backdrop-blur-xl border-r border-[#E8E8ED] overflow-y-auto hide-scrollbar z-[90] hidden lg:block">
-        <div className="py-6 px-2">
+      <aside className="fixed left-0 top-[56px] bottom-0 w-[56px] bg-white/80 backdrop-blur-xl border-r border-[#E8E8ED] overflow-y-auto hide-scrollbar z-[90] hidden lg:block">
+        <div className="py-4 px-2">
           <div className="flex flex-col gap-2">
             {availableItems.map((item, index) => {
               const active = isActive(item.href);
@@ -102,7 +102,7 @@ export default function Dock() {
                       setHoveredTooltip({ label: item.label, top: rect.top + rect.height / 2 });
                     }}
                     onMouseLeave={() => setHoveredTooltip(null)}
-                    className={`flex items-center justify-center w-[48px] h-[48px] rounded-[12px] transition-colors mx-auto ${
+                    className={`flex items-center justify-center w-[40px] h-[40px] rounded-[12px] transition-colors mx-auto ${
                       active
                         ? "bg-[#0071E3] text-white shadow-sm"
                         : "text-[#6E6E73] hover:bg-[#F5F5F7] hover:text-[#1D1D1F]"
@@ -119,7 +119,7 @@ export default function Dock() {
 
       {hoveredTooltip && (
         <div
-          className="fixed left-[84px] z-[9999] px-3 py-1.5 bg-[#1D1D1F] text-white text-[13px] font-medium rounded-[8px] whitespace-nowrap pointer-events-none shadow-lg -translate-y-1/2 animate-in fade-in zoom-in-95 duration-200"
+          className="fixed left-[68px] z-[9999] px-3 py-1.5 bg-[#1D1D1F] text-white text-[13px] font-medium rounded-[8px] whitespace-nowrap pointer-events-none shadow-lg -translate-y-1/2 animate-in fade-in zoom-in-95 duration-200"
           style={{ top: hoveredTooltip.top }}
         >
           {hoveredTooltip.label}

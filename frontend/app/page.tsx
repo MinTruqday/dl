@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 const easeOutExpo = (t: number) => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
 const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-const clamp       = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
 const GREETINGS = [
   "Xin chào,", "Hello,", "Bonjour,", "你好,", "Hola,",
@@ -32,47 +32,10 @@ const GREETINGS = [
 ];
 const HOLD_MS = 900, FADE_MS = 280, LANG_MS = FADE_MS + HOLD_MS + FADE_MS;
 
-const CODE = "const explore = () => router.push('/kham-pha')";
-
-const CODE_TOKENS = [
-  { str: "const ",           color: "#BF5AF2" },
-  { str: "explore",          color: "#0071E3" },
-  { str: " = () => ",        color: "#6E6E73" },
-  { str: "router",           color: "#30D158" },
-  { str: ".push(",           color: "#1D1D1F" },
-  { str: "'/kham-pha'",      color: "#FF9F0A" },
-  { str: ")",                color: "#1D1D1F" },
-];
-
-function renderTokens(text: string) {
-  const nodes: React.ReactNode[] = [];
-  let rem = text;
-  for (const tk of CODE_TOKENS) {
-    if (!rem) break;
-    if (rem.startsWith(tk.str)) {
-      nodes.push(<span key={tk.str} style={{ color: tk.color }}>{tk.str}</span>);
-      rem = rem.slice(tk.str.length);
-    } else if (tk.str.startsWith(rem)) {
-      nodes.push(<span key={tk.str + rem} style={{ color: tk.color }}>{rem}</span>);
-      rem = "";
-    }
-  }
-  return nodes;
-}
-
 export default function IntroSplash() {
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const router     = useRouter();
-
-  const [codeText,    setCodeText]    = useState("");
-  const [codePhase,   setCodePhase]   = useState<"hidden"|"typing"|"done"|"button">("hidden");
-  const [blink, setBlink] = useState(true);
-
-  useEffect(() => {
-    if (codePhase !== "typing") return;
-    const id = setInterval(() => setBlink(b => !b), 530);
-    return () => clearInterval(id);
-  }, [codePhase]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const router    = useRouter();
+  const [showBtn, setShowBtn] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -135,8 +98,6 @@ export default function IntroSplash() {
     const T_SWEEP_E=T_MORPH_END+1600, T_SWEEP_W=T_SWEEP_E+SWEEP_DUR+200;
     const T_SWEEP_DONE=T_SWEEP_W+SWEEP_DUR;
     const T_LANG_START=T_SWEEP_DONE;
-    const T_LANG_END=T_LANG_START+GREETINGS.length*LANG_MS;
-    const T_DONE=T_LANG_START;
 
     const SLOTS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     let startTime=-1, typedText="", cursorVis=true, cursorTick=0;
@@ -192,8 +153,8 @@ export default function IntroSplash() {
       else if(sweepW) exX=wordXM+(exclXM-wordXM)*easeInOutCubic(clamp((now-T_SWEEP_W)/SWEEP_DUR,0,1));
 
       const sinColor = (i: number) => {
-        const t = now * 0.0006 + i * 0.4;
-        const h = 210 + (Math.sin(t) * 0.5 + 0.5) * 130;
+        const tt = now * 0.0006 + i * 0.4;
+        const h = 210 + (Math.sin(tt) * 0.5 + 0.5) * 130;
         return `hsl(${h},75%,60%)`;
       };
 
@@ -222,7 +183,7 @@ export default function IntroSplash() {
         ctx.fillStyle = "#1D1D1F"; ctx.fillText(EXCL, mxLang + metisW + 4, cy);
         ctx.globalAlpha = 1;
 
-        if (!done) { done = true; setTimeout(() => setCodePhase("typing"), 800); }
+        if (!done) { done = true; setTimeout(() => setShowBtn(true), 600); }
 
         rafId = requestAnimationFrame(draw); return;
       }
@@ -249,94 +210,42 @@ export default function IntroSplash() {
     return () => cancelAnimationFrame(rafId);
   }, []);
 
-  useEffect(() => {
-    if (codePhase !== "typing") return;
-    let i = 0;
-    const interval = setInterval(() => {
-      i++;
-      setCodeText(CODE.substring(0, i));
-      if (i >= CODE.length) {
-        clearInterval(interval);
-        setTimeout(() => setCodePhase("done"), 400);
-        setTimeout(() => setCodePhase("button"), 900);
-      }
-    }, 38);
-    return () => clearInterval(interval);
-  }, [codePhase]);
-
   return (
     <div style={{ position:"fixed", inset:0, background:"#fff", overflow:"hidden" }}>
       <canvas ref={canvasRef} style={{ display:"block" }} />
 
-      {codePhase !== "hidden" && (
-        <div style={{
-          position:"absolute", inset:0,
-          display:"flex", flexDirection:"column",
-          alignItems:"center", justifyContent:"center",
-          pointerEvents: codePhase === "button" ? "auto" : "none",
-        }}>
-          <div style={{ height:"180px" }} />
+      <div style={{
+        position:"absolute", inset:0,
+        display:"flex", flexDirection:"column",
+        alignItems:"center", justifyContent:"center",
+        pointerEvents: showBtn ? "auto" : "none",
+      }}>
+        <div style={{ height:"220px" }} />
 
-          <div style={{
-            position:"relative",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            height:"56px", minWidth:"300px",
-          }}>
-            <div style={{
-              position:"absolute",
-              opacity: codePhase === "button" ? 0 : 1,
-              transform: codePhase === "button" ? "scale(0.8) translateY(-6px)" : "scale(1) translateY(0)",
-              transition: "opacity 350ms ease, transform 350ms cubic-bezier(0.4,0,1,1)",
-              fontFamily: '"SF Mono","Fira Code","Fira Mono",monospace',
-              fontSize: "13.5px",
-              letterSpacing: "0.01em",
-              whiteSpace: "nowrap",
-            }}>
-              {renderTokens(codeText)}
-              {(codePhase === "typing") && blink && (
-                <span style={{
-                  display:"inline-block", width:"2px", height:"1.05em",
-                  background:"#1D1D1F", marginLeft:"2px",
-                  verticalAlign:"text-bottom",
-                }}/>
-              )}
-              {codePhase === "done" && (
-                <span style={{
-                  marginLeft:"10px", color:"#30D158",
-                  fontFamily:'"SF Mono","Fira Code",monospace',
-                  fontSize:"12px",
-                }}>▶ Running</span>
-              )}
-            </div>
-
-            <button
-              onClick={() => router.push("/kham-pha")}
-              style={{
-                position:"absolute",
-                opacity: codePhase === "button" ? 1 : 0,
-                transform: codePhase === "button" ? "scale(1)" : "scale(0.75)",
-                transition: "opacity 450ms ease, transform 450ms cubic-bezier(0.34,1.56,0.64,1)",
-                background:"#0071E3",
-                color:"#fff",
-                border:"none",
-                borderRadius:"980px",
-                padding:"10px 28px",
-                fontSize:"15px",
-                fontWeight:600,
-                fontFamily:"-apple-system,'SF Pro Display',BlinkMacSystemFont,sans-serif",
-                cursor:"pointer",
-                letterSpacing:"-0.01em",
-                whiteSpace:"nowrap",
-                pointerEvents: codePhase === "button" ? "auto" : "none",
-              }}
-              onMouseEnter={e => { const el=e.currentTarget; el.style.background="#0055C6"; el.style.transform="scale(1.04)"; }}
-              onMouseLeave={e => { const el=e.currentTarget; el.style.background="#0071E3"; el.style.transform="scale(1)"; }}
-            >
-              Bắt đầu
-            </button>
-          </div>
-        </div>
-      )}
+        <button
+          onClick={() => router.push("/kham-pha")}
+          style={{
+            opacity: showBtn ? 1 : 0,
+            transform: showBtn ? "scale(1) translateY(0)" : "scale(0.8) translateY(8px)",
+            transition: "opacity 500ms ease, transform 500ms cubic-bezier(0.34,1.56,0.64,1)",
+            background:"#0071E3",
+            color:"#fff",
+            border:"none",
+            borderRadius:"980px",
+            padding:"10px 28px",
+            fontSize:"15px",
+            fontWeight:600,
+            fontFamily:"-apple-system,'SF Pro Display',BlinkMacSystemFont,sans-serif",
+            cursor:"pointer",
+            letterSpacing:"-0.01em",
+            whiteSpace:"nowrap",
+          }}
+          onMouseEnter={e => { const el=e.currentTarget; el.style.background="#0055C6"; el.style.transform="scale(1.04)"; }}
+          onMouseLeave={e => { const el=e.currentTarget; el.style.background="#0071E3"; el.style.transform="scale(1)"; }}
+        >
+          Bắt đầu
+        </button>
+      </div>
     </div>
   );
 }
