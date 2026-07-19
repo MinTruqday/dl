@@ -1,24 +1,24 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, redirect } from "next/navigation";
 import EditorPage from "@/features/content/components/EditorPage";
-import CreateDocumentPage from "@/features/content/components/CreateDocumentPage";
-import ProvisionLayout from "@/features/content/components/ProvisionLayout";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 
 function SoanThaoContent() {
   const searchParams = useSearchParams();
   const documentId = searchParams.get("tai-lieu");
 
+  useEffect(() => {
+    if (!documentId) {
+      redirect("/soan-thao/khoi-tao");
+    }
+  }, [documentId]);
+
   if (documentId) {
     return <EditorPage />;
   }
 
-  return (
-    <ProvisionLayout>
-      <CreateDocumentPage />
-    </ProvisionLayout>
-  );
+  return null;
 }
 
 export default function Page() {

@@ -85,6 +85,11 @@ import {
   Timer,
   Check,
   FileText,
+  Phone,
+  Video,
+  Info,
+  SmilePlus,
+  Forward,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/shared/lib/app_utils";
@@ -1356,10 +1361,11 @@ export default function MessagesPage() {
         </div>
 
         <div
-          className={`flex-1 flex flex-col min-w-0 bg-[#F5F5F7] rounded-[18px] overflow-hidden ${!selectedConv ? "hidden md:flex items-center justify-center" : "flex"}`}
+          className={`flex-1 flex min-w-0 rounded-[18px] overflow-hidden ${!selectedConv ? "hidden md:flex items-center justify-center bg-[#F5F5F7]" : ""}`}
         >
           {selectedConv ? (
             <>
+              <div className="flex-1 flex flex-col min-w-0 bg-[#F5F5F7] relative">
               <div className="h-[64px] px-6 md:px-0 flex items-center justify-between border-b border-[#D2D2D7] bg-transparent">
                 <div className="flex items-center gap-4">
                   <button
@@ -1392,10 +1398,23 @@ export default function MessagesPage() {
                     </p>
                   </div>
                 </div>
-                <div className="relative flex items-center gap-2">
+                <div className="relative flex items-center gap-1 sm:gap-2">
+                  <button className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full transition-colors hidden sm:block" title="Gọi thoại">
+                    <Phone className="w-5 h-5" />
+                  </button>
+                  <button className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full transition-colors hidden sm:block" title="Gọi video">
+                    <Video className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setShowSharedSidebar(!showSharedSidebar)}
+                    className={`p-2 rounded-full transition-colors ${showSharedSidebar ? "bg-[#E8E8ED] text-[#1D1D1F]" : "text-[#0071E3] hover:bg-[#F5F5F7]"}`}
+                    title="Thông tin đoạn chat"
+                  >
+                    <Info className="w-5 h-5" />
+                  </button>
                   <button
                     onClick={() => setShowSearchMsgBar(!showSearchMsgBar)}
-                    className={`p-2 rounded-full transition-colors ${showSearchMsgBar ? "bg-[#E8E8ED] text-[#1D1D1F]" : "text-[#0071E3] hover:bg-[#F5F5F7]"}`}
+                    className={`p-2 rounded-full transition-colors hidden sm:block ${showSearchMsgBar ? "bg-[#E8E8ED] text-[#1D1D1F]" : "text-[#0071E3] hover:bg-[#F5F5F7]"}`}
                     title="Tìm kiếm"
                   >
                     <Search className="w-4 h-4" />
@@ -1700,6 +1719,21 @@ export default function MessagesPage() {
                                 </div>
                               )}
                             </div>
+                            </div>
+                            
+                            {/* Read Receipt (Mock) */}
+                            {isSender && i === messages.length - 1 && (
+                              <div className="flex justify-end mt-1 mr-1">
+                                <div className="w-3.5 h-3.5 rounded-full bg-[#D2D2D7] overflow-hidden border-[1.5px] border-white shadow-sm">
+                                  {selectedConv.other_user?.avatar_url ? (
+                                    <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
+                                  ) : (
+                                    <User className="w-2.5 h-2.5 text-white m-auto" />
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                             {/* popup now rendered globally as fixed overlay */}
                           </div>
                         </div>
@@ -1849,9 +1883,10 @@ export default function MessagesPage() {
                   </button>
                 </div>
               </div>
+              </div>
             </>
           ) : (
-            <div className="text-center">
+            <div className="text-center w-full">
               <MessageSquare className="w-4 h-4 text-[#D2D2D7] mx-auto mb-4" />
               <p className="text-[17px] text-[#6E6E73]">
                 Chọn một hội thoại để bắt đầu
@@ -1859,6 +1894,50 @@ export default function MessagesPage() {
             </div>
           )}
         </div>
+        
+        {/* Right Sidebar (Chat Info) */}
+        {showSharedSidebar && selectedConv && (
+          <div className="w-[300px] shrink-0 bg-white border-l border-[#D2D2D7] flex flex-col h-full overflow-hidden">
+            <div className="h-[64px] shrink-0 px-4 flex items-center justify-between border-b border-[#D2D2D7]">
+              <h3 className="text-[15px] font-medium text-[#1D1D1F]">Thông tin đoạn chat</h3>
+              <button onClick={() => setShowSharedSidebar(false)} className="p-2 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              <div className="flex flex-col items-center">
+                <div className="w-20 h-20 rounded-full bg-[#D2D2D7] overflow-hidden mb-3">
+                  {selectedConv.other_user?.avatar_url ? (
+                    <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <User className="w-10 h-10 text-white m-auto mt-5" />
+                  )}
+                </div>
+                <h4 className="text-[17px] font-medium text-[#1D1D1F] text-center">
+                  {aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username}
+                </h4>
+              </div>
+              
+              <div>
+                <h5 className="text-[13px] font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">File phương tiện & File</h5>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <div className="aspect-square bg-[#E8E8ED] rounded-[8px] flex items-center justify-center text-[#A1A1A6]">
+                    <ImageIcon className="w-6 h-6" />
+                  </div>
+                  <div className="aspect-square bg-[#E8E8ED] rounded-[8px] flex items-center justify-center text-[#A1A1A6]">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <div className="aspect-square bg-[#E8E8ED] rounded-[8px] flex items-center justify-center text-[#A1A1A6]">
+                    <Video className="w-6 h-6" />
+                  </div>
+                  <div className="col-span-3 text-center mt-2">
+                    <button className="text-[13px] text-[#0071E3] font-medium hover:underline">Xem tất cả</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Modal isOpen={showAliasModal} onClose={() => setShowAliasModal(false)}>
