@@ -640,7 +640,194 @@ export default function TroChuyenPage() {
   return (
     <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <div className="flex flex-1 min-h-0 gap-6">
-        <AgenticSidebar sessions={sessions} currentSessionId={currentSessionId} onSelectSession={handleSessionSelect} onNewSession={() => {setCurrentSessionId(null); setMessages([]);}} onDeleteSession={handleDeleteSession} />
+        <aside className="w-full lg:w-[320px] bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none flex flex-col overflow-hidden shrink-0 hidden lg:flex">
+          <div className="px-6 md:px-0 pt-6 pb-4 flex items-center justify-between shrink-0">
+            <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
+              Lịch sử
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => (window.location.href = "/nang-cap")}
+                className="px-3 py-1.5 text-[13px] font-medium bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] transition-colors shadow-sm"
+              >
+                Nâng cấp
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentSessionId(null);
+                  setMessages([]);
+                }}
+                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                title="Cuộc trò chuyện mới"
+              >
+                <PlusIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div className="overflow-y-auto px-6 md:px-0 pb-6 flex flex-col gap-2 shrink custom-scrollbar">
+            {sessions.length === 0 ? (
+              <div className="py-12 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
+                <p className="text-[17px] font-medium text-[#6E6E73]">
+                  Chưa có dữ liệu
+                </p>
+              </div>
+            ) : (
+              sessions.map((s) => (
+                <div
+                  key={s._id}
+                  className={`p-3 rounded-[14px] cursor-pointer transition-colors ${currentSessionId === s._id ? "bg-white border border-transparent shadow-[0_1px_2px_rgba(0,0,0,0.05)]" : "border border-transparent hover:bg-[#E8E8ED]"}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={async () => {
+                        const token = getToken();
+                        setCurrentSessionId(s._id);
+                        setView("chat");
+                        try {
+                          const res = await fetch(
+                            `${API_URL}/lich-su/${s._id}?user_id=${user?.id || user?._id}`,
+                            { headers: { Authorization: `Bearer ${token}` } },
+                          );
+                          if (res.ok) {
+                            const data = await res.json();
+                            const msgs = data.data ? data.data.messages : data.messages;
+                            const mapped = (msgs || []).map(
+                              (m: any) => ({
+                                id: m.id || m._id || Math.random().toString(),
+                                role: m.role || "user",
+                                content: m.content || "",
+                                thoughts: m.thoughts || [],
+                                attachments: m.attachments || {},
+                                isThinkingEnabled: m.isThinkingEnabled !== undefined ? m.isThinkingEnabled : ((m.thoughts && m.thoughts.length > 0) || (m.content && m.content.startsWith("<think>"))),
+                              }),
+                            );
+                            setMessages(mapped);
+                          }
+                        } catch (e) {}
+                      }}
+                    >
+                      {editingTitleId === s._id ? (
+                        <input
+                          autoFocus
+                          value={editingTitleValue}
+                          onChange={(e) => setEditingTitleValue(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          onBlur={() => setEditingTitleId(null)}
+                          onKeyDown={async (e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (!editingTitleValue.trim()) return;
+                              try {
+                                const token = getToken();
+                                const res = await fetch(
+                                  `${API_URL}/lich-su/${s._id}/tieu-de?user_id=${user?.id || user?._id}`,
+                                  {
+                                    method: "PUT",
+                                    headers: {
+                                      Authorization: `Bearer ${token}`,
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      title: editingTitleValue,
+                                    }),
+                                  },
+                                );
+                                if (res.ok) {
+                                  fetchHistory();
+                                  setEditingTitleId(null);
+                                }
+                              } catch (err) {}
+                            } else if (e.key === "Escape") {
+                              setEditingTitleId(null);
+                            }
+                          }}
+                          className="w-full text-[15px] font-medium text-[#1D1D1F] bg-[#F5F5F7] border border-[#0071E3] rounded-[8px] px-2 py-1 outline-none"
+                        />
+                      ) : (
+                        <p className="text-[15px] font-medium text-[#1D1D1F] truncate">
+                          {s.title}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <p className="text-[12px] text-[#6E6E73] whitespace-nowrap">
+                        {new Date(s.updated_at).toLocaleDateString("vi-VN")}
+                      </p>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownId(
+                              openDropdownId === s._id ? null : s._id,
+                            );
+                          }}
+                          className="p-1.5 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {openDropdownId === s._id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdownId(null);
+                              }}
+                            />
+                            <div className="absolute right-0 top-full mt-1 w-36 p-1.5 bg-white  rounded-[14px] z-50">
+                              <button
+                                className="w-full text-left px-3 py-2 text-[13px] text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-[10px] transition-colors flex items-center gap-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(null);
+                                  setEditingTitleId(s._id);
+                                  setEditingTitleValue(s.title);
+                                }}
+                              >
+                                <Edit2 className="w-3.5 h-3.5" /> Đổi tên
+                              </button>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(null);
+                                  try {
+                                    const token = getToken();
+                                    const res = await fetch(
+                                      `${API_URL}/lich-su/${s._id}?user_id=${user?.id || user?._id}`,
+                                      {
+                                        method: "DELETE",
+                                        headers: {
+                                          Authorization: `Bearer ${token}`,
+                                        },
+                                      },
+                                    );
+                                    if (res.ok) {
+                                      if (currentSessionId === s._id) {
+                                        setCurrentSessionId(null);
+                                        setMessages([]);
+                                      }
+                                      fetchHistory();
+                                    }
+                                  } catch (err) {}
+                                }}
+                                className="w-full text-left px-3 py-2 text-[13px] text-[#FF3B30] hover:bg-[#FFEBEB] rounded-[10px] transition-colors flex items-center gap-2"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Xóa
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+            <QuotaIndicator />
+          </div>
+        </aside>
 
         <main className="flex-1 flex flex-col min-w-0 h-full bg-[#F5F5F7] md:bg-transparent rounded-[24px] md:rounded-none relative overflow-hidden">
           <div
@@ -659,7 +846,152 @@ export default function TroChuyenPage() {
             ) : (
               <div className="flex flex-col w-full px-8 md:px-0 py-6 md:pt-6 gap-6">
                 {messages.map((msg, idx) => {
-                  return <AgenticMessageBubble key={idx} msg={msg} idx={idx} isSending={isSending} isLastMessage={idx === messages.length - 1} />;
+                  if (msg.role === "user") {
+                    return (
+                      <div key={idx} className="flex justify-end">
+                        <div className="max-w-[85%] flex flex-col gap-2 items-end">
+                          {msg.attachments?.image && (
+                            <img
+                              src={msg.attachments.image}
+                              alt="Attachment"
+                              className="max-w-[240px] max-h-[240px] object-cover rounded-[16px] border border-[#E8E8ED]"
+                            />
+                          )}
+                          {msg.attachments?.file && (
+                            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-[14px] border border-[#E8E8ED] shadow-sm">
+                              <FileText className="w-5 h-5 text-[#0071E3]" />
+                              <span className="text-[14px] font-medium text-[#1D1D1F]">
+                                {msg.attachments.file}
+                              </span>
+                            </div>
+                          )}
+                          {msg.attachments?.folder && (
+                            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-[14px] border border-[#E8E8ED] shadow-sm">
+                              <Folder className="w-5 h-5 text-[#FF9500]" />
+                              <span className="text-[14px] font-medium text-[#1D1D1F]">
+                                {msg.attachments.folder}
+                              </span>
+                            </div>
+                          )}
+                          {msg.content && <UserMessage content={msg.content} />}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const displayContent = msg.isThinkingEnabled ? msg.content : msg.content.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, "");
+                  const cleanText = displayContent.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, "").trim();
+                  const segments = displayContent
+                    .split(/(<think>[\s\S]*?(?:<\/think>|$))/g)
+                    .filter((s) => s.trim() !== "");
+                  
+                  const isLastAssistant = idx === messages.length - 1 && msg.role === "assistant";
+
+                  return (
+                    <div key={idx} className="flex justify-start">
+                      <div className="w-full">
+                        <div className="py-2 w-full relative group">
+                          {msg.isThinkingEnabled && msg.thoughts && msg.thoughts.length > 0 && (
+                            <div className="mb-3 mt-1">
+                              <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]" open={isSending && idx === messages.length - 1}>
+                                <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
+                                  <div className="flex-1 flex items-center gap-2">
+                                    <Activity className="w-4 h-4 text-[#0071E3]" />
+                                    <span className="text-[14px] font-semibold text-[#1D1D1F]">
+                                      Quá trình xử lý
+                                    </span>
+                                  </div>
+                                  <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
+                                </summary>
+                                <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] border-t border-[#E8E8ED] flex flex-col gap-2">
+                                  {msg.thoughts.map((t, tIdx) => (
+                                    <div key={tIdx} className="flex gap-2 items-start">
+                                      <div className="mt-1">
+                                        {(isSending && idx === messages.length - 1 && tIdx === msg.thoughts!.length - 1) ? (
+                                          <Loader2 className="w-3.5 h-3.5 text-[#0071E3] animate-spin" />
+                                        ) : (
+                                          <div className="w-1.5 h-1.5 rounded-full bg-[#34C759] mt-1" />
+                                        )}
+                                      </div>
+                                      <span className="text-[14px] text-[#1D1D1F] leading-relaxed">{t}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            </div>
+                          )}
+                          {segments.map((segment, sIdx) => {
+                            if (segment.startsWith("<think>")) {
+                              const thinkContent = segment.replace(/^<think>/, "").replace(/<\/think>$/, "").trim();
+                              
+                              return (
+                                <div key={sIdx} className="mb-3 mt-1">
+                                  <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]" open={isSending && idx === messages.length - 1 && sIdx === segments.length - 1}>
+                                    <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
+                                      <div className="flex-1 flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-[#0071E3]" />
+                                        <span className="text-[14px] font-semibold text-[#1D1D1F]">
+                                          <ThoughtTimer isRunning={isSending && idx === messages.length - 1 && sIdx === segments.length - 1} />
+                                        </span>
+                                      </div>
+                                      <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
+                                    </summary>
+                                    <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] border-t border-[#E8E8ED]">
+                                      {thinkContent ? (
+                                        <div className="prose prose-sm max-w-none prose-zinc prose-p:leading-relaxed text-[#6E6E73]">
+                                          <ReactMarkdown
+                                            remarkPlugins={[remarkGfm, remarkMath]}
+                                            rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                          >
+                                            {thinkContent}
+                                          </ReactMarkdown>
+                                        </div>
+                                      ) : (
+                                        <div className="flex gap-2 items-center py-1">
+                                          <Loader2 className="w-4 h-4 text-[#0071E3] animate-spin" />
+                                          <span className="text-[14px] text-[#6E6E73] font-medium animate-pulse">
+                                            Đang kích hoạt không gian suy luận...
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </details>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <ReactMarkdown
+                                key={sIdx}
+                                remarkPlugins={[remarkGfm, remarkMath]}
+                                rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                className="prose prose-sm max-w-none prose-zinc prose-p:text-[15px] prose-p:text-[#1D1D1F] prose-p:leading-relaxed prose-code:bg-[#F5F5F7] prose-code:text-[#FF3B30] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-[6px] prose-pre:bg-[#1D1D1F] prose-pre:rounded-[14px]"
+                                components={{
+                                  a: ({ href, children, ...props }) => {
+                                    if (
+                                      href &&
+                                      (href.includes("payos.vn") ||
+                                        href.includes("pay.payos.vn"))
+                                    ) {
+                                      return <PayOSEmbedded checkoutUrl={href} />;
+                                    }
+                                    return (
+                                      <a
+                                        href={href}
+                                        className="text-[#0071E3] font-medium hover:underline"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        {...props}
+                                      >
+                                        {children}
+                                      </a>
+                                    );
+                                  },
+                                }}
+                              >
+                                {segment}
+                              </ReactMarkdown>
+                            );
                           })}
 
                           {!cleanText && segments.length === 0 && (
