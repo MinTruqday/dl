@@ -302,3 +302,87 @@ class ThreadService:
         )
         return messages
 
+    @staticmethod
+    @log_logic_execution
+    async def forward_message(message_id: str, receiver_ids: list, current_user):
+        original_msg = await MessageRepository.find_one({"_id": message_id})
+        if not original_msg:
+            raise ValueError("Original message not found")
+        if original_msg.get("is_recalled"):
+            raise ValueError("Cannot forward a recalled message")
+            
+        forwarded_messages = []
+        for receiver_id in receiver_ids:
+            msg = await ThreadService.send_message(
+                receiver_id=receiver_id,
+                content=original_msg.get("content", ""),
+                current_user=current_user,
+                image_url=original_msg.get("image_url"),
+                audio_url=original_msg.get("audio_url"),
+                attachments=original_msg.get("attachments", [])
+            )
+            forwarded_messages.append(msg)
+        return {"success": True, "messages": forwarded_messages}
+
+    @staticmethod
+    @log_logic_execution
+    async def create_poll(receiver_id: str, question: str, options: list, current_user):
+        import json
+        poll_data = {
+            "question": question,
+            "options": [{"id": f"opt_{i}", "text": opt, "votes": []} for i, opt in enumerate(options)]
+        }
+        return await ThreadService.send_message(
+            receiver_id=receiver_id,
+            content=json.dumps({"type": "poll", "data": poll_data}),
+            current_user=current_user
+        )
+
+    @staticmethod
+    @log_logic_execution
+    async def vote_poll(message_id: str, option_id: str, current_user):
+        import json
+        msg = await MessageRepository.find_one({"_id": message_id})
+        if not msg:
+            raise ValueError("Poll message not found")
+            
+        try:
+            content_dict = json.loads(msg.get("content", "{}"))
+            if content_dict.get("type") != "poll":
+                raise ValueError("Message is not a poll")
+                
+            poll_data = content_dict.get("data", {})
+            user_id = str(current_user.id)
+            
+            for opt in poll_data.get("options", []):
+                if user_id in opt.get("votes", []):
+                    opt["votes"].remove(user_id)
+                    
+            for opt in poll_data.get("options", []):
+                if opt["id"] == option_id:
+                    opt["votes"].append(user_id)
+                    break
+                    
+            new_content = json.dumps({"type": "poll", "data": poll_data})
+            await MessageRepository.update_one(
+                {"_id": message_id},
+                {"$set": {"content": new_content, "updated_at": datetime.now(timezone.utc)}}
+            )
+            
+            # Update last_message if it's the latest
+            participant_key = (
+                msg["receiver_id"]
+                if msg["receiver_id"].startswith("group_")
+                else f"{min(msg['sender_id'], msg['receiver_id'])}_{max(msg['sender_id'], msg['receiver_id'])}"
+            )
+            conv = await ConversationRepository.find_one({"_id": participant_key})
+            if conv and conv.get("last_message", {}).get("_id") == message_id:
+                await ConversationRepository.update_one(
+                    {"_id": participant_key},
+                    {"$set": {"last_message.content": new_content}},
+                )
+                
+            return await MessageRepository.find_one({"_id": message_id})
+        except json.JSONDecodeError:
+            raise ValueError("Invalid poll data format")
+

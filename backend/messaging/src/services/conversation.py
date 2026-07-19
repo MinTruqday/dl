@@ -274,4 +274,25 @@ class ConversationService:
             ),
             "is_muted": is_muted,
             "is_pinned": is_pinned,
+            "theme": settings.get("theme") if settings else None,
+            "nicknames": settings.get("nicknames", {}) if settings else {},
+            "emoji": settings.get("emoji") if settings else None,
         }
+
+    @staticmethod
+    @log_logic_execution
+    async def update_conversation_settings(other_user_id: str, updates: dict, current_user):
+        settings_id = (
+            other_user_id
+            if other_user_id.startswith("group_")
+            else f"settings_{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
+        )
+        allowed_keys = ["theme", "nicknames", "emoji"]
+        filtered_updates = {k: v for k, v in updates.items() if k in allowed_keys}
+        if filtered_updates:
+            await MessageRepository.update_setting(
+                {"_id": settings_id},
+                {"$set": filtered_updates},
+                upsert=True
+            )
+        return {"success": True, "message": "Cập nhật cấu hình trò chuyện thành công"}

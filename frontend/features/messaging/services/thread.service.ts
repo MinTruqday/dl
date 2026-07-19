@@ -303,6 +303,98 @@ export const createGroupAPI = async (
   return data;
 };
 
+export const addGroupMemberAPI = async (groupId: string, userId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/thanh-vien`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ user_id: userId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật danh sách thành viên nhóm");
+  return data;
+};
+
+export const removeGroupMemberAPI = async (groupId: string, userId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/thanh-vien/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi xóa thành viên khỏi nhóm");
+  return data;
+};
+
+export const updateGroupInfoAPI = async (groupId: string, groupName: string, avatarUrl: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/thong-tin`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ group_name: groupName, avatar_url: avatarUrl }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật thông tin nhóm");
+  return data;
+};
+
+export const forwardMessageAPI = async (messageId: string, receiverIds: string[]) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/chuyen-tiep`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ message_id: messageId, receiver_ids: receiverIds }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi chuyển tiếp tin nhắn");
+  return data;
+};
+
+export const createPollAPI = async (receiverId: string, question: string, options: string[]) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/binh-chon`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ receiver_id: receiverId, question, options }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi tạo bình chọn");
+  return data;
+};
+
+export const votePollAPI = async (messageId: string, optionId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/binh-chon/${messageId}/bo-phieu`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ option_id: optionId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi bỏ phiếu");
+  return data;
+};
+
 export const saveDraftAPI = async (otherUserId: string, content: string) => {
   const token = getToken();
   if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
@@ -369,6 +461,22 @@ export const getConversationSettingsAPI = async (otherUserId: string) => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi truy xuất bộ thông số cấu hình luồng");
+  return data;
+};
+
+export const updateConversationSettingsAPI = async (otherUserId: string, updates: any) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/cai-dat`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật cấu hình cuộc trò chuyện");
   return data;
 };
 

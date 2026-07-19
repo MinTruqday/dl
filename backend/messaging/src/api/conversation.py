@@ -53,6 +53,13 @@ async def get_conversation_settings(
     result["is_online"] = is_online
     return APIResponse(data=result, message="Trích xuất cấu hình cuộc trò chuyện hoàn tất")
 
+@router.put("/{other_user_id}/cai-dat", response_model=APIResponse[Any])
+async def update_conversation_settings(
+    other_user_id: str, req: dict, current_user=Depends(get_current_user)
+):
+    result = await ConversationService.update_conversation_settings(other_user_id, req, current_user)
+    return APIResponse(data=result, message="Cập nhật cấu hình cuộc trò chuyện hoàn tất")
+
 @router.delete("/cuoc-tro-chuyen/{other_user_id}", response_model=APIResponse[Any])
 async def delete_conversation(
     other_user_id: str, current_user=Depends(get_current_user)

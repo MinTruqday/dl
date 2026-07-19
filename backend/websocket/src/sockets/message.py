@@ -22,7 +22,7 @@ class MessageSocket:
         if not redis.get_client():
             return
         self._pubsub = redis.get_client().pubsub()
-        await self._pubsub.psubscribe("chat_delivery:*")
+        await self._pubsub.psubscribe("message_delivery:*")
         self._listener_task = asyncio.create_task(self._global_listener())
 
     async def _global_listener(self):
@@ -62,12 +62,19 @@ class MessageSocket:
             self.active_connections[user_id] = set()
         self.active_connections[user_id].add(websocket)
         await self._ensure_listener()
+        
+        r = redis.get_client()
+        if r:
+            await r.setex(f"user_online:{user_id}", 90, "true")
 
     def disconnect(self, user_id: str, websocket: WebSocket):
         if user_id in self.active_connections:
             self.active_connections[user_id].discard(websocket)
             if not self.active_connections[user_id]:
                 del self.active_connections[user_id]
+                r = redis.get_client()
+                if r:
+                    asyncio.create_task(r.delete(f"user_online:{user_id}"))
 
     async def send_personal_message(self, message: dict, receiver_id: str):
         pass
@@ -75,6 +82,39 @@ class MessageSocket:
     async def _handle_ws_action(self, user_id: str, payload: dict):
         action = payload.get("action")
         data = payload.get("data", {})
+        r = redis.get_client()
+        
+        if action in ("typing_start", "typing_end"):
+            receiver_id = data.get("receiver_id")
+            if receiver_id and r:
+                event = {
+                    "type": action,
+                    "data": {
+                        "sender_id": user_id,
+                        "receiver_id": receiver_id
+                    }
+                }
+                await r.publish(f"message_delivery:{receiver_id}", json.dumps(event))
+            return
+            
+        if action == "check_online":
+            user_ids = data.get("user_ids", [])
+            if not user_ids or not isinstance(user_ids, list):
+                return
+            status_map = {}
+            if r:
+                for uid in user_ids:
+                    is_online = await r.exists(f"user_online:{uid}")
+                    status_map[uid] = bool(is_online)
+            ws_set = self.active_connections.get(user_id)
+            if ws_set:
+                for ws in list(ws_set):
+                    try:
+                        await ws.send_json({"type": "online_status", "data": status_map})
+                    except Exception:
+                        pass
+            return
+
         await mq.publish(
             "messaging_queue",
             {

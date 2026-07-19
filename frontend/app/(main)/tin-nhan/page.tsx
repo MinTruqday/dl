@@ -229,7 +229,7 @@ export default function MessagesPage() {
   const [loadingGroupUsers, setLoadingGroupUsers] = useState(false);
   const [selfDestructSeconds, setSelfDestructSeconds] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
+
   const [showSelfDestructMenu, setShowSelfDestructMenu] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isRecordingPaused, setIsRecordingPaused] = useState(false);
@@ -240,6 +240,36 @@ export default function MessagesPage() {
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [showConvMenu, setShowConvMenu] = useState(false);
   const [aliases, setAliases] = useState<Record<string, string>>({});
+  const [conversationTheme, setConversationTheme] = useState<string>("default");
+
+  const getThemeBgClass = (theme: string) => {
+    switch(theme) {
+      case "red": return "bg-red-500";
+      case "green": return "bg-green-500";
+      case "purple": return "bg-purple-500";
+      default: return "bg-[#0071E3]";
+    }
+  };
+
+  const getThemeTextClass = (theme: string) => {
+    switch(theme) {
+      case "red": return "text-red-500";
+      case "green": return "text-green-500";
+      case "purple": return "text-purple-500";
+      default: return "text-[#0071E3]";
+    }
+  };
+
+  const updateTheme = async (newTheme: string) => {
+    if (!selectedConvRef.current) return;
+    setConversationTheme(newTheme);
+    setShowConvMenu(false);
+    try {
+      await updateConversationSettingsAPI(selectedConvRef.current.other_user_id, { theme: newTheme });
+    } catch (e) {
+      console.error(e);
+    }
+  };
   const [showAliasModal, setShowAliasModal] = useState(false);
   const [aliasInput, setAliasInput] = useState("");
   const recordTimerRef = useRef<any>(null);
@@ -249,11 +279,23 @@ export default function MessagesPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const socketRef = useRef<WebSocket | null>(null);
+  const conversationsRef = useRef<any[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<{[key: string]: boolean}>({});
+  const [typingUsers, setTypingUsers] = useState<{[key: string]: boolean}>({});
+  const typingTimeoutRef = useRef<any>(null);
 
   const loadConversations = useCallback(async () => {
     try {
       const res = await getConversationsAPI();
-      setConversations(res.data || res || []);
+      const loaded = res.data || res || [];
+      setConversations(loaded);
+      conversationsRef.current = loaded;
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+          const userIds = loaded.map((c: any) => c.other_user_id);
+          if (userIds.length > 0) {
+              socketRef.current.send(JSON.stringify({ action: "check_online", data: { user_ids: userIds } }));
+          }
+      }
     } catch (err: any) {
       showToast("Lỗi đồng bộ danh sách phiên hội thoại", "error");
     } finally {
@@ -274,7 +316,7 @@ export default function MessagesPage() {
     }
   }, []);
 
-  const handleSetAlias = () => {
+  const handleSetAlias = async () => {
     if (!selectedConv) return;
     const userId = selectedConv.other_user_id;
     const updated = { ...aliases, [userId]: aliasInput };
@@ -282,6 +324,11 @@ export default function MessagesPage() {
     setAliases(updated);
     localStorage.setItem("user_aliases", JSON.stringify(updated));
     setShowAliasModal(false);
+    try {
+        await updateConversationSettingsAPI(userId, { nicknames: updated });
+    } catch (e) {
+        console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -306,6 +353,7 @@ export default function MessagesPage() {
           conv.unread_count = (conv.unread_count || 0) + 1;
         updated.splice(idx, 1);
         updated.unshift(conv);
+        conversationsRef.current = updated;
         return updated;
       });
     },
@@ -328,8 +376,13 @@ export default function MessagesPage() {
         );
     };
     const pingInterval = setInterval(() => {
-      if (socket.readyState === WebSocket.OPEN)
+      if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ action: "ping" }));
+        const userIds = conversationsRef.current.map((c) => c.other_user_id);
+        if (userIds.length > 0) {
+          socket.send(JSON.stringify({ action: "check_online", data: { user_ids: userIds } }));
+        }
+      }
     }, 30000);
 
     socket.onmessage = (event) => {
@@ -407,6 +460,12 @@ export default function MessagesPage() {
         } else if (type === "conversation_settings_updated") {
           if (selectedConvRef.current)
             setSelfDestructSeconds(data.self_destruct_seconds || 0);
+        } else if (type === "online_status") {
+          setOnlineUsers(prev => ({ ...prev, ...data }));
+        } else if (type === "typing_start") {
+          setTypingUsers(prev => ({ ...prev, [data.sender_id]: true }));
+        } else if (type === "typing_end") {
+          setTypingUsers(prev => ({ ...prev, [data.sender_id]: false }));
         }
       } catch (err) {}
     };
@@ -446,7 +505,12 @@ export default function MessagesPage() {
       const settings = settingsRes.data || settingsRes;
       setSelfDestructSeconds(settings.self_destruct_seconds || 0);
       setIsMuted(settings.is_muted || false);
-      setIsOnline(settings.is_online || false);
+      setConversationTheme(settings.theme || "default");
+      if (settings.nicknames) {
+        setAliases(prev => ({ ...prev, ...settings.nicknames }));
+      }
+      setSelfDestructSeconds(settings.self_destruct_seconds || 0);
+      setIsMuted(settings.is_muted || false);
       const draftRes = await getDraftAPI(conv.other_user_id);
       setNewMessage(draftRes.data?.content || "");
       setConversations((prev) =>
@@ -462,6 +526,24 @@ export default function MessagesPage() {
       setLoadingMsgs(false);
     }
   };
+  const handleTyping = (e: any) => {
+    setNewMessage(e.target.value);
+    if (!selectedConvRef.current || !socketRef.current) return;
+    if (socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({
+        action: "typing_start",
+        data: { receiver_id: selectedConvRef.current.other_user_id }
+      }));
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        socketRef.current?.send(JSON.stringify({
+          action: "typing_end",
+          data: { receiver_id: selectedConvRef.current.other_user_id }
+        }));
+      }, 3000);
+    }
+  };
+
 
   const handleSend = async () => {
     if (isBlocked) {
@@ -1271,6 +1353,9 @@ export default function MessagesPage() {
                     ) : (
                       <User className="w-4 h-4 text-white m-auto mt-2.5" />
                     )}
+                    {onlineUsers[selectedConv.other_user_id] && (
+                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                    )}
                   </div>
                   <div>
                     <h3 className="text-[17px] font-medium text-[#1D1D1F]">
@@ -1278,7 +1363,7 @@ export default function MessagesPage() {
                         selectedConv.other_user?.username}
                     </h3>
                     <p className="text-[12px] text-[#6E6E73]">
-                      {isOnline ? "Trực tuyến" : "Ngoại tuyến"}
+                      {onlineUsers[selectedConv.other_user_id] ? "Trực tuyến" : "Ngoại tuyến"}
                     </p>
                   </div>
                 </div>
@@ -1340,6 +1425,14 @@ export default function MessagesPage() {
                       <button onClick={() => { handleDeleteConv(selectedConv.other_user_id); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px] text-red-500">
                         <Trash2 className="w-4 h-4" /> Xóa hội thoại
                       </button>
+                      <div className="h-px bg-[#E8E8ED] my-1" />
+                      <div className="px-4 py-2 text-[12px] font-semibold text-[#6E6E73] uppercase tracking-wider">Màu sắc chủ đề</div>
+                      <div className="px-4 py-2 flex gap-2">
+                        <button onClick={() => updateTheme("default")} className="w-6 h-6 rounded-full bg-[#0071E3] border border-transparent hover:border-black" />
+                        <button onClick={() => updateTheme("red")} className="w-6 h-6 rounded-full bg-red-500 border border-transparent hover:border-black" />
+                        <button onClick={() => updateTheme("green")} className="w-6 h-6 rounded-full bg-green-500 border border-transparent hover:border-black" />
+                        <button onClick={() => updateTheme("purple")} className="w-6 h-6 rounded-full bg-purple-500 border border-transparent hover:border-black" />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1500,7 +1593,7 @@ export default function MessagesPage() {
                                 msg.is_recalled
                                   ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] min-h-[38px] p-4 justify-center"
                                   : isSender
-                                  ? "bg-[#0071E3] text-white p-4"
+                                  ? `${getThemeBgClass(conversationTheme)} text-white p-4`
                                   : "bg-white border border-[#E8E8ED] text-[#1D1D1F] p-4"
                               } relative cursor-pointer select-none`}
                             >
@@ -1577,6 +1670,26 @@ export default function MessagesPage() {
                         </div>
                       );
                     })}
+                    {typingUsers[selectedConv.other_user_id] && (
+                      <div className="flex w-full mb-4 justify-start">
+                        <div className="flex gap-2 items-end max-w-[70%]">
+                          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#E8E8ED] flex items-center justify-center overflow-hidden">
+                            {selectedConv.other_user?.avatar_url ? (
+                              <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <User className="w-4 h-4 text-[#86868B]" />
+                            )}
+                          </div>
+                          <div className="px-4 py-3 rounded-[18px] bg-[#F5F5F7] rounded-bl-[4px]">
+                            <div className="flex gap-1.5 h-2 items-center">
+                              <span className="w-1.5 h-1.5 bg-[#86868B] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                              <span className="w-1.5 h-1.5 bg-[#86868B] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                              <span className="w-1.5 h-1.5 bg-[#86868B] rounded-full animate-bounce"></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div ref={messagesEndRef} />
                   </div>
                 )}
@@ -1663,7 +1776,7 @@ export default function MessagesPage() {
                         <input
                           type="text"
                           value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
+                          onChange={handleTyping}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") handleSend();
                           }}
@@ -1688,7 +1801,7 @@ export default function MessagesPage() {
                       }
                     }}
                     disabled={!isRecording && !newMessage.trim() && imageFiles.length === 0}
-                    className="w-[44px] h-[44px] flex-shrink-0 flex items-center justify-center bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] disabled:opacity-50 transition-colors"
+                    className={`w-[44px] h-[44px] flex-shrink-0 flex items-center justify-center ${getThemeBgClass(conversationTheme)} text-white rounded-full hover:opacity-80 disabled:opacity-50 transition-colors`}
                   >
                     <Send className="w-[20px] h-[20px] relative -left-[1px] top-[1px]" />
                   </button>
@@ -1730,7 +1843,7 @@ export default function MessagesPage() {
             </button>
             <button
               onClick={handleSetAlias}
-              className="px-4 py-2 text-[14px] font-medium text-white bg-[#0071E3] hover:bg-[#0055C6] rounded-full transition-colors"
+              className={`px-4 py-2 text-[14px] font-medium text-white ${getThemeBgClass(conversationTheme)} hover:opacity-80 rounded-full transition-colors`}
             >
               Lưu
             </button>
@@ -1738,13 +1851,11 @@ export default function MessagesPage() {
         </ModalContent>
       </Modal>
 
-      {/* ====== Global tapback popup (fixed, smart above/below) ====== */}
       {activeMsgMenuId && activeMsgRect && activeMsgObj && (() => {
         const msgId = activeMsgObj._id || activeMsgObj.id;
         const isRecalled = activeMsgObj.is_recalled;
         const isSender = activeMsgRect.isSender;
 
-        // Estimate popup height: emoji pill (46px) + gap (8px) + actions (~200px)
         const emojiH = isRecalled ? 0 : 54;
         const actionsH = isRecalled ? 60 : (isSender ? 240 : 185);
         const totalH = emojiH + (isRecalled ? 0 : 8) + actionsH + 12;
@@ -1769,10 +1880,7 @@ export default function MessagesPage() {
 
         return (
           <>
-            {/* Backdrop */}
             <div className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]" onClick={dismiss} />
-
-            {/* Cloned Message Group (elevates exactly above original) */}
             <div 
               style={{
                 position: 'fixed',
@@ -1844,7 +1952,6 @@ export default function MessagesPage() {
                </div>
             </div>
 
-            {/* Unified popup container — flex direction flips for above/below */}
             <div
               style={{ position: "fixed", zIndex: 60, ...hPos, ...vPos }}
               className={`flex w-max gap-2 ${showAbove ? "flex-col-reverse" : "flex-col"}`}

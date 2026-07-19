@@ -110,3 +110,46 @@ async def search_messages(
         message="Tìm kiếm tin nhắn hoàn tất",
     )
 
+@router.post("/chuyen-tiep", response_model=APIResponse[Any])
+async def forward_message(req: dict, current_user=Depends(get_current_user)):
+    message_id = req.get("message_id")
+    receiver_ids = req.get("receiver_ids", [])
+    if not message_id or not receiver_ids:
+        return APIResponse(message="Dữ liệu chuyển tiếp không hợp lệ", status=400)
+    
+    result = await ThreadService.forward_message(message_id, receiver_ids, current_user)
+    for msg in result.get("messages", []):
+        await publish_personal_message(
+            {"type": "new_message", "data": msg}, msg["receiver_id"]
+        )
+    return APIResponse(data=result, message="Chuyển tiếp tin nhắn hoàn tất")
+
+@router.post("/binh-chon", response_model=APIResponse[Any])
+async def create_poll(req: dict, current_user=Depends(get_current_user)):
+    receiver_id = req.get("receiver_id")
+    question = req.get("question")
+    options = req.get("options", [])
+    if not receiver_id or not question or not options:
+        return APIResponse(message="Dữ liệu bình chọn không hợp lệ", status=400)
+        
+    msg = await ThreadService.create_poll(receiver_id, question, options, current_user)
+    await publish_personal_message(
+        {"type": "new_message", "data": msg}, receiver_id
+    )
+    return APIResponse(data=msg, message="Tạo bình chọn hoàn tất", status=201)
+
+@router.post("/binh-chon/{message_id}/bo-phieu", response_model=APIResponse[Any])
+async def vote_poll(message_id: str, req: dict, current_user=Depends(get_current_user)):
+    option_id = req.get("option_id")
+    if not option_id:
+        return APIResponse(message="Lựa chọn không hợp lệ", status=400)
+        
+    result = await ThreadService.vote_poll(message_id, option_id, current_user)
+    other_id = (
+        result["receiver_id"]
+        if result["sender_id"] == current_user.id
+        else result["sender_id"]
+    )
+    await publish_personal_message({"type": "message_edited", "data": result}, other_id)
+    return APIResponse(data=result, message="Bỏ phiếu hoàn tất")
+
