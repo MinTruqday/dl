@@ -3,6 +3,9 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   getConversationsAPI,
+  forwardMessageAPI,
+  createPollAPI,
+  votePollAPI,
   getMessagesAPI,
   sendMessageAPI,
   togglePinAPI,
@@ -86,6 +89,10 @@ import {
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/shared/lib/app_utils";
 import PageLoader from "@/shared/components/common/PageLoader";
+import { ForwardModal } from "@/features/messaging/components/ForwardModal";
+import { CreatePollModal } from "@/features/messaging/components/CreatePollModal";
+import { PollMessage } from "@/features/messaging/components/PollMessage";
+import { ReplyBlock } from "@/features/messaging/components/ReplyBlock";
 
 const CustomAudioPlayer = ({
   src,
@@ -208,6 +215,8 @@ export default function MessagesPage() {
   const [editingMsg, setEditingMsg] = useState<any>(null);
   const [activeMsgMenuId, setActiveMsgMenuId] = useState<string | null>(null);
   const [showMsgMenu, setShowMsgMenu] = useState<string | null>(null);
+  const [showForwardModal, setShowForwardModal] = useState<string | null>(null); // messageId
+  const [showPollModal, setShowPollModal] = useState(false);
   const [showDeleteSubMenu, setShowDeleteSubMenu] = useState<string | null>(null);
   const [activeMsgRect, setActiveMsgRect] = useState<{top: number; left: number; right: number; bottom: number; isSender: boolean} | null>(null);
   const [activeMsgObj, setActiveMsgObj] = useState<any>(null);
@@ -785,6 +794,22 @@ export default function MessagesPage() {
           m.content.toLowerCase().includes(q.toLowerCase()),
       ),
     );
+  };
+
+  
+  const handleForward = async (messageId: string, receiverIds: string[]) => {
+    await forwardMessageAPI(messageId, receiverIds);
+  };
+
+  const handleCreatePoll = async (question: string, options: string[]) => {
+    if (!selectedConv) return;
+    const receiverId = selectedConv.type === "group" ? selectedConv._id : selectedConv.participants.find((p: any) => p._id !== user?._id)?._id;
+    await createPollAPI(receiverId, question, options);
+  };
+
+  const handleVote = async (messageId: string, optionId: string) => {
+    await votePollAPI(messageId, optionId);
+    // UI update will happen via websocket or just fetch again
   };
 
   const handleAddReaction = async (messageId: string, reaction: string) => {
@@ -1638,7 +1663,17 @@ export default function MessagesPage() {
                                   isSender={isSender}
                                 />
                               )}
-                              {!msg.is_recalled && msg.content && msg.content !== "Tin nhắn thoại" && (
+                              
+                              {msg.poll_data && (
+                                <PollMessage 
+                                  messageId={msg._id || msg.id}
+                                  pollData={msg.poll_data}
+                                  currentUserId={user?._id}
+                                  onVote={handleVote}
+                                />
+                              )}
+
+                              {!msg.is_recalled && !msg.poll_data && msg.content && msg.content !== "Tin nhắn thoại" && (
                                 <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{msg.content}</p>
                               )}
                               {msg.is_recalled && (
@@ -1773,6 +1808,13 @@ export default function MessagesPage() {
                         >
                           <Paperclip className="w-[18px] h-[18px]" />
                         </button>
+
+                        <button
+                          onClick={() => setShowPollModal(true)}
+                          className="absolute left-[36px] top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10"
+                        >
+                          <BarChart2 className="w-[18px] h-[18px]" />
+                        </button>
                         <input
                           type="text"
                           value={newMessage}
@@ -1781,7 +1823,7 @@ export default function MessagesPage() {
                             if (e.key === "Enter") handleSend();
                           }}
                           placeholder=""
-                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[40px] pr-[40px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
+                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[70px] pr-[40px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
                         />
                         <button
                           onClick={handleStartRecording}
@@ -1983,6 +2025,17 @@ export default function MessagesPage() {
                     Trả lời
                   </button>
                 )}
+
+                {!isRecalled && (
+                  <button
+                    onClick={() => { setShowForwardModal(msgId); dismiss(); }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                  >
+                    <Share2 className="w-[18px] h-[18px] text-[#6E6E73]" />
+                    Chuyển tiếp
+                  </button>
+                )}
+
                 {!isRecalled && (
                   <button
                     onClick={() => { handlePin(msgId); dismiss(); }}
