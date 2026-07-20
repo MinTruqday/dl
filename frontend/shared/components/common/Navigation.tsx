@@ -177,7 +177,9 @@ export default function Navigation() {
                         alt=""
                       />
                     ) : (
-                      <div className="w-full h-full bg-[#1D1D1F]" />
+                      <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[11px] font-semibold uppercase">
+                        {(user.full_name || user.username || "U").charAt(0)}
+                      </div>
                     )}
                   </div>
                 </button>

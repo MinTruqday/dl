@@ -111,11 +111,12 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const { user, needsPasskey } = await login(email, password);
-      if (needsPasskey) {
+      const res = await login(email, password);
+      if (res.needsPasskey) {
         setPendingPasskeyEmail(email);
         setIsSubmitting(false);
       } else {
+        await loginState(res.access_token || res);
         showToast("Xác thực thông tin đăng nhập hợp lệ", "success");
         router.push("/kham-pha");
       }

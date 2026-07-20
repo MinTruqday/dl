@@ -140,7 +140,9 @@ export default function ProfilePage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User className="w-12 h-12 text-white" />
+                  <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[56px] font-semibold uppercase">
+                    {(user.full_name || user.username || "U").charAt(0)}
+                  </div>
                 )}
               </div>
               <label className="absolute inset-0 bg-[rgba(0,0,0,0.5)] opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white cursor-pointer rounded-full transition-all duration-300">

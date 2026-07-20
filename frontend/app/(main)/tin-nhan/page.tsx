@@ -104,9 +104,6 @@ import { parseUTC } from "@/shared/lib/app_utils";
 import PageLoader from "@/shared/components/common/PageLoader";
 
 
-// --- Inlined from ForwardModal ---
-
-
 
 
 interface ForwardModalProps {
@@ -151,81 +148,82 @@ function ForwardModal({ messageId, conversations, user, onClose, onForward }: Fo
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div 
-        className="bg-white rounded-[18px] w-full max-w-[400px] flex flex-col overflow-hidden shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-[#E8E8ED]">
-          <h3 className="font-semibold text-[#1D1D1F] text-[17px]">Chuyển tiếp tin nhắn</h3>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#F5F5F7] text-[#6E6E73]">
-            <X className="w-5 h-5" />
-          </button>
+    <Modal isOpen={true} onClose={onClose}>
+      <ModalHeader>
+        <ModalTitle>Chuyển tiếp tin nhắn</ModalTitle>
+      </ModalHeader>
+      
+      <div className="px-6 py-4 border-b border-[#E8E8ED]">
+        <div className="relative">
+          <Search className="w-4 h-4 text-[#6E6E73] absolute left-3 top-1/2 -translate-y-1/2" />
+          <input 
+            type="text"
+            placeholder=""
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="apple-input w-full pl-9"
+          />
         </div>
-        
-        <div className="p-4 border-b border-[#E8E8ED]">
-          <div className="relative">
-            <Search className="w-4 h-4 text-[#6E6E73] absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text"
-              placeholder="Tìm kiếm..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full bg-[#F5F5F7] text-[15px] rounded-[10px] pl-9 pr-4 py-2 outline-none"
-            />
-          </div>
-        </div>
+      </div>
 
-        <div className="flex-1 overflow-y-auto max-h-[300px] p-2">
-          {filtered.map(c => {
-            const isGroup = c.type === "group";
-            const targetId = isGroup ? c._id : c.participants.find((p: any) => p._id !== user?._id)?._id;
-            const name = isGroup ? c.group_name : c.participants.find((p: any) => p._id !== user?._id)?.full_name;
-            const avatar = isGroup ? c.avatar_url : c.participants.find((p: any) => p._id !== user?._id)?.avatar_url;
-            
-            return (
-              <div 
-                key={c._id}
-                onClick={() => toggleSelect(targetId)}
-                className="flex items-center gap-3 p-2 rounded-[10px] hover:bg-[#F5F5F7] cursor-pointer transition-colors"
-              >
-                <input 
-                  type="checkbox" 
-                  checked={selectedIds.includes(targetId)}
-                  readOnly
-                  className="w-4 h-4 rounded-full border-[#D2D2D7] text-[#0071E3] focus:ring-[#0071E3]"
-                />
+      <div className="flex-1 overflow-y-auto max-h-[300px] px-4 py-2">
+        {filtered.map(c => {
+          const isGroup = c.type === "group";
+          const targetId = isGroup ? c._id : c.participants.find((p: any) => p._id !== user?._id)?._id;
+          const name = isGroup ? c.group_name : c.participants.find((p: any) => p._id !== user?._id)?.full_name;
+          const avatar = isGroup ? c.avatar_url : c.participants.find((p: any) => p._id !== user?._id)?.avatar_url;
+          
+          return (
+            <div 
+              key={c._id}
+              onClick={() => toggleSelect(targetId)}
+              className="flex items-center gap-3 p-2 rounded-[10px] hover:bg-[#F5F5F7] cursor-pointer transition-colors"
+            >
+              <input 
+                type="checkbox" 
+                checked={selectedIds.includes(targetId)}
+                readOnly
+                className="w-4 h-4 rounded-full border-[#D2D2D7] text-[#0071E3] focus:ring-[#0071E3]"
+              />
+              {avatar ? (
                 <img 
-                  src={avatar || "https://i.pravatar.cc/150"} 
+                  src={avatar} 
                   alt="" 
                   className="w-10 h-10 rounded-full object-cover border border-[#E8E8ED]" 
                 />
-                <span className="text-[15px] text-[#1D1D1F] font-medium truncate">{name || "Người dùng"}</span>
-              </div>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div className="p-4 text-center text-[#6E6E73] text-[15px]">Không tìm thấy cuộc trò chuyện nào</div>
-          )}
-        </div>
-
-        <div className="p-4 border-t border-[#E8E8ED] bg-[#F5F5F7]">
-          <button
-            onClick={handleForward}
-            disabled={selectedIds.length === 0 || isSubmitting}
-            className="w-full bg-[#0071E3] text-white rounded-[10px] py-2.5 font-medium flex items-center justify-center gap-2 hover:bg-[#0055C6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Send className="w-4 h-4" />
-            Gửi ({selectedIds.length})
-          </button>
-        </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[#E8E8ED] flex items-center justify-center border border-[#E8E8ED]">
+                  <User className="w-5 h-5 text-[#6E6E73]" />
+                </div>
+              )}
+              <span className="text-[15px] text-[#1D1D1F] font-medium truncate">{name || "Người dùng"}</span>
+            </div>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div className="p-4 text-center text-[#6E6E73] text-[15px]">Không tìm thấy cuộc trò chuyện nào</div>
+        )}
       </div>
-    </div>
+
+      <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E8E8ED]">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 text-[14px] font-medium text-[#1D1D1F] bg-[#E8E8ED] hover:bg-[#D2D2D7] rounded-full transition-colors"
+        >
+          Hủy
+        </button>
+        <button
+          onClick={handleForward}
+          disabled={selectedIds.length === 0 || isSubmitting}
+          className="px-4 py-2 text-[14px] font-medium text-white bg-[#0071E3] hover:opacity-80 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          <Send className="w-4 h-4" />
+          Gửi ({selectedIds.length})
+        </button>
+      </div>
+    </Modal>
   );
 }
-
-
-// --- Inlined from CreatePollModal ---
 
 
 
@@ -284,27 +282,20 @@ function CreatePollModal({ onClose, onSubmit }: CreatePollModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div 
-        className="bg-white rounded-[18px] w-full max-w-[400px] flex flex-col overflow-hidden shadow-2xl p-5"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-[#1D1D1F] text-[18px]">Tạo bình chọn</h3>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-[#F5F5F7] text-[#6E6E73] transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto hide-scrollbar">
+    <Modal isOpen={true} onClose={onClose}>
+      <ModalHeader>
+        <ModalTitle>Tạo bình chọn</ModalTitle>
+      </ModalHeader>
+      <ModalContent>
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto hide-scrollbar">
           <div>
             <label className="block text-[13px] font-medium text-[#6E6E73] mb-1">Câu hỏi</label>
             <input 
               type="text" 
               value={question}
               onChange={e => setQuestion(e.target.value)}
-              placeholder="Đặt câu hỏi bình chọn..."
-              className="w-full bg-[#F5F5F7] text-[15px] rounded-[10px] px-3 py-2.5 outline-none focus:ring-1 focus:ring-[#0071E3] transition-all"
+              placeholder=""
+              className="apple-input w-full"
             />
           </div>
 
@@ -316,8 +307,8 @@ function CreatePollModal({ onClose, onSubmit }: CreatePollModalProps) {
                   type="text" 
                   value={opt}
                   onChange={e => handleChangeOption(idx, e.target.value)}
-                  placeholder={`Lựa chọn ${idx + 1}`}
-                  className="flex-1 bg-[#F5F5F7] text-[15px] rounded-[10px] px-3 py-2 outline-none focus:ring-1 focus:ring-[#0071E3] transition-all"
+                  placeholder=""
+                  className="apple-input flex-1"
                 />
                 {options.length > 2 && (
                   <button onClick={() => handleRemoveOption(idx)} className="p-2 text-[#6E6E73] hover:text-red-500 rounded-full hover:bg-[#FFF5F5] transition-colors">
@@ -335,22 +326,25 @@ function CreatePollModal({ onClose, onSubmit }: CreatePollModalProps) {
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-[#E8E8ED]">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#E8E8ED]">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-[14px] font-medium text-[#1D1D1F] bg-[#E8E8ED] hover:bg-[#D2D2D7] rounded-full transition-colors"
+          >
+            Hủy
+          </button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full bg-[#0071E3] text-white rounded-[10px] py-2.5 font-medium flex items-center justify-center gap-2 hover:bg-[#0055C6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-[14px] font-medium text-white bg-[#0071E3] hover:opacity-80 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Tạo bình chọn
           </button>
         </div>
-      </div>
-    </div>
+      </ModalContent>
+    </Modal>
   );
 }
-
-
-// --- Inlined from PollMessage ---
 
 
 
@@ -412,12 +406,12 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
               onClick={() => handleVote(opt.id)}
               className="relative rounded-[10px] overflow-hidden cursor-pointer group transition-colors"
             >
-              {/* Progress Bar background */}
+
               <div 
                 className="absolute inset-0 bg-[#E8E8ED] origin-left transition-transform duration-500 ease-out"
                 style={{ transform: `scaleX(${percentage / 100})`, opacity: hasVoted ? 0.8 : 0.4 }}
               />
-              {/* Hover effect */}
+
               <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="relative flex items-center justify-between p-3 z-10">
@@ -434,7 +428,7 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
                 <div className="flex items-center gap-2">
                   {voteCount > 0 && (
                      <div className="flex -space-x-1.5 mr-1">
-                        {/* Simulate avatars if we had them, just showing count for now */}
+
                         <div className="w-5 h-5 rounded-full bg-white border border-[#D2D2D7] flex items-center justify-center text-[9px] font-bold text-[#6E6E73]">
                           {voteCount}
                         </div>
@@ -449,9 +443,6 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
     </div>
   );
 }
-
-
-// --- Inlined from ReplyBlock ---
 
 interface ReplyBlockProps {
   replyingTo: any;
@@ -656,7 +647,7 @@ function ThreadSidebar({
                 }
               }
             }}
-            placeholder="Trả lời vào luồng..."
+            placeholder=""
             className="flex-1 max-h-[120px] min-h-[36px] bg-transparent text-[15px] outline-none resize-none px-3 py-1.5"
             rows={1}
           />
@@ -736,17 +727,17 @@ export default function MessagesPage() {
   const [editingMsg, setEditingMsg] = useState<any>(null);
   const [activeMsgMenuId, setActiveMsgMenuId] = useState<string | null>(null);
 
-  // Thread Replies State
+
   const [activeThreadParentId, setActiveThreadParentId] = useState<string | null>(null);
   const [threadMessages, setThreadMessages] = useState<any[]>([]);
   const [loadingThread, setLoadingThread] = useState(false);
   const [threadInput, setThreadInput] = useState("");
 
-  // Quick Replies State
+
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
   const [loadingQuickReplies, setLoadingQuickReplies] = useState(false);
   const [showMsgMenu, setShowMsgMenu] = useState<string | null>(null);
-  const [showForwardModal, setShowForwardModal] = useState<string | null>(null); // messageId
+  const [showForwardModal, setShowForwardModal] = useState<string | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
   const [showDeleteSubMenu, setShowDeleteSubMenu] = useState<string | null>(null);
   const [activeMsgRect, setActiveMsgRect] = useState<{top: number; left: number; right: number; bottom: number; isSender: boolean} | null>(null);
@@ -1302,7 +1293,7 @@ export default function MessagesPage() {
     try {
       await deleteMessageForMeAPI(messageId);
     } catch {
-      // ignore API error — hide locally regardless
+
     }
     setMessages((prev) => prev.filter((m) => (m._id || m.id) !== messageId));
     showToast("Xóa dữ liệu cục bộ hoàn tất", "success");
@@ -1334,7 +1325,7 @@ export default function MessagesPage() {
 
   const handleVote = async (messageId: string, optionId: string) => {
     await votePollAPI(messageId, optionId);
-    // UI update will happen via websocket or just fetch again
+
   };
 
   const handleAddReaction = async (messageId: string, reaction: string) => {
@@ -1641,7 +1632,7 @@ export default function MessagesPage() {
             <input
               value={searchQuery}
               onChange={(e) => handleSearchUsers(e.target.value)}
-              placeholder="Tìm kiếm người dùng..."
+              placeholder=""
               className="w-full bg-[#E8E8ED] text-[#1D1D1F] placeholder:text-[#A1A1A6] pl-9 pr-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-[15px]"
             />
           </div>
@@ -1655,7 +1646,7 @@ export default function MessagesPage() {
                 <div
                   key={u._id || u.id}
                   onClick={() => startNewChat(u)}
-                  className="flex items-center justify-between p-4 bg-white rounded-[10px] cursor-pointer hover:"
+                  className="flex items-center justify-between p-4 bg-white rounded-[10px] cursor-pointer hover:bg-[#F5F5F7]"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-6 h-6 bg-[#F5F5F7] rounded-full overflow-hidden flex items-center justify-center">
@@ -1666,7 +1657,9 @@ export default function MessagesPage() {
                           alt=""
                         />
                       ) : (
-                        <User className="w-4 h-4 text-[#6E6E73]" />
+                        <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[9px] font-semibold uppercase">
+                          {(u.full_name || u.username || "U").charAt(0)}
+                        </div>
                       )}
                     </div>
                     <div className="flex flex-col">
@@ -1816,11 +1809,11 @@ export default function MessagesPage() {
             {loadingConv ? (
               <div className="space-y-2">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="p-4 rounded-[14px] flex items-center gap-4 animate-pulse bg-white/50">
-                    <div className="w-6 h-6 bg-[#D2D2D7] rounded-full shrink-0" />
+                  <div key={i} className="p-4 rounded-[14px] flex items-center gap-4 animate-pulse bg-white/50 border border-transparent">
+                    <div className="w-[48px] h-[48px] bg-[#E8E8ED] rounded-full shrink-0" />
                     <div className="flex-1 space-y-2.5">
-                      <div className="h-3 bg-[#D2D2D7] rounded-full w-24" />
-                      <div className="h-2 bg-[#D2D2D7] rounded-full w-32" />
+                      <div className="h-3.5 bg-[#E8E8ED] rounded-full w-[40%]" />
+                      <div className="h-2.5 bg-[#E8E8ED] rounded-full w-[70%]" />
                     </div>
                   </div>
                 ))}
@@ -1838,7 +1831,7 @@ export default function MessagesPage() {
                     onClick={() => selectConversation(conv)}
                     className={`p-4 rounded-[14px] cursor-pointer flex items-center gap-4 transition-colors group/conv relative ${active ? "bg-white" : "hover:bg-white/50"}`}
                   >
-                    <div className="w-6 h-6 bg-[#D2D2D7] rounded-full overflow-hidden shrink-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                       {conv.other_user?.avatar_url ? (
                         <img
                           src={conv.other_user.avatar_url}
@@ -1846,8 +1839,8 @@ export default function MessagesPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex justify-center items-center">
-                          <User className="w-4 h-4 text-white" />
+                        <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[16px] font-semibold uppercase">
+                          {(aliases[conv.other_user_id] || conv.other_user?.full_name || conv.other_user?.username || "U").charAt(0)}
                         </div>
                       )}
                     </div>
@@ -1872,7 +1865,7 @@ export default function MessagesPage() {
                         <p
                           className={`text-[13px] truncate transition-all duration-300 ${conv.unread_count > 0 ? "font-semibold text-[#1D1D1F]" : "text-[#6E6E73]"}`}
                         >
-                          {conv.last_message ? (conv.last_message.content || (conv.last_message.image_url ? "[Hình ảnh]" : conv.last_message.poll_data ? "[Bình chọn]" : "[Đính kèm]")) : "Chưa có tin nhắn"}
+                          {conv.last_message ? (conv.last_message.is_recalled ? "Tin nhắn đã thu hồi" : conv.last_message.content?.startsWith("Shared document preview and link to access") ? "[Tài liệu]" : (conv.last_message.content || (conv.last_message.image_url ? "[Hình ảnh]" : conv.last_message.poll_data ? "[Bình chọn]" : "[Đính kèm]"))) : "Chưa có tin nhắn"}
                         </p>
                         {conv.unread_count > 0 && (
                           <div className="w-2.5 h-2.5 bg-[#0071E3] rounded-full shrink-0 ml-2" />
@@ -1937,7 +1930,7 @@ export default function MessagesPage() {
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
-                  <div className="w-6 h-6 rounded-full bg-[#D2D2D7] overflow-hidden">
+                  <div className="w-10 h-10 rounded-full overflow-hidden relative">
                     {selectedConv.other_user?.avatar_url ? (
                       <img
                         src={selectedConv.other_user.avatar_url}
@@ -1945,7 +1938,9 @@ export default function MessagesPage() {
                         alt=""
                       />
                     ) : (
-                      <User className="w-4 h-4 text-white m-auto mt-2.5" />
+                      <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[18px] font-semibold uppercase">
+                        {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
+                      </div>
                     )}
                     {onlineUsers[selectedConv.other_user_id] && (
                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
@@ -1957,23 +1952,17 @@ export default function MessagesPage() {
                         selectedConv.other_user?.username}
                     </h3>
                     <p className="text-[12px] text-[#6E6E73]">
-                      {onlineUsers[selectedConv.other_user_id] ? "Trực tuyến" : "Ngoại tuyến"}
+                      {onlineUsers[selectedConv.other_user_id] ? "Trực tuyến" : ""}
                     </p>
                   </div>
                 </div>
                 <div className="relative flex items-center gap-1 sm:gap-2">
-                  <button className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full transition-colors hidden sm:block" title="Gọi thoại">
-                    <Phone className="w-5 h-5" />
-                  </button>
-                  <button className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full transition-colors hidden sm:block" title="Gọi video">
-                    <Video className="w-5 h-5" />
-                  </button>
                   <button
                     onClick={() => setShowSharedSidebar(!showSharedSidebar)}
-                    className={`p-2 rounded-full transition-colors ${showSharedSidebar ? "bg-[#E8E8ED] text-[#1D1D1F]" : "text-[#0071E3] hover:bg-[#F5F5F7]"}`}
+                    className={`p-2 rounded-full transition-colors ${showSharedSidebar ? "bg-[#E8E8ED] text-[#1D1D1F]" : "text-[#0071E3] hover:bg-[#F5F5F7] "}`}
                     title="Thông tin đoạn chat"
                   >
-                    <Info className="w-5 h-5" />
+                    <Info className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setShowSearchMsgBar(!showSearchMsgBar)}
@@ -2029,11 +2018,6 @@ export default function MessagesPage() {
                       <button onClick={() => { handleBlockUser(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px] text-red-500">
                         <ShieldAlert className="w-4 h-4" /> {isBlocked ? "Bỏ chặn" : "Chặn người dùng"}
                       </button>
-                      <button onClick={() => { handleDeleteConv(selectedConv.other_user_id); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px] text-red-500">
-                        <Trash2 className="w-4 h-4" /> Xóa hội thoại
-                      </button>
-                      <div className="h-px bg-[#E8E8ED] my-1" />
-                      <div className="px-4 py-2 text-[12px] font-semibold text-[#6E6E73] uppercase tracking-wider">Màu sắc chủ đề</div>
                       <div className="px-4 py-2 flex gap-2">
                         <button onClick={() => updateTheme("default")} className="w-6 h-6 rounded-full bg-[#0071E3] border border-transparent hover:border-black" />
                         <button onClick={() => updateTheme("red")} className="w-6 h-6 rounded-full bg-red-500 border border-transparent hover:border-black" />
@@ -2045,18 +2029,16 @@ export default function MessagesPage() {
                 </div>
               </div>
 
-              {/* Search bar — slides in below header */}
+
               {showSearchMsgBar && (
-                <div className="px-6 md:px-0 py-2.5 border-b border-[#F2F2F7] bg-transparent">
+                <div className="px-6 md:px-0 py-3 bg-[#F5F5F7] border-b border-[#D2D2D7]">
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-[#A1A1A6] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Search className="w-4 h-4 text-[#6E6E73] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
-                      autoFocus
                       type="text"
                       value={searchMsgQuery}
                       onChange={(e) => handleSearchMessages(e.target.value)}
-                      placeholder="Tìm trong đoạn chat..."
-                      className="w-full bg-[#E8E8ED] text-[#1D1D1F] placeholder:text-[#A1A1A6] pl-8 pr-8 py-1.5 rounded-[10px] text-[14px] focus:outline-none transition-all"
+                      className="w-full bg-white border border-[#D2D2D7] text-[#1D1D1F] pl-9 pr-8 py-2 rounded-[10px] text-[15px] focus:outline-none focus:border-[#0071E3] transition-colors"
                     />
                     {searchMsgQuery && (
                       <button
@@ -2199,9 +2181,11 @@ export default function MessagesPage() {
                               className={`rounded-[18px] flex flex-col gap-2 ${
                                 msg.is_recalled
                                   ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] min-h-[38px] p-4 justify-center"
+                                  : msg.poll_data || (msg.content && msg.content.startsWith("Shared document preview and link to access"))
+                                  ? "bg-transparent p-0"
                                   : isSender
                                   ? `${getThemeBgClass(conversationTheme)} text-white p-4`
-                                  : "bg-white border border-[#E8E8ED] text-[#1D1D1F] p-4"
+                                  : "bg-[#E8E8ED] text-[#1D1D1F] p-4"
                               } relative cursor-pointer select-none`}
                             >
                               {msg.reply_to && !msg.is_recalled && (
@@ -2256,13 +2240,37 @@ export default function MessagesPage() {
                               )}
 
                               {!msg.is_recalled && !msg.poll_data && msg.content && msg.content !== "Tin nhắn thoại" && (
-                                <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{msg.content}</p>
+                                msg.content.startsWith("Shared document preview and link to access") ? (
+                                  (() => {
+                                    const match = msg.content.match(/access (.+) at internal reference (.+)/);
+                                    if (match) {
+                                      return (
+                                        <a href={`/tai-lieu/${match[2]}`} target="_blank" rel="noreferrer" className={`flex flex-col gap-2 p-3 rounded-[16px] border shadow-sm ${isSender ? "bg-[#0071E3] border-white/20 text-white" : "bg-white border-[#D2D2D7] text-[#1D1D1F]"} transition-all hover:opacity-90 w-full min-w-[240px] max-w-[280px]`}>
+                                          <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 shrink-0 rounded-[10px] flex items-center justify-center ${isSender ? "bg-white/20" : "bg-[#F5F5F7]"}`}>
+                                              <FileText className={`w-5 h-5 ${isSender ? "text-white" : "text-[#0071E3]"}`} />
+                                            </div>
+                                            <div className="flex flex-col overflow-hidden">
+                                              <span className="text-[14px] font-semibold truncate leading-tight">{match[1]}</span>
+                                              <span className={`text-[12px] mt-0.5 ${isSender ? "text-white/80" : "text-[#6E6E73]"}`}>Tài liệu DocLib</span>
+                                            </div>
+                                          </div>
+                                          <div className={`text-[12px] px-3 py-1.5 rounded-full text-center font-medium mt-1 ${isSender ? "bg-white/10 text-white" : "bg-[#F5F5F7] text-[#0071E3]"}`}>
+                                            Xem chi tiết
+                                          </div>
+                                        </a>
+                                      );
+                                    }
+                                    return <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{msg.content}</p>;
+                                  })()
+                                ) : (
+                                  <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{msg.content}</p>
+                                )
                               )}
                               {msg.is_recalled && (
                                 <span className="text-[13px] italic flex items-center h-full">Tin nhắn đã thu hồi</span>
                               )}
                             </div>
-                            {/* Reaction badge & Time — below the bubble */}
                             <div className={`flex items-center gap-2 mt-1 ${isSender ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}>
                               <span className="text-[10px] text-[#6E6E73] whitespace-nowrap">
                                 {new Date(parseUTC(msg.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
@@ -2284,20 +2292,19 @@ export default function MessagesPage() {
                             </div>
                             </div>
                             
-                            {/* Read Receipt (Mock) */}
                             {isSender && i === messages.length - 1 && (
                               <div className="flex justify-end mt-1 mr-1">
-                                <div className="w-3.5 h-3.5 rounded-full bg-[#D2D2D7] overflow-hidden border-[1.5px] border-white shadow-sm">
+                                <div className="w-5 h-5 rounded-full overflow-hidden border-[1.5px] border-white shadow-sm">
                                   {selectedConv.other_user?.avatar_url ? (
                                     <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
                                   ) : (
-                                    <User className="w-2.5 h-2.5 text-white m-auto" />
+                                    <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[12px] font-semibold uppercase">
+                                      {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
+                                    </div>
                                   )}
                                 </div>
                               </div>
                             )}
-
-                            {/* popup now rendered globally as fixed overlay */}
                           </div>
                       );
                     })}
@@ -2308,7 +2315,9 @@ export default function MessagesPage() {
                             {selectedConv.other_user?.avatar_url ? (
                               <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <User className="w-4 h-4 text-[#86868B]" />
+                              <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[11px] font-semibold uppercase">
+                                {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
+                              </div>
                             )}
                           </div>
                           <div className="px-4 py-3 rounded-[18px] bg-[#F5F5F7] rounded-bl-[4px]">
@@ -2405,14 +2414,19 @@ export default function MessagesPage() {
                       <>
                         <button
                           onClick={() => fileInputRef.current?.click()}
-                          className="absolute left-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10"
+                          className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
                         >
                           <Paperclip className="w-[18px] h-[18px]" />
                         </button>
-
+                        <button
+                          onClick={openShareDoc}
+                          className="absolute left-[40px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                        >
+                          <FileText className="w-[18px] h-[18px]" />
+                        </button>
                         <button
                           onClick={() => setShowPollModal(true)}
-                          className="absolute left-[36px] top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10"
+                          className="absolute left-[78px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
                         >
                           <BarChart2 className="w-[18px] h-[18px]" />
                         </button>
@@ -2424,11 +2438,11 @@ export default function MessagesPage() {
                             if (e.key === "Enter") handleSend();
                           }}
                           placeholder=""
-                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[70px] pr-[40px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
+                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[120px] pr-[44px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
                         />
                         <button
                           onClick={handleStartRecording}
-                          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
                         >
                           <Mic className="w-[18px] h-[18px]" />
                         </button>
@@ -2453,10 +2467,10 @@ export default function MessagesPage() {
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center w-full h-full min-h-[500px] text-center">
-              <p className="text-[17px] text-[#6E6E73]">
+            <div className="flex items-center justify-center w-full h-full min-h-[500px]">
+              <span className="text-[17px] text-[#6E6E73]">
                 Chưa có dữ liệu
-              </p>
+              </span>
             </div>
           )}
         </div>
@@ -2476,7 +2490,7 @@ export default function MessagesPage() {
           }}
           loading={loadingThread}
         />
-        {/* Right Sidebar (Chat Info) */}
+
         {showSharedSidebar && selectedConv && (
           <div className="w-[300px] shrink-0 bg-white border-l border-[#D2D2D7] flex flex-col h-full overflow-hidden">
             <div className="h-[64px] shrink-0 px-4 flex items-center justify-between border-b border-[#D2D2D7]">
@@ -2491,7 +2505,9 @@ export default function MessagesPage() {
                   {selectedConv.other_user?.avatar_url ? (
                     <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <User className="w-10 h-10 text-white m-auto mt-5" />
+                    <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[40px] font-semibold uppercase">
+                      {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
+                    </div>
                   )}
                 </div>
                 <h4 className="text-[17px] font-medium text-[#1D1D1F] text-center">
@@ -2501,20 +2517,42 @@ export default function MessagesPage() {
               
               <div>
                 <h5 className="text-[13px] font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">File phương tiện & File</h5>
-                <div className="grid grid-cols-3 gap-1.5">
-                  <div className="aspect-square bg-[#E8E8ED] rounded-[8px] flex items-center justify-center text-[#A1A1A6]">
-                    <ImageIcon className="w-6 h-6" />
+                {sharedAttachments.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {sharedAttachments.slice(0, 6).map((att: any, idx: number) => {
+                      const url = att.url || "";
+                      return (
+                        <a 
+                          key={idx} 
+                          href={url ? (url.startsWith("http") ? url : `${API_URL}/storage/${url}`) : "#"} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="aspect-square bg-[#E8E8ED] rounded-[8px] flex flex-col items-center justify-center text-[#A1A1A6] hover:bg-[#D2D2D7] transition-colors p-1 cursor-pointer"
+                        >
+                          {url.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                            <ImageIcon className="w-6 h-6 mb-1 text-[#6E6E73]" />
+                          ) : url.match(/\.(mp4|webm|mov)$/i) ? (
+                            <Video className="w-6 h-6 mb-1 text-[#6E6E73]" />
+                          ) : (
+                            <FileText className="w-6 h-6 mb-1 text-[#6E6E73]" />
+                          )}
+                          <span className="text-[10px] text-[#6E6E73] truncate w-full text-center max-w-full">
+                            {att.name || "File"}
+                          </span>
+                        </a>
+                      );
+                    })}
+                    {sharedAttachments.length > 6 && (
+                      <div className="col-span-3 text-center mt-2">
+                        <button className="text-[13px] text-[#0071E3] font-medium hover:underline">Xem tất cả ({sharedAttachments.length})</button>
+                      </div>
+                    )}
                   </div>
-                  <div className="aspect-square bg-[#E8E8ED] rounded-[8px] flex items-center justify-center text-[#A1A1A6]">
-                    <FileText className="w-6 h-6" />
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-[13px] text-[#6E6E73]">Chưa có file nào được chia sẻ</p>
                   </div>
-                  <div className="aspect-square bg-[#E8E8ED] rounded-[8px] flex items-center justify-center text-[#A1A1A6]">
-                    <Video className="w-6 h-6" />
-                  </div>
-                  <div className="col-span-3 text-center mt-2">
-                    <button className="text-[13px] text-[#0071E3] font-medium hover:underline">Xem tất cả</button>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -2531,8 +2569,8 @@ export default function MessagesPage() {
               type="text"
               value={aliasInput}
               onChange={(e) => setAliasInput(e.target.value)}
-              placeholder="Nhập biệt danh..."
-              className="w-full bg-[#E8E8ED] text-[#1D1D1F] px-4 py-2.5 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-[15px]"
+              placeholder=""
+              className="apple-input w-full"
               autoFocus
             />
           </div>
@@ -2659,7 +2697,7 @@ export default function MessagesPage() {
               className={`flex w-max gap-2 ${showAbove ? "flex-col-reverse" : "flex-col"}`}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Emoji pill */}
+
               {!isRecalled && (
                 <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.18)] self-start">
                   {["❤️", "👍", "😂", "😮", "😢", "🙏"].map((emoji) => (
@@ -2674,7 +2712,7 @@ export default function MessagesPage() {
                 </div>
               )}
 
-              {/* Action panel */}
+
               <div className="flex flex-col bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
                   <button
                     onClick={() => { setReplyingTo(activeMsgObj); dismiss(); }}
@@ -2744,7 +2782,7 @@ export default function MessagesPage() {
                         className="flex items-center gap-3 w-full px-5 py-2.5 text-[14px] text-orange-500 hover:bg-orange-50 border-b border-[#F2F2F7] text-left transition-colors"
                       >
                         <Undo2 className="w-[15px] h-[15px]" />
-                        Xóa cả hai
+                        Thu hồi tin nhắn
                       </button>
                     )}
                     <button
