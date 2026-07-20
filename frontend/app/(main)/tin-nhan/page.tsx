@@ -2141,7 +2141,8 @@ export default function MessagesPage() {
                 ) : (
                   <div className="space-y-4">
                     {messages.map((msg, i) => {
-                      const isSender = msg.sender_id === user?._id;
+                      const currentUserId = user?._id || (user as any)?.id;
+                      const isSender = (msg.sender_id || msg.sender) === currentUserId;
                       const prevMsg = i > 0 ? messages[i-1] : null;
                       const showTime = !prevMsg || (new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() > 30 * 60 * 1000);
                       return (
@@ -2216,7 +2217,7 @@ export default function MessagesPage() {
                               {msg.attachments && msg.attachments.length > 0 && !msg.is_recalled && (
                                 <div className="space-y-2">
                                   {msg.attachments.map((att: any, idx: number) => (
-                                    <a key={idx} href={att.url.startsWith("http") ? att.url : `${API_URL}/storage/${att.url}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-[10px] ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
+                                    <a key={idx} href={att.url && att.url.startsWith("http") ? att.url : `${API_URL}/storage/${att.url}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-[10px] ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
                                       <FileText className="w-5 h-5 shrink-0" />
                                       <span className="text-[13px] truncate">{att.name || "Tài liệu đính kèm"}</span>
                                     </a>
@@ -2242,7 +2243,7 @@ export default function MessagesPage() {
                               {!msg.is_recalled && !msg.poll_data && msg.content && msg.content !== "Tin nhắn thoại" && (
                                 msg.content.startsWith("Shared document preview and link to access") ? (
                                   (() => {
-                                    const match = msg.content.match(/access (.+) at internal reference (.+)/);
+                                    const match = msg.content.match(/access ([\s\S]+) at internal reference ([\s\S]+)/);
                                     if (match) {
                                       return (
                                         <a href={`/tai-lieu/${match[2]}`} target="_blank" rel="noreferrer" className={`flex flex-col gap-2 p-3 rounded-[16px] border shadow-sm ${isSender ? "bg-[#0071E3] border-white/20 text-white" : "bg-white border-[#D2D2D7] text-[#1D1D1F]"} transition-all hover:opacity-90 w-full min-w-[240px] max-w-[280px]`}>
@@ -2521,10 +2522,11 @@ export default function MessagesPage() {
                   <div className="grid grid-cols-3 gap-1.5">
                     {sharedAttachments.slice(0, 6).map((att: any, idx: number) => {
                       const url = att.url || "";
+                      const href = url ? (url.startsWith("http") ? url : `${API_URL}/storage/${url}`) : "#";
                       return (
                         <a 
                           key={idx} 
-                          href={url ? (url.startsWith("http") ? url : `${API_URL}/storage/${url}`) : "#"} 
+                          href={href} 
                           target="_blank" 
                           rel="noreferrer"
                           className="aspect-square bg-[#E8E8ED] rounded-[8px] flex flex-col items-center justify-center text-[#A1A1A6] hover:bg-[#D2D2D7] transition-colors p-1 cursor-pointer"
