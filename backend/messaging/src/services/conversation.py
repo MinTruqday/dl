@@ -29,7 +29,7 @@ class ConversationService:
                             "_id": {
                                 "$in": [
                                     g["_id"]
-                                    for g in await MessageRepository.find_groups({"members": str(current_user.id)}).execute()
+                                    for g in await MessageRepository.find_groups({"members": str(current_user.id)}).to_list(length=None)
                                 ]
                             }
                         },
@@ -38,7 +38,7 @@ class ConversationService:
                 }
             )
             .sort("updated_at", -1)
-            .execute()
+            .to_list(length=None)
         )
         other_user_ids = []
         for conv in conversations:
@@ -62,7 +62,7 @@ class ConversationService:
         user_map = {str(u["_id"]): u for u in users_list}
         groups_list = (
             await MessageRepository.find_groups({"members": str(current_user.id)})
-            .execute()
+            .to_list(length=None)
         )
         group_map = {str(g["_id"]): g for g in groups_list}
         results = []
@@ -111,6 +111,7 @@ class ConversationService:
                             "unread_count": unread,
                         }
                     )
+        print(f"DEBUG: Returning {len(results)} conversations for {current_user.id}")
         return results
 
     @staticmethod

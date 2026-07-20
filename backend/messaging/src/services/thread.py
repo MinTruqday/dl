@@ -326,7 +326,7 @@ class ThreadService:
             await MessageRepository
             .find(query)
             .sort("created_at", -1)
-            .execute()
+            .to_list(length=None)
         )
         return messages
 

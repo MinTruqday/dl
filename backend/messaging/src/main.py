@@ -37,8 +37,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(message)
 app.include_router(conversation)
+app.include_router(message)
 app.include_router(group)
 app.include_router(interaction)
 app.include_router(pin)

@@ -97,7 +97,7 @@ export default function LoginPage() {
 
       await loginState(verify.access_token || verify);
       showToast("Xác thực chứng thư số Passkey hợp lệ", "success");
-      router.push("/");
+      router.push("/kham-pha");
     } catch (err: any) {
       showToast(err.message || "Lỗi xác thực định danh chứng thư số", "error");
     } finally {
@@ -110,29 +110,14 @@ export default function LoginPage() {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
-    if (!email) {
-      showToast("Lỗi thiếu hụt trường dữ liệu định danh bắt buộc", "error");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!password) {
-      showToast("Lỗi thiếu hụt trường khóa truy cập bắt buộc", "error");
-      setIsSubmitting(false);
-      return;
-    }
     try {
-      const data = await login(email, password);
-
-      await loginState(data.access_token);
-
-      if (!data.user?.has_passkey) {
-        setPendingPasskeyEmail(data.user?.email || email);
-        showToast("Xác thực thông tin đăng nhập hợp lệ", "success");
+      const { user, needsPasskey } = await login(email, password);
+      if (needsPasskey) {
+        setPendingPasskeyEmail(email);
         setIsSubmitting(false);
       } else {
         showToast("Xác thực thông tin đăng nhập hợp lệ", "success");
-        router.push("/");
+        router.push("/kham-pha");
       }
     } catch (err: any) {
       showToast(err.message || "Lỗi sai lệch thông tin định danh hệ thống", "error");
@@ -143,13 +128,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-white font-sans flex flex-col">
       <main className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 py-12">
-        <div className="w-full max-w-[420px]">
+        <div className="w-full max-w-[400px]">
           {pendingPasskeyEmail && (
             <div className="mb-6">
               <Passkey
                 email={pendingPasskeyEmail}
-                onClose={() => router.push("/")}
-                onSuccess={() => router.push("/")}
+                onClose={() => router.push("/kham-pha")}
+                onSuccess={() => router.push("/kham-pha")}
               />
             </div>
           )}

@@ -68,7 +68,7 @@ class AttachmentService:
             await MessageRepository
             .find(query)
             .sort("created_at", -1)
-            .execute()
+            .to_list(length=None)
         )
         attachments = []
         for m in messages:

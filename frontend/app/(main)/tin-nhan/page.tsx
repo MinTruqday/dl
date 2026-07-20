@@ -29,6 +29,7 @@ import {
   toggleSelfDestructAPI,
   toggleMuteAPI,
   getConversationSettingsAPI,
+  updateConversationSettingsAPI,
   deleteConversationAPI,
   getThreadRepliesAPI,
   getQuickRepliesAPI,
@@ -356,7 +357,7 @@ function CreatePollModal({ onClose, onSubmit }: CreatePollModalProps) {
 interface PollOption {
   id: string;
   text: string;
-  voter_ids: string[];
+  votes: string[];
 }
 
 interface PollData {
@@ -377,7 +378,7 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
 
   const [isVoting, setIsVoting] = useState(false);
 
-  const totalVotes = pollData.options.reduce((sum, opt) => sum + opt.voter_ids.length, 0);
+  const totalVotes = pollData.options.reduce((sum, opt) => sum + (opt.votes?.length || 0), 0);
 
   const handleVote = async (optionId: string) => {
     if (isVoting) return;
@@ -401,9 +402,9 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
       </div>
       <div className="p-2 space-y-1">
         {pollData.options.map((opt) => {
-          const voteCount = opt.voter_ids.length;
+          const voteCount = opt.votes?.length || 0;
           const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
-          const hasVoted = opt.voter_ids.includes(currentUserId);
+          const hasVoted = opt.votes?.includes(currentUserId);
 
           return (
             <div 
@@ -677,6 +678,19 @@ function ThreadSidebar({
   );
 }
 
+const parsePollData = (msg: any) => {
+  if (msg.poll_data) return msg;
+  if (msg.content && typeof msg.content === "string" && msg.content.includes('"type": "poll"')) {
+    try {
+      const parsed = JSON.parse(msg.content);
+      if (parsed.type === "poll" && parsed.data) {
+        return { ...msg, poll_data: parsed.data, content: "" };
+      }
+    } catch (e) {}
+  }
+  return msg;
+};
+
 export default function MessagesPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
   const { showToast } = useToast();
@@ -813,7 +827,10 @@ export default function MessagesPage() {
   const loadConversations = useCallback(async () => {
     try {
       const res = await getConversationsAPI();
-      const loaded = res.data || res || [];
+      const loaded = (res.data || res || []).map((c: any) => {
+        if (c.last_message) c.last_message = parsePollData(c.last_message);
+        return c;
+      });
       setConversations(loaded);
       conversationsRef.current = loaded;
       if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -915,14 +932,15 @@ export default function MessagesPage() {
       try {
         const { type, data } = JSON.parse(event.data);
         if (type === "new_message") {
+          const parsedData = parsePollData(data);
           if (
             selectedConvRef.current &&
-            data.sender_id === selectedConvRef.current.other_user_id
+            parsedData.sender_id === selectedConvRef.current.other_user_id
           ) {
             setMessages((prev) => {
-              if (prev.some((m) => (m._id || m.id) === (data._id || data.id)))
+              if (prev.some((m) => (m._id || m.id) === (parsedData._id || parsedData.id)))
                 return prev;
-              return [...prev, data];
+              return [...prev, parsedData];
             });
             if (socketRef.current?.readyState === WebSocket.OPEN) {
               socketRef.current.send(
@@ -935,38 +953,22 @@ export default function MessagesPage() {
               );
             }
           }
-          updateConversationInPlace(data.sender_id, data);
-          localStorage.setItem(`last_msg_id_${user._id}`, data._id || data.id);
+          updateConversationInPlace(parsedData.sender_id, parsedData);
+          localStorage.setItem(`last_msg_id_${user._id}`, parsedData._id || parsedData.id);
         } else if (type === "message_sent_ack") {
+          const parsedData = parsePollData(data);
           setMessages((prev) => {
-            if (prev.some((m) => (m._id || m.id) === (data._id || data.id)))
+            if (prev.some((m) => (m._id || m.id) === (parsedData._id || parsedData.id)))
               return prev;
-            return [...prev, data];
+            return [...prev, parsedData];
           });
-          updateConversationInPlace(data.receiver_id, data);
-          localStorage.setItem(`last_msg_id_${user._id}`, data._id || data.id);
-        } else if (type === "message_edited") {
+          updateConversationInPlace(parsedData.receiver_id, parsedData);
+          localStorage.setItem(`last_msg_id_${user._id}`, parsedData._id || parsedData.id);
+        } else if (["message_edited", "message_pinned", "message_recalled", "message_reaction"].includes(type)) {
+          const parsedData = parsePollData(data);
           setMessages((prev) =>
             prev.map((m) =>
-              (m._id || m.id) === (data._id || data.id) ? data : m,
-            ),
-          );
-        } else if (type === "message_pinned") {
-          setMessages((prev) =>
-            prev.map((m) =>
-              (m._id || m.id) === (data._id || data.id) ? data : m,
-            ),
-          );
-        } else if (type === "message_recalled") {
-          setMessages((prev) =>
-            prev.map((m) =>
-              (m._id || m.id) === (data._id || data.id) ? data : m,
-            ),
-          );
-        } else if (type === "message_reaction") {
-          setMessages((prev) =>
-            prev.map((m) =>
-              (m._id || m.id) === (data._id || data.id) ? data : m,
+              (m._id || m.id) === (parsedData._id || parsedData.id) ? parsedData : m,
             ),
           );
         } else if (type === "messages_read") {
@@ -1021,7 +1023,8 @@ export default function MessagesPage() {
     setShowSelfDestructMenu(false);
     try {
       const res = await getMessagesAPI(conv.other_user_id);
-      setMessages(res.data || res || []);
+      const rawMsgs = res.data || res || [];
+      setMessages(rawMsgs.map(parsePollData));
       await markAsReadAPI(conv.other_user_id);
       const blockedRes = await getBlockedStatusAPI(conv.other_user_id);
       setIsBlocked(blockedRes.data?.is_blocked || false);
@@ -1869,7 +1872,7 @@ export default function MessagesPage() {
                         <p
                           className={`text-[13px] truncate transition-all duration-300 ${conv.unread_count > 0 ? "font-semibold text-[#1D1D1F]" : "text-[#6E6E73]"}`}
                         >
-                          {conv.last_message?.content || "Chưa có tin nhắn"}
+                          {conv.last_message ? (conv.last_message.content || (conv.last_message.image_url ? "[Hình ảnh]" : conv.last_message.poll_data ? "[Bình chọn]" : "[Đính kèm]")) : "Chưa có tin nhắn"}
                         </p>
                         {conv.unread_count > 0 && (
                           <div className="w-2.5 h-2.5 bg-[#0071E3] rounded-full shrink-0 ml-2" />
@@ -1913,7 +1916,7 @@ export default function MessagesPage() {
                 );
               })
             ) : (
-              <div className="py-24 text-center">
+              <div className="flex-1 flex flex-col items-center justify-center h-full min-h-[300px] text-center">
                 <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
               </div>
             )}
@@ -2450,10 +2453,9 @@ export default function MessagesPage() {
               </div>
             </>
           ) : (
-            <div className="text-center w-full">
-              <MessageSquare className="w-4 h-4 text-[#D2D2D7] mx-auto mb-4" />
+            <div className="flex flex-col items-center justify-center w-full h-full min-h-[500px] text-center">
               <p className="text-[17px] text-[#6E6E73]">
-                Chọn một hội thoại để bắt đầu
+                Chưa có dữ liệu
               </p>
             </div>
           )}

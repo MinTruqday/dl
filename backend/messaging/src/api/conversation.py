@@ -13,6 +13,7 @@ from src.core.dependency import get_current_user
 from src.core.response import APIResponse
 from src.repositories.message import MessageRepository
 
+from src.api.thread import publish_personal_message
 router = APIRouter(route_class=LoggingRoute, prefix="/tin-nhan")
 
 @router.get("/cuoc-tro-chuyen", response_model=APIResponse[Any])

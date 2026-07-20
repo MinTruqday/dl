@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 
 export const MENU_ITEMS = [
-  { id: "explore", label: "Khám phá", href: "/", icon: Search, group: "chung" },
+  { id: "explore", label: "Khám phá", href: "/kham-pha", icon: Search, group: "chung" },
   { id: "message", label: "Tin nhắn", href: "/tin-nhan", icon: MessageSquare, requireAuth: true, group: "chung" },
   { id: "chat", label: "Trò chuyện", href: "/tro-chuyen", icon: Sparkles, requireAuth: true, group: "chung" },
   { id: "library", label: "Thư viện", href: "/thu-vien", icon: Library, requireAuth: true, group: "chung" },

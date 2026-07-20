@@ -24,15 +24,14 @@ class EnhancementService:
         msg = await MessageRepository.find_one({"_id": message_id})
         if not msg:
             return None
-        from src.core.http import http
-
+        from src.core.http import make_ai_request
         from src.core.infrastructure.configuration import settings
 
         translated_content = ""
         try:
-            response = await http.post(
+            response = await make_ai_request(
                 f"{settings.AGENTIC_AI_URL}/dich-thuat",
-                json={"text": msg["content"], "target_lang": target_lang},
+                json_data={"text": msg["content"], "target_lang": target_lang},
             )
             if response.status_code == 200:
                 translated_content = response.json().get("data")
@@ -95,13 +94,13 @@ class EnhancementService:
         if not history_messages:
             return {"replies": ["Chào bạn", "Có chuyện gì thế?", "Tôi có thể giúp gì?"]}
             
-        from src.core.http import http
+        from src.core.http import make_ai_request
         from src.core.infrastructure.configuration import settings
         
         try:
-            response = await http.post(
+            response = await make_ai_request(
                 f"{settings.AGENTIC_AI_URL}/goi-y-tra-loi",
-                json={"history_messages": history_messages},
+                json_data={"history_messages": history_messages},
             )
             if response.status_code == 200:
                 return response.json()
