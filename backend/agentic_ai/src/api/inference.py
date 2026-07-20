@@ -29,6 +29,7 @@ from src.schemas.inference import (
     WebFactCheckRequest,
     ComplianceScreenRequest,
     SemanticDiffRequest,
+    QuickRepliesRequest,
 )
 from src.core.dependency import CurrentUser, Role
 
@@ -164,6 +165,36 @@ async def translate_text(
         raise HTTPException(
             status_code=500, detail=f"Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau {e}"
         )
+
+@router.post("/goi-y-tra-loi")
+async def generate_quick_replies(
+    req: QuickRepliesRequest, current_user: CurrentUser = Depends(get_current_user)
+):
+    logger.info(f"Started quick replies generation API request for user_id={current_user.id}")
+    try:
+        history_text = "\n".join(req.history_messages)
+        prompt = f"Dựa vào bối cảnh cuộc trò chuyện sau:\n{history_text}\nHãy đưa ra đúng 3 câu trả lời ngắn gọn, tự nhiên, lịch sự (dưới 6 từ mỗi câu) phù hợp với ngữ cảnh nhất. Trả về đúng định dạng JSON list chứa các chuỗi, không có văn bản nào khác. Ví dụ: [\"Tôi đồng ý\", \"Cảm ơn bạn\", \"Tuyệt vời\"]."
+        result = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100,
+            temperature=0.3,
+        )
+        import json
+        try:
+            # Cleanup common markdown code block markers if present
+            clean_result = result.strip().strip('`').removeprefix('json').strip()
+            replies = json.loads(clean_result)
+            if not isinstance(replies, list):
+                replies = ["Đồng ý", "Cảm ơn", "Tôi hiểu"]
+        except json.JSONDecodeError:
+            replies = ["Đồng ý", "Cảm ơn", "Tuyệt vời"]
+            
+        logger.info(f"Completed quick replies API request for user_id={current_user.id}")
+        return {"replies": replies[:3]}
+    except Exception as e:
+        logger.exception("Error generating quick replies")
+        return {"replies": ["Đồng ý", "Cảm ơn", "Tôi hiểu"]}
 
 @router.post("/tao-ma")
 async def generate_code(

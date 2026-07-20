@@ -67,6 +67,7 @@ class ThreadService:
         audio_url: str = None,
         client_msg_id: str = None,
         attachments: list = None,
+        parent_message_id: str = None,
     ):
         sender_id = str(current_user.id)
         if client_msg_id:
@@ -106,6 +107,7 @@ class ThreadService:
             client_msg_id=client_msg_id,
             self_destruct_seconds=self_destruct_seconds,
             attachments=attachments or [],
+            parent_message_id=parent_message_id,
         )
         msg_dict = message.model_dump(by_alias=True)
         if reply_msg:
@@ -130,7 +132,33 @@ class ThreadService:
                 "created_at": msg_dict.get("created_at", datetime.now(timezone.utc)),
             },
         )
+        if parent_message_id:
+            await MessageRepository.update_one(
+                {"_id": parent_message_id},
+                {"$inc": {"thread_count": 1}}
+            )
         return msg_dict
+
+    @staticmethod
+    @log_logic_execution
+    async def get_thread_replies(
+        parent_message_id: str,
+        current_user,
+        limit: int = Query(default=20, le=100),
+        cursor: str = None,
+    ):
+        query = {"parent_message_id": parent_message_id, "deleted_by": {"$ne": str(current_user.id)}}
+        if cursor:
+            query["_id"] = {"$lt": cursor}
+        
+        messages = (
+            await MessageRepository
+            .find(query)
+            .sort("created_at", -1)
+            .limit(limit)
+            .to_list(length=limit)
+        )
+        return messages[::-1]
 
     @staticmethod
     @log_logic_execution

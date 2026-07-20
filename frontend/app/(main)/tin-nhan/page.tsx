@@ -30,6 +30,8 @@ import {
   toggleMuteAPI,
   getConversationSettingsAPI,
   deleteConversationAPI,
+  getThreadRepliesAPI,
+  getQuickRepliesAPI,
 } from "@/features/messaging/services/thread.service";
 import { searchUsersAPI } from "@/features/management/services/profile.service";
 import { getMyDocumentsAPI } from "@/features/content/services/document.service";
@@ -93,6 +95,8 @@ import {
   BarChart2,
   CheckCircle2,
   Circle,
+  Sparkles,
+  MessageSquareReply,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/shared/lib/app_utils";
@@ -554,6 +558,125 @@ const CustomAudioPlayer = ({
   );
 };
 
+
+function SmartQuickReplies({ replies, onSelect }: { replies: string[], onSelect: (r: string) => void }) {
+  if (!replies || replies.length === 0) return null;
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 bg-white border-t border-[#E8E8ED] overflow-x-auto no-scrollbar">
+      <Sparkles className="w-4 h-4 text-[#0071E3] shrink-0" />
+      {replies.map((reply, idx) => (
+        <button
+          key={idx}
+          onClick={() => onSelect(reply)}
+          className="whitespace-nowrap px-4 py-1.5 bg-[#F5F5F7] hover:bg-[#E8E8ED] text-[#1D1D1F] text-[14px] font-medium rounded-[980px] transition-colors"
+        >
+          {reply}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ThreadSidebar({
+  isOpen,
+  onClose,
+  parentMessage,
+  messages,
+  currentUserId,
+  onReply,
+  loading
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  parentMessage: any;
+  messages: any[];
+  currentUserId: string;
+  onReply: (content: string) => void;
+  loading: boolean;
+}) {
+  const [input, setInput] = React.useState("");
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="w-[360px] h-full flex flex-col bg-white border-l border-[#E8E8ED] animate-in slide-in-from-right-8 duration-300 shadow-xl z-20">
+      <div className="flex items-center justify-between p-4 border-b border-[#E8E8ED] bg-white/80 backdrop-blur-md">
+        <div className="flex items-center gap-2 text-[#1D1D1F]">
+          <MessageSquareReply className="w-5 h-5" />
+          <h3 className="font-semibold text-[16px]">Luồng tin nhắn</h3>
+        </div>
+        <button onClick={onClose} className="p-1.5 rounded-full hover:bg-[#F5F5F7] text-[#6E6E73] transition-colors">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto bg-[#F5F5F7] p-4 flex flex-col gap-4">
+        {parentMessage && (
+          <div className="bg-white rounded-[14px] p-3 shadow-sm border border-[#E8E8ED]">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-semibold text-[14px]">{parentMessage.sender_id === currentUserId ? "Bạn" : "Họ"}</span>
+              <span className="text-[12px] text-[#A1A1A6]">Gốc</span>
+            </div>
+            <p className="text-[15px]">{parentMessage.content}</p>
+          </div>
+        )}
+        
+        <div className="w-full h-[1px] bg-[#E8E8ED] my-2" />
+
+        {loading ? (
+          <div className="flex justify-center p-4"><Circle className="w-6 h-6 animate-spin text-[#0071E3]" /></div>
+        ) : (
+          messages.map((msg) => {
+            const isMe = msg.sender_id === currentUserId;
+            return (
+              <div key={msg._id} className={`flex flex-col max-w-[85%] ${isMe ? "self-end" : "self-start"}`}>
+                <div className={`px-4 py-2.5 rounded-[18px] ${
+                  isMe ? "bg-[#0071E3] text-white rounded-br-[4px]" : "bg-white text-[#1D1D1F] border border-[#E8E8ED] shadow-sm rounded-bl-[4px]"
+                }`}>
+                  <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">{msg.content}</p>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="p-4 bg-white border-t border-[#E8E8ED]">
+        <div className="flex items-end gap-2 bg-[#F5F5F7] rounded-[18px] p-1 border border-transparent focus-within:border-[#0071E3]/30 transition-colors">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (input.trim()) {
+                  onReply(input);
+                  setInput("");
+                }
+              }
+            }}
+            placeholder="Trả lời vào luồng..."
+            className="flex-1 max-h-[120px] min-h-[36px] bg-transparent text-[15px] outline-none resize-none px-3 py-1.5"
+            rows={1}
+          />
+          <button 
+            onClick={() => {
+              if (input.trim()) {
+                onReply(input);
+                setInput("");
+              }
+            }}
+            disabled={!input.trim()}
+            className="p-1.5 mb-0.5 mr-0.5 rounded-full bg-[#0071E3] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center w-8 h-8 shrink-0"
+          >
+            <Send className="w-4 h-4 ml-0.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MessagesPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
   const { showToast } = useToast();
@@ -598,6 +721,16 @@ export default function MessagesPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editingMsg, setEditingMsg] = useState<any>(null);
   const [activeMsgMenuId, setActiveMsgMenuId] = useState<string | null>(null);
+
+  // Thread Replies State
+  const [activeThreadParentId, setActiveThreadParentId] = useState<string | null>(null);
+  const [threadMessages, setThreadMessages] = useState<any[]>([]);
+  const [loadingThread, setLoadingThread] = useState(false);
+  const [threadInput, setThreadInput] = useState("");
+
+  // Quick Replies State
+  const [quickReplies, setQuickReplies] = useState<string[]>([]);
+  const [loadingQuickReplies, setLoadingQuickReplies] = useState(false);
   const [showMsgMenu, setShowMsgMenu] = useState<string | null>(null);
   const [showForwardModal, setShowForwardModal] = useState<string | null>(null); // messageId
   const [showPollModal, setShowPollModal] = useState(false);
@@ -938,23 +1071,24 @@ export default function MessagesPage() {
   };
 
 
-  const handleSend = async () => {
+  const handleSend = async (textOverride?: string, parentIdOverride?: string) => {
     if (isBlocked) {
       showToast("Không thể gửi tin nhắn do giới hạn bảo mật", "error");
       return;
     }
-    if ((!newMessage.trim() && imageFiles.length === 0) || !selectedConv || sending) return;
+    const textToSend = textOverride !== undefined ? textOverride : newMessage.trim();
+    if ((!textToSend && imageFiles.length === 0) || !selectedConv || sending) return;
     if (editingMsg) {
       setSending(true);
       try {
         await editMessageAPI(
           editingMsg._id || editingMsg.id,
-          newMessage.trim(),
+          textToSend,
         );
         setMessages((prev) =>
           prev.map((m) =>
             (m._id || m.id) === (editingMsg._id || editingMsg.id)
-              ? { ...m, content: newMessage.trim(), is_edited: true }
+              ? { ...m, content: textToSend, is_edited: true }
               : m,
           ),
         );
@@ -985,13 +1119,14 @@ export default function MessagesPage() {
           const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
           const res = await sendMessageAPI(
             selectedConv.other_user_id,
-            i === 0 ? newMessage.trim() : "",
+            i === 0 ? textToSend : "",
             isImage ? uploadData.data.url : undefined,
             replyingTo?._id || replyingTo?.id,
             undefined,
             selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
             !isImage ? uploadData.data.url : undefined,
             !isImage ? imageFiles[i].name : undefined,
+            parentIdOverride,
           );
           const msg = res.data || res;
           setMessages((prev) => [...prev, msg]);
@@ -1001,11 +1136,14 @@ export default function MessagesPage() {
       } else {
         const res = await sendMessageAPI(
           selectedConv.other_user_id,
-          newMessage.trim(),
+          textToSend,
           "",
           replyingTo?._id || replyingTo?.id,
           undefined,
           selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
+          undefined,
+          undefined,
+          parentIdOverride,
         );
         const msg = res.data || res;
         setMessages((prev) => [...prev, msg]);
@@ -1436,6 +1574,49 @@ export default function MessagesPage() {
     );
   });
 
+
+  const loadQuickReplies = async (otherUserId: string) => {
+    if (!user || (user.role !== "admin" && user.ai_tier !== "PRO" && user.ai_tier !== "PREMIUM")) {
+      setQuickReplies([]);
+      return;
+    }
+    try {
+      setLoadingQuickReplies(true);
+      const res = await getQuickRepliesAPI(otherUserId);
+      setQuickReplies(res.data?.replies || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingQuickReplies(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedConv) {
+      loadQuickReplies(selectedConv.other_user_id);
+    } else {
+      setQuickReplies([]);
+    }
+  }, [selectedConv]);
+
+  useEffect(() => {
+    if (activeThreadParentId) {
+      const loadThread = async () => {
+        try {
+          setLoadingThread(true);
+          const res = await getThreadRepliesAPI(activeThreadParentId);
+          setThreadMessages(res.data.reverse());
+        } catch (e) {
+          showToast(e instanceof Error ? e.message : "Lỗi tải luồng", "error");
+        } finally {
+          setLoadingThread(false);
+        }
+      };
+      loadThread();
+    } else {
+      setThreadMessages([]);
+    }
+  }, [activeThreadParentId]);
   if (authLoading) return <PageLoader />;
   if (!user) return null;
 
@@ -2142,6 +2323,11 @@ export default function MessagesPage() {
                 )}
               </div>
 
+
+              <SmartQuickReplies 
+                replies={quickReplies} 
+                onSelect={(text) => handleSend(text)}
+              />
               <div className="px-4 pb-4 pt-2 bg-transparent relative">
                 {imageFiles.length > 0 && (
                   <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar">
@@ -2273,6 +2459,21 @@ export default function MessagesPage() {
           )}
         </div>
         
+
+        <ThreadSidebar
+          isOpen={!!activeThreadParentId}
+          onClose={() => setActiveThreadParentId(null)}
+          parentMessage={messages.find(m => m._id === activeThreadParentId || m.id === activeThreadParentId)}
+          messages={threadMessages}
+          currentUserId={user?._id || user?.id}
+          onReply={(content) => {
+            handleSend(content, activeThreadParentId);
+            setTimeout(() => {
+               getThreadRepliesAPI(activeThreadParentId).then(res => setThreadMessages(res.data.reverse())).catch(console.error);
+            }, 500);
+          }}
+          loading={loadingThread}
+        />
         {/* Right Sidebar (Chat Info) */}
         {showSharedSidebar && selectedConv && (
           <div className="w-[300px] shrink-0 bg-white border-l border-[#D2D2D7] flex flex-col h-full overflow-hidden">
@@ -2473,13 +2674,25 @@ export default function MessagesPage() {
 
               {/* Action panel */}
               <div className="flex flex-col bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
-                {!isRecalled && (
                   <button
                     onClick={() => { setReplyingTo(activeMsgObj); dismiss(); }}
                     className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
                   >
                     <Reply className="w-[18px] h-[18px] text-[#6E6E73]" />
                     Trả lời
+                  </button>
+                )}
+
+                {!isRecalled && (
+                  <button
+                    onClick={() => { 
+                      setActiveThreadParentId(msgId); 
+                      dismiss(); 
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                  >
+                    <MessageSquareReply className="w-[18px] h-[18px] text-[#6E6E73]" />
+                    Phản hồi theo luồng {activeMsgObj?.thread_count > 0 ? `(${activeMsgObj.thread_count})` : ''}
                   </button>
                 )}
 

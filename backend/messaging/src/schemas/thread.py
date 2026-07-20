@@ -13,6 +13,8 @@ class Base(BaseModel):
     audio_url: Optional[str] = None
     attachments: Optional[List[dict]] = []
     reply_to_id: Optional[str] = None
+    parent_message_id: Optional[str] = None
+    thread_count: int = 0
     client_msg_id: Optional[str] = None
     is_pinned: bool = False
     is_read: bool = False
@@ -31,6 +33,7 @@ class Creation(BaseModel):
     audio_url: Optional[str] = None
     attachments: Optional[List[dict]] = []
     reply_to_id: Optional[str] = None
+    parent_message_id: Optional[str] = None
 
 class Record(Base):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")

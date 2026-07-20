@@ -44,6 +44,7 @@ export const sendMessageAPI = async (
   selfDestructIn?: number,
   documentUrl?: string,
   documentName?: string,
+  parentMessageId?: string,
 ) => {
   const token = getToken();
   if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
@@ -61,6 +62,7 @@ export const sendMessageAPI = async (
       reply_to_id: replyToId,
       self_destruct_in: selfDestructIn,
       attachments: documentUrl ? [{ url: documentUrl, name: documentName }] : [],
+      parent_message_id: parentMessageId,
       client_msg_id: crypto.randomUUID(),
     }),
   });
@@ -492,5 +494,37 @@ export const deleteConversationAPI = async (otherUserId: string) => {
   );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ toàn bộ dữ liệu luồng hội thoại");
+  return data;
+};
+
+export const getThreadRepliesAPI = async (
+  messageId: string,
+  limit: number = 50,
+  cursor?: string,
+) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  let url = `${API_URL}/tin-nhan/${messageId}/thread?limit=${limit}`;
+  if (cursor) {
+    url += `&cursor=${cursor}`;
+  }
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi truy xuất luồng tin nhắn phụ");
+  return data;
+};
+
+export const getQuickRepliesAPI = async (otherUserId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/goi-y-tra-loi`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi tạo gợi ý trả lời thông minh");
   return data;
 };

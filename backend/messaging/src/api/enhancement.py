@@ -53,3 +53,27 @@ async def toggle_self_destruct(
     )
     return APIResponse(data=result, message="Kích hoạt tính năng tự động hủy tin nhắn hoàn tất")
 
+@router.get("/{other_user_id}/goi-y-tra-loi", response_model=APIResponse[Any])
+async def get_quick_replies(
+    other_user_id: str, current_user=Depends(get_current_user)
+):
+    if current_user.role.value != "admin" and (not current_user.ai_tier or current_user.ai_tier.value not in ["PRO", "PREMIUM"]):
+        return APIResponse(
+            data={"replies": []},
+            message="Tính năng Gợi ý trả lời thông minh chỉ dành cho người dùng gói Chuyên sâu hoặc Toàn năng",
+            status=403
+        )
+    
+    # Try to get from redis cache
+    cache_key = f"quick_replies:{current_user.id}:{other_user_id}"
+    cached = await redis.get(cache_key)
+    if cached:
+        return APIResponse(data=json.loads(cached), message="Trích xuất gợi ý trả lời hoàn tất")
+        
+    result = await EnhancementService.generate_quick_replies(other_user_id, current_user)
+    
+    # Cache for 10 seconds to avoid spamming AI
+    await redis.set(cache_key, json.dumps(result), ex=10)
+    
+    return APIResponse(data=result, message="Khởi tạo gợi ý trả lời hoàn tất")
+

@@ -67,3 +67,46 @@ class EnhancementService:
         )
         return {"self_destruct_seconds": seconds}
 
+    @staticmethod
+    @log_logic_execution
+    async def generate_quick_replies(other_user_id: str, current_user):
+        if other_user_id.startswith("group_"):
+            query = {"receiver_id": other_user_id}
+        else:
+            query = {
+                "$or": [
+                    {"sender_id": str(current_user.id), "receiver_id": other_user_id},
+                    {"sender_id": other_user_id, "receiver_id": str(current_user.id)},
+                ]
+            }
+        query["deleted_by"] = {"$ne": str(current_user.id)}
+        messages = (
+            await MessageRepository
+            .find(query)
+            .sort("_id", -1)
+            .limit(5)
+            .to_list(length=5)
+        )
+        
+        if not messages:
+            return {"replies": ["Chào bạn", "Có chuyện gì thế?", "Tôi có thể giúp gì?"]}
+            
+        history_messages = [msg.get("content", "") for msg in reversed(messages) if msg.get("content")]
+        if not history_messages:
+            return {"replies": ["Chào bạn", "Có chuyện gì thế?", "Tôi có thể giúp gì?"]}
+            
+        from src.core.http import http
+        from src.core.infrastructure.configuration import settings
+        
+        try:
+            response = await http.post(
+                f"{settings.AGENTIC_AI_URL}/goi-y-tra-loi",
+                json={"history_messages": history_messages},
+            )
+            if response.status_code == 200:
+                return response.json()
+        except Exception as e:
+            pass
+            
+        return {"replies": ["Đồng ý", "Cảm ơn", "Tôi hiểu"]}
+

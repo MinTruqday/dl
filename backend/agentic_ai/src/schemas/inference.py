@@ -82,3 +82,6 @@ class MemoryUserEditsRequest(BaseModel):
     action: str
     content: str
     memory_id: Optional[str] = None
+
+class QuickRepliesRequest(BaseModel):
+    history_messages: List[str]

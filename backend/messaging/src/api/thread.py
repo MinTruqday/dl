@@ -43,6 +43,7 @@ async def send_message(req: Creation, current_user=Depends(get_current_user)):
         req.audio_url,
         req.client_msg_id,
         req.attachments,
+        req.parent_message_id,
     )
     await publish_personal_message(
         {"type": "new_message", "data": msg}, req.receiver_id
@@ -63,6 +64,21 @@ async def get_messages(
             other_user_id, current_user, limit, cursor
         ),
         message="Trích xuất lịch sử cuộc trò chuyện hoàn tất",
+        status=200,
+    )
+
+@router.get("/{message_id}/thread", response_model=APIResponse[Any])
+async def get_thread_replies(
+    message_id: str,
+    cursor: str = None,
+    limit: int = Query(50),
+    current_user=Depends(get_current_user),
+):
+    return APIResponse(
+        data=await ThreadService.get_thread_replies(
+            message_id, current_user, limit, cursor
+        ),
+        message="Trích xuất luồng tin nhắn hoàn tất",
         status=200,
     )
 
