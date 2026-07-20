@@ -79,7 +79,7 @@ class ThreadService:
                 return existing
         user_doc = await ProfileRepository.get_profile(receiver_id)
         if user_doc and sender_id in user_doc.get("blocked_users", []):
-            raise Exception("Tài khoản này hiện không tiếp nhận tin nhắn từ bạn")
+            raise Exception("This account is currently not accepting messages from you")
         self_destruct_at = None
         settings_id = (
             f"settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"

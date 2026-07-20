@@ -24,6 +24,9 @@ class Base(BaseModel):
     self_destruct_seconds: Optional[int] = None
     self_destruct_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    is_system: bool = False
+    system_action: Optional[str] = None
+    visible_to: Optional[List[str]] = None
 
 class Creation(BaseModel):
     receiver_id: str

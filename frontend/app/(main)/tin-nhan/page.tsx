@@ -98,6 +98,10 @@ import {
   Circle,
   Sparkles,
   MessageSquareReply,
+  Palette,
+  Camera,
+  LogOut,
+  Settings2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/shared/lib/app_utils";
@@ -404,15 +408,15 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
             <div 
               key={opt.id}
               onClick={() => handleVote(opt.id)}
-              className="relative rounded-[10px] overflow-hidden cursor-pointer group transition-colors"
+              className="relative rounded-[10px] overflow-hidden cursor-pointer group/pollopt transition-colors border border-transparent hover:border-[#E8E8ED]"
             >
 
               <div 
-                className="absolute inset-0 bg-[#E8E8ED] origin-left transition-transform duration-500 ease-out"
-                style={{ transform: `scaleX(${percentage / 100})`, opacity: hasVoted ? 0.8 : 0.4 }}
+                className={`absolute inset-y-0 left-0 transition-all duration-500 ease-out ${hasVoted ? "bg-[#0071E3]/15" : "bg-[#F5F5F7]"}`}
+                style={{ width: `${percentage}%` }}
               />
 
-              <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-black/[0.03] opacity-0 group-hover/pollopt:opacity-100 transition-opacity" />
               
               <div className="relative flex items-center justify-between p-3 z-10">
                 <div className="flex items-center gap-3">
@@ -569,105 +573,7 @@ function SmartQuickReplies({ replies, onSelect }: { replies: string[], onSelect:
   );
 }
 
-function ThreadSidebar({
-  isOpen,
-  onClose,
-  parentMessage,
-  messages,
-  currentUserId,
-  onReply,
-  loading
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  parentMessage: any;
-  messages: any[];
-  currentUserId: string;
-  onReply: (content: string) => void;
-  loading: boolean;
-}) {
-  const [input, setInput] = React.useState("");
 
-  if (!isOpen) return null;
-
-  return (
-    <div className="w-[360px] h-full flex flex-col bg-white border-l border-[#E8E8ED] animate-in slide-in-from-right-8 duration-300 shadow-xl z-20">
-      <div className="flex items-center justify-between p-4 border-b border-[#E8E8ED] bg-white/80 backdrop-blur-md">
-        <div className="flex items-center gap-2 text-[#1D1D1F]">
-          <MessageSquareReply className="w-5 h-5" />
-          <h3 className="font-semibold text-[16px]">Luồng tin nhắn</h3>
-        </div>
-        <button onClick={onClose} className="p-1.5 rounded-full hover:bg-[#F5F5F7] text-[#6E6E73] transition-colors">
-          <X className="w-5 h-5" />
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto bg-[#F5F5F7] p-4 flex flex-col gap-4">
-        {parentMessage && (
-          <div className="bg-white rounded-[14px] p-3 shadow-sm border border-[#E8E8ED]">
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-semibold text-[14px]">{parentMessage.sender_id === currentUserId ? "Bạn" : "Họ"}</span>
-              <span className="text-[12px] text-[#A1A1A6]">Gốc</span>
-            </div>
-            <p className="text-[15px]">{parentMessage.content}</p>
-          </div>
-        )}
-        
-        <div className="w-full h-[1px] bg-[#E8E8ED] my-2" />
-
-        {loading ? (
-          <div className="flex justify-center p-4"><Circle className="w-6 h-6 animate-spin text-[#0071E3]" /></div>
-        ) : (
-          messages.map((msg) => {
-            const isMe = msg.sender_id === currentUserId;
-            return (
-              <div key={msg._id} className={`flex flex-col max-w-[85%] ${isMe ? "self-end" : "self-start"}`}>
-                <div className={`px-4 py-2.5 rounded-[18px] ${
-                  isMe ? "bg-[#0071E3] text-white rounded-br-[4px]" : "bg-white text-[#1D1D1F] border border-[#E8E8ED] shadow-sm rounded-bl-[4px]"
-                }`}>
-                  <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">{msg.content}</p>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      <div className="p-4 bg-white border-t border-[#E8E8ED]">
-        <div className="flex items-end gap-2 bg-[#F5F5F7] rounded-[18px] p-1 border border-transparent focus-within:border-[#0071E3]/30 transition-colors">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (input.trim()) {
-                  onReply(input);
-                  setInput("");
-                }
-              }
-            }}
-            placeholder=""
-            className="flex-1 max-h-[120px] min-h-[36px] bg-transparent text-[15px] outline-none resize-none px-3 py-1.5"
-            rows={1}
-          />
-          <button 
-            onClick={() => {
-              if (input.trim()) {
-                onReply(input);
-                setInput("");
-              }
-            }}
-            disabled={!input.trim()}
-            className="p-1.5 mb-0.5 mr-0.5 rounded-full bg-[#0071E3] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center w-8 h-8 shrink-0"
-          >
-            <Send className="w-4 h-4 ml-0.5" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const parsePollData = (msg: any) => {
   if (msg.poll_data) return msg;
@@ -762,6 +668,9 @@ export default function MessagesPage() {
   const [isMuted, setIsMuted] = useState(false);
 
   const [showSelfDestructMenu, setShowSelfDestructMenu] = useState(false);
+  const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
+  const [showLeaveGroupModal, setShowLeaveGroupModal] = useState(false);
+  const [tempGroupSettings, setTempGroupSettings] = useState({ messaging_restricted: false, requires_approval: false });
   const [isRecording, setIsRecording] = useState(false);
   const [isRecordingPaused, setIsRecordingPaused] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
@@ -811,9 +720,10 @@ export default function MessagesPage() {
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const socketRef = useRef<WebSocket | null>(null);
   const conversationsRef = useRef<any[]>([]);
-  const [onlineUsers, setOnlineUsers] = useState<{[key: string]: boolean}>({});
+  const [onlineUsers, setOnlineUsers] = useState<{[key: string]: boolean | number}>({});
   const [typingUsers, setTypingUsers] = useState<{[key: string]: boolean}>({});
   const typingTimeoutRef = useRef<any>(null);
+  const groupAvatarInputRef = useRef<HTMLInputElement>(null);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -1070,6 +980,7 @@ export default function MessagesPage() {
       showToast("Không thể gửi tin nhắn do giới hạn bảo mật", "error");
       return;
     }
+    const effectiveParentId = parentIdOverride || activeThreadParentId;
     const textToSend = textOverride !== undefined ? textOverride : newMessage.trim();
     if ((!textToSend && imageFiles.length === 0) || !selectedConv || sending) return;
     if (editingMsg) {
@@ -1120,10 +1031,14 @@ export default function MessagesPage() {
             selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
             !isImage ? uploadData.data.url : undefined,
             !isImage ? imageFiles[i].name : undefined,
-            parentIdOverride,
+            effectiveParentId,
           );
           const msg = res.data || res;
-          setMessages((prev) => [...prev, msg]);
+          if (effectiveParentId) {
+            setThreadMessages((prev) => [...prev, msg]);
+          } else {
+            setMessages((prev) => [...prev, msg]);
+          }
           updateConversationInPlace(selectedConv.other_user_id, msg);
         }
         setUploadingImage(false);
@@ -1137,10 +1052,14 @@ export default function MessagesPage() {
           selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
           undefined,
           undefined,
-          parentIdOverride,
+          effectiveParentId,
         );
         const msg = res.data || res;
-        setMessages((prev) => [...prev, msg]);
+        if (effectiveParentId) {
+          setThreadMessages((prev) => [...prev, msg]);
+        } else {
+          setMessages((prev) => [...prev, msg]);
+        }
         updateConversationInPlace(selectedConv.other_user_id, msg);
       }
       setNewMessage("");
@@ -1382,6 +1301,41 @@ export default function MessagesPage() {
     }
   };
 
+  const handleGroupAvatarUpload = async (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedConv) return;
+    try {
+      showToast("Đang tải ảnh lên...", "info");
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${API_URL}/tai-len/tap-tin`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: fd
+      });
+      const data = await res.json();
+      if (data.data?.url) {
+        await fetch(`${API_URL}/chat/nhom/${selectedConv.other_user_id}/thong-tin`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({ avatar_url: data.data.url })
+        });
+        showToast("Đã cập nhật ảnh đại diện nhóm", "success");
+        setSelectedConv({
+          ...selectedConv,
+          group_avatar: data.data.url,
+          other_user: { ...selectedConv.other_user, avatar_url: data.data.url }
+        });
+        updateConversationInPlace(selectedConv.other_user_id, { avatar_url: data.data.url, group_avatar: data.data.url });
+      }
+    } catch (err: any) {
+      showToast("Lỗi tải ảnh đại diện nhóm", "error");
+    }
+  };
+
   const handleBlockUser = async () => {
     if (!selectedConv) return;
     try {
@@ -1614,6 +1568,23 @@ export default function MessagesPage() {
   if (authLoading) return <PageLoader />;
   if (!user) return null;
 
+  const isGroupConv = selectedConv?.other_user?.is_group || selectedConv?.other_user_id?.startsWith("group_") || false;
+
+  const renderOnlineStatus = (userId: string, isGroup: boolean, participantCount?: number) => {
+    if (isGroup) return `${participantCount || 0} thành viên`;
+    const status = onlineUsers[userId];
+    if (status === true) return "Trực tuyến";
+    if (typeof status === "number") {
+      const diffMinutes = Math.floor((Date.now() - status * 1000) / 60000);
+      if (diffMinutes < 1) return `Hoạt động vừa xong`;
+      if (diffMinutes < 60) return `Hoạt động từ ${diffMinutes} phút trước`;
+      if (diffMinutes < 1440) return `Hoạt động từ ${Math.floor(diffMinutes / 60)} giờ trước`;
+      const date = new Date(status * 1000);
+      return `Hoạt động từ ${date.toLocaleDateString("vi-VN")}`;
+    }
+    return "Ngoại tuyến";
+  };
+
   return (
     <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
       <Modal
@@ -1780,6 +1751,110 @@ export default function MessagesPage() {
         </ModalContent>
       </Modal>
 
+      <Modal isOpen={showGroupSettingsModal} onClose={() => setShowGroupSettingsModal(false)}>
+        <ModalHeader>
+          <ModalTitle>Cài đặt nhóm</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-[15px] font-medium text-[#1D1D1F]">Hạn chế nhắn tin</span>
+                <span className="text-[13px] text-[#6E6E73]">Chỉ trưởng nhóm và phó nhóm được gửi tin</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={tempGroupSettings.messaging_restricted}
+                onChange={(e) => setTempGroupSettings(prev => ({...prev, messaging_restricted: e.target.checked}))}
+                className="w-5 h-5 rounded border-[#D2D2D7] text-[#0071E3] focus:ring-[#0071E3]"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-[15px] font-medium text-[#1D1D1F]">Yêu cầu phê duyệt</span>
+                <span className="text-[13px] text-[#6E6E73]">Người mới dùng link tham gia cần được duyệt</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={tempGroupSettings.requires_approval}
+                onChange={(e) => setTempGroupSettings(prev => ({...prev, requires_approval: e.target.checked}))}
+                className="w-5 h-5 rounded border-[#D2D2D7] text-[#0071E3] focus:ring-[#0071E3]"
+              />
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(`${API_URL}/tin-nhan/nhom/${selectedConv._id || selectedConv.id}/cai-dat`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+                    body: JSON.stringify(tempGroupSettings)
+                  });
+                  const data = await res.json();
+                  if (res.ok) {
+                    showToast(data.message, "success");
+                    setShowGroupSettingsModal(false);
+                  } else {
+                    showToast(data.message || "Có lỗi xảy ra", "error");
+                  }
+                } catch(e) {
+                  showToast("Lỗi kết nối", "error");
+                }
+              }}
+              className="w-full mt-4 bg-[#0071E3] text-white font-medium py-3 rounded-[980px] hover:bg-[#0055C6] transition-colors"
+            >
+              Lưu thay đổi
+            </button>
+          </div>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={showLeaveGroupModal} onClose={() => setShowLeaveGroupModal(false)}>
+        <ModalHeader>
+          <ModalTitle>Rời khỏi nhóm</ModalTitle>
+          <ModalDescription>Bạn có muốn rời khỏi nhóm này không?</ModalDescription>
+        </ModalHeader>
+        <ModalContent>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(`${API_URL}/tin-nhan/nhom/${selectedConv._id || selectedConv.id}/thanh-vien/${user?._id || (user as any)?.id}?silent=false`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${getToken()}` }
+                  });
+                  if (res.ok) {
+                    showToast("Đã rời nhóm", "success");
+                    setShowLeaveGroupModal(false);
+                    setSelectedConv(null);
+                  }
+                } catch(e) {}
+              }}
+              className="w-full bg-red-500 text-white font-medium py-3 rounded-[980px] hover:bg-red-600 transition-colors"
+            >
+              Rời nhóm
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(`${API_URL}/tin-nhan/nhom/${selectedConv._id || selectedConv.id}/thanh-vien/${user?._id || (user as any)?.id}?silent=true`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${getToken()}` }
+                  });
+                  if (res.ok) {
+                    showToast("Đã rời nhóm trong im lặng", "success");
+                    setShowLeaveGroupModal(false);
+                    setSelectedConv(null);
+                  }
+                } catch(e) {}
+              }}
+              className="w-full bg-[#F5F5F7] text-[#1D1D1F] font-medium py-3 rounded-[980px] hover:bg-[#E8E8ED] transition-colors"
+            >
+              Rời nhóm trong im lặng
+            </button>
+          </div>
+        </ModalContent>
+      </Modal>
+
       <div className="flex flex-1 min-h-0 gap-6">
         <div
           className={`w-full md:w-[320px] bg-[#F5F5F7] rounded-[18px] flex flex-col overflow-hidden shrink-0 ${selectedConv ? "hidden md:flex" : "flex"}`}
@@ -1922,39 +1997,58 @@ export default function MessagesPage() {
           {selectedConv ? (
             <>
               <div className="flex-1 flex flex-col min-w-0 bg-[#F5F5F7] relative">
-              <div className="h-[64px] px-6 md:px-0 flex items-center justify-between border-b border-[#D2D2D7] bg-transparent">
+              <div className="h-[64px] px-6 md:px-0 flex items-center justify-between bg-transparent">
                 <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setSelectedConv(null)}
-                    className="md:hidden text-[#0071E3]"
+                  {activeThreadParentId ? (
+                    <button onClick={() => setActiveThreadParentId(null)} className="text-[#0071E3] flex items-center gap-1 hover:bg-[#F5F5F7] p-1.5 rounded-full transition-colors">
+                      <ArrowLeft className="w-4 h-4" />
+                      <span className="text-[14px] font-medium hidden sm:inline">Quay lại</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setSelectedConv(null)}
+                      className="md:hidden text-[#0071E3]"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setShowSharedSidebar(!showSharedSidebar)}
+                    className="flex items-center gap-3 text-left hover:bg-[#E8E8ED] p-1 -ml-1 rounded-[12px] transition-colors"
                   >
-                    <ArrowLeft className="w-4 h-4" />
+                    <div className="w-10 h-10 rounded-full overflow-hidden relative">
+                      {isGroupConv ? (
+                        selectedConv.group_avatar ? (
+                          <img src={selectedConv.group_avatar} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[18px] font-semibold uppercase">
+                            {(selectedConv.group_name || selectedConv.other_user?.full_name || "G").charAt(0)}
+                          </div>
+                        )
+                      ) : (
+                        selectedConv.other_user?.avatar_url ? (
+                          <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[18px] font-semibold uppercase">
+                            {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
+                          </div>
+                        )
+                      )}
+                      {!isGroupConv && onlineUsers[selectedConv.other_user_id] === true && (
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-[16px] font-semibold text-[#1D1D1F]">
+                        {isGroupConv 
+                          ? (selectedConv.group_name || selectedConv.other_user?.full_name || "Nhóm trò chuyện") 
+                          : (aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username)}
+                      </h3>
+                      <p className="text-[13px] text-[#6E6E73]">
+                        {renderOnlineStatus(selectedConv.other_user_id, isGroupConv, selectedConv.participant_ids?.length)}
+                      </p>
+                    </div>
                   </button>
-                  <div className="w-10 h-10 rounded-full overflow-hidden relative">
-                    {selectedConv.other_user?.avatar_url ? (
-                      <img
-                        src={selectedConv.other_user.avatar_url}
-                        className="w-full h-full object-cover"
-                        alt=""
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[18px] font-semibold uppercase">
-                        {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
-                      </div>
-                    )}
-                    {onlineUsers[selectedConv.other_user_id] && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-[17px] font-medium text-[#1D1D1F]">
-                      {aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name ||
-                        selectedConv.other_user?.username}
-                    </h3>
-                    <p className="text-[12px] text-[#6E6E73]">
-                      {onlineUsers[selectedConv.other_user_id] ? "Trực tuyến" : ""}
-                    </p>
-                  </div>
                 </div>
                 <div className="relative flex items-center gap-1 sm:gap-2">
                   <button
@@ -1971,67 +2065,13 @@ export default function MessagesPage() {
                   >
                     <Search className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => setShowConvMenu(!showConvMenu)}
-                    className="text-[#0071E3] p-2 hover:bg-[#F5F5F7] rounded-full"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                  {showConvMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[14px] shadow-lg border border-[#F5F5F7] py-2 z-50">
-                      <div className="relative">
-                        <button onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center justify-between text-[14px]">
-                          <span className="flex items-center gap-2"><Timer className="w-4 h-4" /> Tự hủy</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                        {showSelfDestructMenu && (
-                          <div className="absolute top-0 right-[100%] mr-2 w-48 bg-white rounded-[14px] shadow-lg border border-[#F5F5F7] py-2">
-                            <div className="px-4 py-2 text-[12px] font-semibold text-[#6E6E73] uppercase tracking-wider">Thời gian tự hủy</div>
-                            {[
-                              { label: "Tắt", value: 0 },
-                              { label: "5 giây", value: 5 },
-                              { label: "10 giây", value: 10 },
-                              { label: "1 phút", value: 60 },
-                              { label: "5 phút", value: 300 },
-                            ].map((opt) => (
-                              <button
-                                key={opt.value}
-                                onClick={() => { setSelfDestructSeconds(opt.value); setShowSelfDestructMenu(false); setShowConvMenu(false); }}
-                                className={`w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center justify-between text-[14px] ${selfDestructSeconds === opt.value ? "text-[#0071E3] font-medium" : "text-[#1D1D1F]"}`}
-                              >
-                                {opt.label}
-                                {selfDestructSeconds === opt.value && <Check className="w-4 h-4" />}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <button onClick={() => { openShareDoc(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px]">
-                        <Share2 className="w-4 h-4" /> Chia sẻ tài liệu
-                      </button>
-                      <button onClick={() => { setAliasInput(aliases[selectedConv.other_user_id] || ""); setShowAliasModal(true); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px]">
-                        <Edit2 className="w-4 h-4" /> Đặt biệt danh
-                      </button>
-                      <button onClick={() => { handleToggleMute(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px]">
-                        {isMuted ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />} {isMuted ? "Bật thông báo" : "Tắt thông báo"}
-                      </button>
-                      <button onClick={() => { handleBlockUser(); setShowConvMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-[#F5F5F7] flex items-center gap-2 text-[14px] text-red-500">
-                        <ShieldAlert className="w-4 h-4" /> {isBlocked ? "Bỏ chặn" : "Chặn người dùng"}
-                      </button>
-                      <div className="px-4 py-2 flex gap-2">
-                        <button onClick={() => updateTheme("default")} className="w-6 h-6 rounded-full bg-[#0071E3] border border-transparent hover:border-black" />
-                        <button onClick={() => updateTheme("red")} className="w-6 h-6 rounded-full bg-red-500 border border-transparent hover:border-black" />
-                        <button onClick={() => updateTheme("green")} className="w-6 h-6 rounded-full bg-green-500 border border-transparent hover:border-black" />
-                        <button onClick={() => updateTheme("purple")} className="w-6 h-6 rounded-full bg-purple-500 border border-transparent hover:border-black" />
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               </div>
 
 
               {showSearchMsgBar && (
-                <div className="px-6 md:px-0 py-3 bg-[#F5F5F7] border-b border-[#D2D2D7]">
+                <div className="px-6 md:px-0 py-3 bg-[#F5F5F7]">
                   <div className="relative">
                     <Search className="w-4 h-4 text-[#6E6E73] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
@@ -2140,18 +2180,55 @@ export default function MessagesPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {messages.map((msg, i) => {
+                    {activeThreadParentId && (() => {
+                      const parentMessage = messages.find(m => m._id === activeThreadParentId || m.id === activeThreadParentId);
+                      if (!parentMessage) return null;
+                      const currentUserId = user?._id || (user as any)?.id;
+                      const isSender = (parentMessage.sender_id || parentMessage.sender) === currentUserId;
+                      return (
+                        <div className="flex flex-col mb-4 w-full">
+                          <div className={`flex flex-col w-full ${isSender ? "items-end" : "items-start"}`}>
+                            <div className={`group relative max-w-[85%] flex flex-col ${isSender ? "items-end" : "items-start"}`}>
+                              <div className="text-[12px] font-semibold text-[#6E6E73] mb-1 px-1">Bản tin gốc</div>
+                              <div className={`rounded-[18px] p-4 ${isSender ? `${getThemeBgClass(conversationTheme)} text-white` : "bg-[#E8E8ED] text-[#1D1D1F]"} opacity-90`}>
+                                <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{parentMessage.content || "[Đính kèm]"}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="w-full h-[1px] bg-[#E8E8ED] my-6 relative">
+                            <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-[#F5F5F7] px-4 text-[12px] font-medium text-[#6E6E73]">
+                              {threadMessages.length} phản hồi
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {activeThreadParentId && loadingThread ? (
+                      <div className="flex justify-center p-4">
+                        <Circle className="w-6 h-6 animate-spin text-[#0071E3]" />
+                      </div>
+                    ) : (activeThreadParentId ? threadMessages : messages).map((msg, i) => {
                       const currentUserId = user?._id || (user as any)?.id;
                       const isSender = (msg.sender_id || msg.sender) === currentUserId;
                       const prevMsg = i > 0 ? messages[i-1] : null;
                       const showTime = !prevMsg || (new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() > 30 * 60 * 1000);
+                      if (msg.is_system) {
+                        return (
+                          <div key={msg._id || msg.id || i} className="flex justify-center w-full my-4">
+                            <span className="bg-[#E8E8ED] text-[#1D1D1F] px-4 py-1.5 rounded-full text-[13px] font-medium">
+                              {msg.content}
+                            </span>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={msg._id || msg.id || i}
                           ref={(el) => {
                             messageRefs.current[msg._id || msg.id] = el;
                           }}
-                          className={`flex flex-col transition-colors duration-500 mb-2 ${isSender ? "items-end" : "items-start"}`}
+                          className={`flex flex-col transition-colors duration-500 mb-2 ${msg.poll_data ? "items-center" : isSender ? "items-end" : "items-start"}`}
                         >
                           {showTime && (
                             <div className="flex justify-center w-full my-3">
@@ -2161,7 +2238,7 @@ export default function MessagesPage() {
                             </div>
                           )}
                           <div 
-                            className={`group relative max-w-[85%] flex flex-col ${isSender ? "items-end" : "items-start"}`}
+                            className={`group relative flex flex-col ${msg.poll_data ? "w-full items-center" : `max-w-[85%] ${isSender ? "items-end" : "items-start"}`}`}
                             onDoubleClick={(e) => {
                               e.stopPropagation();
                               const rect = e.currentTarget.getBoundingClientRect();
@@ -2272,28 +2349,30 @@ export default function MessagesPage() {
                                 <span className="text-[13px] italic flex items-center h-full">Tin nhắn đã thu hồi</span>
                               )}
                             </div>
-                            <div className={`flex items-center gap-2 mt-1 ${isSender ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}>
-                              <span className="text-[10px] text-[#6E6E73] whitespace-nowrap">
-                                {new Date(parseUTC(msg.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-                              </span>
-                              {!msg.is_recalled && msg.reactions && msg.reactions.length > 0 && (
-                                <div className="bg-white border border-[#D2D2D7] rounded-full px-1.5 py-0.5 text-[11px] flex items-center gap-1 shadow-sm text-[#1D1D1F]">
-                                  {(() => {
-                                    const counts: Record<string, number> = {};
-                                    msg.reactions.forEach((r: any) => { counts[r.reaction] = (counts[r.reaction] || 0) + 1; });
-                                    return Object.entries(counts).map(([emoji, count]) => (
-                                      <span key={emoji} className="flex items-center gap-0.5 font-medium leading-none">
-                                        <span className="text-[12px] leading-none">{emoji}</span>
-                                        <span className="text-[#6E6E73] text-[11px] tabular-nums leading-none">{count}</span>
-                                      </span>
-                                    ));
-                                  })()}
-                                </div>
-                              )}
-                            </div>
+                            {!msg.poll_data && (
+                              <div className={`flex items-center gap-2 mt-1 ${isSender ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}>
+                                <span className="text-[10px] text-[#6E6E73] whitespace-nowrap">
+                                  {new Date(parseUTC(msg.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                                {!msg.is_recalled && msg.reactions && msg.reactions.length > 0 && (
+                                  <div className="bg-white border border-[#D2D2D7] rounded-full px-1.5 py-0.5 text-[11px] flex items-center gap-1 shadow-sm text-[#1D1D1F]">
+                                    {(() => {
+                                      const counts: Record<string, number> = {};
+                                      msg.reactions.forEach((r: any) => { counts[r.reaction] = (counts[r.reaction] || 0) + 1; });
+                                      return Object.entries(counts).map(([emoji, count]) => (
+                                        <span key={emoji} className="flex items-center gap-0.5 font-medium leading-none">
+                                          <span className="text-[12px] leading-none">{emoji}</span>
+                                          <span className="text-[#6E6E73] text-[11px] tabular-nums leading-none">{count}</span>
+                                        </span>
+                                      ));
+                                    })()}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                             </div>
                             
-                            {isSender && i === messages.length - 1 && (
+                            {!msg.poll_data && isSender && i === messages.length - 1 && (
                               <div className="flex justify-end mt-1 mr-1">
                                 <div className="w-5 h-5 rounded-full overflow-hidden border-[1.5px] border-white shadow-sm">
                                   {selectedConv.other_user?.avatar_url ? (
@@ -2341,7 +2420,41 @@ export default function MessagesPage() {
                 replies={quickReplies} 
                 onSelect={(text) => handleSend(text)}
               />
+              {(() => {
+                const isGroupAdmin = isGroupConv && selectedConv?.created_by === (user?._id || (user as any)?.id);
+                const isGroupDeputy = isGroupConv && selectedConv?.deputies?.includes(user?._id || (user as any)?.id);
+                const cannotMessage = isGroupConv && selectedConv?.messaging_restricted && !isGroupAdmin && !isGroupDeputy;
+                
+                if (cannotMessage) {
+                  return (
+                    <div className="flex justify-center p-4 py-8">
+                      <span className="text-[13px] text-[#6E6E73] bg-[#E8E8ED] px-4 py-2 rounded-full font-medium">Chỉ trưởng nhóm và phó nhóm mới được gửi tin nhắn</span>
+                    </div>
+                  );
+                }
+                
+                return (
               <div className="px-4 pb-4 pt-2 bg-transparent relative">
+                <ReplyBlock replyingTo={replyingTo} onCancel={() => setReplyingTo(null)} />
+                {editingMsg && (
+                  <div className="absolute bottom-full left-0 w-full bg-white/95 backdrop-blur-md border-t border-[#E8E8ED] px-4 py-2.5 flex items-center justify-between z-10 animate-in slide-in-from-bottom-2 fade-in duration-200">
+                    <div className="flex flex-col flex-1 overflow-hidden pr-4 border-l-2 border-[#0071E3] pl-3">
+                      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#0071E3] mb-0.5">
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Đang chỉnh sửa tin nhắn</span>
+                      </div>
+                      <p className="text-[14px] text-[#6E6E73] truncate">
+                        {editingMsg.content || (editingMsg.image_url ? "[Hình ảnh]" : editingMsg.poll_data ? "[Bình chọn]" : "[Đính kèm]")}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => { setEditingMsg(null); setNewMessage(""); }}
+                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F5F7] text-[#6E6E73] transition-colors shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
                 {imageFiles.length > 0 && (
                   <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar">
                     {imageFiles.map((file, idx) => {
@@ -2465,6 +2578,8 @@ export default function MessagesPage() {
                   </button>
                 </div>
               </div>
+                );
+              })()}
               </div>
             </>
           ) : (
@@ -2477,84 +2592,245 @@ export default function MessagesPage() {
         </div>
         
 
-        <ThreadSidebar
-          isOpen={!!activeThreadParentId}
-          onClose={() => setActiveThreadParentId(null)}
-          parentMessage={messages.find(m => m._id === activeThreadParentId || m.id === activeThreadParentId)}
-          messages={threadMessages}
-          currentUserId={user?._id || user?.id}
-          onReply={(content) => {
-            handleSend(content, activeThreadParentId);
-            setTimeout(() => {
-               getThreadRepliesAPI(activeThreadParentId).then(res => setThreadMessages(res.data.reverse())).catch(console.error);
-            }, 500);
-          }}
-          loading={loadingThread}
-        />
+
 
         {showSharedSidebar && selectedConv && (
-          <div className="w-[300px] shrink-0 bg-white border-l border-[#D2D2D7] flex flex-col h-full overflow-hidden">
-            <div className="h-[64px] shrink-0 px-4 flex items-center justify-between border-b border-[#D2D2D7]">
-              <h3 className="text-[15px] font-medium text-[#1D1D1F]">Thông tin đoạn chat</h3>
-              <button onClick={() => setShowSharedSidebar(false)} className="p-2 text-[#0071E3] hover:bg-[#F5F5F7] rounded-full transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full bg-[#D2D2D7] overflow-hidden mb-3">
-                  {selectedConv.other_user?.avatar_url ? (
-                    <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
+          <div className="w-[300px] md:w-[320px] shrink-0 bg-[#F5F5F7] border-l border-[#D2D2D7] flex flex-col h-full overflow-hidden">
+            <div className="flex-1 overflow-y-auto hide-scrollbar pt-6">
+              {/* Profile Section */}
+              <div className="flex flex-col items-center px-4 pb-6">
+                <div className="w-24 h-24 rounded-full bg-[#D2D2D7] overflow-hidden mb-3 relative shadow-sm group">
+                  {isGroupConv ? (
+                    (selectedConv.group_avatar || selectedConv.other_user?.avatar_url) ? (
+                      <img src={selectedConv.group_avatar || selectedConv.other_user?.avatar_url} className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[40px] font-semibold uppercase">
+                        {(selectedConv.group_name || selectedConv.other_user?.full_name || "G").charAt(0)}
+                      </div>
+                    )
                   ) : (
-                    <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[40px] font-semibold uppercase">
-                      {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
+                    selectedConv.other_user?.avatar_url ? (
+                      <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[40px] font-semibold uppercase">
+                        {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
+                      </div>
+                    )
+                  )}
+                  {!isGroupConv && onlineUsers[selectedConv.other_user_id] === true && (
+                    <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-[3px] border-[#F5F5F7] rounded-full"></span>
+                  )}
+                  {isGroupConv && (
+                    <div onClick={() => groupAvatarInputRef.current?.click()} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <Camera className="w-8 h-8 text-white" />
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        ref={groupAvatarInputRef} 
+                        className="hidden" 
+                        onChange={handleGroupAvatarUpload} 
+                      />
                     </div>
                   )}
                 </div>
-                <h4 className="text-[17px] font-medium text-[#1D1D1F] text-center">
-                  {aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username}
+                <h4 className="text-[20px] font-semibold text-[#1D1D1F] text-center leading-tight mt-1 mb-1">
+                  {isGroupConv 
+                    ? (selectedConv.group_name || selectedConv.other_user?.full_name || "Nhóm trò chuyện") 
+                    : (aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username)}
                 </h4>
+                <p className="text-[14px] text-[#6E6E73] mt-1 text-center px-4">
+                  {renderOnlineStatus(selectedConv.other_user_id, isGroupConv, selectedConv.participant_ids?.length)}
+                </p>
               </div>
-              
-              <div>
-                <h5 className="text-[13px] font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">File phương tiện & File</h5>
-                {sharedAttachments.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {sharedAttachments.slice(0, 6).map((att: any, idx: number) => {
-                      const url = att.url || "";
-                      const href = url ? (url.startsWith("http") ? url : `${API_URL}/storage/${url}`) : "#";
-                      return (
-                        <a 
-                          key={idx} 
-                          href={href} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="aspect-square bg-[#E8E8ED] rounded-[8px] flex flex-col items-center justify-center text-[#A1A1A6] hover:bg-[#D2D2D7] transition-colors p-1 cursor-pointer"
-                        >
-                          {url.match(/\.(jpeg|jpg|gif|png)$/i) ? (
-                            <ImageIcon className="w-6 h-6 mb-1 text-[#6E6E73]" />
-                          ) : url.match(/\.(mp4|webm|mov)$/i) ? (
-                            <Video className="w-6 h-6 mb-1 text-[#6E6E73]" />
-                          ) : (
-                            <FileText className="w-6 h-6 mb-1 text-[#6E6E73]" />
-                          )}
-                          <span className="text-[10px] text-[#6E6E73] truncate w-full text-center max-w-full">
-                            {att.name || "File"}
-                          </span>
-                        </a>
-                      );
-                    })}
-                    {sharedAttachments.length > 6 && (
-                      <div className="col-span-3 text-center mt-2">
-                        <button className="text-[13px] text-[#0071E3] font-medium hover:underline">Xem tất cả ({sharedAttachments.length})</button>
+
+              {/* Actions Section */}
+              <div className="mt-2 px-3 space-y-4">
+                <div className="bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] overflow-hidden divide-y divide-[#E8E8ED]">
+                  {!isGroupConv && (
+                    <button onClick={() => { setAliasInput(aliases[selectedConv.other_user_id] || ""); setShowAliasModal(true); }} className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                      <span className="text-[15px] text-[#1D1D1F] font-medium">Đổi biệt danh</span>
+                      <ChevronRight className="w-4 h-4 text-[#A1A1A6]" />
+                    </button>
+                  )}
+                  <button onClick={handleToggleMute} className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                    <span className="text-[15px] text-[#1D1D1F] font-medium">Âm báo</span>
+                    <span className="text-[14px] text-[#86868B]">{isMuted ? "Tắt" : "Bật"}</span>
+                  </button>
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <span className="text-[15px] text-[#1D1D1F] font-medium">Chủ đề</span>
+                    <div className="flex gap-2">
+                      <button onClick={() => updateTheme("default")} className="w-5 h-5 rounded-full bg-[#0071E3] border border-transparent hover:border-black" />
+                      <button onClick={() => updateTheme("red")} className="w-5 h-5 rounded-full bg-red-500 border border-transparent hover:border-black" />
+                      <button onClick={() => updateTheme("green")} className="w-5 h-5 rounded-full bg-green-500 border border-transparent hover:border-black" />
+                      <button onClick={() => updateTheme("purple")} className="w-5 h-5 rounded-full bg-purple-500 border border-transparent hover:border-black" />
+                    </div>
+                  </div>
+                  <div>
+                    <button onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)} className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                      <span className="text-[15px] text-[#1D1D1F] font-medium">Tự hủy tin</span>
+                      <div className="flex items-center gap-1 text-[#86868B]">
+                        <span className="text-[14px]">{selfDestructSeconds ? `${selfDestructSeconds}s` : "Tắt"}</span>
+                        <ChevronRight className={`w-4 h-4 transition-transform ${showSelfDestructMenu ? "rotate-90" : ""}`} />
+                      </div>
+                    </button>
+                    {showSelfDestructMenu && (
+                      <div className="px-3 pb-2 pt-1 bg-[#F5F5F7]/50">
+                        {[
+                          { label: "Tắt", value: 0 },
+                          { label: "5 giây", value: 5 },
+                          { label: "10 giây", value: 10 },
+                          { label: "1 phút", value: 60 },
+                          { label: "5 phút", value: 300 },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => { setSelfDestructSeconds(opt.value); setShowSelfDestructMenu(false); }}
+                            className={`w-full text-left py-2 px-3 rounded-[8px] flex items-center justify-between text-[14px] ${selfDestructSeconds === opt.value ? "bg-[#0071E3]/10 text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-black/5"}`}
+                          >
+                            {opt.label}
+                            {selfDestructSeconds === opt.value && <Check className="w-4 h-4 text-[#0071E3]" />}
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-[13px] text-[#6E6E73]">Chưa có file nào được chia sẻ</p>
+                </div>
+
+                {/* Media */}
+                <div className="bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] p-4">
+                  <h5 className="text-[13px] font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">File phương tiện</h5>
+                  {sharedAttachments.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {sharedAttachments.slice(0, 6).map((att: any, idx: number) => {
+                        const url = att.url || "";
+                        const href = url ? (url.startsWith("http") ? url : `${API_URL}/storage/${url}`) : "#";
+                        const isImg = url.match(/\.(jpeg|jpg|gif|png)$/i);
+                        return (
+                          <a 
+                            key={idx} 
+                            href={href} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="aspect-square bg-[#F5F5F7] rounded-[8px] flex flex-col items-center justify-center text-[#A1A1A6] hover:bg-[#E8E8ED] transition-colors p-1 cursor-pointer overflow-hidden border border-[#D2D2D7]/50"
+                          >
+                            {isImg ? (
+                              <img src={href} className="w-full h-full object-cover rounded-[6px]" alt="" />
+                            ) : url.match(/\.(mp4|webm|mov)$/i) ? (
+                              <Video className="w-6 h-6 mb-1 text-[#6E6E73]" />
+                            ) : (
+                              <FileText className="w-6 h-6 mb-1 text-[#6E6E73]" />
+                            )}
+                            {!isImg && (
+                              <span className="text-[10px] text-[#6E6E73] truncate w-full text-center px-1">
+                                {att.name || "File"}
+                              </span>
+                            )}
+                          </a>
+                        );
+                      })}
+                      {sharedAttachments.length > 6 && (
+                        <div className="col-span-3 text-center mt-2 pt-2 border-t border-[#F5F5F7]">
+                          <button className="text-[14px] text-[#0071E3] font-medium hover:underline">Xem tất cả ({sharedAttachments.length})</button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 bg-[#F5F5F7] rounded-[8px]">
+                      <p className="text-[13px] text-[#6E6E73]">Chưa có file nào</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Group Settings / Info */}
+                {isGroupConv && (
+                  <>
+                    <div className="mt-4 bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] p-4">
+                      <h5 className="text-[13px] font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">Thành viên ({selectedConv.participant_ids?.length || 0})</h5>
+                      <div className="flex flex-col max-h-[150px] overflow-y-auto hide-scrollbar divide-y divide-[#E8E8ED]/50 -mx-2 px-2">
+                        {(selectedConv.participant_ids || []).map((mId: string) => {
+                          const mUser = Object.values(conversationsRef.current).find(c => c.other_user_id === mId)?.other_user || { _id: mId };
+                          const isGroupAdmin = selectedConv.created_by === mId;
+                          const isGroupDeputy = (selectedConv.deputies || []).includes(mId);
+                          return (
+                            <div key={mId} className="flex items-center gap-3 py-2 hover:bg-[#F5F5F7] rounded-[8px] transition-colors cursor-pointer px-2">
+                              <div className="w-8 h-8 rounded-full bg-[#D2D2D7] overflow-hidden shrink-0">
+                                {mUser?.avatar_url ? (
+                                  <img src={mUser.avatar_url} className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                  <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[12px] font-semibold uppercase">
+                                    {(mUser?.full_name || mUser?.username || "U").charAt(0)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex flex-col flex-1 min-w-0">
+                                <span className="text-[14px] font-medium text-[#1D1D1F] truncate">{mUser?.full_name || mUser?.username || "Thành viên"}</span>
+                                {isGroupAdmin ? (
+                                  <span className="text-[11px] text-[#0071E3] font-medium mt-0.5">Trưởng nhóm</span>
+                                ) : isGroupDeputy ? (
+                                  <span className="text-[11px] text-[#0071E3] mt-0.5">Phó nhóm</span>
+                                ) : null}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] overflow-hidden divide-y divide-[#E8E8ED] mt-4 mb-2">
+                       <button onClick={async () => {
+                         try {
+                           let token = selectedConv.invite_token;
+                           if (!token) {
+                             const res = await fetch(`${API_URL}/tin-nhan/nhom/${selectedConv._id || selectedConv.id}/link`, { method: "POST", headers: { "Authorization": `Bearer ${getToken()}` } });
+                             const data = await res.json();
+                             if (data.data?.invite_token) token = data.data.invite_token;
+                           }
+                           if (token) {
+                             const link = `${window.location.origin}/tin-nhan/tham-gia/${token}`;
+                             await navigator.clipboard.writeText(link);
+                             showToast("Đã sao chép link mời nhóm", "success");
+                           }
+                         } catch (e) {
+                           showToast("Không thể tạo link mời", "error");
+                         }
+                       }} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-[#0071E3] hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                        <Share2 className="w-5 h-5" />
+                        Sao chép link mời
+                      </button>
+                      <button onClick={() => {
+                        const isGroupAdmin = selectedConv.created_by === (user?._id || (user as any)?.id);
+                        const isGroupDeputy = (selectedConv.deputies || []).includes(user?._id || (user as any)?.id);
+                        if (!isGroupAdmin && !isGroupDeputy) {
+                          showToast("Chỉ trưởng nhóm và phó nhóm mới được đổi cài đặt", "error");
+                          return;
+                        }
+                        setTempGroupSettings({
+                          messaging_restricted: selectedConv.messaging_restricted || false,
+                          requires_approval: selectedConv.requires_approval || false
+                        });
+                        setShowGroupSettingsModal(true);
+                      }} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-[#0071E3] hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                        <Settings2 className="w-5 h-5" />
+                        Cài đặt nhóm
+                      </button>
+                      <button onClick={() => setShowLeaveGroupModal(true)} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors">
+                        <LogOut className="w-5 h-5" />
+                        Rời nhóm
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* Block */}
+                {!isGroupConv && (
+                  <div className="bg-white rounded-[16px] shadow-sm overflow-hidden border border-[#E8E8ED] mb-6">
+                    <button onClick={handleBlockUser} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-red-500 hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                      <ShieldAlert className="w-5 h-5" />
+                      {isBlocked ? "Bỏ chặn người dùng" : "Chặn người dùng"}
+                    </button>
                   </div>
                 )}
+
               </div>
             </div>
           </div>

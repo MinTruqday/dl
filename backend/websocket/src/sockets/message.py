@@ -74,7 +74,11 @@ class MessageSocket:
                 del self.active_connections[user_id]
                 r = redis.get_client()
                 if r:
-                    asyncio.create_task(r.delete(f"user_online:{user_id}"))
+                    import time
+                    async def update_offline():
+                        await r.delete(f"user_online:{user_id}")
+                        await r.set(f"user_last_active:{user_id}", str(int(time.time())))
+                    asyncio.create_task(update_offline())
 
     async def send_personal_message(self, message: dict, receiver_id: str):
         pass
@@ -105,7 +109,17 @@ class MessageSocket:
             if r:
                 for uid in user_ids:
                     is_online = await r.exists(f"user_online:{uid}")
-                    status_map[uid] = bool(is_online)
+                    if is_online:
+                        status_map[uid] = True
+                    else:
+                        last_active = await r.get(f"user_last_active:{uid}")
+                        if last_active:
+                            try:
+                                status_map[uid] = int(last_active.decode("utf-8"))
+                            except ValueError:
+                                status_map[uid] = False
+                        else:
+                            status_map[uid] = False
             ws_set = self.active_connections.get(user_id)
             if ws_set:
                 for ws in list(ws_set):
