@@ -24,6 +24,11 @@ async def get_conversations(current_user=Depends(get_current_user)):
         status=200,
     )
 
+@router.get("/tim-kiem-toan-cuc", response_model=APIResponse[Any])
+async def global_search(q: str = Query(...), current_user=Depends(get_current_user)):
+    results = await ConversationService.global_search(q, current_user)
+    return APIResponse(data=results, message="Tìm kiếm toàn cục hoàn tất")
+
 @router.post("/{other_user_id}/doc-hieu", response_model=APIResponse[Any])
 async def mark_as_read(other_user_id: str, current_user=Depends(get_current_user)):
     result = await ConversationService.mark_as_read(other_user_id, current_user)

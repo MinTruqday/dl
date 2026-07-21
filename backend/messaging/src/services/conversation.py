@@ -297,3 +297,39 @@ class ConversationService:
                 upsert=True
             )
         return {"success": True, "message": "Cập nhật cấu hình trò chuyện thành công"}
+
+    @staticmethod
+    @log_logic_execution
+    async def global_search(query: str, current_user):
+        user_id = str(current_user.id)
+        # Find all groups user belongs to
+        groups = await MessageRepository.find_groups({"members": user_id}).to_list(length=None)
+        group_ids = [str(g["_id"]) for g in groups]
+        
+        # Build query for messages
+        # We search where content matches query (case-insensitive regex)
+        # And user is either sender, receiver, or receiver is a group they belong to.
+        import re
+        regex = re.compile(query, re.IGNORECASE)
+        match_query = {
+            "content": {"$regex": regex},
+            "$or": [
+                {"sender_id": user_id},
+                {"receiver_id": user_id},
+                {"receiver_id": {"$in": group_ids}}
+            ]
+        }
+        messages = await MessageRepository.find(match_query).sort("created_at", -1).limit(50).to_list(length=None)
+        
+        results = []
+        for msg in messages:
+            # Determine thread context
+            is_group = str(msg["receiver_id"]).startswith("group_")
+            other_id = msg["receiver_id"] if is_group else (msg["receiver_id"] if msg["sender_id"] == user_id else msg["sender_id"])
+            results.append({
+                "message": msg,
+                "thread_id": other_id,
+                "is_group": is_group
+            })
+        
+        return results

@@ -44,10 +44,17 @@ async def send_message(req: Creation, current_user=Depends(get_current_user)):
         req.client_msg_id,
         req.attachments,
         req.parent_message_id,
+        req.scheduled_at,
     )
-    await publish_personal_message(
-        {"type": "new_message", "data": msg}, req.receiver_id
-    )
+    if not msg.get("is_scheduled"):
+        await publish_personal_message(
+            {"type": "new_message", "data": msg}, req.receiver_id
+        )
+    else:
+        # Publish a 'scheduled_message' event back to sender only so they see it in UI if needed
+        await publish_personal_message(
+            {"type": "scheduled_message", "data": msg}, current_user.id
+        )
     return APIResponse(
         data=msg, message="Gửi tin nhắn trực tiếp hoàn tất", status=201
     )

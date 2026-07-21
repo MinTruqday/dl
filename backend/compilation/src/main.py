@@ -16,7 +16,6 @@ logger.add(
 from src.api.composition import router as editor
 from src.api.composition import router as editorjs
 from src.api.latex import router as latex
-from src.api.cortex import router as cortex
 from src.core.infrastructure.configuration import settings
 app = FastAPI(title="DocLib Compiler", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="compilation")
@@ -41,7 +40,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(latex)
-app.include_router(cortex)
 app.include_router(editorjs)
 app.include_router(editor)
 @app.on_event("startup")

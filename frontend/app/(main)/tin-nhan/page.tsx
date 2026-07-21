@@ -14,6 +14,7 @@ import {
   deleteMessageForMeAPI,
   restoreMessageAPI,
   searchMessagesAPI,
+  globalSearchAPI,
   addReactionAPI,
   markAsReadAPI,
   shareDocumentAPI,
@@ -102,6 +103,7 @@ import {
   Camera,
   LogOut,
   Settings2,
+  Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/shared/lib/app_utils";
@@ -230,6 +232,52 @@ function ForwardModal({ messageId, conversations, user, onClose, onForward }: Fo
 }
 
 
+
+interface ScheduleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSchedule: (date: Date) => void;
+}
+
+function ScheduleModal({ isOpen, onClose, onSchedule }: ScheduleModalProps) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!date || !time) return;
+    const scheduledAt = new Date(`${date}T${time}`);
+    if (scheduledAt <= new Date()) {
+      alert("Thời gian phải ở tương lai");
+      return;
+    }
+    onSchedule(scheduledAt);
+    onClose();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-sm">
+      <ModalHeader>
+        <ModalTitle>Hẹn giờ gửi tin nhắn</ModalTitle>
+      </ModalHeader>
+      <ModalContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-[#1D1D1F] mb-1">Ngày gửi</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="w-full bg-[#E8E8ED] text-[#1D1D1F] px-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3]" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#1D1D1F] mb-1">Giờ gửi</label>
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required className="w-full bg-[#E8E8ED] text-[#1D1D1F] px-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3]" />
+          </div>
+          <button type="submit" className="w-full bg-[#0071E3] text-white rounded-[10px] py-2 font-medium hover:bg-[#0077ED] transition-colors">
+            Hẹn giờ
+          </button>
+        </form>
+      </ModalContent>
+    </Modal>
+  );
+}
 
 interface CreatePollModalProps {
   onClose: () => void;
@@ -627,6 +675,10 @@ export default function MessagesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState("");
+  const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
+  const [isGlobalSearching, setIsGlobalSearching] = useState(false);
   const [replyingTo, setReplyingTo] = useState<any>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -645,6 +697,7 @@ export default function MessagesPage() {
   const [showMsgMenu, setShowMsgMenu] = useState<string | null>(null);
   const [showForwardModal, setShowForwardModal] = useState<string | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showDeleteSubMenu, setShowDeleteSubMenu] = useState<string | null>(null);
   const [activeMsgRect, setActiveMsgRect] = useState<{top: number; left: number; right: number; bottom: number; isSender: boolean} | null>(null);
   const [activeMsgObj, setActiveMsgObj] = useState<any>(null);
@@ -1074,6 +1127,58 @@ export default function MessagesPage() {
     }
   };
 
+  const handleScheduleSend = async (scheduledAt: Date) => {
+    if (!newMessage.trim() && imageFiles.length === 0) return;
+    try {
+      showToast("Đang lên lịch gửi tin nhắn...", "info");
+      
+      if (imageFiles.length > 0) {
+        for (let i = 0; i < imageFiles.length; i++) {
+          const file = imageFiles[i];
+          const formData = new FormData();
+          formData.append("file", file);
+          const resUpload = await fetch(`${API_URL}/tai-len/tap-tin`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${getToken()}` },
+            body: formData,
+          });
+          const uploadData = await resUpload.json();
+          await sendMessageAPI(
+            selectedConvRef.current!.other_user_id,
+            i === 0 ? newMessage.trim() : "",
+            uploadData.data.url,
+            activeMsgObj?._id || undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            activeThreadParentId || undefined,
+            scheduledAt.toISOString()
+          );
+        }
+      } else {
+        await sendMessageAPI(
+          selectedConvRef.current!.other_user_id,
+          newMessage.trim(),
+          undefined,
+          activeMsgObj?._id || undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          activeThreadParentId || undefined,
+          scheduledAt.toISOString()
+        );
+      }
+      
+      showToast("Đã lên lịch gửi tin nhắn", "success");
+      setNewMessage("");
+      setImageFiles([]);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Lỗi lên lịch gửi tin nhắn", "error");
+    }
+  };
+
   const handleTogglePauseRecording = () => {
     if (mediaRecorder && isRecording) {
       if (isRecordingPaused) {
@@ -1489,6 +1594,20 @@ export default function MessagesPage() {
     }
   };
 
+  const handleGlobalSearch = async (q: string) => {
+    setGlobalSearchQuery(q);
+    if (q.length < 2) return setGlobalSearchResults([]);
+    setIsGlobalSearching(true);
+    try {
+      const res = await globalSearchAPI(q);
+      setGlobalSearchResults(res.data || res || []);
+    } catch (err: any) {
+      showToast("Lỗi tìm kiếm toàn cục", "error");
+    } finally {
+      setIsGlobalSearching(false);
+    }
+  };
+
   const startNewChat = (otherUser: any) => {
     const existing = conversations.find(
       (c) => c.other_user_id === (otherUser._id || otherUser.id),
@@ -1859,29 +1978,74 @@ export default function MessagesPage() {
         <div
           className={`w-full md:w-[320px] bg-[#F5F5F7] rounded-[18px] flex flex-col overflow-hidden shrink-0 ${selectedConv ? "hidden md:flex" : "flex"}`}
         >
-          <div className="p-6 md:px-0 pb-4 md:pt-6 flex items-center justify-between">
-            <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
-              Tất cả tin nhắn
-            </h2>
-            <div className="flex gap-2">
-              <button
-                onClick={openGroupModal}
-                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
-                title="Tạo nhóm"
-              >
-                <Users className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setShowNewChatModal(true)}
-                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
-                title="Tin nhắn mới"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+          <div className="p-6 md:px-0 pb-4 md:pt-6 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
+                Tất cả tin nhắn
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowGlobalSearch(!showGlobalSearch)}
+                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  title="Tìm kiếm"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={openGroupModal}
+                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  title="Tạo nhóm"
+                >
+                  <Users className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setShowNewChatModal(true)}
+                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  title="Tin nhắn mới"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+            {showGlobalSearch && (
+              <div className="relative">
+                <Search className="w-4 h-4 text-[#A1A1A6] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={globalSearchQuery}
+                  onChange={(e) => handleGlobalSearch(e.target.value)}
+                  placeholder="Tìm tin nhắn..."
+                  className="w-full bg-[#E8E8ED] text-[#1D1D1F] placeholder:text-[#A1A1A6] pl-9 pr-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-[15px]"
+                />
+              </div>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto px-6 md:px-0 pb-4 space-y-2 hide-scrollbar">
-            {loadingConv ? (
+            {isGlobalSearching ? (
+              <div className="py-12 flex justify-center">
+                <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
+              </div>
+            ) : globalSearchQuery.length >= 2 ? (
+              globalSearchResults.length > 0 ? (
+                globalSearchResults.map((msg) => (
+                  <div
+                    key={msg._id || msg.id}
+                    onClick={() => {
+                      const otherId = msg.sender_id === (user as any)?._id ? msg.receiver_id : msg.sender_id;
+                      const c = conversations.find(c => c.other_user_id === otherId);
+                      if (c) setSelectedConv(c);
+                    }}
+                    className="p-4 bg-white rounded-[14px] cursor-pointer hover:bg-[#F5F5F7] border border-transparent hover:border-[#E8E8ED] transition-all"
+                  >
+                    <div className="text-[13px] text-[#6E6E73] mb-1">{formatRelativeTime(parseUTC(msg.created_at))}</div>
+                    <div className="text-[15px] text-[#1D1D1F] line-clamp-2">{msg.content}</div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-[13px] text-[#6E6E73] py-12">
+                  Không tìm thấy kết quả
+                </p>
+              )
+            ) : loadingConv ? (
               <div className="space-y-2">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="p-4 rounded-[14px] flex items-center gap-4 animate-pulse bg-white/50 border border-transparent">
@@ -2544,6 +2708,12 @@ export default function MessagesPage() {
                         >
                           <BarChart2 className="w-[18px] h-[18px]" />
                         </button>
+                        <button
+                          onClick={() => setShowScheduleModal(true)}
+                          className="absolute left-[116px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                        >
+                          <Clock className="w-[18px] h-[18px]" />
+                        </button>
                         <input
                           type="text"
                           value={newMessage}
@@ -2552,7 +2722,7 @@ export default function MessagesPage() {
                             if (e.key === "Enter") handleSend();
                           }}
                           placeholder=""
-                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[120px] pr-[44px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
+                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[158px] pr-[44px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
                         />
                         <button
                           onClick={handleStartRecording}
@@ -2992,6 +3162,7 @@ export default function MessagesPage() {
 
 
               <div className="flex flex-col bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
+                {!isRecalled && (
                   <button
                     onClick={() => { setReplyingTo(activeMsgObj); dismiss(); }}
                     className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
@@ -3077,6 +3248,11 @@ export default function MessagesPage() {
           </>
         );
       })()}
+      <ScheduleModal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        onSchedule={handleScheduleSend}
+      />
     </div>
   );
 }

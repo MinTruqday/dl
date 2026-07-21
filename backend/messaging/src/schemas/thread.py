@@ -23,6 +23,8 @@ class Base(BaseModel):
     reactions: List[dict] = []
     self_destruct_seconds: Optional[int] = None
     self_destruct_at: Optional[datetime] = None
+    scheduled_at: Optional[datetime] = None
+    is_scheduled: bool = False
     updated_at: Optional[datetime] = None
     is_system: bool = False
     system_action: Optional[str] = None
@@ -37,6 +39,7 @@ class Creation(BaseModel):
     attachments: Optional[List[dict]] = []
     reply_to_id: Optional[str] = None
     parent_message_id: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
 
 class Record(Base):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")

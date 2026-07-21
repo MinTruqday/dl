@@ -45,6 +45,7 @@ export const sendMessageAPI = async (
   documentUrl?: string,
   documentName?: string,
   parentMessageId?: string,
+  scheduledAt?: string,
 ) => {
   const token = getToken();
   if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
@@ -63,6 +64,7 @@ export const sendMessageAPI = async (
       self_destruct_in: selfDestructIn,
       attachments: documentUrl ? [{ url: documentUrl, name: documentName }] : [],
       parent_message_id: parentMessageId,
+      scheduled_at: scheduledAt,
       client_msg_id: crypto.randomUUID(),
     }),
   });
@@ -146,6 +148,20 @@ export const searchMessagesAPI = async (otherUserId: string, q: string) => {
   );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi truy vấn cơ sở dữ liệu thông điệp");
+  return data;
+};
+
+export const globalSearchAPI = async (q: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(
+    `${API_URL}/hoi-thoai/tim-kiem-toan-cuc?q=${encodeURIComponent(q)}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi tìm kiếm toàn cục");
   return data;
 };
 

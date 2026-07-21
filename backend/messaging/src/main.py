@@ -44,10 +44,23 @@ app.include_router(interaction)
 app.include_router(pin)
 app.include_router(attachment)
 app.include_router(enhancement)
+
+import asyncio
+from src.services.thread import ThreadService
+
+async def scheduled_message_worker():
+    while True:
+        try:
+            await ThreadService.process_scheduled_messages()
+        except Exception as e:
+            logger.error(f"Error in scheduled_message_worker: {e}")
+        await asyncio.sleep(10)
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Message service initialization completed successfully")
     await init_db()
+    asyncio.create_task(scheduled_message_worker())
 @app.on_event("shutdown")
 async def shutdown_event():
     await close_db()

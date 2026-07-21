@@ -68,6 +68,7 @@ class ThreadService:
         client_msg_id: str = None,
         attachments: list = None,
         parent_message_id: str = None,
+        scheduled_at: datetime = None,
     ):
         sender_id = str(current_user.id)
         if client_msg_id:
@@ -108,6 +109,8 @@ class ThreadService:
             self_destruct_seconds=self_destruct_seconds,
             attachments=attachments or [],
             parent_message_id=parent_message_id,
+            scheduled_at=scheduled_at,
+            is_scheduled=True if scheduled_at and scheduled_at > datetime.now(timezone.utc) else False,
         )
         msg_dict = message.model_dump(by_alias=True)
         if reply_msg:
@@ -117,26 +120,29 @@ class ThreadService:
                 "sender_id": reply_msg.get("sender_id"),
             }
         await MessageRepository.insert_one(msg_dict)
-        await ThreadService._upsert_conversation(
-            sender_id,
-            receiver_id,
-            {
-                "_id": msg_dict["_id"],
-                "sender_id": sender_id,
-                "receiver_id": receiver_id,
-                "content": content,
-                "image_url": image_url,
-                "audio_url": audio_url,
-                "attachments": attachments or [],
-                "is_recalled": False,
-                "created_at": msg_dict.get("created_at", datetime.now(timezone.utc)),
-            },
-        )
-        if parent_message_id:
-            await MessageRepository.update_one(
-                {"_id": parent_message_id},
-                {"$inc": {"thread_count": 1}}
+        
+        # Only update conversation and thread count if not scheduled for future
+        if not msg_dict["is_scheduled"]:
+            await ThreadService._upsert_conversation(
+                sender_id,
+                receiver_id,
+                {
+                    "_id": msg_dict["_id"],
+                    "sender_id": sender_id,
+                    "receiver_id": receiver_id,
+                    "content": content,
+                    "image_url": image_url,
+                    "audio_url": audio_url,
+                    "attachments": attachments or [],
+                    "is_recalled": False,
+                    "created_at": msg_dict.get("created_at", datetime.now(timezone.utc)),
+                },
             )
+            if parent_message_id:
+                await MessageRepository.update_one(
+                    {"_id": parent_message_id},
+                    {"$inc": {"thread_count": 1}}
+                )
         return msg_dict
 
     @staticmethod
@@ -413,4 +419,54 @@ class ThreadService:
             return await MessageRepository.find_one({"_id": message_id})
         except json.JSONDecodeError:
             raise ValueError("Invalid poll data format")
+
+    @staticmethod
+    @log_logic_execution
+    async def process_scheduled_messages():
+        from src.api.thread import publish_personal_message
+        now = datetime.now(timezone.utc)
+        query = {
+            "is_scheduled": True,
+            "scheduled_at": {"$lte": now}
+        }
+        messages = await MessageRepository.find(query).to_list(length=None)
+        
+        for msg in messages:
+            msg_id = msg["_id"]
+            # Update as not scheduled anymore
+            await MessageRepository.update_one(
+                {"_id": msg_id},
+                {"$set": {"is_scheduled": False, "created_at": now}}
+            )
+            msg["is_scheduled"] = False
+            msg["created_at"] = now
+            
+            # Upsert conversation
+            sender_id = msg["sender_id"]
+            receiver_id = msg["receiver_id"]
+            await ThreadService._upsert_conversation(
+                sender_id,
+                receiver_id,
+                {
+                    "_id": msg_id,
+                    "sender_id": sender_id,
+                    "receiver_id": receiver_id,
+                    "content": msg.get("content"),
+                    "image_url": msg.get("image_url"),
+                    "audio_url": msg.get("audio_url"),
+                    "attachments": msg.get("attachments", []),
+                    "is_recalled": False,
+                    "created_at": now,
+                },
+            )
+            
+            # Publish to receiver
+            await publish_personal_message(
+                {"type": "new_message", "data": msg}, receiver_id
+            )
+            # Publish back to sender to update UI
+            await publish_personal_message(
+                {"type": "message_sent_ack", "data": msg}, sender_id
+            )
+
 
