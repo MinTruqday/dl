@@ -10,3 +10,4 @@ backend/.venv/
 .gitignore
 test_*.py
 mem0-main
+tectonic-master
