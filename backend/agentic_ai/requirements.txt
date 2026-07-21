@@ -54,4 +54,4 @@ playwright>=1.40.0
 presidio-analyzer
 jupyter_client
 ipykernel
-rank_bm25
+rank_bm25==5.4.0
