@@ -1,14 +1,12 @@
-from src.core.infrastructure.mongo import mongo
-from src.core.infrastructure.database import database
-from motor.motor_asyncio import AsyncIOMotorClient
-import contextvars
 import sys
-import uuid
-from fastapi import FastAPI, Request
+from contextlib import asynccontextmanager
+from fastapi import Depends, FastAPI, Request
 from loguru import logger
 from src.core.infrastructure.configuration import settings
-from src.core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
-from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
+from src.core.infrastructure.database import database
+from src.core.middleware import add_trace_id_header, trace_id_filter
+from src.core.metrics import PrometheusMiddleware, metrics_endpoint
+from src.core.dependency import Role, require_role
 logger.remove()
 logger.add(
     sys.stdout,
@@ -36,7 +34,6 @@ app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="agentic_ai")
 app.add_route("/metrics", metrics_endpoint("agentic_ai"))
 
-from fastapi import Request
 from fastapi.responses import JSONResponse
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
@@ -72,6 +69,36 @@ app.include_router(interrupt_router)
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/ready")
+async def readiness_check():
+    checks = {}
+    try:
+        await database.mongodb.admin.command("ping")
+        checks["mongodb"] = "ready"
+    except Exception:
+        checks["mongodb"] = "unavailable"
+    try:
+        from src.core.infrastructure.redis import redis
+        checks["redis"] = "ready" if await redis.get_client().ping() else "unavailable"
+    except Exception:
+        checks["redis"] = "unavailable"
+    try:
+        from src.core.infrastructure.mq import mq
+        checks["rabbitmq"] = "ready" if await mq.health_check() else "unavailable"
+    except Exception:
+        checks["rabbitmq"] = "unavailable"
+    try:
+        from src.store.vector import vector_store
+        await vector_store.client.get_collections()
+        checks["qdrant"] = "ready"
+    except Exception:
+        checks["qdrant"] = "unavailable"
+    ready = all(value == "ready" for value in checks.values())
+    return JSONResponse(
+        status_code=200 if ready else 503,
+        content={"status": "ready" if ready else "degraded", "checks": checks},
+    )
 @app.get("/evaluate/metrics")
 async def harness_metrics():
     from fastapi.responses import PlainTextResponse
@@ -79,7 +106,10 @@ async def harness_metrics():
         content=agentops.get_prometheus_metrics(),
         media_type="text/plain; version=0.0.4",
     )
-@app.get("/evaluate/status")
+@app.get(
+    "/evaluate/status",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def harness_status():
     return {
         "orchestration": {
@@ -88,7 +118,6 @@ async def harness_status():
         },
         "evaluation": evaluation.get_dashboard_metrics(),
     }
-@app.on_event("startup")
 async def startup_event():
     logger.info("Agentic AI system initialized successfully")
     from src.store.vector import vector_store
@@ -126,7 +155,6 @@ async def startup_event():
         logger.info("Event-driven loop started successfully")
     except Exception as e:
         logger.exception("Event-driven loop startup error")
-@app.on_event("shutdown")
 async def shutdown_event():
     try:
         from src.loop.event import cron_scheduler, event_driven_loop
@@ -144,3 +172,40 @@ async def shutdown_event():
         await mq.aclose()
     except Exception:
         pass
+    try:
+        from src.core.infrastructure.database import close_db
+        await close_db()
+    except Exception:
+        pass
+    try:
+        from src.store.vector import vector_store
+        await vector_store.client.close()
+    except Exception:
+        pass
+    try:
+        from src.memory.mem0 import mem0_manager
+        await mem0_manager.close()
+    except Exception:
+        pass
+    try:
+        from src.memory.management import memory_manager
+        if memory_manager._redis:
+            await memory_manager._redis.aclose()
+    except Exception:
+        pass
+    try:
+        from src.workflow.orchestration import supervisor
+        supervisor.checkpointer.close()
+        supervisor.sync_client.close()
+    except Exception:
+        pass
+
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    await startup_event()
+    try:
+        yield
+    finally:
+        await shutdown_event()
+
+app.router.lifespan_context = lifespan

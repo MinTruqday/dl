@@ -35,10 +35,12 @@ class RubricResult:
 class BaseGrader(ABC):
     @property
     @abstractmethod
-    def name(self) -> str: ...
+    def name(self) -> str:
+        raise NotImplementedError
 
     @abstractmethod
-    async def grade(self, response: str, context: dict) -> GraderResult: ...
+    async def grade(self, response: str, context: dict) -> GraderResult:
+        raise NotImplementedError
 
 class ResponseLengthGrader(BaseGrader):
     def __init__(self, min_length: int = 10, max_length: int = 50_000):
@@ -215,7 +217,7 @@ def create_financial_rubric() -> Rubric:
         name="financial",
     )
 
-AgentCallable = Callable[..., Coroutine[Any, Any, str]]
+AgentCallable = Callable[[str, dict], Coroutine[Any, Any, str]]
 
 class RubricMiddleware:
     """
@@ -267,7 +269,7 @@ class RubricMiddleware:
 
             logger.warning(
                 f"RubricMiddleware: FAILED on attempt {attempt}. "
-                f"Failed: {[g.grader_name for g in rubric_result.failed_graders]}. Retrying...")
+                f"Failed: {[g.grader_name for g in rubric_result.failed_graders]}. Retrying")
             if attempt < self.max_retries:
                 if feedback_injector:
                     new_args, new_kwargs = feedback_injector(last_response, rubric_result.combined_feedback)

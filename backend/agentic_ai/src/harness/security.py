@@ -1,14 +1,7 @@
-import asyncio
 import re
-import time
 from dataclasses import dataclass, field
-from typing import Optional
-
 from loguru import logger
-
-import json
-import os
-from typing import Tuple, List
+from typing import List
 
 @dataclass
 class ScanResult:
@@ -35,15 +28,26 @@ class SecurityHarness:
         try:
             from presidio_analyzer import AnalyzerEngine
             from presidio_anonymizer import AnonymizerEngine
-            self.analyzer = AnalyzerEngine()
+            from presidio_analyzer.nlp_engine import NlpEngineProvider
+            provider = NlpEngineProvider(
+                nlp_configuration={
+                    "nlp_engine_name": "spacy",
+                    "models": [
+                        {"lang_code": "en", "model_name": "en_core_web_sm"}
+                    ],
+                }
+            )
+            self.analyzer = AnalyzerEngine(nlp_engine=provider.create_engine())
             self.anonymizer = AnonymizerEngine()
-            logger.info("Presidio Security Engines initialized successfully.")
+            logger.info("Presidio security engines initialized successfully")
         except ImportError:
-            logger.warning("Presidio not installed. Falling back to LLM/Regex for PII scanning.")
+            logger.warning("Presidio dependencies unavailable, using deterministic PII scanning")
         except Exception as e:
-            logger.error(f"Failed to initialize Presidio: {e}")
+            logger.error(f"Presidio initialization failed, using deterministic PII scanning: {e}")
 
-    async def _adetect_security_issues(self, text: str) -> tuple[str, List[str]]:
+    async def _adetect_security_issues(
+        self, text: str, allow_ai_review: bool = True
+    ) -> tuple[str, List[str]]:
         from huggingface_hub import AsyncInferenceClient
         from langchain_core.messages import HumanMessage
         from src.utils.huggingface import HFInferenceChat
@@ -53,8 +57,36 @@ class SecurityHarness:
         
         violations = []
         sanitized = text
-        
-        # 1. Fast PII Scanning via Presidio (Offline / Rule-based)
+
+        pii_patterns = (
+            (r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[REDACTED EMAIL]"),
+            (r"\b(?:\+?84|0)(?:\d[ .-]?){9,10}\b", "[REDACTED PHONE]"),
+            (r"\b(?:\d[ -]*?){13,19}\b", "[REDACTED CARD]"),
+        )
+        for pattern, replacement in pii_patterns:
+            updated = re.sub(pattern, replacement, sanitized)
+            if updated != sanitized:
+                violations.append("pii_detected")
+                sanitized = updated
+
+        injection_patterns = (
+            r"ignore\s+(?:all\s+)?previous\s+instructions",
+            r"reveal\s+(?:the\s+)?system\s+prompt",
+            r"system\s+override",
+            r"forget\s+(?:all|everything)",
+            r"print\s+(?:your\s+)?initial\s+prompt",
+        )
+        if any(re.search(pattern, text, re.IGNORECASE) for pattern in injection_patterns):
+            violations.append("prompt_injection:deterministic_pattern")
+
+        credential_patterns = (
+            r"\bAKIA[0-9A-Z]{16}\b",
+            r"\b(?:api[_-]?key|password|secret)\s*[:=]\s*[^\s]{8,}",
+            r"\b(?:mongodb|postgres(?:ql)?|mysql|redis)://[^\s]+",
+        )
+        if any(re.search(pattern, text, re.IGNORECASE) for pattern in credential_patterns):
+            violations.append("credential_leak")
+
         if self.analyzer and self.anonymizer:
             try:
                 results = self.analyzer.analyze(text=text, entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"], language='en')
@@ -64,8 +96,22 @@ class SecurityHarness:
                     sanitized = anonymized_result.text
             except Exception as e:
                 logger.error(f"Presidio scan error: {e}")
-                
-        # 2. LLM Scanning for Prompt Injection
+
+        review_markers = (
+            "jailbreak",
+            "developer message",
+            "hidden instruction",
+            "bypass policy",
+            "roleplay as",
+        )
+        requires_ai_review = (
+            len(text) > 4000
+            or self._anomaly_score(text) > 0.18
+            or any(marker in text.lower() for marker in review_markers)
+        )
+        if not allow_ai_review or not requires_ai_review:
+            return sanitized, list(dict.fromkeys(violations))
+
         try:
             client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
             llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
@@ -78,11 +124,10 @@ class SecurityHarness:
                 violations.append(f"prompt_injection:{result.reason[:60]}")
             if result.has_credentials:
                 violations.append("credential_leak")
-            # If presidio failed to catch it but LLM caught it
-            if result.has_pii and "pii_detected" not in violations:
-                violations.append("pii_detected")
-                if result.sanitized_text:
-                    sanitized = result.sanitized_text
+                if result.has_pii and "pii_detected" not in violations:
+                    violations.append("pii_detected")
+                    if result.sanitized_text:
+                        sanitized = result.sanitized_text
         except Exception as e:
             logger.exception("AI security tracing failed")
             
@@ -137,7 +182,12 @@ class SecurityHarness:
     async def ascan_output(self, text: str, session_id: str = "") -> str:
         if not text:
             return text
-        sanitized, violations = await self._adetect_security_issues(text)
+        sanitized, violations = await self._adetect_security_issues(
+            text, allow_ai_review=False
+        )
+        sanitized = re.sub(
+            r"<(think|thought)>.*?</\1>", "", sanitized, flags=re.IGNORECASE | re.DOTALL
+        ).strip()
         if any("credential_leak" in v for v in violations):
             logger.error("System proactively blocked and neutralized credential leak risk")
             return "Hệ thống bảo mật đã tự động chặn phản hồi do phát hiện rủi ro rò rỉ thông tin xác thực"

@@ -14,7 +14,6 @@ class AgenticFirewall:
     </contract>
     """
     
-    # Common prompt injection patterns (heuristic approach for performance)
     SUSPICIOUS_PATTERNS = [
         re.compile(r"ignore\s+(all\s+)?previous\s+instructions", re.IGNORECASE),
         re.compile(r"you\s+are\s+now\s+(a\s+)?", re.IGNORECASE),

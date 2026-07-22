@@ -1,14 +1,15 @@
-import asyncio
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Query, HTTPException, Depends
+from fastapi import APIRouter, Body, Query, Depends
 import src.services.finetuning as finetune_service
 from src.core.dependency import get_current_user, CurrentUser
-from src.core.infrastructure.configuration import settings
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tinh-chinh")
 
 @router.post("/tap-du-lieu")
-async def create_dataset(req: dict):
+async def create_dataset(
+    req: dict, current_user: CurrentUser = Depends(get_current_user)
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.create_dataset(req)
 
 @router.get("/tap-du-lieu")
@@ -24,7 +25,12 @@ async def delete_dataset(dataset_id: str, current_user: CurrentUser = Depends(ge
     return await finetune_service.delete_dataset(dataset_id, str(current_user.id))
 
 @router.post("/tap-du-lieu/{dataset_id}/mau-thu")
-async def add_samples(dataset_id: str, req: dict):
+async def add_samples(
+    dataset_id: str,
+    req: dict,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.add_samples(dataset_id, req)
 
 @router.get("/tap-du-lieu/{dataset_id}/mau-thu")
@@ -41,19 +47,35 @@ async def delete_sample(dataset_id: str, sample_id: str, current_user: CurrentUs
     return await finetune_service.delete_sample(dataset_id, sample_id, str(current_user.id))
 
 @router.post("/dau-vao/phan-hoi")
-async def import_feedback(req: dict):
+async def import_feedback(
+    req: dict = Body(default={}),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.import_feedback(req)
 
 @router.post("/dau-vao/tai-lieu")
-async def import_documents(req: dict):
+async def import_documents(
+    req: dict,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.import_documents(req)
 
 @router.post("/tien-trinh")
-async def create_job(req: dict):
+async def create_job(
+    req: dict, current_user: CurrentUser = Depends(get_current_user)
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.create_job(req)
 
 @router.post("/tien-trinh/{job_id}/bat-dau")
-async def start_job(job_id: str, req: dict):
+async def start_job(
+    job_id: str,
+    req: dict = Body(default={}),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.start_job(job_id, req)
 
 @router.get("/tien-trinh")
@@ -65,13 +87,28 @@ async def get_job(job_id: str, current_user: CurrentUser = Depends(get_current_u
     return await finetune_service.get_job(job_id, str(current_user.id))
 
 @router.post("/tien-trinh/{job_id}/huy-bo")
-async def cancel_job(job_id: str, req: dict):
+async def cancel_job(
+    job_id: str,
+    req: dict = Body(default={}),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.cancel_job(job_id, req)
 
 @router.post("/tien-trinh/{job_id}/trien-khai")
-async def deploy_model(job_id: str, req: dict):
+async def deploy_model(
+    job_id: str,
+    req: dict = Body(default={}),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.deploy_model(job_id, req)
 
 @router.post("/tien-trinh/{job_id}/danh-gia")
-async def evaluate_model(job_id: str, req: dict):
+async def evaluate_model(
+    job_id: str,
+    req: dict,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req["user_id"] = str(current_user.id)
     return await finetune_service.evaluate_model(job_id, req)

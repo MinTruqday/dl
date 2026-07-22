@@ -226,9 +226,8 @@ class EngineAgent:
                     logger.info("Self-evaluation: Sufficient information gathered.")
                     break
                 else:
-                    logger.info("Self-evaluation: Insufficient information. Re-formulating query...")
+                    logger.info("Self-evaluation: Insufficient information. Re-formulating query")
                     
-                    # Try playwright fallback on the top URL if available
                     urls = re.findall(r"Source link (https?://[^\s]+)", accumulated_results)
                     if urls:
                         logger.info(f"Triggering Playwright fallback on {urls[0]}")

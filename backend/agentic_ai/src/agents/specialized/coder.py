@@ -91,7 +91,7 @@ class CoderAgent:
                     logger.info("Coder verification passed successfully")
                     break
                     
-                logger.warning(f"Coder verification failed on attempt {attempt+1}: {verification_error[:100]}...")
+                logger.warning(f"Coder verification failed on attempt {attempt+1}: {verification_error[:100]}")
                 if attempt < max_retries:
                     human_msg_content += f"\n\nYour previous code failed with this error:\n{verification_error}\nPlease fix the code."
                 

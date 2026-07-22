@@ -8,7 +8,7 @@ class ChatRequest(BaseModel):
     Constraint: Ensure `thread_id` is supplied to maintain context window continuity.
     """
     query: str = Field(description="<critical_instructions>The main user query to respond to.</critical_instructions>")
-    user_id: str = Field(description="<input_context>The ID of the requesting user.</input_context>")
+    user_id: str = Field(default="", description="<input_context>The ID of the requesting user.</input_context>")
     document_ids: Optional[list] = Field(default_factory=list, description="<input_context>List of relevant document IDs.</input_context>")
     useWeb: bool = Field(default=False, description="<conditional_output>Whether to use web search.</conditional_output>")
     thinking: bool = Field(default=False, description="<conditional_output>Whether to stream internal thinking.</conditional_output>")

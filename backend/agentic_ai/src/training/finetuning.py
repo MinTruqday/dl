@@ -160,6 +160,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     from peft import LoraConfig, PeftModel, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from trl import SFTConfig, SFTTrainer
+    from src.utils.huggingface import resolve_model_revision
 
     base_model_name = config.get("base_model")
     hf_token = config.get("hf_token")
@@ -168,6 +169,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     learning_rate = config.get("learning_rate", 2e-4)
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
+    revision = resolve_model_revision(base_model_name, hf_token)
 
     logger.info("Initializing and loading language model")
     update_callback({"progress": 10, "status": "running"})
@@ -183,6 +185,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
 
     model = AutoModelForCausalLM.from_pretrained(
         base_model_name,
+        revision=revision,
         quantization_config=bnb_config,
         device_map="auto",
         torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
@@ -190,7 +193,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
         trust_remote_code=True,
     )
     tokenizer = AutoTokenizer.from_pretrained(
-        base_model_name, token=hf_token, trust_remote_code=True
+        base_model_name, revision=revision, token=hf_token, trust_remote_code=True
     )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -282,7 +285,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
 
     logger.info("Merging training data into language model")
     base_model = AutoModelForCausalLM.from_pretrained(
-        base_model_name, device_map="cpu", torch_dtype=torch.float16, token=hf_token
+        base_model_name, revision=revision, device_map="cpu", torch_dtype=torch.float16, token=hf_token
     )
     merged_model = PeftModel.from_pretrained(
         base_model, adapter_path
@@ -363,6 +366,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
         Seq2SeqTrainer,
         Seq2SeqTrainingArguments,
     )
+    from src.utils.huggingface import resolve_model_revision
 
     base_model_name = config.get("base_model")
     hf_token = config.get("hf_token")
@@ -371,17 +375,21 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     learning_rate = config.get("learning_rate", 2e-4)
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
+    revision = resolve_model_revision(base_model_name, hf_token)
 
     logger.info("Initializing and loading language model")
     update_callback({"progress": 10, "status": "running"})
 
     model = AutoModelForSeq2SeqLM.from_pretrained(
         base_model_name,
+        revision=revision,
         device_map="auto",
         torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
         token=hf_token,
     )
-    tokenizer = AutoTokenizer.from_pretrained(base_model_name, token=hf_token)
+    tokenizer = AutoTokenizer.from_pretrained(
+        base_model_name, revision=revision, token=hf_token
+    )
 
     update_callback({"progress": 20})
 
@@ -477,7 +485,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
 
     logger.info("Merging training data into language model")
     base_model = AutoModelForSeq2SeqLM.from_pretrained(
-        base_model_name, device_map="cpu", torch_dtype=torch.float32, token=hf_token
+        base_model_name, revision=revision, device_map="cpu", torch_dtype=torch.float32, token=hf_token
     )
     merged_model = PeftModel.from_pretrained(
         base_model, adapter_path
@@ -503,6 +511,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     from diffusers import FluxPipeline
     from peft import LoraConfig, get_peft_model
     from PIL import Image
+    from src.utils.huggingface import resolve_model_revision
 
     base_model_name = config.get("base_model")
     hf_token = config.get("hf_token")
@@ -511,6 +520,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     learning_rate = config.get("learning_rate", 1e-4)
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
+    revision = resolve_model_revision(base_model_name, hf_token)
 
     logger.info("Initializing and loading language model")
     update_callback({"progress": 10, "status": "running"})
@@ -519,7 +529,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 
     pipeline = FluxPipeline.from_pretrained(
-        base_model_name, torch_dtype=dtype, token=hf_token
+        base_model_name, revision=revision, torch_dtype=dtype, token=hf_token
     )
     pipeline.to(device)
     transformer = pipeline.transformer

@@ -13,7 +13,6 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
-import { Theme } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/shared/contexts/ToastContext";
 import { AnnouncementProvider } from "@/shared/contexts/AnnouncementContext";
 
@@ -26,16 +25,9 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans min-h-screen bg-white`}>
         <AuthProvider>
-          <Theme
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ToastProvider>
-              <AnnouncementProvider>{children}</AnnouncementProvider>
-            </ToastProvider>
-          </Theme>
+          <ToastProvider>
+            <AnnouncementProvider>{children}</AnnouncementProvider>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

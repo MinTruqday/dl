@@ -15,5 +15,5 @@ class SwarmState(BaseModel):
     is_complete: bool = Field(default=False, description="<conditional_output>Whether the swarm has completed the task.</conditional_output>")
 
 class SwarmRouteDecision(BaseModel):
-    next_agent: Literal["coder", "secops", "reviewer", "finish"] = Field(..., description="<critical_instructions>The next agent to route the task to, or 'finish' if complete.</critical_instructions>")
-    reasoning: str = Field(..., description="<critical_instructions>Why this route was chosen.</critical_instructions>")
+    next_agent: Literal["coder", "secops", "reviewer", "finish"] = Field(description="<critical_instructions>The next agent to route the task to, or 'finish' if complete.</critical_instructions>")
+    reasoning: str = Field(description="<critical_instructions>Why this route was chosen.</critical_instructions>")

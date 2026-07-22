@@ -47,7 +47,7 @@ async def supervisor_node(state: ActingState):
     if not steps:
         nodes = await planner.create_plan(state["req_data"])
         from src.agents.routing import plan_validator
-        nodes = plan_validator.validate_plan(nodes)
+        nodes = await plan_validator.validate_plan(nodes)
         
         steps = nodes
         task_status = {n["id"]: "pending" for n in steps}
@@ -432,10 +432,6 @@ workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregator": "saniti
 workflow.add_edge("sanitizer", "aggregator")
 workflow.add_edge("aggregator", END)
 
-# Memory checkpoint will be bound at execution time
-# memory = MemorySaver()
-# supervisor_app = workflow.compile(checkpointer=memory, interrupt_before=["action"])
-
 class OrchestrationWorkflow:
     """
     <module_purpose>
@@ -452,6 +448,14 @@ class OrchestrationWorkflow:
     def __init__(self):
         self.workflow = workflow
         self.sync_client = MongoClient(settings.MONGODB_URI)
+        self.checkpointer = MongoDBSaver(
+            self.sync_client,
+            db_name=settings.AGENTIC_AI_DB_NAME,
+        )
+        self.app = self.workflow.compile(
+            checkpointer=self.checkpointer,
+            interrupt_before=["action"],
+        )
 
     async def execute_plan(self, req_data):
         from src.memory.global_state import global_state
@@ -485,9 +489,7 @@ class OrchestrationWorkflow:
             "recursion_limit": 25,
         }
 
-        checkpointer = MongoDBSaver(self.sync_client)
-        app = self.workflow.compile(checkpointer=checkpointer, interrupt_before=["action"])
-        async for output in app.astream(initial_state, config=config):
+        async for output in self.app.astream(initial_state, config=config):
                 for node_name, state_update in output.items():
                     if "consolidated_results" in state_update:
                         final_results = state_update["consolidated_results"]
@@ -535,3 +537,4 @@ class OrchestrationWorkflow:
             logger.exception("Episodic memory storage failed")
 
 supervisor = OrchestrationWorkflow()
+supervisor_app = supervisor.app

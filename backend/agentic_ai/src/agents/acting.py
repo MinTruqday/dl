@@ -47,7 +47,7 @@ class ActingAgent:
         for t in tools:
             args = ""
             if hasattr(t, "args_schema") and t.args_schema:
-                schema = t.args_schema.schema()
+                schema = t.args_schema.model_json_schema()
                 props = schema.get("properties", {})
                 args = ", ".join(
                     [f"{k} type {v.get('type')}" for k, v in props.items()]
@@ -81,7 +81,7 @@ class ActingAgent:
                         messages.append(HumanMessage(
                             content=(
                                 f"Your previous response failed validation: {e}. "
-                                "This often happens if you pass a JSON list `[...]` instead of a JSON object `{...}` for tool arguments. "
+                                "This often happens if you pass a JSON list instead of a JSON object for tool arguments. "
                                 "YOU MUST generate a valid JSON dictionary for the tool arguments."
                             )
                         ))
@@ -127,7 +127,7 @@ class ActingAgent:
                 selected_tool = self.tool_map[tool_name]
                 try:
                     tool_result = await selected_tool.ainvoke(
-                        tool_params, config={"configurable": {"token": token, "user_id": state.get("user_id")}}
+                        tool_params, config={"configurable": {"token": token, "user_id": user_id}}
                     )
                     return str(tool_result)
                 except Exception as e:

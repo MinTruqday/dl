@@ -1,7 +1,7 @@
 import uuid
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from loguru import logger
 from pydantic import BaseModel
 
@@ -14,11 +14,12 @@ from src.loop.event import (
 )
 
 from src.schemas.events import WebhookPayload, CreateScheduleRequest, ScheduleResponse
+from src.core.dependency import Role, require_role, verify_internal_token
 
 router = APIRouter(prefix="/su-kien")
 
-@router.post("/webhook")
-async def receive_webhook(request: Request, body: WebhookPayload = Body(...)):
+@router.post("/webhook", dependencies=[Depends(verify_internal_token)])
+async def receive_webhook(request: Request, body: WebhookPayload = Body()):
     try:
         event_type_str = body.event_type.lower()
         event_type_map = {
@@ -50,7 +51,10 @@ async def receive_webhook(request: Request, body: WebhookPayload = Body(...)):
         logger.exception(f"Webhook processing error {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/webhook/tai-lieu-dang-tai")
+@router.post(
+    "/webhook/tai-lieu-dang-tai",
+    dependencies=[Depends(verify_internal_token)],
+)
 async def document_uploaded_webhook(
     document_id: str,
     user_id: str = "",
@@ -65,14 +69,20 @@ async def document_uploaded_webhook(
     await event_driven_loop.emit_event(event)
     return {"status": "accepted", "event_id": event.event_id}
 
-@router.get("/lich-trinh")
+@router.get(
+    "/lich-trinh",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def list_schedules():
     return {
         "schedules": cron_scheduler.list_schedules(),
         "total": len(cron_scheduler._schedules),
     }
 
-@router.post("/lich-trinh")
+@router.post(
+    "/lich-trinh",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def create_schedule(req: CreateScheduleRequest):
     event_type_map = {
         "system_heartbeat": EventType.SYSTEM_HEARTBEAT,
@@ -108,7 +118,10 @@ async def create_schedule(req: CreateScheduleRequest):
     }
 
 
-@router.delete("/lich-trinh/{schedule_id}")
+@router.delete(
+    "/lich-trinh/{schedule_id}",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def delete_schedule(schedule_id: str):
     if schedule_id not in cron_scheduler._schedules:
         raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy lịch trình thực thi yêu cầu")
@@ -116,7 +129,10 @@ async def delete_schedule(schedule_id: str):
     return {"status": "deleted", "schedule_id": schedule_id}
 
 
-@router.patch("/lich-trinh/{schedule_id}/trang-thai")
+@router.patch(
+    "/lich-trinh/{schedule_id}/trang-thai",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def toggle_schedule(schedule_id: str):
     schedule = cron_scheduler._schedules.get(schedule_id)
     if not schedule:
@@ -128,17 +144,26 @@ async def toggle_schedule(schedule_id: str):
         "enabled": schedule.enabled,
     }
 
-@router.get("/trang-thai")
+@router.get(
+    "/trang-thai",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def event_loop_status():
     return event_driven_loop.get_stats()
 
-@router.get("/lich-su")
+@router.get(
+    "/lich-su",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def event_history(limit: int = 20):
     return {
         "events": event_driven_loop.get_recent_events(limit=limit),
     }
 
-@router.get("/cap-nhat")
+@router.get(
+    "/cap-nhat",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def system_updates(limit: int = 20):
     updates = event_driven_loop.update_registry.get_recent(limit=limit)
     return {
@@ -156,7 +181,10 @@ async def system_updates(limit: int = 20):
         "stats": event_driven_loop.update_registry.get_stats(),
     }
 
-@router.post("/kich-hoat/{event_type}")
+@router.post(
+    "/kich-hoat/{event_type}",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 async def manual_trigger(event_type: str, payload: Dict[str, Any] = Body(default={})):
     event_type_map = {
         "heartbeat": EventType.SYSTEM_HEARTBEAT,

@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import json
 from typing import Any, List, Optional
 
 import httpx
@@ -10,7 +11,7 @@ from loguru import logger
 from src.core.registry import PromptType, registry
 
 from src.core.infrastructure.configuration import settings
-from src.core.dependency import get_current_user
+from src.core.dependency import get_current_user, verify_internal_token
 from src.schemas.inference import (
     ActionRequest,
     CitationRequest,
@@ -99,9 +100,6 @@ async def _chat_direct(
             )
             msg = response.choices[0].message
             content = msg.content or ""
-            reasoning = getattr(msg, "reasoning", None)
-            if reasoning:
-                return f"<think>\n{reasoning}\n</think>\n{content}"
             return content
         except Exception as e:
             logger.exception("AI text generation execution error")
@@ -182,7 +180,6 @@ async def generate_quick_replies(
         )
         import json
         try:
-            # Cleanup common markdown code block markers if present
             clean_result = result.strip().strip('`').removeprefix('json').strip()
             replies = json.loads(clean_result)
             if not isinstance(replies, list):
@@ -634,7 +631,10 @@ async def analyze_document(
         logger.exception("Document analysis error")
         raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình phân tích tài liệu, vui lòng thử lại sau")
 
-@router.delete("/vector/{document_id}")
+@router.delete(
+    "/vector/{document_id}",
+    dependencies=[Depends(verify_internal_token)],
+)
 async def delete_vector_document(document_id: str):
     logger.info(f"Started vector index deletion for document {document_id}")
     try:

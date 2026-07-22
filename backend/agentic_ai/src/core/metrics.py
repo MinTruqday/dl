@@ -51,15 +51,23 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         if request.url.path == '/metrics':
             return await call_next(request)
         start = time.perf_counter()
-        response = await call_next(request)
-        duration = time.perf_counter() - start
-        metrics_collector.record(
-            method=request.method,
-            path=request.url.path,
-            status=response.status_code,
-            duration=duration,
-        )
-        return response
+        try:
+            response = await call_next(request)
+            status = response.status_code
+            return response
+        except Exception:
+            status = 500
+            raise
+        finally:
+            duration = time.perf_counter() - start
+            route = request.scope.get('route')
+            path = getattr(route, 'path', request.url.path)
+            metrics_collector.record(
+                method=request.method,
+                path=path,
+                status=status,
+                duration=duration,
+            )
 
 
 def metrics_endpoint(service_name: str):

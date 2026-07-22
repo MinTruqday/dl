@@ -53,7 +53,6 @@ class InterpreterAgent:
             code = match.group(1).strip() if match else content.replace("```", "").strip()
 
             from src.core.delegation import delegator
-            # Interpreter tasks might involve heavy data processing, allow 60s
             final_res = await delegator.delegate("RUN_CODE", {"code": code}, timeout=60.0)
             return final_res
 

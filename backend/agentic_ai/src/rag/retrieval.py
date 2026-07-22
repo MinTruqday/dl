@@ -87,7 +87,7 @@ class RetrievalRag:
         from src.rag.embedding import embedder
 
         hypothetical_doc = await self._generate_hypothetical_document(question)
-        hyde_vector = await asyncio.to_thread(embedder.embed_query, hypothetical_doc)
+        hyde_vector = await embedder.embed_query(hypothetical_doc)
 
         try:
             from src.schemas.routing import MultiQueryOutput
@@ -133,7 +133,7 @@ class RetrievalRag:
         if query_vector_override is not None:
             query_vector = query_vector_override
         else:
-            query_vector = await asyncio.to_thread(embedder.embed_query, query)
+            query_vector = await embedder.embed_query(query)
 
         current_reranker = self.reranker
         fetch_limit = k * 3 if current_reranker else k
@@ -145,7 +145,6 @@ class RetrievalRag:
         if not documents:
             return []
 
-        # Simulated Hybrid Search (Vector + BM25)
         try:
             from rank_bm25 import BM25Okapi
             tokenized_corpus = [doc.get("text", "").lower().split(" ") for doc in documents]
@@ -153,7 +152,6 @@ class RetrievalRag:
             tokenized_query = query.lower().split(" ")
             bm25_scores = bm25.get_scores(tokenized_query)
             
-            # Reciprocal Rank Fusion (RRF)
             k_rrf = 60
             for i, doc in enumerate(documents):
                 dense_rank = i + 1

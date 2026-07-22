@@ -8,7 +8,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
+from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, Range, VectorParams
 from rank_bm25 import BM25Okapi
 
 from src.core.infrastructure.configuration import settings
@@ -31,9 +31,9 @@ class EntityStore:
         try:
             from pydantic import BaseModel, Field
             class EntityRelation(BaseModel):
-                source: str = Field(..., description="Source entity name")
-                relation: str = Field(..., description="Action or relationship verb")
-                target: str = Field(..., description="Target entity name")
+                source: str = Field(description="Source entity name")
+                relation: str = Field(description="Action or relationship verb")
+                target: str = Field(description="Target entity name")
             class ExtractedGraph(BaseModel):
                 relations: List[EntityRelation]
                 
@@ -90,25 +90,34 @@ class MemoryManager:
             task="conversational",
         )
         self.llm = ChatHuggingFace(llm=self._hf)
-        self._init_task = asyncio.create_task(self._ensure_collection())
         from src.rag.embedding import embedder
         self.embedder = embedder
+        self._initialized = False
+        self._init_lock = None
         self._entity_store = EntityStore(self)
         self._project_store = ProjectStore(self)
 
     async def _ensure_collection(self):
-        try:
-            collections = await self.client.get_collections()
-            exists = any(c.name == self.collection_name for c in collections.collections)
-            if not exists:
-                await self.client.create_collection(
-                    collection_name=self.collection_name,
-                    vectors_config=VectorParams(
-                        size=self.embedder._dimensions, distance=Distance.COSINE
-                    ),
-                )
-        except Exception:
-            logger.exception("Memory collection initialization error")
+        if self._initialized:
+            return
+        if self._init_lock is None:
+            self._init_lock = asyncio.Lock()
+        async with self._init_lock:
+            if self._initialized:
+                return
+            try:
+                collections = await self.client.get_collections()
+                exists = any(c.name == self.collection_name for c in collections.collections)
+                if not exists:
+                    await self.client.create_collection(
+                        collection_name=self.collection_name,
+                        vectors_config=VectorParams(
+                            size=self.embedder._dimensions, distance=Distance.COSINE
+                        ),
+                    )
+                self._initialized = True
+            except Exception:
+                logger.exception("Memory collection initialization error")
 
     async def search_and_resolve_conflicts(self, new_content: str, user_id: str, agent_id: Optional[str] = None, run_id: Optional[str] = None) -> Optional[MemoryOperation]:
         existing = await self.search(new_content, user_id, agent_id, run_id)
@@ -154,7 +163,6 @@ class MemoryManager:
         if filters:
             for k, v in filters.items():
                 if isinstance(v, dict):
-                    # Advanced operators (simplified handling for Qdrant)
                     if "$gt" in v:
                         conditions.append(FieldCondition(key=k, range=Range(gt=v["$gt"])))
                     elif "$lt" in v:
@@ -166,16 +174,6 @@ class MemoryManager:
                 else:
                     conditions.append(FieldCondition(key=k, match=MatchValue(value=v)))
             
-        current_time = datetime.now(timezone.utc).isoformat()
-        conditions.append(
-            FieldCondition(
-                key="expires_at", 
-                match=MatchValue(value=""), 
-                # Simplistic way to represent null/none or handle expiration logic in Qdrant
-                # For robust TTL, we should just filter out in Python or use Range condition if stored as timestamp.
-                # Let's handle expiration filtering in python for simplicity if Qdrant schema isn't strictly typed.
-            )
-        ) # We'll do post-filtering for TTL to avoid Qdrant strict index errors.
         return Filter(must=conditions)
 
     async def _create_procedural_memory(self, messages: List[Dict]) -> MemoryOperation:
@@ -221,7 +219,7 @@ class MemoryManager:
             logger.exception("Hash deduplication pre-fetch error")
 
         for item in operations.add:
-            content_hash = hashlib.md5(item.content.encode('utf-8')).hexdigest()
+            content_hash = hashlib.sha256(item.content.encode('utf-8')).hexdigest()
             if content_hash in existing_hashes:
                 logger.info(f"Memory skipped due to exact hash match: {content_hash}")
                 continue
@@ -236,7 +234,7 @@ class MemoryManager:
                 
             item_id = str(uuid.uuid4())
             try:
-                vector = await asyncio.to_thread(self.embedder.embed_query, item.content)
+                vector = await self.embedder.embed_query(item.content)
                 payload = {
                     "text": item.content,
                     "category": getattr(item, "category", "fact"),
@@ -280,6 +278,7 @@ class MemoryManager:
     add_memory = add
 
     async def get(self, memory_id: str) -> Optional[Dict]:
+        await self._ensure_collection()
         try:
             res = await self.client.retrieve(self.collection_name, ids=[memory_id])
             if res:
@@ -289,6 +288,7 @@ class MemoryManager:
         return None
 
     async def get_all(self, user_id: Optional[str] = None, agent_id: Optional[str] = None, run_id: Optional[str] = None, org_id: Optional[str] = None, project_id: Optional[str] = None, limit: int = 100, filters: Optional[Dict] = None) -> List[Dict]:
+        await self._ensure_collection()
         try:
             query_filter = self._build_filter(user_id, agent_id, run_id, org_id, project_id, filters)
                     
@@ -320,7 +320,8 @@ class MemoryManager:
         try:
             query_filter = self._build_filter(user_id, agent_id, run_id, org_id, project_id, filters)
                     
-            vector = await asyncio.to_thread(self.embedder.embed_query, query)
+            await self._ensure_collection()
+            vector = await self.embedder.embed_query(query)
             results = await self.client.search(
                 collection_name=self.collection_name,
                 query_vector=vector,
@@ -381,13 +382,14 @@ class MemoryManager:
 
     async def update(self, memory_id: str, new_content: str):
         try:
-            vector = await asyncio.to_thread(self.embedder.embed_query, new_content)
+            await self._ensure_collection()
+            vector = await self.embedder.embed_query(new_content)
             res = await self.client.retrieve(self.collection_name, ids=[memory_id])
             if res:
                 payload = res[0].payload
                 old_content = payload.get("text")
                 payload["text"] = new_content
-                payload["hash"] = hashlib.md5(new_content.encode('utf-8')).hexdigest()
+                payload["hash"] = hashlib.sha256(new_content.encode('utf-8')).hexdigest()
                 payload["updated_at"] = datetime.now(timezone.utc).isoformat()
                 
                 await self.client.upsert(

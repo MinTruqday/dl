@@ -18,6 +18,9 @@ from src.repositories.chat import ChatRepository
 
 active_jobs = {}
 
+class TrainingCancelled(Exception):
+    pass
+
 from src.schemas.finetuning import FinetuneJobUpdate
 
 @log_logic_execution
@@ -44,8 +47,17 @@ async def report_progress(job_id: str, data: dict):
         await FinetuneRepository.update_job(
             {"_id": job_id}, {"$set": update_fields}
         )
+    status_value = data.get("status")
+    if status_value in {"completed", "failed", "cancelled"}:
+        job = await FinetuneRepository.find_job({"_id": job_id})
+        if job:
+            dataset_status = "trained" if status_value == "completed" else "ready"
+            await FinetuneRepository.update_dataset(
+                {"_id": job["dataset_id"]},
+                {"$set": {"status": dataset_status}},
+            )
 
-def _run_training_sync(job_id: str, config: dict, loop):
+def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
     from src.training.finetuning import run_finetune_job
 
     @log_logic_execution
@@ -53,19 +65,12 @@ def _run_training_sync(job_id: str, config: dict, loop):
         await report_progress(job_id, data)
 
     def sync_update(data):
+        if cancel_event.is_set():
+            raise TrainingCancelled
         asyncio.run_coroutine_threadsafe(_update(data), loop)
 
     try:
         sync_update({"status": "running", "progress": 5})
-
-        base_model_name = config.get("base_model", settings.LLM_MODEL)
-        hf_token = settings.HF_TOKEN
-        epochs = config.get("epochs", 3)
-        batch_size = config.get("batch_size", 4)
-        learning_rate = config.get("learning_rate", 2e-4)
-        lora_rank = config.get("lora_rank", 16)
-        lora_alpha = config.get("lora_alpha", 32)
-        training_data = config.get("training_data", [])
 
         sync_update({"progress": 10, "status": "running"})
         result = run_finetune_job(job_id, config, sync_update)
@@ -94,7 +99,10 @@ def _run_training_sync(job_id: str, config: dict, loop):
             }
         )
 
-    except Exception as e:
+    except TrainingCancelled:
+        sync_update = lambda data: asyncio.run_coroutine_threadsafe(_update(data), loop)
+        sync_update({"status": "cancelled"})
+    except Exception:
         logger.exception("Model fine-tuning process error")
         sync_update({"status": "failed", "error_message": "Quá trình tinh chỉnh mô hình gặp sự cố bất ngờ"})
     finally:
@@ -361,7 +369,7 @@ async def create_job(req: dict):
         "dataset_id": ds_id,
         "job_name": req.get("job_name")
         or f"Model-Training-Task-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}",
-        "base_model": req.get("base_model"),
+        "base_model": req.get("base_model") or settings.LLM_MODEL,
         "method": req.get("method", "lora"),
         "epochs": req.get("epochs", 3),
         "learning_rate": req.get("learning_rate", 2e-4),
@@ -375,16 +383,13 @@ async def create_job(req: dict):
         "created_at": datetime.now(timezone.utc),
     }
     await FinetuneRepository.insert_job(job)
-    await FinetuneRepository.update_dataset(
-        {"_id": ds_id}, {"$set": {"status": "training"}}
-    )
     return job
 
 @log_logic_execution
 async def start_job(job_id: str, req: dict):
     
     job = await FinetuneRepository.find_job(
-        {"_id": job_id, "user_id": req.get("user_id")}
+        {"_id": job_id, "user_id": req.get("user_id"), "status": "pending"}
     )
     if not job:
         raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
@@ -392,7 +397,8 @@ async def start_job(job_id: str, req: dict):
         return {"error": "Tiến trình huấn luyện này đang được thực thi"}
     samples = await mongo.find("finetune_samples", {"dataset_id": job["dataset_id"]}).to_list(length=None)
     config = {
-        "base_model": job.get("base_model"),
+        "base_model": job.get("base_model") or settings.LLM_MODEL,
+        "hf_token": settings.HF_TOKEN,
         "epochs": job.get("epochs", 3),
         "batch_size": job.get("batch_size", 4),
         "learning_rate": job.get("learning_rate", 2e-4),
@@ -408,15 +414,21 @@ async def start_job(job_id: str, req: dict):
         ],
     }
     loop = asyncio.get_event_loop()
+    cancel_event = threading.Event()
     thread = threading.Thread(
-        target=_run_training_sync, args=(job_id, config, loop), daemon=True
+        target=_run_training_sync,
+        args=(job_id, config, loop, cancel_event),
+        daemon=True,
     )
-    active_jobs[job_id] = thread
-    thread.start()
     await FinetuneRepository.update_job(
         {"_id": job_id},
         {"$set": {"status": "running", "started_at": datetime.now(timezone.utc)}},
     )
+    await FinetuneRepository.update_dataset(
+        {"_id": job["dataset_id"]}, {"$set": {"status": "training"}}
+    )
+    active_jobs[job_id] = {"thread": thread, "cancel_event": cancel_event}
+    thread.start()
     return {"status": "started", "job_id": job_id}
 
 @log_logic_execution
@@ -433,7 +445,11 @@ async def get_job(job_id: str, user_id: str):
 
 @log_logic_execution
 async def cancel_job(job_id: str, req: dict):
-    
+    job = await FinetuneRepository.find_job(
+        {"_id": job_id, "user_id": req.get("user_id")}
+    )
+    if not job:
+        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
     result = await FinetuneRepository.update_job(
         {
             "_id": job_id,
@@ -443,7 +459,12 @@ async def cancel_job(job_id: str, req: dict):
         {"$set": {"status": "cancelled"}},
     )
     if result.modified_count > 0:
-        active_jobs.pop(job_id, None)
+        active_job = active_jobs.get(job_id)
+        if active_job:
+            active_job["cancel_event"].set()
+        await FinetuneRepository.update_dataset(
+            {"_id": job["dataset_id"]}, {"$set": {"status": "ready"}}
+        )
         return {"status": "cancelled"}
     raise HTTPException(
         status_code=400, detail="Hệ thống không thể hủy tiến trình huấn luyện vào lúc này"

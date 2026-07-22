@@ -2,7 +2,7 @@ import json
 
 import httpx
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from loguru import logger
 from src.agents.routing import semantic_router
@@ -13,12 +13,18 @@ from src.harness.context import context
 from src.harness.orchestration import orchestration
 from src.harness.security import security
 from src.schemas.interaction import ChatRequest
+from src.core.dependency import CurrentUser, get_current_user
 from src.workflow.orchestration import supervisor
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tro-chuyen")
 
 @router.post("")
-async def chat_endpoint(req: ChatRequest, request: Request):
+async def chat_endpoint(
+    req: ChatRequest,
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req.user_id = str(current_user.id)
     logger.info(f"Started Chat streaming process for user_id={req.user_id} with query length={len(req.query)}")
     token = request.headers.get("Authorization")
     if token:
@@ -59,11 +65,14 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                         "route": "error",
                     }
 
-        route_data = await semantic_router.execute(req.query)
+        route_data = {}
         if req.thinking:
             route = "supervisor"
+        elif req.document_ids or req.file_data or req.folder_data:
+            route = "knowledge"
         else:
-            route = "chat"
+            route_data = await semantic_router.execute(req.query)
+            route = route_data.get("route", "knowledge")
             
         final_answer = ""
 
@@ -94,8 +103,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 else:
                     content = text_prompt
 
-                res = await chat_llm.ainvoke([HumanMessage(content=content)])
+                res = await chat_llm.ainvoke(
+                    [HumanMessage(content=content)], max_tokens=256
+                )
                 final_answer = res.content
+        elif route == "knowledge":
+            from src.agents.analysis import researcher
+            final_answer = await researcher.execute(req.model_dump())
         else:
             async for event in supervisor.execute_plan(req.model_dump()):
                 if event["type"] == "message":
@@ -179,7 +193,12 @@ async def _consume_upload_quota(req: ChatRequest):
         logger.exception("Upload quota consumption error")
 
 @router.post("/phat-truc-tiep")
-async def stream_endpoint(req: ChatRequest, request: Request):
+async def stream_endpoint(
+    req: ChatRequest,
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    req.user_id = str(current_user.id)
     logger.info(f"Started Server-Sent Events stream for user_id={req.user_id} with query length={len(req.query)}")
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
@@ -247,11 +266,14 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             )
             req.conversation_history = ctx.chat_history
 
-            route_data = await semantic_router.execute(req.query)
+            route_data = {}
             if req.thinking:
                 route = "supervisor"
+            elif req.document_ids or req.file_data or req.folder_data:
+                route = "knowledge"
             else:
-                route = "chat"
+                route_data = await semantic_router.execute(req.query)
+                route = route_data.get("route", "knowledge")
                 
             final_answer = ""
 
@@ -286,12 +308,14 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         content = text_prompt
 
                     try:
-                        async for chunk in chat_llm.astream(
-                            [HumanMessage(content=content)]
-                        ):
-                            if chunk.content:
-                                final_answer += chunk.content
-                                yield "event: message\ndata: " + json.dumps({'chunk': chunk.content}) + "\n\n"
+                        response = await chat_llm.ainvoke(
+                            [HumanMessage(content=content)], max_tokens=256
+                        )
+                        final_answer = await security.ascan_output(response.content)
+                        if final_answer:
+                            yield "event: message\ndata: " + json.dumps(
+                                {"chunk": final_answer}
+                            ) + "\n\n"
                     except RuntimeError as e:
                         if "StopIteration" in str(e):
                             logger.warning("StopIteration during LLM chat stream")
@@ -302,52 +326,11 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         logger.exception("Unexpected error during LLM chat stream")
 
             elif route == "knowledge":
-                from huggingface_hub import AsyncInferenceClient
-                from langchain_core.messages import HumanMessage, SystemMessage
-                from src.utils.huggingface import HFInferenceChat
-
-                llama_client = AsyncInferenceClient(
-                    model=settings.LLM_MODEL, token=settings.HF_TOKEN
-                )
-                knowledge_llm = HFInferenceChat(
-                    client=llama_client, model=settings.LLM_MODEL
-                )
-
-                system_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(
-                    query=req.query
-                )
-
-                messages = [SystemMessage(content=system_prompt)]
-                if req.conversation_history:
-                    from langchain_core.messages import AIMessage
-                    for turn in req.conversation_history[-6:]:  # giữ 6 turns gần nhất
-                        if turn.get("role") == "user":
-                            messages.append(HumanMessage(content=turn["content"]))
-                        elif turn.get("role") == "assistant":
-                            messages.append(AIMessage(content=turn["content"]))
-
-                if req.image_data:
-                    final_msg_content = [
-                        {"type": "text", "text": req.query},
-                        {"type": "image_url", "image_url": {"url": req.image_data}},
-                    ]
-                else:
-                    final_msg_content = req.query
-                messages.append(HumanMessage(content=final_msg_content))
-
-                try:
-                    async for chunk in knowledge_llm.astream(messages):
-                        if chunk.content:
-                            final_answer += chunk.content
-                            yield "event: message\ndata: " + json.dumps({'chunk': chunk.content}) + "\n\n"
-                except RuntimeError as e:
-                    if "StopIteration" in str(e):
-                        logger.warning("StopIteration during knowledge LLM stream")
-                        yield "event: message\ndata: " + json.dumps({'chunk': 'Hệ thống đang gặp trục trặc kỹ thuật khi truy xuất dữ liệu'}) + "\n\n"
-                    else:
-                        logger.exception("RuntimeError during knowledge LLM stream")
-                except Exception:
-                    logger.exception("Unexpected error during knowledge LLM stream")
+                from src.agents.analysis import researcher
+                final_answer = await researcher.execute(req.model_dump())
+                yield "event: message\ndata: " + json.dumps(
+                    {"chunk": final_answer}
+                ) + "\n\n"
 
             else:
                 import asyncio
@@ -408,7 +391,6 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             )
                             agent_name = event.get('agent', 'unknown')
                             content = event.get('content', 'Completed')
-                            # Simulate live piping by chunking the output
                             chunk_size = 50
                             for i in range(0, len(content), chunk_size):
                                 chunk_str = content[i:i+chunk_size]

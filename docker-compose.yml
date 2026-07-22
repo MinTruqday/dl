@@ -196,15 +196,6 @@ services:
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
       - doclib_network
-    # Bỏ comment cụm dưới đây khi deploy lên Cloud/VPS có GPU NVIDIA
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-
   qdrant:
     image: qdrant/qdrant:latest
     container_name: doclib_qdrant

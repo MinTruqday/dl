@@ -26,8 +26,6 @@ class SecOpsAgent:
         self.llm = llm
 
     async def _invoke_slm(self, messages) -> SecOpsEvaluation:
-        # Architecture 5.0: Logic separated for easy drop-in of a local SLM (e.g., Ollama).
-        # Currently using the main LLM as requested by the user, but encapsulated.
         try:
             structured_llm = self.llm.with_structured_output(SecOpsEvaluation)
             return await structured_llm.ainvoke(messages)

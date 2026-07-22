@@ -104,6 +104,8 @@ class SessionService:
         internal_url = f"{settings.HUMANITY_URL}/nguoi-dung/email/{auth_cred['email']}"
         role = "reader"
         is_active = True
+        user_data = {}
+        ai_tier = "BASIC"
         
         async with httpx.AsyncClient() as client:
             try:
@@ -115,6 +117,17 @@ class SessionService:
             except Exception as e:
                 logger.exception("Failed to fetch user profile details from Humanity service during login")
                 pass
+            try:
+                usage_response = await client.get(
+                    f"{settings.USAGE_URL}/goi-cuoc/{user_id_str}",
+                    timeout=5.0,
+                )
+                if usage_response.status_code == 200:
+                    ai_tier = usage_response.json().get("data", {}).get(
+                        "ai_tier", "BASIC"
+                    )
+            except Exception:
+                logger.exception("Failed to fetch AI tier during login")
 
         if not is_active:
             raise HTTPException(status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động")
@@ -129,6 +142,11 @@ class SessionService:
                 "sid": session_id,
                 "role": role,
                 "uid": user_id_str,
+                "permissions": user_data.get("permissions", []),
+                "is_premium": user_data.get("is_premium", False),
+                "ai_tier": ai_tier,
+                "full_name": user_data.get("full_name", ""),
+                "slug": user_data.get("slug", ""),
             }
         )
         refresh_token = create_access_token(
@@ -247,6 +265,7 @@ class SessionService:
                 "uid": str(user_doc.get("_id", "")),
                 "permissions": user_doc.get("permissions", []),
                 "is_premium": user_doc.get("is_premium", False),
+                "ai_tier": user_doc.get("ai_tier", "BASIC"),
                 "full_name": user_doc.get("full_name", ""),
                 "slug": user_doc.get("slug", ""),
             }
@@ -260,4 +279,3 @@ class SessionService:
             "token_type": "bearer",
             "user": {"email": user_doc["email"], "has_passkey": has_passkey},
         }
-

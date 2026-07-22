@@ -12,7 +12,7 @@ export async function processTextAPI(
 ) {
   const res = await fetch(`${API_URL}/suy-luan/hanh-dong`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, action, context, target_lang: targetLang }),
   });
   const data = await res.json();
@@ -108,7 +108,7 @@ export async function queryRagAPI(
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({
-      document_id: documentId,
+      document_ids: [documentId],
       query,
       thinking,
       session_id: sessionId,

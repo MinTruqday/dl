@@ -6,7 +6,6 @@ from uuid6 import uuid7
 
 from fastapi import HTTPException
 from src.repositories.chat import ChatRepository
-from src.repositories.chat import ChatRepository
 
 class HistoryService:
     """

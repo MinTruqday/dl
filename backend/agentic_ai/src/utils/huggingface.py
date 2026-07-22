@@ -13,6 +13,14 @@ from pydantic import Field
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from loguru import logger
 
+def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
+    from huggingface_hub import HfApi
+
+    info = HfApi(token=token).model_info(model_id)
+    if not info.sha:
+        raise RuntimeError(f"Unable to resolve an immutable revision for model {model_id}")
+    return info.sha
+
 class HFInferenceChat(BaseChatModel):
     """
     <module_purpose>
@@ -129,7 +137,6 @@ class HFInferenceChat(BaseChatModel):
         
         def extract_and_parse(text: str):
             try:
-                # Handle cases where model wraps JSON in markdown blocks
                 if "```json" in text:
                     text = text.split("```json")[1].split("```")[0]
                 elif "```" in text:

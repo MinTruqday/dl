@@ -1,4 +1,4 @@
-import asyncio
+import re
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -49,34 +49,33 @@ class SemanticRouterValidator:
         from src.rag.embedding import embedder
         return embedder
 
-    def _compute_agent_embeddings(self) -> Dict[str, List[float]]:
+    async def _compute_agent_embeddings(self) -> Dict[str, List[float]]:
         embedder = self._get_embedder()
         result = {}
         for agent_name, description in VALID_AGENTS.items():
             try:
-                vec = embedder.embed_query(description)
+                vec = await embedder.embed_query(description)
                 result[agent_name] = vec
             except Exception:
                 logger.exception(f"Failed to embed agent description for {agent_name}")
         logger.info("Agent description embeddings initialized")
         return result
 
-    @property
-    def agent_embeddings(self) -> Dict[str, List[float]]:
+    async def get_agent_embeddings(self) -> Dict[str, List[float]]:
         if self._agent_embeddings is None:
-            self._agent_embeddings = self._compute_agent_embeddings()
+            self._agent_embeddings = await self._compute_agent_embeddings()
         return self._agent_embeddings
 
-    def find_closest_agent(self, task: str, fallback: str = "Knowledge") -> str:
+    async def find_closest_agent(self, task: str, fallback: str = "Knowledge") -> str:
         embedder = self._get_embedder()
         try:
-            task_vec = embedder.embed_query(task)
+            task_vec = await embedder.embed_query(task)
         except Exception:
             return fallback
 
         best_agent = fallback
         best_score = -1.0
-        for agent_name, agent_vec in self.agent_embeddings.items():
+        for agent_name, agent_vec in (await self.get_agent_embeddings()).items():
             score = _cosine_similarity(task_vec, agent_vec)
             if score > best_score:
                 best_score = score
@@ -85,13 +84,13 @@ class SemanticRouterValidator:
         logger.info(f"Semantic fallback routed to {best_agent} (score {best_score:.3f})")
         return best_agent
 
-    def validate_plan(self, nodes: List[Dict]) -> List[Dict]:
+    async def validate_plan(self, nodes: List[Dict]) -> List[Dict]:
         validated = []
         for node in nodes:
             agent = node.get("agent", "Knowledge")
             task_desc = node.get("task", "")
             if agent not in VALID_AGENTS:
-                corrected = self.find_closest_agent(task_desc)
+                corrected = await self.find_closest_agent(task_desc)
                 logger.warning(f"Invalid agent '{agent}' corrected to '{corrected}'")
                 node = {**node, "agent": corrected}
                 agent = corrected
@@ -108,9 +107,9 @@ class SemanticRouterValidator:
 
 
 INTENTS = {
-    "chat": "Conversational, summarize, explain, casual talk, greeting",
-    "action": "Create file, edit code, run command, system modification, delete",
-    "knowledge": "Search documents, read file, lookup guidelines, retrieve internal data"
+    "chat": "Conversational chat, greeting, casual talk, hello, xin chào, trò chuyện",
+    "action": "Create file, edit code, run command, system modification, delete, tạo và chỉnh sửa",
+    "knowledge": "Search documents, read file, lookup guidelines, retrieve internal data, tìm tài liệu"
 }
 
 class RouteAgent:
@@ -127,28 +126,39 @@ class RouteAgent:
         from src.rag.embedding import embedder
         return embedder
 
-    def _get_intent_vecs(self):
+    async def _get_intent_vecs(self):
         if self._intent_vecs is None:
             embedder = self._get_embedder()
             self._intent_vecs = {}
             for intent, desc in INTENTS.items():
-                self._intent_vecs[intent] = embedder.embed_query(desc)
+                self._intent_vecs[intent] = await embedder.embed_query(desc)
         return self._intent_vecs
 
     async def execute(self, query: str) -> dict:
+        normalized = re.sub(r"[^\w\s]", "", query.casefold()).strip()
+        quick_responses = {
+            "xin chào": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
+            "chào": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
+            "hello": "Hello. How can I help you today?",
+            "hi": "Hello. How can I help you today?",
+            "hey": "Hello. How can I help you today?",
+        }
+        if normalized in quick_responses:
+            return {"route": "chat", "answer": quick_responses[normalized]}
+
         embedder = self._get_embedder()
         try:
-            query_vec = embedder.embed_query(query)
+            query_vec = await embedder.embed_query(query)
             best_route = "knowledge"
             best_score = -1.0
             
-            for intent, vec in self._get_intent_vecs().items():
+            for intent, vec in (await self._get_intent_vecs()).items():
                 score = _cosine_similarity(query_vec, vec)
                 if score > best_score:
                     best_score = score
                     best_route = intent
 
-            if best_score > 0.85:
+            if best_score > 0.55:
                 logger.info(f"Intent classified as {best_route} with confidence {best_score:.3f}")
                 return {"route": best_route, "answer": ""}
             else:

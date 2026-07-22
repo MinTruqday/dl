@@ -21,7 +21,10 @@ async def get_user_sessions(
     return await HistoryService.get_user_sessions(str(current_user.id), document_id)
 
 @router.post("", response_model=Dict[str, Any])
-async def create_session(data: dict):
+async def create_session(
+    data: dict, current_user: CurrentUser = Depends(get_current_user)
+):
+    data["user_id"] = str(current_user.id)
     return await HistoryService.create_session(data)
 
 @router.get("/{session_id}", response_model=Dict[str, Any])
@@ -37,5 +40,11 @@ async def delete_session(session_id: str, current_user: CurrentUser = Depends(ge
     return await HistoryService.delete_session(session_id, str(current_user.id))
 
 @router.post("/{session_id}/tin-nhan", response_model=Dict[str, Any])
-async def add_message(session_id: str, data: dict):
+async def add_message(
+    session_id: str,
+    data: dict,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    await HistoryService.get_session_detail(session_id, str(current_user.id))
+    data["user_id"] = str(current_user.id)
     return await HistoryService.add_message(session_id, data)

@@ -156,7 +156,7 @@ async def edit_document_block(
     WHEN TO USE THIS TOOL:
     - Use this for EditorJS documents ONLY (format='json').
     - action must be 'insert' (inserts before index), 'replace' (replaces block at index), or 'delete' (removes block at index).
-    - new_block_json is required for 'insert' and 'replace' and must be a valid JSON string for a single EditorJS block (e.g. '{"type":"paragraph","data":{"text":"..."}}').
+    - new_block_json is required for 'insert' and 'replace' and must be a valid JSON string for a single EditorJS block.
     </contract>
     """
     token = config.get("configurable", {}).get("token")

@@ -5,4 +5,4 @@ scrape_configs:
   - job_name: 'doclib-agentic-ai'
     metrics_path: '/harness/metrics'
     static_configs:
-      - targets: ['agentic-ai:8100']
+      - targets: ['agentic_ai:8000']

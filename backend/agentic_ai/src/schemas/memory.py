@@ -3,9 +3,9 @@ from pydantic import BaseModel, Field
 
 class MemoryItem(BaseModel):
     id: Optional[str] = Field(None, description="The unique ID of the memory, if updating or deleting an existing memory. Leave empty for new memories.")
-    content: str = Field(..., description="The content of the memory to save.")
+    content: str = Field(description="The content of the memory to save.")
     category: str = Field("fact", description="The category of the memory. Can be 'fact', 'preference', 'procedure', or 'relationship'.")
-    hash: Optional[str] = Field(None, description="MD5 hash of the content to prevent duplication.")
+    hash: Optional[str] = Field(None, description="SHA-256 hash of the content to prevent duplication.")
     agent_id: Optional[str] = Field(None, description="ID of the agent that owns or created this memory, for multi-tenant isolation.")
     run_id: Optional[str] = Field(None, description="Execution run ID for contextual grouping.")
     memory_type: str = Field("semantic", description="Type of memory: semantic, episodic, procedural, or entity.")

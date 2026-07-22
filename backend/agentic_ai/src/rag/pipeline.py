@@ -20,7 +20,6 @@ class PipelineRag:
     </module_purpose>
     """
     _mongo_client = None
-    _neo4j_driver = None
 
     def __init__(self):
         mongo_uri = settings.MONGODB_URI
@@ -35,69 +34,25 @@ class PipelineRag:
         self._minio_private_bucket = settings.MINIO_PRIVATE_BUCKET
         self._minio_public_bucket = settings.MINIO_PUBLIC_BUCKET
         
-        if PipelineRag._neo4j_driver is None:
-            try:
-                from neo4j import AsyncGraphDatabase
-                PipelineRag._neo4j_driver = AsyncGraphDatabase.driver(
-                    settings.NEO4J_URI, 
-                    auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD)
-                )
-            except Exception as e:
-                logger.error(f"Neo4j Graph Database connection failed: {e}")
-        self._neo4j = PipelineRag._neo4j_driver
-
-    async def _extract_entities_and_relations(self, text: str, document_id: str):
-        if not self._neo4j:
-            return
-            
-        try:
-            from langchain_core.prompts import PromptTemplate
-            from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
-            
-            from src.core.registry import registry, PromptType
-            
-            _hf = HuggingFaceEndpoint(
-                task="conversational",
-                repo_id=settings.LLM_MODEL,
-                huggingfacehub_api_token=settings.HF_TOKEN,
-                temperature=0.1,
-            )
-            llm = ChatHuggingFace(llm=_hf)
-            prompt_template = registry.get(PromptType.GRAPHRAG_ENTITY_EXTRACTION)
-            prompt = PromptTemplate(
-                template=prompt_template,
-                input_variables=["text"]
-            )
-            response = await llm.ainvoke(prompt.format(text=text[:3000]))
-            
-            import json
-            import re
-            match = re.search(r"\[.*\]", response.content.strip(), re.DOTALL)
-            if match:
-                relations = json.loads(match.group(0))
-                
-                async def _write_tx(tx, rel):
-                    query = (
-                        "MERGE (s:Entity {name: $source}) "
-                        "MERGE (t:Entity {name: $target}) "
-                        "MERGE (s)-[r:RELATES_TO {type: $relation, doc_id: $doc_id}]->(t)"
-                    )
-                    await tx.run(query, source=rel.get("source"), target=rel.get("target"), relation=rel.get("relation"), doc_id=document_id)
-                
-                async with self._neo4j.session() as session:
-                    for rel in relations:
-                        await session.execute_write(_write_tx, rel)
-                logger.info(f"GraphRAG extracted {len(relations)} relations to Neo4j")
-                
-        except Exception as e:
-            logger.exception("GraphRAG entity extraction failed")
-
-    async def ingest_document(self, document_id: str) -> Dict:
-        document = await self._db.documents.find_one(
-            {"_id": __import__("bson").ObjectId(document_id)}
-        )
+    async def authorize_document(
+        self, document_id: str, user_id: str, is_admin: bool = False
+    ) -> Dict:
+        document = await self._db.documents.find_one({"_id": document_id})
         if not document:
             raise ValueError("Document not found or access denied")
+        if not is_admin:
+            allowed_users = {
+                str(document.get("creator_id", "")),
+                *[str(value) for value in document.get("coauthors", [])],
+            }
+            if user_id not in allowed_users:
+                raise PermissionError("Document not found or access denied")
+        return document
+
+    async def ingest_document(
+        self, document_id: str, user_id: str, is_admin: bool = False
+    ) -> Dict:
+        document = await self.authorize_document(document_id, user_id, is_admin)
 
         file_url = document.get("file_url", "")
         title = document.get("title", "Untitled")
@@ -197,8 +152,7 @@ class PipelineRag:
             extracted_chunks = await chunker.chunk_document(raw_text, metadata)
             chunks.extend(extracted_chunks)
             
-            # Extract GraphRAG entities from the summary portion
-            await self._extract_entities_and_relations(first_few_pages, document_id)
+        await self._extract_entities_and_relations(first_few_pages, document_id)
 
         if not chunks:
             raise ValueError("Document chunking error")
@@ -214,7 +168,7 @@ class PipelineRag:
         await vector_store.wait_upsert()
 
         await self._db.documents.update_one(
-            {"_id": __import__("bson").ObjectId(document_id)},
+            {"_id": document_id},
             {
                 "$set": {
                     "indexing_status": "indexed",
@@ -374,19 +328,37 @@ class PipelineRag:
         from src.memory.management import memory_manager
         import json
         from langchain_core.messages import SystemMessage, HumanMessage
+        from pydantic import BaseModel
+
+        class GraphRelation(BaseModel):
+            source: str
+            target: str
+            relation: str
+
+        class ExtractedGraph(BaseModel):
+            relations: List[GraphRelation]
         
         logger.info(f"Extracting GraphRAG entities for document {document_id}")
-        system_prompt = registry.get(PromptType.AGENT_MEMORY_EXTRACTION) # Re-using memory prompt for entities
-        human_msg = f"Extract key entities and their relationships from the following text as a JSON list of dictionaries with 'source', 'target', and 'relation' keys:\n\n{text[:8000]}"
+        system_prompt = registry.get(PromptType.GRAPHRAG_ENTITY_EXTRACTION)
+        human_msg = f"Extract key entities and relationships from this text:\n\n{text[:8000]}"
         
         try:
             msg = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
-            # For simplicity, we just invoke and let the LLM return JSON or text
-            response = await llm.ainvoke(msg)
-            # In a full implementation, we'd use structured output. Here we simulate storing to RedisGraph
+            response = await llm.with_structured_output(ExtractedGraph).ainvoke(msg)
             if memory_manager._redis:
-                edge_data = json.dumps({"document_id": document_id, "relations": str(response.content)})
-                await memory_manager._redis.sadd(f"graphrag:edges:{document_id}", edge_data)
+                for relation in response.relations:
+                    edge_data = json.dumps(
+                        {
+                            "document_id": document_id,
+                            "source": relation.source,
+                            "target": relation.target,
+                            "relation": relation.relation,
+                        },
+                        ensure_ascii=False,
+                    )
+                    await memory_manager._redis.sadd(
+                        f"graphrag:edges:{document_id}", edge_data
+                    )
                 logger.info("Successfully pushed entities to GraphRAG store")
         except Exception as e:
             logger.exception("GraphRAG entity extraction failed")

@@ -1,11 +1,15 @@
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from loguru import logger
 
 from src.loop.hill_climbing import hill_climbing_loop
+from src.core.dependency import Role, require_role
 
-router = APIRouter(prefix="/toi-uu")
+router = APIRouter(
+    prefix="/toi-uu",
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
 
 @router.get("/tong-quan")
 async def get_dashboard():

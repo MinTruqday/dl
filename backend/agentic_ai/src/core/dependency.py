@@ -3,7 +3,7 @@ import time
 from typing import List, Optional
 
 import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
@@ -52,6 +52,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         "role": payload.get("role", "reader"),
         "permissions": payload.get("permissions", []),
         "is_premium": payload.get("is_premium", False),
+        "ai_tier": payload.get("ai_tier", "BASIC"),
         "full_name": payload.get("full_name", ""),
         "slug": payload.get("slug", ""),
         "is_active": True
@@ -128,8 +129,6 @@ def require_permissions(required_permissions: List[str]):
 
     return permission_checker
 
-from fastapi import Header
-
 class AuthenticatedUser:
     def __init__(self, user_id: str, user_name: str = "User"):
         self.id = user_id
@@ -150,3 +149,12 @@ from src.core.infrastructure.mongo import mongo
 
 async def get_db():
     return mongo.get_db()
+
+async def verify_internal_token(
+    x_internal_token: Optional[str] = Header(default=None),
+) -> None:
+    if not settings.SECRET_KEY or x_internal_token != settings.SECRET_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden invalid internal token",
+        )

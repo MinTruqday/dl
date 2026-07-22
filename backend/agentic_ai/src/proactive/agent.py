@@ -21,7 +21,7 @@ def _format_trajectory_window(trajectory: List[Dict], window: int = _WINDOW_SIZE
         role = turn.get("role", "unknown").upper()
         content = str(turn.get("content", ""))
         if len(content) > 600:
-            content = content[:300] + "\n[...TRUNCATED...]\n" + content[-300:]
+            content = content[:300] + "\n[TRUNCATED]\n" + content[-300:]
         lines.append(f"[TURN {i + 1}] {role}: {content}")
     return "\n".join(lines) if lines else "(no trajectory)"
 

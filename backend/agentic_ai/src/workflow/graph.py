@@ -146,7 +146,7 @@ async def retrieve_db(state: AgentState):
     if document_ids and len(document_ids) >= 2:
         logger.info("Processing cross-document retrieval")
         try:
-            raw_documents = await retrieval.cross_document_retrieve(
+            raw_documents = await retriever.cross_document_retrieve(
                 question, document_ids, k=6
             )
             extracted_documents = []
@@ -181,7 +181,7 @@ async def retrieve_db(state: AgentState):
     for q in list(dict.fromkeys(queries))[:3]:
         try:
             results = await vector_store.query(
-                query_vector=await embedding.embed_query(q),
+                query_vector=await embedder.embed_query(q),
                 document_ids=document_ids,
                 limit=10,
             )
@@ -200,7 +200,7 @@ async def retrieve_db(state: AgentState):
                 scores = await asyncio.to_thread(reranker.predict, pairs)
                 scored_documents = list(zip(all_raw_documents, scores))
                 scored_documents.sort(key=lambda x: x[1], reverse=True)
-                top_documents = retrieval._lost_in_the_middle_reorder(
+                top_documents = retriever._lost_in_the_middle_reorder(
                     [doc for doc, score in scored_documents[:6]]
                 )[:3]
             except Exception as e:
@@ -319,7 +319,7 @@ async def generate(state: AgentState):
         else "CRITICAL: Do NOT include any citations or references — no relevant documents were retrieved for this query. All factual claims must come from your training knowledge only."
     )
     thought_instruction = (
-        "CRITICAL: You MUST enclose your full reasoning process, analysis, and outline inside <think></think> tags at the very beginning of your response, BEFORE the final answer. The <think> block must be substantive — not a placeholder."
+        "Analyze the evidence carefully and provide only the final answer without exposing private reasoning."
         if state.get("use_smart")
         else ""
     )
@@ -368,7 +368,7 @@ async def grade_generation(state: AgentState):
         documents_list = [
             {"text": d, "metadata": {"title": "Source"}} for d in documents
         ]
-        eval_res = await reasoning.evaluate_quality(
+        eval_res = await reasoner.evaluate_quality(
             state["question"], generation, documents_list
         )
 

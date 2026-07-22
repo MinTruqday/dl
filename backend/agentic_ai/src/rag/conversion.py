@@ -15,12 +15,15 @@ class _ChandraModel:
     def __init__(self):
         from transformers import AutoProcessor, AutoModelForImageTextToText, BitsAndBytesConfig
         import torch
+        from src.utils.huggingface import resolve_model_revision
 
         quant_config = BitsAndBytesConfig(load_in_8bit=True)
+        revision = resolve_model_revision(MODEL_ID, settings.HF_TOKEN)
 
-        self.processor = AutoProcessor.from_pretrained(MODEL_ID)
+        self.processor = AutoProcessor.from_pretrained(MODEL_ID, revision=revision)
         self.model = AutoModelForImageTextToText.from_pretrained(
             MODEL_ID,
+            revision=revision,
             device_map="auto",
             quantization_config=quant_config,
             torch_dtype=torch.float16,
