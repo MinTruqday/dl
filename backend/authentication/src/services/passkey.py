@@ -1,14 +1,11 @@
-from src.core.logic_logger import log_logic_execution
-from src.core.infrastructure.mongo import mongo
 import base64
 import json
-import os
-import uuid
 from datetime import datetime, timezone
 
 import httpx
 from fastapi import HTTPException
 from loguru import logger
+from src.core.logic_logger import log_logic_execution
 from src.repositories.identity import IdentityRepository as AuthenticationRepository
 from webauthn import (
     generate_authentication_options,
@@ -32,12 +29,11 @@ from webauthn.helpers.structs import (
 )
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.schemas.identity import UserInDB
 
 RP_ID = settings.PASSKEY_RP_ID
 RP_NAME = settings.PASSKEY_RP_NAME
-ORIGIN = settings.PASSKEY_ALLOWED_ORIGINS
+ORIGINS = [item.strip() for item in settings.PASSKEY_ALLOWED_ORIGINS.split(",") if item.strip()]
+EXPECTED_ORIGIN = ORIGINS if len(ORIGINS) > 1 else ORIGINS[0]
 
 class PasskeyService:
 
@@ -77,20 +73,7 @@ class PasskeyService:
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
             raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
-        challenge = None
-        try:
-            challenge = await AuthenticationRepository.get_redis_passkey_challenge(email)
-        except Exception as e:
-            logger.exception("Failed to retrieve temporary authentication challenge from cache layer")
-        if not challenge:
-            chal_doc = await AuthenticationRepository.get_passkey_challenge(email)
-            if chal_doc:
-                age = (
-                    datetime.now(timezone.utc)
-                    - chal_doc["created_at"].replace(tzinfo=timezone.utc)
-                ).total_seconds()
-                if age < 300:
-                    challenge = chal_doc["challenge"]
+        challenge = await AuthenticationRepository.consume_passkey_challenge(email)
         if not challenge:
             raise HTTPException(
                 status_code=400, detail="Mã xác minh bảo mật không hợp lệ hoặc đã quá hạn sử dụng"
@@ -110,37 +93,33 @@ class PasskeyService:
             verification = verify_authentication_response(
                 credential=credential_data,
                 expected_challenge=challenge,
-                expected_origin=ORIGIN,
+                expected_origin=EXPECTED_ORIGIN,
                 expected_rp_id=RP_ID,
                 credential_public_key=base64.b64decode(passkey["public_key"]),
                 credential_current_sign_count=passkey["sign_count"],
             )
-        except Exception as e:
+        except InvalidAuthenticationResponse:
             raise HTTPException(status_code=400, detail="Quá trình xác minh dữ liệu mã bảo mật gặp sự cố")
         await AuthenticationRepository.update_passkey_sign_count(
             user["_id"], credential_id_b64, verification.new_sign_count
         )
-        await AuthenticationRepository.delete_passkey_challenge(email)
-        try:
-            await AuthenticationRepository.delete_redis_passkey_challenge(email)
-        except Exception as e:
-            logger.exception("Failed to clear expired authentication challenge from cache layer")
         user_doc = None
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
+                    f"{settings.HUMANITY_URL}/nguoi-dung/email/{email}",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
                     timeout=10.0,
                 )
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")
         except Exception:
-            pass
+            logger.exception("Failed to fetch user profile after passkey verification")
 
         if not user_doc:
             raise HTTPException(status_code=401, detail="Quá trình xác minh định danh tài khoản gặp sự cố")
 
-        from src.services.passkey import SessionService
+        from src.services.session import SessionService
 
         return await SessionService.issue_token_for_user(user_doc, "passkey_login")
 
@@ -188,21 +167,7 @@ class PasskeyService:
         if not user:
             raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
 
-        challenge = None
-        try:
-            challenge = await AuthenticationRepository.get_redis_passkey_challenge(email)
-        except Exception as e:
-            logger.exception("Failed to retrieve temporary authentication challenge from cache layer")
-            
-        if not challenge:
-            chal_doc = await AuthenticationRepository.get_passkey_challenge(email)
-            if chal_doc:
-                age = (
-                    datetime.now(timezone.utc)
-                    - chal_doc["created_at"].replace(tzinfo=timezone.utc)
-                ).total_seconds()
-                if age < 300:
-                    challenge = chal_doc["challenge"]
+        challenge = await AuthenticationRepository.consume_passkey_challenge(email)
 
         if not challenge:
             raise HTTPException(
@@ -213,10 +178,10 @@ class PasskeyService:
             verification = verify_registration_response(
                 credential=credential_data,
                 expected_challenge=challenge,
-                expected_origin=ORIGIN,
+                expected_origin=EXPECTED_ORIGIN,
                 expected_rp_id=RP_ID,
             )
-        except InvalidRegistrationResponse as e:
+        except InvalidRegistrationResponse:
             raise HTTPException(status_code=400, detail="Quá trình xác minh dữ liệu mã bảo mật gặp sự cố")
 
         new_passkey = {
@@ -226,15 +191,8 @@ class PasskeyService:
             "created_at": datetime.now(timezone.utc)
         }
 
-        await mongo.update_one("auth_credentials", 
-            {"_id": user["_id"]},
-            {"$push": {"passkeys": new_passkey}}
-        )
-
-        await AuthenticationRepository.delete_passkey_challenge(email)
-        try:
-            await AuthenticationRepository.delete_redis_passkey_challenge(email)
-        except Exception as e:
-            logger.exception("Failed to clear expired authentication challenge from cache layer")
+        result = await AuthenticationRepository.add_passkey(user["_id"], new_passkey)
+        if result.modified_count == 0:
+            raise HTTPException(status_code=409, detail="Mã bảo mật đã được đăng ký")
 
         return {"message": "Thực hiện đăng ký mã bảo mật hoàn tất"}

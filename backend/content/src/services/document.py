@@ -24,6 +24,7 @@ from src.schemas.document import (
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
 
 def serialize_document(document):
@@ -36,9 +37,39 @@ def serialize_document(document):
     views = document.get("views", 0)
     document["view_count"] = views
     document["views_count"] = views
+    document.pop("password", None)
+    document.pop("access_password_hash", None)
     return document
 
 class DocumentService:
+    @staticmethod
+    def _is_admin(current_user) -> bool:
+        role = getattr(current_user, "role", "") if current_user else ""
+        return str(getattr(role, "value", role)).lower() == "admin"
+
+    @staticmethod
+    async def _has_purchase(user_id: str | None, document_id: str) -> bool:
+        if not user_id:
+            return False
+        purchase = await database.mongodb[settings.FINANCE_DB_NAME].purchases.find_one(
+            {"user_id": user_id, "item_id": document_id, "status": "purchased"},
+            {"_id": 1},
+        )
+        return purchase is not None
+
+    @staticmethod
+    async def _can_read_full(document: dict, current_user) -> bool:
+        user_id = str(current_user.id) if current_user else None
+        if user_id == document.get("creator_id") or DocumentService._is_admin(current_user):
+            return True
+        if document.get("status") != DocumentStatus.PUBLISHED or document.get("is_deleted") is True:
+            return False
+        if document.get("visibility", "public") != "public":
+            return False
+        if int(document.get("price_dl", 0) or 0) <= 0 and not document.get("is_premium"):
+            return True
+        return await DocumentService._has_purchase(user_id, str(document["_id"]))
+
     @staticmethod
     def _fragment_document_content(content: str, key: bytes = None) -> list:
         if not content:
@@ -81,8 +112,8 @@ class DocumentService:
             {"$sort": {"_id": 1}},
         ]
         pipeline_categories = [
-            {"$unwind": "$categories"},
-            {"$group": {"_id": "$categories"}},
+            {"$match": {"category": {"$type": "string"}}},
+            {"$group": {"_id": "$category"}},
             {"$sort": {"_id": 1}},
         ]
         tags_list = await docs_col.aggregate(pipeline_tags).to_list(length=None)
@@ -103,12 +134,12 @@ class DocumentService:
         docs_col = DocumentRepository
         cursor = (
             docs_col.find(
-                {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}
+                {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}, "visibility": "public"}
             )
             .sort("views", -1)
             .limit(limit)
         )
-        documents = await cursor 
+        documents = await cursor.to_list(length=limit)
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -125,10 +156,11 @@ class DocumentService:
             {
                 "status": DocumentStatus.PUBLISHED,
                 "is_deleted": {"$ne": True},
+                "visibility": "public",
                 "$text": {"$search": query},
             }
         ).limit(limit)
-        documents = await cursor 
+        documents = await cursor.to_list(length=limit)
         return [serialize_document(d) for d in documents]
 
 
@@ -152,12 +184,12 @@ class DocumentService:
         
         file_id = str(uuid.UUID(bytes=file_id_bytes))
         
-        # Verify license
-        license_doc = await mongo.find_one("drm_licenses", {"file_id": file_id})
+        license_doc = await database.mongodb[settings.DRM_DB_NAME].drm_licenses.find_one({"file_id": file_id})
         if not license_doc:
             raise ValueError("Không tìm thấy giấy phép hợp lệ cho tài liệu này")
-            
-        if license_doc.get("user_id") != current_user.id and current_user.role != "ADMIN":
+        if license_doc.get("status") != "ACTIVE":
+            raise ValueError("Giấy phép tài liệu đã hết hiệu lực")
+        if license_doc.get("user_id") != str(current_user.id) and not DocumentService._is_admin(current_user):
             raise ValueError("Bạn không có quyền truy cập tài liệu này")
             
         encoded_key = license_doc.get("aes_key")
@@ -169,7 +201,7 @@ class DocumentService:
         try:
             aesgcm = AESGCM(aes_key)
             decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
-        except Exception as e:
+        except Exception:
             raise ValueError("Giải mã tài liệu thất bại, tệp tin có thể đã bị can thiệp")
             
         if hashlib.sha256(decrypted_data).digest() != file_hash:
@@ -192,20 +224,30 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def create_document(doc_in: DocumentCreate, current_user):
-        
         docs_collection = DocumentRepository
-        existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
-        if existing_slug:
-            raise HTTPException(
-                status_code=400, detail="Đường dẫn tĩnh yêu cầu đã tồn tại trên hệ thống"
-            )
+        import re
+        import unicodedata
 
-        doc_dict = doc_in.model_dump()
+        slug = doc_in.slug
+        if not slug:
+            normalized = unicodedata.normalize("NFKD", doc_in.title).encode("ascii", "ignore").decode("ascii").lower()
+            slug = re.sub(r"[^a-z0-9]+", "-", normalized).strip("-") or "tai-lieu"
+        existing_slug = await docs_collection.find_one({"slug": slug})
+        if existing_slug:
+            slug = f"{slug}-{str(uuid7())[:8]}"
+
+        doc_dict = doc_in.model_dump(exclude={"password"})
+        doc_dict["slug"] = slug
         if not doc_dict.get("publisher_name"):
             doc_dict["publisher_name"] = current_user.full_name
 
         doc_doc = DocumentInDB(**doc_dict, creator_id=str(current_user.id))
-        await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
+        stored_document = doc_doc.model_dump(by_alias=True)
+        if doc_in.password:
+            pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+            stored_document["access_password_hash"] = pwd_context.hash(doc_in.password)
+            stored_document["is_password_protected"] = True
+        await docs_collection.insert_one(stored_document)
         logger.info("Document successfully created in the system")
         return doc_doc
 
@@ -303,16 +345,18 @@ class DocumentService:
         if settings.NOTIFICATION_URL:
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
-                    await client.post(
-                        f"{settings.NOTIFICATION_URL}/thong-bao/kich-hoat",
+                    response = await client.post(
+                        f"{settings.NOTIFICATION_URL}/thong-bao/gui-di",
                         json={
                             "target_user_id": str(current_user.id),
                             "title": "Document successfully updated",
                             "body": "The specified document content has been successfully synchronized and updated",
                             "type": "DOCUMENT_UPDATE",
                         },
+                        headers={"X-Internal-Token": settings.SECRET_KEY},
                     )
-            except Exception as e:
+                    response.raise_for_status()
+            except Exception:
                 logger.exception("Document update notification dispatch failed")
 
         logger.info("Document content successfully synchronized and updated")
@@ -334,7 +378,7 @@ class DocumentService:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
         if (
             doc.get("creator_id") != str(current_user.id)
-            and current_user.role != "ADMIN"
+            and not DocumentService._is_admin(current_user)
         ):
             raise HTTPException(
                 status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này"
@@ -397,14 +441,14 @@ class DocumentService:
     ):
         
         docs_collection = DocumentRepository
-        query = {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}
+        query = {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}, "visibility": "public"}
         if q:
             query["$or"] = [
                 {"title": {"$regex": q, "$options": "i"}},
                 {"description": {"$regex": q, "$options": "i"}},
             ]
         if category:
-            query["categories"] = category
+            query["category"] = category
         if tag:
             query["tags"] = tag
 
@@ -433,11 +477,14 @@ class DocumentService:
         if not document:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
+        if document.get("is_deleted") is True and document.get("creator_id") != user_id and not DocumentService._is_admin(current_user):
+            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+
         if (
             document.get("creator_id") != user_id
             and document.get("status") != DocumentStatus.PUBLISHED
         ):
-            if not current_user or current_user.role != "ADMIN":
+            if not DocumentService._is_admin(current_user):
                 raise HTTPException(
                     status_code=403, detail="Tài liệu hiện đang ở trạng thái nháp và chưa được công bố"
                 )
@@ -476,33 +523,36 @@ class DocumentService:
             if rl_key and redis:
                 await redis.delete(rl_key)
 
+        can_read_full = await DocumentService._can_read_full(document, current_user)
+        if not can_read_full and document.get("status") == DocumentStatus.PUBLISHED:
+            raw_content = document.get("content") or ""
+            limit = max(0, int(document.get("preview_pages", 5) or 0))
+            document["content"] = raw_content[: limit * 1000]
+            document["has_purchased"] = False
+
         document = serialize_document(document)
 
-        aes_key = None
-        try:
-            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-            aes_key = AESGCM.generate_key(bit_length=256)
-            import base64
-            b64_key = base64.b64encode(aes_key).decode('utf-8')
-            if redis:
-                uid_str = user_id or "guest"
-                await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
-        except ImportError:
-            pass
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        import base64
+        aes_key = AESGCM.generate_key(bit_length=256)
+        b64_key = base64.b64encode(aes_key).decode("utf-8")
+        if redis and can_read_full:
+            uid_str = user_id or "guest"
+            await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
 
         try:
             from src.core.infrastructure.mongo import mongo
-            drm_doc = await mongo.find_one("document_drm_settings", {"document_id": document["_id"]})
+            drm_doc = await database.mongodb[settings.DRM_DB_NAME].document_drm_settings.find_one({"document_id": document["_id"]})
             if drm_doc:
                 document["drm_settings"] = {
                     "disable_copy": drm_doc.get("disable_copy", False),
                     "hide_from_search": drm_doc.get("hide_from_search", False),
                 }
         except Exception:
-            pass
+            logger.exception("Failed to retrieve DRM settings")
 
         if document.get("content"):
-            if user_id != document.get("creator_id"):
+            if user_id != document.get("creator_id") and can_read_full:
                 document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
                 del document["content"]
 
@@ -609,11 +659,12 @@ class DocumentService:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{email}",
+                    f"{settings.HUMANITY_URL}/nguoi-dung/email/{email}",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
                 )
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
-        except Exception as e:
+        except Exception:
             logger.exception("Author profile synchronization failed")
 
         if not target_user:
@@ -640,6 +691,7 @@ class DocumentService:
                 "slug": slug,
                 "status": DocumentStatus.PUBLISHED,
                 "is_deleted": {"$ne": True},
+                "visibility": "public",
             }
         )
         if not document:
@@ -651,15 +703,11 @@ class DocumentService:
             if document.get("creator_id") == user_id:
                 has_purchased = True
             else:
-                purchases_col = ContentRepository.get("purchases")
-                purchase = await purchases_col.find_one(
-                    {"user_id": user_id, "item_id": str(document["_id"])}
-                )
-                if purchase:
-                    has_purchased = True
+                has_purchased = await DocumentService._has_purchase(user_id, str(document["_id"]))
 
-        is_privileged = current_user and current_user.role == "ADMIN"
-        if document.get("is_premium") and not has_purchased and not is_privileged:
+        is_privileged = DocumentService._is_admin(current_user)
+        requires_purchase = int(document.get("price_dl", 0) or 0) > 0 or document.get("is_premium")
+        if requires_purchase and not has_purchased and not is_privileged:
             raw_content = document.get("content") or ""
             limit = document.get("preview_pages", 5)
             try:
@@ -671,7 +719,7 @@ class DocumentService:
                     document["content"] = json.dumps(parsed)
                 else:
                     document["content"] = raw_content[: limit * 1000]
-            except:
+            except (TypeError, ValueError, json.JSONDecodeError):
                 document["content"] = raw_content[: limit * 1000]
 
         should_increment = True
@@ -695,11 +743,12 @@ class DocumentService:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/{document['creator_id']}",
+                    f"{settings.HUMANITY_URL}/nguoi-dung/{document['creator_id']}",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
                 )
                 if resp.status_code == 200:
                     author = resp.json().get("data")
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to synchronize author profile data")
         if author:
             document["author"] = {
@@ -709,20 +758,16 @@ class DocumentService:
             }
 
         document["has_purchased"] = has_purchased
-        aes_key = None
-        try:
-            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-            aes_key = AESGCM.generate_key(bit_length=256)
-            import base64
-            b64_key = base64.b64encode(aes_key).decode('utf-8')
-            if redis:
-                uid_str = user_id or "guest"
-                await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
-        except ImportError:
-            pass
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        import base64
+        aes_key = AESGCM.generate_key(bit_length=256)
+        b64_key = base64.b64encode(aes_key).decode("utf-8")
+        if redis and (has_purchased or not requires_purchase or is_privileged):
+            uid_str = user_id or "guest"
+            await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
         
         if document.get("content"):
-            if user_id != document.get("creator_id"):
+            if user_id != document.get("creator_id") and (has_purchased or not requires_purchase or is_privileged):
                 document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
                 del document["content"]
             
@@ -732,6 +777,9 @@ class DocumentService:
     @log_logic_execution
     async def get_document_decryption_key(document_id: str, current_user):
         user_id = str(current_user.id) if current_user else "guest"
+        document = await DocumentRepository.find_one({"_id": document_id})
+        if not document or not await DocumentService._can_read_full(document, current_user):
+            raise HTTPException(status_code=403, detail="Bạn không có quyền giải mã tài liệu này")
         if redis:
             b64_key = await redis.get(f"aes_key:{document_id}:{user_id}")
             if b64_key:
@@ -747,6 +795,7 @@ class DocumentService:
                 "slug": slug,
                 "status": DocumentStatus.PUBLISHED,
                 "is_deleted": {"$ne": True},
+                "visibility": "public",
             }
         )
         if not doc:
@@ -764,7 +813,7 @@ class DocumentService:
                 preview_content = json.dumps(parsed)
             else:
                 preview_content = raw_content[: limit * 1000]
-        except:
+        except (TypeError, ValueError, json.JSONDecodeError):
             preview_content = raw_content[: limit * 1000]
 
         preview_data = {
@@ -791,7 +840,7 @@ class DocumentService:
             .find("audit_logs", {"document_id": document_id})
             .sort("timestamp", -1)
             .limit(100)
-            .execute()
+            .to_list(length=100)
         )
         return [
             {
@@ -801,7 +850,7 @@ class DocumentService:
                 "reason": log.get("reason"),
                 "timestamp": (
                     log["timestamp"].isoformat()
-                    if isinstance(log.get("timestamp"), datetime.datetime)
+                    if isinstance(log.get("timestamp"), datetime)
                     else log.get("timestamp")
                 ),
             }
@@ -841,7 +890,7 @@ class DocumentService:
         documents = (
             await DocumentRepository
             .aggregate(pipeline)
-            .execute()
+            .to_list(length=limit)
         )
 
         def format_date(val):
@@ -960,12 +1009,14 @@ class DocumentService:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/{new_owner_id}",
+                    f"{settings.HUMANITY_URL}/nguoi-dung/{new_owner_id}",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
                 )
                 if resp.status_code == 200:
                     target = resp.json().get("data")
         except Exception:
-            pass
+            logger.exception("Failed to verify ownership transfer target")
+            raise HTTPException(status_code=503, detail="Dịch vụ hồ sơ người dùng tạm thời không khả dụng")
         if not target:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài khoản chuyển nhượng"
@@ -990,14 +1041,14 @@ class DocumentService:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
             )
+        if doc.get("creator_id") != str(current_user.id) and not DocumentService._is_admin(current_user):
+            raise HTTPException(status_code=403, detail="Bạn không có quyền xem dữ liệu phân tích tài liệu này")
         views = doc.get("views", 0)
         content = doc.get("content", "")
         total_words = len(content.split()) if content else 0
         avg_read_time_min = max(1, total_words // 200)
         bookmark_count = await mongo.count_documents(collection="bookmarks", filter={"document_id": document_id})
-        purchase_count = await mongo.count_documents("transactions", 
-            {"reference_id": document_id, "type": {"$in": ["purchase", "receive"]}}
-        )
+        purchase_count = await database.mongodb[settings.FINANCE_DB_NAME].purchases.count_documents({"item_id": document_id, "status": "purchased"})
         return {
             "views": views,
             "avg_read_time": f"{avg_read_time_min} minutes",
@@ -1016,6 +1067,8 @@ class DocumentService:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
             )
+        if doc.get("creator_id") != str(current_user.id) and not DocumentService._is_admin(current_user) and doc.get("status") != DocumentStatus.PUBLISHED:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền xem chỉ số tài liệu này")
         content = doc.get("content", "")
         word_count = len(content.split()) if content else 0
         sentences = (
@@ -1040,8 +1093,8 @@ class DocumentService:
     ) -> List[dict]:
         
         docs_col = DocumentRepository
-        cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
-        documents = await cursor 
+        cursor = docs_col.find({"status": "published", "is_deleted": {"$ne": True}, "visibility": "public"}).sort("views", -1).limit(limit)
+        documents = await cursor.to_list(length=limit)
         return [
             {
                 "_id": str(b["_id"]),

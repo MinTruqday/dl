@@ -12,6 +12,7 @@ from src.core.dependency import AuthenticatedUser, Depends, Header, HTTPExceptio
 from src.core.dependency import get_current_user
 from src.core.response import APIResponse
 from src.repositories.message import MessageRepository
+from src.api.thread import publish_personal_message
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tin-nhan")
 
@@ -46,4 +47,3 @@ async def toggle_pin_conversation(
         data=await PinService.toggle_pin_conversation(other_user_id, current_user),
         message="Cập nhật ưu tiên cuộc trò chuyện hoàn tất",
     )
-

@@ -1,15 +1,6 @@
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-try:
-    from motor.motor_asyncio import AsyncIOMotorCursor, AsyncIOMotorCommandCursor
-    def _cursor_await(self):
-        return self.to_list(length=None).__await__()
-    AsyncIOMotorCursor.__await__ = _cursor_await
-    AsyncIOMotorCommandCursor.__await__ = _cursor_await
-except ImportError:
-    pass
-
 class MongoClient:
     def __init__(self):
         self.db_name = settings.AUTHENTICATION_DB_NAME
@@ -89,6 +80,13 @@ class QueryBuilder:
         return self
 
     async def execute(self):
-        return await self.client.find(self.collection, self._query, sort=self._sort, skip=self._skip, limit=self._limit)
+        cursor = self.client.find(
+            self.collection,
+            self._query,
+            sort=self._sort,
+            skip=self._skip,
+            limit=self._limit,
+        )
+        return await cursor.to_list(length=None)
 
 mongo = MongoClient()

@@ -89,8 +89,8 @@ class RabbitMQClient:
             logger.warning(f"RabbitMQ message {ack_id} acknowledgement timed out, requeuing")
             try:
                 await message.nack(requeue=True)
-            except Exception as e:
-                pass
+            except Exception:
+                logger.exception("RabbitMQ message requeue failed")
 
     async def ack(self, delivery_tag: str) -> bool:
         message = self.pending_acks.pop(delivery_tag, None)

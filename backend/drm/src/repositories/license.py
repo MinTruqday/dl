@@ -1,5 +1,8 @@
+from typing import Any, Dict, Optional
+
+from pymongo import ReturnDocument
+
 from src.core.infrastructure.mongo import mongo
-from typing import Optional, Dict, Any
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 class LicenseRepository:
@@ -26,7 +29,49 @@ class LicenseRepository:
 
     @classmethod
     async def get_purchase(cls, user_id: str, item_id: str) -> Optional[Dict[str, Any]]:
-        return await mongo.find_one("purchases", {"user_id": user_id, "item_id": item_id})
+        finance_db = database.mongodb[settings.FINANCE_DB_NAME]
+        return await finance_db["purchases"].find_one(
+            {
+                "user_id": user_id,
+                "document_id": item_id,
+                "item_type": "document",
+                "status": {"$ne": "CANCELLED"},
+            }
+        )
+
+    @classmethod
+    async def claim_access(
+        cls,
+        license_id: Any,
+        hardware_signature: str,
+        accessed_at,
+        client_ip: str,
+    ) -> Optional[Dict[str, Any]]:
+        return await cls._get_db()["drm_licenses"].find_one_and_update(
+            {
+                "_id": license_id,
+                "status": "ACTIVE",
+                "$or": [
+                    {"hardware_signature": {"$exists": False}},
+                    {"hardware_signature": None},
+                    {"hardware_signature": hardware_signature},
+                ],
+            },
+            {
+                "$set": {
+                    "hardware_signature": hardware_signature,
+                    "last_opened_at": accessed_at,
+                },
+                "$inc": {"open_count": 1},
+                "$push": {
+                    "recent_accesses": {
+                        "$each": [{"time": accessed_at, "ip": client_ip}],
+                        "$slice": -20,
+                    }
+                },
+            },
+            return_document=ReturnDocument.AFTER,
+        )
 
     @classmethod
     async def record_audit_log(cls, log_doc: Dict[str, Any]):

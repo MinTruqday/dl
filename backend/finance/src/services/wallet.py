@@ -18,7 +18,10 @@ class WalletService:
     @log_logic_execution
     async def get_balance(current_user):
         wallet = await mongo.find_one(collection="wallets", query={"_id": str(current_user.id)})
-        return {"balance": wallet.get("balance", 0) if wallet else 0}
+        return {
+            "balance": wallet.get("balance", 0) if wallet else 0,
+            "withdrawable_balance": wallet.get("withdrawable_balance", 0) if wallet else 0,
+        }
     @staticmethod
     @log_logic_execution
     async def get_history(
@@ -36,8 +39,8 @@ class WalletService:
                 query["created_at"] = {
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
-            except Exception as e:
-                logger.exception("Invalid pagination cursor format provided")
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Con trỏ phân trang không hợp lệ")
         txs = await mongo.find(collection="transactions", query=query, sort=[("created_at", -1)], skip=skip, limit=limit).to_list(length=None)
         type_translations = {
             "topup": "Deposit",

@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from loguru import logger
 
-from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
+from src.services.document import DocumentService
 
 class PublicationService:
 
@@ -46,33 +46,33 @@ class PublicationService:
         )
         if not doc:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
+        if doc.get("creator_id") != str(current_user.id) and not DocumentService._is_admin(current_user) and doc.get("status") != "published":
+            raise HTTPException(status_code=403, detail="Bạn không có quyền phân tích tài liệu này")
         content = doc.get("content")
         if not content:
             return {"score": 0, "level": "No content available", "words": 0}
-        try:
-            import textstat
+        import re
 
-            score = textstat.flesch_reading_ease(content)
-            grade = textstat.flesch_kincaid_grade(content)
-            words = textstat.lexicon_count(content, removepunct=True)
-            target = (
-                "University / Expert"
-                if grade > 12
-                else "High School" if grade > 8 else "General Public"
-            )
-            return {
-                "ease_score": score,
-                "complexity_grade": grade,
-                "target_audience": target,
-                "total_words": words,
-                "analysis": "Readable structure" if score > 60 else "Complex structure",
-            }
-        except ImportError as e:
-            logger.exception("Linguistic syntax analysis failed")
-            return {"error": "Hệ thống phân tích chỉ số đọc hiểu hiện đang bảo trì, vui lòng thử lại sau"}
-        except Exception as e:
-            logger.exception("Text structure analysis failed")
-            return {"error": "Hệ thống không thể phân tích văn bản do định dạng dữ liệu không xác định"}
+        words_list = re.findall(r"[\wÀ-ỹ]+", str(content), flags=re.UNICODE)
+        words = len(words_list)
+        sentences = max(1, len(re.findall(r"[.!?]+", str(content))))
+        vowels = "aeiouyàáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ"
+        syllables = 0
+        for word in words_list:
+            groups = re.findall(f"[{vowels}]+", word.lower())
+            syllables += max(1, len(groups))
+        ease = 206.835 - 1.015 * (words / sentences) - 84.6 * (syllables / max(words, 1))
+        grade = 0.39 * (words / sentences) + 11.8 * (syllables / max(words, 1)) - 15.59
+        score = round(max(0, min(100, ease)), 1)
+        grade = round(max(0, grade), 1)
+        target = "University / Expert" if grade > 12 else "High School" if grade > 8 else "General Public"
+        return {
+            "ease_score": score,
+            "complexity_grade": grade,
+            "target_audience": target,
+            "total_words": words,
+            "analysis": "Readable structure" if score > 60 else "Complex structure",
+        }
 
     @staticmethod
     @log_logic_execution
@@ -80,10 +80,12 @@ class PublicationService:
         document_id: str, publish_at: str, current_user
     ):
         user_id = str(current_user.id)
-        await DocumentRepository.update_one(
+        result = await DocumentRepository.update_one(
             {"_id": document_id, "creator_id": user_id},
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at) if isinstance(publish_at, str) else publish_at}},
         )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu cần lên lịch")
         logger.info("Document publication schedule configured successfully")
         return {"message": "Thiết lập lịch trình xuất bản tự động hoàn tất"}
 
@@ -99,7 +101,9 @@ class PublicationService:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
         from src.core.publication import trigger_document_publish_job
 
-        await trigger_document_publish_job(document_id, user_id)
+        queued = await trigger_document_publish_job(document_id, user_id)
+        if not queued:
+            raise HTTPException(status_code=503, detail="Hàng đợi xuất bản tạm thời không khả dụng")
         await docs_collection.update_one(
             {"_id": document_id},
             {

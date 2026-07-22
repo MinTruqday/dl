@@ -1,4 +1,3 @@
-import json
 import redis.asyncio as aioredis
 from loguru import logger
 from src.core.infrastructure.configuration import settings
@@ -41,10 +40,34 @@ class RedisAPIClient:
             logger.exception(f"Failed to execute DELETE operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
+    async def incr(self, key: str):
+        try:
+            return await self.get_client().incr(key)
+        except Exception:
+            logger.exception(f"Failed to execute INCR operation on Redis Cache for key {key}")
+            raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
+
+    async def incrby(self, key: str, amount: int):
+        try:
+            return await self.get_client().incrby(key, amount)
+        except Exception:
+            logger.exception(f"Failed to execute INCRBY operation on Redis Cache for key {key}")
+            raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
+
+    async def expire(self, key: str, seconds: int):
+        try:
+            return await self.get_client().expire(key, seconds)
+        except Exception:
+            logger.exception(f"Failed to execute EXPIRE operation on Redis Cache for key {key}")
+            raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
+
+    async def ping(self):
+        return await self.get_client().ping()
+
     async def sadd(self, key: str, member: str):
         try:
             return await self.get_client().sadd(key, member)
-        except Exception as e:
+        except Exception:
             logger.exception(f"Failed to execute SADD operation on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
@@ -84,5 +107,6 @@ class RedisAPIClient:
     async def aclose(self):
         if self._client:
             await self._client.aclose()
+            self._client = None
 
 redis = RedisAPIClient()

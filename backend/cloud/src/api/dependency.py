@@ -1,8 +1,3 @@
-import httpx
-from fastapi import Depends, HTTPException
-from loguru import logger
-
-from src.core.infrastructure.configuration import settings
 from src.core.dependency import (
     RateLimiting,
     get_current_user,
@@ -14,24 +9,3 @@ from src.core.dependency import (
     require_role,
 )
 from src.core.dependency import CurrentUser, Role
-
-async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
-                f"{settings.USAGE_URL}/han-muc/xac-minh",
-                params={
-                    "user_id": str(current_user.id),
-                    "role": current_user.role.value,
-                },
-            )
-            if resp.status_code == 429:
-                raise HTTPException(
-                    status_code=429,
-                    detail=resp.json().get("detail", "StorageService quota exceeded"),
-                )
-            elif resp.status_code != 200:
-                logger.warning("Failed to verify user storage quota")
-    except Exception as e:
-        logger.exception("Failed to connect to background service")
-    return current_user

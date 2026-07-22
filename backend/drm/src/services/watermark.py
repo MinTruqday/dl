@@ -1,6 +1,4 @@
 import asyncio
-import io
-
 from src.core.logic_logger import log_logic_execution
 from fastapi import HTTPException
 from loguru import logger
@@ -96,19 +94,9 @@ class WatermarkService:
         )
         import httpx
         from src.core.infrastructure.configuration import settings
-        
+
         user_id = str(current_user.id)
         user_tier = current_user.tier
-        try:
-            url = f"{settings.INTERNAL_API_URL}/su-dung/goi-cuoc/{current_user.id}"
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, timeout=10.0)
-                if response.status_code == 200:
-                    data = response.json()
-                    tier_data = data.get("data") or {}
-                    user_tier = tier_data.get("ai_tier", "BASIC")
-        except Exception as e:
-            logger.warning(f"Failed to fetch user tier information {e}")
 
         try:
             async with httpx.AsyncClient() as client:
@@ -144,7 +132,7 @@ class WatermarkService:
         if (
             document.get("is_premium")
             and document.get("creator_id") != user_id
-            and (not hasattr(current_user, "role") or current_user.role != "admin")
+            and (not hasattr(current_user, "role") or current_user.role.value != "admin")
         ):
             purchase = await LicenseRepository.get_purchase(user_id, str(document["_id"]))
             if not purchase:
@@ -157,7 +145,7 @@ class WatermarkService:
         raw_content = str(document.get("content", ""))
 
         if content_format == "doclibx":
-            watermarked_latex = WatermarkService.inject_structural_watermark_latex(raw_content, user_id) if enable_micro else raw_content
+            watermarked_latex = raw_content
             try:
                 from src.compilation.engines.latex import LatexEngine
                 pdf_data_pre = await LatexEngine.compile_to_pdf(watermarked_latex)
@@ -211,14 +199,14 @@ class WatermarkService:
                     width, height = rect.width, rect.height
                     
                     if enable_visual:
+                        watermark_point = fitz.Point(width / 4, height / 2)
                         page.insert_text(
-                            fitz.Point(width / 4, height / 2),
+                            watermark_point,
                             user_email,
                             fontsize=60,
                             fontname="helv",
                             color=(0.7, 0.7, 0.7),
                             fill_opacity=0.2,
-                            rotate=45,
                             overlay=True
                         )
                         page.insert_text(
@@ -287,7 +275,7 @@ class WatermarkService:
         try:
             aesgcm = AESGCM(aes_key)
             nonce = os.urandom(12)
-            content_bytes = raw_content.encode("utf-8")
+            content_bytes = pdf_data
             ciphertext = aesgcm.encrypt(nonce, content_bytes, None)
             
             file_id_bytes = uuid.UUID(file_id).bytes 
@@ -298,7 +286,7 @@ class WatermarkService:
             raise HTTPException(status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình mã hóa tài liệu")
 
         logger.info(f"Successfully exported E-DRM document, file_id={file_id}")
-        return final_doclib_data, content_format, "application/octet-stream"
+        return final_doclib_data, "doclib", "application/octet-stream"
 
     @staticmethod
     @log_logic_execution

@@ -22,8 +22,8 @@ async def get_my_wallet(
 
 @router.get("/lich-su", response_model=APIResponse[Any])
 async def get_my_transactions(
-    limit: int = Query(20),
-    offset: int = Query(0),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0, le=10000),
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):

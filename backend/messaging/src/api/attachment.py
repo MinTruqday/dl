@@ -12,6 +12,7 @@ from src.core.dependency import AuthenticatedUser, Depends, Header, HTTPExceptio
 from src.core.dependency import get_current_user
 from src.core.response import APIResponse
 from src.repositories.message import MessageRepository
+from src.api.thread import publish_personal_message
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tin-nhan")
 
@@ -38,4 +39,3 @@ async def get_shared_attachments(
         data=await AttachmentService.get_shared_attachments(other_user_id, current_user),
         message="Trích xuất danh sách tệp đính kèm hoàn tất",
     )
-

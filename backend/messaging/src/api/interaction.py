@@ -12,6 +12,7 @@ from src.core.dependency import AuthenticatedUser, Depends, Header, HTTPExceptio
 from src.core.dependency import get_current_user
 from src.core.response import APIResponse
 from src.repositories.message import MessageRepository
+from src.api.thread import publish_personal_message
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tin-nhan")
 
@@ -65,4 +66,3 @@ async def toggle_mute(other_user_id: str, current_user=Depends(get_current_user)
     return APIResponse(
         data=result, message="Cập nhật cấu hình thông báo cuộc trò chuyện hoàn tất"
     )
-

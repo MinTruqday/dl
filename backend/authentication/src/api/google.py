@@ -1,7 +1,6 @@
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Request
 from typing import Any
-from src.core.dependency import CurrentUser 
 from src.core.response import APIResponse
 from src.services.google import GoogleService
 
@@ -17,10 +16,10 @@ async def google_login():
     )
 
 @router.get("/callback", response_model=APIResponse[Any])
-async def google_callback(code: str, request: Request):
+async def google_callback(code: str, state: str, request: Request):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await GoogleService.handle_google_callback(code, client_ip),
+        data=await GoogleService.handle_google_callback(code, state, client_ip),
         message="Xác thực tài khoản thông qua liên kết ngoài hoàn tất",
         status=200,
     )

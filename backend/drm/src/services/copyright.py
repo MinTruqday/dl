@@ -5,6 +5,7 @@ from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 from src.repositories.copyright import CopyrightRepository
 from loguru import logger
+from fastapi import HTTPException
 
 class CopyrightService:
     @staticmethod
@@ -12,7 +13,7 @@ class CopyrightService:
     async def resolve_copyright_dispute(
         dispute_id: str, resolution: str, current_user
     ) -> dict:
-        await CopyrightRepository.update_dispute(
+        result = await CopyrightRepository.update_dispute(
             {"_id": dispute_id},
             {
                 "$set": {
@@ -23,13 +24,25 @@ class CopyrightService:
                 }
             },
         )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tranh chấp bản quyền")
         logger.info("Copyright dispute resolved successfully")
         return {"message": "Đã giải quyết tranh chấp bản quyền"}
     
     @staticmethod
     @log_logic_execution
     async def update_drm_settings(document_id: str, disable_copy: bool, hide_from_search: bool, current_user) -> dict:
-        db = database.mongodb.get_database(settings.DRM_DB_NAME)
+        document = await database.mongodb["doclib_content"]["documents"].find_one(
+            {"_id": document_id},
+            {"creator_id": 1, "coauthors": 1},
+        )
+        if not document:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        user_id = str(current_user.id)
+        is_owner = document.get("creator_id") == user_id
+        is_coauthor = user_id in document.get("coauthors", [])
+        if current_user.role.value != "admin" and not is_owner and not is_coauthor:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền cấu hình DRM cho tài liệu này")
         await mongo.update_one("document_drm_settings", 
             {"document_id": document_id},
             {

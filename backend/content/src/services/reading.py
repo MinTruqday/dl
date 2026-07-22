@@ -34,38 +34,28 @@ class ReadingService:
             {"$limit": limit},
             {
                 "$lookup": {
-                    "from": "document",
+                    "from": "documents",
                     "localField": "document_id",
                     "foreignField": "_id",
                     "as": "doc",
                 }
             },
             {"$unwind": {"path": "$doc", "preserveNullAndEmptyArrays": True}},
-            {
-                "$lookup": {
-                    "from": "users",
-                    "localField": "doc.creator_id",
-                    "foreignField": "_id",
-                    "as": "author",
-                }
-            },
-            {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}},
         ]
         history = (
             await mongo
             .aggregate("reading_history", pipeline)
-            .execute()
+            .to_list(length=None)
         )
         result = []
         for h in history:
             doc = h.get("doc") or {}
-            author = h.get("author") or {}
             result.append(
                 {
                     "document_id": h["document_id"],
                     "document_title": doc.get("title", ""),
                     "document_slug": doc.get("slug", ""),
-                    "author_name": author.get("full_name") or "DocLib System",
+                    "author_name": doc.get("publisher_name") or "DocLib System",
                     "cover_url": doc.get("cover_url"),
                     "progress_percentage": h.get("progress_percentage", 0),
                     "last_read_at": (
@@ -106,6 +96,9 @@ class ReadingService:
         )
         if not doc:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
+        from src.services.document import DocumentService
+        if not await DocumentService._can_read_full(doc, current_user):
+            raise HTTPException(status_code=403, detail="Bạn không có quyền tìm kiếm trong nội dung tài liệu này")
         content = doc.get("content", "")
         query_lower = query.lower()
         content_lower = content.lower()

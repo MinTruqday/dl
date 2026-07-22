@@ -31,6 +31,7 @@ async def read_users_me(
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
                 f"{settings.HUMANITY_URL}/nguoi-dung/{current_user.id}",
+                headers={"X-Internal-Token": settings.SECRET_KEY},
                 timeout=10.0,
             )
             if resp.status_code == 200:
@@ -50,6 +51,7 @@ async def read_users_me(
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp_usage = await client.get(
                 f"{settings.USAGE_URL}/goi-cuoc/{current_user.id}",
+                headers={"X-Internal-Token": settings.SECRET_KEY},
                 timeout=10.0,
             )
             if resp_usage.status_code == 200:
@@ -113,7 +115,11 @@ async def login(
         status=status.HTTP_200_OK,
     )
 
-@router.post("/quen-mat-khau", response_model=APIResponse[Any])
+@router.post(
+    "/quen-mat-khau",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(RateLimiting(calls=3, period=300))],
+)
 async def forgot_password(
     payload: ForgotPasswordRequest, request: Request
 ) -> Any:
@@ -124,7 +130,11 @@ async def forgot_password(
         status=status.HTTP_200_OK,
     )
 
-@router.post("/dat-lai-mat-khau", response_model=APIResponse[Any])
+@router.post(
+    "/dat-lai-mat-khau",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(RateLimiting(calls=5, period=300))],
+)
 async def reset_password(
     payload: ResetPasswordRequest, request: Request
 ) -> Any:
@@ -137,7 +147,11 @@ async def reset_password(
         status=status.HTTP_200_OK,
     )
 
-@router.post("/xac-nhan-ma", response_model=APIResponse[Any])
+@router.post(
+    "/xac-nhan-ma",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(RateLimiting(calls=5, period=300))],
+)
 async def verify_code(
     payload: VerifyCodeRequest, request: Request
 ) -> Any:
@@ -148,3 +162,16 @@ async def verify_code(
         status=status.HTTP_200_OK,
     )
 
+@router.post("/dang-xuat", response_model=APIResponse[Any])
+async def logout(current_user: CurrentUser = Depends(get_current_user)):
+    return APIResponse(
+        data=await SessionService.revoke_session(current_user),
+        message="Đăng xuất hoàn tất",
+    )
+
+@router.post("/dang-xuat-tat-ca", response_model=APIResponse[Any])
+async def logout_all(current_user: CurrentUser = Depends(get_current_user)):
+    return APIResponse(
+        data=await SessionService.revoke_all_sessions(current_user),
+        message="Đăng xuất khỏi tất cả thiết bị hoàn tất",
+    )

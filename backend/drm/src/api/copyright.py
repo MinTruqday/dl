@@ -1,7 +1,7 @@
 from typing import Any
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
-from src.core.dependency import get_current_user
+from src.core.dependency import Role, get_current_user, require_role
 from src.core.response import APIResponse
 from src.services.copyright import CopyrightService
 from pydantic import BaseModel
@@ -38,7 +38,7 @@ async def update_drm_settings(
 async def resolve_copyright_dispute(
     dispute_id: str,
     resolution: str,
-    current_user = Depends(get_current_user),
+    current_user = Depends(require_role([Role.ADMIN])),
 ):
     result = await CopyrightService.resolve_copyright_dispute(
         dispute_id, resolution, current_user

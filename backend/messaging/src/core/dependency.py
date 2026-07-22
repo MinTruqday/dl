@@ -1,6 +1,5 @@
-from src.core.infrastructure.redis import redis
-import time
-from typing import List, Optional
+from enum import Enum
+from typing import Any, List, Optional
 
 import jwt
 from fastapi import Depends, HTTPException, Request, status
@@ -8,11 +7,8 @@ from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-
-from enum import Enum
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from src.core.infrastructure.redis import redis
 
 class Role(str, Enum):
     GUEST = "guest"
@@ -21,16 +17,18 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 class CurrentUser(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
     id: str = Field(alias="_id")
     email: str
     role: Role = Role.READER
-    permissions: List[str] = []
+    permissions: List[str] = Field(default_factory=list)
     is_active: bool = True
     full_name: str = ""
     slug: str = ""
     is_premium: bool = False
+    ai_tier: str = "BASIC"
     
-    from pydantic import field_validator
     @field_validator("role", mode="before")
     @classmethod
     def validate_role_case(cls, v: Any):
@@ -38,10 +36,6 @@ class CurrentUser(BaseModel):
             return v.lower()
         return v
     
-    class Config:
-        populate_by_name = True
-        extra = "ignore"
-
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY
 
@@ -84,7 +78,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         "is_premium": payload.get("is_premium", False),
         "full_name": payload.get("full_name", ""),
         "slug": payload.get("slug", ""),
-        "is_active": True
+        "is_active": True,
+        "ai_tier": payload.get("ai_tier", "BASIC"),
     }
     return CurrentUser(**user_doc)
 

@@ -7,7 +7,7 @@ from src.core.dependency import get_current_user, get_db
 from src.services.watermark import WatermarkService
 
 from src.core.response import APIResponse
-from src.core.dependency import CurrentUser, Role
+from src.core.dependency import CurrentUser, Role, require_role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/ket-xuat")
 
@@ -34,11 +34,8 @@ from src.schemas.watermark import TextPayload
 @router.post("/giai-ma-truy-vet")
 async def verify_document_watermark(
     payload: TextPayload,
-    current_user: CurrentUser = Depends(get_current_user)
+    current_user: CurrentUser = Depends(require_role([Role.ADMIN]))
 ):
-    if current_user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Chỉ quản trị viên mới có quyền giải mã truy vết")
-    
     user_id = await WatermarkService.verify_watermark(payload.text)
     if user_id:
         return APIResponse(

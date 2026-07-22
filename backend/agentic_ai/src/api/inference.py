@@ -50,6 +50,7 @@ async def _check_quota(current_user: CurrentUser):
                     "ai_tier": current_user.ai_tier.value,
                     "feature": "chat",
                 },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
             )
             if resp.status_code != 200:
                 raise HTTPException(
@@ -59,9 +60,9 @@ async def _check_quota(current_user: CurrentUser):
             return resp.json().get("data", {})
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("AI quota verification error")
-        return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
+        raise HTTPException(status_code=503, detail="Dịch vụ hạn mức AI tạm thời không khả dụng")
 
 async def _consume_quota(
     current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
@@ -69,7 +70,7 @@ async def _consume_quota(
     logger.info(f"Started AI quota consumption for user_id={current_user.id}, tokens={tokens}")
     try:
         async with httpx.AsyncClient(timeout=10.0) as c:
-            await c.post(
+            response = await c.post(
                 f"{settings.USAGE_URL}/han-muc/su-dung",
                 json={
                     "user_id": str(current_user.id),
@@ -77,9 +78,12 @@ async def _consume_quota(
                     "req_reset_hours": req_reset_hours,
                     "tokens": tokens,
                 },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
             )
-    except Exception as e:
+            response.raise_for_status()
+    except Exception:
         logger.exception("AI quota consumption error")
+        raise HTTPException(status_code=503, detail="Không thể ghi nhận hạn mức AI đã sử dụng")
 
 async def _chat_direct(
     messages: List[dict],

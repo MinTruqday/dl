@@ -11,7 +11,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict, Any
 
 class Role(str, Enum):
@@ -21,14 +21,17 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 class CurrentUser(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
     id: str = Field(alias="_id")
     email: str
     role: Role = Role.READER
-    permissions: List[str] = []
+    permissions: List[str] = Field(default_factory=list)
     is_active: bool = True
     full_name: str = ""
     slug: str = ""
     is_premium: bool = False
+    ai_tier: str = "BASIC"
     
     from pydantic import field_validator
     @field_validator("role", mode="before")
@@ -38,14 +41,10 @@ class CurrentUser(BaseModel):
             return v.lower()
         return v
     
-    class Config:
-        populate_by_name = True
-        extra = "ignore"
-
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap")
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(
@@ -60,7 +59,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         if email is None or session_id is None:
             logger.warning("Token verification failed due to missing identity claims")
             raise credentials_exception
-    except jwt.PyJWTError as e:
+    except jwt.PyJWTError:
         logger.exception("Authentication decoding failed due to invalid token payload")
         raise credentials_exception
 
@@ -82,6 +81,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         "role": payload.get("role", "reader"),
         "permissions": payload.get("permissions", []),
         "is_premium": payload.get("is_premium", False),
+        "ai_tier": payload.get("ai_tier", "BASIC"),
         "full_name": payload.get("full_name", ""),
         "slug": payload.get("slug", ""),
         "is_active": True
@@ -90,7 +90,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
 
 async def get_current_user_optional(
     token: Optional[str] = Depends(
-        OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+        OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap", auto_error=False)
     )
 ) -> Optional[CurrentUser]:
     if not token:

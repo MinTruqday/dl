@@ -17,20 +17,42 @@ class StorageService:
     async def create_item(
         item: StorageItemCreate, owner_id: str
     ) -> StorageItemInDB:
-        db_item = StorageItemInDB(**item.dict(), owner_id=owner_id)
-        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.insert_one(
-            db_item.dict(by_alias=True)
-        )
-        if db_item.size and db_item.size > 0:
-            await database.mongodb[settings.CLOUD_DB_NAME].users.update_one(
-                {"_id": owner_id}, {"$inc": {"used_storage": db_item.size}}
+        if item.parent_id:
+            parent = await StorageService.get_item(item.parent_id, owner_id)
+            if not parent or not parent.is_folder or parent.is_trashed:
+                from fastapi import HTTPException
+                raise HTTPException(status_code=400, detail="Thư mục cha không hợp lệ")
+        if not item.is_folder:
+            allowed_prefixes = (f"users/{owner_id}/", f"client/{owner_id}/")
+            if not item.url or not item.url.startswith(allowed_prefixes):
+                from fastapi import HTTPException
+                raise HTTPException(status_code=400, detail="Đường dẫn tệp không thuộc chủ sở hữu")
+            existing = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+                {"owner_id": owner_id, "url": item.url}, {"_id": 1}
             )
+            if existing:
+                from fastapi import HTTPException
+                raise HTTPException(status_code=409, detail="Tệp đã được đăng ký trong kho lưu trữ")
+            from src.core.storage import get_bucket, get_storage_client
+            try:
+                client = await get_storage_client()
+                metadata = await client.head_object(Bucket=get_bucket(item.url), Key=item.url)
+            except Exception:
+                from fastapi import HTTPException
+                raise HTTPException(status_code=400, detail="Không tìm thấy dữ liệu tệp trong kho đối tượng")
+            if metadata.get("ContentLength") != item.size:
+                from fastapi import HTTPException
+                raise HTTPException(status_code=400, detail="Kích thước tệp không khớp dữ liệu lưu trữ")
+        db_item = StorageItemInDB(**item.model_dump(), owner_id=owner_id)
+        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.insert_one(
+            db_item.model_dump(by_alias=True)
+        )
         return db_item
 
     @staticmethod
     @log_logic_execution
     async def get_storage_quota(owner_id: str) -> dict:
-        user = await database.mongodb[settings.CLOUD_DB_NAME].users.find_one(
+        user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
             {"_id": owner_id}
         )
         limit = (
@@ -52,9 +74,13 @@ class StorageService:
     async def create_shortcut(
         item_id: str, parent_id: Optional[str], owner_id: str
     ) -> Optional[StorageItemInDB]:
-        target = await StorageService.get_item(item_id)
+        target = await StorageService.get_accessible_item(item_id, owner_id)
         if not target:
             return None
+        if parent_id:
+            parent = await StorageService.get_item(parent_id, owner_id)
+            if not parent or not parent.is_folder:
+                return None
         shortcut = StorageItemInDB(
             name=f"Shortcut to {target.name}",
             parent_id=parent_id,
@@ -64,7 +90,7 @@ class StorageService:
             target_id=item_id,
         )
         await database.mongodb[settings.CLOUD_DB_NAME].storage_items.insert_one(
-            shortcut.dict(by_alias=True)
+            shortcut.model_dump(by_alias=True)
         )
         return shortcut
 
@@ -76,11 +102,13 @@ class StorageService:
         is_trashed: bool = False,
         is_starred: Optional[bool] = None,
     ) -> List[StorageItemInDB]:
-        query = {
-            "$or": [{"owner_id": owner_id}, {"shared_with.user_id": owner_id}],
-            "parent_id": parent_id,
-            "is_trashed": is_trashed,
-        }
+        access_query = {"$or": [{"owner_id": owner_id}, {"shared_with.user_id": owner_id}]}
+        if parent_id:
+            parent = await StorageService.get_accessible_item(parent_id, owner_id)
+            if not parent:
+                return []
+            access_query = {"owner_id": parent.owner_id}
+        query = {**access_query, "parent_id": parent_id, "is_trashed": is_trashed}
         if is_starred is not None:
             query["is_starred"] = is_starred
         cursor = (
@@ -88,7 +116,7 @@ class StorageService:
             .storage_items.find(query)
             .sort([("is_folder", -1), ("name", 1)])
         )
-        items = await cursor 
+        items = await cursor.to_list(length=None)
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
@@ -110,7 +138,7 @@ class StorageService:
             .storage_items.find(query)
             .sort([("created_at", -1)])
         )
-        items = await cursor 
+        items = await cursor.to_list(length=None)
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
@@ -130,10 +158,36 @@ class StorageService:
 
     @staticmethod
     @log_logic_execution
+    async def get_accessible_item(item_id: str, user_id: str) -> Optional[StorageItemInDB]:
+        item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({
+            "_id": item_id,
+            "is_trashed": False,
+            "$or": [{"owner_id": user_id}, {"shared_with.user_id": user_id}],
+        })
+        return StorageItemInDB(**item) if item else None
+
+    @staticmethod
+    @log_logic_execution
     async def update_item(
         item_id: str, owner_id: str, update_data: StorageItemUpdate
     ) -> Optional[StorageItemInDB]:
-        update_dict = {k: v for (k, v) in update_data.dict(exclude_unset=True).items()}
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item:
+            return None
+        update_dict = update_data.model_dump(exclude_unset=True)
+        if "parent_id" in update_dict and update_dict["parent_id"]:
+            if update_dict["parent_id"] == item_id:
+                return None
+            parent = await StorageService.get_item(update_dict["parent_id"], owner_id)
+            if not parent or not parent.is_folder or parent.is_trashed:
+                return None
+            ancestor = parent
+            while ancestor.parent_id:
+                if ancestor.parent_id == item_id:
+                    return None
+                ancestor = await StorageService.get_item(ancestor.parent_id, owner_id)
+                if not ancestor:
+                    return None
         if not update_dict:
             return await StorageService.get_item(item_id, owner_id)
         update_dict["updated_at"] = datetime.now(timezone.utc)
@@ -143,6 +197,20 @@ class StorageService:
             return_document=True,
         )
         if result:
+            if item.is_folder and "is_trashed" in update_dict:
+                pending = [item_id]
+                descendant_ids = []
+                while pending:
+                    children = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
+                        {"owner_id": owner_id, "parent_id": {"$in": pending}}, {"_id": 1}
+                    ).to_list(length=None)
+                    pending = [child["_id"] for child in children]
+                    descendant_ids.extend(pending)
+                if descendant_ids:
+                    await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_many(
+                        {"_id": {"$in": descendant_ids}, "owner_id": owner_id},
+                        {"$set": {"is_trashed": update_dict["is_trashed"], "updated_at": datetime.now(timezone.utc)}},
+                    )
             return StorageItemInDB(**result)
         return None
 
@@ -153,57 +221,40 @@ class StorageService:
         if not item:
             return False
 
-        should_delete_physical = False
-        old_version_urls = []
-        if not item.is_folder and (not item.is_shortcut) and item.url:
-            ref_count = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.count_documents(
-                {"url": item.url}
-            )
-            if ref_count <= 1:
-                should_delete_physical = True
-                if hasattr(item, "versions") and item.versions:
-                    old_version_urls = [
-                        v.get("url")
-                        for v in item.versions
-                        if v.get("url") and v.get("url") != item.url
-                    ]
-
-        result = (
-            await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_one(
-                {"_id": item_id, "owner_id": owner_id}
-            )
-        )
-        if result.deleted_count == 0:
-            return False
-
-        if item.size and item.size > 0:
-            await database.mongodb[settings.CLOUD_DB_NAME].users.update_one(
-                {"_id": owner_id}, {"$inc": {"used_storage": -item.size}}
-            )
-
+        items = [item]
+        if item.is_folder:
+            pending = [item.id]
+            while pending:
+                children = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
+                    {"owner_id": owner_id, "parent_id": {"$in": pending}}
+                ).to_list(length=None)
+                pending = []
+                for child in children:
+                    parsed = StorageItemInDB(**child)
+                    items.append(parsed)
+                    if parsed.is_folder:
+                        pending.append(parsed.id)
+        ids = [entry.id for entry in items]
         await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(
-            {"target_id": item_id}
+            {"_id": {"$in": ids}, "owner_id": owner_id}
         )
-
-        if should_delete_physical:
-            from src.core.infrastructure.configuration import settings
-            from src.core.storage import get_storage_client, get_bucket
-
-            try:
-                storage_client = await get_storage_client()
-                await storage_client.delete_object(
-                    Bucket=get_bucket(item.url), Key=item.url
-                )
-                for old_url in old_version_urls:
+        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(
+            {"target_id": {"$in": ids}}
+        )
+        from src.core.storage import get_bucket, get_storage_client
+        storage_client = await get_storage_client()
+        for entry in items:
+            urls = []
+            if not entry.is_folder and not entry.is_shortcut and entry.url:
+                urls.append(entry.url)
+                urls.extend(version.url for version in entry.versions if version.url != entry.url)
+            for url in urls:
+                references = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.count_documents({"url": url})
+                if references == 0:
                     try:
-                        await storage_client.delete_object(
-                            Bucket=get_bucket(old_url), Key=old_url
-                        )
+                        await storage_client.delete_object(Bucket=get_bucket(url), Key=url)
                     except Exception:
-                        pass
-            except Exception as e:
-                logger.exception("Failed to cleanup physical storage files during hard delete")
-
+                        logger.exception("Failed to cleanup physical storage file")
         return True
 
     @staticmethod
@@ -212,14 +263,14 @@ class StorageService:
         cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
             {"owner_id": owner_id, "parent_id": source_parent_id, "is_trashed": False}
         )
-        children = await cursor 
+        children = await cursor.to_list(length=None)
         for child in children:
-            child_dict = StorageItemInDB(**child).dict()
+            child_dict = StorageItemInDB(**child).model_dump()
             child_id_old = child_dict.pop("id", None)
             child_dict["parent_id"] = new_parent_id
             new_child = StorageItemInDB(**child_dict)
             await database.mongodb[settings.CLOUD_DB_NAME].storage_items.insert_one(
-                new_child.dict(by_alias=True)
+                new_child.model_dump(by_alias=True)
             )
             if new_child.is_folder:
                 await StorageService._copy_children(
@@ -234,14 +285,18 @@ class StorageService:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
             return None
-        new_item_dict = item.dict()
+        if target_parent_id:
+            parent = await StorageService.get_item(target_parent_id, owner_id)
+            if not parent or not parent.is_folder or parent.is_trashed:
+                return None
+        new_item_dict = item.model_dump()
         new_item_dict["name"] = f"{item.name} (Copy)"
         if target_parent_id is not None:
             new_item_dict["parent_id"] = target_parent_id
         new_item_dict.pop("id", None)
         new_item = StorageItemInDB(**new_item_dict)
         await database.mongodb[settings.CLOUD_DB_NAME].storage_items.insert_one(
-            new_item.dict(by_alias=True)
+            new_item.model_dump(by_alias=True)
         )
         if item.is_folder:
             await StorageService._copy_children(item_id, str(new_item.id), owner_id)
@@ -254,6 +309,19 @@ class StorageService:
     ) -> Optional[StorageItemInDB]:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
+            return None
+        if not url.startswith((f"users/{owner_id}/", f"client/{owner_id}/")):
+            return None
+        from src.core.storage import get_bucket, get_storage_client
+        try:
+            client = await get_storage_client()
+            metadata = await client.head_object(Bucket=get_bucket(url), Key=url)
+        except Exception:
+            return None
+        if metadata.get("ContentLength") != size:
+            return None
+        quota = await StorageService.get_storage_quota(owner_id)
+        if quota["used"] - item.size + size > quota["limit"]:
             return None
         from src.schemas.storage import FileVersion
 
@@ -268,17 +336,13 @@ class StorageService:
                 url=item.url, size=item.size, created_at=item.updated_at
             )
             update_op["$push"] = {
-                "versions": {"$each": [old_version.dict()], "$slice": -10}
+                "versions": {"$each": [old_version.model_dump()], "$slice": -10}
             }
 
         size_diff = size - (item.size or 0)
         await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
             {"_id": item_id, "owner_id": owner_id}, update_op
         )
-        if size_diff != 0:
-            await database.mongodb[settings.CLOUD_DB_NAME].users.update_one(
-                {"_id": owner_id}, {"$inc": {"used_storage": size_diff}}
-            )
 
         return await StorageService.get_item(item_id, owner_id)
 
@@ -297,7 +361,10 @@ class StorageService:
     async def share_item(
         item_id: str, email: str, role: str, owner_id: str
     ) -> dict:
-        target_user = await database.mongodb[settings.CLOUD_DB_NAME].users.find_one(
+        if role not in {"viewer", "editor"}:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=422, detail="Vai trò chia sẻ không hợp lệ")
+        target_user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
             {"email": email}
         )
         if not target_user:
@@ -355,5 +422,5 @@ class StorageService:
             .sort([("updated_at", -1)])
             .limit(limit)
         )
-        items = await cursor 
+        items = await cursor.to_list(length=limit)
         return [StorageItemInDB(**item) for item in items]

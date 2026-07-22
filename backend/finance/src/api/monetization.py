@@ -55,11 +55,11 @@ async def get_author_revenue(current_user: CurrentUser = Depends(get_current_use
         status=200
     )
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class PricingUpdate(BaseModel):
     document_id: str
-    price_dl: float
+    price_dl: int = Field(ge=0, le=10_000_000)
     is_drm_protected: bool = True
 
 @router.put("/thiet-lap-gia", response_model=APIResponse[Any])
@@ -74,7 +74,7 @@ async def set_document_pricing(
     doc = await PricingRepository.get_document(req.document_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu tài liệu yêu cầu")
-    if doc.get("creator_id") != str(current_user.id) and current_user.role != "ADMIN":
+    if doc.get("creator_id") != str(current_user.id) and current_user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Chỉ tác giả mới có quyền thực hiện thay đổi giá bán tài liệu")
         
     await PricingRepository.update_document(
@@ -91,4 +91,3 @@ async def set_document_pricing(
         message="Cập nhật cấu hình giá bán tài liệu hoàn tất",
         status=200
     )
-

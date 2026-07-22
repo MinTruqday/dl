@@ -1,9 +1,15 @@
 import time
 from typing import Dict, Any
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
+
+from src.core.dependency import verify_internal_token
 from src.core.infrastructure.redis import redis
 
-router = APIRouter(prefix="/bao-ve")
+router = APIRouter(
+    prefix="/bao-ve",
+    dependencies=[Depends(verify_internal_token)],
+)
 
 @router.get("/kiem-tra-bat-thuong-mang")
 async def check_network_anomaly(user_id: str, client_ip: str) -> Dict[str, Any]:
@@ -32,8 +38,12 @@ async def check_network_anomaly(user_id: str, client_ip: str) -> Dict[str, Any]:
             },
             "system_flag_anomaly": is_anomalous
         }
-    except Exception as e:
-        return {"system_flag_anomaly": False, "error": str(e)}
+    except Exception:
+        logger.exception("Network anomaly evaluation failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Dịch vụ đánh giá bất thường tạm thời không khả dụng",
+        )
 
 @router.get("/ho-so-tin-cay")
 async def get_user_trust_profile(user_id: str, user_tier: str = "BASIC") -> Dict[str, Any]:

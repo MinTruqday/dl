@@ -1,14 +1,15 @@
 from src.core.dependency import CurrentUser
-from typing import Any, List, Optional
+from typing import Any
 
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from src.api.dependency import get_current_user, get_db, require_role
 from src.services.health import HealthService
 from src.services.telemetry import TelemetryService
 
 from src.core.response import APIResponse
 from src.core.dependency import Role
+from src.schemas.operation import ShadowbanUpdate, SystemConfigUpdate
 
 router = APIRouter(route_class=LoggingRoute, prefix="/van-hanh")
 
@@ -63,7 +64,15 @@ async def trigger_backup(db=Depends(get_db)):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def get_system_config(db=Depends(get_db)):
-    return APIResponse(data={}, message="Trích xuất cấu hình hệ thống hoàn tất")
+    return APIResponse(data=await HealthService.get_system_config(), message="Trích xuất cấu hình hệ thống hoàn tất")
+
+@router.put(
+    "/cai-dat",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
+async def update_system_config(payload: SystemConfigUpdate, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)):
+    return APIResponse(data=await HealthService.update_system_config(payload.model_dump(exclude_none=True), current_user), message="Cập nhật cấu hình hệ thống hoàn tất")
 
 @router.get(
     "/tinh-trang",
@@ -83,7 +92,7 @@ async def get_system_health(db=Depends(get_db)):
 )
 async def get_admin_reports(db=Depends(get_db)):
     return APIResponse(
-        data=await AccountService.get_report_queue(status_filter=None),
+        data=await HealthService.get_admin_reports(),
         message="Trích xuất danh sách báo cáo vi phạm hoàn tất",
     )
 
@@ -93,12 +102,10 @@ async def get_admin_reports(db=Depends(get_db)):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def shadowban_user(
-    payload: Any, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
+    user_id: str, payload: ShadowbanUpdate, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await HealthService.bulk_update_shadowban(
-            payload.user_ids, payload.status, current_user
-        ),
+        data=await HealthService.update_shadowban(user_id, payload.status, current_user),
         message="Cập nhật quyền hiển thị nội dung hoàn tất",
     )
 
@@ -108,12 +115,10 @@ async def shadowban_user(
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def verify_kyc(
-    payload: Any, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
+    user_id: str, status: str, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await HealthService.bulk_verify_kyc(
-            payload.user_ids, payload.status, current_user
-        ),
+        data=await HealthService.update_kyc(user_id, status, current_user),
         message="Cập nhật trạng thái hồ sơ xác minh danh tính hoàn tất",
     )
 

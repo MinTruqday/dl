@@ -1,50 +1,74 @@
-import uvicorn
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from loguru import logger
-from src.api.session import router as auth
-from src.api.passkey import router as passkey
-from src.api.google import router as google
+
+from src.api.google import router as google_router
+from src.api.passkey import router as passkey_router
+from src.api.session import router as session_router
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import close_db, init_db
-from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
-app = FastAPI(title="DocLib Authentication", version=settings.VERSION)
+from src.core.infrastructure.database import close_db, database, init_db
+from src.core.infrastructure.redis import redis
+from src.core.metrics import PrometheusMiddleware, metrics_endpoint
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    await redis.get_client().ping()
+    logger.info("Authentication service initialized successfully")
+    try:
+        yield
+    finally:
+        await redis.aclose()
+        await close_db()
+
+
+app = FastAPI(
+    title="DocLib Authentication",
+    version=settings.VERSION,
+    lifespan=lifespan,
+)
 app.add_middleware(PrometheusMiddleware, service_name="authentication")
 app.add_route("/metrics", metrics_endpoint("authentication"))
-
-from fastapi import Request
-from fastapi.responses import JSONResponse
-@app.middleware("http")
-async def internal_token_middleware(request: Request, call_next):
-    if "/internal/" in request.url.path:
-        token = request.headers.get("X-Internal-Token")
-        if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
-    return await call_next(request)
-
+origins = [
+    origin.strip()
+    for origin in settings.CORS_ALLOWED_ORIGINS.split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=(
-        settings.CORS_ALLOWED_ORIGINS.split(",")
-        if settings.CORS_ALLOWED_ORIGINS
-        else ["*"]
-    ),
-    allow_credentials=True,
+    allow_origins=origins or ["*"],
+    allow_credentials=bool(origins),
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(auth)
-app.include_router(passkey)
-app.include_router(google)
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Authentication service initialization completed successfully")
-    await init_db()
-@app.on_event("shutdown")
-async def shutdown_event():
-    await close_db()
+app.include_router(session_router)
+app.include_router(passkey_router)
+app.include_router(google_router)
+
+
 @app.get("/health")
 async def health_check():
-    return {
-        "status": "The authentication service is currently operating normally and functioning as expected without any internal issues"
-    }
+    return {"status": "healthy"}
+
+
+@app.get("/ready")
+async def readiness_check():
+    checks = {}
+    try:
+        await database.mongodb.admin.command("ping")
+        checks["mongodb"] = "ready"
+    except Exception:
+        checks["mongodb"] = "unavailable"
+    try:
+        checks["redis"] = "ready" if await redis.get_client().ping() else "unavailable"
+    except Exception:
+        checks["redis"] = "unavailable"
+    ready = all(value == "ready" for value in checks.values())
+    return JSONResponse(
+        status_code=200 if ready else 503,
+        content={"status": "ready" if ready else "degraded", "checks": checks},
+    )

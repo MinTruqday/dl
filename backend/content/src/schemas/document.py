@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from uuid6 import uuid7
 
 class DocumentStatus(str, Enum):
@@ -24,22 +24,23 @@ class DocumentContentFormat(str, Enum):
     DOCLIB = "doclib"
 
 class DocumentBase(BaseModel):
-    title: str
-    slug: str
-    description: Optional[str] = None
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1, max_length=300)
+    slug: Optional[str] = Field(default=None, min_length=1, max_length=200, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    description: Optional[str] = Field(default=None, max_length=5000)
     cover_url: Optional[str] = None
     file_url: Optional[str] = None
-    tags: List[str] = []
+    tags: List[str] = Field(default_factory=list, max_length=50)
     content: Optional[Any] = None
     content_format: Optional[DocumentContentFormat] = DocumentContentFormat.DOCLIB
-    price_dl: int = 0
-    visibility: str = "public"
-    password: Optional[str] = None
+    price_dl: int = Field(default=0, ge=0, le=1_000_000_000)
+    visibility: str = Field(default="public", pattern=r"^(public|private|unlisted)$")
     category: Optional[str] = "Uncategorized"
     pages_count: Optional[int] = 0
-    preview_pages: int = 5
+    preview_pages: int = Field(default=5, ge=0, le=1000)
     scheduled_publish_at: Optional[datetime] = None
-    coauthors: List[str] = []
+    coauthors: List[str] = Field(default_factory=list)
     is_deleted: bool = False
     deleted_at: Optional[datetime] = None
     publisher_name: Optional[str] = None
@@ -47,7 +48,7 @@ class DocumentBase(BaseModel):
     drm_settings: Optional[dict] = None
     publish_at: Optional[datetime] = None
     draft_content: Optional[Any] = None
-    toc: List[dict] = []
+    toc: List[dict] = Field(default_factory=list)
     reading_time_minutes: int = 0
 
 class DocumentContentUpdate(BaseModel):
@@ -56,13 +57,15 @@ class DocumentContentUpdate(BaseModel):
     expected_version: Optional[datetime] = None
 
 class DocumentUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     title: Optional[str] = None
     slug: Optional[str] = None
     description: Optional[str] = None
     cover_url: Optional[str] = None
     tags: Optional[List[str]] = None
     category: Optional[str] = None
-    price_dl: Optional[int] = None
+    price_dl: Optional[int] = Field(default=None, ge=0, le=1_000_000_000)
     folder_id: Optional[str] = None
     drm_settings: Optional[dict] = None
     publish_at: Optional[datetime] = None
@@ -70,7 +73,7 @@ class DocumentUpdate(BaseModel):
     expected_version: Optional[datetime] = None
 
 class DocumentCreate(DocumentBase):
-    pass
+    password: Optional[str] = Field(default=None, min_length=8, max_length=200)
 
 class DocumentInDB(DocumentBase):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
@@ -82,6 +85,8 @@ class DocumentInDB(DocumentBase):
     views: int = 0
 
 class DocumentResponse(DocumentBase):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
     id: str = Field(alias="_id")
     creator_id: str
     status: DocumentStatus
@@ -89,18 +94,15 @@ class DocumentResponse(DocumentBase):
     views: int = 0
     has_purchased: bool = False
 
-    class Config:
-        populate_by_name = True
-
 class DocumentPasswordRequest(BaseModel):
-    password: str
+    password: str = Field(min_length=8, max_length=200)
 
 class SchedulePublishRequest(BaseModel):
     publish_at: datetime
 
 class SeoMetadataRequest(BaseModel):
-    tags: List[str] = []
-    keywords: List[str] = []
+    tags: List[str] = Field(default_factory=list)
+    keywords: List[str] = Field(default_factory=list)
     slug: str = ""
     description: str = ""
 

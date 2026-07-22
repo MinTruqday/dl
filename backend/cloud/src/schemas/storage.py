@@ -2,36 +2,40 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from uuid6 import uuid7
 
 class ShareAccess(BaseModel):
-    user_id: str
-    role: str = "viewer"
+    user_id: str = Field(min_length=1, max_length=100)
+    role: str = Field(default="viewer", pattern=r"^(viewer|editor)$")
 
 class StorageItemBase(BaseModel):
-    name: str
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=255)
     parent_id: Optional[str] = None
     description: Optional[str] = None
     color: Optional[str] = None
-    tags: List[str] = []
-    shared_with: List[ShareAccess] = []
+    tags: List[str] = Field(default_factory=list, max_length=50)
+    shared_with: List[ShareAccess] = Field(default_factory=list)
     is_shortcut: bool = False
     target_id: Optional[str] = None
     is_duplicate: Optional[bool] = False
     duplicate_of: Optional[str] = None
     environment_ready: Optional[bool] = False
     ai_processed: Optional[bool] = False
-    entities: Optional[dict] = {}
-    broken_links: Optional[List[str]] = []
+    entities: Optional[dict] = Field(default_factory=dict)
+    broken_links: Optional[List[str]] = Field(default_factory=list)
 
 class StorageItemCreate(StorageItemBase):
     is_folder: bool = False
-    size: int = 0
+    size: int = Field(default=0, ge=0, le=10 * 1024 * 1024 * 1024)
     mime_type: Optional[str] = None
     url: Optional[str] = None
 
 class StorageItemUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: Optional[str] = None
     parent_id: Optional[str] = None
     description: Optional[str] = None
@@ -40,6 +44,7 @@ class StorageItemUpdate(BaseModel):
     is_trashed: Optional[bool] = None
     is_starred: Optional[bool] = None
     is_public: Optional[bool] = None
+    share_token: Optional[str] = None
     shared_with: Optional[List[ShareAccess]] = None
     is_duplicate: Optional[bool] = None
     duplicate_of: Optional[str] = None
@@ -51,7 +56,7 @@ class StorageItemUpdate(BaseModel):
 class FileVersion(BaseModel):
     version_id: str = Field(default_factory=lambda: str(uuid7()))
     url: str
-    size: int
+    size: int = Field(ge=0, le=10 * 1024 * 1024 * 1024)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class StorageItemInDB(StorageItemBase):
@@ -65,11 +70,13 @@ class StorageItemInDB(StorageItemBase):
     is_starred: bool = False
     is_public: bool = False
     share_token: Optional[str] = None
-    versions: List[FileVersion] = []
+    versions: List[FileVersion] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class StorageItemResponse(StorageItemBase):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
     id: str = Field(alias="_id")
     owner_id: str
     is_folder: bool
@@ -81,9 +88,6 @@ class StorageItemResponse(StorageItemBase):
     is_starred: bool
     is_public: bool = False
     share_token: Optional[str] = None
-    versions: List[FileVersion] = []
+    versions: List[FileVersion] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        populate_by_name = True

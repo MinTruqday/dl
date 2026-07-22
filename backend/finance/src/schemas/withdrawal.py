@@ -8,13 +8,15 @@ from uuid6 import uuid7
 
 class WithdrawalStatus(str, Enum):
     PENDING = "PENDING"
+    APPROVED = "APPROVED"
     COMPLETED = "COMPLETED"
     REJECTED = "REJECTED"
+    CANCELLED = "CANCELLED"
 
 class WithdrawalRequest(BaseModel):
-    amount: int = Field(..., gt=0)
-    bank_info: str = Field(..., min_length=10)
-    note: Optional[str] = None
+    amount: int = Field(ge=50, le=20_000_000)
+    bank_info: str = Field(min_length=10, max_length=500)
+    note: Optional[str] = Field(default=None, max_length=500)
 
 class WithdrawalInDB(WithdrawalRequest):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")

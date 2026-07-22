@@ -24,6 +24,7 @@ async def check_quota(current_user: CurrentUser = Depends(get_current_user)):
                     "user_id": str(current_user.id),
                     "role": current_user.role.value,
                 },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
             )
             if resp.status_code == 429:
                 raise HTTPException(

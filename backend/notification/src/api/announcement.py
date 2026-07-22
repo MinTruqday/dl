@@ -2,12 +2,12 @@ from typing import Any
 
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query
-from src.schemas.announcement import AnnouncementCreate
+from src.schemas.announcement import AnnouncementCreate, AnnouncementSettings
 from src.services.announcement import AnnouncementService
 
 from src.core.dependency import get_current_user, get_db
 from src.core.response import APIResponse
-from src.core.dependency import CurrentUser, Role
+from src.core.dependency import CurrentUser, Role, verify_internal_token
 from src.repositories.announcement import AnnouncementRepository
 
 router = APIRouter(route_class=LoggingRoute, prefix="/thong-bao")
@@ -59,7 +59,7 @@ async def delete_announcement(
         message="Xóa thông báo vĩnh viễn hoàn tất",
     )
 
-@router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False, dependencies=[Depends(verify_internal_token)])
 async def create_announcement(data: AnnouncementCreate, db=Depends(get_db)):
     return APIResponse(
         data=await AnnouncementService.create_announcement(data, db),
@@ -72,10 +72,8 @@ async def get_settings(
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    user_doc = await AnnouncementRepository.find_one(
-        {"_id": str(current_user.id)}, {"announcement_settings": 1}
-    )
-    settings = (user_doc or {}).get("announcement_settings", {})
+    settings = await AnnouncementRepository.get_settings(str(current_user.id))
+    settings = settings or AnnouncementSettings().model_dump()
     return APIResponse(
         data=settings,
         message="Trích xuất cài đặt thông báo hoàn tất",
@@ -83,17 +81,15 @@ async def get_settings(
 
 @router.post("/cai-dat", response_model=APIResponse[Any])
 async def update_settings(
-    settings: dict,
+    settings: AnnouncementSettings,
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
     from src.repositories.announcement import AnnouncementRepository
-    await AnnouncementRepository.update_user_announcement_status(
-        {"_id": current_user.id}, 
-        {"$set": {"announcement_settings": settings}}
-    )
+    settings_data = settings.model_dump()
+    await AnnouncementRepository.update_settings(str(current_user.id), settings_data)
     return APIResponse(
-        data=settings,
+        data=settings_data,
         message="Cập nhật cài đặt thông báo hoàn tất",
         status=200,
     )

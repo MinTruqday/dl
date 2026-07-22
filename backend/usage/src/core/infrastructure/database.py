@@ -1,7 +1,4 @@
 from src.core.infrastructure.redis import redis
-import asyncio
-import os
-
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
@@ -24,20 +21,24 @@ async def init_db():
     from motor.motor_asyncio import AsyncIOMotorClient
     database.mongodb = AsyncIOMotorClient(mongo_uri)
 
+    await database.mongodb.admin.command("ping")
     await setup_indexes()
 
 async def setup_indexes():
     try:
         db = database.mongodb[settings.USAGE_DB_NAME]
 
-        await db["reports"].create_index([("status", 1)], background=True)
-        await db["reports"].create_index([("created_at", -1)], background=True)
+        await db["subscriptions"].create_index("user_id", unique=True)
+        await db["subscriptions"].create_index("expires_at")
+        await db["quota_configs"].create_index("updated_at")
 
         logger.info("MongoDB indexes successfully created and applied")
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to initialize MongoDB indexes")
+        raise
 
 async def close_db():
     if database.mongodb:
         database.mongodb.close()
-
+        database.mongodb = None
+    await redis.aclose()

@@ -3,7 +3,7 @@ from typing import Any
 
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, HTTPException
-from src.core.dependency import get_current_user, get_db, require_role
+from src.core.dependency import get_current_user, get_db, require_role, verify_internal_token
 from src.services.quota import QuotaService
 
 from src.core.response import APIResponse
@@ -12,7 +12,7 @@ from src.core.dependency import Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/han-muc")
 
-@router.get("/kiem-tra", response_model=APIResponse[Any], include_in_schema=False)
+@router.get("/xac-minh", response_model=APIResponse[Any], include_in_schema=False, dependencies=[Depends(verify_internal_token)])
 async def check_quota_internal(
     user_id: str,
     role: str,
@@ -20,7 +20,7 @@ async def check_quota_internal(
     feature: str = "chat",
     db=Depends(get_db),
 ):
-    limits = await QuotaService.check_quota(user_id, role, ai_tier, feature)
+    limits = await QuotaService.check_and_reserve_quota(user_id, role, ai_tier, feature)
     return APIResponse(
         data=limits.model_dump(),
         message="Xác minh giới hạn tài nguyên hoàn tất",
@@ -42,7 +42,7 @@ async def get_my_quota(
     )
     return APIResponse(data=usage, message="Trích xuất thông tin hạn mức sử dụng tài nguyên hoàn tất")
 
-@router.put("/{role}/cau-hinh", response_model=APIResponse[Any])
+@router.put("/cai-dat/{role}", response_model=APIResponse[Any])
 async def update_role_quota(
     role: str,
     limits: QuotaLimit,
@@ -55,7 +55,7 @@ async def update_role_quota(
         message="Cập nhật cấu hình giới hạn tài nguyên hệ thống hoàn tất",
     )
 
-@router.get("/cau-hinh", response_model=APIResponse[Any])
+@router.get("/cai-dat", response_model=APIResponse[Any])
 async def get_global_config(
     current_user: CurrentUser = Depends(require_role([Role.ADMIN])), db=Depends(get_db)
 ):
@@ -65,11 +65,8 @@ async def get_global_config(
         message="Trích xuất cấu hình tài nguyên hệ thống hoàn tất",
     )
 
-@router.post("/tieu-thu", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/su-dung", response_model=APIResponse[Any], include_in_schema=False, dependencies=[Depends(verify_internal_token)])
 async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
-    await QuotaService.consume_request(
-        req.user_id, req.feature, req.req_reset_hours
-    )
     if req.tokens > 0:
         await QuotaService.consume_tokens(
             req.user_id, req.tokens, req.feature, req.req_reset_hours
@@ -78,11 +75,11 @@ async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
         data=None, message="Ghi nhận mức tiêu thụ tài nguyên hệ thống hoàn tất", status=200
     )
 
-from src.schemas.quota import ConsumeUploadQuotaRequest
+from src.schemas.quota import ConsumeUploadQuotaRequest, UploadType
 
 @router.get("/tai-len/xac-minh", response_model=APIResponse[Any], include_in_schema=False)
 async def check_upload_quota_internal(
-    item_type: str,
+    item_type: UploadType,
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
@@ -91,7 +88,7 @@ async def check_upload_quota_internal(
     if hasattr(ai_tier, "value"):
         ai_tier = ai_tier.value
         
-    await QuotaService.check_upload_quota(str(current_user.id), role, ai_tier, item_type)
+    await QuotaService.check_upload_quota(str(current_user.id), role, ai_tier, item_type.value)
     return APIResponse(
         data=None,
         message="Xác minh dung lượng tải lên khả dụng hoàn tất",
@@ -105,7 +102,7 @@ async def consume_upload_quota_internal(
     db=Depends(get_db)
 ):
     await QuotaService.consume_upload_quota(
-        str(current_user.id), req.item_type, req.req_reset_hours
+        str(current_user.id), req.item_type.value, req.req_reset_hours
     )
     return APIResponse(
         data=None, message="Ghi nhận mức tiêu thụ dung lượng tải lên hoàn tất", status=200

@@ -1,21 +1,73 @@
-from src.core.logic_logger import log_logic_execution
-from src.core.infrastructure.mongo import mongo
 import asyncio
 from datetime import datetime, timezone
 
-import httpx
-from fastapi import Query
-from src.schemas.thread import Record
+from fastapi import HTTPException
+from pymongo.errors import DuplicateKeyError
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.core.logic_logger import log_logic_execution
+from src.schemas.thread import Record
 from src.repositories.message import MessageRepository
 from src.repositories.conversation import ConversationRepository
-from src.repositories.message import MessageRepository
 from src.repositories.profile import ProfileRepository
-from src.repositories.message import MessageRepository
 
 class ThreadService:
+    @staticmethod
+    async def ensure_group_access(group_id: str, user_id: str, require_send: bool = False):
+        group = await MessageRepository.find_group({"_id": group_id})
+        if not group or user_id not in group.get("members", []):
+            raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập nhóm trò chuyện này")
+        if require_send and group.get("messaging_restricted"):
+            allowed = user_id == group.get("created_by") or user_id in group.get("deputies", [])
+            if not allowed:
+                raise HTTPException(status_code=403, detail="Nhóm chỉ cho phép quản trị viên gửi tin nhắn")
+        return group
+
+    @staticmethod
+    async def ensure_target_access(receiver_id: str, user_id: str):
+        if receiver_id.startswith("group_"):
+            return await ThreadService.ensure_group_access(receiver_id, user_id, require_send=True)
+        if receiver_id == user_id:
+            raise HTTPException(status_code=400, detail="Không thể gửi tin nhắn cho chính tài khoản hiện tại")
+        sender_controls, receiver_controls, sender_profile, receiver_profile = await asyncio.gather(
+            MessageRepository.get_user_controls(user_id),
+            MessageRepository.get_user_controls(receiver_id),
+            ProfileRepository.get_profile(user_id),
+            ProfileRepository.get_profile(receiver_id),
+        )
+        if not receiver_profile:
+            raise HTTPException(status_code=404, detail="Không tìm thấy người nhận tin nhắn")
+        sender_blocked = set((sender_controls or {}).get("blocked_users", []))
+        receiver_blocked = set((receiver_controls or {}).get("blocked_users", []))
+        sender_blocked.update((sender_profile or {}).get("blocked_users", []))
+        receiver_blocked.update(receiver_profile.get("blocked_users", []))
+        if receiver_id in sender_blocked or user_id in receiver_blocked:
+            raise HTTPException(status_code=403, detail="Không thể gửi tin nhắn do thiết lập chặn tài khoản")
+        return None
+
+    @staticmethod
+    async def ensure_message_access(message: dict, user_id: str):
+        if not message:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tin nhắn")
+        receiver_id = str(message.get("receiver_id", ""))
+        if receiver_id.startswith("group_"):
+            await ThreadService.ensure_group_access(receiver_id, user_id)
+        elif user_id not in {str(message.get("sender_id")), receiver_id}:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập tin nhắn này")
+        visible_to = message.get("visible_to")
+        if visible_to is not None and user_id not in visible_to:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập tin nhắn này")
+        if message.get("is_scheduled") and message.get("sender_id") != user_id:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tin nhắn")
+        return message
+
+    @staticmethod
+    def same_conversation(message: dict, sender_id: str, receiver_id: str) -> bool:
+        if receiver_id.startswith("group_"):
+            return message.get("receiver_id") == receiver_id
+        return {str(message.get("sender_id")), str(message.get("receiver_id"))} == {
+            sender_id,
+            receiver_id,
+        }
 
     @staticmethod
     @log_logic_execution
@@ -71,6 +123,14 @@ class ThreadService:
         scheduled_at: datetime = None,
     ):
         sender_id = str(current_user.id)
+        if not any([content and content.strip(), image_url, audio_url, attachments]):
+            raise HTTPException(status_code=400, detail="Tin nhắn phải có nội dung hoặc tệp đính kèm")
+        await ThreadService.ensure_target_access(receiver_id, sender_id)
+        if scheduled_at:
+            if scheduled_at.tzinfo is None:
+                raise HTTPException(status_code=400, detail="Thời gian hẹn gửi phải có múi giờ")
+            if scheduled_at <= datetime.now(timezone.utc):
+                scheduled_at = None
         if client_msg_id:
             existing = await MessageRepository.find_one(
                 {"client_msg_id": client_msg_id, "sender_id": sender_id}
@@ -78,9 +138,6 @@ class ThreadService:
             if existing:
                 existing["_id"] = str(existing["_id"])
                 return existing
-        user_doc = await ProfileRepository.get_profile(receiver_id)
-        if user_doc and sender_id in user_doc.get("blocked_users", []):
-            raise Exception("This account is currently not accepting messages from you")
         self_destruct_at = None
         settings_id = (
             f"settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
@@ -95,6 +152,15 @@ class ThreadService:
         results = await asyncio.gather(*tasks)
         settings = results[0]
         reply_msg = results[1] if reply_to_id and len(results) > 1 else None
+        if reply_msg:
+            await ThreadService.ensure_message_access(reply_msg, sender_id)
+            if not ThreadService.same_conversation(reply_msg, sender_id, receiver_id):
+                raise HTTPException(status_code=400, detail="Tin nhắn trả lời không thuộc cuộc trò chuyện này")
+        if parent_message_id:
+            parent = await MessageRepository.find_one({"_id": parent_message_id})
+            await ThreadService.ensure_message_access(parent, sender_id)
+            if not ThreadService.same_conversation(parent, sender_id, receiver_id):
+                raise HTTPException(status_code=400, detail="Tin nhắn gốc không thuộc cuộc trò chuyện này")
         self_destruct_seconds = None
         if settings and settings.get("self_destruct_seconds", 0) > 0:
             self_destruct_seconds = settings["self_destruct_seconds"]
@@ -119,9 +185,18 @@ class ThreadService:
                 "content": reply_msg.get("content"),
                 "sender_id": reply_msg.get("sender_id"),
             }
-        await MessageRepository.insert_one(msg_dict)
-        
-        # Only update conversation and thread count if not scheduled for future
+        try:
+            await MessageRepository.insert_one(msg_dict)
+        except DuplicateKeyError:
+            if not client_msg_id:
+                raise
+            existing = await MessageRepository.find_one(
+                {"client_msg_id": client_msg_id, "sender_id": sender_id}
+            )
+            if existing:
+                return existing
+            raise
+
         if not msg_dict["is_scheduled"]:
             await ThreadService._upsert_conversation(
                 sender_id,
@@ -150,10 +225,18 @@ class ThreadService:
     async def get_thread_replies(
         parent_message_id: str,
         current_user,
-        limit: int = Query(default=20, le=100),
+        limit: int = 20,
         cursor: str = None,
     ):
-        query = {"parent_message_id": parent_message_id, "deleted_by": {"$ne": str(current_user.id)}}
+        user_id = str(current_user.id)
+        parent = await MessageRepository.find_one({"_id": parent_message_id})
+        await ThreadService.ensure_message_access(parent, user_id)
+        query = {
+            "parent_message_id": parent_message_id,
+            "deleted_by": {"$ne": user_id},
+            "is_scheduled": {"$ne": True},
+            "$or": [{"visible_to": None}, {"visible_to": user_id}],
+        }
         if cursor:
             query["_id"] = {"$lt": cursor}
         
@@ -171,12 +254,11 @@ class ThreadService:
     async def get_messages(
         other_user_id: str,
         current_user,
-        limit: int = Query(
-            default=20, le=100
-        ),
+        limit: int = 20,
         cursor: str = None,
     ):
         if other_user_id.startswith("group_"):
+            await ThreadService.ensure_group_access(other_user_id, str(current_user.id))
             query = {"receiver_id": other_user_id}
         else:
             query = {
@@ -188,6 +270,10 @@ class ThreadService:
         if cursor:
             query["_id"] = {"$lt": cursor}
         query["deleted_by"] = {"$ne": str(current_user.id)}
+        query["is_scheduled"] = {"$ne": True}
+        query["$and"] = [
+            {"$or": [{"visible_to": None}, {"visible_to": str(current_user.id)}]}
+        ]
         messages = (
             await MessageRepository
             .find(query)
@@ -320,8 +406,16 @@ class ThreadService:
     async def search_messages(
         other_user_id: str, query_str: str, current_user
     ) -> list:
-        query = {"$text": {"$search": query_str}, "is_recalled": False}
+        user_id = str(current_user.id)
+        query = {
+            "$text": {"$search": query_str},
+            "is_recalled": False,
+            "is_scheduled": {"$ne": True},
+            "deleted_by": {"$ne": user_id},
+            "$and": [{"$or": [{"visible_to": None}, {"visible_to": user_id}]}],
+        }
         if other_user_id.startswith("group_"):
+            await ThreadService.ensure_group_access(other_user_id, user_id)
             query["receiver_id"] = other_user_id
         else:
             query["$or"] = [
@@ -340,10 +434,9 @@ class ThreadService:
     @log_logic_execution
     async def forward_message(message_id: str, receiver_ids: list, current_user):
         original_msg = await MessageRepository.find_one({"_id": message_id})
-        if not original_msg:
-            raise ValueError("Original message not found")
+        await ThreadService.ensure_message_access(original_msg, str(current_user.id))
         if original_msg.get("is_recalled"):
-            raise ValueError("Cannot forward a recalled message")
+            raise HTTPException(status_code=400, detail="Không thể chuyển tiếp tin nhắn đã thu hồi")
             
         forwarded_messages = []
         for receiver_id in receiver_ids:
@@ -376,34 +469,36 @@ class ThreadService:
     @log_logic_execution
     async def vote_poll(message_id: str, option_id: str, current_user):
         import json
-        msg = await MessageRepository.find_one({"_id": message_id})
-        if not msg:
-            raise ValueError("Poll message not found")
-            
-        try:
-            content_dict = json.loads(msg.get("content", "{}"))
+        from src.core.infrastructure.redis import redis
+
+        lock = redis.get_client().lock(f"message:poll:{message_id}", timeout=10)
+        async with lock:
+            msg = await MessageRepository.find_one({"_id": message_id})
+            await ThreadService.ensure_message_access(msg, str(current_user.id))
+            try:
+                content_dict = json.loads(msg.get("content", "{}"))
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Dữ liệu bình chọn không hợp lệ")
             if content_dict.get("type") != "poll":
-                raise ValueError("Message is not a poll")
-                
+                raise HTTPException(status_code=400, detail="Tin nhắn không phải là bình chọn")
             poll_data = content_dict.get("data", {})
+            options = poll_data.get("options", [])
+            if not any(option.get("id") == option_id for option in options):
+                raise HTTPException(status_code=400, detail="Lựa chọn bình chọn không tồn tại")
             user_id = str(current_user.id)
-            
-            for opt in poll_data.get("options", []):
-                if user_id in opt.get("votes", []):
-                    opt["votes"].remove(user_id)
-                    
-            for opt in poll_data.get("options", []):
-                if opt["id"] == option_id:
-                    opt["votes"].append(user_id)
+            for option in options:
+                votes = option.setdefault("votes", [])
+                if user_id in votes:
+                    votes.remove(user_id)
+            for option in options:
+                if option.get("id") == option_id:
+                    option["votes"].append(user_id)
                     break
-                    
             new_content = json.dumps({"type": "poll", "data": poll_data})
             await MessageRepository.update_one(
                 {"_id": message_id},
-                {"$set": {"content": new_content, "updated_at": datetime.now(timezone.utc)}}
+                {"$set": {"content": new_content, "updated_at": datetime.now(timezone.utc)}},
             )
-            
-            # Update last_message if it's the latest
             participant_key = (
                 msg["receiver_id"]
                 if msg["receiver_id"].startswith("group_")
@@ -415,10 +510,7 @@ class ThreadService:
                     {"_id": participant_key},
                     {"$set": {"last_message.content": new_content}},
                 )
-                
             return await MessageRepository.find_one({"_id": message_id})
-        except json.JSONDecodeError:
-            raise ValueError("Invalid poll data format")
 
     @staticmethod
     @log_logic_execution
@@ -429,19 +521,14 @@ class ThreadService:
             "is_scheduled": True,
             "scheduled_at": {"$lte": now}
         }
-        messages = await MessageRepository.find(query).to_list(length=None)
-        
+        messages = await MessageRepository.find(query).sort("scheduled_at", 1).limit(100).to_list(length=100)
+
         for msg in messages:
             msg_id = msg["_id"]
-            # Update as not scheduled anymore
-            await MessageRepository.update_one(
-                {"_id": msg_id},
-                {"$set": {"is_scheduled": False, "created_at": now}}
-            )
-            msg["is_scheduled"] = False
-            msg["created_at"] = now
-            
-            # Upsert conversation
+            claimed = await MessageRepository.claim_scheduled_message(msg_id, now)
+            if not claimed:
+                continue
+            msg = claimed
             sender_id = msg["sender_id"]
             receiver_id = msg["receiver_id"]
             await ThreadService._upsert_conversation(
@@ -460,13 +547,9 @@ class ThreadService:
                 },
             )
             
-            # Publish to receiver
             await publish_personal_message(
                 {"type": "new_message", "data": msg}, receiver_id
             )
-            # Publish back to sender to update UI
             await publish_personal_message(
                 {"type": "message_sent_ack", "data": msg}, sender_id
             )
-
-

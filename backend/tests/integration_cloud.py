@@ -1,0 +1,175 @@
+import asyncio
+import json
+import os
+import urllib.error
+import urllib.request
+import uuid
+from datetime import datetime, timedelta, timezone
+
+import jwt
+import aioboto3
+from motor.motor_asyncio import AsyncIOMotorClient
+import redis.asyncio as redis
+
+
+BASE_URL = os.getenv("CLOUD_TEST_URL", "http://127.0.0.1:8000")
+OWNER_ID = f"cloud-owner-{uuid.uuid4()}"
+SHARED_ID = f"cloud-shared-{uuid.uuid4()}"
+OWNER_SESSION = str(uuid.uuid4())
+SHARED_SESSION = str(uuid.uuid4())
+SECRET_KEY = os.getenv("SECRET_KEY", "doclib-password")
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def token(user_id, session_id, role="reader", ai_tier="BASIC"):
+    now = datetime.now(timezone.utc)
+    return jwt.encode(
+        {
+            "sub": f"{user_id}@doclib.local",
+            "uid": user_id,
+            "sid": session_id,
+            "role": role,
+            "ai_tier": ai_tier,
+            "iat": now,
+            "exp": now + timedelta(minutes=15),
+        },
+        SECRET_KEY,
+        algorithm="HS256",
+    )
+
+
+def call(method, path, bearer=None, body=None, raw=None, headers=None, follow=True):
+    request_headers = dict(headers or {})
+    if bearer:
+        request_headers["Authorization"] = f"Bearer {bearer}"
+    if body is not None:
+        request_headers["Content-Type"] = "application/json"
+        raw = json.dumps(body).encode()
+    request = urllib.request.Request(f"{BASE_URL}{path}", data=raw, headers=request_headers, method=method)
+    opener = urllib.request.build_opener() if follow else urllib.request.build_opener(NoRedirect)
+    try:
+        with opener.open(request, timeout=20) as response:
+            content = response.read()
+            return response.status, json.loads(content) if content else None, response.headers
+    except urllib.error.HTTPError as error:
+        content = error.read()
+        try:
+            payload = json.loads(content)
+        except json.JSONDecodeError:
+            payload = content.decode(errors="ignore")
+        return error.code, payload, error.headers
+
+
+def multipart(filename, content, content_type="text/plain"):
+    boundary = f"doclib-{uuid.uuid4().hex}"
+    data = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+        f"Content-Type: {content_type}\r\n\r\n"
+    ).encode() + content + f"\r\n--{boundary}--\r\n".encode()
+    return data, {"Content-Type": f"multipart/form-data; boundary={boundary}"}
+
+
+async def main():
+    mongo = AsyncIOMotorClient(os.getenv("MONGODB_URI", "mongodb://127.0.0.1:27017/doclib"))
+    cache = redis.from_url(os.getenv("REDIS_URI", "redis://127.0.0.1:6379/0"), decode_responses=True)
+    cloud = mongo[os.getenv("CLOUD_DB_NAME", "doclib_cloud")]
+    humanity = mongo[os.getenv("HUMANITY_DB_NAME", "doclib_humanity")]
+    owner_token = token(OWNER_ID, OWNER_SESSION, ai_tier="PRO")
+    shared_token = token(SHARED_ID, SHARED_SESSION, ai_tier="PRO")
+    object_paths = []
+    try:
+        await cache.sadd(f"user_sessions:{OWNER_ID}", OWNER_SESSION)
+        await cache.sadd(f"user_sessions:{SHARED_ID}", SHARED_SESSION)
+        await humanity.users.insert_many([
+            {"_id": OWNER_ID, "email": f"{OWNER_ID}@doclib.local", "role": "reader", "storage_limit": 20 * 1024 * 1024},
+            {"_id": SHARED_ID, "email": f"{SHARED_ID}@doclib.local", "role": "reader", "storage_limit": 20 * 1024 * 1024},
+        ])
+        assert call("GET", "/ready")[0] == 200
+        content = b"cloud-integration-data" * 300
+        data, headers = multipart("integration.txt", content)
+        status, payload, _ = call("POST", "/tai-len/tap-tin", owner_token, raw=data, headers=headers)
+        assert status == 200 or status == 201, payload
+        item_id = payload["data"]["item_id"]
+        path = payload["data"]["url"]
+        object_paths.append(path)
+        assert path.startswith(f"users/{OWNER_ID}/")
+        assert await cloud.storage_items.find_one({"_id": item_id, "size": len(content)})
+        status, quota, _ = call("GET", "/luu-tru/han-muc", owner_token)
+        assert status == 200 and quota["data"]["used"] == len(content), quota
+        assert call("GET", f"/tai-len/luu-tru/{path}", shared_token, follow=False)[0] == 403
+
+        status, share_payload, _ = call(
+            "POST",
+            f"/luu-tru/tap-tin/{item_id}/chia-se",
+            owner_token,
+            {"email": f"{SHARED_ID}@doclib.local", "role": "viewer"},
+        )
+        assert status == 200, share_payload
+        assert call("GET", f"/tai-len/luu-tru/{path}", shared_token, follow=False)[0] == 302
+        status, public_payload, _ = call("PUT", f"/luu-tru/tap-tin/{item_id}", owner_token, {"is_public": True})
+        assert status == 200, public_payload
+        share_token = public_payload["data"]["share_token"]
+        status, public_item, _ = call("GET", f"/luu-tru/chia-se/{share_token}")
+        assert status == 200 and public_item["data"]["download_url"], public_item
+
+        reserved_content = b"presigned-cloud-data" * 300
+        request_body = {"filename": "presigned.txt", "size": len(reserved_content), "content_type": "text/plain"}
+        status, reserved, _ = call("POST", "/tai-len/presigned-url", owner_token, request_body)
+        assert status == 200, reserved
+        reserved_path = reserved["data"]["file_path"]
+        object_paths.append(reserved_path)
+        async with aioboto3.Session().client(
+            "s3",
+            endpoint_url=os.environ["MINIO_ENDPOINT"],
+            aws_access_key_id=os.environ["MINIO_ACCESS_KEY"],
+            aws_secret_access_key=os.environ["MINIO_SECRET_KEY"],
+        ) as storage:
+            await storage.put_object(
+                Bucket=os.environ["MINIO_PRIVATE_BUCKET"],
+                Key=reserved_path,
+                Body=reserved_content,
+                ContentType="text/plain",
+            )
+        confirm = {**request_body, "file_path": reserved_path}
+        status, confirmed, _ = call("POST", "/tai-len/xac-nhan", owner_token, confirm)
+        assert status == 201, confirmed
+        confirmed_item_id = confirmed["data"]["item_id"]
+        assert call("POST", "/tai-len/xac-nhan", owner_token, confirm)[0] == 409
+        assert call("POST", "/tai-len/xac-nhan", owner_token, {**confirm, "file_path": f"users/{OWNER_ID}/documents/forged.txt"})[0] == 409
+
+        status, folder_payload, _ = call("POST", "/luu-tru/thu-muc", owner_token, {"name": "parent"})
+        assert status == 201, folder_payload
+        folder_id = folder_payload["data"]["_id"]
+        status, child_payload, _ = call("POST", "/luu-tru/thu-muc", owner_token, {"name": "child", "parent_id": folder_id})
+        assert status == 201, child_payload
+        child_id = child_payload["data"]["_id"]
+        assert call("PUT", f"/luu-tru/tap-tin/{folder_id}", owner_token, {"parent_id": child_id})[0] == 404
+        assert call("DELETE", f"/luu-tru/tap-tin/{folder_id}", owner_token)[0] == 200
+        child = await cloud.storage_items.find_one({"_id": child_id})
+        assert child["is_trashed"] is True
+        assert call("DELETE", f"/luu-tru/tap-tin/{folder_id}?hard_delete=true", owner_token)[0] == 200
+        assert await cloud.storage_items.find_one({"_id": child_id}) is None
+        assert call("DELETE", f"/luu-tru/tap-tin/{item_id}?hard_delete=true", owner_token)[0] == 200
+        assert call("DELETE", f"/luu-tru/tap-tin/{confirmed_item_id}?hard_delete=true", owner_token)[0] == 200
+        print("cloud integration passed")
+    finally:
+        records = await cloud.storage_items.find({"owner_id": {"$in": [OWNER_ID, SHARED_ID]}}).to_list(length=None)
+        object_paths.extend(record.get("url") for record in records if record.get("url"))
+        await cloud.storage_items.delete_many({"owner_id": {"$in": [OWNER_ID, SHARED_ID]}})
+        await cloud.temp_chat_files.delete_many({"owner_id": {"$in": [OWNER_ID, SHARED_ID]}})
+        await humanity.users.delete_many({"_id": {"$in": [OWNER_ID, SHARED_ID]}})
+        await cache.delete(f"user_sessions:{OWNER_ID}", f"user_sessions:{SHARED_ID}")
+        async for key in cache.scan_iter(match="cloud:upload:*"):
+            value = await cache.get(key)
+            if value and json.loads(value).get("owner_id") in {OWNER_ID, SHARED_ID}:
+                await cache.delete(key)
+        await cache.aclose()
+        mongo.close()
+
+
+asyncio.run(main())

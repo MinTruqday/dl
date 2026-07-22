@@ -59,7 +59,7 @@ class BookmarkService:
             await DocumentRepository
             .find({"_id": {"$in": bookmark_ids}})
             .limit(limit)
-            .execute()
+            .to_list(length=limit)
         )
         return [
             {
@@ -99,7 +99,7 @@ class BookmarkService:
             await mongo
             .find("bookmark_folders", {"user_id": str(current_user.id)})
             .sort("created_at", -1)
-            .execute()
+            .to_list(length=None)
         )
         return [
             {

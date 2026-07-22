@@ -1,15 +1,14 @@
-import math
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Union
+from typing import Dict
 
 from pydantic import BaseModel, Field
 
 class QuotaLimit(BaseModel):
-    daily_requests: Union[int, float] = 0
-    daily_tokens: Union[int, float] = 0
-    req_reset_hours: Union[int, float] = 24
-    max_docs: Union[int, float] = 1
-    model: str = ""
+    daily_requests: int = Field(default=0, ge=-1, le=1_000_000)
+    daily_tokens: int = Field(default=0, ge=-1, le=1_000_000_000)
+    req_reset_hours: int = Field(default=24, ge=1, le=720)
+    max_docs: int = Field(default=1, ge=-1, le=1_000_000)
+    model: str = Field(default="", max_length=300)
     thinking: bool = False
 
 class UserQuota(BaseModel):
@@ -19,18 +18,18 @@ class UserQuota(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class GlobalQuotaConfig(BaseModel):
-    role_limits: Dict[str, QuotaLimit] = {
+    role_limits: Dict[str, QuotaLimit] = Field(default_factory=lambda: {
         "reader": QuotaLimit(daily_requests=0, daily_tokens=0),
         "author": QuotaLimit(daily_requests=0, daily_tokens=0),
-        "admin": QuotaLimit(daily_requests=math.inf, daily_tokens=math.inf),
-    }
+        "admin": QuotaLimit(daily_requests=-1, daily_tokens=-1, max_docs=-1),
+    })
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ConsumeQuotaRequest(BaseModel):
-    user_id: str
-    feature: str = "chat"
-    req_reset_hours: int = 24
-    tokens: int = 0
+    user_id: str = Field(min_length=1, max_length=100)
+    feature: str = Field(default="chat", pattern=r"^[a-zA-Z0-9_-]{1,50}$")
+    req_reset_hours: int = Field(default=24, ge=1, le=720)
+    tokens: int = Field(default=0, ge=0, le=10_000_000)
 
 from enum import Enum
 class Tier(str, Enum):
@@ -44,6 +43,6 @@ class UploadType(str, Enum):
     FOLDER = "folder"
 
 class ConsumeUploadQuotaRequest(BaseModel):
-    user_id: str
+    user_id: str = Field(min_length=1, max_length=100)
     item_type: UploadType
-    req_reset_hours: int = 24
+    req_reset_hours: int = Field(default=24, ge=1, le=720)

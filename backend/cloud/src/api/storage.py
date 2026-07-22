@@ -17,7 +17,7 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/luu-tru")
 
-@router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
+@router.post("/thu-muc", response_model=APIResponse[StorageItemResponse], status_code=201)
 async def create_folder(
     data: StorageItemCreate = Body(...),
     current_user: CurrentUser = Depends(
@@ -33,7 +33,7 @@ async def create_folder(
         status=201,
     )
 
-@router.post("/tap-tin", response_model=APIResponse[StorageItemResponse])
+@router.post("/tap-tin", response_model=APIResponse[StorageItemResponse], status_code=201)
 async def create_file(
     background_tasks: BackgroundTasks,
     data: StorageItemCreate = Body(...),
@@ -42,8 +42,10 @@ async def create_file(
     ),
     db=Depends(get_db),
 ):
-    
     data.is_folder = False
+    quota = await StorageService.get_storage_quota(current_user.id)
+    if quota["used"] + data.size > quota["limit"]:
+        raise HTTPException(status_code=400, detail="Dung lượng lưu trữ đã đầy")
     item = await StorageService.create_item(data, current_user.id)
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
@@ -113,7 +115,7 @@ async def get_storage_quota(
     )
 
 @router.post(
-    "/tap-tin/{item_id}/loi-tat", response_model=APIResponse[StorageItemResponse]
+    "/tap-tin/{item_id}/loi-tat", response_model=APIResponse[StorageItemResponse], status_code=201
 )
 async def create_shortcut(
     item_id: str,
@@ -152,25 +154,36 @@ async def download_zip(
     from src.core.infrastructure.configuration import settings
     from src.core.storage import get_storage_client, get_bucket
 
-    item_ids = [i.strip() for i in ids.split(",") if i.strip()]
-    if not item_ids:
+    item_ids = list(dict.fromkeys(i.strip() for i in ids.split(",") if i.strip()))
+    if not item_ids or len(item_ids) > 50:
         raise HTTPException(
-            status_code=400, detail="Yêu cầu ít nhất một tệp tin để tạo bản nén"
+            status_code=400, detail="Số lượng tệp yêu cầu không hợp lệ"
         )
     zip_buffer = io.BytesIO()
     storage_client = await get_storage_client()
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+        total_size = 0
+        used_names = set()
         for i_id in item_ids:
-                item = await StorageService.get_item(i_id, current_user.id)
-                if item and (not item.is_folder) and item.url:
-                    try:
-                        resp = await storage_client.get_object(
-                            Bucket=get_bucket(item.url), Key=item.url
-                        )
-                        file_data = await resp["Body"].read()
-                        zip_file.writestr(item.name, file_data)
-                    except Exception as e:
-                        logger.exception("Failed to add file to zip archive during download request")
+            item = await StorageService.get_accessible_item(i_id, current_user.id)
+            if not item or item.is_folder or not item.url:
+                raise HTTPException(status_code=404, detail="Không tìm thấy tệp hoặc thiếu quyền truy cập")
+            total_size += item.size
+            if total_size > 500 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="Tổng dung lượng bản nén vượt quá giới hạn")
+            safe_name = item.name.replace("\\", "_").replace("/", "_")
+            if safe_name in used_names:
+                safe_name = f"{item.id}_{safe_name}"
+            used_names.add(safe_name)
+            try:
+                resp = await storage_client.get_object(Bucket=get_bucket(item.url), Key=item.url)
+                file_data = await resp["Body"].read()
+                zip_file.writestr(safe_name, file_data)
+            except HTTPException:
+                raise
+            except Exception:
+                logger.exception("Failed to add file to zip archive")
+                raise HTTPException(status_code=502, detail="Không thể đọc tệp từ kho đối tượng")
     zip_buffer.seek(0)
     return StreamingResponse(
         zip_buffer,
@@ -192,7 +205,7 @@ async def update_item(
     if data.is_public and data.is_public is True:
         current_item = await StorageService.get_item(item_id, current_user.id)
         if current_item and (not current_item.share_token):
-            update_data_dict = data.dict(exclude_unset=True)
+            update_data_dict = data.model_dump(exclude_unset=True)
             update_data_dict["share_token"] = str(uuid7())
             item = await StorageService.update_item(
                 item_id, current_user.id, StorageItemUpdate(**update_data_dict)
@@ -240,7 +253,7 @@ async def delete_item(
         return APIResponse(data=None, message="Di chuyển dữ liệu vào khu vực lưu trữ tạm hoàn tất", status=200)
 
 @router.post(
-    "/tap-tin/{item_id}/sao-chep", response_model=APIResponse[StorageItemResponse]
+    "/tap-tin/{item_id}/sao-chep", response_model=APIResponse[StorageItemResponse], status_code=201
 )
 async def copy_item(
     item_id: str,
@@ -295,15 +308,19 @@ async def share_archive(
     res = await StorageService.share_item(item_id, email, role, current_user.id)
     return APIResponse(data=None, message=res["message"], status=200)
 
-@router.get("/chia-se/{share_token}", response_model=APIResponse[StorageItemResponse])
+@router.get("/chia-se/{share_token}", response_model=APIResponse[Any])
 async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageService.get_public_item(share_token)
     if not item:
         raise HTTPException(
             status_code=404, detail="Liên kết chia sẻ dữ liệu không hợp lệ hoặc đã hết hạn"
         )
+    data = StorageItemResponse(**item.model_dump()).model_dump(by_alias=True)
+    if not item.is_folder and item.url:
+        from src.services.upload import UploadService
+        data.update(await UploadService.get_presigned_url(item.url))
     return APIResponse(
-        data=StorageItemResponse(**item.dict()),
+        data=data,
         message="Trích xuất thông tin tệp chia sẻ hoàn tất",
         status=200,
     )

@@ -35,7 +35,7 @@ class LibraryService:
         return (
             await mongo
             .find("reading_lists", {"user_id": str(current_user.id)})
-            .execute()
+            .to_list(length=None)
         )
 
     @staticmethod
@@ -51,7 +51,7 @@ class LibraryService:
             docs = (
                 await DocumentRepository
                 .find({"_id": {"$in": doc_ids}})
-                .execute()
+                .to_list(length=None)
             )
             reading_list["documents_detailed"] = docs
         else:

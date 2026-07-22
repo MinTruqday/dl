@@ -50,7 +50,7 @@ class VersionService:
             .find("document_versions", {"document_id": document_id, "creator_id": str(current_user.id)})
             .sort("created_at", -1)
         )
-        versions = await cursor 
+        versions = await cursor.to_list(length=None)
         for v in versions:
             v["_id"] = str(v["_id"])
             v["created_at"] = v["created_at"].isoformat()

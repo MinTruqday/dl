@@ -5,6 +5,7 @@ from bson import ObjectId
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status, File, UploadFile
 from pydantic import BaseModel
+from loguru import logger
 from src.api.dependency import (
     get_current_user,
     get_current_user_optional,
@@ -30,9 +31,18 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tai-lieu")
 
-@router.post("", response_model=APIResponse[DocumentResponse])
+@router.post("", response_model=APIResponse[DocumentResponse], status_code=status.HTTP_201_CREATED)
+async def create_document(
+    doc_in: DocumentCreate,
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN])),
+) -> Any:
+    return APIResponse(
+        data=await DocumentService.create_document(doc_in, current_user),
+        message="Khởi tạo tài liệu mới trên hệ thống hoàn tất",
+        status=status.HTTP_201_CREATED,
+    )
 
-@router.post("/import", response_model=APIResponse)
+@router.post("/import", response_model=APIResponse, status_code=status.HTTP_201_CREATED)
 async def import_document_from_file(
     file: UploadFile = File(...),
     current_user: CurrentUser = Depends(get_current_user)
@@ -46,19 +56,9 @@ async def import_document_from_file(
         )
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to import document")
         raise HTTPException(status_code=500, detail="Hệ thống không thể xử lý tác vụ giải mã tài liệu")
-
-async def create_document(
-    doc_in: DocumentCreate,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN])),
-) -> Any:
-    return APIResponse(
-        data=await DocumentService.create_document(doc_in, current_user),
-        message="Khởi tạo tài liệu mới trên hệ thống hoàn tất",
-        status=status.HTTP_201_CREATED,
-    )
 
 @router.put("/{document_id}/noi-dung", response_model=APIResponse[DocumentResponse])
 async def update_document_content(
@@ -168,7 +168,7 @@ async def get_trash(current_user: CurrentUser = Depends(get_current_user)):
         message="Trích xuất dữ liệu tài liệu trong thùng rác hoàn tất",
     )
 
-@router.get("/{document_id}", response_model=APIResponse[DocumentResponse])
+@router.get("/{document_id}", response_model=APIResponse[Any])
 async def get_document_by_id(
     document_id: str,
     password: Optional[str] = Header(None, alias="x-document-password"),
@@ -182,7 +182,7 @@ async def get_document_by_id(
         status=status.HTTP_200_OK,
     )
 
-@router.get("/tai-lieu/{slug}", response_model=APIResponse[DocumentResponse])
+@router.get("/tai-lieu/{slug}", response_model=APIResponse[Any])
 async def get_document_by_slug(
     slug: str, current_user: CurrentUser = Depends(get_current_user_optional)
 ) -> Any:

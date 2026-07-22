@@ -23,6 +23,7 @@ async def init_db():
 
     from motor.motor_asyncio import AsyncIOMotorClient
     database.mongodb = AsyncIOMotorClient(mongo_uri)
+    await database.mongodb.admin.command("ping")
 
     from src.core.infrastructure.mq import mq
     max_retries = 5
@@ -36,7 +37,7 @@ async def init_db():
         except Exception as e:
             if i == max_retries - 1:
                 logger.exception("RabbitMQ connection error")
-                raise e
+                raise
             logger.warning("Attempting to reconnect to RabbitMQ")
             await asyncio.sleep(5)
 
@@ -60,12 +61,19 @@ async def setup_indexes():
         await db["editor_comments"].create_index([("document_id", 1), ("block_id", 1)], background=True)
 
         await db["document_versions"].create_index([("document_id", 1), ("created_at", -1)], background=True)
+        await db["workspace_folders"].create_index([("creator_id", 1), ("parent_id", 1)])
+        await db["bookmarks"].create_index([("user_id", 1), ("document_id", 1)], unique=True)
+        await db["highlights"].create_index([("user_id", 1), ("document_id", 1), ("created_at", -1)])
 
         logger.info("MongoDB indexing initialized successfully")
-    except Exception as e:
+    except Exception:
         logger.exception("MongoDB indexing error")
+        raise
 
 async def close_db():
     if database.mongodb:
         database.mongodb.close()
-
+        database.mongodb = None
+    from src.core.infrastructure.mq import mq
+    await mq.aclose()
+    await redis.aclose()

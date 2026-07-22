@@ -1,14 +1,12 @@
 from src.core.infrastructure.redis import redis
-import json
-from typing import Any, List
+from typing import Any
 
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Query
-from src.schemas.thread import Conversation, Creation, Response
+from src.schemas.thread import Creation
 from src.services.thread import ThreadService
 
-from src.core.infrastructure.database import database
-from src.core.dependency import AuthenticatedUser, Depends, Header, HTTPException
+from src.core.dependency import Depends
 from src.core.dependency import get_current_user
 from src.core.response import APIResponse
 from src.repositories.message import MessageRepository
@@ -51,7 +49,6 @@ async def send_message(req: Creation, current_user=Depends(get_current_user)):
             {"type": "new_message", "data": msg}, req.receiver_id
         )
     else:
-        # Publish a 'scheduled_message' event back to sender only so they see it in UI if needed
         await publish_personal_message(
             {"type": "scheduled_message", "data": msg}, current_user.id
         )
@@ -63,7 +60,7 @@ async def send_message(req: Creation, current_user=Depends(get_current_user)):
 async def get_messages(
     other_user_id: str,
     cursor: str = None,
-    limit: int = Query(500),
+    limit: int = Query(50, ge=1, le=100),
     current_user=Depends(get_current_user),
 ):
     return APIResponse(
@@ -78,7 +75,7 @@ async def get_messages(
 async def get_thread_replies(
     message_id: str,
     cursor: str = None,
-    limit: int = Query(50),
+    limit: int = Query(50, ge=1, le=100),
     current_user=Depends(get_current_user),
 ):
     return APIResponse(
@@ -126,7 +123,7 @@ async def recall_message(message_id: str, current_user=Depends(get_current_user)
 
 @router.get("/{other_user_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_messages(
-    other_user_id: str, q: str = Query(...), current_user=Depends(get_current_user)
+    other_user_id: str, q: str, current_user=Depends(get_current_user)
 ):
     return APIResponse(
         data=await ThreadService.search_messages(other_user_id, q, current_user),
@@ -137,7 +134,7 @@ async def search_messages(
 async def forward_message(req: dict, current_user=Depends(get_current_user)):
     message_id = req.get("message_id")
     receiver_ids = req.get("receiver_ids", [])
-    if not message_id or not receiver_ids:
+    if not message_id or not receiver_ids or len(receiver_ids) > 20:
         return APIResponse(message="Dữ liệu chuyển tiếp không hợp lệ", status=400)
     
     result = await ThreadService.forward_message(message_id, receiver_ids, current_user)
@@ -152,7 +149,7 @@ async def create_poll(req: dict, current_user=Depends(get_current_user)):
     receiver_id = req.get("receiver_id")
     question = req.get("question")
     options = req.get("options", [])
-    if not receiver_id or not question or not options:
+    if not receiver_id or not isinstance(question, str) or not question.strip() or not 2 <= len(options) <= 10:
         return APIResponse(message="Dữ liệu bình chọn không hợp lệ", status=400)
         
     msg = await ThreadService.create_poll(receiver_id, question, options, current_user)
@@ -175,4 +172,3 @@ async def vote_poll(message_id: str, req: dict, current_user=Depends(get_current
     )
     await publish_personal_message({"type": "message_edited", "data": result}, other_id)
     return APIResponse(data=result, message="Bỏ phiếu hoàn tất")
-

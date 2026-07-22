@@ -1,14 +1,13 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
-import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
-from bson import ObjectId
 from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.database import database
+from src.core.infrastructure.configuration import settings
 
 
 from src.repositories.system import SystemRepository
@@ -46,7 +45,7 @@ class TelemetryService:
             {"$sort": {"count": -1}},
         ]
         cursor = SystemRepository.aggregate_telemetry(pipeline)
-        return await cursor 
+        return await cursor.to_list(length=None)
 
     @staticmethod
     @log_logic_execution
@@ -60,11 +59,11 @@ class TelemetryService:
     @staticmethod
     @log_logic_execution
     async def get_system_stats() -> dict:
-        total_users = await UserRepository.count_documents({})
-        total_documents = await SystemRepository.count_documents({})
-        total_authors = await UserRepository.count_documents(
-            {"role": "AUTHOR"}
-        )
+        humanity = database.mongodb[settings.HUMANITY_DB_NAME]
+        content = database.mongodb[settings.CONTENT_DB_NAME]
+        total_users = await humanity.users.count_documents({"is_active": {"$ne": False}})
+        total_documents = await content.documents.count_documents({"is_deleted": {"$ne": True}})
+        total_authors = await humanity.users.count_documents({"role": {"$regex": "^author$", "$options": "i"}, "is_active": {"$ne": False}})
         return {
             "total_users": total_users,
             "total_documents": total_documents,
@@ -89,8 +88,25 @@ class TelemetryService:
     @staticmethod
     @log_logic_execution
     async def get_activity_log(user_id: str) -> list:
-        return (
+        rows = (
             await ModerationRepository.find_moderator_activities({"actor_id": user_id})
             .sort("timestamp", -1)
             .execute()
         )
+        return TelemetryService._serialize(rows)
+
+    @staticmethod
+    async def get_audit_logs(limit: int = 20, offset: int = 0) -> list:
+        rows = await mongo.find("audit_logs", {}, sort=[("timestamp", -1)], skip=offset, limit=limit).to_list(length=limit)
+        return TelemetryService._serialize(rows)
+
+    @staticmethod
+    def _serialize(rows: list) -> list:
+        result = []
+        for row in rows:
+            item = dict(row)
+            item["_id"] = str(item.get("_id", ""))
+            if isinstance(item.get("timestamp"), datetime):
+                item["timestamp"] = item["timestamp"].isoformat()
+            result.append(item)
+        return result

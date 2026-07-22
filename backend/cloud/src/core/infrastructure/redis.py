@@ -1,4 +1,3 @@
-import json
 import redis.asyncio as aioredis
 from loguru import logger
 from src.core.infrastructure.configuration import settings
@@ -84,5 +83,9 @@ class RedisAPIClient:
     async def aclose(self):
         if self._client:
             await self._client.aclose()
+            self._client = None
+
+    async def ping(self):
+        return await self.get_client().ping()
 
 redis = RedisAPIClient()

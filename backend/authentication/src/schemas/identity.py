@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
@@ -33,19 +33,21 @@ class Tier(str, Enum):
     PREMIUM = "PREMIUM"
 
 class UserBase(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     email: EmailStr
-    full_name: str
-    slug: str
+    full_name: str = Field(min_length=2, max_length=100)
+    slug: str = Field(min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
     role: Role = Role.READER
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
-    social_links: Optional[Dict[str, str]] = {}
-    pinned_documents: List[str] = []
-    bookmarks: List[str] = []
+    social_links: Optional[Dict[str, str]] = Field(default_factory=dict)
+    pinned_documents: List[str] = Field(default_factory=list)
+    bookmarks: List[str] = Field(default_factory=list)
     is_premium: bool = False
     wallet_balance: int = 0
     is_shadowbanned: bool = False
-    permissions: List[str] = []
+    permissions: List[str] = Field(default_factory=list)
     donation_link: Optional[str] = None
     kyc_status: KYC = KYC.NONE
     creator_status: Creator = Creator.NONE
@@ -65,17 +67,26 @@ class UserBase(BaseModel):
 
     tos_accepted_at: Optional[datetime] = None
     welcome_message: Optional[str] = None
-    blocked_users: List[str] = []
-    settings: Dict[str, Any] = {
-        "mod_notifs": True,
-        "auto_refresh": False,
-        "auto_save": True,
-        "default_visibility": "public",
-    }
+    blocked_users: List[str] = Field(default_factory=list)
+    settings: Dict[str, Any] = Field(
+        default_factory=lambda: {
+            "mod_notifs": True,
+            "auto_refresh": False,
+            "auto_save": True,
+            "default_visibility": "public",
+        }
+    )
 
 class UserCreate(UserBase):
-    password: str
-    agreed_to_terms: bool = False
+    password: str = Field(min_length=12, max_length=128)
+    agreed_to_terms: bool
+
+    @field_validator("agreed_to_terms")
+    @classmethod
+    def validate_terms(cls, value: bool):
+        if not value:
+            raise ValueError("Điều khoản sử dụng phải được chấp thuận")
+        return value
 
 class UserInDB(UserBase):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
@@ -85,7 +96,7 @@ class UserInDB(UserBase):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True
     is_kyc_verified: bool = False
-    passkeys: List[Dict[str, Any]] = []
+    passkeys: List[Dict[str, Any]] = Field(default_factory=list)
     last_password_change: Optional[datetime] = None
     last_bank_update: Optional[datetime] = None
 
@@ -93,9 +104,6 @@ class UserResponse(UserBase):
     id: str = Field(alias="_id")
     created_at: datetime
     has_passkey: bool = False
-
-    class Config:
-        populate_by_name = True
 
 class ProfileUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -114,11 +122,11 @@ class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str
+    token: str = Field(min_length=6, max_length=128)
+    new_password: str = Field(min_length=12, max_length=128)
 
 class VerifyCodeRequest(BaseModel):
-    token: str
+    token: str = Field(min_length=6, max_length=128)
 
 class NotificationSettingsUpdate(BaseModel):
     enable_comment_notifications: bool = True
@@ -140,8 +148,8 @@ class NoteRequest(BaseModel):
     note: str
 
 class PasskeyRequest(BaseModel):
-    email: str
+    email: EmailStr
 
 class PasskeyFinishRequest(BaseModel):
-    email: str
+    email: EmailStr
     credential: dict

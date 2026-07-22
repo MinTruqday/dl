@@ -1,6 +1,7 @@
 import functools
 import time
 from loguru import logger
+from fastapi import HTTPException
 
 def log_logic_execution(func):
     @functools.wraps(func)
@@ -12,10 +13,14 @@ def log_logic_execution(func):
             duration = time.time() - start_time
             logger.info(f"Completed execution of core logic {func.__name__} in {duration:.3f}s")
             return result
-        except Exception as e:
+        except HTTPException:
+            duration = time.time() - start_time
+            logger.warning(f"Core logic rejected execution of {func.__name__} after {duration:.3f}s")
+            raise
+        except Exception:
             duration = time.time() - start_time
             logger.exception(f"Exception occurred during execution of core logic {func.__name__} after {duration:.3f}s")
-            raise e
+            raise
     return wrapper
 
 def log_logic_execution_sync(func):
@@ -28,8 +33,8 @@ def log_logic_execution_sync(func):
             duration = time.time() - start_time
             logger.info(f"Completed execution of core logic {func.__name__} in {duration:.3f}s")
             return result
-        except Exception as e:
+        except Exception:
             duration = time.time() - start_time
             logger.exception(f"Exception occurred during execution of core logic {func.__name__} after {duration:.3f}s")
-            raise e
+            raise
     return wrapper

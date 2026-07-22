@@ -9,7 +9,6 @@ from fastapi import HTTPException
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
 from src.schemas.quota import QuotaLimit
 
 class QuotaService:
@@ -63,12 +62,14 @@ class QuotaService:
     @staticmethod
     @log_logic_execution
     async def update_role_quota(tier: str, limits_dict: dict):
+        tier = tier.upper() if tier.lower() != "admin" else "admin"
         global_cfg = await QuotaService.get_global_config_from_db()
-        if tier in global_cfg:
-            global_cfg[tier].update(limits_dict)
-            await mongo.update_one("quota_configs", 
-                {"_id": "global"}, {"$set": {f"role_limits.{tier}": global_cfg[tier]}}
-            )
+        if tier not in global_cfg:
+            raise HTTPException(status_code=404, detail="Không tìm thấy nhóm hạn mức yêu cầu")
+        global_cfg[tier].update(limits_dict)
+        await mongo.update_one("quota_configs", 
+            {"_id": "global"}, {"$set": {f"role_limits.{tier}": global_cfg[tier]}}
+        )
 
     @staticmethod
     @log_logic_execution
@@ -77,17 +78,16 @@ class QuotaService:
     ) -> QuotaLimit:
         global_cfg = await QuotaService.get_global_config_from_db()
 
-        target_tier = "admin" if role == "admin" else ai_tier
+        normalized_role = str(role).lower()
+        normalized_tier = str(ai_tier).upper()
+        target_tier = "admin" if normalized_role == "admin" else normalized_tier
         tier_cfg = global_cfg.get(target_tier, global_cfg.get("BASIC", {}))
 
-        def _parse_inf(val):
-            return math.inf if val == -1 else val
-
         return QuotaLimit(
-            daily_requests=_parse_inf(tier_cfg.get("daily_requests", 0)),
-            daily_tokens=_parse_inf(tier_cfg.get("daily_tokens", 0)),
+            daily_requests=tier_cfg.get("daily_requests", 0),
+            daily_tokens=tier_cfg.get("daily_tokens", 0),
             req_reset_hours=tier_cfg.get("req_reset_hours", 24),
-            max_docs=_parse_inf(tier_cfg.get("max_docs", 1)),
+            max_docs=tier_cfg.get("max_docs", 1),
             model=tier_cfg.get("model", settings.QWEN_MODEL),
             thinking=tier_cfg.get("thinking", False),
         )
@@ -103,7 +103,7 @@ class QuotaService:
         current_reqs = await redis.get(req_key)
         current_reqs = int(current_reqs) if current_reqs else 0
 
-        if current_reqs >= limits.daily_requests:
+        if limits.daily_requests >= 0 and current_reqs >= limits.daily_requests:
             raise HTTPException(
                 status_code=429, detail="Đã vượt quá giới hạn yêu cầu cấp phép trong ngày"
             )
@@ -112,10 +112,31 @@ class QuotaService:
         current_tokens = await redis.get(token_key)
         current_tokens = int(current_tokens) if current_tokens else 0
 
-        if current_tokens >= limits.daily_tokens:
+        if limits.daily_tokens >= 0 and current_tokens >= limits.daily_tokens:
             raise HTTPException(
                 status_code=429, detail="Đã sử dụng hết hạn mức mã thông báo (token) trong ngày"
             )
+        return limits
+
+    @staticmethod
+    @log_logic_execution
+    async def check_and_reserve_quota(
+        user_id: str,
+        role: str,
+        ai_tier: str = "BASIC",
+        feature: str = "chat",
+    ):
+        limits = await QuotaService.check_quota(user_id, role, ai_tier, feature)
+        script = "local c=tonumber(redis.call('GET',KEYS[1]) or '0'); local l=tonumber(ARGV[1]); if l>=0 and c>=l then return -1 end; local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],ARGV[2]) end; return n"
+        result = await redis.get_client().eval(
+            script,
+            1,
+            f"quota:{user_id}:{feature}:req",
+            limits.daily_requests,
+            limits.req_reset_hours * 3600,
+        )
+        if int(result) < 0:
+            raise HTTPException(status_code=429, detail="Đã vượt quá giới hạn yêu cầu trong kỳ")
         return limits
 
     @staticmethod
@@ -155,21 +176,21 @@ class QuotaService:
         used_tokens = int(await redis.get(token_key) or 0)
         return {
             "limit_requests": (
-                limits.daily_requests if limits.daily_requests != math.inf else -1
+                limits.daily_requests
             ),
             "limit_tokens": (
-                limits.daily_tokens if limits.daily_tokens != math.inf else -1
+                limits.daily_tokens
             ),
             "used_requests": used_reqs,
             "used_tokens": used_tokens,
             "remaining_requests": (
                 max(0, limits.daily_requests - used_reqs)
-                if limits.daily_requests != math.inf
+                if limits.daily_requests >= 0
                 else -1
             ),
             "remaining_tokens": (
                 max(0, limits.daily_tokens - used_tokens)
-                if limits.daily_tokens != math.inf
+                if limits.daily_tokens >= 0
                 else -1
             ),
             "tier": ai_tier,

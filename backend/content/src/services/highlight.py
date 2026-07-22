@@ -46,7 +46,7 @@ class HighlightService:
             await HighlightRepository
             .find({"user_id": str(current_user.id), "document_id": document_id})
             .sort("created_at", -1)
-            .execute()
+            .to_list(length=None)
         )
         return [
             {
@@ -117,7 +117,7 @@ class HighlightService:
             [
                 {
                     "$lookup": {
-                        "from": "document",
+                        "from": "documents",
                         "localField": "document_id",
                         "foreignField": "_id",
                         "as": "doc",
@@ -129,7 +129,7 @@ class HighlightService:
         highlights = (
             await HighlightRepository
             .aggregate(pipeline)
-            .execute()
+            .to_list(length=None)
         )
         result = []
         for h in highlights:
@@ -165,7 +165,7 @@ class HighlightService:
             await HighlightRepository
             .find({"user_id": str(current_user.id), "document_id": document_id})
             .sort("created_at", 1)
-            .execute()
+            .to_list(length=None)
         )
         lines = [
             f"# {document_title}",

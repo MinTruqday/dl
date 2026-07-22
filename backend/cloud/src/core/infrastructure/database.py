@@ -1,7 +1,4 @@
 from src.core.infrastructure.redis import redis
-import asyncio
-import os
-
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
@@ -23,8 +20,7 @@ async def init_db():
 
     from motor.motor_asyncio import AsyncIOMotorClient
     database.mongodb = AsyncIOMotorClient(mongo_uri)
-
-
+    await database.mongodb.admin.command("ping")
     await setup_indexes()
 
 async def setup_indexes():
@@ -34,14 +30,23 @@ async def setup_indexes():
         await db["storage_items"].create_index([("owner_id", 1), ("parent_id", 1), ("is_trashed", 1)], background=True)
         await db["storage_items"].create_index([("shared_with.user_id", 1), ("parent_id", 1), ("is_trashed", 1)], background=True)
         await db["storage_items"].create_index([("url", 1)], background=True)
+        await db["storage_items"].create_index(
+            [("share_token", 1)],
+            unique=True,
+            partialFilterExpression={"share_token": {"$type": "string"}},
+            background=True,
+        )
         await db["storage_items"].create_index([("target_id", 1)], background=True)
         await db["storage_items"].create_index([("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True)
+        await db["temp_chat_files"].create_index("expires_at", expireAfterSeconds=0)
 
         logger.info("MongoDB indexes successfully created and applied")
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to initialize MongoDB indexes")
+        raise
 
 async def close_db():
     if database.mongodb:
         database.mongodb.close()
-
+        database.mongodb = None
+    await redis.aclose()

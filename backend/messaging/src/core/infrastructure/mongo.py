@@ -1,22 +1,13 @@
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-try:
-    from motor.motor_asyncio import AsyncIOMotorCursor, AsyncIOMotorCommandCursor
-    def _cursor_await(self):
-        return self.to_list(length=None).__await__()
-    AsyncIOMotorCursor.__await__ = _cursor_await
-    AsyncIOMotorCommandCursor.__await__ = _cursor_await
-except ImportError:
-    pass
-
 class MongoClient:
     def __init__(self):
         self.db_name = settings.MESSAGING_DB_NAME
 
     def get_db(self):
         if not database.mongodb:
-            raise Exception("MongoDB is not initialized")
+            raise RuntimeError("MongoDB is not initialized")
         return database.mongodb[self.db_name]
 
     async def find_one(self, collection: str, query: dict, projection: dict = None, **kwargs):
@@ -54,7 +45,8 @@ class MongoClient:
     async def delete_many(self, collection: str, filter: dict):
         return await self.get_db()[collection].delete_many(filter)
 
-    async def count_documents(self, collection: str, filter: dict = {}):
+    async def count_documents(self, collection: str, filter: dict = None):
+        filter = filter or {}
         return await self.get_db()[collection].count_documents(filter)
 
     def query(self, collection: str):
@@ -89,6 +81,13 @@ class QueryBuilder:
         return self
 
     async def execute(self):
-        return await self.client.find(self.collection, self._query, sort=self._sort, skip=self._skip, limit=self._limit)
+        cursor = self.client.find(
+            self.collection,
+            self._query,
+            sort=self._sort,
+            skip=self._skip,
+            limit=self._limit,
+        )
+        return await cursor.to_list(length=self._limit or None)
 
 mongo = MongoClient()

@@ -32,7 +32,7 @@ class PinService:
         docs = (
             await mongo
             .find("documents", {"_id": {"$in": doc_ids}})
-            
+            .to_list(length=None)
         )
         doc_map = {str(d["_id"]): d for d in docs}
         result = []

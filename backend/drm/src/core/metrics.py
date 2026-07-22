@@ -3,7 +3,6 @@ from collections import defaultdict
 from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.routing import Router
 
 
 class MetricsCollector:
@@ -51,14 +50,18 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         if request.url.path == '/metrics':
             return await call_next(request)
         start = time.perf_counter()
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception:
+            duration = time.perf_counter() - start
+            route = request.scope.get("route")
+            path = getattr(route, "path", request.url.path)
+            metrics_collector.record(request.method, path, 500, duration)
+            raise
         duration = time.perf_counter() - start
-        metrics_collector.record(
-            method=request.method,
-            path=request.url.path,
-            status=response.status_code,
-            duration=duration,
-        )
+        route = request.scope.get("route")
+        path = getattr(route, "path", request.url.path)
+        metrics_collector.record(request.method, path, response.status_code, duration)
         return response
 
 

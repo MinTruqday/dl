@@ -35,7 +35,7 @@ async def get_sys_health(db=Depends(get_db)):
     )
 
 @router.get(
-    "/kiem-toan",
+    "/kiem-tra",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
@@ -45,7 +45,7 @@ async def get_audit_logs(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await TelemetryService.get_activity_stats(days=30),
+        data=await TelemetryService.get_audit_logs(limit=limit, offset=offset),
         message="Trích xuất nhật ký giám sát hệ thống hoàn tất",
     )
 

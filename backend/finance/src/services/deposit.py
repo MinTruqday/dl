@@ -18,9 +18,24 @@ from src.core.infrastructure.database import database
 class DepositService:
 
     @staticmethod
+    def _signature_value(value):
+        if value is None or value in ("undefined", "null"):
+            return ""
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, list):
+            normalized = [dict(sorted(item.items())) if isinstance(item, dict) else item for item in value]
+            return json.dumps(normalized, ensure_ascii=False, separators=(",", ":"))
+        if isinstance(value, dict):
+            return json.dumps(dict(sorted(value.items())), ensure_ascii=False, separators=(",", ":"))
+        return str(value)
+
+    @staticmethod
     def _generate_payos_signature(data: dict) -> str:
-        sorted_keys = sorted(data.keys())
-        raw = "&".join((f"{k}={data[k]}" for k in sorted_keys))
+        raw = "&".join(
+            f"{key}={DepositService._signature_value(data[key])}"
+            for key in sorted(data)
+        )
         return hmac.new(
             settings.PAYOS_CHECKSUM_KEY.encode("utf-8"),
             raw.encode("utf-8"),
@@ -45,8 +60,8 @@ class DepositService:
             description = description[:25]
 
         frontend_url = getattr(settings, "PAYOS_RETURN_URL", "").rstrip("/")
-        return_url = f"{frontend_url}/?orderCode={order_code}"
-        cancel_url = f"{frontend_url}/?orderCode={order_code}&cancel=true"
+        return_url = f"{frontend_url}?orderCode={order_code}"
+        cancel_url = f"{frontend_url}?orderCode={order_code}&cancel=true"
 
         signature_data = {
             "amount": req.amount,
@@ -97,6 +112,7 @@ class DepositService:
                         "Content-Type": "application/json",
                     },
                 )
+            response.raise_for_status()
             res_data = response.json()
             if res_data.get("code") == "00":
                 checkout_url = res_data["data"]["checkoutUrl"]
@@ -121,7 +137,7 @@ class DepositService:
                 )
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception:
             await mongo.update_one("orders", 
                 {"order_code": order_code}, {"$set": {"status": "FAILED"}}
             )
@@ -132,17 +148,9 @@ class DepositService:
     @log_logic_execution
     async def deposit_webhook(request):
         data = await request.json()
-        logger.info("Payment status successfully updated via webhook notification")
         if data.get("code") == "00" and data.get("data"):
             webhook_data = data["data"]
             order_code = webhook_data.get("orderCode")
-            signature_data = {
-                "amount": webhook_data.get("amount"),
-                "cancelUrl": webhook_data.get("cancelUrl", ""),
-                "description": webhook_data.get("description", ""),
-                "orderCode": order_code,
-                "returnUrl": webhook_data.get("returnUrl", ""),
-            }
             try:
                 received_signature = data.get("signature", "")
                 if not received_signature:
@@ -155,9 +163,9 @@ class DepositService:
                     )
 
                 expected_signature = DepositService._generate_payos_signature(
-                    signature_data
+                    webhook_data
                 )
-                if received_signature != expected_signature:
+                if not hmac.compare_digest(received_signature, expected_signature):
                     logger.warning("Webhook request rejected due to invalid digital signature")
                     raise HTTPException(
                         status_code=400,
@@ -168,8 +176,9 @@ class DepositService:
                 await DepositService.process_success_order(order_code, paid_amount)
             except HTTPException:
                 raise
-            except Exception as e:
+            except Exception:
                 logger.exception("Failed to process incoming payment webhook payload")
+                raise HTTPException(status_code=500, detail="Không thể xử lý thông báo thanh toán")
         return Response(
             content=json.dumps({"code": "00", "desc": "success"}),
             media_type="application/json",
@@ -224,24 +233,22 @@ class DepositService:
                     "dl": order.get("dl", 0),
                 }
             else:
-                # Fallback: return DB info if PayOS API fails
                 return {
                     "order_code": order_code,
                     "status": order.get("status", "UNKNOWN").upper(),
                     "amount": order.get("amount", 0),
-                    "amount_paid": order.get("amount", 0),
+                    "amount_paid": 0,
                     "dl": order.get("dl", 0),
                 }
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to verify payment status with external payment gateway")
-            # Fallback to DB data instead of raising error
             return {
                 "order_code": order_code,
                 "status": order.get("status", "UNKNOWN").upper(),
                 "amount": order.get("amount", 0),
-                "amount_paid": order.get("amount", 0),
+                "amount_paid": 0,
                 "dl": order.get("dl", 0),
             }
 
@@ -256,9 +263,10 @@ class DepositService:
             session.start_transaction()
             should_close_session = True
 
-        orders = database.mongodb["orders"]
-        wallets = database.mongodb["wallets"]
-        transactions = database.mongodb["transactions"]
+        finance_db = database.mongodb[settings.FINANCE_DB_NAME]
+        orders = finance_db["orders"]
+        wallets = finance_db["wallets"]
+        transactions = finance_db["transactions"]
 
         order = await orders.find_one(
             {"order_code": order_code, "status": {"$in": ["INIT", "pending"]}}
@@ -268,14 +276,14 @@ class DepositService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            return
+            return False
 
-        if paid_amount is not None and paid_amount < order.get("amount", 0):
-            logger.warning("Order fulfillment rejected due to insufficient paid amount")
+        if paid_amount is not None and paid_amount != order.get("amount", 0):
+            logger.warning("Order fulfillment rejected due to payment amount mismatch")
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            return
+            raise HTTPException(status_code=400, detail="Số tiền thanh toán không khớp với đơn hàng")
 
         dl_to_add = order.get("dl", 0)
         user_id = order["user_id"]
@@ -295,7 +303,7 @@ class DepositService:
                 if should_close_session:
                     await session.abort_transaction()
                 logger.warning("Failed to update deposit order status to success")
-                return
+                return False
             await wallets.update_one(
                 {"_id": user_id},
                 {"$inc": {"balance": dl_to_add}},
@@ -309,26 +317,31 @@ class DepositService:
                 note="Deposit successfully processed via electronic payment gateway",
             )
             await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
+            await finance_db["outbox_events"].insert_one(
+                {
+                    "_id": str(tx.id),
+                    "event_type": "notification",
+                    "payload": {
+                        "target_user_id": user_id,
+                        "title": "Nạp tiền thành công",
+                        "body": "Số dư ví đã được cập nhật từ giao dịch thanh toán",
+                        "type": "topup",
+                        "idempotency_key": str(tx.id),
+                    },
+                    "status": "pending",
+                    "attempts": 0,
+                    "next_attempt_at": datetime.now(timezone.utc),
+                    "created_at": datetime.now(timezone.utc),
+                },
+                session=session,
+            )
 
             if should_close_session:
                 await session.commit_transaction()
 
-            try:
-                from src.core.infrastructure.mq import mq
-
-                await mq.publish(
-                    "notification_queue",
-                    {
-                        "target_user_id": user_id,
-                        "title": "Deposit processed successfully",
-                        "body": "The requested deposit funds have been successfully credited to the digital wallet",
-                        "type": "topup",
-                    }
-                )
-            except Exception as e:
-                logger.exception("Failed to publish deposit notification to message queue")
             logger.info("Deposit transaction successfully verified and funds credited to wallet")
-        except Exception as e:
+            return True
+        except Exception:
             if should_close_session:
                 await session.abort_transaction()
             logger.exception("Failed to complete processing of deposit transaction")

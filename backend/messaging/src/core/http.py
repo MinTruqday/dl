@@ -39,13 +39,24 @@ ai_http_client = httpx.AsyncClient(
     timeout=httpx.Timeout(30.0),
 )
 
-async def make_ai_request(url: str, json_data: dict, timeout: float = 30.0):
+async def make_ai_request(
+    url: str,
+    json_data: dict,
+    timeout: float = 30.0,
+    bearer_token: str = None,
+):
     ai_circuit_breaker.check()
     try:
-        response = await ai_http_client.post(url, json=json_data, timeout=timeout)
+        headers = {"Authorization": f"Bearer {bearer_token}"} if bearer_token else {}
+        response = await ai_http_client.post(
+            url,
+            json=json_data,
+            timeout=timeout,
+            headers=headers,
+        )
         response.raise_for_status()
         ai_circuit_breaker.on_success()
         return response
-    except Exception as e:
+    except Exception:
         ai_circuit_breaker.on_failure()
-        raise e
+        raise

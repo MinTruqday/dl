@@ -1,6 +1,4 @@
 import os
-from typing import Optional
-
 from pydantic import BaseModel
 
 
@@ -12,22 +10,26 @@ def get_service_url(service_name_underscore: str) -> str:
     return f"http://{service_name_underscore.lower()}:8000"
 
 class Settings(BaseModel):
-    PROJECT_NAME: str = os.getenv("PROJECT_NAME")
-    VERSION: str = os.getenv("VERSION")
-    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
-    SECRET_KEY: str = os.getenv("SECRET_KEY")
-    CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS")
-    MONGODB_URI: str = os.getenv("MONGODB_URI")
-    REDIS_URI: str = os.getenv("REDIS_URI")
-    RABBITMQ_URI: str = os.getenv("RABBITMQ_URI")
-    PAYOS_CLIENT_ID: str = os.getenv("PAYOS_CLIENT_ID")
-    PAYOS_API_KEY: str = os.getenv("PAYOS_API_KEY")
-    PAYOS_CHECKSUM_KEY: str = os.getenv("PAYOS_CHECKSUM_KEY")
-    PAYOS_RETURN_URL: str = os.getenv("PAYOS_RETURN_URL")
-    PAYOS_API_URL: str = os.getenv("PAYOS_API_URL")
-    PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
+    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "DocLib")
+    VERSION: str = os.getenv("VERSION", "1.0.0")
+    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL", "http://traefik:8000")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
+    CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://mongodb:27017/doclib")
+    REDIS_URI: str = os.getenv("REDIS_URI", "redis://redis:6379/0")
+    RABBITMQ_URI: str = os.getenv("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672/")
+    PAYOS_CLIENT_ID: str = os.getenv("PAYOS_CLIENT_ID", "")
+    PAYOS_API_KEY: str = os.getenv("PAYOS_API_KEY", "")
+    PAYOS_CHECKSUM_KEY: str = os.getenv("PAYOS_CHECKSUM_KEY", "")
+    PAYOS_RETURN_URL: str = os.getenv("PAYOS_RETURN_URL", "http://localhost:3000/thanh-toan/ket-qua")
+    PAYOS_API_URL: str = os.getenv("PAYOS_API_URL", "https://api-merchant.payos.vn/v2/payment-requests")
+    PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID", "")
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
-    MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
-    FINANCE_DB_NAME: str = os.getenv("FINANCE_DB_NAME")
+    HUMANITY_URL: str = get_service_url("HUMANITY")
+    FINANCE_DB_NAME: str = os.getenv("FINANCE_DB_NAME", "doclib_finance")
+    CONTENT_DB_NAME: str = os.getenv("CONTENT_DB_NAME", "doclib_content")
+    HUMANITY_DB_NAME: str = os.getenv("HUMANITY_DB_NAME", "doclib_humanity")
+    USAGE_DB_NAME: str = os.getenv("USAGE_DB_NAME", "doclib_usage")
+    AUTHENTICATION_DB_NAME: str = os.getenv("AUTHENTICATION_DB_NAME", "doclib_authentication")
 
 settings = Settings()

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from loguru import logger
+from pymongo.errors import DuplicateKeyError
 from src.schemas.announcement import Announcement, AnnouncementCreate
 from uuid6 import uuid7
 
@@ -24,7 +25,7 @@ class AnnouncementService:
             .skip(skip)
             .limit(limit)
         )
-        docs = await cursor 
+        docs = await cursor.to_list(length=limit)
         total = await AnnouncementRepository.count_documents(
             {"target_user_id": user_id}
         )
@@ -72,6 +73,18 @@ class AnnouncementService:
     @staticmethod
     @log_logic_execution
     async def create_announcement(data: AnnouncementCreate, db):
+        if data.idempotency_key:
+            existing = await AnnouncementRepository.find_one(
+                {"idempotency_key": data.idempotency_key}
+            )
+            if existing:
+                return {"id": str(existing["_id"]), "duplicate": True}
+        profile = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
+            {"_id": data.target_user_id},
+            {"_id": 1},
+        )
+        if not profile:
+            raise HTTPException(status_code=404, detail="Không tìm thấy người nhận thông báo")
         notif_id = str(uuid7())
         doc = {
             "_id": notif_id,
@@ -80,15 +93,22 @@ class AnnouncementService:
             "body": data.body,
             "is_read": False,
             "type": data.type,
+            "idempotency_key": data.idempotency_key,
             "created_at": datetime.now(timezone.utc),
         }
-        await AnnouncementRepository.insert_one(doc)
+        try:
+            await AnnouncementRepository.insert_one(doc)
+        except DuplicateKeyError:
+            existing = await AnnouncementRepository.find_one(
+                {"idempotency_key": data.idempotency_key}
+            )
+            return {"id": str(existing["_id"]), "duplicate": True}
         try:
             import json
             await redis.publish(
                 f"user_announcements:{data.target_user_id}",
                 json.dumps({"title": data.title, "body": data.body}),
             )
-        except Exception as e:
-                logger.exception("Failed to distribute real-time notification")
+        except Exception:
+            logger.exception("Failed to distribute real-time notification")
         return {"id": notif_id}

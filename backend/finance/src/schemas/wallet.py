@@ -40,6 +40,5 @@ class DocumentPricingRequest(BaseModel):
     is_drm_protected: bool = True
 
 class TopupRequest(BaseModel):
-    amount: int = Field(..., gt=0)
+    amount: int = Field(gt=0)
     method: str = "payos"
-

@@ -1,18 +1,16 @@
-from src.core.infrastructure.redis import redis
-import time
-from typing import List, Optional
+import hmac
+from enum import Enum
+from typing import Any, List, Optional
 
 import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.core.infrastructure.redis import redis
 
-from enum import Enum
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
 
 class Role(str, Enum):
     GUEST = "guest"
@@ -20,75 +18,58 @@ class Role(str, Enum):
     AUTHOR = "author"
     ADMIN = "admin"
 
+
 class CurrentUser(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
     id: str = Field(alias="_id")
     email: str
     role: Role = Role.READER
-    permissions: List[str] = []
+    permissions: List[str] = Field(default_factory=list)
     is_active: bool = True
     full_name: str = ""
     slug: str = ""
-    from pydantic import field_validator
+
     @field_validator("role", mode="before")
     @classmethod
-    def validate_role_case(cls, v: Any):
-        if isinstance(v, str):
-            return v.lower()
-        return v
-    
-    class Config:
-        populate_by_name = True
-        extra = "ignore"
+    def validate_role_case(cls, value: Any):
+        return value.lower() if isinstance(value, str) else value
 
-ALGORITHM = "HS256"
-SECRET_KEY = settings.SECRET_KEY
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap")
+
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
-    credentials_exception = HTTPException(
+    exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại hệ thống",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        session_id: str = payload.get("sid")
-        if email is None or session_id is None:
-            logger.warning("Token verification failed due to missing identity claims")
-            raise credentials_exception
-    except jwt.PyJWTError as e:
-        logger.exception("Authentication decoding failed due to invalid token payload")
-        raise credentials_exception
-
-    uid = payload.get("uid")
-    if not uid:
-        logger.warning("Missing user identifier (UID) in authentication token")
-        raise credentials_exception
-
-    is_valid_session = await redis.sismember(
-        f"user_sessions:{uid}", session_id
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        email = payload.get("sub")
+        session_id = payload.get("sid")
+        user_id = payload.get("uid")
+        if not email or not session_id or not user_id:
+            raise exception
+    except jwt.PyJWTError:
+        raise exception
+    if not await redis.sismember(f"user_sessions:{user_id}", session_id):
+        raise exception
+    return CurrentUser(
+        _id=user_id,
+        email=email,
+        role=payload.get("role", "reader"),
+        permissions=payload.get("permissions", []),
+        full_name=payload.get("full_name", ""),
+        slug=payload.get("slug", ""),
     )
-    if not is_valid_session:
-        logger.warning("Attempted to use an invalidated or revoked session token")
-        raise credentials_exception
 
-    user_doc = {
-        "_id": uid,
-        "email": email,
-        "role": payload.get("role", "reader"),
-        "permissions": payload.get("permissions", []),
-        "full_name": payload.get("full_name", ""),
-        "slug": payload.get("slug", ""),
-        "is_active": True
-    }
-    return CurrentUser(**user_doc)
 
 async def get_current_user_optional(
     token: Optional[str] = Depends(
-        OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
-    )
+        OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap", auto_error=False)
+    ),
 ) -> Optional[CurrentUser]:
     if not token:
         return None
@@ -97,83 +78,55 @@ async def get_current_user_optional(
     except HTTPException:
         return None
 
-async def get_current_user_token_param(token: str) -> CurrentUser:
-    return await get_current_user(token)
 
 def require_role(required_roles: List[Role]):
-
     async def role_checker(
+        current_user: CurrentUser = Depends(get_current_user),
+    ) -> CurrentUser:
+        if current_user.role == Role.ADMIN or current_user.role in required_roles:
+            return current_user
+        raise HTTPException(status_code=403, detail="Bạn không có quyền thực hiện thao tác này")
+
+    return role_checker
+
+
+def require_permissions(required_permissions: List[str]):
+    async def permission_checker(
         current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         if current_user.role == Role.ADMIN:
             return current_user
-        if current_user.role not in required_roles:
-            logger.warning("Access denied due to insufficient authorization privileges")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bạn không có quyền thực hiện thao tác này",
-            )
+        if any(item not in current_user.permissions for item in required_permissions):
+            raise HTTPException(status_code=403, detail="Tài khoản không có đủ quyền hạn")
         return current_user
 
-    return role_checker
+    return permission_checker
+
+
+async def verify_internal_token(x_internal_token: str = Header(default="")):
+    if not settings.SECRET_KEY or not hmac.compare_digest(
+        x_internal_token.encode("utf-8"), settings.SECRET_KEY.encode("utf-8")
+    ):
+        raise HTTPException(status_code=403, detail="Mã xác thực nội bộ không hợp lệ")
+
 
 class RateLimiting:
-
     def __init__(self, calls: int, period: int):
         self.calls = calls
         self.period = period
 
     async def __call__(self, request: Request):
-
         client_ip = request.client.host if request.client else "unknown"
-        path = request.url.path
-        key = f"rate_limit:{client_ip}:{path}"
+        key = f"rate_limit:{client_ip}:{request.url.path}"
         current = await redis.get(key)
         if current is not None and int(current) >= self.calls:
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Hệ thống tạm thời hạn chế quyền truy cập do phát hiện quá nhiều yêu cầu",
-            )
+            raise HTTPException(status_code=429, detail="Đã vượt quá giới hạn yêu cầu truy cập")
         await redis.pipeline_incr_expire(key, self.period)
         return True
 
-def require_permissions(required_permissions: List[str]):
-
-    async def permission_checker(
-        current_user: CurrentUser = Depends(get_current_user),
-    ) -> CurrentUser:
-        user_perms = current_user.permissions or []
-        if current_user.role == Role.ADMIN:
-            return current_user
-        missing = [p for p in required_permissions if p not in user_perms]
-        if missing:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Tài khoản không có đủ quyền hạn để thực hiện thao tác này",
-            )
-        return current_user
-
-    return permission_checker
-
-from fastapi import Header
-
-class AuthenticatedUser:
-    def __init__(self, user_id: str, user_name: str = "User"):
-        self.id = user_id
-        self.full_name = user_name
-
-def get_current_user_from_header(
-    x_user_id: str = Header(None), x_user_name: str = Header("User")
-):
-    if not x_user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Không tìm thấy thông tin định danh người dùng hợp lệ",
-        )
-    return AuthenticatedUser(x_user_id, x_user_name)
-
 
 from src.core.infrastructure.mongo import mongo
+
 
 async def get_db():
     return mongo.get_db()

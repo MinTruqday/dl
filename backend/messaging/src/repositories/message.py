@@ -59,7 +59,35 @@ class MessageRepository:
 
     @classmethod
     async def find_shared_document(cls, *args, **kwargs):
-        return await mongo.find_one("documents", *args, **kwargs)
+        return await database.mongodb[settings.CONTENT_DB_NAME]["documents"].find_one(*args, **kwargs)
+
+    @classmethod
+    async def get_user_controls(cls, user_id: str):
+        return await cls._get_db()["user_controls"].find_one({"_id": user_id})
+
+    @classmethod
+    async def update_user_controls(cls, user_id: str, update: dict):
+        return await cls._get_db()["user_controls"].update_one(
+            {"_id": user_id},
+            update,
+            upsert=True,
+        )
+
+    @classmethod
+    async def claim_scheduled_message(cls, message_id: str, claimed_at):
+        from pymongo import ReturnDocument
+
+        return await cls._get_db()["messages"].find_one_and_update(
+            {"_id": message_id, "is_scheduled": True},
+            {
+                "$set": {
+                    "is_scheduled": False,
+                    "created_at": claimed_at,
+                    "scheduled_delivered_at": claimed_at,
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
 
     @classmethod
     async def insert_many(cls, *args, **kwargs):

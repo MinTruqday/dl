@@ -56,12 +56,14 @@ class CollaborationService:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/email/{invitee_email}",
+                    f"{settings.HUMANITY_URL}/nguoi-dung/email/{invitee_email}",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
                 )
                 if resp.status_code == 200:
                     invitee = resp.json().get("data")
         except Exception:
-            pass
+            logger.exception("Failed to retrieve collaboration invitee")
+            raise HTTPException(status_code=503, detail="Dịch vụ hồ sơ người dùng tạm thời không khả dụng")
         if not invitee:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy người dùng được yêu cầu")
         invitee_id = str(invitee["_id"])
@@ -112,7 +114,7 @@ class CollaborationService:
             await mongo
             .find("collaboration_invites", {"invitee_id": str(current_user.id), "status": "PENDING"})
             .sort("created_at", -1)
-            .execute()
+            .to_list(length=None)
         )
         return invites
 
@@ -174,7 +176,7 @@ class CollaborationService:
         invites = (
             await mongo
             .find("collaboration_invites", {"document_id": document_id, "status": "ACCEPTED"})
-            .execute()
+            .to_list(length=None)
         )
         collaborators = []
         try:
@@ -183,12 +185,13 @@ class CollaborationService:
                     user_info = None
                     try:
                         resp = await client.get(
-                            f"{settings.MANAGEMENT_URL}/nguoi-dung/{inv['invitee_id']}",
+                            f"{settings.HUMANITY_URL}/nguoi-dung/{inv['invitee_id']}",
+                            headers={"X-Internal-Token": settings.SECRET_KEY},
                         )
                         if resp.status_code == 200:
                             user_info = resp.json().get("data")
                     except Exception:
-                        pass
+                        logger.warning("Failed to retrieve a collaborator profile")
                     if user_info:
                         collaborators.append(
                             {
@@ -200,7 +203,8 @@ class CollaborationService:
                             }
                         )
         except Exception:
-            pass
+            logger.exception("Failed to retrieve collaborator profiles")
+            raise HTTPException(status_code=503, detail="Dịch vụ hồ sơ người dùng tạm thời không khả dụng")
         return collaborators
 
     @staticmethod
@@ -259,7 +263,7 @@ class CollaborationService:
             .find("collaboration_activities", {"document_id": document_id})
             .sort("timestamp", -1)
             .limit(50)
-            .execute()
+            .to_list(length=50)
         )
         return [
             {
@@ -293,12 +297,14 @@ class CollaborationService:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    f"{settings.MANAGEMENT_URL}/nguoi-dung/{target_user_id}",
+                    f"{settings.HUMANITY_URL}/nguoi-dung/{target_user_id}",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
                 )
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
         except Exception:
-            pass
+            logger.exception("Failed to retrieve ownership transfer target")
+            raise HTTPException(status_code=503, detail="Dịch vụ hồ sơ người dùng tạm thời không khả dụng")
         if not target_user:
             raise HTTPException(
                 status_code=404,
@@ -353,6 +359,7 @@ class CollaborationService:
         online_users = (
             await mongo
             .find("collaboration_status", {"document_id": document_id})
+            .to_list(length=None)
         )
         result = []
         for u in online_users:
@@ -453,7 +460,7 @@ class CollaborationService:
             .find("collaboration_memos", {"document_id": document_id})
             .sort("timestamp", 1)
             .limit(100)
-            .execute()
+            .to_list(length=100)
         )
         return [
             {
@@ -516,7 +523,7 @@ class CollaborationService:
             await mongo
             .find("collaboration_invites", {"document_id": document_id, "status": "PENDING"})
             .sort("created_at", -1)
-            .execute()
+            .to_list(length=None)
         )
         return invites
 
@@ -574,7 +581,7 @@ class CollaborationService:
         stats = (
             await mongo
             .aggregate("collaboration_activities", pipeline)
-            .execute()
+            .to_list(length=None)
         )
         return [{"user_name": s["_id"], "count": s["count"]} for s in stats]
 
@@ -635,7 +642,7 @@ class CollaborationService:
             await mongo
             .find("collaboration_drafts", {"document_id": document_id})
             .sort("timestamp", -1)
-            .execute()
+            .to_list(length=None)
         )
         return [
             {
@@ -886,7 +893,7 @@ class CollaborationService:
             await mongo
             .find("collaboration_tasks", {"document_id": document_id})
             .sort("created_at", -1)
-            .execute()
+            .to_list(length=None)
         )
         return [
             {
@@ -1000,7 +1007,7 @@ class CollaborationService:
             await mongo
             .find("collaboration_task_comments", {"task_id": task_id})
             .sort("timestamp", 1)
-            .execute()
+            .to_list(length=None)
         )
         return [
             {

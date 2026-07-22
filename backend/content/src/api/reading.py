@@ -72,114 +72,79 @@ async def delete_history_item(
     )
 
 import io
-import ipaddress
-import socket
 import zipfile
+from pathlib import PurePosixPath
 from urllib.parse import urlparse
 
-import aiohttp
+import httpx
 from fastapi import HTTPException
+from src.core.infrastructure.configuration import settings
 
-def validate_url_ssrf(url: str):
+def normalize_storage_url(url: str) -> str:
     parsed = urlparse(url)
-    if not parsed.hostname:
+    internal = urlparse(settings.MINIO_ENDPOINT)
+    public = urlparse(settings.MINIO_PUBLIC_URL) if settings.MINIO_PUBLIC_URL else None
+    allowed_hosts = {internal.hostname}
+    if public and public.hostname:
+        allowed_hosts.add(public.hostname)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.hostname not in allowed_hosts or parsed.username or parsed.password:
         raise HTTPException(status_code=400, detail="Đường dẫn tệp tin cung cấp không hợp lệ")
-    try:
-        ip = socket.gethostbyname(parsed.hostname)
-        ip_obj = ipaddress.ip_address(ip)
-        if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
-            raise HTTPException(
-                status_code=403,
-                detail="Yêu cầu bị từ chối do cố gắng truy cập mạng nội bộ hệ thống",
-            )
-    except socket.gaierror as e:
-        raise HTTPException(status_code=400, detail="Hệ thống không thể phân giải tên miền yêu cầu")
+    return f"{settings.MINIO_ENDPOINT.rstrip('/')}{parsed.path}" + (f"?{parsed.query}" if parsed.query else "")
+
+async def download_zip(url: str) -> bytes:
+    target = normalize_storage_url(url)
+    async with httpx.AsyncClient(timeout=20.0, follow_redirects=False) as client:
+        response = await client.get(target)
+        if response.status_code != 200:
+            raise HTTPException(status_code=404, detail="Tệp tin yêu cầu không khả dụng")
+        if len(response.content) > 100 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Tệp nén vượt quá dung lượng xử lý cho phép")
+        return response.content
 
 def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
-    if "" in info.filename or info.filename.startswith("/"):
+    path = PurePosixPath(info.filename)
+    if info.filename.startswith("/") or ".." in path.parts or info.file_size > 20 * 1024 * 1024:
         return False
     if info.external_attr >> 16 & 40960 == 40960:
         return False
     return True
 
 @router.get("/luu-tru/cay-thu-muc", response_model=APIResponse[Any])
-async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
+async def get_zip_tree(file_url: str = Query(...), current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)):
     try:
-        validate_url_ssrf(file_url)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(file_url) as resp:
-                if resp.status == 200:
-                    content = await resp.read()
-                    with zipfile.ZipFile(io.BytesIO(content)) as z:
-                        tree = []
-                        for info in z.infolist():
-                            if is_safe_zip_info(info):
-                                tree.append(
-                                    {
-                                        "path": info.filename,
-                                        "name": (
-                                            info.filename.split("/")[-1]
-                                            if not info.is_dir()
-                                            else info.filename.split("/")[-2]
-                                        ),
-                                        "is_dir": info.is_dir(),
-                                        "size": info.file_size,
-                                    }
-                                )
-                        return APIResponse(
-                            data=tree, message="Trích xuất cấu trúc tệp nén hoàn tất"
-                        )
-                else:
-                    return APIResponse(
-                        data=None,
-                        message="Tệp tin yêu cầu không khả dụng hoặc không tồn tại trên máy chủ",
-                        status=400,
-                    )
+        content = await download_zip(file_url)
+        with zipfile.ZipFile(io.BytesIO(content)) as z:
+            if sum(info.file_size for info in z.infolist()) > 200 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="Nội dung giải nén vượt quá dung lượng cho phép")
+            tree = []
+            for info in z.infolist():
+                if is_safe_zip_info(info):
+                    tree.append({"path": info.filename, "name": PurePosixPath(info.filename.rstrip("/")).name, "is_dir": info.is_dir(), "size": info.file_size})
+            return APIResponse(data=tree, message="Trích xuất cấu trúc tệp nén hoàn tất")
     except HTTPException as he:
         raise he
-    except Exception as e:
-        return APIResponse(data=None, message="Hệ thống gặp sự cố trong quá trình phân tích cấu trúc tệp nén", status=500)
+    except (zipfile.BadZipFile, OSError):
+        raise HTTPException(status_code=400, detail="Tệp nén không hợp lệ")
 
 @router.get("/luu-tru/noi-dung", response_model=APIResponse[Any])
 async def get_zip_content(
-    file_url: str = Query(...), path: str = Query(...), db=Depends(get_db)
+    file_url: str = Query(...), path: str = Query(...), current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     try:
-        validate_url_ssrf(file_url)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(file_url) as resp:
-                if resp.status == 200:
-                    content = await resp.read()
-                    with zipfile.ZipFile(io.BytesIO(content)) as z:
-                        if path in z.namelist():
-                            info = z.getinfo(path)
-                            if not is_safe_zip_info(info):
-                                return APIResponse(
-                                    data=None,
-                                    message="Hệ thống phát hiện tệp tin chứa nội dung có rủi ro bảo mật",
-                                    status=403,
-                                )
-                            file_bytes = z.read(path)
-                            try:
-                                text = file_bytes.decode("utf-8")
-                                return APIResponse(
-                                    data={"content": text, "type": "text"},
-                                    message="Trích xuất nội dung tệp tin hoàn tất",
-                                )
-                            except UnicodeDecodeError:
-                                return APIResponse(
-                                    data={
-                                        "content": "Binary files do not support direct viewing",
-                                        "type": "binary",
-                                    },
-                                    message="Định dạng tệp nhị phân không hỗ trợ xem trực tiếp",
-                                )
-                        return APIResponse(
-                            data=None,
-                            message="Hệ thống không tìm thấy tệp tin được yêu cầu trong tệp nén",
-                            status=404,
-                        )
+        content = await download_zip(file_url)
+        with zipfile.ZipFile(io.BytesIO(content)) as z:
+            if path not in z.namelist():
+                raise HTTPException(status_code=404, detail="Không tìm thấy tệp trong tệp nén")
+            info = z.getinfo(path)
+            if not is_safe_zip_info(info) or info.is_dir():
+                raise HTTPException(status_code=403, detail="Tệp chứa nội dung có rủi ro bảo mật")
+            file_bytes = z.read(path)
+            try:
+                text = file_bytes.decode("utf-8")
+                return APIResponse(data={"content": text, "type": "text"}, message="Trích xuất nội dung tệp tin hoàn tất")
+            except UnicodeDecodeError:
+                return APIResponse(data={"content": "Binary files do not support direct viewing", "type": "binary"}, message="Định dạng tệp nhị phân không hỗ trợ xem trực tiếp")
     except HTTPException as he:
         raise he
-    except Exception as e:
-        return APIResponse(data=None, message="Hệ thống gặp sự cố trong quá trình xử lý tệp nén", status=500)
+    except (zipfile.BadZipFile, OSError):
+        raise HTTPException(status_code=400, detail="Tệp nén không hợp lệ")

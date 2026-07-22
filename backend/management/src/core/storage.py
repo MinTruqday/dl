@@ -1,5 +1,3 @@
-import os
-
 import aioboto3
 import brotli
 from botocore.exceptions import ClientError
@@ -32,6 +30,12 @@ async def get_storage_client():
             aws_secret_access_key=MINIO_SECRET_KEY,
         ).__aenter__()
     return _storage_client
+
+async def close_storage_client():
+    global _storage_client
+    if _storage_client is not None:
+        await _storage_client.__aexit__(None, None, None)
+        _storage_client = None
 
 async def initialize_bucket():
     storage_client = await get_storage_client()

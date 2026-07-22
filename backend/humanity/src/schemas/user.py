@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from enum import Enum
 from datetime import datetime, timezone
 from uuid6 import uuid7
@@ -24,18 +24,20 @@ class Creator(str, Enum):
     SUSPENDED = "SUSPENDED"
 
 class UserBase(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     email: EmailStr
     full_name: str
     slug: str
     role: Role = Role.READER
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
-    social_links: Optional[Dict[str, str]] = {}
-    pinned_documents: List[str] = []
-    bookmarks: List[str] = []
+    social_links: Optional[Dict[str, str]] = Field(default_factory=dict)
+    pinned_documents: List[str] = Field(default_factory=list)
+    bookmarks: List[str] = Field(default_factory=list)
     wallet_balance: int = 0
     is_shadowbanned: bool = False
-    permissions: List[str] = []
+    permissions: List[str] = Field(default_factory=list)
     donation_link: Optional[str] = None
     kyc_status: KYC = KYC.NONE
     creator_status: Creator = Creator.NONE
@@ -43,13 +45,13 @@ class UserBase(BaseModel):
     storage_limit: int = 50 * 1024 * 1024 * 1024
     tos_accepted_at: Optional[datetime] = None
     welcome_message: Optional[str] = None
-    blocked_users: List[str] = []
-    settings: Dict[str, Any] = {
+    blocked_users: List[str] = Field(default_factory=list)
+    settings: Dict[str, Any] = Field(default_factory=lambda: {
         "mod_notifs": True,
         "auto_refresh": False,
         "auto_save": True,
         "default_visibility": "public",
-    }
+    })
 
 class UserInDB(UserBase):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
@@ -58,17 +60,17 @@ class UserInDB(UserBase):
     is_active: bool = True
 
 class ProfileUpdate(BaseModel):
-    full_name: Optional[str] = None
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
-    cover_url: Optional[str] = None
-    location: Optional[str] = None
-    website: Optional[str] = None
+    full_name: Optional[str] = Field(default=None, min_length=2, max_length=100)
+    bio: Optional[str] = Field(default=None, max_length=1000)
+    avatar_url: Optional[str] = Field(default=None, max_length=2048)
+    cover_url: Optional[str] = Field(default=None, max_length=2048)
+    location: Optional[str] = Field(default=None, max_length=100)
+    website: Optional[str] = Field(default=None, max_length=2048)
 
 class CreateUserRequest(BaseModel):
     email: EmailStr
-    full_name: str
-    slug: str
+    full_name: str = Field(min_length=2, max_length=100)
+    slug: str = Field(min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
     role: Role = Role.READER
 
 class UpdateRoleRequest(BaseModel):
@@ -83,3 +85,20 @@ class ModerationActionRequest(BaseModel):
 
 class NoteRequest(BaseModel):
     note: str
+
+
+class SettingsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    theme: Optional[str] = Field(default=None, max_length=30)
+    notifications_enabled: Optional[bool] = None
+    privacy_mode: Optional[bool] = None
+    mod_notifs: Optional[bool] = None
+    auto_refresh: Optional[bool] = None
+    auto_save: Optional[bool] = None
+    default_visibility: Optional[str] = Field(default=None, pattern=r"^(public|private|unlisted)$")
+
+
+class AuthorApplication(BaseModel):
+    motivation: str = Field(min_length=20, max_length=2000)
+    portfolio: Optional[str] = Field(default=None, max_length=2048)

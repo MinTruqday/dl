@@ -30,7 +30,7 @@ class LoggingRoute(APIRoute):
                     payload = json.loads(body)
                     masked_payload = mask_sensitive_data(payload)
                     body_str = json.dumps(masked_payload, ensure_ascii=False)[:500]
-                except:
+                except (ValueError, UnicodeDecodeError):
                     body_str = body.decode('utf-8', errors='ignore')[:500]
             
             query = str(request.query_params)

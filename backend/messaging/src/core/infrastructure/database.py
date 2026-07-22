@@ -1,7 +1,3 @@
-from src.core.infrastructure.redis import redis
-import asyncio
-import os
-
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
@@ -35,12 +31,27 @@ async def setup_indexes():
         await db["messages"].create_index([("sender_id", 1), ("receiver_id", 1), ("created_at", -1)], background=True)
         await db["messages"].create_index([("sender_id", 1), ("receiver_id", 1), ("is_read", 1)], background=True)
         await db["messages"].create_index([("sender_id", 1), ("receiver_id", 1), ("is_pinned", 1)], background=True)
+        await db["messages"].create_index(
+            [("sender_id", 1), ("client_msg_id", 1)],
+            unique=True,
+            partialFilterExpression={"client_msg_id": {"$type": "string"}},
+        )
+        await db["messages"].create_index([("is_scheduled", 1), ("scheduled_at", 1)], background=True)
+        await db["messages"].create_index([("parent_message_id", 1), ("created_at", -1)], background=True)
         await db["messages"].create_index([("content", "text")], background=True)
         await db["messages"].create_index([("self_destruct_at", 1)], expireAfterSeconds=0, background=True)
 
+        await db["message_groups"].create_index(
+            "invite_token",
+            unique=True,
+            partialFilterExpression={"invite_token": {"$type": "string"}},
+        )
+        await db["message_groups"].create_index("members")
+        await db["user_controls"].create_index("blocked_users")
         logger.info("MongoDB index initialization completed")
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to initialize MongoDB collection indexes")
+        raise
 
 async def close_db():
     if database.mongodb:

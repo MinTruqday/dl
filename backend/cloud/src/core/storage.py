@@ -15,7 +15,7 @@ MINIO_PUBLIC_BUCKET = settings.MINIO_PUBLIC_BUCKET
 MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
 
 def get_bucket(path: str) -> str:
-    if path.startswith("system/"):
+    if path.startswith(("system/", "users/", "client/", "temp/")):
         return MINIO_PRIVATE_BUCKET
     return MINIO_PUBLIC_BUCKET
 
@@ -33,6 +33,12 @@ async def get_storage_client():
         ).__aenter__()
     return _storage_client
 
+async def close_storage_client():
+    global _storage_client
+    if _storage_client is not None:
+        await _storage_client.__aexit__(None, None, None)
+        _storage_client = None
+
 async def initialize_bucket():
     storage_client = await get_storage_client()
     for bucket in [MINIO_PRIVATE_BUCKET, MINIO_PUBLIC_BUCKET]:
@@ -42,6 +48,17 @@ async def initialize_bucket():
             logger.info(f"Initializing storage bucket {bucket}")
             await storage_client.create_bucket(Bucket=bucket)
             logger.info(f"Storage bucket {bucket} initialized successfully")
+    await storage_client.put_bucket_lifecycle_configuration(
+        Bucket=MINIO_PRIVATE_BUCKET,
+        LifecycleConfiguration={
+            "Rules": [{
+                "ID": "expire-temporary-chat-files",
+                "Status": "Enabled",
+                "Filter": {"Prefix": "temp/"},
+                "Expiration": {"Days": 14},
+            }]
+        },
+    )
 
 async def upload_file(
     file_content: bytes,
@@ -55,11 +72,7 @@ async def upload_file(
         "ContentType": content_type,
     }
 
-    if (
-        compress
-        or content_type.startswith("text/")
-        or content_type == "application/json"
-    ):
+    if compress:
         import asyncio
 
         loop = asyncio.get_event_loop()

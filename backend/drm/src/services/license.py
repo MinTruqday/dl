@@ -11,7 +11,7 @@ class LicenseService:
     @log_logic_execution
     async def create_license(document_id: str, user_id: str) -> tuple[str, bytes]:
         file_id = str(uuid.uuid4())
-        raw_key = os.urandom(32)  
+        raw_key = os.urandom(32)
         encoded_key = base64.b64encode(raw_key).decode("utf-8")
         
         await LicenseRepository.create_license(
@@ -23,6 +23,7 @@ class LicenseService:
                 "created_at": datetime.datetime.now(datetime.timezone.utc),
                 "status": "ACTIVE",
                 "open_count": 0,
+                "payload_format": "pdf",
             }
         )
         return file_id, raw_key

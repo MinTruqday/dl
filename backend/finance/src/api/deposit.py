@@ -1,7 +1,7 @@
 from typing import Any
 
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response, status
 from src.schemas.deposit import DepositRequest
 from src.services.deposit import DepositService
 
@@ -11,7 +11,7 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/nap-tien")
 
-@router.post("", response_model=APIResponse[Any])
+@router.post("", response_model=APIResponse[Any], status_code=status.HTTP_201_CREATED)
 async def create_deposit(
     req: DepositRequest,
     current_user: CurrentUser = Depends(get_current_user),
@@ -24,6 +24,11 @@ async def create_deposit(
         message="Khởi tạo giao dịch nạp tiền hoàn tất, hệ thống đang chờ xác nhận",
         status=201,
     )
+
+
+@router.post("/webhook/payos", include_in_schema=False)
+async def payos_webhook(request: Request) -> Response:
+    return await DepositService.deposit_webhook(request)
 
 @router.get("/kiem-tra/{order_code}", response_model=APIResponse[Any])
 async def verify_deposit(

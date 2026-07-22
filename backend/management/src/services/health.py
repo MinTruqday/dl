@@ -1,23 +1,21 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
-import uuid
+import asyncio
+import gzip
 from datetime import datetime, timezone
 
 import httpx
+from bson import json_util
 from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.dependency import Role
-
 from src.repositories.system import SystemRepository
-
-
-
 from src.repositories.policy import PolicyProposalRepository
+from src.repositories.moderation import ModerationRepository
 
 class HealthService:
 
@@ -35,14 +33,7 @@ class HealthService:
             query["created_at"] = {
                 "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
             }
-        users = (
-            await UserRepository
-            .find(query)
-            .sort("created_at", -1)
-            .skip(offset)
-            .limit(limit)
-            .execute()
-        )
+        users = await database.mongodb[settings.HUMANITY_DB_NAME].users.find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(length=limit)
         return [
             {
                 "_id": str(u["_id"]),
@@ -62,7 +53,7 @@ class HealthService:
     @staticmethod
     @log_logic_execution
     async def update_user_role(user_id: str, role: str) -> dict:
-        res = await UserRepository.update_one(
+        res = await database.mongodb[settings.HUMANITY_DB_NAME].users.update_one(
             {"_id": user_id},
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -76,7 +67,7 @@ class HealthService:
     @staticmethod
     @log_logic_execution
     async def update_user_status(user_id: str, is_active: bool) -> dict:
-        res = await UserRepository.update_one(
+        res = await database.mongodb[settings.HUMANITY_DB_NAME].users.update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -114,8 +105,25 @@ class HealthService:
     @staticmethod
     @log_logic_execution
     async def trigger_backup(action: str = "FULL") -> dict:
-        logger.info("System data backup scheduled successfully")
-        return {"message": "Tiến trình sao lưu dữ liệu hệ thống đang được thực thi"}
+        from src.core.storage import upload_file
+
+        snapshot = {"created_at": datetime.now(timezone.utc), "databases": {}}
+        names = await database.mongodb.list_database_names()
+        for database_name in names:
+            if database_name in {"admin", "config", "local"}:
+                continue
+            target = database.mongodb[database_name]
+            snapshot["databases"][database_name] = {}
+            for collection_name in await target.list_collection_names():
+                snapshot["databases"][database_name][collection_name] = await target[collection_name].find({}).to_list(length=None)
+        raw = json_util.dumps(snapshot).encode("utf-8")
+        compressed = await asyncio.to_thread(gzip.compress, raw, 6)
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        object_name = f"system/backups/doclib-{timestamp}.json.gz"
+        await upload_file(compressed, object_name, content_type="application/gzip")
+        await mongo.insert_one("backup_jobs", {"_id": str(uuid7()), "object_name": object_name, "size_bytes": len(compressed), "status": "completed", "created_at": datetime.now(timezone.utc)})
+        logger.info("System data backup completed successfully")
+        return {"object_name": object_name, "size_bytes": len(compressed), "status": "completed"}
 
     @staticmethod
     @log_logic_execution
@@ -186,86 +194,73 @@ class HealthService:
         from src.core.storage import get_storage_client
 
         try:
-            async with await get_storage_client() as storage_client:
-                buckets_resp = await storage_client.list_buckets()
-                buckets_list = buckets_resp.get("Buckets", [])
-                total_size_bytes = 0
-                total_objects_count = 0
-                buckets_data = []
-                categories = {
-                    "CTAN": {"count": 0, "size": 0},
-                    "NXBGD": {"count": 0, "size": 0},
-                    "NXBST": {"count": 0, "size": 0},
-                    "AnnaSource Archive": {"count": 0, "size": 0},
-                    "User Images": {"count": 0, "size": 0},
-                    "User Documents": {"count": 0, "size": 0},
-                    "Others": {"count": 0, "size": 0},
-                }
-                for b in buckets_list:
-                    bucket_name = b["Name"]
-                    paginator = storage_client.get_paginator("list_objects_v2")
-                    obj_count = 0
-                    bucket_size = 0
-                    async for page in paginator.paginate(Bucket=bucket_name):
-                        for obj in page.get("Contents", []):
-                            size = obj["Size"]
-                            key = obj["Key"]
-                            bucket_size += size
-                            obj_count += 1
-                            total_size_bytes += size
-                            total_objects_count += 1
-                            if "ctan" in key.lower():
-                                categories["CTAN"]["count"] += 1
-                                categories["CTAN"]["size"] += size
-                            elif "nxbgd" in key.lower():
-                                categories["NXBGD"]["count"] += 1
-                                categories["NXBGD"]["size"] += size
-                            elif "nxbst" in key.lower():
-                                categories["NXBST"]["count"] += 1
-                                categories["NXBST"]["size"] += size
-                            elif "anna_archive" in key.lower():
-                                categories["AnnaSource Archive"]["count"] += 1
-                                categories["AnnaSource Archive"]["size"] += size
-                            elif key.startswith("images/"):
-                                categories["User Images"]["count"] += 1
-                                categories["User Images"]["size"] += size
-                            elif key.startswith("documents/"):
-                                categories["User Documents"]["count"] += 1
-                                categories["User Documents"]["size"] += size
-                            else:
-                                categories["Others"]["count"] += 1
-                                categories["Others"]["size"] += size
-                    buckets_data.append(
-                        {
-                            "name": bucket_name,
-                            "created_at": (
-                                b["CreationDate"].isoformat()
-                                if "CreationDate" in b
-                                else ""
-                            ),
-                            "size_bytes": bucket_size,
-                            "objects_count": obj_count,
-                        }
+            storage_client = await get_storage_client()
+            buckets_resp = await storage_client.list_buckets()
+            buckets_list = buckets_resp.get("Buckets", [])
+            total_size_bytes = 0
+            total_objects_count = 0
+            buckets_data = []
+            categories = {
+                "CTAN": {"count": 0, "size": 0},
+                "NXBGD": {"count": 0, "size": 0},
+                "NXBST": {"count": 0, "size": 0},
+                "AnnaSource Archive": {"count": 0, "size": 0},
+                "User Images": {"count": 0, "size": 0},
+                "User Documents": {"count": 0, "size": 0},
+                "Others": {"count": 0, "size": 0},
+            }
+            for b in buckets_list:
+                bucket_name = b["Name"]
+                paginator = storage_client.get_paginator("list_objects_v2")
+                obj_count = 0
+                bucket_size = 0
+                async for page in paginator.paginate(Bucket=bucket_name):
+                    for obj in page.get("Contents", []):
+                        size = obj["Size"]
+                        key = obj["Key"]
+                        bucket_size += size
+                        obj_count += 1
+                        total_size_bytes += size
+                        total_objects_count += 1
+                        if "ctan" in key.lower():
+                            category = "CTAN"
+                        elif "nxbgd" in key.lower():
+                            category = "NXBGD"
+                        elif "nxbst" in key.lower():
+                            category = "NXBST"
+                        elif "anna_archive" in key.lower():
+                            category = "AnnaSource Archive"
+                        elif key.startswith("images/"):
+                            category = "User Images"
+                        elif key.startswith("documents/"):
+                            category = "User Documents"
+                        else:
+                            category = "Others"
+                        categories[category]["count"] += 1
+                        categories[category]["size"] += size
+                buckets_data.append(
+                    {
+                        "name": bucket_name,
+                        "created_at": b["CreationDate"].isoformat() if "CreationDate" in b else "",
+                        "size_bytes": bucket_size,
+                        "objects_count": obj_count,
+                    }
+                )
+            formatted_categories = []
+            for name, stats in categories.items():
+                if stats["count"] > 0 or stats["size"] > 0:
+                    formatted_categories.append(
+                        {"name": name, "count": stats["count"], "size_bytes": stats["size"]}
                     )
-                formatted_categories = []
-                for name, stats in categories.items():
-                    if stats["count"] > 0 or stats["size"] > 0:
-                        formatted_categories.append(
-                            {
-                                "name": name,
-                                "count": stats["count"],
-                                "size_bytes": stats["size"],
-                            }
-                        )
-                return {
-                    "status": "healthy",
-                    "total_buckets": len(buckets_list),
-                    "total_size_bytes": total_size_bytes,
-                    "total_objects_count": total_objects_count,
-                    "buckets": buckets_data,
-                    "categories": formatted_categories,
-                }
-        except Exception as e:
+            return {
+                "status": "healthy",
+                "total_buckets": len(buckets_list),
+                "total_size_bytes": total_size_bytes,
+                "total_objects_count": total_objects_count,
+                "buckets": buckets_data,
+                "categories": formatted_categories,
+            }
+        except Exception:
             logger.exception("Failed to retrieve storage statistics due to connection failure")
             return {
                 "status": "unreachable",
@@ -312,11 +307,59 @@ class HealthService:
 
     @staticmethod
     @log_logic_execution
-    async def bulk_update_shadowban(user_ids, status, current_user) -> dict:
-        return {}
-        
+    async def update_shadowban(user_id: str, status: bool, current_user) -> dict:
+        result = await database.mongodb[settings.HUMANITY_DB_NAME].users.update_one({"_id": user_id}, {"$set": {"is_shadowbanned": status, "updated_at": datetime.now(timezone.utc)}})
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản cần cập nhật")
+        await HealthService._audit(current_user, "user.shadowban", user_id, {"status": status})
+        return {"user_id": user_id, "is_shadowbanned": status}
+
     @staticmethod
     @log_logic_execution
-    async def bulk_verify_kyc(user_ids, status, current_user) -> dict:
-        return {}
+    async def update_kyc(user_id: str, status: str, current_user) -> dict:
+        normalized = status.upper()
+        if normalized not in {"PENDING", "VERIFIED", "REJECTED"}:
+            raise HTTPException(status_code=422, detail="Trạng thái xác minh không hợp lệ")
+        now = datetime.now(timezone.utc)
+        values = {"kyc_status": normalized, "updated_at": now}
+        if normalized == "VERIFIED":
+            values["kyc_verified_at"] = now
+        result = await database.mongodb[settings.HUMANITY_DB_NAME].users.update_one({"_id": user_id}, {"$set": values})
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản cần xác minh")
+        await HealthService._audit(current_user, "user.kyc", user_id, {"status": normalized})
+        return {"user_id": user_id, "kyc_status": normalized}
 
+    @staticmethod
+    async def get_system_config() -> dict:
+        result = {"registration_enabled": True}
+        async for row in mongo.find("system_config", {}):
+            if row.get("key") == "maintenance_mode":
+                result["maintenance_enabled"] = row.get("enabled", False)
+                result["maintenance_message"] = row.get("message", "")
+            elif row.get("key") == "registration_enabled":
+                result["registration_enabled"] = row.get("value", True)
+        return result
+
+    @staticmethod
+    async def update_system_config(values: dict, current_user) -> dict:
+        if "registration_enabled" in values:
+            await mongo.update_one("system_config", {"key": "registration_enabled"}, {"$set": {"value": values["registration_enabled"], "updated_at": datetime.now(timezone.utc)}}, upsert=True)
+        await HealthService._audit(current_user, "system.config", "system", values)
+        return await HealthService.get_system_config()
+
+    @staticmethod
+    async def get_admin_reports() -> list:
+        rows = await mongo.find("reports", {}, sort=[("created_at", -1)], limit=100).to_list(length=100)
+        result = []
+        for row in rows:
+            item = dict(row)
+            item["_id"] = str(item.get("_id", ""))
+            if isinstance(item.get("created_at"), datetime):
+                item["created_at"] = item["created_at"].isoformat()
+            result.append(item)
+        return result
+
+    @staticmethod
+    async def _audit(current_user, action: str, target_id: str, details: dict):
+        await SystemRepository.insert_audit_log({"_id": str(uuid7()), "actor_id": str(current_user.id), "action": action, "target_id": target_id, "details": details, "timestamp": datetime.now(timezone.utc)})

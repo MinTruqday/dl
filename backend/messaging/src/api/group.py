@@ -49,7 +49,7 @@ async def update_group_info(group_id: str, req: dict, current_user=Depends(get_c
 @router.put("/nhom/{group_id}/quyen", response_model=APIResponse[Any])
 async def set_deputy(group_id: str, req: dict, current_user=Depends(get_current_user)):
     user_id = req.get("user_id")
-    action = req.get("action") # "promote" or "demote"
+    action = req.get("action")
     if not user_id or action not in ["promote", "demote"]:
         return APIResponse(message="Dữ liệu không hợp lệ", status=400)
     
@@ -76,7 +76,7 @@ async def join_by_link(token: str, current_user=Depends(get_current_user)):
 
 @router.post("/nhom/{group_id}/duyet/{user_id}", response_model=APIResponse[Any])
 async def review_join_request(group_id: str, user_id: str, req: dict, current_user=Depends(get_current_user)):
-    action = req.get("action") # "approve" or "reject"
+    action = req.get("action")
     if action == "approve":
         result = await GroupService.approve_join_request(group_id, user_id, current_user)
     elif action == "reject":
@@ -84,4 +84,3 @@ async def review_join_request(group_id: str, user_id: str, req: dict, current_us
     else:
         return APIResponse(message="Hành động không hợp lệ", status=400)
     return APIResponse(data=result, message=result.get("message", ""))
-

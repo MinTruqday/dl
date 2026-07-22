@@ -1,15 +1,6 @@
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-try:
-    from motor.motor_asyncio import AsyncIOMotorCursor, AsyncIOMotorCommandCursor
-    def _cursor_await(self):
-        return self.to_list(length=None).__await__()
-    AsyncIOMotorCursor.__await__ = _cursor_await
-    AsyncIOMotorCommandCursor.__await__ = _cursor_await
-except ImportError:
-    pass
-
 class MongoClient:
     def __init__(self):
         self.db_name = settings.FINANCE_DB_NAME
@@ -42,11 +33,11 @@ class MongoClient:
     async def insert_many(self, collection: str, documents: list):
         return await self.get_db()[collection].insert_many(documents)
 
-    async def update_one(self, collection: str, filter: dict, update: dict, upsert: bool = False):
-        return await self.get_db()[collection].update_one(filter, update, upsert=upsert)
+    async def update_one(self, collection: str, filter: dict, update: dict, upsert: bool = False, **kwargs):
+        return await self.get_db()[collection].update_one(filter, update, upsert=upsert, **kwargs)
 
-    async def update_many(self, collection: str, filter: dict, update: dict, upsert: bool = False):
-        return await self.get_db()[collection].update_many(filter, update, upsert=upsert)
+    async def update_many(self, collection: str, filter: dict, update: dict, upsert: bool = False, **kwargs):
+        return await self.get_db()[collection].update_many(filter, update, upsert=upsert, **kwargs)
 
     async def delete_one(self, collection: str, filter: dict):
         return await self.get_db()[collection].delete_one(filter)
@@ -89,7 +80,14 @@ class QueryBuilder:
         return self
 
     async def execute(self):
-        return await self.client.find(self.collection, self._query, sort=self._sort, skip=self._skip, limit=self._limit)
+        cursor = self.client.find(
+            self.collection,
+            self._query,
+            sort=self._sort,
+            skip=self._skip,
+            limit=self._limit,
+        )
+        return await cursor.to_list(length=None)
 
     def __await__(self):
         return self.execute().__await__()

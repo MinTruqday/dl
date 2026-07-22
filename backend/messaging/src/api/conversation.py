@@ -25,7 +25,7 @@ async def get_conversations(current_user=Depends(get_current_user)):
     )
 
 @router.get("/tim-kiem-toan-cuc", response_model=APIResponse[Any])
-async def global_search(q: str = Query(...), current_user=Depends(get_current_user)):
+async def global_search(q: str, current_user=Depends(get_current_user)):
     results = await ConversationService.global_search(q, current_user)
     return APIResponse(data=results, message="Tìm kiếm toàn cục hoàn tất")
 

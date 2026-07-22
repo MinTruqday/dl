@@ -1,160 +1,139 @@
-from src.core.logic_logger import log_logic_execution
-from src.core.infrastructure.mongo import mongo
 import asyncio
+import re
 from datetime import datetime, timezone
 
 import httpx
-from fastapi import Query
-from src.schemas.thread import Record
+from fastapi import HTTPException
+from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.repositories.message import MessageRepository
+from src.core.logic_logger import log_logic_execution
 from src.repositories.conversation import ConversationRepository
 from src.repositories.message import MessageRepository
 from src.repositories.profile import ProfileRepository
-from src.repositories.message import MessageRepository
+from src.services.thread import ThreadService
+
 
 class ConversationService:
     @staticmethod
     @log_logic_execution
     async def get_conversations(current_user):
-        conversations = (
-            await ConversationRepository
-            .find(
+        user_id = str(current_user.id)
+        groups = await MessageRepository.find_groups({"members": user_id}).to_list(length=None)
+        group_ids = [group["_id"] for group in groups]
+        conversations = await (
+            ConversationRepository.find(
                 {
                     "$or": [
-                        {"participants": str(current_user.id)},
-                        {
-                            "_id": {
-                                "$in": [
-                                    g["_id"]
-                                    for g in await MessageRepository.find_groups({"members": str(current_user.id)}).to_list(length=None)
-                                ]
-                            }
-                        },
+                        {"participants": user_id},
+                        {"_id": {"$in": group_ids}},
                     ],
-                    "cleared_by": {"$ne": str(current_user.id)},
+                    "cleared_by": {"$ne": user_id},
                 }
             )
             .sort("updated_at", -1)
             .to_list(length=None)
         )
-        other_user_ids = []
-        for conv in conversations:
-            if not str(conv["_id"]).startswith("group_"):
-                for p in conv.get("participants", []):
-                    if p != str(current_user.id):
-                        other_user_ids.append(p)
-        users_list = []
+        other_user_ids = {
+            participant
+            for conversation in conversations
+            if not str(conversation["_id"]).startswith("group_")
+            for participant in conversation.get("participants", [])
+            if participant != user_id
+        }
+        users = []
         if other_user_ids:
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
-                    resp = await client.post(
+                    response = await client.post(
                         f"{settings.HUMANITY_URL}/nguoi-dung/hang-loat",
-                        json=other_user_ids,
+                        json=list(other_user_ids),
+                        headers={"X-Internal-Token": settings.SECRET_KEY},
                     )
-                    if resp.status_code == 200:
-                        users_list = resp.json().get("data", [])
-            except Exception as e:
-                from loguru import logger
-                logger.error(f"Error fetching users in get_conversations {e}")
-        user_map = {str(u["_id"]): u for u in users_list}
-        groups_list = (
-            await MessageRepository.find_groups({"members": str(current_user.id)})
-            .to_list(length=None)
-        )
-        group_map = {str(g["_id"]): g for g in groups_list}
+                    response.raise_for_status()
+                    users = response.json().get("data", [])
+            except Exception:
+                logger.exception("Failed to fetch conversation participant profiles")
+        user_map = {str(user["_id"]): user for user in users}
+        group_map = {str(group["_id"]): group for group in groups}
         results = []
-        for conv in conversations:
-            is_group = str(conv["_id"]).startswith("group_")
-            other_id = conv["_id"] if is_group else None
-            if not is_group:
-                for p in conv.get("participants", []):
-                    if p != str(current_user.id):
-                        other_id = p
-                        break
-            if not other_id:
-                continue
-            unread = conv.get("unread_count", {}).get(str(current_user.id), 0)
-            pinned_messages = conv.get("pinned_messages", [])
+        for conversation in conversations:
+            conversation_id = str(conversation["_id"])
+            is_group = conversation_id.startswith("group_")
             if is_group:
-                group = group_map.get(other_id)
-                if group:
-                    results.append(
-                        {
-                            "other_user_id": other_id,
-                            "other_user": {
-                                "username": group.get("group_name"),
-                                "full_name": group.get("group_name"),
-                                "avatar_url": "",
-                                "is_group": True,
-                            },
-                            "last_message": conv.get("last_message"),
-                            "pinned_messages": pinned_messages,
-                            "unread_count": unread,
-                        }
-                    )
+                group = group_map.get(conversation_id)
+                if not group:
+                    continue
+                other_id = conversation_id
+                other_user = {
+                    "username": group.get("group_name"),
+                    "full_name": group.get("group_name"),
+                    "avatar_url": group.get("avatar_url", ""),
+                    "is_group": True,
+                }
             else:
-                other_user = user_map.get(other_id)
-                if other_user:
-                    results.append(
-                        {
-                            "other_user_id": other_id,
-                            "other_user": {
-                                "username": other_user.get("username"),
-                                "avatar_url": other_user.get("avatar_url"),
-                                "full_name": other_user.get("full_name"),
-                            },
-                            "last_message": conv.get("last_message"),
-                            "pinned_messages": pinned_messages,
-                            "unread_count": unread,
-                        }
-                    )
-        print(f"DEBUG: Returning {len(results)} conversations for {current_user.id}")
+                other_id = next(
+                    (
+                        participant
+                        for participant in conversation.get("participants", [])
+                        if participant != user_id
+                    ),
+                    None,
+                )
+                if not other_id:
+                    continue
+                profile = user_map.get(other_id, {})
+                other_user = {
+                    "username": profile.get("username"),
+                    "avatar_url": profile.get("avatar_url"),
+                    "full_name": profile.get("full_name"),
+                }
+            results.append(
+                {
+                    "other_user_id": other_id,
+                    "other_user": other_user,
+                    "last_message": conversation.get("last_message"),
+                    "pinned_messages": conversation.get("pinned_messages", []),
+                    "unread_count": conversation.get("unread_count", {}).get(user_id, 0),
+                }
+            )
         return results
 
     @staticmethod
     @log_logic_execution
     async def delete_conversation(other_user_id: str, current_user) -> dict:
+        user_id = str(current_user.id)
         if other_user_id.startswith("group_"):
-            group = await MessageRepository.find_group(
-                {"_id": other_user_id}
-            )
-            if group:
-                if group.get("created_by") == str(current_user.id):
-                    await MessageRepository.delete_group(
-                        {"_id": other_user_id}
-                    )
-                    await MessageRepository.delete_many(
-                        {"receiver_id": other_user_id}
-                    )
-                    await ConversationRepository.delete_one(
-                        {"_id": other_user_id}
-                    )
-                else:
-                    await MessageRepository.update_group(
-                        {"_id": other_user_id},
-                        {"$pull": {"members": str(current_user.id)}},
-                    )
-                    await ConversationRepository.update_one(
-                        {"_id": other_user_id},
-                        {"$addToSet": {"cleared_by": str(current_user.id)}},
-                    )
+            group = await MessageRepository.find_group({"_id": other_user_id})
+            if not group or user_id not in group.get("members", []):
+                raise HTTPException(status_code=404, detail="Không tìm thấy nhóm trò chuyện")
+            if group.get("created_by") == user_id:
+                await MessageRepository.delete_group({"_id": other_user_id})
+                await MessageRepository.delete_many({"receiver_id": other_user_id})
+                await ConversationRepository.delete_one({"_id": other_user_id})
+            else:
+                await MessageRepository.update_group(
+                    {"_id": other_user_id},
+                    {"$pull": {"members": user_id, "deputies": user_id}},
+                )
+                await ConversationRepository.update_one(
+                    {"_id": other_user_id},
+                    {"$addToSet": {"cleared_by": user_id}},
+                )
             return {"status": "success"}
         await MessageRepository.update_many(
             {
                 "$or": [
-                    {"sender_id": str(current_user.id), "receiver_id": other_user_id},
-                    {"sender_id": other_user_id, "receiver_id": str(current_user.id)},
+                    {"sender_id": user_id, "receiver_id": other_user_id},
+                    {"sender_id": other_user_id, "receiver_id": user_id},
                 ]
             },
-            {"$addToSet": {"deleted_by": str(current_user.id)}},
+            {"$addToSet": {"deleted_by": user_id}},
         )
-        participant_key = f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
+        participant_key = f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
         await ConversationRepository.update_one(
             {"_id": participant_key},
-            {"$addToSet": {"cleared_by": str(current_user.id)}},
+            {"$addToSet": {"cleared_by": user_id}},
         )
         return {"status": "success"}
 
@@ -162,26 +141,21 @@ class ConversationService:
     @log_logic_execution
     async def mark_as_read(other_user_id: str, current_user):
         user_id = str(current_user.id)
-        participant_key = (
-            other_user_id
-            if other_user_id.startswith("group_")
-            else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
-        )
-        last_msg = await MessageRepository.find_one(
-            {
-                "receiver_id": (
-                    participant_key if other_user_id.startswith("group_") else user_id
-                )
-            },
+        if other_user_id.startswith("group_"):
+            await ThreadService.ensure_group_access(other_user_id, user_id)
+            participant_key = other_user_id
+            message_scope = {"receiver_id": other_user_id}
+        else:
+            participant_key = f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
+            message_scope = {"receiver_id": user_id, "sender_id": other_user_id}
+        delivered_scope = {**message_scope, "is_scheduled": {"$ne": True}}
+        last_message = await MessageRepository.find_one(
+            delivered_scope,
             sort=[("created_at", -1)],
         )
-        from datetime import timedelta
-
         await MessageRepository.update_many(
             {
-                "receiver_id": (
-                    participant_key if other_user_id.startswith("group_") else user_id
-                ),
+                **delivered_scope,
                 "is_read": False,
                 "self_destruct_seconds": {"$exists": True, "$ne": None},
                 "self_destruct_at": None,
@@ -201,33 +175,49 @@ class ConversationService:
             ],
         )
         await MessageRepository.update_many(
-            {
-                "receiver_id": (
-                    participant_key if other_user_id.startswith("group_") else user_id
-                ),
-                "is_read": False,
-            },
+            {**delivered_scope, "is_read": False},
             {"$set": {"is_read": True}},
         )
-        update_data = {f"unread_count.{user_id}": 0}
-        if last_msg:
-            update_data[f"last_read_message_id.{user_id}"] = last_msg["_id"]
+        update = {f"unread_count.{user_id}": 0}
+        if last_message:
+            update[f"last_read_message_id.{user_id}"] = last_message["_id"]
         await ConversationRepository.update_one(
-            {"_id": participant_key}, {"$set": update_data}
+            {"_id": participant_key},
+            {"$set": update},
         )
         return {"status": "success"}
 
     @staticmethod
+    async def _ensure_context(other_user_id: str, current_user, allow_new_direct: bool = False):
+        user_id = str(current_user.id)
+        if other_user_id.startswith("group_"):
+            await ThreadService.ensure_group_access(other_user_id, user_id)
+        elif allow_new_direct:
+            await ThreadService.ensure_target_access(other_user_id, user_id)
+        else:
+            if not await ProfileRepository.get_profile(other_user_id):
+                raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản trò chuyện")
+
+    @staticmethod
+    def _participant_key(other_user_id: str, user_id: str) -> str:
+        if other_user_id.startswith("group_"):
+            return other_user_id
+        return f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
+
+    @staticmethod
     @log_logic_execution
     async def save_draft(other_user_id: str, content: str, current_user):
-        participant_key = (
-            other_user_id
-            if other_user_id.startswith("group_")
-            else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
-        )
+        if len(content) > 10000:
+            raise HTTPException(status_code=400, detail="Bản nháp vượt quá độ dài cho phép")
+        await ConversationService._ensure_context(other_user_id, current_user, allow_new_direct=True)
+        user_id = str(current_user.id)
+        participant_key = ConversationService._participant_key(other_user_id, user_id)
+        update = {"$set": {f"draft.{user_id}": content}}
+        if not other_user_id.startswith("group_"):
+            update["$setOnInsert"] = {"participants": sorted([user_id, other_user_id])}
         await ConversationRepository.update_one(
             {"_id": participant_key},
-            {"$set": {f"draft.{current_user.id}": content}},
+            update,
             upsert=True,
         )
         return {"status": "success"}
@@ -235,66 +225,53 @@ class ConversationService:
     @staticmethod
     @log_logic_execution
     async def get_draft(other_user_id: str, current_user):
-        participant_key = (
-            other_user_id
-            if other_user_id.startswith("group_")
-            else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
+        await ConversationService._ensure_context(other_user_id, current_user)
+        user_id = str(current_user.id)
+        conversation = await ConversationRepository.find_one(
+            {"_id": ConversationService._participant_key(other_user_id, user_id)}
         )
-        conv = await ConversationRepository.find_one(
-            {"_id": participant_key}
-        )
-        draft = conv.get("draft", {}).get(str(current_user.id), "") if conv else ""
+        draft = conversation.get("draft", {}).get(user_id, "") if conversation else ""
         return {"draft": draft}
 
     @staticmethod
     @log_logic_execution
     async def get_conversation_settings(other_user_id: str, current_user):
-        settings_id = (
-            other_user_id
-            if other_user_id.startswith("group_")
-            else f"settings_{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
+        await ConversationService._ensure_context(other_user_id, current_user)
+        user_id = str(current_user.id)
+        participant_key = ConversationService._participant_key(other_user_id, user_id)
+        settings_id = other_user_id if other_user_id.startswith("group_") else f"settings_{participant_key}"
+        conversation, message_settings = await asyncio.gather(
+            ConversationRepository.find_one({"_id": participant_key}),
+            MessageRepository.find_setting({"_id": settings_id}),
         )
-        settings = await MessageRepository.find_setting(
-            {"_id": settings_id}
-        )
-
-        participant_key = (
-            other_user_id
-            if other_user_id.startswith("group_")
-            else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
-        )
-        conv = await ConversationRepository.find_one(
-            {"_id": participant_key}
-        )
-        is_muted = str(current_user.id) in conv.get("muted_by", []) if conv else False
-        is_pinned = str(current_user.id) in conv.get("pinned_by", []) if conv else False
-
+        message_settings = message_settings or {}
+        conversation = conversation or {}
         return {
-            "self_destruct_seconds": (
-                settings.get("self_destruct_seconds", 0) if settings else 0
-            ),
-            "is_muted": is_muted,
-            "is_pinned": is_pinned,
-            "theme": settings.get("theme") if settings else None,
-            "nicknames": settings.get("nicknames", {}) if settings else {},
-            "emoji": settings.get("emoji") if settings else None,
+            "self_destruct_seconds": message_settings.get("self_destruct_seconds", 0),
+            "is_muted": user_id in conversation.get("muted_by", []),
+            "is_pinned": user_id in conversation.get("pinned_by", []),
+            "theme": message_settings.get("theme"),
+            "nicknames": message_settings.get("nicknames", {}),
+            "emoji": message_settings.get("emoji"),
         }
 
     @staticmethod
     @log_logic_execution
     async def update_conversation_settings(other_user_id: str, updates: dict, current_user):
-        settings_id = (
-            other_user_id
-            if other_user_id.startswith("group_")
-            else f"settings_{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
-        )
-        allowed_keys = ["theme", "nicknames", "emoji"]
-        filtered_updates = {k: v for k, v in updates.items() if k in allowed_keys}
+        await ConversationService._ensure_context(other_user_id, current_user)
+        user_id = str(current_user.id)
+        participant_key = ConversationService._participant_key(other_user_id, user_id)
+        settings_id = other_user_id if other_user_id.startswith("group_") else f"settings_{participant_key}"
+        filtered_updates = {
+            key: value
+            for key, value in updates.items()
+            if key in {"theme", "nicknames", "emoji"}
+        }
         if filtered_updates:
             await MessageRepository.update_setting(
                 {"_id": settings_id},
                 {"$set": filtered_updates},
-                upsert=True
+                upsert=True,
             )
         return {"success": True, "message": "Cập nhật cấu hình trò chuyện thành công"}
 
@@ -302,34 +279,40 @@ class ConversationService:
     @log_logic_execution
     async def global_search(query: str, current_user):
         user_id = str(current_user.id)
-        # Find all groups user belongs to
         groups = await MessageRepository.find_groups({"members": user_id}).to_list(length=None)
-        group_ids = [str(g["_id"]) for g in groups]
-        
-        # Build query for messages
-        # We search where content matches query (case-insensitive regex)
-        # And user is either sender, receiver, or receiver is a group they belong to.
-        import re
-        regex = re.compile(query, re.IGNORECASE)
+        group_ids = [str(group["_id"]) for group in groups]
         match_query = {
-            "content": {"$regex": regex},
+            "content": {"$regex": re.compile(re.escape(query), re.IGNORECASE)},
+            "is_recalled": False,
+            "is_scheduled": {"$ne": True},
+            "deleted_by": {"$ne": user_id},
+            "$and": [{"$or": [{"visible_to": None}, {"visible_to": user_id}]}],
             "$or": [
-                {"sender_id": user_id},
+                {
+                    "sender_id": user_id,
+                    "receiver_id": {"$not": re.compile(r"^group_")},
+                },
                 {"receiver_id": user_id},
-                {"receiver_id": {"$in": group_ids}}
-            ]
+                {"receiver_id": {"$in": group_ids}},
+            ],
         }
-        messages = await MessageRepository.find(match_query).sort("created_at", -1).limit(50).to_list(length=None)
-        
-        results = []
-        for msg in messages:
-            # Determine thread context
-            is_group = str(msg["receiver_id"]).startswith("group_")
-            other_id = msg["receiver_id"] if is_group else (msg["receiver_id"] if msg["sender_id"] == user_id else msg["sender_id"])
-            results.append({
-                "message": msg,
-                "thread_id": other_id,
-                "is_group": is_group
-            })
-        
-        return results
+        messages = await (
+            MessageRepository.find(match_query)
+            .sort("created_at", -1)
+            .limit(50)
+            .to_list(length=50)
+        )
+        return [
+            {
+                "message": message,
+                "thread_id": (
+                    message["receiver_id"]
+                    if str(message["receiver_id"]).startswith("group_")
+                    else message["receiver_id"]
+                    if message["sender_id"] == user_id
+                    else message["sender_id"]
+                ),
+                "is_group": str(message["receiver_id"]).startswith("group_"),
+            }
+            for message in messages
+        ]
