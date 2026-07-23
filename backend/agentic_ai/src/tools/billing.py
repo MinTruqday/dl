@@ -146,7 +146,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
 async def transfer_user_funds(recipient_identifier: str, amount: int, note: str = "", config: RunnableConfig = None) -> str:
     """
     <module_purpose>
-    Transfer DL credits from current user's wallet to another user (Peer-to-Peer transfer).
+    Transfer dl credits from current user's wallet to another user (Peer-to-Peer transfer).
     </module_purpose>
     <contract>
     WHEN TO USE THIS TOOL:
@@ -174,7 +174,7 @@ async def transfer_user_funds(recipient_identifier: str, amount: int, note: str 
             data = response.json().get("data", {})
             recipient_name = data.get("recipient", {}).get("name", recipient_identifier)
             remaining = data.get("remaining_balance", 0)
-            return f"Successfully transferred {amount} DL to {recipient_name}. Remaining balance: {remaining} DL"
+            return f"Successfully transferred {amount} dl to {recipient_name}. Remaining balance: {remaining} dl"
         else:
             detail = response.json().get("detail") or "Fund transfer failed"
             return f"Transfer failed: {detail}"

@@ -20,6 +20,11 @@ class Role(str, Enum):
     AUTHOR = "author"
     ADMIN = "admin"
 
+class Tier(str, Enum):
+    BASIC = "BASIC"
+    PRO = "PRO"
+    PREMIUM = "PREMIUM"
+
 class CurrentUser(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 

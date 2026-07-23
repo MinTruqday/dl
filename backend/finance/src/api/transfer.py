@@ -36,6 +36,6 @@ async def p2p_transfer_funds(
     result = await TransferService.transfer_funds(current_user, req)
     return APIResponse(
         data=result,
-        message=f"Chuyển {req.amount} DL cho {result['recipient']['full_name']} thành công",
+        message=f"Chuyển {req.amount} dl cho {result['recipient']['full_name']} thành công",
         status=status.HTTP_200_OK
     )

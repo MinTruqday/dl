@@ -1,12 +1,14 @@
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException
 from uuid6 import uuid7
-
+import httpx
+from loguru import logger
+from src.core.dependency import Tier
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.logic_logger import log_logic_execution
 from src.schemas.wallet import Transaction, TransactionType
+from src.services.deposit import DepositService
 
 
 ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELLED"}
@@ -75,23 +77,52 @@ class WithdrawalService:
             if (now - last_bank_update).total_seconds() < 86400:
                 raise HTTPException(status_code=403, detail="Rút tiền tạm khóa trong 24 giờ sau khi đổi tài khoản ngân hàng")
 
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        rows = await db.withdrawal_requests.aggregate(
+        user_tier_val = getattr(current_user, "ai_tier", Tier.BASIC.value)
+        if hasattr(user_tier_val, "value"):
+            user_tier_val = user_tier_val.value
+        user_tier_val = str(user_tier_val).upper()
+
+        max_weekly_withdrawals = 7 if user_tier_val == Tier.PREMIUM.value else 5 if user_tier_val == Tier.PRO.value else 3
+
+        days_since_monday = now.weekday()
+        week_start = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+        weekly_rows = await db.withdrawal_requests.aggregate(
             [
                 {
                     "$match": {
                         "user_id": user_id,
-                        "created_at": {"$gte": today_start},
+                        "created_at": {"$gte": week_start},
                         "status": {"$in": ["PENDING", "APPROVED"]},
                     }
                 },
-                {"$group": {"_id": None, "count": {"$sum": 1}, "total": {"$sum": "$amount"}}},
+                {"$group": {"_id": None, "count": {"$sum": 1}}},
             ]
         ).to_list(length=None)
-        if rows and rows[0]["count"] >= 3:
-            raise HTTPException(status_code=429, detail="Đã đạt số lần rút tiền tối đa trong ngày")
-        if rows and rows[0]["total"] + amount > 20_000_000:
-            raise HTTPException(status_code=429, detail="Đã vượt hạn mức rút tiền trong ngày")
+
+        weekly_count = weekly_rows[0]["count"] if weekly_rows else 0
+        if weekly_count >= max_weekly_withdrawals:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Đã đạt giới hạn rút tiền hàng tuần ({max_weekly_withdrawals} lượt/tuần cho gói {user_tier_val})"
+            )
+
+        tax_percent = weekly_count + 1
+        tax_amount = int(round(amount * (tax_percent / 100.0)))
+        total_deduction = amount + tax_amount
+
+        wallet_bal = int(wallet.get("balance", 0)) if wallet else 0
+        wallet_withdrawable = int(wallet.get("withdrawable_balance", 0)) if wallet else 0
+
+        if wallet_bal < total_deduction or wallet_withdrawable < total_deduction:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Số dư khả dụng không đủ chi trả khoản rút {amount} dl cộng phí thuế {tax_amount} dl ({tax_percent}% cho lượt thứ {tax_percent} trong tuần). Tổng trừ: {total_deduction} dl"
+            )
+
+        AUTO_PAYOUT_THRESHOLD_DL = 500_000
+        is_auto_payout = amount < AUTO_PAYOUT_THRESHOLD_DL
+        initial_status = "APPROVED" if is_auto_payout else "PENDING"
 
         withdrawal_id = str(uuid7())
         async with await database.mongodb.start_session() as session:
@@ -99,10 +130,10 @@ class WithdrawalService:
                 deduction = await db.wallets.update_one(
                     {
                         "_id": user_id,
-                        "balance": {"$gte": amount},
-                        "withdrawable_balance": {"$gte": amount},
+                        "balance": {"$gte": total_deduction},
+                        "withdrawable_balance": {"$gte": total_deduction},
                     },
-                    {"$inc": {"balance": -amount, "withdrawable_balance": -amount}},
+                    {"$inc": {"balance": -total_deduction, "withdrawable_balance": -total_deduction}},
                     session=session,
                 )
                 if deduction.modified_count != 1:
@@ -112,25 +143,59 @@ class WithdrawalService:
                         "_id": withdrawal_id,
                         "user_id": user_id,
                         "amount": amount,
+                        "tax_amount": tax_amount,
+                        "tax_percent": tax_percent,
+                        "total_deducted": total_deduction,
                         "bank_info": data["bank_info"],
                         "note": data.get("note"),
-                        "status": "PENDING",
+                        "status": initial_status,
+                        "auto_payout": is_auto_payout,
                         "created_at": now,
                     },
                     session=session,
                 )
                 transaction = Transaction(
                     user_id=user_id,
-                    amount=-amount,
+                    amount=-total_deduction,
                     type=TransactionType.WITHDRAW,
-                    note="Funds reserved for pending withdrawal",
+                    note=f"Rút {amount} dl về ngân hàng qua Napas 24/7 (Phí thuế {tax_percent}%: {tax_amount} dl - Status: {initial_status})",
                     reference_id=withdrawal_id,
                 )
                 await db.transactions.insert_one(
                     transaction.model_dump(by_alias=True),
                     session=session,
                 )
-        return {"message": "Yêu cầu rút tiền đã được ghi nhận", "withdrawal_id": withdrawal_id}
+
+        if is_auto_payout and settings.PAYOS_CLIENT_ID and settings.PAYOS_API_KEY:
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as http_client:
+                    bank_info_obj = data.get("bank_info", {})
+                    payout_data = {
+                        "accountNumber": bank_info_obj.get("account_number", ""),
+                        "bankCode": bank_info_obj.get("bank_code", "VCB"),
+                        "amount": amount,
+                        "description": f"DocLib rut tien tu dong {withdrawal_id[:8]}"
+                    }
+                    signature = DepositService._generate_payos_signature(payout_data)
+                    payout_headers = {
+                        "x-client-id": settings.PAYOS_CLIENT_ID,
+                        "x-api-key": settings.PAYOS_API_KEY,
+                        "x-signature": signature
+                    }
+                    resp = await http_client.post("https://api-merchant.payos.vn/v2/payouts", json=payout_data, headers=payout_headers)
+                    if resp.status_code == 200:
+                        logger.info(f"Instant Auto-Payout executed successfully for withdrawal {withdrawal_id}")
+                    else:
+                        logger.warning(f"Instant Auto-Payout response code {resp.status_code}: {resp.text}")
+            except Exception as e:
+                logger.error(f"Instant Auto-Payout API integration error: {e}")
+
+        if is_auto_payout:
+            msg = f"Hệ thống đã tự động duyệt và chuyển {amount} dl về tài khoản ngân hàng của bạn qua Napas 24/7!"
+        else:
+            msg = f"Yêu cầu rút tiền {amount} dl đã được ghi nhận và đang chờ Admin duyệt an toàn (do vượt hạn mức tự động 500.000 dl)"
+
+        return {"message": msg, "withdrawal_id": withdrawal_id, "status": initial_status, "auto_payout": is_auto_payout}
 
     @staticmethod
     @log_logic_execution
@@ -222,6 +287,30 @@ class WithdrawalService:
                     )
                 bank_info = str(withdrawal["bank_info"])
                 masked_bank = bank_info[:4] + "***" + bank_info[-3:] if len(bank_info) > 8 else "***"
+
+                if new_status == "APPROVED" and settings.PAYOS_CLIENT_ID and settings.PAYOS_API_KEY:
+                    try:
+                        async with httpx.AsyncClient(timeout=15.0) as http_client:
+                            payout_data = {
+                                "accountNumber": withdrawal.get("bank_info", {}).get("account_number", ""),
+                                "bankCode": withdrawal.get("bank_info", {}).get("bank_code", ""),
+                                "amount": withdrawal["amount"],
+                                "description": f"DocLib rut tien {withdrawal_id[:8]}"
+                            }
+                            signature = DepositService._generate_payos_signature(payout_data)
+                            payout_headers = {
+                                "x-client-id": settings.PAYOS_CLIENT_ID,
+                                "x-api-key": settings.PAYOS_API_KEY,
+                                "x-signature": signature
+                            }
+                            resp = await http_client.post("https://api-merchant.payos.vn/v2/payouts", json=payout_data, headers=payout_headers)
+                            if resp.status_code == 200:
+                                logger.info(f"PayOS Payout Gateway executed successfully for withdrawal {withdrawal_id}")
+                            else:
+                                logger.warning(f"PayOS Payout response code {resp.status_code}: {resp.text}")
+                    except Exception as e:
+                        logger.error(f"PayOS Payout API integration error: {e}")
+
                 await db.audit_logs.insert_one(
                     {
                         "action": f"WITHDRAWAL_{new_status}",

@@ -81,7 +81,7 @@ class TransferService:
         sender_balance = sender_wallet.get("balance", 0) if sender_wallet else 0
 
         if sender_balance < amount:
-            raise HTTPException(status_code=400, detail=f"Số dư tài khoản không đủ. Số dư hiện tại: {sender_balance} DL")
+            raise HTTPException(status_code=400, detail=f"Số dư tài khoản không đủ. Số dư hiện tại: {sender_balance} dl")
 
         now = datetime.now(timezone.utc)
         note_text = req.note.strip() if req.note else "Chuyển tiền nội bộ"
@@ -111,7 +111,7 @@ class TransferService:
             "type": TransactionType.TRANSFER.value,
             "amount": -amount,
             "reference_id": recipient_id,
-            "note": f"Chuyển {amount} DL cho {recipient_name}. Ghi chú: {note_text}",
+            "note": f"Chuyển {amount} dl cho {recipient_name}. Ghi chú: {note_text}",
             "created_at": now
         }
         await mongo.insert_one(collection="transactions", doc=sender_tx)
@@ -124,7 +124,7 @@ class TransferService:
             "type": TransactionType.RECEIVE.value,
             "amount": amount,
             "reference_id": sender_id,
-            "note": f"Nhận {amount} DL từ {sender_name}. Ghi chú: {note_text}",
+            "note": f"Nhận {amount} dl từ {sender_name}. Ghi chú: {note_text}",
             "created_at": now
         }
         await mongo.insert_one(collection="transactions", doc=recipient_tx)
@@ -144,7 +144,7 @@ class TransferService:
         }
         await mongo.insert_one(collection="outbox", doc=outbox_doc)
 
-        logger.info(f"P2P Transfer completed: {sender_id} -> {recipient_id} | Amount: {amount} DL")
+        logger.info(f"P2P Transfer completed: {sender_id} -> {recipient_id} | Amount: {amount} dl")
 
         new_sender_wallet = await mongo.find_one(collection="wallets", query={"_id": sender_id})
         new_balance = new_sender_wallet.get("balance", 0) if new_sender_wallet else 0

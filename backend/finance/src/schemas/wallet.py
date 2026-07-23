@@ -42,7 +42,7 @@ class TopupRequest(BaseModel):
 
 class TransferRequest(BaseModel):
     recipient_identifier: str = Field(min_length=1, description="Recipient Email, User ID, Slug, or Account Number")
-    amount: int = Field(gt=0, description="Amount of DL credits to transfer")
+    amount: int = Field(gt=0, description="Amount of dl credits to transfer")
     note: Optional[str] = Field(default="", description="Transfer message / note")
     idempotency_key: Optional[str] = Field(default=None, description="Unique key to prevent duplicate transfer execution")
 
