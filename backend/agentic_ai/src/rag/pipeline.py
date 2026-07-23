@@ -197,7 +197,7 @@ class PipelineRag:
             logger.info("Compressed file detected")
             return await self._extract_from_zip(file_bytes)
 
-        return self._extract_with_markitdown(file_bytes, file_url)
+        return self._extract_with_docling(file_bytes, file_url)
 
     async def _extract_from_zip(self, zip_data: bytes) -> str:
         import shutil
@@ -248,7 +248,7 @@ class PipelineRag:
                         try:
                             with open(f_path, "rb") as f_handle:
                                 content_bytes = f_handle.read()
-                                file_text = self._extract_with_markitdown(
+                                file_text = self._extract_with_docling(
                                     content_bytes, f
                                 )
                                 if file_text:
@@ -293,31 +293,27 @@ class PipelineRag:
             logger.exception("File download error")
             return None
 
-    def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
+    def _extract_with_docling(self, data: bytes, file_url: str) -> str:
         try:
             import os
             import tempfile
-
-            from markitdown import MarkItDown
+            from pathlib import Path
+            from src.rag.conversion import document_parser
 
             ext = os.path.splitext(file_url)[1] or ".pdf"
 
             with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
                 tmp.write(data)
-                tmp_path = tmp.name
+                tmp_path = Path(tmp.name)
 
-            logger.info("Analyzing downloaded file data")
-            md = MarkItDown()
-            result = md.convert(tmp_path)
-            full_text = result.text_content
-
-            os.remove(tmp_path)
-
-            logger.info("Document content analyzed successfully")
-            return full_text
-        except ImportError as e:
-            logger.exception("Missing content analysis library")
-            return ""
+            try:
+                logger.info("Analyzing file data using Docling")
+                parse_res = document_parser._parse_file_with_docling(tmp_path)
+                full_text = parse_res.get("markdown", "")
+                logger.info("Document content analyzed successfully")
+                return full_text
+            finally:
+                tmp_path.unlink(missing_ok=True)
         except Exception as e:
             logger.exception("Data analysis error")
             return ""

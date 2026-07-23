@@ -1,9 +1,10 @@
 import base64
 import os
 import tempfile
+from pathlib import Path
 
 from loguru import logger
-from markitdown import MarkItDown
+from src.rag.conversion import document_parser
 
 def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> str:
     try:
@@ -16,16 +17,16 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
 
         with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
             tmp.write(file_bytes)
-            tmp_path = tmp.name
+            tmp_path = Path(tmp.name)
 
-        logger.info("Extracting text content")
-        md = MarkItDown()
-        result = md.convert(tmp_path)
-        full_text = result.text_content
-
-        os.remove(tmp_path)
-        logger.info("Text extraction successful")
-        return full_text
+        try:
+            logger.info("Extracting text content using Docling")
+            res = document_parser._parse_file_with_docling(tmp_path)
+            full_text = res.get("markdown", "")
+            logger.info("Text extraction successful")
+            return full_text
+        finally:
+            tmp_path.unlink(missing_ok=True)
     except Exception as e:
         logger.exception("File text extraction error")
         return ""

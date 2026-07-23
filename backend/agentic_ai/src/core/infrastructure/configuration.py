@@ -46,7 +46,7 @@ class Settings(BaseModel):
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
     NLLB_MODEL: str = os.getenv("NLLB_MODEL", "facebook/nllb-200-distilled-600M")
     NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME", "cross-encoder/nli-deberta-v3-base")
-    CHANDRA_MODEL: str = os.getenv("CHANDRA_MODEL", "datalab-to/chandra-ocr-2")
+    DOCLING_MODEL: str = os.getenv("DOCLING_MODEL", "ds4sd/docling-models")
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID", "")
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
     USAGE_URL: str = get_service_url("USAGE")

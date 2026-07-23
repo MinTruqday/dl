@@ -8,101 +8,26 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-MODEL_ID = settings.CHANDRA_MODEL
-MAX_OUTPUT_TOKENS = 12384
+MODEL_ID = settings.DOCLING_MODEL
 
-class _ChandraModel:
+class _DoclingModel:
     def __init__(self):
-        from transformers import AutoProcessor, AutoModelForImageTextToText, BitsAndBytesConfig
-        import torch
-        from src.utils.huggingface import resolve_model_revision
+        from docling.document_converter import DocumentConverter, PdfFormatOption
+        from docling.datamodel.pipeline_options import PdfPipelineOptions
+        from docling.datamodel.base_models import InputFormat
 
-        quant_config = BitsAndBytesConfig(load_in_8bit=True)
-        revision = resolve_model_revision(MODEL_ID, settings.HF_TOKEN)
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = True
+        pipeline_options.do_table_structure = True
 
-        self.processor = AutoProcessor.from_pretrained(MODEL_ID, revision=revision)
-        self.model = AutoModelForImageTextToText.from_pretrained(
-            MODEL_ID,
-            revision=revision,
-            device_map="auto",
-            quantization_config=quant_config,
-            torch_dtype=torch.float16,
+        self.converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+            }
         )
-        self.model.eval()
 
-        import torch
-        self.device = next(self.model.parameters()).device
-
-    def generate(self, conversations: List[List[dict]]) -> List[str]:
-        import torch
-
-        inputs = self.processor.apply_chat_template(
-            conversations,
-            tokenize=True,
-            add_generation_prompt=True,
-            return_dict=True,
-            return_tensors="pt",
-            padding=True,
-        )
-        inputs = {k: v.to(self.device) for k, v in inputs.items()}
-
-        eos_token_id = self.model.generation_config.eos_token_id
-        im_end_id = self.processor.tokenizer.convert_tokens_to_ids("<|im_end|>")
-        if isinstance(eos_token_id, int):
-            eos_token_id = [eos_token_id]
-        if im_end_id is not None and im_end_id not in eos_token_id:
-            eos_token_id = eos_token_id + [im_end_id]
-
-        with torch.no_grad():
-            output_ids = self.model.generate(
-                **inputs,
-                max_new_tokens=MAX_OUTPUT_TOKENS,
-                eos_token_id=eos_token_id,
-                do_sample=False,
-            )
-
-        input_len = inputs["input_ids"].shape[1]
-        results = []
-        for ids in output_ids:
-            decoded = self.processor.tokenizer.decode(
-                ids[input_len:], skip_special_tokens=True
-            )
-            results.append(decoded)
-        return results
-
-def _build_conversation(image) -> List[dict]:
-    return [
-        {
-            "role": "user",
-            "content": [
-                {"type": "image", "image": image},
-                {
-                    "type": "text",
-                    "text": "Convert this document page to markdown. Preserve all structure including tables, headings, lists, and equations. Output only the markdown content.",
-                },
-            ],
-        }
-    ]
-
-def _pdf_to_images(file_path: Path) -> List:
-    import pypdfium2 as pdfium
-    from PIL import Image as PILImage
-
-    doc = pdfium.PdfDocument(str(file_path))
-    images = []
-    for i in range(len(doc)):
-        page = doc[i]
-        bitmap = page.render(scale=2.0)
-        pil_img = bitmap.to_pil()
-        images.append(pil_img)
-    doc.close()
-    return images
-
-def _image_file_to_pil(file_path: Path):
-    from PIL import Image as PILImage
-
-    img = PILImage.open(str(file_path)).convert("RGB")
-    return img
+    def convert(self, file_path: Path):
+        return self.converter.convert(str(file_path))
 
 def _extract_tables_from_html(html: str) -> List[Dict]:
     from bs4 import BeautifulSoup
@@ -122,29 +47,72 @@ class ConversionRag:
         self._minio_access = settings.MINIO_ACCESS_KEY
         self._minio_secret = settings.MINIO_SECRET_KEY
         self._minio_region = settings.MINIO_REGION
-        self._chandra: Optional[_ChandraModel] = None
+        self._docling: Optional[_DoclingModel] = None
         logger.info("Document analysis tool initialized successfully")
 
-    def _get_chandra(self) -> _ChandraModel:
-        if self._chandra is None:
-            logger.info("Loading Chandra OCR 2 model")
-            self._chandra = _ChandraModel()
-            logger.info("Chandra OCR 2 model loaded successfully")
-        return self._chandra
+    def _get_docling(self) -> _DoclingModel:
+        if self._docling is None:
+            logger.info("Loading Docling document converter engine")
+            self._docling = _DoclingModel()
+            logger.info("Docling document converter loaded successfully")
+        return self._docling
 
-    def _run_chandra_on_images(self, images: List) -> List[str]:
-        chandra = self._get_chandra()
-        conversations = [_build_conversation(img) for img in images]
-        
-        BATCH_SIZE = 4
-        results = []
-        for i in range(0, len(conversations), BATCH_SIZE):
-            batch = conversations[i:i+BATCH_SIZE]
-            logger.info(f"Processing RAG batch {i//BATCH_SIZE + 1}/{(len(conversations)-1)//BATCH_SIZE + 1} with size {len(batch)}")
-            batch_results = chandra.generate(batch)
-            results.extend(batch_results)
-            
-        return results
+    def _parse_file_with_docling(self, file_path: Path) -> Dict:
+        try:
+            docling = self._get_docling()
+            conv_res = docling.convert(file_path)
+            doc = conv_res.document
+            markdown = doc.export_to_markdown()
+
+            page_count = 1
+            if hasattr(doc, "pages") and doc.pages:
+                page_count = len(doc.pages)
+
+            chunks = []
+            try:
+                from docling.chunking import HybridChunker
+                chunker = HybridChunker()
+                doc_chunks = list(chunker.chunk(doc))
+                for c in doc_chunks:
+                    text_content = c.text.strip()
+                    if len(text_content) >= 30:
+                        chunks.append({"text": text_content, "chunk_type": "text"})
+            except Exception:
+                chunks = self._split_markdown_to_chunks(markdown)
+
+            if not chunks:
+                chunks = self._split_markdown_to_chunks(markdown)
+
+            return {
+                "markdown": markdown,
+                "chunks": chunks,
+                "chunk_count": len(chunks),
+                "page_count": page_count,
+                "docling_document": doc,
+            }
+        except Exception as err:
+            logger.warning(f"Docling conversion fallback triggered for {file_path.name}: {err}")
+            markdown = ""
+            try:
+                from markitdown import MarkItDown
+                md = MarkItDown()
+                res = md.convert(str(file_path))
+                markdown = res.text_content
+                logger.info("Successfully converted document using MarkItDown fallback")
+            except Exception as md_err:
+                logger.warning(f"MarkItDown fallback error for {file_path.name}: {md_err}")
+                try:
+                    markdown = file_path.read_text(encoding="utf-8", errors="ignore")
+                except Exception:
+                    markdown = ""
+
+            chunks = self._split_markdown_to_chunks(markdown)
+            return {
+                "markdown": markdown,
+                "chunks": chunks,
+                "chunk_count": len(chunks),
+                "page_count": 1,
+            }
 
     async def parse_document(self, file_url: str) -> Dict:
         file_bytes, file_ext = await self._download_from_minio(file_url)
@@ -155,30 +123,29 @@ class ConversionRag:
             tmp.write(file_bytes)
             tmp_path = Path(tmp.name)
 
-
         try:
             if file_ext in [".doclib", ".doclibx"]:
                 if len(file_bytes) < 60:
                     return {"error": "Tệp tin DocLib bị hỏng hoặc không hợp lệ"}
-                
+
                 import uuid
                 import base64
                 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
                 from motor.motor_asyncio import AsyncIOMotorClient
                 from src.core.infrastructure.configuration import settings
-                
+
                 file_id_bytes = file_bytes[:16]
                 nonce = file_bytes[48:60]
                 ciphertext = file_bytes[60:]
                 file_id = str(uuid.UUID(bytes=file_id_bytes))
-                
+
                 mongo_client = AsyncIOMotorClient(settings.MONGODB_URI)
                 db = mongo_client.doclib
                 license_doc = await db.drm_licenses.find_one({"file_id": file_id})
-                
+
                 if not license_doc or not license_doc.get("aes_key"):
                     return {"error": "Không tìm thấy giấy phép giải mã cho tài liệu này"}
-                    
+
                 aes_key = base64.b64decode(license_doc.get("aes_key"))
                 try:
                     aesgcm = AESGCM(aes_key)
@@ -186,7 +153,7 @@ class ConversionRag:
                     raw_text = decrypted_data.decode("utf-8")
                 except Exception:
                     return {"error": "Giải mã tài liệu thất bại"}
-                    
+
                 chunks = self._split_markdown_to_chunks(raw_text)
                 return {
                     "markdown": raw_text,
@@ -195,57 +162,15 @@ class ConversionRag:
                     "page_count": 1
                 }
 
-            image_exts = [".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"]
-
-            if file_ext in image_exts:
-                return await self._parse_image_with_chandra(tmp_path)
-            return await self._parse_pdf_with_chandra(tmp_path)
+            loop = asyncio.get_event_loop()
+            res = await loop.run_in_executor(None, self._parse_file_with_docling, tmp_path)
+            res.pop("docling_document", None)
+            return res
         except Exception as e:
             logger.exception("Document content analysis error")
             return {"error": f"Lỗi phân tích cú pháp tài liệu {e}"}
         finally:
             tmp_path.unlink(missing_ok=True)
-
-    async def _parse_pdf_with_chandra(self, file_path: Path) -> Dict:
-        loop = asyncio.get_event_loop()
-
-        def _convert():
-            images = _pdf_to_images(file_path)
-            if not images:
-                return [], 0
-            page_markdowns = self._run_chandra_on_images(images)
-            return page_markdowns, len(images)
-
-        page_markdowns, page_count = await loop.run_in_executor(None, _convert)
-
-        markdown = "\n\n---\n\n".join(page_markdowns)
-        chunks = self._split_markdown_to_chunks(markdown)
-
-        logger.info("Extracted text from document successfully")
-        return {
-            "markdown": markdown,
-            "chunks": chunks,
-            "chunk_count": len(chunks),
-            "page_count": page_count,
-        }
-
-    async def _parse_image_with_chandra(self, file_path: Path) -> Dict:
-        loop = asyncio.get_event_loop()
-
-        def _convert():
-            img = _image_file_to_pil(file_path)
-            results = self._run_chandra_on_images([img])
-            return results[0] if results else ""
-
-        markdown = await loop.run_in_executor(None, _convert)
-        chunks = self._split_markdown_to_chunks(markdown)
-
-        logger.info("Extracted text from image successfully")
-        return {
-            "markdown": markdown,
-            "chunks": chunks,
-            "chunk_count": len(chunks),
-        }
 
     async def extract_tables(self, file_url: str) -> List[Dict]:
         file_bytes, file_ext = await self._download_from_minio(file_url)
@@ -260,31 +185,26 @@ class ConversionRag:
             loop = asyncio.get_event_loop()
 
             def _extract():
-                image_exts = [".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"]
-                if file_ext in image_exts:
-                    images = [_image_file_to_pil(tmp_path)]
-                else:
-                    images = _pdf_to_images(tmp_path)
-                if not images:
-                    return []
-                chandra = self._get_chandra()
-                all_tables = []
-                for img in images:
-                    conversations = [[{
-                        "role": "user",
-                        "content": [
-                            {"type": "image", "image": img},
-                            {
-                                "type": "text",
-                                "text": "Extract all tables from this document page and output them as HTML <table> elements only. If there are no tables, output an empty string.",
-                            },
-                        ],
-                    }]]
-                    results = chandra.generate(conversations)
-                    if results and results[0].strip():
-                        tables = _extract_tables_from_html(results[0])
-                        all_tables.extend(tables)
-                return all_tables
+                parsed = self._parse_file_with_docling(tmp_path)
+                doc = parsed.get("docling_document")
+                extracted = []
+
+                if doc and hasattr(doc, "tables") and doc.tables:
+                    for i, tbl in enumerate(doc.tables):
+                        tbl_html = ""
+                        if hasattr(tbl, "export_to_html"):
+                            tbl_html = tbl.export_to_html()
+                        elif hasattr(tbl, "export_to_markdown"):
+                            tbl_html = tbl.export_to_markdown()
+
+                        if tbl_html.strip():
+                            extracted.append({"text": tbl_html, "chunk_type": "table", "index": i})
+
+                if not extracted:
+                    markdown = parsed.get("markdown", "")
+                    extracted = _extract_tables_from_html(markdown)
+
+                return extracted
 
             tables = await loop.run_in_executor(None, _extract)
             logger.info("Extracted data tables successfully")
@@ -382,7 +302,7 @@ class ConversionRag:
         if "." in file_url:
             file_ext = "." + file_url.rsplit(".", 1)[-1].lower()
 
-        doc_exts = [".pdf", ".docx", ".epub", ".pptx", ".xlsx"]
+        doc_exts = [".pdf", ".docx", ".epub", ".pptx", ".xlsx", ".html", ".adoc"]
         if file_ext in doc_exts:
             table_chunks = await self.extract_tables(file_url)
             if table_chunks:
@@ -418,7 +338,7 @@ class ConversionRag:
                 object_key = path_parts[1] if len(path_parts) == 2 else parsed.path.lstrip("/")
             else:
                 object_key = file_url
-                
+
             bucket = self._minio_private_bucket if object_key.startswith("system/") else self._minio_public_bucket
 
             if ".." in object_key:
@@ -436,11 +356,20 @@ class ConversionRag:
             data = obj["Body"].read()
 
             ext_map = {
-                ".epub": ".epub",
+                ".pdf": ".pdf",
                 ".docx": ".docx",
-                ".xlsx": ".xlsx",
+                ".doc": ".doc",
                 ".pptx": ".pptx",
+                ".ppt": ".ppt",
+                ".xlsx": ".xlsx",
+                ".xls": ".xls",
+                ".csv": ".csv",
+                ".epub": ".epub",
                 ".html": ".html",
+                ".htm": ".htm",
+                ".md": ".md",
+                ".txt": ".md",
+                ".adoc": ".adoc",
                 ".png": ".png",
                 ".jpg": ".jpg",
                 ".jpeg": ".jpeg",

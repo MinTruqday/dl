@@ -3,7 +3,11 @@ FROM python:3.11-slim
 ARG LLAMA_CPP_REV=305ba519ab61cdff8044922cba2347826a04453f
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    TORCHINDUCTOR_CACHE_DIR=/home/appuser/.cache/torchinductor \
+    TORCH_HOME=/home/appuser/.cache/torch \
+    HF_HOME=/home/appuser/.cache/huggingface \
+    TMPDIR=/home/appuser/.cache/tmp
 
 WORKDIR /app
 
@@ -12,6 +16,8 @@ COPY agentic_ai/requirements.txt .
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgomp1 \
+    libgl1 \
+    libglib2.0-0 \
     ffmpeg \
     git \
     ripgrep \
@@ -21,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash appuser
-RUN mkdir -p /home/appuser/.cache/huggingface && chown -R appuser:appuser /home/appuser/.cache
+RUN mkdir -p /home/appuser/.cache/huggingface /home/appuser/.cache/torchinductor /home/appuser/.cache/torch /home/appuser/.cache/tmp && chown -R appuser:appuser /home/appuser/.cache
 RUN mkdir -p /tmp/doclib_finetune/models /tmp/doclib_finetune/adapters /tmp/doclib_finetune/gguf && chown -R appuser:appuser /tmp/doclib_finetune
 
 RUN git init /app/llama.cpp && \

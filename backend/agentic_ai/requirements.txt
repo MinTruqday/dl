@@ -28,6 +28,8 @@ pymupdf==1.24.2
 pypdfium2>=4.30.0
 beautifulsoup4>=4.12.0
 markitdown[all]
+docling>=2.0.0
+docling-core
 nest-asyncio
 Pillow==10.3.0
 RestrictedPython==7.4
