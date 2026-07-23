@@ -42,9 +42,9 @@ async def read_document_section(
     token = config.get("configurable", {}).get("token")
     if not token: return "Authentication token is missing or invalid"
     headers = {"Authorization": token}
-    from src.tools.interface import _make_api_request, INTERNAL_API_URL
+    from src.tools.http_client import make_api_request, INTERNAL_API_URL
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        res = await make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
         if res.status_code != 200: return "Document detailed information extraction failed"
         doc_data = res.json().get("data", {})
     except Exception as e:
@@ -92,9 +92,9 @@ async def edit_document_text(
     token = config.get("configurable", {}).get("token")
     if not token: return "Authentication token is missing or invalid"
     headers = {"Authorization": token}
-    from src.tools.interface import _make_api_request, INTERNAL_API_URL
+    from src.tools.http_client import make_api_request, INTERNAL_API_URL
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        res = await make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
         if res.status_code != 200: return "Document detailed information extraction failed"
         doc_data = res.json().get("data", {})
     except Exception as e:
@@ -162,9 +162,9 @@ async def edit_document_block(
     token = config.get("configurable", {}).get("token")
     if not token: return "Authentication token is missing or invalid"
     headers = {"Authorization": token}
-    from src.tools.interface import _make_api_request, INTERNAL_API_URL
+    from src.tools.http_client import make_api_request, INTERNAL_API_URL
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        res = await make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
         if res.status_code != 200: return "Document detailed information extraction failed"
         doc_data = res.json().get("data", {})
     except Exception as e:
@@ -248,9 +248,9 @@ async def propose_document_edits(
     token = config.get("configurable", {}).get("token")
     if not token: return "Authentication token is missing or invalid"
     headers = {"Authorization": token}
-    from src.tools.interface import _make_api_request, INTERNAL_API_URL
+    from src.tools.http_client import make_api_request, INTERNAL_API_URL
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        res = await make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
         if res.status_code != 200: return "Document detailed information extraction failed"
         doc_data = res.json().get("data", {})
     except Exception as e:

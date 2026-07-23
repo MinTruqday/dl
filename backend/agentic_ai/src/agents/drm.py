@@ -2,7 +2,7 @@ from typing import Dict, Any
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from loguru import logger
-from src.tools.interface import llm
+from src.agents.planning import llm
 from src.tools.drm import check_network_anomaly, get_user_trust_profile, analyze_document_risk
 import asyncio
 from src.core.infrastructure.configuration import settings

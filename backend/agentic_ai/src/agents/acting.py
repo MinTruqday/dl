@@ -1,7 +1,8 @@
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from loguru import logger
 from src.core.registry import PromptType, registry
-from src.tools.interface import llm, tools
+from src.agents.planning import llm
+from src.tools import tools
 
 from src.core.infrastructure.configuration import settings
 
