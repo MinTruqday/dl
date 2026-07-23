@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
+from src.schemas.auth import Tier
 
 class WatermarkConfig(BaseModel):
     enabled: bool = Field(default=False, description="<critical_instructions>Whether visual watermark is enabled.</critical_instructions>")
@@ -30,6 +31,6 @@ class DRMContextRequest(BaseModel):
     user_id: str
     document_id: str
     client_ip: str
-    user_tier: Optional[str] = "BASIC"
+    user_tier: Optional[Tier] = Tier.BASIC
     document_type: Optional[str] = "standard"
     device_fingerprint: Optional[str] = None

@@ -1,10 +1,19 @@
+import datetime
+from enum import Enum
+import hashlib
+import secrets
 import time
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 
 from src.core.dependency import verify_internal_token
 from src.core.infrastructure.redis import redis
+
+class Tier(str, Enum):
+    BASIC = "BASIC"
+    PRO = "PRO"
+    PREMIUM = "PREMIUM"
 
 router = APIRouter(
     prefix="/bao-ve",
@@ -19,7 +28,7 @@ async def check_network_anomaly(user_id: str, client_ip: str) -> Dict[str, Any]:
     
     try:
         req_responses = await redis.pipeline_incr_expire(req_key, 60)
-        req_count = req_responses[0] 
+        req_count = req_responses[0]
         
         await redis.sadd(ip_key, client_ip)
         await redis.get_client().expire(ip_key, 60)
@@ -46,11 +55,13 @@ async def check_network_anomaly(user_id: str, client_ip: str) -> Dict[str, Any]:
         )
 
 @router.get("/ho-so-tin-cay")
-async def get_user_trust_profile(user_id: str, user_tier: str = "BASIC") -> Dict[str, Any]:
+async def get_user_trust_profile(user_id: str, user_tier: str = Tier.BASIC.value) -> Dict[str, Any]:
+    tier_upper = str(user_tier).upper()
+    score = 90 if tier_upper == Tier.PREMIUM.value else 75 if tier_upper == Tier.PRO.value else 50
     return {
         "user_id": user_id,
-        "user_tier": user_tier,
-        "trust_score": 90 if user_tier == "PRO" else 50,
+        "user_tier": tier_upper,
+        "trust_score": score,
     }
 
 @router.get("/rui-ro-tai-lieu")
@@ -59,6 +70,53 @@ async def analyze_document_risk(document_id: str, document_type: str = "standard
     return {
         "document_id": document_id,
         "document_type": document_type,
-        "is_sensitive": is_sensitive,
-        "risk_level": "HIGH" if is_sensitive else "LOW"
+        "risk_level": "HIGH" if is_sensitive else "LOW",
+    }
+
+@router.get("/thuy-an-dong")
+async def generate_dynamic_watermark(user_id: str, client_ip: str, email: str = "") -> Dict[str, Any]:
+    timestamp_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    display_text = f"CONFIDENTIAL | {email or user_id} | {client_ip} | {timestamp_str}"
+    watermark_token = hashlib.sha256(f"{user_id}:{client_ip}:{timestamp_str}".encode()).hexdigest()[:16]
+
+    return {
+        "enabled": True,
+        "text": display_text,
+        "watermark_token": watermark_token,
+        "opacity": 0.15,
+        "font_size": 16,
+        "color": "#888888"
+    }
+
+@router.post("/cap-khoa-aes")
+async def issue_temporary_aes_key(document_id: str, user_id: str, ttl_seconds: int = 300) -> Dict[str, Any]:
+    key_id = f"aes_key:{document_id}:{user_id}:{secrets.token_hex(4)}"
+    raw_key = secrets.token_hex(32)
+
+    try:
+        await redis.get_client().setex(key_id, ttl_seconds, raw_key)
+        status = "issued"
+    except Exception as e:
+        logger.warning(f"DRM Redis key issuance fallback: {e}")
+        status = "issued_fallback"
+
+    return {
+        "key_id": key_id,
+        "key_hex": raw_key,
+        "ttl_seconds": ttl_seconds,
+        "status": status
+    }
+
+@router.get("/xac-minh-van-tay")
+async def verify_device_fingerprint(user_id: str, client_ip: str, device_fingerprint: Optional[str] = None) -> Dict[str, Any]:
+    if not device_fingerprint:
+        return {"matched": True, "risk_multiplier": 1.0, "reason": "No fingerprint enforced"}
+
+    expected_hash = hashlib.sha256(f"{user_id}:{client_ip}".encode()).hexdigest()[:16]
+    is_match = device_fingerprint == expected_hash
+
+    return {
+        "matched": is_match,
+        "risk_multiplier": 1.0 if is_match else 2.5,
+        "reason": "Fingerprint verified" if is_match else "Mismatch hardware signature detected"
     }

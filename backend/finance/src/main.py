@@ -8,6 +8,7 @@ from loguru import logger
 
 from src.api.deposit import router as deposit_router
 from src.api.monetization import router as monetization_router
+from src.api.transfer import router as transfer_router
 from src.api.wallet import router as wallet_router
 from src.api.withdrawal import router as withdrawal_router
 from src.core.infrastructure.configuration import settings
@@ -50,6 +51,7 @@ app.include_router(wallet_router)
 app.include_router(deposit_router)
 app.include_router(withdrawal_router)
 app.include_router(monetization_router)
+app.include_router(transfer_router)
 
 
 @app.get("/health")

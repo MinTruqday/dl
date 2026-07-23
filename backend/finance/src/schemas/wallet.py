@@ -13,8 +13,7 @@ class TransactionType(str, Enum):
     WITHDRAW = "withdraw"
     TIP = "tip"
     REFUND = "refund"
-
-
+    TRANSFER = "transfer"
 
 class Transaction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
@@ -33,8 +32,6 @@ class PurchaseRecord(BaseModel):
     price_paid: int
     purchased_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
-
 class DocumentPricingRequest(BaseModel):
     price_dl: int = 0
     is_drm_protected: bool = True
@@ -42,3 +39,12 @@ class DocumentPricingRequest(BaseModel):
 class TopupRequest(BaseModel):
     amount: int = Field(gt=0)
     method: str = "payos"
+
+class TransferRequest(BaseModel):
+    recipient_identifier: str = Field(min_length=1, description="Recipient Email, User ID, Slug, or Account Number")
+    amount: int = Field(gt=0, description="Amount of DL credits to transfer")
+    note: Optional[str] = Field(default="", description="Transfer message / note")
+    idempotency_key: Optional[str] = Field(default=None, description="Unique key to prevent duplicate transfer execution")
+
+class RecipientVerifyRequest(BaseModel):
+    recipient_identifier: str = Field(min_length=1, description="Recipient Email, User ID, Slug, or Account Number")

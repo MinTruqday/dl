@@ -10,6 +10,7 @@ from src.tools.billing import (
     get_transaction_history,
     redeem_voucher,
     get_revenue_report,
+    transfer_user_funds,
 )
 from src.tools.document import (
     get_my_documents,
@@ -28,6 +29,7 @@ tools = [
     agent_summarize_long_document,
     get_user_balance,
     get_transaction_history,
+    transfer_user_funds,
     redeem_voucher,
     get_revenue_report,
     get_my_documents,

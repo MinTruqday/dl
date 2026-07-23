@@ -33,7 +33,8 @@ async def acquire_license(req: Acquisition, request: Request, current_user: Curr
         document = await LicenseRepository.get_document(license_doc["document_id"])
         if not document:
             raise HTTPException(status_code=404, detail="Tài liệu liên kết với giấy phép không còn tồn tại")
-        is_privileged = current_user.role.value == "admin"
+        from src.core.dependency import Role
+        is_privileged = getattr(current_user.role, "value", current_user.role) == Role.ADMIN.value
         if document.get("is_premium") and document.get("creator_id") != user_id and not is_privileged:
             purchase = await LicenseRepository.get_purchase(user_id, license_doc["document_id"])
             if not purchase:

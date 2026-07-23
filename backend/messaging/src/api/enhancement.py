@@ -61,7 +61,8 @@ async def get_quick_replies(
     current_user=Depends(get_current_user),
     bearer_token: str = Depends(oauth2_scheme),
 ):
-    if current_user.role.value != "admin" and current_user.ai_tier not in ["PRO", "PREMIUM"]:
+    from src.core.dependency import Role, Tier
+    if getattr(current_user.role, "value", current_user.role) != Role.ADMIN.value and current_user.ai_tier not in [Tier.PRO.value, Tier.PREMIUM.value]:
         return APIResponse(
             data={"replies": []},
             message="Tính năng Gợi ý trả lời thông minh chỉ dành cho người dùng gói Chuyên sâu hoặc Toàn năng",

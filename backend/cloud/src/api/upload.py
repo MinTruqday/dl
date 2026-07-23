@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse
 
 from src.api.dependency import get_db, require_role
-from src.core.dependency import CurrentUser, Role
+from src.core.dependency import CurrentUser, Role, Tier
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
@@ -112,7 +112,7 @@ async def upload_asset(file: UploadFile = File(...), current_user: CurrentUser =
 @router.post("/tin-nhan", response_model=APIResponse[Any], status_code=201)
 async def upload_chat_attachment(file: UploadFile = File(...), current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])), db=Depends(get_db)) -> Any:
     size = await file_size(file)
-    is_temporary = current_user.ai_tier.upper() == "BASIC" and current_user.role != Role.ADMIN
+    is_temporary = current_user.ai_tier.upper() == Tier.BASIC.value and current_user.role != Role.ADMIN
     if not is_temporary:
         await enforce_quota(current_user.id, size)
     result = await UploadService.upload_document(file, owner_id=current_user.id, is_message_attachment=True, is_temporary=is_temporary)
@@ -136,7 +136,7 @@ async def upload_chat_attachment(file: UploadFile = File(...), current_user: Cur
 async def get_presigned_url_for_upload(req: PresignedUrlRequest, current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])), db=Depends(get_db)) -> Any:
     if req.is_system and current_user.role not in {Role.AUTHOR, Role.ADMIN}:
         raise HTTPException(status_code=403, detail="Không có quyền tải tệp hệ thống")
-    is_temporary = req.is_message_attachment and current_user.ai_tier.upper() == "BASIC" and current_user.role != Role.ADMIN
+    is_temporary = req.is_message_attachment and current_user.ai_tier.upper() == Tier.BASIC.value and current_user.role != Role.ADMIN
     if not req.is_system and not is_temporary:
         await enforce_quota(current_user.id, req.size)
     result = await UploadService.get_presigned_upload_url(req.filename, req.content_type, current_user.id, req.is_system, req.is_message_attachment, is_temporary)
@@ -181,7 +181,7 @@ async def confirm_upload(req: ConfirmUploadRequest, current_user: CurrentUser = 
     result = {"url": req.file_path, "filename": req.filename, "size": req.size, "content_type": req.content_type}
     if req.is_system:
         return APIResponse(data=result, message="Xác thực tải lên hệ thống hoàn tất", status=201)
-    is_temporary = req.is_message_attachment and current_user.ai_tier.upper() == "BASIC" and current_user.role != Role.ADMIN
+    is_temporary = req.is_message_attachment and current_user.ai_tier.upper() == Tier.BASIC.value and current_user.role != Role.ADMIN
     if is_temporary:
         await database.mongodb[settings.CLOUD_DB_NAME].temp_chat_files.insert_one({
             "owner_id": current_user.id,

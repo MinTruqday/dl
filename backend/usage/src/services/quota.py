@@ -62,7 +62,9 @@ class QuotaService:
     @staticmethod
     @log_logic_execution
     async def update_role_quota(tier: str, limits_dict: dict):
-        tier = tier.upper() if tier.lower() != "admin" else "admin"
+        from src.schemas.quota import Role, Tier
+        tier_upper = tier.upper()
+        tier = tier_upper if tier_upper != Role.ADMIN.value.upper() else Role.ADMIN.value
         global_cfg = await QuotaService.get_global_config_from_db()
         if tier not in global_cfg:
             raise HTTPException(status_code=404, detail="Không tìm thấy nhóm hạn mức yêu cầu")
@@ -78,10 +80,11 @@ class QuotaService:
     ) -> QuotaLimit:
         global_cfg = await QuotaService.get_global_config_from_db()
 
+        from src.schemas.quota import Role, Tier
         normalized_role = str(role).lower()
         normalized_tier = str(ai_tier).upper()
-        target_tier = "admin" if normalized_role == "admin" else normalized_tier
-        tier_cfg = global_cfg.get(target_tier, global_cfg.get("BASIC", {}))
+        target_tier = Role.ADMIN.value if normalized_role == Role.ADMIN.value else normalized_tier
+        tier_cfg = global_cfg.get(target_tier, global_cfg.get(Tier.BASIC.value, {}))
 
         return QuotaLimit(
             daily_requests=tier_cfg.get("daily_requests", 0),
@@ -200,13 +203,13 @@ class QuotaService:
     @staticmethod
     @log_logic_execution
     async def check_upload_quota(user_id: str, role: str, ai_tier: str, item_type: str):
-        if role == "admin":
+        if role == Role.ADMIN.value:
             return True
         
-        if item_type == "folder" and ai_tier != "PREMIUM":
+        if item_type == "folder" and ai_tier != Tier.PREMIUM.value:
             raise HTTPException(status_code=403, detail="Yêu cầu đặc quyền Toàn năng để tải lên cấu trúc thư mục")
             
-        limits = {"BASIC": 1, "PRO": 5, "PREMIUM": math.inf}
+        limits = {Tier.BASIC.value: 1, Tier.PRO.value: 5, Tier.PREMIUM.value: math.inf}
         daily_limit = limits.get(ai_tier, 1)
         
         if daily_limit == math.inf:

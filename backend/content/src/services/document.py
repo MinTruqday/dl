@@ -45,7 +45,8 @@ class DocumentService:
     @staticmethod
     def _is_admin(current_user) -> bool:
         role = getattr(current_user, "role", "") if current_user else ""
-        return str(getattr(role, "value", role)).lower() == "admin"
+        from src.core.dependency import Role
+        return str(getattr(role, "value", role)).lower() == Role.ADMIN.value
 
     @staticmethod
     async def _has_purchase(user_id: str | None, document_id: str) -> bool:

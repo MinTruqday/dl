@@ -129,10 +129,11 @@ class WatermarkService:
             logger.warning("Failed to evaluate DRM policy via Agentic AI, falling back to LEVEL_2")
             enable_visual, enable_micro, enable_aes = True, True, True
 
+        from src.core.dependency import Role
         if (
             document.get("is_premium")
             and document.get("creator_id") != user_id
-            and (not hasattr(current_user, "role") or current_user.role.value != "admin")
+            and (not hasattr(current_user, "role") or getattr(current_user.role, "value", current_user.role) != Role.ADMIN.value)
         ):
             purchase = await LicenseRepository.get_purchase(user_id, str(document["_id"]))
             if not purchase:

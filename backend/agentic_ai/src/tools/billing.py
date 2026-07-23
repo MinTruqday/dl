@@ -141,3 +141,44 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     except Exception as e:
         logger.exception("Failed to load revenue report")
         raise Exception(f"An unexpected error occurred {e}")
+
+@tool
+async def transfer_user_funds(recipient_identifier: str, amount: int, note: str = "", config: RunnableConfig = None) -> str:
+    """
+    <module_purpose>
+    Transfer DL credits from current user's wallet to another user (Peer-to-Peer transfer).
+    </module_purpose>
+    <contract>
+    WHEN TO USE THIS TOOL:
+    - Use this when the user requests to send, transfer, or give money/credits to another user.
+    CRITICAL: Requires recipient_identifier (email, user_id, or slug) and amount > 0.
+    </contract>
+    """
+    token = config.get("configurable", {}).get("token") if config else None
+    if not token:
+        return "Authentication required to perform P2P fund transfer"
+    headers = {"Authorization": token, "Content-Type": "application/json"}
+    try:
+        response = await make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/vi-tien/chuyen-tien",
+            json_data={
+                "recipient_identifier": recipient_identifier,
+                "amount": amount,
+                "note": note
+            },
+            headers=headers,
+            timeout=30.0,
+        )
+        if response.status_code == 200:
+            data = response.json().get("data", {})
+            recipient_name = data.get("recipient", {}).get("name", recipient_identifier)
+            remaining = data.get("remaining_balance", 0)
+            return f"Successfully transferred {amount} DL to {recipient_name}. Remaining balance: {remaining} DL"
+        else:
+            detail = response.json().get("detail") or "Fund transfer failed"
+            return f"Transfer failed: {detail}"
+    except Exception as e:
+        logger.exception("Failed to execute P2P fund transfer")
+        return f"Transfer failed due to system error: {e}"
+

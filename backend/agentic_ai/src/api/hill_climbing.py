@@ -29,8 +29,10 @@ async def get_improvements(status: Optional[str] = None, limit: int = 50):
         ),
     }
 
+from src.schemas.auth import Role
+
 @router.post("/de-xuat/{improvement_id}/phe-duyet")
-async def approve_improvement(improvement_id: str, approver: str = "admin"):
+async def approve_improvement(improvement_id: str, approver: str = Role.ADMIN.value):
     success = await hill_climbing_loop.approve_improvement(improvement_id, approver=approver)
     if not success:
         raise HTTPException(

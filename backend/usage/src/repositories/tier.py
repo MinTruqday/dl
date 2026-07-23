@@ -15,9 +15,10 @@ class TierRepository:
             "is_premium": is_premium,
             "updated_at": now,
         }
+        from src.schemas.tier import Tier
         if expires_at is not None:
             values["expires_at"] = expires_at
-        elif ai_tier == "BASIC":
+        elif ai_tier == Tier.BASIC.value:
             values["expires_at"] = None
         return await mongo.get_db()["subscriptions"].update_one(
             {"user_id": user_id},

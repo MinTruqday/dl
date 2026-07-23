@@ -85,10 +85,11 @@ class PurchaseService:
     @staticmethod
     @log_logic_execution
     async def buy_ai_tier(tier: str, current_user) -> dict:
+        from src.core.dependency import Tier
         tier = tier.upper()
-        if tier not in {"PRO", "PREMIUM"}:
+        if tier not in {Tier.PRO.value, Tier.PREMIUM.value}:
             raise HTTPException(status_code=400, detail="Gói thành viên không hợp lệ")
-        price = 750 if tier == "PRO" else 2500
+        price = 750 if tier == Tier.PRO.value else 2500
         finance_db, content_db, humanity_db, usage_db = PurchaseService._databases()
         user_id = str(current_user.id)
         current_subscription = await usage_db.subscriptions.find_one({"user_id": user_id})

@@ -20,9 +20,10 @@ from src.core.dependency import AuthenticatedUser, Depends, Header, HTTPExceptio
 from src.core.dependency import get_current_user
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
+    from src.core.dependency import Role, Tier
     if (
-        current_user.ai_tier.value not in ["PREMIUM"]
-        and current_user.role.value != "admin"
+        getattr(current_user.ai_tier, "value", current_user.ai_tier) != Tier.PREMIUM.value
+        and getattr(current_user.role, "value", current_user.role) != Role.ADMIN.value
     ):
         raise HTTPException(
             status_code=403, detail="Tính năng AI nâng cao chỉ dành cho tài khoản đã nâng cấp gói trả phí"

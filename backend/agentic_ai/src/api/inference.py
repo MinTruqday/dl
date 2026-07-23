@@ -224,7 +224,7 @@ async def grammar_check(
     try:
         if (
             current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != "PREMIUM"
+            and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
             raise HTTPException(
                 status_code=403,
@@ -284,7 +284,7 @@ async def check_plagiarism(
     try:
         if (
             current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != "PREMIUM"
+            and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
             logger.warning(f"Plagiarism detection access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
@@ -400,7 +400,7 @@ async def get_synonyms(
     try:
         if (
             current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != "PREMIUM"
+            and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
             logger.warning(f"Synonym retrieval access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
@@ -431,7 +431,7 @@ async def suggest_citations(
     try:
         if (
             current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != "PREMIUM"
+            and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
             logger.warning(f"Citation suggestion access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
@@ -477,7 +477,7 @@ async def transform_tone(
     try:
         if (
             current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != "PREMIUM"
+            and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
             logger.warning(f"Tone transformation access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(
@@ -511,7 +511,7 @@ async def peer_review(
     try:
         if (
             current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != "PREMIUM"
+            and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
             logger.warning(f"Content review access denied for user_id={current_user.id} insufficient permissions")
             raise HTTPException(

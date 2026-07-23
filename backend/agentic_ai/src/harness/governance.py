@@ -3,17 +3,19 @@ from typing import Literal, Optional
 
 from loguru import logger
 
+from src.schemas.auth import Role
+
 UserRole = Literal["guest", "reader", "author", "admin"]
 
 ROLE_POLICIES: dict[str, dict] = {
-    "guest": {
+    Role.GUEST.value: {
         "max_tool_calls_per_session": 3,
         "max_tokens_per_session": 2000,
         "allowed_tools": {"EngineAgent", "Knowledge"},
         "blocked_tools": {"InterpreterAgent", "Action", "Reasoning"},
         "max_plan_steps": 2,
     },
-    "reader": {
+    Role.READER.value: {
         "max_tool_calls_per_session": 12,
         "max_tokens_per_session": 8000,
         "allowed_tools": {
@@ -26,7 +28,7 @@ ROLE_POLICIES: dict[str, dict] = {
         "blocked_tools": set(),
         "max_plan_steps": 6,
     },
-    "author": {
+    Role.AUTHOR.value: {
         "max_tool_calls_per_session": 25,
         "max_tokens_per_session": 20000,
         "allowed_tools": {
@@ -39,7 +41,7 @@ ROLE_POLICIES: dict[str, dict] = {
         "blocked_tools": set(),
         "max_plan_steps": 10,
     },
-    "admin": {
+    Role.ADMIN.value: {
         "max_tool_calls_per_session": -1,
         "max_tokens_per_session": -1,
         "allowed_tools": None,

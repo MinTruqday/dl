@@ -41,7 +41,8 @@ class CopyrightService:
         user_id = str(current_user.id)
         is_owner = document.get("creator_id") == user_id
         is_coauthor = user_id in document.get("coauthors", [])
-        if current_user.role.value != "admin" and not is_owner and not is_coauthor:
+        from src.core.dependency import Role
+        if getattr(current_user.role, "value", current_user.role) != Role.ADMIN.value and not is_owner and not is_coauthor:
             raise HTTPException(status_code=403, detail="Bạn không có quyền cấu hình DRM cho tài liệu này")
         await mongo.update_one("document_drm_settings", 
             {"document_id": document_id},

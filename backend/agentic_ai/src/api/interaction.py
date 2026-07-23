@@ -142,10 +142,11 @@ async def _check_upload_quota(req: ChatRequest):
     try:
         from src.core.infrastructure.database import database
         user = await database.mongodb[settings.AGENTIC_AI_DB_NAME].users.find_one({"_id": req.user_id})
-        ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
-        is_admin = user.get("role") == "admin" if user else False
+        from src.schemas.auth import Role, Tier
+        ai_tier = user.get("ai_tier", Tier.BASIC.value) if user else Tier.BASIC.value
+        is_admin = user.get("role") == Role.ADMIN.value if user else False
         
-        if is_admin or ai_tier != "BASIC":
+        if is_admin or ai_tier != Tier.BASIC.value:
             return True, ""
 
         async with httpx.AsyncClient(timeout=10.0) as c:
@@ -177,10 +178,10 @@ async def _consume_upload_quota(req: ChatRequest):
     try:
         from src.core.infrastructure.database import database
         user = await database.mongodb[settings.AGENTIC_AI_DB_NAME].users.find_one({"_id": req.user_id})
-        ai_tier = user.get("ai_tier", "BASIC") if user else "BASIC"
-        is_admin = user.get("role") == "admin" if user else False
+        ai_tier = user.get("ai_tier", Tier.BASIC.value) if user else Tier.BASIC.value
+        is_admin = user.get("role") == Role.ADMIN.value if user else False
         
-        if is_admin or ai_tier != "BASIC":
+        if is_admin or ai_tier != Tier.BASIC.value:
             return
 
         async with httpx.AsyncClient(timeout=10.0) as c:
