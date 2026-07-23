@@ -1,13 +1,30 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
+
+class WatermarkConfig(BaseModel):
+    enabled: bool = Field(default=False, description="<critical_instructions>Whether visual watermark is enabled.</critical_instructions>")
+    text: str = Field(default="", description="<input_context>Contextual text for watermark (User Email, IP, Session ID, Timestamp).</input_context>")
+    opacity: float = Field(default=0.15, description="<constraints>Opacity float between 0.05 and 0.5.</constraints>")
+    font_size: int = Field(default=16, description="<constraints>Font size in pixels.</constraints>")
+    color: str = Field(default="#888888", description="<constraints>Color hex code.</constraints>")
+
+class AntiExfiltrationFlags(BaseModel):
+    block_print: bool = Field(default=False, description="<critical_instructions>Block printing and Ctrl+P.</critical_instructions>")
+    block_copy: bool = Field(default=False, description="<critical_instructions>Block text copying and selection.</critical_instructions>")
+    block_screenshot: bool = Field(default=False, description="<critical_instructions>Trigger screen blur on focus loss.</critical_instructions>")
+
+class AESKeySession(BaseModel):
+    key_id: str = Field(description="<critical_instructions>Unique key identifier stored in Redis.</critical_instructions>")
+    key_hex: str = Field(description="<critical_instructions>AES-256-GCM hex key string.</critical_instructions>")
+    ttl_seconds: int = Field(default=300, description="<constraints>Time-To-Live in seconds for temporary key.</constraints>")
 
 class DRMPolicyOutput(BaseModel):
-    decision: str = Field(description="<critical_instructions>MUST be exactly one of: LEVEL_0 (No DRM), LEVEL_1 (Basic tracking), LEVEL_2 (Watermarking & tracking), LEVEL_3 (Encryption & strict tracking), or BLOCKED (Access denied). Determine this based on the trust profile and document risk.</critical_instructions>")
-    reasoning: str = Field(description="<internal_thought>A short, one-sentence technical justification for this decision. (e.g., 'User has high trust score and IP is stable, granting LEVEL_0').</internal_thought>")
-    enable_visual_watermark: bool = Field(description="<metis_constraint>Set to true if visual deterrence (e.g., an overlay across the document) is required due to elevated risk.</metis_constraint>")
-    enable_micro_dots: bool = Field(description="<metis_constraint>Set to true if steganography forensic tracking is needed to trace leaks back to the specific user session.</metis_constraint>")
-    enable_aes_encryption: bool = Field(description="<metis_constraint>Set to true to wrap the document in a secure .doclib AES-GCM container to prevent offline extraction.</metis_constraint>")
-    hardware_binding_strict: bool = Field(description="<critical_instructions>Set to true to lock the decryption key strictly to the client's hardware signature (MAC address, CPU ID). Use ONLY for LEVEL_3.</critical_instructions>")
+    decision: str = Field(description="<critical_instructions>MUST be one of: LEVEL_0, LEVEL_1, LEVEL_2, LEVEL_3, BLOCKED.</critical_instructions>")
+    reasoning: str = Field(description="<internal_thought>Technical justification for decision.</internal_thought>")
+    watermark: WatermarkConfig = Field(default_factory=WatermarkConfig, description="<critical_instructions>Watermark configuration.</critical_instructions>")
+    anti_exfiltration: AntiExfiltrationFlags = Field(default_factory=AntiExfiltrationFlags, description="<critical_instructions>Anti-exfiltration flags.</critical_instructions>")
+    enable_aes_encryption: bool = Field(default=False, description="<metis_constraint>Enable AES-256-GCM container.</metis_constraint>")
+    hardware_binding_strict: bool = Field(default=False, description="<critical_instructions>Lock decryption key to device fingerprint.</critical_instructions>")
 
 class DRMContextRequest(BaseModel):
     user_id: str
@@ -15,3 +32,4 @@ class DRMContextRequest(BaseModel):
     client_ip: str
     user_tier: Optional[str] = "BASIC"
     document_type: Optional[str] = "standard"
+    device_fingerprint: Optional[str] = None

@@ -41,8 +41,9 @@ class PlanAgent:
             import redis as redis_lib
             self._redis = redis_lib.from_url(settings.REDIS_URI, decode_responses=True)
             self._redis.ping()
-        except Exception:
-            logger.exception("Planner Redis connection failed")
+        except Exception as e:
+            self._redis = None
+            logger.warning(f"Planner Redis connection unavailable, caching disabled: {e}")
 
     @with_retry(max_retries=3, base_wait=2, max_wait=10)
     async def _invoke_llm(self, messages):
