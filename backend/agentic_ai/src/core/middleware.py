@@ -1,5 +1,5 @@
 import contextvars
-import uuid
+from uuid6 import uuid7
 
 from fastapi import Request
 
@@ -10,7 +10,7 @@ def trace_id_filter(record):
     return True
 
 async def add_trace_id_header(request: Request, call_next):
-    trace_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    trace_id = request.headers.get("X-Request-ID") or str(uuid7())
     trace_id_ctx_var.set(trace_id)
     response = await call_next(request)
     response.headers["X-Request-ID"] = trace_id

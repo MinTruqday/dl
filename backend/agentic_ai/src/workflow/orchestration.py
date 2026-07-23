@@ -26,7 +26,7 @@ async def supervisor_node(state: ActingState):
         start_time = time.time()
 
     if time.time() - start_time > 45:
-        logger.exception("AI task execution exceeded hard timeout")
+        logger.warning("AI task execution exceeded hard timeout")
         return {
             "next_nodes": ["trimmer"],
             "error": "Hệ thống đã tự động dừng tiến trình do vượt quá thời gian xử lý cho phép",
@@ -184,14 +184,14 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                         replan_count += 1
                         logger.warning("Self-reflection failed, initiating replan sequence")
                         try:
-                            from src.memory.mem0_client import mem0_manager
+                            from src.memory.memo import memo_manager
                             import asyncio
                             user_id = req_data.get("user_id", "guest")
                             mem_data = [
                                 {"role": "system", "content": "I attempted a task but failed. I must learn from this mistake for future reasoning."},
                                 {"role": "user", "content": f"Task: {current_task}\nFailed Output: {res}\nFeedback: {eval_res.feedback}\nRevised Task for next time: {eval_res.revised_task}"}
                             ]
-                            asyncio.create_task(mem0_manager.add_memory(mem_data, user_id))
+                            asyncio.create_task(memo_manager.add_memory(mem_data, user_id))
                         except Exception as e:
                             logger.exception("Failed to inject procedural memory")
                         current_task = eval_res.revised_task or current_task

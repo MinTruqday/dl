@@ -85,9 +85,8 @@ class ContextHarness:
         if not user_id:
             return ""
         try:
-            from src.memory.management import mem0_manager
-
-            prefs = await mem0_manager.get_user_preferences(user_id)
+            from src.memory.memo import memo_manager
+            prefs = await memo_manager.get_memories(user_id)
             return prefs or ""
         except Exception as e:
             logger.exception("Error loading personal configuration")

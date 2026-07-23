@@ -145,14 +145,14 @@ class ProactiveMemoryAgent:
                 await self._bank.update_status(session_id, args.get("status", ""))
 
             elif name == "memory_save_knowledge":
-                from src.memory.mem0_client import mem0_manager
+                from src.memory.memo import memo_manager
                 await self._bank.save_knowledge(
                     session_id,
                     entry_id=args.get("id", ""),
                     content=args.get("content", ""),
                     category=args.get("category", "task_fact"),
                 )
-                await mem0_manager.add_memory(session_id, args.get("content", ""), metadata={"category": args.get("category", "task_fact")})
+                await memo_manager.add([{"role": "user", "content": args.get("content", "")}], user_id=session_id, category=args.get("category", "task_fact"))
 
             elif name == "memory_save_procedural":
                 await self._bank.save_procedural(

@@ -1,4 +1,4 @@
-import uuid
+from uuid6 import uuid7
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
@@ -33,7 +33,7 @@ async def receive_webhook(request: Request, body: WebhookPayload = Body()):
         event_type = event_type_map.get(event_type_str, EventType.WEBHOOK)
 
         event = AgentEvent(
-            event_id=str(uuid.uuid4()),
+            event_id=str(uuid7()),
             event_type=event_type,
             payload=body.payload,
             source=body.source,
@@ -61,7 +61,7 @@ async def document_uploaded_webhook(
     request: Request = None,
 ):
     event = AgentEvent(
-        event_id=str(uuid.uuid4()),
+        event_id=str(uuid7()),
         event_type=EventType.DOCUMENT_UPLOADED,
         payload={"document_id": document_id, "user_id": user_id},
         source="content_service",
@@ -93,7 +93,7 @@ async def create_schedule(req: CreateScheduleRequest):
     event_type = event_type_map.get(req.event_type, EventType.SYSTEM_HEARTBEAT)
 
     schedule = CronSchedule(
-        schedule_id=str(uuid.uuid4()),
+        schedule_id=str(uuid7()),
         name=req.name,
         cron_expression=f"*/{req.interval_seconds // 60 or 1} * * * *",
         interval_seconds=req.interval_seconds,
@@ -193,7 +193,7 @@ async def manual_trigger(event_type: str, payload: Dict[str, Any] = Body(default
     }
     et = event_type_map.get(event_type, EventType.WEBHOOK)
     event = AgentEvent(
-        event_id=str(uuid.uuid4()),
+        event_id=str(uuid7()),
         event_type=et,
         payload=payload,
         source="manual_trigger",

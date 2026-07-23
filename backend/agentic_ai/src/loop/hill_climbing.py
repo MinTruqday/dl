@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-import uuid
+from uuid6 import uuid7
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Literal, Optional
@@ -134,7 +134,7 @@ class IssueDetector:
 
         if stats.get("failure_rate", 0) > self.FAILURE_RATE_THRESHOLD:
             issues.append(DetectedIssue(
-                issue_id=str(uuid.uuid4()),
+                issue_id=str(uuid7()),
                 category="prompt_quality",
                 title="High Agent Failure Rate",
                 description=(
@@ -151,7 +151,7 @@ class IssueDetector:
         for tool_name, failure_count in stats.get("tool_failures", {}).items():
             if failure_count >= self.TOOL_FAILURE_THRESHOLD:
                 issues.append(DetectedIssue(
-                    issue_id=str(uuid.uuid4()),
+                    issue_id=str(uuid7()),
                     category="tool_failure",
                     title=f"Recurring Tool Failure: {tool_name}",
                     description=(
@@ -165,7 +165,7 @@ class IssueDetector:
 
         if stats.get("security_violations", 0) >= self.SECURITY_VIOLATION_THRESHOLD:
             issues.append(DetectedIssue(
-                issue_id=str(uuid.uuid4()),
+                issue_id=str(uuid7()),
                 category="routing_error",
                 title="Security Violation Spike",
                 description=(
@@ -179,7 +179,7 @@ class IssueDetector:
 
         if stats.get("avg_duration_ms", 0) > self.SLOW_DURATION_MS_THRESHOLD:
             issues.append(DetectedIssue(
-                issue_id=str(uuid.uuid4()),
+                issue_id=str(uuid7()),
                 category="timeout",
                 title="High Average Response Time",
                 description=(
@@ -216,7 +216,7 @@ class HarnessImprover:
     ) -> Optional[ImprovementSuggestion]:
         if issue.category == "prompt_quality":
             return ImprovementSuggestion(
-                improvement_id=str(uuid.uuid4()),
+                improvement_id=str(uuid7()),
                 issue_id=issue.issue_id,
                 improvement_type="prompt_tweak",
                 title=f"Improve prompt for: {issue.title}",
@@ -241,7 +241,7 @@ class HarnessImprover:
         elif issue.category == "tool_failure":
             tool_name = issue.affected_component.split("/")[-1]
             return ImprovementSuggestion(
-                improvement_id=str(uuid.uuid4()),
+                improvement_id=str(uuid7()),
                 issue_id=issue.issue_id,
                 improvement_type="tool_config",
                 title=f"Fix tool configuration: {tool_name}",
@@ -263,7 +263,7 @@ class HarnessImprover:
 
         elif issue.category == "timeout":
             return ImprovementSuggestion(
-                improvement_id=str(uuid.uuid4()),
+                improvement_id=str(uuid7()),
                 issue_id=issue.issue_id,
                 improvement_type="grader_config",
                 title="Reduce plan complexity threshold",
@@ -281,7 +281,7 @@ class HarnessImprover:
 
         elif issue.category == "routing_error":
             return ImprovementSuggestion(
-                improvement_id=str(uuid.uuid4()),
+                improvement_id=str(uuid7()),
                 issue_id=issue.issue_id,
                 improvement_type="prompt_tweak",
                 title="Strengthen security prompt",
@@ -304,7 +304,7 @@ class PromptVersionControl:
         self._versions: Dict[str, List[Dict]] = {}
 
     def snapshot(self, prompt_type: str, content: str) -> str:
-        version_id = str(uuid.uuid4())[:8]
+        version_id = str(uuid7())[:8]
         if prompt_type not in self._versions:
             self._versions[prompt_type] = []
         self._versions[prompt_type].append({

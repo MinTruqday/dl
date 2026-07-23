@@ -183,8 +183,8 @@ async def shutdown_event():
     except Exception:
         pass
     try:
-        from src.memory.mem0 import mem0_manager
-        await mem0_manager.close()
+        from src.memory.memo import memo_manager
+        await memo_manager.close()
     except Exception:
         pass
     try:

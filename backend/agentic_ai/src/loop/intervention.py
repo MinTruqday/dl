@@ -1,6 +1,6 @@
 import asyncio
 import json
-import uuid
+from uuid6 import uuid7
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
@@ -75,7 +75,7 @@ class InterventionHarness:
         risk_level: RiskLevel = "medium",
         ttl_seconds: Optional[int] = None,
     ) -> InterventionRequest:
-        intervention_id = str(uuid.uuid4())
+        intervention_id = str(uuid7())
         request = InterventionRequest(
             intervention_id=intervention_id,
             session_id=session_id,

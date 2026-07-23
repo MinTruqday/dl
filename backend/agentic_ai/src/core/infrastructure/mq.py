@@ -1,6 +1,6 @@
 import asyncio
 import json
-import uuid
+from uuid6 import uuid7
 import aio_pika
 from loguru import logger
 from typing import Any, Dict, Optional
@@ -65,7 +65,7 @@ class RabbitMQClient:
             message = await queue.get(timeout=timeout)
             if message:
                 payload = json.loads(message.body.decode())
-                ack_id = str(uuid.uuid4())
+                ack_id = str(uuid7())
                 
                 self.pending_acks[ack_id] = message
                 

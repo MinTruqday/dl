@@ -1301,15 +1301,15 @@ async def memory_user_edits(action: str, content: str, config: RunnableConfig, m
     if not user_id:
         return "Lỗi hệ thống: Cần có định danh người dùng để quản lý trí nhớ"
     try:
-        from src.memory.mem0 import mem0_manager
+        from src.memory.memo import memo_manager
         if action == "add":
-            await mem0_manager.add_memory([{"role": "user", "content": content}], user_id=user_id)
+            await memo_manager.add_memory([{"role": "user", "content": content}], user_id=user_id)
             return "Hệ thống đã ghi nhớ thông tin thành công"
         elif action == "update" and memory_id:
-            await mem0_manager.update_memory(memory_id=memory_id, new_content=content)
+            await memo_manager.update_memory(memory_id=memory_id, new_content=content)
             return "Hệ thống đã cập nhật trí nhớ thành công"
         elif action == "delete" and memory_id:
-            await mem0_manager.delete_memory(memory_id=memory_id)
+            await memo_manager.delete_memory(memory_id=memory_id)
             return "Hệ thống đã xóa trí nhớ thành công"
         else:
             return "Yêu cầu không hợp lệ hoặc thiếu mã định danh trí nhớ"

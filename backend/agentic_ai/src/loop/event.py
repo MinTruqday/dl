@@ -1,6 +1,6 @@
 import asyncio
 import json
-import uuid
+from uuid6 import uuid7
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
@@ -9,7 +9,7 @@ from typing import Any, Callable, Coroutine, Dict, List, Optional
 
 from loguru import logger
 
-from src.memory.mem0 import mem0_manager
+from src.memory.memo import memo_manager
 from src.repositories.chat import ChatRepository
 
 
@@ -134,7 +134,7 @@ class CronScheduler:
                 schedule.run_count += 1
 
                 event = AgentEvent(
-                    event_id=str(uuid.uuid4()),
+                    event_id=str(uuid7()),
                     event_type=schedule.event_type,
                     payload={**schedule.payload_template, "schedule_id": schedule.schedule_id,
                              "schedule_name": schedule.name, "run_count": schedule.run_count},
@@ -219,7 +219,7 @@ class EventDrivenLoop:
                 if result:
                     results.append(result)
                     update = SystemUpdate(
-                        update_id=str(uuid.uuid4()),
+                        update_id=str(uuid7()),
                         event_id=event.event_id,
                         update_type=handler.event_type.value,
                         description=f"Handler '{handler.description}' processed event successfully",
@@ -229,7 +229,7 @@ class EventDrivenLoop:
             except Exception as e:
                 logger.exception(f"EventDrivenLoop handler '{handler.description}' failed with {e}")
                 update = SystemUpdate(
-                    update_id=str(uuid.uuid4()),
+                    update_id=str(uuid7()),
                     event_id=event.event_id,
                     update_type=handler.event_type.value,
                     description=f"Handler '{handler.description}' failed: {str(e)[:200]}",
@@ -378,7 +378,7 @@ def _is_valuable_message(content: str) -> bool:
 
 
 async def _handle_nightly_memory_extraction(event: AgentEvent) -> Optional[str]:
-    logger.info("Started nightly memory extraction process into Mem0")
+    logger.info("Started nightly memory extraction process into Memo")
     
     cutoff_time = datetime.now(timezone.utc) - timedelta(days=1)
     sessions = await ChatRepository.find_ai_sessions(
@@ -409,7 +409,7 @@ async def _handle_nightly_memory_extraction(event: AgentEvent) -> Optional[str]:
                 )
 
         if len(formatted_messages) > 1:
-            await mem0_manager.add_memory(formatted_messages, user_id)
+            await memo_manager.add_memory(formatted_messages, user_id)
             processed_count += 1
 
     return f"Extracted and stored memories for {processed_count} sessions"
@@ -418,7 +418,7 @@ async def _handle_nightly_memory_extraction(event: AgentEvent) -> Optional[str]:
 event_driven_loop.register_handler(EventHandler(
     event_type=EventType.CRON,
     handler=_handle_nightly_memory_extraction,
-    description="Extract and compress conversation memory to Mem0 nightly",
+    description="Extract and compress conversation memory to Memo nightly",
 ))
 
 _nightly_memory_schedule = CronSchedule(

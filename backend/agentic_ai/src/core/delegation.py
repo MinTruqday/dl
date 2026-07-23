@@ -1,4 +1,4 @@
-import uuid
+from uuid6 import uuid7
 import asyncio
 import json
 import requests
@@ -10,7 +10,7 @@ from src.core.infrastructure.redis import redis
 class ToolDelegator:
     @staticmethod
     async def delegate(action: str, payload: dict, timeout: float = 30.0) -> str:
-        task_id = str(uuid.uuid4())
+        task_id = str(uuid7())
         channel = f"tool_result:{task_id}"
         
         pubsub = redis.get_client().pubsub()

@@ -654,10 +654,10 @@ Evaluate the conversation and output a structured JSON array of memory operation
 
 <example_group title="Extracting Procedural Knowledge">
 <example>
-<user_input>Task: Run syntax check. Failed Output: SyntaxError in mem0_client.py. Revised Task: Add missing colon at line 45.</user_input>
+<user_input>Task: Run syntax check. Failed Output: SyntaxError in memo.py. Revised Task: Add missing colon at line 45.</user_input>
 <good_response>
 {
-    "add": [{"content": "When running syntax check on mem0_client.py, ensure line 45 has the correct colon syntax to avoid SyntaxError.", "category": "procedure"}],
+    "add": [{"content": "When running syntax check on memo.py, ensure line 45 has the correct colon syntax to avoid SyntaxError.", "category": "procedure"}],
     "update": [],
     "delete": []
 }
