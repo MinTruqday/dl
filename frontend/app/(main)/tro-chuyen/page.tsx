@@ -65,6 +65,56 @@ function PayOSEmbedded({ checkoutUrl }: { checkoutUrl: string }) {
   );
 }
 
+function RecommendedDocsCards({ payloadStr }: { payloadStr: string }) {
+  try {
+    const data = JSON.parse(payloadStr);
+    const recs = data.recommendations || [];
+    if (!Array.isArray(recs) || recs.length === 0) return null;
+
+    return (
+      <div className="my-4 p-4 rounded-[18px] bg-[#F5F5F7] border border-[#E8E8ED]">
+        <div className="flex items-center gap-2 font-semibold text-[15px] text-[#1D1D1F] mb-3">
+          <FileText className="w-4 h-4 text-[#0071E3]" />
+          <span>Tài liệu gợi ý dành cho bạn:</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {recs.map((item: any, idx: number) => (
+            <div
+              key={idx}
+              className="p-3.5 rounded-[14px] bg-white border border-[#E8E8ED] hover:border-[#0071E3] transition-all flex flex-col justify-between"
+            >
+              <div>
+                <h4 className="font-semibold text-[14px] text-[#1D1D1F] line-clamp-2 mb-1">
+                  {item.title}
+                </h4>
+                <p className="text-[12px] text-[#6E6E73] line-clamp-2 mb-2">
+                  {item.summary}
+                </p>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-[#F5F5F7] mt-auto">
+                <span className="text-[12px] font-medium text-[#0071E3]">
+                  {item.price_dl > 0 ? `${item.price_dl} DL` : "Miễn phí"}
+                </span>
+                <a
+                  href={item.url}
+                  className="px-2.5 py-1 rounded-full bg-[#0071E3] text-white text-[12px] font-medium hover:bg-[#0055C6] transition-colors flex items-center gap-1"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>Xem ngay</span>
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  } catch (e) {
+    return null;
+  }
+}
+
 function QuotaIndicator() {
   const [usage, setUsage] = useState<QuotaUsage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -960,38 +1010,50 @@ export default function TroChuyenPage() {
                               );
                             }
 
+                            let payloadStr = "";
+                            let displaySegment = segment;
+                            if (segment.includes("<!--RECOMMENDED_DOCS_PAYLOAD:")) {
+                              const parts = segment.split("<!--RECOMMENDED_DOCS_PAYLOAD:");
+                              displaySegment = parts[0];
+                              const endParts = parts[1]?.split("-->");
+                              if (endParts) payloadStr = endParts[0];
+                            }
+
                             return (
-                              <ReactMarkdown
-                                key={sIdx}
-                                remarkPlugins={[remarkGfm, remarkMath]}
-                                rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                                className="prose prose-sm max-w-none prose-zinc prose-p:text-[15px] prose-p:text-[#1D1D1F] prose-p:leading-relaxed prose-code:bg-[#F5F5F7] prose-code:text-[#FF3B30] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-[6px] prose-pre:bg-[#1D1D1F] prose-pre:rounded-[14px]"
-                                components={{
-                                  a: ({ href, children, ...props }) => {
-                                    if (
-                                      href &&
-                                      (href.includes("payos.vn") ||
-                                        href.includes("pay.payos.vn"))
-                                    ) {
-                                      return <PayOSEmbedded checkoutUrl={href} />;
-                                    }
-                                    return (
-                                      <a
-                                        href={href}
-                                        className="text-[#0071E3] font-medium hover:underline"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        {...props}
-                                      >
-                                        {children}
-                                      </a>
-                                    );
-                                  },
-                                }}
-                              >
-                                {segment}
-                              </ReactMarkdown>
+                              <div key={sIdx}>
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm, remarkMath]}
+                                  rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                  className="prose prose-sm max-w-none prose-zinc prose-p:text-[15px] prose-p:text-[#1D1D1F] prose-p:leading-relaxed prose-code:bg-[#F5F5F7] prose-code:text-[#FF3B30] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-[6px] prose-pre:bg-[#1D1D1F] prose-pre:rounded-[14px]"
+                                  components={{
+                                    a: ({ href, children, ...props }) => {
+                                      if (
+                                        href &&
+                                        (href.includes("payos.vn") ||
+                                          href.includes("pay.payos.vn"))
+                                      ) {
+                                        return <PayOSEmbedded checkoutUrl={href} />;
+                                      }
+                                      return (
+                                        <a
+                                          href={href}
+                                          className="text-[#0071E3] font-medium hover:underline"
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </a>
+                                      );
+                                    },
+                                  }}
+                                >
+                                  {displaySegment}
+                                </ReactMarkdown>
+                                {payloadStr && <RecommendedDocsCards payloadStr={payloadStr} />}
+                              </div>
                             );
+
                           })}
 
                           {!cleanText && segments.length === 0 && (

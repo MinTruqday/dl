@@ -215,3 +215,74 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
     if not text:
         return "Document content is empty or could not be loaded"
     return text
+
+@tool
+async def recommend_documents(query: str, config: RunnableConfig) -> str:
+    """
+    <module_purpose>
+    Search and recommend the top 3 most relevant documents for a project request or query.
+    </module_purpose>
+    <contract>
+    WHEN TO USE THIS TOOL:
+    - Use this when the user asks for document recommendations, reference materials, or templates for building a project.
+    CRITICAL: Returns a structured summary of the top 3 matching documents including title, link, price, and match description.
+    </contract>
+    """
+    import json
+
+    token = config.get("configurable", {}).get("token")
+    headers = {"Authorization": token} if token else {}
+    try:
+        response = await make_api_request(
+            "GET",
+            f"{INTERNAL_API_URL}/tai-lieu/tim-kiem?q={query}&limit=3",
+            headers=headers,
+            timeout=30.0,
+        )
+        docs = []
+        if response.status_code == 200:
+            data = response.json().get("data", [])
+            if isinstance(data, list):
+                docs = data[:3]
+            elif isinstance(data, dict) and "items" in data:
+                docs = data["items"][:3]
+
+        if not docs:
+            pub_res = await make_api_request(
+                "GET",
+                f"{INTERNAL_API_URL}/tai-lieu/cong-khai?limit=3",
+                headers=headers,
+                timeout=30.0,
+            )
+            if pub_res.status_code == 200:
+                docs = pub_res.json().get("data", [])[:3]
+
+        if not docs:
+            return "Không tìm thấy tài liệu phù hợp trong hệ thống"
+
+        recommendations = []
+        for doc in docs:
+            doc_id = str(doc.get("_id") or doc.get("id"))
+            recommendations.append({
+                "id": doc_id,
+                "title": doc.get("title", "Tài liệu kỹ thuật"),
+                "slug": doc.get("slug", ""),
+                "price_dl": doc.get("price_dl", 0),
+                "summary": doc.get("summary") or doc.get("description") or "Tài liệu hướng dẫn và cấu trúc dự án chuẩn",
+                "url": f"/tai-lieu/xem-truoc/{doc_id}",
+            })
+
+        result_payload = {
+            "status": "success",
+            "query": query,
+            "recommendations": recommendations,
+        }
+        output_text = f"Đã tìm thấy 3 tài liệu phù hợp nhất cho yêu cầu '{query}':\n"
+        for idx, rec in enumerate(recommendations, 1):
+            output_text += f"{idx}. {rec['title']} (Giá: {rec['price_dl']} DL) - Xem tại: {rec['url']}\n"
+        output_text += f"\n<!--RECOMMENDED_DOCS_PAYLOAD:{json.dumps(result_payload, ensure_ascii=False)}-->"
+        return output_text
+    except Exception as e:
+        logger.exception("Failed to execute document recommendation tool")
+        return "Đã xảy ra lỗi khi tìm kiếm tài liệu gợi ý"
+

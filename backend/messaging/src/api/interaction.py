@@ -66,3 +66,19 @@ async def toggle_mute(other_user_id: str, current_user=Depends(get_current_user)
     return APIResponse(
         data=result, message="Cập nhật cấu hình thông báo cuộc trò chuyện hoàn tất"
     )
+
+@router.post("/{other_user_id}/danh-dau-chua-doc", response_model=APIResponse[Any])
+async def mark_unread(other_user_id: str, current_user=Depends(get_current_user)):
+    result = await InteractionService.mark_unread(other_user_id, current_user)
+    return APIResponse(
+        data=result, message="Đánh dấu chưa đọc cuộc trò chuyện hoàn tất"
+    )
+
+@router.post("/{other_user_id}/tu-xoa", response_model=APIResponse[Any])
+async def set_disappearing_timer(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
+    timer_seconds = req.get("timer_seconds", 0)
+    result = await InteractionService.set_disappearing_timer(other_user_id, timer_seconds, current_user)
+    return APIResponse(
+        data=result, message="Cấu hình thời gian tự xóa tin nhắn hoàn tất"
+    )
+

@@ -816,7 +816,7 @@ export default function MessagesPage() {
   const handleSetAlias = async () => {
     if (!selectedConv) return;
     const userId = selectedConv.other_user_id;
-    const updated = { ...aliases, [userId]: aliasInput };
+    const updated: Record<string, string> = { ...aliases, [userId]: aliasInput };
     if (!aliasInput.trim()) delete updated[userId];
     setAliases(updated);
     localStorage.setItem("user_aliases", JSON.stringify(updated));
@@ -1084,7 +1084,7 @@ export default function MessagesPage() {
             selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
             !isImage ? uploadData.data.url : undefined,
             !isImage ? imageFiles[i].name : undefined,
-            effectiveParentId,
+            effectiveParentId || undefined,
           );
           const msg = res.data || res;
           if (effectiveParentId) {
@@ -1105,7 +1105,7 @@ export default function MessagesPage() {
           selfDestructSeconds > 0 ? selfDestructSeconds : undefined,
           undefined,
           undefined,
-          effectiveParentId,
+          effectiveParentId || undefined,
         );
         const msg = res.data || res;
         if (effectiveParentId) {

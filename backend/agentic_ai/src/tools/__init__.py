@@ -19,6 +19,7 @@ from src.tools.document import (
     restore_document,
     get_document_analytics,
     read_document,
+    recommend_documents,
 )
 from src.tools.web_scraper import playwright_scrape
 from src.workflow.reduction import agent_summarize_long_document
@@ -34,6 +35,7 @@ tools = [
     get_revenue_report,
     get_my_documents,
     read_document,
+    recommend_documents,
     get_trash_documents,
     delete_document,
     restore_document,
@@ -44,3 +46,4 @@ tools = [
     propose_document_edits,
     playwright_scrape,
 ]
+

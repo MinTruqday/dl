@@ -544,3 +544,32 @@ export const getQuickRepliesAPI = async (otherUserId: string) => {
     throw new Error(data.message || "Lỗi tạo gợi ý trả lời thông minh");
   return data;
 };
+
+export const markUnreadAPI = async (otherUserId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/danh-dau-chua-doc`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi đánh dấu chưa đọc cuộc trò chuyện");
+  return data;
+};
+
+export const setDisappearingTimerAPI = async (otherUserId: string, timerSeconds: number) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/tu-xoa`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ timer_seconds: timerSeconds }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cấu hình tự xóa tin nhắn");
+  return data;
+};
+

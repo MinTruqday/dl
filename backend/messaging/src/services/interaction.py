@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timezone
 
 from fastapi import HTTPException
 
@@ -116,3 +117,46 @@ class InteractionService:
             {"$addToSet": {"muted_by": str(current_user.id)}},
         )
         return {"is_muted": True}
+
+    @staticmethod
+    @log_logic_execution
+    async def mark_unread(other_user_id: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        participant_key = (
+            other_user_id
+            if other_user_id.startswith("group_")
+            else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
+        )
+        await ConversationRepository.update_one(
+            {"_id": participant_key},
+            {
+                "$set": {
+                    "participants": sorted([user_id, other_user_id])
+                    if not other_user_id.startswith("group_")
+                    else [],
+                    "updated_at": datetime.now(timezone.utc),
+                },
+                "$inc": {f"unread_count.{user_id}": 1},
+            },
+            upsert=True,
+        )
+        return {"status": "unread", "other_user_id": other_user_id}
+
+    @staticmethod
+    @log_logic_execution
+    async def set_disappearing_timer(other_user_id: str, timer_seconds: int, current_user) -> dict:
+        user_id = str(current_user.id)
+        if other_user_id.startswith("group_"):
+            await ThreadService.ensure_group_access(other_user_id, user_id)
+        participant_key = (
+            other_user_id
+            if other_user_id.startswith("group_")
+            else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
+        )
+        await ConversationRepository.update_one(
+            {"_id": participant_key},
+            {"$set": {"self_destruct_seconds": timer_seconds}},
+            upsert=True,
+        )
+        return {"timer_seconds": timer_seconds, "other_user_id": other_user_id}
+
