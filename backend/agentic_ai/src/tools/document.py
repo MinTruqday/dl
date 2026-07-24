@@ -229,33 +229,34 @@ async def recommend_documents(query: str, config: RunnableConfig) -> str:
     </contract>
     """
     import json
+    import os
+    from motor.motor_asyncio import AsyncIOMotorClient
+    from src.core.infrastructure.database import database
 
-    token = config.get("configurable", {}).get("token")
-    headers = {"Authorization": token} if token else {}
     try:
-        response = await make_api_request(
-            "GET",
-            f"{INTERNAL_API_URL}/tai-lieu/tim-kiem?q={query}&limit=3",
-            headers=headers,
-            timeout=30.0,
-        )
-        docs = []
-        if response.status_code == 200:
-            data = response.json().get("data", [])
-            if isinstance(data, list):
-                docs = data[:3]
-            elif isinstance(data, dict) and "items" in data:
-                docs = data["items"][:3]
+        db_name = os.getenv("CONTENT_DB_NAME", "doclib_content")
+        if database.mongodb:
+            db = database.mongodb[db_name]
+        else:
+            mongo_uri = os.getenv("MONGODB_URI", "mongodb://doclib_mongodb:27017")
+            client = AsyncIOMotorClient(mongo_uri)
+            db = client[db_name]
+
+        search_filter = {
+            "status": "published",
+            "is_deleted": {"$ne": True},
+        }
+        if query and query.strip():
+            search_filter["$or"] = [
+                {"title": {"$regex": query, "$options": "i"}},
+                {"description": {"$regex": query, "$options": "i"}},
+                {"tags": {"$regex": query, "$options": "i"}},
+            ]
+
+        docs = await db["documents"].find(search_filter).limit(3).to_list(length=3)
 
         if not docs:
-            pub_res = await make_api_request(
-                "GET",
-                f"{INTERNAL_API_URL}/tai-lieu/cong-khai?limit=3",
-                headers=headers,
-                timeout=30.0,
-            )
-            if pub_res.status_code == 200:
-                docs = pub_res.json().get("data", [])[:3]
+            docs = await db["documents"].find({"status": "published", "is_deleted": {"$ne": True}}).limit(3).to_list(length=3)
 
         if not docs:
             return "Không tìm thấy tài liệu phù hợp trong hệ thống"
@@ -285,4 +286,3 @@ async def recommend_documents(query: str, config: RunnableConfig) -> str:
     except Exception as e:
         logger.exception("Failed to execute document recommendation tool")
         return "Đã xảy ra lỗi khi tìm kiếm tài liệu gợi ý"
-

@@ -1,5 +1,10 @@
 "use client";
-import { streamAiChatAPI } from "@/features/agentic_ai/services/interaction.service";
+import {
+  streamAiChatAPI,
+  getUserInstructionsAPI,
+  saveUserInstructionsAPI,
+  clearUserInstructionsAPI,
+} from "@/features/agentic_ai/services/interaction.service";
 import { uploadChatAttachmentAPI } from "@/features/cloud/services/upload.service";
 import {
   getToken,
@@ -224,6 +229,156 @@ function InteractiveMindmapCanvas({ payloadStr }: { payloadStr: string }) {
   }
 }
 
+function CustomInstructionsModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [instructions, setInstructions] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true);
+      getUserInstructionsAPI()
+        .then((res) => {
+          setInstructions(res.data?.instructions || "");
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, [isOpen]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveUserInstructionsAPI(instructions);
+      showToast("Cập nhật chỉ dẫn cá nhân thành công", "success");
+      onClose();
+    } catch (e: any) {
+      showToast(e.message || "Lỗi lưu chỉ dẫn cá nhân", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleClear = async () => {
+    try {
+      await clearUserInstructionsAPI();
+      setInstructions("");
+      showToast("Đã xóa chỉ dẫn cá nhân", "success");
+    } catch (e: any) {
+      showToast(e.message || "Lỗi xóa chỉ dẫn", "error");
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const presets = [
+    "Thêm phần tóm tắt TL;DR ở đầu mỗi phản hồi",
+    "Trình bày danh sách bằng định dạng gạch đầu dòng",
+    "Trả lời bằng tiếng Việt ngắn gọn, đi thẳng vào trọng tâm",
+    "Ưu tiên kèm theo mã nguồn Python/TypeScript khi giải thích",
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg bg-white rounded-[24px] border border-[#E8E8ED] shadow-xl p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-[#E8E8ED] pb-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Edit2 className="w-5 h-5 text-[#0071E3]" />
+            <h3 className="text-[17px] font-semibold text-[#1D1D1F]">
+              Tùy chỉnh chỉ dẫn cá nhân cho AI
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-[#F5F5F7] text-[#86868B] hover:text-[#1D1D1F]"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <p className="text-[13px] text-[#6E6E73] mb-4">
+          Nhập các chỉ dẫn cá nhân để AI tự động ghi nhớ và áp dụng thống nhất
+          xuyên suốt tất cả các phiên trò chuyện của bạn.
+        </p>
+
+        {loading ? (
+          <div className="py-8 flex justify-center items-center">
+            <Loader2 className="w-6 h-6 text-[#0071E3] animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="mb-4">
+              <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">
+                Chỉ dẫn mẫu (Nhấn để áp dụng nhanh):
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {presets.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() =>
+                      setInstructions((prev) =>
+                        prev ? `${prev}\n- ${preset}` : `- ${preset}`
+                      )
+                    }
+                    className="text-[12px] px-2.5 py-1 rounded-full bg-[#F5F5F7] text-[#1D1D1F] border border-[#E8E8ED] hover:border-[#0071E3] transition-all text-left"
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <textarea
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              placeholder="Ví dụ: Luôn bắt đầu phản hồi bằng tóm tắt TL;DR ngắn gọn..."
+              rows={5}
+              className="w-full p-3.5 rounded-[12px] border border-[#D2D2D7] focus:border-[#0071E3] outline-none text-[14px] text-[#1D1D1F] resize-none mb-4"
+            />
+
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleClear}
+                type="button"
+                className="text-[13px] text-[#FF3B30] font-medium hover:underline"
+              >
+                Xóa tất cả
+              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={onClose}
+                  type="button"
+                  className="px-4 py-2 rounded-full border border-[#E8E8ED] text-[#1D1D1F] text-[13px] font-medium hover:bg-[#F5F5F7]"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  type="button"
+                  className="px-5 py-2 rounded-full bg-[#0071E3] text-white text-[13px] font-medium hover:bg-[#0055C6] disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Lưu chỉ dẫn</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function QuotaIndicator() {
   const [usage, setUsage] = useState<QuotaUsage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -387,6 +542,7 @@ export default function TroChuyenPage() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [editingTitleValue, setEditingTitleValue] = useState("");
+  const [showInstructionsModal, setShowInstructionsModal] = useState(false);
 
   const { showToast } = useToast();
   const searchParams = useSearchParams();
@@ -805,6 +961,13 @@ export default function TroChuyenPage() {
               Lịch sử
             </h2>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowInstructionsModal(true)}
+                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                title="Tùy chỉnh chỉ dẫn cá nhân"
+              >
+                <Edit2 className="w-4 h-4 text-[#0071E3]" />
+              </button>
               <button
                 onClick={() => (window.location.href = "/nang-cap")}
                 className="px-3 py-1.5 text-[13px] font-medium bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] transition-colors shadow-sm"
@@ -1445,6 +1608,10 @@ export default function TroChuyenPage() {
           </div>
         </main>
       </div>
+      <CustomInstructionsModal
+        isOpen={showInstructionsModal}
+        onClose={() => setShowInstructionsModal(false)}
+      />
     </div>
   );
 }

@@ -183,3 +183,34 @@ export async function multiDocSynthesisAPI(
   if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Multi-document synthesis inference failed");
   return data;
 }
+
+export async function getUserInstructionsAPI() {
+  const res = await fetch(`${API_URL}/tro-chuyen/tuy-chon-ca-nhan`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải chỉ dẫn cá nhân");
+  return data;
+}
+
+export async function saveUserInstructionsAPI(instructions: string) {
+  const res = await fetch(`${API_URL}/tro-chuyen/tuy-chon-ca-nhan`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ instructions }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể lưu chỉ dẫn cá nhân");
+  return data;
+}
+
+export async function clearUserInstructionsAPI() {
+  const res = await fetch(`${API_URL}/tro-chuyen/tuy-chon-ca-nhan`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể xóa chỉ dẫn cá nhân");
+  return data;
+}
+

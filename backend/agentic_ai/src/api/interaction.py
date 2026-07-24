@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 
 import httpx
 from src.core.logging_route import LoggingRoute
@@ -7,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from src.agents.routing import semantic_router
 from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 from src.core.registry import PromptType, registry
 from src.harness.agentops import agentops
 from src.harness.context import context
@@ -454,3 +456,53 @@ async def stream_endpoint(
         yield "event: done\ndata: [DONE]\n\n"
 
     return StreamingResponse(response_generator(), media_type="text/event-stream")
+
+
+@router.get("/tuy-chon-ca-nhan")
+async def get_user_instructions(
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    user_id = str(current_user.id)
+    db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
+    doc = await db.user_instructions.find_one({"_id": user_id})
+    instructions = doc.get("instructions", "") if doc else ""
+    return {"status": "success", "data": {"instructions": instructions}}
+
+
+@router.post("/tuy-chon-ca-nhan")
+async def save_user_instructions(
+    req: dict,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    user_id = str(current_user.id)
+    instructions = req.get("instructions", "").strip()
+    db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
+    await db.user_instructions.update_one(
+        {"_id": user_id},
+        {
+            "$set": {
+                "instructions": instructions,
+                "updated_at": datetime.now(timezone.utc),
+            }
+        },
+        upsert=True,
+    )
+    return {
+        "status": "success",
+        "message": "Cập nhật chỉ dẫn cá nhân thành công",
+        "data": {"instructions": instructions},
+    }
+
+
+@router.delete("/tuy-chon-ca-nhan")
+async def clear_user_instructions(
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    user_id = str(current_user.id)
+    db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
+    await db.user_instructions.delete_one({"_id": user_id})
+    return {
+        "status": "success",
+        "message": "Xóa toàn bộ chỉ dẫn cá nhân thành công",
+    }
+
