@@ -22,6 +22,7 @@ from src.tools.document import (
     recommend_documents,
 )
 from src.tools.web_scraper import playwright_scrape
+from src.tools.mindmap import generate_mindmap
 from src.workflow.reduction import agent_summarize_long_document
 
 tools = [
@@ -36,6 +37,7 @@ tools = [
     get_my_documents,
     read_document,
     recommend_documents,
+    generate_mindmap,
     get_trash_documents,
     delete_document,
     restore_document,
@@ -46,4 +48,5 @@ tools = [
     propose_document_edits,
     playwright_scrape,
 ]
+
 

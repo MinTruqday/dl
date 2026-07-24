@@ -115,6 +115,115 @@ function RecommendedDocsCards({ payloadStr }: { payloadStr: string }) {
   }
 }
 
+function InteractiveMindmapCanvas({ payloadStr }: { payloadStr: string }) {
+  const [collapsedNodes, setCollapsedNodes] = useState<Record<string, boolean>>({});
+  const [zoom, setZoom] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  try {
+    const data = JSON.parse(payloadStr);
+    const tree = data.tree || {};
+    const root = tree.root;
+    if (!root) return null;
+
+    const toggleNode = (id: string) => {
+      setCollapsedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    return (
+      <div
+        className={`my-4 p-5 rounded-[18px] bg-[#F5F5F7] border border-[#E8E8ED] transition-all ${
+          isFullscreen ? "fixed inset-4 z-50 overflow-auto bg-white shadow-2xl" : ""
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-[#E8E8ED] pb-3 mb-4">
+          <div className="flex items-center gap-2 font-semibold text-[15px] text-[#1D1D1F]">
+            <Activity className="w-4.5 h-4.5 text-[#0071E3]" />
+            <span>{tree.title || "Sơ đồ tư duy"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setZoom((z) => Math.max(0.7, z - 0.1))}
+              className="px-2.5 py-1 rounded-full bg-white border border-[#E8E8ED] text-[12px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7]"
+            >
+              -
+            </button>
+            <span className="text-[12px] font-medium text-[#6E6E73]">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom((z) => Math.min(1.5, z + 0.1))}
+              className="px-2.5 py-1 rounded-full bg-white border border-[#E8E8ED] text-[12px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7]"
+            >
+              +
+            </button>
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-1.5 rounded-full bg-white border border-[#E8E8ED] text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <div
+          className="overflow-x-auto py-4 transition-transform duration-200 origin-top"
+          style={{ transform: `scale(${zoom})` }}
+        >
+          <div className="flex flex-col items-center">
+            <div className="px-6 py-3 rounded-full bg-[#0071E3] text-white font-bold text-[16px] shadow-md mb-8 cursor-pointer hover:bg-[#0055C6] transition-colors">
+              {root.name}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+              {(root.children || []).map((branch: any) => {
+                const isCollapsed = collapsedNodes[branch.id];
+                return (
+                  <div
+                    key={branch.id}
+                    className="flex flex-col rounded-[16px] bg-white border border-[#E8E8ED] p-4 shadow-sm"
+                  >
+                    <div
+                      onClick={() => toggleNode(branch.id)}
+                      className="flex items-center justify-between font-semibold text-[14px] text-[#1D1D1F] cursor-pointer border-b border-[#F5F5F7] pb-2 mb-3"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#0071E3]" />
+                        {branch.name}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-[#86868B] transition-transform ${
+                          isCollapsed ? "-rotate-90" : ""
+                        }`}
+                      />
+                    </div>
+
+                    {!isCollapsed && (
+                      <ul className="space-y-2">
+                        {(branch.children || []).map((sub: any) => (
+                          <li
+                            key={sub.id}
+                            className="text-[13px] text-[#6E6E73] flex items-center gap-2 pl-2 py-1 rounded-[8px] hover:bg-[#F5F5F7] transition-colors"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#AEAEB2]" />
+                            <span>{sub.name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  } catch (e) {
+    return null;
+  }
+}
+
 function QuotaIndicator() {
   const [usage, setUsage] = useState<QuotaUsage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1010,13 +1119,20 @@ export default function TroChuyenPage() {
                               );
                             }
 
-                            let payloadStr = "";
+                            let docPayloadStr = "";
+                            let mindmapPayloadStr = "";
                             let displaySegment = segment;
                             if (segment.includes("<!--RECOMMENDED_DOCS_PAYLOAD:")) {
                               const parts = segment.split("<!--RECOMMENDED_DOCS_PAYLOAD:");
                               displaySegment = parts[0];
                               const endParts = parts[1]?.split("-->");
-                              if (endParts) payloadStr = endParts[0];
+                              if (endParts) docPayloadStr = endParts[0];
+                            }
+                            if (displaySegment.includes("<!--MINDMAP_PAYLOAD:")) {
+                              const parts = displaySegment.split("<!--MINDMAP_PAYLOAD:");
+                              displaySegment = parts[0];
+                              const endParts = parts[1]?.split("-->");
+                              if (endParts) mindmapPayloadStr = endParts[0];
                             }
 
                             return (
@@ -1050,9 +1166,11 @@ export default function TroChuyenPage() {
                                 >
                                   {displaySegment}
                                 </ReactMarkdown>
-                                {payloadStr && <RecommendedDocsCards payloadStr={payloadStr} />}
+                                {docPayloadStr && <RecommendedDocsCards payloadStr={docPayloadStr} />}
+                                {mindmapPayloadStr && <InteractiveMindmapCanvas payloadStr={mindmapPayloadStr} />}
                               </div>
                             );
+
 
                           })}
 
