@@ -916,7 +916,7 @@ export default function StoragePage() {
                                             onClick={async (e) => {
                                               e.stopPropagation();
                                               try {
-                                                await lockDocumentAPI(item._id || item.id);
+                                                await lockDocumentAPI(item._id || item.id, "");
                                                 showToast("Cập nhật trạng thái bảo mật hoàn tất", "success");
                                                 fetchItems(undefined, "published");
                                               } catch (err: any) {
@@ -1161,7 +1161,7 @@ export default function StoragePage() {
                       Nhãn
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {detailsItem.tags.map((t) => (
+                      {detailsItem.tags.map((t: string) => (
                         <span
                           key={t}
                           className="px-3 py-1 bg-[#E8E8ED] text-[#1D1D1F] text-[12px] font-medium rounded-full"

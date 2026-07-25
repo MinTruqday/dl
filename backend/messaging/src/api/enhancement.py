@@ -81,3 +81,69 @@ async def get_quick_replies(
     await redis.setex(cache_key, 10, json.dumps(result))
     
     return APIResponse(data=result, message="Khởi tạo gợi ý trả lời hoàn tất")
+
+
+@router.post("/{group_id}/link-moi", response_model=APIResponse[Any])
+async def generate_group_invite(group_id: str, current_user=Depends(get_current_user)):
+    result = await EnhancementService.generate_group_invite(group_id, current_user)
+    return APIResponse(data=result, message="Khởi tạo đường dẫn mời tham gia nhóm hoàn tất")
+
+
+@router.post("/nhom/tham-gia", response_model=APIResponse[Any])
+async def join_by_invite(req: dict, current_user=Depends(get_current_user)):
+    invite_code = req.get("invite_code", "")
+    result = await EnhancementService.join_by_invite(invite_code, current_user)
+    return APIResponse(data=result, message="Tham gia nhóm trò chuyện thành công")
+
+
+@router.post("/{other_user_id}/biet-danh", response_model=APIResponse[Any])
+async def set_nickname(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
+    nickname = req.get("nickname", "")
+    result = await EnhancementService.set_nickname(other_user_id, nickname, current_user)
+    return APIResponse(data=result, message="Cập nhật biệt danh hoàn tất")
+
+
+@router.post("/{other_user_id}/danh-thiep", response_model=APIResponse[Any])
+async def share_contact_card(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
+    contact_user_id = req.get("contact_user_id", "")
+    result = await EnhancementService.share_contact_card(other_user_id, contact_user_id, current_user)
+    return APIResponse(data=result, message="Chia sẻ thẻ danh thiếp thành công")
+
+
+@router.post("/{other_user_id}/luu-tru", response_model=APIResponse[Any])
+async def archive_thread(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
+    is_archived = req.get("is_archived", True)
+    result = await EnhancementService.archive_thread(other_user_id, is_archived, current_user)
+    return APIResponse(data=result, message="Cập nhật trạng thái lưu trữ cuộc trò chuyện thành công")
+
+
+@router.post("/ca-nhan/tra-loi-tu-dong", response_model=APIResponse[Any])
+async def set_auto_reply(req: dict, current_user=Depends(get_current_user)):
+    auto_reply_text = req.get("auto_reply_text", "")
+    is_enabled = req.get("is_enabled", True)
+    result = await EnhancementService.set_auto_reply(auto_reply_text, is_enabled, current_user)
+    return APIResponse(data=result, message="Cấu hình tin nhắn tự động thành công")
+
+
+@router.post("/{group_id}/quyen-gui-tin-nhan", response_model=APIResponse[Any])
+async def manage_group_permissions(group_id: str, req: dict, current_user=Depends(get_current_user)):
+    admin_only = req.get("admin_only", False)
+    result = await EnhancementService.manage_group_permissions(group_id, admin_only, current_user)
+    return APIResponse(data=result, message="Phân quyền gửi tin nhắn nhóm thành công")
+
+
+@router.post("/{group_id}/su-kien", response_model=APIResponse[Any])
+async def create_group_event(group_id: str, req: dict, current_user=Depends(get_current_user)):
+    title = req.get("title", "")
+    event_time = req.get("event_time", "")
+    result = await EnhancementService.create_group_event(group_id, title, event_time, current_user)
+    return APIResponse(data=result, message="Tạo sự kiện nhóm thành công")
+
+
+@router.post("/{other_user_id}/uu-tien-vip", response_model=APIResponse[Any])
+async def set_vip_priority(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
+    is_vip = req.get("is_vip", True)
+    result = await EnhancementService.set_vip_priority(other_user_id, is_vip, current_user)
+    return APIResponse(data=result, message="Cập nhật thẻ ưu tiên VIP cuộc trò chuyện thành công")
+
+

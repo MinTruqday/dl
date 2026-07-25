@@ -1,4 +1,6 @@
 import re
+import secrets
+from datetime import datetime, timezone
 
 from fastapi import HTTPException
 
@@ -113,3 +115,194 @@ class EnhancementService:
         except Exception:
             raise HTTPException(status_code=503, detail="Dịch vụ gợi ý trả lời tạm thời không khả dụng")
         raise HTTPException(status_code=502, detail="Dịch vụ gợi ý trả lời trả về dữ liệu không hợp lệ")
+
+    @staticmethod
+    @log_logic_execution
+    async def generate_group_invite(group_id: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        await ThreadService.ensure_group_access(group_id, user_id)
+        invite_code = f"inv_{secrets.token_hex(6)}"
+        from src.core.infrastructure.mongo import mongo
+        await mongo.update_one(
+            "message_groups",
+            {"_id": group_id},
+            {"$set": {"invite_code": invite_code, "invite_created_at": datetime.now(timezone.utc)}},
+        )
+        return {
+            "status": "success",
+            "group_id": group_id,
+            "invite_code": invite_code,
+            "invite_url": f"/tin-nhan/nhom/tham-gia/{invite_code}",
+        }
+
+    @staticmethod
+    @log_logic_execution
+    async def join_by_invite(invite_code: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        group = await MessageRepository.find_group({"invite_code": invite_code})
+        if not group:
+            raise HTTPException(status_code=404, detail="Mã mời nhóm không tồn tại hoặc đã hết hạn")
+        group_id = str(group["_id"])
+        from src.core.infrastructure.mongo import mongo
+        await mongo.update_one(
+            "message_groups",
+            {"_id": group_id},
+            {"$addToSet": {"members": user_id, "participants": user_id}},
+        )
+        return {
+            "status": "success",
+            "group_id": group_id,
+            "group_name": group.get("name", "Nhóm trò chuyện"),
+        }
+
+
+    @staticmethod
+    @log_logic_execution
+    async def set_nickname(other_user_id: str, nickname: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        if other_user_id.startswith("group_"):
+            await ThreadService.ensure_group_access(other_user_id, user_id)
+        participant_key = (
+            other_user_id
+            if other_user_id.startswith("group_")
+            else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
+        )
+        await MessageRepository.update_one(
+            {"_id": participant_key},
+            {"$set": {f"nicknames.{other_user_id}": nickname.strip()}},
+            upsert=True,
+        )
+        return {"nickname": nickname.strip(), "target_user_id": other_user_id}
+
+    @staticmethod
+    @log_logic_execution
+    async def share_contact_card(other_user_id: str, contact_user_id: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        from src.repositories.profile import ProfileRepository
+
+        contact_profile = await ProfileRepository.get_profile(contact_user_id)
+        if not contact_profile:
+            raise HTTPException(status_code=404, detail="Không tìm thấy danh thiếp người dùng")
+
+        card_attachment = {
+            "type": "contact_card",
+            "user_id": contact_user_id,
+            "full_name": contact_profile.get("full_name", "Người dùng DocLib"),
+            "email": contact_profile.get("email", ""),
+            "avatar": contact_profile.get("avatar_url", ""),
+        }
+
+        msg_doc = {
+            "sender_id": user_id,
+            "receiver_id": other_user_id,
+            "content": f"Đã chia sẻ danh thiếp của {contact_profile.get('full_name', 'Người dùng DocLib')}",
+            "attachments": [card_attachment],
+            "created_at": datetime.now(timezone.utc),
+        }
+        inserted = await MessageRepository.insert_one(msg_doc)
+        return {
+            "status": "success",
+            "message_id": str(inserted.inserted_id),
+            "contact_card": card_attachment,
+        }
+
+    @staticmethod
+    @log_logic_execution
+    async def archive_thread(other_user_id: str, is_archived: bool, current_user) -> dict:
+        user_id = str(current_user.id)
+        participant_key = (
+            other_user_id
+            if other_user_id.startswith("group_")
+            else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
+        )
+        if is_archived:
+            await MessageRepository.update_one(
+                {"_id": participant_key},
+                {"$addToSet": {"archived_by": user_id}},
+                upsert=True,
+            )
+        else:
+            await MessageRepository.update_one(
+                {"_id": participant_key},
+                {"$pull": {"archived_by": user_id}},
+            )
+        return {"is_archived": is_archived, "other_user_id": other_user_id}
+
+    @staticmethod
+    @log_logic_execution
+    async def set_auto_reply(auto_reply_text: str, is_enabled: bool, current_user) -> dict:
+        user_id = str(current_user.id)
+        await MessageRepository.update_setting(
+            {"_id": f"auto_reply_{user_id}"},
+            {
+                "$set": {
+                    "user_id": user_id,
+                    "text": auto_reply_text.strip(),
+                    "is_enabled": is_enabled,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+            upsert=True,
+        )
+        return {"is_enabled": is_enabled, "auto_reply_text": auto_reply_text.strip()}
+
+    @staticmethod
+    @log_logic_execution
+    async def manage_group_permissions(group_id: str, admin_only: bool, current_user) -> dict:
+        user_id = str(current_user.id)
+        from src.core.infrastructure.mongo import mongo
+
+        group = await MessageRepository.find_group({"_id": group_id})
+        if not group or group.get("created_by") != user_id:
+            raise HTTPException(status_code=403, detail="Chỉ Trưởng nhóm mới có quyền thay đổi quyền gửi tin nhắn")
+        await mongo.update_one(
+            "message_groups",
+            {"_id": group_id},
+            {"$set": {"messaging_restricted": admin_only}},
+        )
+        return {"status": "success", "group_id": group_id, "admin_only": admin_only}
+
+    @staticmethod
+    @log_logic_execution
+    async def create_group_event(group_id: str, title: str, event_time: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        await ThreadService.ensure_group_access(group_id, user_id)
+        from src.core.infrastructure.mongo import mongo
+
+        event_doc = {
+            "group_id": group_id,
+            "title": title.strip(),
+            "event_time": event_time,
+            "created_by": user_id,
+            "created_at": datetime.now(timezone.utc),
+        }
+        await mongo.update_one(
+            "message_groups",
+            {"_id": group_id},
+            {"$set": {"active_event": event_doc}},
+        )
+        return {"status": "success", "event": event_doc}
+
+    @staticmethod
+    @log_logic_execution
+    async def set_vip_priority(other_user_id: str, is_vip: bool, current_user) -> dict:
+        user_id = str(current_user.id)
+        participant_key = (
+            other_user_id
+            if other_user_id.startswith("group_")
+            else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
+        )
+        if is_vip:
+            await MessageRepository.update_one(
+                {"_id": participant_key},
+                {"$addToSet": {"vip_by": user_id}},
+                upsert=True,
+            )
+        else:
+            await MessageRepository.update_one(
+                {"_id": participant_key},
+                {"$pull": {"vip_by": user_id}},
+            )
+        return {"is_vip": is_vip, "other_user_id": other_user_id}
+
+

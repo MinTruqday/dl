@@ -131,7 +131,7 @@ export default function DocumentViewer() {
           _id: id,
           title: rawName || "Tài liệu",
           content_format: "raw",
-          file_url: `${API_URL.replace("/api/v1", "")}/luu-tru/${rawUrl}`,
+          file_url: `${(API_URL || "").replace("/api/v1", "")}/luu-tru/${rawUrl}`,
         });
         setLoading(false);
         return;

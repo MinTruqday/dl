@@ -47,3 +47,11 @@ async def toggle_pin_conversation(
         data=await PinService.toggle_pin_conversation(other_user_id, current_user),
         message="Cập nhật ưu tiên cuộc trò chuyện hoàn tất",
     )
+
+
+@router.post("/{other_user_id}/an-tin-nhan", response_model=APIResponse[Any])
+async def set_pin_lock(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
+    pin_code = req.get("pin_code", "")
+    result = await PinService.set_pin_lock(other_user_id, pin_code, current_user)
+    return APIResponse(data=result, message="Đặt mã PIN ẩn cuộc trò chuyện thành công")
+
