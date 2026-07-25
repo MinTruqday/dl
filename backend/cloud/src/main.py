@@ -7,6 +7,13 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
 from src.api.storage import router as storage
 from src.api.upload import router as upload
+from src.api.version import router as version
+from src.api.trash import router as trash
+from src.api.share import router as share
+from src.api.star import router as star
+from src.api.analytics import router as analytics
+from src.api.search import router as search
+
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
@@ -41,6 +48,13 @@ app.add_middleware(
 )
 app.include_router(storage)
 app.include_router(upload)
+app.include_router(version)
+app.include_router(trash)
+app.include_router(share)
+app.include_router(star)
+app.include_router(analytics)
+app.include_router(search)
+
 @app.get("/health", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "service": "cloud"}

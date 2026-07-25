@@ -9,6 +9,7 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
+from src.repositories.conversation import ConversationRepository
 from src.repositories.message import MessageRepository
 from src.repositories.profile import ProfileRepository
 from src.schemas.thread import Record
@@ -243,3 +244,52 @@ class GroupService:
     @log_logic_execution
     async def reject_join_request(group_id: str, user_id: str, current_user):
         return await GroupService._review_join_request(group_id, user_id, current_user, False)
+
+    @staticmethod
+    @log_logic_execution
+    async def set_deputy_admin(group_id: str, deputy_user_id: str, is_deputy: bool, current_user) -> dict:
+        group = await GroupService._get_group(group_id)
+        user_id = str(current_user.id)
+        if group.get("created_by") != user_id:
+            raise HTTPException(status_code=403, detail="Chỉ Trưởng nhóm mới có quyền phân quyền Phó nhóm")
+        update = {"$addToSet": {"deputies": deputy_user_id}} if is_deputy else {"$pull": {"deputies": deputy_user_id}}
+        await MessageRepository.update_group({"_id": group_id}, update)
+        return {"status": "success", "group_id": group_id, "deputy_user_id": deputy_user_id, "is_deputy": is_deputy}
+
+    @staticmethod
+    @log_logic_execution
+    async def set_group_rules(group_id: str, rules_text: str, current_user) -> dict:
+        group = await GroupService._get_group(group_id)
+        user_id = str(current_user.id)
+        if not GroupService._is_manager(group, user_id):
+            raise HTTPException(status_code=403, detail="Chỉ Quản trị viên mới có quyền thiết lập Nội quy nhóm")
+        await MessageRepository.update_group(
+            {"_id": group_id},
+            {"$set": {"rules": rules_text.strip(), "rules_updated_at": datetime.now(timezone.utc)}},
+        )
+        return {"status": "success", "group_id": group_id, "rules": rules_text.strip()}
+
+    @staticmethod
+    @log_logic_execution
+    async def get_group_activity_log(group_id: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        group = await GroupService._get_group(group_id)
+        await ThreadService.ensure_group_access(group_id, user_id)
+        logs = [
+            {"type": "group_created", "user_id": group.get("created_by"), "timestamp": str(group.get("created_at", ""))},
+            {"type": "rules_updated", "user_id": group.get("created_by"), "timestamp": str(group.get("rules_updated_at", ""))},
+        ]
+        return {"status": "success", "group_id": group_id, "logs": [l for l in logs if l["timestamp"]]}
+
+    @staticmethod
+    @log_logic_execution
+    async def disband_group(group_id: str, current_user) -> dict:
+        group = await GroupService._get_group(group_id)
+        user_id = str(current_user.id)
+        if group.get("created_by") != user_id:
+            raise HTTPException(status_code=403, detail="Chỉ Trưởng nhóm mới có quyền giải thể nhóm")
+        await MessageRepository.delete_group({"_id": group_id})
+        await ConversationRepository.delete_one({"_id": group_id})
+        return {"status": "success", "group_id": group_id, "message": "Đã giải thể nhóm"}
+
+

@@ -55,3 +55,10 @@ async def set_pin_lock(other_user_id: str, req: dict, current_user=Depends(get_c
     result = await PinService.set_pin_lock(other_user_id, pin_code, current_user)
     return APIResponse(data=result, message="Đặt mã PIN ẩn cuộc trò chuyện thành công")
 
+
+@router.get("/{other_user_id}/tin-nhan-ghim", response_model=APIResponse[Any])
+async def get_pinned_messages(other_user_id: str, current_user=Depends(get_current_user)):
+    result = await PinService.get_pinned_messages(other_user_id, current_user)
+    return APIResponse(data=result, message="Trích xuất danh sách tin nhắn ghim hoàn tất")
+
+

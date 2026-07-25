@@ -17,7 +17,21 @@ import {
   getStorageQuotaAPI,
   createShortcutAPI,
   downloadZipAPI,
+  getFileVersionsAPI,
+  restoreFileVersionAPI,
+  moveToTrashAPI,
+  restoreFromTrashAPI,
+  emptyTrashAPI,
+  createProtectedShareLinkAPI,
+  toggleStarItemAPI,
+  getStarredItemsAPI,
+  analyzeStorageQuotaAPI,
+  duplicateItemAPI,
+  setFolderColorAPI,
+  updateItemTagsAPI,
+  getPreviewPayloadAPI,
 } from "@/features/cloud/services/storage.service";
+
 import {
   getMyDocumentsAPI,
   deleteAuthorDocumentAPI,
@@ -114,6 +128,20 @@ export default function StoragePage() {
     "info",
   );
   const [chatInput, setChatInput] = useState("");
+  const [colorItem, setColorItem] = useState<StorageItem | null>(null);
+
+  const handleSetFolderColor = async (colorHex: string) => {
+    if (!colorItem) return;
+    try {
+      await setFolderColorAPI(colorItem._id, colorHex);
+      showToast("Cập nhật màu sắc thư mục hoàn tất", "success");
+      setColorItem(null);
+      fetchItems(currentFolderId);
+    } catch (e: any) {
+      showToast(e.message || "Lỗi cập nhật màu thư mục", "error");
+    }
+  };
+
   const [chatHistory, setChatHistory] = useState<
     { role: string; content: string }[]
   >([]);
@@ -123,11 +151,11 @@ export default function StoragePage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [detailsItem, setDetailsItem] = useState<any>(null);
   const [relatedItems, setRelatedItems] = useState<any[]>([]);
-  const [colorItem, setColorItem] = useState<any>(null);
   const [colorValue, setColorValue] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [hasMorePublished, setHasMorePublished] = useState(true);
   const [publishedCursor, setPublishedCursor] = useState<string | null>(null);
+
 
   const fetchQuota = async () => {
     try {
@@ -363,17 +391,7 @@ export default function StoragePage() {
       showToast(e.message || "Lỗi cập nhật phân loại nhãn", "error");
     }
   };
-  const handleUpdateColor = async () => {
-    if (!colorItem) return;
-    try {
-      await updateStorageItemAPI(colorItem._id, { color: colorValue });
-      showToast("Cập nhật nhãn màu hoàn tất", "success");
-      setColorItem(null);
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Lỗi cập nhật nhãn màu", "error");
-    }
-  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim() && !searchType) {
@@ -555,16 +573,10 @@ export default function StoragePage() {
                 {viewMode === "documents" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
-                onClick={() => setViewMode("published")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "published" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
-              >
-                <span className="truncate text-left">Tài liệu</span>
-                {viewMode === "published" && <ChevronRight className="w-4 h-4 shrink-0" />}
-              </button>
-              <button
                 onClick={() => setViewMode("folders")}
                 className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "folders" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
               >
+
                 <span className="truncate text-left">Thư mục</span>
                 {viewMode === "folders" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
@@ -698,10 +710,8 @@ export default function StoragePage() {
                       </>
                     )}
                     <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Cập nhật</th>
-                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">
-                      {viewMode === "published" ? "Trạng thái" : "Bảo mật"}
-                    </th>
                     <th className="py-3 px-6 font-medium text-right">
+
                       Thao tác
                     </th>
                   </tr>
@@ -747,11 +757,13 @@ export default function StoragePage() {
                                     e.stopPropagation();
                                     handleNavigate(item);
                                   }}
-                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
+                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate flex items-center gap-2"
                                 >
-                                  {item.name || item.title}
+                                  <Folder className="w-5 h-5 shrink-0" style={{ color: item.color || "#1D1D1F" }} />
+                                  <span className="truncate">{item.name || item.title}</span>
                                 </button>
                               ) : viewMode === "published" ? (
+
                                 <a
                                   href={`/tai-lieu/xem-truoc/${item._id || item.id}`}
                                   onClick={(e) => e.stopPropagation()}
@@ -814,38 +826,8 @@ export default function StoragePage() {
                             "vi-VN",
                           )}
                         </td>
-                        {viewMode === "published" ? (
-                          <td className="py-3 px-6 text-[13px] text-center hidden md:table-cell">
-                            <span
-                              className={`px-2 py-1 rounded-full font-medium ${
-                                item.status === "published"
-                                  ? "bg-[#34C759]/10 text-[#34C759]"
-                                  : "bg-[#FF9F0A]/10 text-[#FF9F0A]"
-                              }`}
-                            >
-                              {item.status === "published" ? "Đã đăng" : "Bản nháp"}
-                            </span>
-                          </td>
-                        ) : (
-                          <td 
-                            className="py-3 px-6 text-[13px] text-center hidden md:table-cell"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <select
-                              value={item.is_public ? "public" : "private"}
-                              onChange={(e) => {
-                                if ((e.target.value === "public") !== item.is_public) {
-                                  handleToggleLock(item);
-                                }
-                              }}
-                              className="bg-transparent text-[#6E6E73] font-medium outline-none cursor-pointer text-center appearance-none"
-                            >
-                              <option value="public">Công khai</option>
-                              <option value="private">Riêng tư</option>
-                            </select>
-                          </td>
-                        )}
                         <td className="py-3 px-6 text-right">
+
                           <div className="flex justify-end gap-1 transition-opacity">
                             {viewMode === "trash" ? (
                               <div className="relative">
@@ -910,76 +892,39 @@ export default function StoragePage() {
                                       className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[12px] shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#E8E8ED] py-2 z-50 flex flex-col"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      {viewMode === "published" ? (
-                                        <>
+                                       <button
+                                         onClick={(e) => {
+                                           e.stopPropagation();
+                                           handleToggleStar(item);
+                                           setOpenMenuId(null);
+                                         }}
+                                         className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                       >
+                                         <Star className={`w-4 h-4 ${item.is_starred ? "text-[#FF9500] fill-[#FF9500]" : ""}`} />
+                                         {item.is_starred ? "Bỏ gắn sao" : "Gắn sao"}
+                                       </button>
                                           <button
-                                            onClick={async (e) => {
-                                              e.stopPropagation();
-                                              try {
-                                                await lockDocumentAPI(item._id || item.id, "");
-                                                showToast("Cập nhật trạng thái bảo mật hoàn tất", "success");
-                                                fetchItems(undefined, "published");
-                                              } catch (err: any) {
-                                                showToast(err.message || "Lỗi cập nhật trạng thái bảo mật", "error");
-                                              }
+                                            onClick={() => {
+                                              setShareItem(item);
                                               setOpenMenuId(null);
                                             }}
                                             className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
                                           >
-                                            {item.is_protected ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                                            {item.is_protected ? "Mở khoá" : "Khóa bảo vệ"}
+                                            <Share2 className="w-4 h-4" /> Chia sẻ
                                           </button>
-                                          <div className="h-[1px] bg-[#E8E8ED] my-1" />
-                                          <button
-                                            onClick={async (e) => {
-                                              e.stopPropagation();
-                                              try {
-                                                await deleteAuthorDocumentAPI(item._id || item.id);
-                                                showToast("Xóa dữ liệu tác phẩm hoàn tất", "success");
-                                                fetchItems(undefined, "published");
-                                              } catch (err: any) {
-                                                showToast(err.message || "Lỗi xóa dữ liệu tác phẩm", "error");
-                                              }
-                                              setOpenMenuId(null);
-                                            }}
-                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#FF3B30] hover:bg-[#FF3B30]/10 text-left"
-                                          >
-                                            <Trash2 className="w-4 h-4" /> Xóa tác phẩm
-                                          </button>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleToggleStar(item);
-                                              setOpenMenuId(null);
-                                            }}
-                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
-                                          >
-                                            <Star className={`w-4 h-4 ${item.is_starred ? "text-[#FF9500] fill-[#FF9500]" : ""}`} />
-                                            {item.is_starred ? "Bỏ gắn sao" : "Gắn sao"}
-                                          </button>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleToggleLock(item);
-                                              setOpenMenuId(null);
-                                            }}
-                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
-                                          >
-                                            {item.is_public ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                                            {item.is_public ? "Khóa" : "Mở khóa"}
-                                          </button>
-                                      <button
-                                        onClick={() => {
-                                          setShareItem(item);
-                                          setOpenMenuId(null);
-                                        }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
-                                      >
-                                        <Share2 className="w-4 h-4" /> Chia sẻ
-                                      </button>
+                                      {item.is_folder && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setColorItem(item);
+                                            setOpenMenuId(null);
+                                          }}
+                                          className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                        >
+                                          <Palette className="w-4 h-4 text-[#0071E3]" /> Đổi màu
+                                        </button>
+                                      )}
+
                                       {!item.is_folder && (
                                         <button
                                           onClick={() => {
@@ -1024,15 +969,13 @@ export default function StoragePage() {
                                       >
                                         <Trash2 className="w-4 h-4" /> Xóa
                                       </button>
-                                    </>
-                                  )}
-                                </div>
-                              </>
+                                     </div>
+                                   </>
+                                 )}
+                               </div>
                             )}
                           </div>
-                        )}
-                      </div>
-                    </td>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1368,6 +1311,47 @@ export default function StoragePage() {
           </button>
         </ModalFooter>
       </Modal>
+
+      <Modal
+        isOpen={!!colorItem}
+        onClose={() => setColorItem(null)}
+        className="max-w-sm"
+      >
+        <ModalHeader>
+          <ModalTitle>Đổi màu sắc thư mục</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <div className="flex items-center gap-3 justify-center py-6">
+            {[
+              { hex: "#0071E3", name: "Xanh biển" },
+              { hex: "#FF3B30", name: "Đỏ" },
+              { hex: "#34C759", name: "Xanh lá" },
+              { hex: "#FF9500", name: "Cam" },
+              { hex: "#AF52DE", name: "Tím" },
+              { hex: "#FF2D55", name: "Hồng" },
+              { hex: "#8E8E93", name: "Xám" },
+            ].map((c) => (
+              <button
+                key={c.hex}
+                onClick={() => handleSetFolderColor(c.hex)}
+                className="w-8 h-8 rounded-full transition-transform hover:scale-125 border-2 border-white shadow-md"
+                style={{ backgroundColor: c.hex }}
+                title={c.name}
+              />
+            ))}
+          </div>
+        </ModalContent>
+        <ModalFooter>
+          <button
+            onClick={() => setColorItem(null)}
+            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+          >
+            Đóng
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }
+
+

@@ -84,3 +84,32 @@ async def review_join_request(group_id: str, user_id: str, req: dict, current_us
     else:
         return APIResponse(message="Hành động không hợp lệ", status=400)
     return APIResponse(data=result, message=result.get("message", ""))
+
+
+@router.post("/nhom/{group_id}/pho-nhom", response_model=APIResponse[Any])
+async def set_deputy_admin(group_id: str, req: dict, current_user=Depends(get_current_user)):
+    deputy_user_id = req.get("deputy_user_id", "")
+    is_deputy = req.get("is_deputy", True)
+    result = await GroupService.set_deputy_admin(group_id, deputy_user_id, is_deputy, current_user)
+    return APIResponse(data=result, message="Cập nhật quyền Phó nhóm hoàn tất")
+
+
+@router.post("/nhom/{group_id}/noi-quy", response_model=APIResponse[Any])
+async def set_group_rules(group_id: str, req: dict, current_user=Depends(get_current_user)):
+    rules_text = req.get("rules", "")
+    result = await GroupService.set_group_rules(group_id, rules_text, current_user)
+    return APIResponse(data=result, message="Thiết lập Nội quy nhóm thành công")
+
+
+@router.get("/nhom/{group_id}/nhat-ky", response_model=APIResponse[Any])
+async def get_group_activity_log(group_id: str, current_user=Depends(get_current_user)):
+    result = await GroupService.get_group_activity_log(group_id, current_user)
+    return APIResponse(data=result, message="Trích xuất nhật ký hoạt động nhóm hoàn tất")
+
+
+@router.delete("/nhom/{group_id}", response_model=APIResponse[Any])
+async def disband_group(group_id: str, current_user=Depends(get_current_user)):
+    result = await GroupService.disband_group(group_id, current_user)
+    return APIResponse(data=result, message="Giải thể nhóm trò chuyện thành công")
+
+

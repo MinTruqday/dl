@@ -316,3 +316,41 @@ class ConversationService:
             }
             for message in messages
         ]
+
+    @staticmethod
+    @log_logic_execution
+    async def set_quiet_hours(start_hour: int, end_hour: int, is_enabled: bool, current_user) -> dict:
+        user_id = str(current_user.id)
+        await MessageRepository.update_setting(
+            {"_id": f"quiet_hours_{user_id}"},
+            {
+                "$set": {
+                    "user_id": user_id,
+                    "start_hour": start_hour,
+                    "end_hour": end_hour,
+                    "is_enabled": is_enabled,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+            upsert=True,
+        )
+        return {"status": "success", "start_hour": start_hour, "end_hour": end_hour, "is_enabled": is_enabled}
+
+    @staticmethod
+    @log_logic_execution
+    async def set_auto_translate(target_lang: str, is_enabled: bool, current_user) -> dict:
+        user_id = str(current_user.id)
+        await MessageRepository.update_setting(
+            {"_id": f"auto_translate_{user_id}"},
+            {
+                "$set": {
+                    "user_id": user_id,
+                    "target_lang": target_lang,
+                    "is_enabled": is_enabled,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+            upsert=True,
+        )
+        return {"status": "success", "target_lang": target_lang, "is_enabled": is_enabled}
+

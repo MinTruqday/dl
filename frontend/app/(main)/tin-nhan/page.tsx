@@ -56,6 +56,11 @@ import {
   snoozeNotificationsAPI,
   getMediaVaultAPI,
   clearChatStorageAPI,
+  setDeputyAdminAPI,
+  setGroupRulesAPI,
+  getGroupActivityLogAPI,
+  setQuietHoursAPI,
+  setAutoTranslateAPI,
 } from "@/features/messaging/services/thread.service";
 import { searchUsersAPI } from "@/features/management/services/profile.service";
 import { getMyDocumentsAPI } from "@/features/content/services/document.service";

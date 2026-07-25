@@ -19,6 +19,11 @@ class Role(str, Enum):
     AUTHOR = "author"
     ADMIN = "admin"
 
+class Tier(str, Enum):
+    BASIC = "basic"
+    PRO = "pro"
+    PREMIUM = "premium"
+
 class CurrentUser(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
@@ -30,7 +35,7 @@ class CurrentUser(BaseModel):
     full_name: str = ""
     slug: str = ""
     is_premium: bool = False
-    ai_tier: str = "BASIC"
+    ai_tier: str = "basic"
     
     from pydantic import field_validator
     @field_validator("role", mode="before")
@@ -39,8 +44,26 @@ class CurrentUser(BaseModel):
         if isinstance(v, str):
             return v.lower()
         return v
-    
+
+    @field_validator("ai_tier", mode="before")
+    @classmethod
+    def validate_tier_case(cls, v: Any):
+        if isinstance(v, str):
+            return v.lower()
+        return v
+
+    def is_admin(self) -> bool:
+        role_val = self.role.value if hasattr(self.role, "value") else str(self.role).lower()
+        return role_val == Role.ADMIN.value
+
+    def has_ai_access(self) -> bool:
+        if self.is_admin():
+            return True
+        tier_val = str(self.ai_tier).lower()
+        return tier_val in [Tier.PRO.value, Tier.PREMIUM.value]
+
 ALGORITHM = "HS256"
+
 SECRET_KEY = settings.SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")

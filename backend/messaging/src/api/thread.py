@@ -172,3 +172,16 @@ async def vote_poll(message_id: str, req: dict, current_user=Depends(get_current
     )
     await publish_personal_message({"type": "message_edited", "data": result}, other_id)
     return APIResponse(data=result, message="Bỏ phiếu hoàn tất")
+
+
+@router.delete("/{message_id}/xoa-phia-toi", response_model=APIResponse[Any])
+async def delete_for_me(message_id: str, current_user=Depends(get_current_user)):
+    result = await ThreadService.delete_for_me(message_id, current_user)
+    return APIResponse(data=result, message="Xóa tin nhắn phía tôi thành công")
+
+
+@router.post("/{message_id}/khoi-phuc", response_model=APIResponse[Any])
+async def restore_message(message_id: str, current_user=Depends(get_current_user)):
+    result = await ThreadService.restore_message(message_id, current_user)
+    return APIResponse(data=result, message="Khôi phục tin nhắn thành công")
+

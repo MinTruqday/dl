@@ -72,3 +72,21 @@ async def delete_conversation(
 ):
     result = await ConversationService.delete_conversation(other_user_id, current_user)
     return APIResponse(data=result, message="Xóa lịch sử cuộc trò chuyện hoàn tất")
+
+
+@router.post("/ca-nhan/khung-gio-yen-tinh", response_model=APIResponse[Any])
+async def set_quiet_hours(req: dict, current_user=Depends(get_current_user)):
+    start_hour = req.get("start_hour", 22)
+    end_hour = req.get("end_hour", 7)
+    is_enabled = req.get("is_enabled", True)
+    result = await ConversationService.set_quiet_hours(start_hour, end_hour, is_enabled, current_user)
+    return APIResponse(data=result, message="Cấu hình khung giờ yên tĩnh thành công")
+
+
+@router.post("/ca-nhan/tu-dong-dich", response_model=APIResponse[Any])
+async def set_auto_translate(req: dict, current_user=Depends(get_current_user)):
+    target_lang = req.get("target_lang", "vi")
+    is_enabled = req.get("is_enabled", True)
+    result = await ConversationService.set_auto_translate(target_lang, is_enabled, current_user)
+    return APIResponse(data=result, message="Cấu hình tự động dịch tin nhắn thành công")
+

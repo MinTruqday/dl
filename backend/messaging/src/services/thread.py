@@ -553,3 +553,24 @@ class ThreadService:
             await publish_personal_message(
                 {"type": "message_sent_ack", "data": msg}, sender_id
             )
+
+    @staticmethod
+    @log_logic_execution
+    async def delete_for_me(message_id: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        await MessageRepository.update_one(
+            {"_id": message_id},
+            {"$addToSet": {"deleted_by": user_id}},
+        )
+        return {"status": "success", "message_id": message_id, "deleted_by": user_id}
+
+    @staticmethod
+    @log_logic_execution
+    async def restore_message(message_id: str, current_user) -> dict:
+        user_id = str(current_user.id)
+        await MessageRepository.update_one(
+            {"_id": message_id},
+            {"$pull": {"deleted_by": user_id}},
+        )
+        return {"status": "success", "message_id": message_id, "restored_for": user_id}
+

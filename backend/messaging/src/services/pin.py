@@ -95,3 +95,18 @@ class PinService:
         )
         return {"status": "hidden", "other_user_id": other_user_id, "has_pin": True}
 
+    @staticmethod
+    @log_logic_execution
+    async def get_pinned_messages(other_user_id: str, current_user) -> list:
+        user_id = str(current_user.id)
+        if other_user_id.startswith("group_"):
+            await ThreadService.ensure_group_access(other_user_id, user_id)
+        participant_key = (
+            other_user_id
+            if other_user_id.startswith("group_")
+            else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
+        )
+        conv = await ConversationRepository.find_one({"_id": participant_key})
+        return conv.get("pinned_messages", []) if conv else []
+
+

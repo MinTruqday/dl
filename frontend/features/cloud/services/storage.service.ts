@@ -340,3 +340,155 @@ export const getRelatedStorageItemsAPI = async (id: string) => {
     throw new Error(data.message || "Lỗi truy xuất bộ dữ liệu tài liệu liên quan");
   return data.data.map(mapItem) as StorageItem[];
 };
+
+export const getFileVersionsAPI = async (id: string) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/phien-ban/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất lịch sử phiên bản tệp");
+  return data.data;
+};
+
+export const restoreFileVersionAPI = async (id: string, version_id: string) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/phien-ban/${id}/khoi-phuc/${version_id}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi khôi phục phiên bản tệp");
+  return data.data;
+};
+
+export const moveToTrashAPI = async (id: string) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/thung-rac/chuyen-vao/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi chuyển tệp vào Thùng rác");
+  return data.data;
+};
+
+export const restoreFromTrashAPI = async (id: string) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/thung-rac/khoi-phuc/${id}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi khôi phục tệp từ Thùng rác");
+  return data.data;
+};
+
+export const emptyTrashAPI = async () => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/thung-rac/don-sach`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi dọn sạch Thùng rác");
+  return data.data;
+};
+
+export const createProtectedShareLinkAPI = async (item_id: string, password?: string, expires_in_hours: number = 24) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/link-chia-se/tao`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ item_id, password, expires_in_hours }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi tạo đường dẫn chia sẻ bảo mật");
+  return data.data;
+};
+
+export const toggleStarItemAPI = async (id: string) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/danh-dau-sao/${id}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái gắn sao");
+  return data.data;
+};
+
+export const getStarredItemsAPI = async () => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/danh-dau-sao/danh-sach`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất danh sách gắn sao");
+  return data.data.map(mapItem) as StorageItem[];
+};
+
+export const analyzeStorageQuotaAPI = async () => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/dung-luong/phan-tich`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất phân tích dung lượng");
+  return data.data;
+};
+
+export const duplicateItemAPI = async (id: string) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/nhan-ban/${id}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi nhân bản tệp tin");
+  return mapItem(data.data) as StorageItem;
+};
+
+export const setFolderColorAPI = async (folder_id: string, color_hex: string) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/thu-muc/${folder_id}/mau-sac`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ color_hex }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật màu sắc thư mục");
+  return data.data;
+};
+
+export const updateItemTagsAPI = async (item_id: string, tags: string[]) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/phieu-tag/${item_id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ tags }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật thẻ nhãn tệp");
+  return data.data;
+};
+
+export const getPreviewPayloadAPI = async (item_id: string) => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/xem-truoc/${item_id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất dữ liệu xem trước");
+  return data.data;
+};
+

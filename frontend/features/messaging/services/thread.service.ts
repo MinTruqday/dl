@@ -455,6 +455,82 @@ export const clearChatStorageAPI = async (otherUserId: string) => {
   return data;
 };
 
+export const setDeputyAdminAPI = async (groupId: string, deputyUserId: string, isDeputy: boolean = true) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/pho-nhom`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ deputy_user_id: deputyUserId, is_deputy: isDeputy }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi phân quyền Phó nhóm");
+  return data;
+};
+
+export const setGroupRulesAPI = async (groupId: string, rules: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/noi-quy`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ rules }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi thiết lập Nội quy nhóm");
+  return data;
+};
+
+export const getGroupActivityLogAPI = async (groupId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/nhat-ky`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất nhật ký hoạt động nhóm");
+  return data;
+};
+
+export const setQuietHoursAPI = async (startHour: number = 22, endHour: number = 7, isEnabled: boolean = true) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/ca-nhan/khung-gio-yen-tinh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ start_hour: startHour, end_hour: endHour, is_enabled: isEnabled }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cấu hình khung giờ yên tĩnh");
+  return data;
+};
+
+export const setAutoTranslateAPI = async (targetLang: string = "vi", isEnabled: boolean = true) => {
+  const token = getToken();
+  if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
+  const res = await fetch(`${API_URL}/tin-nhan/ca-nhan/tu-dong-dich`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ target_lang: targetLang, is_enabled: isEnabled }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lỗi cấu hình tự động dịch tin nhắn");
+  return data;
+};
+
+
 
 
 

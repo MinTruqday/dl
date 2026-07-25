@@ -324,3 +324,4 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
         message="Trích xuất thông tin tệp chia sẻ hoàn tất",
         status=200,
     )
+
