@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from loguru import logger
+from uuid6 import uuid7
 
 from src.repositories.document import DocumentRepository
 from src.services.document import DocumentService
@@ -101,17 +102,35 @@ class PublicationService:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
         from src.core.publication import trigger_document_publish_job
 
-        queued = await trigger_document_publish_job(document_id, user_id)
-        if not queued:
-            raise HTTPException(status_code=503, detail="Hàng đợi xuất bản tạm thời không khả dụng")
-        await docs_collection.update_one(
-            {"_id": document_id},
+        job_id = f"publish-{uuid7()}"
+        now = datetime.now(timezone.utc)
+        claimed = await docs_collection.update_one(
+            {
+                "_id": document_id,
+                "creator_id": user_id,
+                "status": {"$nin": ["processing_publish", "published"]},
+                "is_deleted": {"$ne": True},
+            },
             {
                 "$set": {
                     "status": "processing_publish",
-                    "updated_at": datetime.now(timezone.utc),
-                }
+                    "publication_job_id": job_id,
+                    "updated_at": now,
+                },
+                "$unset": {"publication_error": ""},
             },
         )
+        if claimed.modified_count != 1:
+            raise HTTPException(status_code=409, detail="Tài liệu không thể chuyển sang trạng thái xuất bản")
+        queued = await trigger_document_publish_job(document_id, user_id, job_id)
+        if not queued:
+            await docs_collection.update_one(
+                {"_id": document_id, "publication_job_id": job_id},
+                {
+                    "$set": {"status": "draft", "updated_at": datetime.now(timezone.utc)},
+                    "$unset": {"publication_job_id": ""},
+                },
+            )
+            raise HTTPException(status_code=503, detail="Hàng đợi xuất bản tạm thời không khả dụng")
         logger.info("Document publication process initiated successfully")
         return await docs_collection.find_one({"_id": document_id})

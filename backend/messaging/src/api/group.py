@@ -15,12 +15,12 @@ from src.repositories.message import MessageRepository
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tin-nhan")
 
-@router.post("/nhom", response_model=APIResponse[Any])
+@router.post("/nhom", response_model=APIResponse[Any], status_code=201)
 async def create_group(req: dict, current_user=Depends(get_current_user)):
     group_name = req.get("group_name")
     member_ids = req.get("member_ids", [])
     if not group_name:
-        return APIResponse(message="Tên nhóm cung cấp không hợp lệ", status=400)
+        raise HTTPException(status_code=400, detail="Tên nhóm cung cấp không hợp lệ")
     result = await GroupService.create_group(group_name, member_ids, current_user)
     return APIResponse(
         data=result, message="Tạo nhóm trò chuyện hoàn tất", status=201
@@ -30,7 +30,7 @@ async def create_group(req: dict, current_user=Depends(get_current_user)):
 async def add_member(group_id: str, req: dict, current_user=Depends(get_current_user)):
     user_id = req.get("user_id")
     if not user_id:
-        return APIResponse(message="ID người dùng không hợp lệ", status=400)
+        raise HTTPException(status_code=400, detail="ID người dùng không hợp lệ")
     result = await GroupService.add_member(group_id, user_id, current_user)
     return APIResponse(data=result, message="Thêm thành viên hoàn tất")
 
@@ -51,7 +51,7 @@ async def set_deputy(group_id: str, req: dict, current_user=Depends(get_current_
     user_id = req.get("user_id")
     action = req.get("action")
     if not user_id or action not in ["promote", "demote"]:
-        return APIResponse(message="Dữ liệu không hợp lệ", status=400)
+        raise HTTPException(status_code=400, detail="Dữ liệu không hợp lệ")
     
     if action == "promote":
         result = await GroupService.promote_deputy(group_id, user_id, current_user)
@@ -82,7 +82,7 @@ async def review_join_request(group_id: str, user_id: str, req: dict, current_us
     elif action == "reject":
         result = await GroupService.reject_join_request(group_id, user_id, current_user)
     else:
-        return APIResponse(message="Hành động không hợp lệ", status=400)
+        raise HTTPException(status_code=400, detail="Hành động không hợp lệ")
     return APIResponse(data=result, message=result.get("message", ""))
 
 
@@ -111,5 +111,3 @@ async def get_group_activity_log(group_id: str, current_user=Depends(get_current
 async def disband_group(group_id: str, current_user=Depends(get_current_user)):
     result = await GroupService.disband_group(group_id, current_user)
     return APIResponse(data=result, message="Giải thể nhóm trò chuyện thành công")
-
-

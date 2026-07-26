@@ -23,7 +23,7 @@ async def add_reaction(
     reaction = req.get("reaction")
     result = await InteractionService.add_reaction(message_id, reaction, current_user)
     if not result:
-        return APIResponse(message="Thao tác tương tác không hợp lệ", status=400)
+        raise HTTPException(status_code=400, detail="Thao tác tương tác không hợp lệ")
     other_id = (
         result["receiver_id"]
         if result["sender_id"] == current_user.id
@@ -166,7 +166,6 @@ async def create_announcement(group_id: str, req: dict, current_user=Depends(get
     body = req.get("body", "")
     result = await InteractionService.create_announcement(group_id, title, body, current_user)
     return APIResponse(data=result, message="Đăng thông báo nhóm thành công")
-
 
 
 

@@ -8,7 +8,11 @@ from src.services.search import SearchService
 
 router = APIRouter(route_class=LoggingRoute, prefix="/luu-tru")
 
-@router.post("/nhan-ban/{item_id}", response_model=APIResponse[Any])
+@router.post(
+    "/nhan-ban/{item_id}",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def duplicate_item(
     item_id: str,
     current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),

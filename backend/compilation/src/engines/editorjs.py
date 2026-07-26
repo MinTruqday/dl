@@ -1,10 +1,13 @@
 import asyncio
 import glob
+import html
 import json
 import os
 import re
 import tempfile
+from urllib.parse import urlparse
 
+import bleach
 from loguru import logger
 from uuid6 import uuid7
 
@@ -20,14 +23,72 @@ class EditorjsEngine:
     def _san(text: str) -> str:
         if not text:
             return ""
-        text = re.sub(
-            r"<(script|iframe|object|applet)(.*?)>(.*?)</\1>",
-            "",
-            text,
-            flags=re.IGNORECASE | re.DOTALL,
+        return bleach.clean(
+            str(text),
+            tags=[
+                "a",
+                "b",
+                "blockquote",
+                "br",
+                "code",
+                "em",
+                "i",
+                "li",
+                "ol",
+                "p",
+                "pre",
+                "s",
+                "span",
+                "strong",
+                "sub",
+                "sup",
+                "u",
+                "ul",
+            ],
+            attributes={"a": ["href", "title"]},
+            protocols=["http", "https", "mailto"],
+            strip=True,
         )
-        text = re.sub(r' on\w+\s*=\s*["\'][^"\']*["\']', "", text, flags=re.IGNORECASE)
-        return text
+
+    @staticmethod
+    def _safe_image_url(value: str) -> str:
+        url = str(value or "")
+        if url.startswith("data:image/"):
+            pattern = r"data:image/(?:png|jpeg|jpg|webp);base64,[A-Za-z0-9+/=\s]+"
+            if len(url) <= 7 * 1024 * 1024 and re.fullmatch(pattern, url):
+                return html.escape(url, quote=True)
+            return ""
+        parsed = urlparse(url)
+        allowed_hosts = {urlparse(settings.MINIO_ENDPOINT).hostname}
+        if settings.MINIO_PUBLIC_URL:
+            allowed_hosts.add(urlparse(settings.MINIO_PUBLIC_URL).hostname)
+        if (
+            parsed.scheme in {"http", "https"}
+            and parsed.hostname in allowed_hosts
+            and not parsed.username
+            and not parsed.password
+        ):
+            return html.escape(url, quote=True)
+        return ""
+
+    @staticmethod
+    def _safe_link_url(value: str) -> str:
+        url = str(value or "").strip()
+        if not url or len(url) > 4096:
+            return ""
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https", "mailto"}:
+            return ""
+        if parsed.scheme in {"http", "https"} and (
+            not parsed.hostname or parsed.username or parsed.password
+        ):
+            return ""
+        return html.escape(url, quote=True)
+
+    @staticmethod
+    def _attribute_text(value) -> str:
+        text = bleach.clean(str(value or ""), tags=[], strip=True)
+        return html.escape(text, quote=True)
 
     @staticmethod
     def _render_list_items(items, tag: str) -> str:
@@ -60,6 +121,8 @@ class EditorjsEngine:
 
         if t == "paragraph":
             align = d.get("alignment", d.get("align", "left"))
+            if align not in {"left", "right", "center", "justify"}:
+                align = "left"
             return f'<p style="text-align:{align}">{san(s(d.get("text")))}</p>'
 
         if t in ("header", "title"):
@@ -121,7 +184,7 @@ class EditorjsEngine:
             return f'<pre><code>{_html.escape(s(d.get("code", d.get("text", ""))))}</code></pre>'
 
         if t in ("codeBox", "codeMirror"):
-            lang = s(d.get("language", d.get("lang", "")))
+            lang = san(s(d.get("language", d.get("lang", ""))))
             code = _html.escape(s(d.get("code", d.get("content", ""))))
             lbl = (
                 f'<div style="font-size:9pt;color:#888;margin-bottom:4px">{lang}</div>'
@@ -142,10 +205,17 @@ class EditorjsEngine:
             return f'<div class="mermaid" style="text-align:center; margin: 15px 0; background:#f4f4f4; padding:10px;">{code}</div>'
 
         if t in ("image", "simpleImage", "imageCrop", "imageWithLink"):
-            url = san(s(d.get("file", {}).get("url", d.get("url", ""))))
+            url = EditorjsEngine._safe_image_url(
+                s(d.get("file", {}).get("url", d.get("url", "")))
+            )
             cap = san(s(d.get("caption", "")))
-            link = san(s(d.get("link", "")))
-            img = f'<img src="{url}" alt="{cap}" style="max-width:100%;display:block;margin:0 auto"/>'
+            cap_attribute = EditorjsEngine._attribute_text(d.get("caption", ""))
+            link = EditorjsEngine._safe_link_url(d.get("link", ""))
+            img = (
+                f'<img src="{url}" alt="{cap_attribute}" style="max-width:100%;display:block;margin:0 auto"/>'
+                if url
+                else ""
+            )
             if link:
                 img = f'<a href="{link}">{img}</a>'
             cap_tag = (
@@ -157,11 +227,15 @@ class EditorjsEngine:
 
         if t in ("gallery", "groupImage", "carousel"):
             files = d.get("files", d.get("images", []))
-            imgs = [
-                f'<img src="{san(s(f.get("url", f.get("file", {}).get("url", ""))))}" style="width:30%;margin:4px;vertical-align:top"/>'
-                for f in files
-                if s(f.get("url", f.get("file", {}).get("url", "")))
-            ]
+            imgs = []
+            for file_data in files:
+                url = EditorjsEngine._safe_image_url(
+                    s(file_data.get("url", file_data.get("file", {}).get("url", "")))
+                )
+                if url:
+                    imgs.append(
+                        f'<img src="{url}" style="width:30%;margin:4px;vertical-align:top"/>'
+                    )
             return f'<div style="margin:1em 0">{"".join(imgs)}</div>' if imgs else ""
 
         if t in ("audio", "audioPlayer"):
@@ -183,20 +257,22 @@ class EditorjsEngine:
 
         if t in ("attaches", "file"):
             name = san(s(d.get("title", d.get("file", {}).get("name", ""))))
-            url = san(s(d.get("file", {}).get("url", "")))
-            return f'<div style="border:1px solid #ddd;padding:6px 10px">&#128206; <a href="{url}">{name or url}</a></div>'
+            raw_url = s(d.get("file", {}).get("url", ""))
+            url = EditorjsEngine._safe_link_url(raw_url)
+            label = name or san(raw_url)
+            return f'<div style="border:1px solid #ddd;padding:6px 10px"><a href="{url}">{label}</a></div>'
 
         if t == "linkTool":
-            link_url = san(s(d.get("link", "")))
+            link_url = EditorjsEngine._safe_link_url(d.get("link", ""))
             meta = d.get("meta", {})
             title = san(s(meta.get("title", link_url)))
             desc = san(s(meta.get("description", "")))
             return f'<div style="border:1px solid #ddd;padding:8px"><a href="{link_url}"><strong>{title}</strong></a><br/><small>{desc}</small></div>'
 
         if t in ("linkSearch", "bookmark"):
-            url = san(s(d.get("url", d.get("link", ""))))
+            url = EditorjsEngine._safe_link_url(d.get("url", d.get("link", "")))
             title = san(s(d.get("title", d.get("name", url))))
-            return f'<p>&#128279; <a href="{url}">{title}</a></p>'
+            return f'<p><a href="{url}">{title}</a></p>'
 
         if t == "drawing":
             return '<div style="border:1px solid #eee;padding:8px;text-align:center;color:#aaa">[Drawing]</div>'
@@ -231,7 +307,7 @@ class EditorjsEngine:
             return f'<table style="width:100%;border-collapse:collapse"><tr>{"".join(col_html)}</tr></table>'
 
         if t == "button":
-            link = san(s(d.get("link", "")))
+            link = EditorjsEngine._safe_link_url(d.get("link", ""))
             text = san(s(d.get("text", "")))
             return f'<p><a href="{link}" style="display:inline-block;padding:6px 16px;background:#333;color:#fff;text-decoration:none">{text}</a></p>'
 
@@ -344,7 +420,9 @@ class EditorjsEngine:
 
         if t == "textBox":
             text = san(s(d.get("text", d.get("content", ""))))
-            align = san(s(d.get("alignment", "left")))
+            align = s(d.get("alignment", "left"))
+            if align not in {"left", "right"}:
+                align = "left"
             return f'<div style="float: {align}; width: 40%; border: 1px solid #333; padding: 15px; margin: 15px; background: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);">{text}</div>'
 
         if t in ("signature", "digitalSignature"):
@@ -406,7 +484,7 @@ class EditorjsEngine:
 
         if t in ("iframeEmbed", "embed"):
             src = san(s(d.get("src", d.get("url", ""))))
-            return f'<iframe src="{src}" style="width: 100%; height: 400px; border: 1px solid #ccc; margin: 15px 0;"></iframe>'
+            return f'<div style="border:1px solid #ccc;padding:8px">[Embed: {src}]</div>'
 
         if t == "jsonViewer":
             return f'<pre style="background: #282a36; color: #f8f8f2; padding: 10px;"><code>{san(s(d.get("json", "")))}</code></pre>'
@@ -429,14 +507,14 @@ class EditorjsEngine:
 
         if t == "oleObject":
             name = san(s(d.get("name", d.get("title", "Embedded Object"))))
-            return f'<div style="border: 2px solid #555; padding: 15px; background: #f9f9f9; width: 250px; text-align: center; margin: 20px auto; border-radius: 8px;"><div style="font-size: 3em;">&#128196;</div><strong>{name}</strong><br/><small style="color:#666;">Double-click to open</small></div>'
+            return f'<div style="border: 2px solid #555; padding: 15px; background: #f9f9f9; width: 250px; text-align: center; margin: 20px auto; border-radius: 8px;"><strong>{name}</strong><br/><small style="color:#666;">Double-click to open</small></div>'
 
         if t in ("convertTextToTable", "convertTableToText", "tableAutoFormat"):
             content = san(s(d.get("content", "")))
             return f'<div style="margin: 10px 0; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc;">{content}</div>'
 
         if t == "digitalSignatureLine":
-            name = san(s(d.get("content", d.get("name", ".............................."))))
+            name = san(s(d.get("content", d.get("name", "Ky va ghi ro ho ten"))))
             return f'<div style="width: 300px; margin: 40px auto; text-align: center;"><div style="font-size: 2em; float: left; margin-top: -15px; font-family: monospace;">X</div><hr style="border-top: 2px solid #000; margin-bottom: 5px; clear: both;" /><strong>{name}</strong></div>'
 
         if t == "phoneticGuide":
@@ -481,134 +559,68 @@ class EditorjsEngine:
         return "\n".join(parts)
 
     @staticmethod
-    async def compile_to_pdf(content: str) -> bytes:
+    def _parse_content(content: str) -> list:
+        if len(content.encode("utf-8")) > settings.MAX_COMPILE_INPUT_BYTES:
+            raise ValueError("Kích thước nội dung biên dịch không hợp lệ")
         try:
             parsed_content = json.loads(content)
-            blocks = (
-                parsed_content.get("blocks", [])
-                if isinstance(parsed_content, dict)
-                else []
-            )
-        except json.JSONDecodeError as e:
-            raise Exception("Định dạng dữ liệu nội dung tài liệu không hợp lệ")
+        except json.JSONDecodeError:
+            raise ValueError("Định dạng dữ liệu nội dung tài liệu không hợp lệ")
+        blocks = parsed_content.get("blocks", []) if isinstance(parsed_content, dict) else []
+        if not isinstance(blocks, list) or not blocks or len(blocks) > 5000:
+            raise ValueError("Tài liệu không chứa danh sách khối hợp lệ")
+        return blocks
 
-        if not blocks:
-            raise Exception("Tài liệu yêu cầu không chứa nội dung hợp lệ để xuất")
+    @staticmethod
+    async def compile_to_pdf(content: str) -> bytes:
+        from src.engines.latex import compile_semaphore, run_process
 
+        blocks = EditorjsEngine._parse_content(content)
         html_content = EditorjsEngine._convert_blocks_to_html(blocks)
-
-        job_id = str(uuid7())
-        temp_dir = tempfile.gettempdir()
-        html_path = os.path.join(temp_dir, f"{job_id}.html")
-        pdf_path = os.path.join(temp_dir, f"{job_id}.pdf")
-
-        with open(html_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-
-        process = None
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "timeout",
-                "-k",
-                "35",
-                "30",
-                "pandoc",
-                html_path,
-                "-o",
-                pdf_path,
-                "--pdf-engine=weasyprint",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                limit=1024 * 1024 * 2,
-            )
-            await asyncio.wait_for(
-                process.communicate(), timeout=30.0
-            )
-
-            if not os.path.exists(pdf_path):
-                logger.error("Failed to generate PDF document using Pandoc/WeasyPrint")
-                raise Exception("Quá trình xuất dữ liệu tài liệu gặp sự cố")
-
-            with open(pdf_path, "rb") as f:
-                return f.read()
-
-        except asyncio.TimeoutError as e:
-            if process:
-                try:
-                    process.kill()
-                except Exception as e:
-                    logger.exception("Failed to terminate orphaned compilation process")
-            raise Exception("Quá trình biên dịch tài liệu vượt quá thời gian tối đa cho phép")
-
-        finally:
-            for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
-                try:
-                    os.remove(filepath)
-                except Exception as e:
-                    logger.exception("Failed to clean up temporary compilation artifacts")
+        async with compile_semaphore:
+            with tempfile.TemporaryDirectory(prefix="doclib_editorjs_") as temp_dir:
+                html_path = os.path.join(temp_dir, "document.html")
+                pdf_path = os.path.join(temp_dir, "document.pdf")
+                with open(html_path, "w", encoding="utf-8") as stream:
+                    stream.write(html_content)
+                await run_process(
+                    [
+                        "weasyprint",
+                        html_path,
+                        pdf_path,
+                    ],
+                    temp_dir,
+                )
+                if not os.path.isfile(pdf_path):
+                    raise ValueError("Quá trình xuất không tạo được tệp PDF")
+                size = os.path.getsize(pdf_path)
+                if size < 1 or size > settings.MAX_COMPILE_OUTPUT_BYTES:
+                    raise ValueError("Kích thước tệp kết quả không hợp lệ")
+                with open(pdf_path, "rb") as stream:
+                    return stream.read()
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
-        try:
-            parsed_content = json.loads(content)
-            blocks = (
-                parsed_content.get("blocks", [])
-                if isinstance(parsed_content, dict)
-                else []
-            )
-        except json.JSONDecodeError as e:
-            raise Exception("Định dạng dữ liệu nội dung tài liệu không hợp lệ")
+        from src.engines.latex import compile_semaphore, run_process
 
-        if not blocks:
-            raise Exception("Tài liệu yêu cầu không chứa nội dung hợp lệ để xuất")
-
+        if target_format not in {"docx", "html"}:
+            raise ValueError("Định dạng xuất không được hỗ trợ")
+        blocks = EditorjsEngine._parse_content(content)
         html_content = EditorjsEngine._convert_blocks_to_html(blocks)
-
-        job_id = str(uuid7())
-        temp_dir = tempfile.gettempdir()
-        html_path = os.path.join(temp_dir, f"{job_id}.html")
-        out_path = os.path.join(temp_dir, f"{job_id}.{target_format}")
-
-        with open(html_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-
-        process = None
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "timeout",
-                "-k",
-                "35",
-                "30",
-                "pandoc",
-                html_path,
-                "-o",
-                out_path,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                limit=1024 * 1024 * 2,
-            )
-            await asyncio.wait_for(
-                process.communicate(), timeout=30.0
-            )
-
-            if not os.path.exists(out_path):
-                logger.error("Failed to generate document using Pandoc")
-                raise Exception("Quá trình xuất dữ liệu tài liệu gặp sự cố")
-
-            with open(out_path, "rb") as f:
-                return f.read()
-
-        except asyncio.TimeoutError as e:
-            if process:
-                try:
-                    process.kill()
-                except Exception as e:
-                    logger.exception("Failed to terminate orphaned compilation process")
-            raise Exception("Quá trình xuất dữ liệu tài liệu vượt quá thời gian tối đa cho phép")
-
-        finally:
-            for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
-                try:
-                    os.remove(filepath)
-                except Exception as e:
-                    logger.exception("Failed to clean up temporary compilation artifacts")
+        async with compile_semaphore:
+            with tempfile.TemporaryDirectory(prefix="doclib_editorjs_export_") as temp_dir:
+                html_path = os.path.join(temp_dir, "document.html")
+                output_path = os.path.join(temp_dir, f"document.{target_format}")
+                with open(html_path, "w", encoding="utf-8") as stream:
+                    stream.write(html_content)
+                await run_process(
+                    ["pandoc", html_path, "-o", output_path],
+                    temp_dir,
+                )
+                if not os.path.isfile(output_path):
+                    raise ValueError("Quá trình xuất không tạo được tệp kết quả")
+                size = os.path.getsize(output_path)
+                if size < 1 or size > settings.MAX_COMPILE_OUTPUT_BYTES:
+                    raise ValueError("Kích thước tệp kết quả không hợp lệ")
+                with open(output_path, "rb") as stream:
+                    return stream.read()

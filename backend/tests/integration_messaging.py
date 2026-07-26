@@ -55,7 +55,6 @@ async def run():
 
     try:
         async with httpx.AsyncClient(timeout=20.0) as client:
-            # 1. Send Message
             send_res = await client.post(
                 "http://messaging:8000/tin-nhan/",
                 json={"receiver_id": user_b, "content": "Xin chao tu Alpha"},
@@ -65,7 +64,6 @@ async def run():
             msg_data = send_res.json()["data"]
             msg_id = msg_data["_id"]
 
-            # 2. Edit Message
             edit_res = await client.put(
                 f"http://messaging:8000/tin-nhan/{msg_id}",
                 json={"content": "Xin chao tu Alpha cap nhat"},
@@ -74,14 +72,12 @@ async def run():
             assert edit_res.status_code == 200, edit_res.text
             assert edit_res.json()["data"]["is_edited"] is True
 
-            # 3. Pin Message
             pin_res = await client.post(
                 f"http://messaging:8000/tin-nhan/{msg_id}/ghim",
                 headers=headers_a,
             )
             assert pin_res.status_code == 200, pin_res.text
 
-            # 4. Search Message
             search_res = await client.get(
                 f"http://messaging:8000/tin-nhan/{user_b}/tim-kiem",
                 params={"q": "Alpha"},
@@ -89,7 +85,6 @@ async def run():
             )
             assert search_res.status_code == 200, search_res.text
 
-            # 5. Forward Message
             forward_res = await client.post(
                 "http://messaging:8000/tin-nhan/chuyen-tiep",
                 json={"message_id": msg_id, "receiver_ids": [user_b]},
@@ -97,7 +92,6 @@ async def run():
             )
             assert forward_res.status_code == 200, forward_res.text
 
-            # 6. Create Poll & Vote
             poll_res = await client.post(
                 "http://messaging:8000/tin-nhan/binh-chon",
                 json={"receiver_id": user_b, "question": "Ban chon gi", "options": ["Option 1", "Option 2"]},
@@ -113,14 +107,12 @@ async def run():
             )
             assert vote_res.status_code == 200, vote_res.text
 
-            # 7. Mark Unread
             unread_res = await client.post(
                 f"http://messaging:8000/tin-nhan/{user_a}/danh-dau-chua-doc",
                 headers=headers_b,
             )
             assert unread_res.status_code == 200, unread_res.text
 
-            # 8. Disappearing Timer
             disappear_res = await client.post(
                 f"http://messaging:8000/tin-nhan/{user_b}/tu-xoa",
                 json={"timer_seconds": 86400},
@@ -128,7 +120,6 @@ async def run():
             )
             assert disappear_res.status_code == 200, disappear_res.text
 
-            # 9. Recall Message
             recall_res = await client.delete(
                 f"http://messaging:8000/tin-nhan/{msg_id}",
                 headers=headers_a,
@@ -138,7 +129,14 @@ async def run():
 
             print("messaging integration passed")
     finally:
-        await messaging_db.messages.delete_many({"_id": {"$in": [msg_id, poll_msg_id]}})
+        await messaging_db.messages.delete_many(
+            {
+                "$or": [
+                    {"sender_id": {"$in": [user_a, user_b]}},
+                    {"receiver_id": {"$in": [user_a, user_b]}},
+                ]
+            }
+        )
         await humanity_db.users.delete_many({"_id": {"$in": [user_a, user_b]}})
         for user_id in sessions:
             await redis_client.delete(f"user_sessions:{user_id}")

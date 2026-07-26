@@ -79,7 +79,17 @@ async def main():
         long_content = "protected-content-" * 500
         status, payload = call("PUT", f"/tai-lieu/{document_id}/noi-dung", author_token, {"content": long_content, "content_format": "markdown"})
         assert status == 200, payload
-        await content.documents.update_one({"_id": document_id}, {"$set": {"status": "published"}})
+        status, payload = call("POST", f"/xuat-ban/{document_id}", author_token)
+        assert status == 200, payload
+        for _ in range(100):
+            published = await content.documents.find_one(
+                {"_id": document_id},
+                {"status": 1},
+            )
+            if published and published.get("status") == "published":
+                break
+            await asyncio.sleep(0.1)
+        assert published and published.get("status") == "published", published
 
         status, payload = call("GET", f"/tai-lieu/{document_id}")
         assert status == 200
@@ -103,13 +113,13 @@ async def main():
         assert plaintext == long_content[:50000]
 
         status, payload = call("POST", f"/phien-ban/luu/{document_id}?version_note=integration", author_token)
-        assert status == 200
+        assert status == 201
         status, payload = call("GET", f"/phien-ban/tai-lieu/{document_id}", author_token)
         assert status == 200
         assert len(payload["data"]) == 1
 
         status, payload = call("POST", "/thu-vien/danh-sach", buyer_token, {"name": "Integration List", "description": "test", "is_public": False})
-        assert status == 200
+        assert status == 201
         list_id = payload["data"]["_id"]
         assert call("POST", f"/thu-vien/lists/{list_id}/documents/{document_id}", buyer_token)[0] == 200
         status, payload = call("GET", f"/thu-vien/danh-sach/{list_id}", buyer_token)
@@ -117,7 +127,7 @@ async def main():
         assert payload["data"]["documents_detailed"][0]["_id"] == document_id
 
         status, payload = call("POST", f"/noi-bat/tai-lieu/{document_id}", buyer_token, {"text": "protected", "start_offset": 0, "end_offset": 9, "note": "integration"})
-        assert status == 200
+        assert status == 201
         highlight_id = payload["data"]["_id"]
         assert call("DELETE", f"/noi-bat/{highlight_id}", buyer_token)[0] == 200
         print("content integration passed")

@@ -29,6 +29,7 @@ class State:
         self.is_capturing = False
         self.captured_hashes = set()
         self.page_counter = 0
+        self.source_url = None
 
     async def _handle_response(self, response: Response):
         if not self.is_capturing or not self.temp_dir:
@@ -114,7 +115,7 @@ class State:
     async def compile_and_upload(self, title: str, author: str):
         import tempfile
 
-        slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
+        slug = urllib.parse.quote(title.lower().replace(" ", "-"), safe="")[:50]
         final_pdf_name = f"{slug}_{uuid7().hex[:6]}.pdf"
 
         temp_pdf_dir = tempfile.mkdtemp(prefix="nxbst_pdf_")
@@ -199,7 +200,7 @@ class State:
 
             logger.info("[NXBST] Transferring compiled document to permanent storage")
             minio_url = await storage.upload_local_file(
-                f"documents/nxbst/{final_pdf_name}", pdf_path
+                f"system/collection/nxbst/{final_pdf_name}", pdf_path
             )
 
             if minio_url:
@@ -208,6 +209,7 @@ class State:
                     "slug": slug,
                     "description": "Trích xuất tự động hoàn tất",
                     "file_url": minio_url,
+                    "source_url": self.source_url,
                     "tags": ["Nhà Xuất bản Chính trị quốc gia Sự thật", author],
                     "content": None,
                     "content_format": "pdf",
@@ -351,6 +353,7 @@ class NxbstSource:
                     state_manager.temp_dir = tempfile.mkdtemp(
                         prefix=f"nxbst_{safe_title[:20]}_"
                     )
+                    state_manager.source_url = document_url
 
                     state_manager.captured_hashes = set()
                     state_manager.page_counter = 0

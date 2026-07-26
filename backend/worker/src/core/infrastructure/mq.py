@@ -1,117 +1,83 @@
 import asyncio
 import json
-import uuid
+import re
+
 import aio_pika
-from loguru import logger
-from typing import Any, Dict, Optional
+
 from src.core.infrastructure.configuration import settings
+
+
+QUEUE_PATTERN = re.compile(r"^[a-z0-9_]{1,100}$")
+
 
 class RabbitMQClient:
     def __init__(self):
-        self.url = settings.RABBITMQ_URI
         self.connection = None
         self.channel = None
-        self.pending_acks = {}
+        self._connect_lock = asyncio.Lock()
+        self._topology_lock = asyncio.Lock()
 
     async def connect(self):
-        if self.connection and not self.connection.is_closed:
-            return
-
-        max_retries = 10
-        for attempt in range(max_retries):
-            try:
-                self.connection = await aio_pika.connect_robust(self.url)
-                self.channel = await self.connection.channel()
-                logger.info("RabbitMQ message broker connection established successfully")
+        async with self._connect_lock:
+            if (
+                self.connection
+                and not self.connection.is_closed
+                and self.channel
+                and not self.channel.is_closed
+            ):
                 return
-            except Exception as e:
-                logger.exception("Failed to connect to RabbitMQ broker, retrying")
-                if attempt == max_retries - 1:
-                    raise e
-                await asyncio.sleep(3)
+            if self.connection and not self.connection.is_closed:
+                await self.connection.close()
+            self.connection = await aio_pika.connect_robust(settings.RABBITMQ_URI)
+            self.channel = await self.connection.channel(publisher_confirms=True)
+            await self.channel.set_qos(prefetch_count=2)
 
     async def get_queue(self, queue_name: str):
-        if not self.channel:
+        if not QUEUE_PATTERN.fullmatch(queue_name):
+            raise ValueError("Invalid queue name")
+        async with self._topology_lock:
             await self.connect()
-        
-        dlx = await self.channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
-        dlq = await self.channel.declare_queue("dlq", durable=True)
-        await dlq.bind(dlx, "dlq")
-        queue_args = {
-            "x-dead-letter-exchange": "dlx",
-            "x-dead-letter-routing-key": "dlq",
-        }
-        return await self.channel.declare_queue(queue_name, durable=True, arguments=queue_args)
+            dlx = await self.channel.declare_exchange(
+                "dlx",
+                aio_pika.ExchangeType.DIRECT,
+            )
+            dlq = await self.channel.declare_queue("dlq", durable=True)
+            await dlq.bind(dlx, "dlq")
+            return await self.channel.declare_queue(
+                queue_name,
+                durable=True,
+                arguments={
+                    "x-dead-letter-exchange": "dlx",
+                    "x-dead-letter-routing-key": "dlq",
+                },
+            )
 
     async def publish(self, queue_name: str, payload: dict) -> bool:
-        if not self.channel:
-            await self.connect()
-        try:
-            message = aio_pika.Message(
-                body=json.dumps(payload).encode(),
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-            )
-            await self.channel.default_exchange.publish(message, routing_key=queue_name)
-            return True
-        except Exception as e:
-            logger.exception("Failed to publish message to RabbitMQ exchange")
-            return False
-
-    async def consume(self, queue_name: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
-        if not self.channel:
-            await self.connect()
-        queue = await self.get_queue(queue_name)
-        try:
-            message = await queue.get(timeout=timeout)
-            if message:
-                payload = json.loads(message.body.decode())
-                ack_id = str(uuid.uuid4())
-                
-                self.pending_acks[ack_id] = message
-                
-                asyncio.create_task(self._auto_nack_if_timeout(ack_id, delay=300))
-                
-                return {
-                    "payload": payload,
-                    "delivery_tag": ack_id
-                }
-            return None
-        except aio_pika.exceptions.QueueEmpty:
-            return None
-        except Exception as e:
-            logger.exception("Failed to consume message from RabbitMQ queue")
-            return None
-
-    async def _auto_nack_if_timeout(self, ack_id: str, delay: int):
-        await asyncio.sleep(delay)
-        message = self.pending_acks.pop(ack_id, None)
-        if message:
-            logger.warning(f"Timeout waiting for acknowledgment (ACK/NACK) for message {ack_id} from RabbitMQ, retrying")
-            try:
-                await message.nack(requeue=True)
-            except Exception as e:
-                pass
-
-    async def ack(self, delivery_tag: str) -> bool:
-        message = self.pending_acks.pop(delivery_tag, None)
-        if message:
-            try:
-                await message.ack()
-                return True
-            except Exception as e:
-                logger.exception("Failed to acknowledge (ACK) message to RabbitMQ")
-                return False
-        return False
+        await self.get_queue(queue_name)
+        message = aio_pika.Message(
+            body=json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode(),
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+            content_type="application/json",
+            message_id=str(payload.get("job_id", "")) or None,
+        )
+        confirmation = await self.channel.default_exchange.publish(
+            message,
+            routing_key=queue_name,
+            mandatory=True,
+        )
+        return confirmation is not False
 
     async def health_check(self) -> bool:
-        try:
-            await self.connect()
-            return True
-        except Exception:
-            return False
+        await self.connect()
+        return bool(self.connection and not self.connection.is_closed)
 
     async def aclose(self):
-        if self.connection:
+        if self.channel and not self.channel.is_closed:
+            await self.channel.close()
+        if self.connection and not self.connection.is_closed:
             await self.connection.close()
+        self.channel = None
+        self.connection = None
+
 
 mq = RabbitMQClient()

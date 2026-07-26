@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getMyDocumentsAPI,
   updateDRMSettingsAPI,
@@ -72,11 +72,7 @@ export default function ConfigPage() {
   const [isTransferring, setTransferUserIdLoading] = useState(false);
   const [confirmTransfer, setConfirmTransfer] = useState(false);
 
-  useEffect(() => {
-    fetchInitData();
-  }, []);
-
-  const fetchInitData = async () => {
+  const fetchInitData = useCallback(async () => {
     setLoadingDocs(true);
     try {
       const [docsData, foldersData] = await Promise.all([
@@ -93,18 +89,13 @@ export default function ConfigPage() {
       setLoadingDocs(false);
       requestAnimationFrame(() => setVisible(true));
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
-    if (selectedDocument) {
-      setDrmCopy(selectedDocument.drm_settings?.disable_copy || false);
-      setDrmSearch(selectedDocument.drm_settings?.hide_from_search || false);
-      setDocTags(selectedDocument.tags || []);
-      fetchCollaborators();
-    }
-  }, [selectedDocumentId, selectedDocument]);
+    fetchInitData();
+  }, [fetchInitData]);
 
-  const fetchCollaborators = async () => {
+  const fetchCollaborators = useCallback(async () => {
     if (!selectedDocumentId) return;
     setLoadingCollabs(true);
     try {
@@ -116,7 +107,16 @@ export default function ConfigPage() {
     } finally {
       setLoadingCollabs(false);
     }
-  };
+  }, [selectedDocumentId]);
+
+  useEffect(() => {
+    if (selectedDocument) {
+      setDrmCopy(selectedDocument.drm_settings?.disable_copy || false);
+      setDrmSearch(selectedDocument.drm_settings?.hide_from_search || false);
+      setDocTags(selectedDocument.tags || []);
+      fetchCollaborators();
+    }
+  }, [fetchCollaborators, selectedDocument]);
 
   const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && newTagInput.trim() && selectedDocumentId) {

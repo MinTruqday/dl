@@ -37,7 +37,7 @@ class StorageService:
         return self._storage_client
 
     def get_bucket(self, path: str) -> str:
-        if path.startswith("system/"):
+        if path.startswith(("system/", "users/", "client/", "temp/")):
             return self.private_bucket
         return self.public_bucket
 
@@ -51,7 +51,8 @@ class StorageService:
                     logger.exception(f"Initializing MinIO bucket {bucket}")
                     await client.create_bucket(Bucket=bucket)
         except Exception:
-            pass
+            logger.exception("MinIO bucket initialization failed")
+            raise
 
     async def upload_local_file(
         self,
@@ -69,10 +70,20 @@ class StorageService:
                 Key=object_name,
                 ExtraArgs={"ContentType": content_type},
             )
-            url = f"{self.public_url}/{target_bucket}/{object_name}"
-            return url
-        except Exception as e:
+            return object_name
+        except Exception:
             logger.exception("Network error during permanent file storage upload")
-            raise e
+            raise
+
+    async def health_check(self):
+        client = await self.get_client()
+        await client.head_bucket(Bucket=self.private_bucket)
+        await client.head_bucket(Bucket=self.public_bucket)
+        return True
+
+    async def aclose(self):
+        if self._storage_client is not None:
+            await self._storage_client.__aexit__(None, None, None)
+            self._storage_client = None
 
 storage = StorageService()

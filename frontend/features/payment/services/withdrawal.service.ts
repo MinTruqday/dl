@@ -3,7 +3,17 @@ import {
   getAuthHeaders,
 } from "@/features/authentication/services/session.service";
 
-export async function requestWithdrawalAPI(amount: number, bankInfo: any) {
+export interface WithdrawalBankInfo {
+  bank_code?: string;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+}
+
+export async function requestWithdrawalAPI(
+  amount: number,
+  bankInfo: WithdrawalBankInfo,
+) {
   const res = await fetch(`${API_URL}/rut-tien`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -29,7 +39,7 @@ export async function verifyWithdrawalAPI(
   action: string,
 ) {
   const res = await fetch(
-    `${API_URL}/rut-tien/${withdrawalId}/auth?action=${action}`,
+    `${API_URL}/rut-tien/${withdrawalId}/xac-minh?action=${action}`,
     {
       method: "POST",
       headers: getAuthHeaders(),

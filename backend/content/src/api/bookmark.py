@@ -11,7 +11,7 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/dau-trang")
 
-@router.post("/thu-muc", response_model=APIResponse[Any])
+@router.post("/thu-muc", response_model=APIResponse[Any], status_code=201)
 async def create_bookmark_folder(
     data: BookmarkFolderCreate,
     current_user: CurrentUser = Depends(get_current_user),
@@ -83,4 +83,3 @@ async def get_bookmarks(
         data=await BookmarkService.get_bookmarks(current_user, limit),
         message="Trích xuất danh sách dấu trang hoàn tất",
     )
-

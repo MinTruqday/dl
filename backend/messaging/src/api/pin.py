@@ -20,12 +20,14 @@ router = APIRouter(route_class=LoggingRoute, prefix="/tin-nhan")
 async def toggle_pin(message_id: str, current_user=Depends(get_current_user)):
     result = await PinService.toggle_pin(message_id, current_user)
     if result is None:
-        return APIResponse(
-            message="Không tìm thấy tin nhắn hoặc không có quyền sửa", status=404
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy tin nhắn hoặc không có quyền sửa",
         )
     if result == "limit_reached":
-        return APIResponse(
-            message="Vượt quá giới hạn số lượng tin nhắn ghim", status=400
+        raise HTTPException(
+            status_code=400,
+            detail="Vượt quá giới hạn số lượng tin nhắn ghim",
         )
     other_id = (
         result["receiver_id"]
@@ -60,5 +62,4 @@ async def set_pin_lock(other_user_id: str, req: dict, current_user=Depends(get_c
 async def get_pinned_messages(other_user_id: str, current_user=Depends(get_current_user)):
     result = await PinService.get_pinned_messages(other_user_id, current_user)
     return APIResponse(data=result, message="Trích xuất danh sách tin nhắn ghim hoàn tất")
-
 

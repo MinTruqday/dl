@@ -1,26 +1,28 @@
 import json
+import httpx
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
-import requests
 
 from src.core.infrastructure.configuration import settings
 
-def _broadcast_update(document_id: str, new_content: str):
+async def _broadcast_update(document_id: str, new_content: str):
     try:
-        requests.post(
-            f"{settings.WEBSOCKET_URL}/ws/broadcast",
-            json={
-                "document_id": document_id,
-                "message": {
-                    "type": "DOCUMENT_UPDATED",
-                    "content": new_content
-                }
-            },
-            timeout=2.0
-        )
-    except Exception as e:
-        logger.error(f"Failed to broadcast update: {e}")
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            response = await client.post(
+                f"{settings.WEBSOCKET_URL}/ws/internal/broadcast",
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+                json={
+                    "document_id": document_id,
+                    "message": {
+                        "type": "DOCUMENT_UPDATED",
+                        "content": new_content,
+                    },
+                },
+            )
+            response.raise_for_status()
+    except Exception:
+        logger.exception("Failed to broadcast document update")
 
 
 @tool
@@ -59,7 +61,7 @@ async def read_document_section(
             blocks = parsed.get("blocks", [])
             sliced_blocks = blocks[start_index:start_index + limit]
             return f"Document section retrieved successfully with blocks {start_index} to {start_index + len(sliced_blocks) - 1} out of {len(blocks)}\n" + json.dumps(sliced_blocks, ensure_ascii=False, indent=2)
-        except:
+        except (json.JSONDecodeError, TypeError):
             return "Document format is JSON but content parsing failed"
     elif format == "doclibx":
         lines = content.splitlines()
@@ -129,11 +131,11 @@ async def edit_document_text(
         
     content_payload = {"content": new_content, "content_format": format}
     try:
-        res_content = await _make_api_request(
+        res_content = await make_api_request(
             "PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/noi-dung", headers=headers, json=content_payload
         )
         if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
-        _broadcast_update(document_id, new_content)
+        await _broadcast_update(document_id, new_content)
     except Exception as e:
         raise Exception(f"Error during content update {e}")
         
@@ -179,13 +181,13 @@ async def edit_document_block(
     try:
         parsed = json.loads(content)
         blocks = parsed.get("blocks", [])
-    except:
+    except (json.JSONDecodeError, TypeError):
         return "Document content validation failed as JSON"
         
     if action in ["insert", "replace"]:
         try:
             new_block = json.loads(new_block_json)
-        except:
+        except (json.JSONDecodeError, TypeError):
             return "Provided new_block_json is not a valid JSON string"
             
     if block_id:
@@ -220,11 +222,11 @@ async def edit_document_block(
     
     content_payload = {"content": new_content, "content_format": format}
     try:
-        res_content = await _make_api_request(
+        res_content = await make_api_request(
             "PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/noi-dung", headers=headers, json=content_payload
         )
         if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
-        _broadcast_update(document_id, new_content)
+        await _broadcast_update(document_id, new_content)
     except Exception as e:
         raise Exception(f"Error during content update {e}")
         
@@ -269,7 +271,7 @@ async def propose_document_edits(
             })
             parsed["blocks"] = blocks
             new_content = json.dumps(parsed)
-        except:
+        except (json.JSONDecodeError, TypeError):
             return "Document parsing failed during proposal generation"
     elif format == "doclibx":
         new_content = content + f"\n\n% PROPOSED EDIT:\n% {proposed_text}\n"
@@ -278,11 +280,11 @@ async def propose_document_edits(
         
     content_payload = {"content": new_content, "content_format": format}
     try:
-        res_content = await _make_api_request(
+        res_content = await make_api_request(
             "PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/noi-dung", headers=headers, json=content_payload
         )
         if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
-        _broadcast_update(document_id, new_content)
+        await _broadcast_update(document_id, new_content)
     except Exception as e:
         raise Exception(f"Error during content update {e}")
         

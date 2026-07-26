@@ -22,7 +22,7 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/cong-tac")
 
-@router.post("/loi-moi", response_model=APIResponse[Any])
+@router.post("/loi-moi", response_model=APIResponse[Any], status_code=201)
 async def invite_collaborator(
     data: CoauthorInviteRequest,
     current_user: CurrentUser = Depends(require_role([Role.AUTHOR])),
@@ -233,7 +233,11 @@ async def get_contribution_stats(
         message="Trích xuất báo cáo thống kê mức độ đóng góp hoàn tất",
     )
 
-@router.post("/tai-lieu/{document_id}/phien-ban", response_model=APIResponse[Any])
+@router.post(
+    "/tai-lieu/{document_id}/phien-ban",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def create_snapshot(
     document_id: str,
     data: CreateDraftSnapshotRequest,
@@ -318,7 +322,11 @@ async def join_via_invite_code(
         message="Tham gia không gian cộng tác tài liệu hoàn tất",
     )
 
-@router.post("/tai-lieu/{document_id}/cong-viec", response_model=APIResponse[Any])
+@router.post(
+    "/tai-lieu/{document_id}/cong-viec",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def create_task(
     document_id: str,
     data: CollabTaskCreateRequest,
@@ -358,7 +366,11 @@ async def update_task(
         message="Cập nhật trạng thái thực thi nhiệm vụ cộng tác hoàn tất",
     )
 
-@router.post("/nhiem-vu/{task_id}/binh-luan", response_model=APIResponse[Any])
+@router.post(
+    "/nhiem-vu/{task_id}/binh-luan",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def add_task_comment(
     task_id: str,
     data: TaskCommentCreateRequest,

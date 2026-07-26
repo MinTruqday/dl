@@ -1,58 +1,138 @@
-import os
-from src.core.infrastructure.redis import redis
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.response import JSONResponse
-from pydantic import BaseModel
+import hmac
+import uuid
+from contextlib import asynccontextmanager
+
+from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
+
 from src.core.infrastructure.configuration import settings
-from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
-app = FastAPI(title="Background Task Service", version=settings.VERSION)
+from src.core.infrastructure.database import close_db, database, init_db, record_job
+from src.core.infrastructure.mq import mq
+from src.core.metrics import PrometheusMiddleware, metrics_endpoint
+from src.core.storage import close_storage, init_storage, storage_ready
+from src.jobs.task import worker_runner
+
+
+def require_internal_token(x_internal_token: str = Header(default="")):
+    if not (
+        settings.SECRET_KEY
+        and x_internal_token
+        and hmac.compare_digest(x_internal_token, settings.SECRET_KEY)
+    ):
+        raise HTTPException(status_code=403, detail="Invalid internal token")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    await init_storage()
+    await worker_runner.start()
+    try:
+        yield
+    finally:
+        await worker_runner.close()
+        await mq.aclose()
+        await close_storage()
+        await close_db()
+
+
+app = FastAPI(
+    title="DocLib Worker",
+    version=settings.VERSION,
+    lifespan=lifespan,
+)
 app.add_middleware(PrometheusMiddleware, service_name="worker")
 app.add_route("/metrics", metrics_endpoint("worker"))
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
-@app.middleware("http")
-async def internal_token_middleware(request: Request, call_next):
-    if "/internal/" in request.url.path:
-        token = request.headers.get("X-Internal-Token")
-        if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
-    return await call_next(request)
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+class CompileRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    document_id: str = Field(min_length=1, max_length=128)
+    creator_id: str | None = Field(default=None, min_length=1, max_length=128)
+    tex_content: str = Field(min_length=1, max_length=settings.MAX_COMPILE_INPUT_BYTES)
+
+
+@app.get("/health", include_in_schema=False)
+async def health():
+    return {"status": "healthy", "service": "worker"}
+
+
+@app.get("/ready", include_in_schema=False)
+async def ready():
+    checks = {}
+    try:
+        await database.mongodb.admin.command("ping")
+        checks["mongodb"] = "ready"
+    except Exception:
+        checks["mongodb"] = "unavailable"
+    try:
+        await mq.get_queue("tectonic_queue")
+        await mq.get_queue("document_publish_queue")
+        checks["rabbitmq"] = "ready"
+    except Exception:
+        checks["rabbitmq"] = "unavailable"
+    try:
+        await storage_ready()
+        checks["object_storage"] = "ready"
+    except Exception:
+        checks["object_storage"] = "unavailable"
+    checks["consumers"] = "ready" if worker_runner.is_running() else "unavailable"
+    ready_state = all(value == "ready" for value in checks.values())
     return JSONResponse(
-        status_code=503, content={"detail": "Đã xảy ra lỗi không mong muốn, vui lòng thử lại sau"}
+        status_code=200 if ready_state else 503,
+        content={
+            "status": "ready" if ready_state else "degraded",
+            "service": "worker",
+            "checks": checks,
+        },
     )
-@app.get("/health")
-async def read_health():
-    await redis.get('health')
-    return {
-        "status": "The background processing service is currently operating normally and ready to accept incoming requests"
+
+
+@app.post(
+    "/worker/internal/documents/compile",
+    dependencies=[Depends(require_internal_token)],
+)
+async def enqueue_compile(payload: CompileRequest):
+    job_id = f"compile-{uuid.uuid4()}"
+    task_payload = {
+        "job_id": job_id,
+        "document_id": payload.document_id,
+        "creator_id": payload.creator_id,
+        "tex_content": payload.tex_content,
     }
-@app.post("/documents/compile")
-def compile_document(payload: dict):
-    doc_id = payload.get("document_id")
-    if not doc_id:
-        raise HTTPException(
-            status_code=400, detail="Yêu cầu thiếu tham số mã tài liệu hợp lệ để thực hiện biên dịch"
-        )
-
-    from src.jobs.task import compile_document_tectonic
-
-    task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
-    return {"message": "Đã thêm yêu cầu biên dịch tài liệu vào hàng đợi xử lý hoàn tất", "task_id": task.id}
-
-@app.on_event("shutdown")
-async def shutdown_event():
+    await record_job(
+        job_id,
+        {"status": "queued"},
+        {
+            "kind": "compile",
+            "document_id": payload.document_id,
+            "creator_id": payload.creator_id,
+        },
+    )
     try:
-        from src.core.infrastructure.redis import redis
-        await redis.aclose()
+        await mq.publish("tectonic_queue", task_payload)
     except Exception:
-        pass
-    try:
-        from src.core.infrastructure.mq import mq
-        await mq.aclose()
-    except Exception:
-        pass
+        await record_job(job_id, {"status": "failed", "error": "Queue unavailable"})
+        raise HTTPException(status_code=503, detail="Worker queue is unavailable")
+    return {"job_id": job_id, "status": "queued"}
 
+
+@app.get(
+    "/worker/internal/jobs/{job_id}",
+    dependencies=[Depends(require_internal_token)],
+)
+async def get_job(job_id: str):
+    if len(job_id) > 128:
+        raise HTTPException(status_code=422, detail="Invalid job identifier")
+    job = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one(
+        {"_id": job_id}
+    )
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    for field in ["created_at", "updated_at", "attempt_started_at", "expire_at"]:
+        value = job.get(field)
+        if value:
+            job[field] = value.isoformat()
+    return job

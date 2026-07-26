@@ -12,7 +12,7 @@ RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY cloud/src/ ./src/
 
-RUN addgroup --system app && adduser --system --ingroup app app && mkdir -p /app/storage/chunks /app/storage/tmp && chown -R app:app /app
+RUN groupadd --system app && useradd --system --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app && mkdir -p /app/storage/chunks /app/storage/tmp && chown -R app:app /app
 
 USER app
 

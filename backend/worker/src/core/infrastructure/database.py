@@ -1,56 +1,44 @@
-from src.core.infrastructure.redis import redis
-import asyncio
-import os
-
-from loguru import logger
+from datetime import datetime, timezone
 
 from src.core.infrastructure.configuration import settings
+
 
 class DatabaseInfrastructure:
     def __init__(self):
         self.mongodb = None
 
+
 database = DatabaseInfrastructure()
 
+
 async def init_db():
-    mongo_uri = settings.MONGODB_URI
-
-    if not mongo_uri :
-        logger.error("Failed to initialize database connection due to missing MongoDB URI")
-        import sys
-
-        sys.exit(1)
-
+    if not settings.SECRET_KEY:
+        raise RuntimeError("SECRET_KEY is required")
     from motor.motor_asyncio import AsyncIOMotorClient
-    database.mongodb = AsyncIOMotorClient(mongo_uri)
+    database.mongodb = AsyncIOMotorClient(settings.MONGODB_URI)
+    await database.mongodb.admin.command("ping")
+    jobs = database.mongodb[settings.WORKER_DB_NAME].worker_jobs
+    await jobs.create_index([("document_id", 1), ("created_at", -1)])
+    await jobs.create_index("expire_at", expireAfterSeconds=0)
 
-    from src.core.infrastructure.mq import mq
-    max_retries = 5
-    for i in range(max_retries):
-        try:
-            if await mq.health_check():
-                logger.info("RabbitMQ connection is stable")
-                break
-            else:
-                raise Exception("MQ health check failed")
-        except Exception as e:
-            if i == max_retries - 1:
-                logger.exception("Failed to connect to RabbitMQ broker")
-                raise e
-            logger.exception("Attempting to reconnect to RabbitMQ broker")
-            await asyncio.sleep(5)
-
-    await setup_indexes()
-
-async def setup_indexes():
-    try:
-        db = database.mongodb[settings.WORKER_DB_NAME]
-
-        logger.info("MongoDB index initialization completed")
-    except Exception as e:
-        logger.exception("Failed to initialize MongoDB collection indexes")
 
 async def close_db():
     if database.mongodb:
         database.mongodb.close()
+        database.mongodb = None
 
+
+async def record_job(job_id: str, values: dict, insert: dict | None = None):
+    now = datetime.now(timezone.utc)
+    update = {"$set": {**values, "updated_at": now}}
+    if insert is not None:
+        update["$setOnInsert"] = {
+            "_id": job_id,
+            "created_at": now,
+            **insert,
+        }
+    await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.update_one(
+        {"_id": job_id},
+        update,
+        upsert=insert is not None,
+    )

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getDocumentVersionsAPI,
@@ -98,11 +98,7 @@ export default function HistoryPage() {
   const [isComparing, setIsComparing] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchInitData();
-  }, []);
-
-  const fetchInitData = async () => {
+  const fetchInitData = useCallback(async () => {
     setLoadingDocs(true);
     try {
       const docsData = await getMyDocumentsAPI();
@@ -114,16 +110,13 @@ export default function HistoryPage() {
     } finally {
       setLoadingDocs(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
-    if (selectedDocumentId) {
-      fetchVersions();
-      setSelectedVersions([]);
-    } else setVersions([]);
-  }, [selectedDocumentId]);
+    fetchInitData();
+  }, [fetchInitData]);
 
-  const fetchVersions = async () => {
+  const fetchVersions = useCallback(async () => {
     setLoadingVersions(true);
     try {
       setVersions((await getDocumentVersionsAPI(selectedDocumentId)) || []);
@@ -133,7 +126,14 @@ export default function HistoryPage() {
     } finally {
       setLoadingVersions(false);
     }
-  };
+  }, [selectedDocumentId, showToast]);
+
+  useEffect(() => {
+    if (selectedDocumentId) {
+      fetchVersions();
+      setSelectedVersions([]);
+    } else setVersions([]);
+  }, [fetchVersions, selectedDocumentId]);
 
   const toggleVersionSelection = (id: string) =>
     setSelectedVersions((prev) =>

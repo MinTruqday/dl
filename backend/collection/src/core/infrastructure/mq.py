@@ -14,7 +14,12 @@ class RabbitMQClient:
         self.pending_acks = {}
 
     async def connect(self):
-        if self.connection and not self.connection.is_closed:
+        if (
+            self.connection
+            and not self.connection.is_closed
+            and self.channel
+            and not self.channel.is_closed
+        ):
             return
 
         max_retries = 10
@@ -24,14 +29,14 @@ class RabbitMQClient:
                 self.channel = await self.connection.channel()
                 logger.info("RabbitMQ connection established successfully")
                 return
-            except Exception as e:
-                logger.exception("RabbitMQ connection failed, retrying...")
+            except Exception:
+                logger.warning("RabbitMQ connection failed, retrying")
                 if attempt == max_retries - 1:
-                    raise e
-                await asyncio.sleep(3)
+                    raise
+                await asyncio.sleep(2)
 
     async def get_queue(self, queue_name: str):
-        if not self.channel:
+        if not self.channel or self.channel.is_closed:
             await self.connect()
         
         dlx = await self.channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
@@ -44,7 +49,7 @@ class RabbitMQClient:
         return await self.channel.declare_queue(queue_name, durable=True, arguments=queue_args)
 
     async def publish(self, queue_name: str, payload: dict) -> bool:
-        if not self.channel:
+        if not self.channel or self.channel.is_closed:
             await self.connect()
         try:
             message = aio_pika.Message(
@@ -53,29 +58,34 @@ class RabbitMQClient:
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             return True
-        except Exception as e:
+        except Exception:
             logger.exception("RabbitMQ message publishing failed")
-            return False
+            raise
 
     async def purge(self, queue_name: str) -> bool:
-        if not self.channel:
+        if not self.channel or self.channel.is_closed:
             await self.connect()
         try:
             queue = await self.get_queue(queue_name)
             await queue.purge()
             return True
-        except Exception as e:
+        except Exception:
             logger.exception("RabbitMQ queue purge failed")
             return False
 
     async def consume(self, queue_name: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
-        if not self.channel:
+        if not self.channel or self.channel.is_closed:
             await self.connect()
         queue = await self.get_queue(queue_name)
         try:
             message = await queue.get(timeout=timeout)
             if message:
-                payload = json.loads(message.body.decode())
+                try:
+                    payload = json.loads(message.body.decode())
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    await message.reject(requeue=False)
+                    logger.warning("RabbitMQ discarded a malformed message")
+                    return None
                 ack_id = str(uuid.uuid4())
                 
                 self.pending_acks[ack_id] = message
@@ -89,7 +99,7 @@ class RabbitMQClient:
             return None
         except aio_pika.exceptions.QueueEmpty:
             return None
-        except Exception as e:
+        except Exception:
             logger.exception("RabbitMQ message consumption failed")
             return None
 
@@ -100,8 +110,8 @@ class RabbitMQClient:
             logger.warning(f"RabbitMQ message {ack_id} ACK/NACK timed out, attempting requeue")
             try:
                 await message.nack(requeue=True)
-            except Exception as e:
-                pass
+            except Exception:
+                logger.exception("RabbitMQ automatic NACK failed")
 
     async def ack(self, delivery_tag: str) -> bool:
         message = self.pending_acks.pop(delivery_tag, None)
@@ -114,6 +124,17 @@ class RabbitMQClient:
                 return False
         return False
 
+    async def nack(self, delivery_tag: str, requeue: bool = True) -> bool:
+        message = self.pending_acks.pop(delivery_tag, None)
+        if not message:
+            return False
+        try:
+            await message.nack(requeue=requeue)
+            return True
+        except Exception:
+            logger.exception("RabbitMQ NACK failed")
+            return False
+
     async def health_check(self) -> bool:
         try:
             await self.connect()
@@ -122,7 +143,15 @@ class RabbitMQClient:
             return False
 
     async def aclose(self):
+        for message in list(self.pending_acks.values()):
+            if not message.processed:
+                await message.nack(requeue=True)
+        self.pending_acks.clear()
+        if self.channel and not self.channel.is_closed:
+            await self.channel.close()
         if self.connection:
             await self.connection.close()
+        self.channel = None
+        self.connection = None
 
 mq = RabbitMQClient()

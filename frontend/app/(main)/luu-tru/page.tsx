@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { getToken as getAuthToken } from "@/features/authentication/services/session.service";
 import {
   StorageItem,
@@ -154,7 +154,7 @@ export default function StoragePage() {
   const [colorValue, setColorValue] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [hasMorePublished, setHasMorePublished] = useState(true);
-  const [publishedCursor, setPublishedCursor] = useState<string | null>(null);
+  const publishedCursor = useRef<string | null>(null);
 
 
   const fetchQuota = async () => {
@@ -166,7 +166,7 @@ export default function StoragePage() {
     fetchQuota();
   }, []);
 
-  const fetchItems = async (
+  const fetchItems = useCallback(async (
     folderId?: string,
     mode: typeof viewMode = viewMode,
     isLoadMore = false
@@ -174,13 +174,15 @@ export default function StoragePage() {
     if (!isLoadMore) setLoading(true);
     try {
       if (mode === "published") {
-        const currentCursor = isLoadMore ? publishedCursor : undefined;
+        const currentCursor = isLoadMore ? publishedCursor.current : undefined;
         const res = await getMyDocumentsAPI("", currentCursor || "", 20);
         let docs = res.data || res || [];
-        // Map document structure to generic structure so table can render it or handle it separately
         setHasMorePublished(docs.length >= 20);
         if (docs.length > 0) {
-          setPublishedCursor(docs[docs.length - 1].id || docs[docs.length - 1]._id);
+          publishedCursor.current =
+            docs[docs.length - 1].id || docs[docs.length - 1]._id;
+        } else if (!isLoadMore) {
+          publishedCursor.current = null;
         }
         if (isLoadMore) {
           setItems((prev) => [...prev, ...docs]);
@@ -201,16 +203,16 @@ export default function StoragePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast, viewMode]);
 
-  const fetchMoveFolders = async (folderId?: string) => {
+  const fetchMoveFolders = useCallback(async (folderId?: string) => {
     try {
       const data = await listStorageItemsAPI(folderId);
       setMoveFolders(
         data.filter((i) => i.is_folder && i._id !== moveItem?._id),
       );
     } catch (e) {}
-  };
+  }, [moveItem]);
 
   useEffect(() => {
     fetchItems(
@@ -219,14 +221,14 @@ export default function StoragePage() {
         : currentFolderId,
       viewMode,
     );
-  }, [currentFolderId, viewMode]);
+  }, [currentFolderId, fetchItems, viewMode]);
 
   useEffect(() => {
   }, [detailsItem, activeSidebarTab]);
 
   useEffect(() => {
     if (moveItem) fetchMoveFolders(moveTargetId);
-  }, [moveTargetId, moveItem]);
+  }, [fetchMoveFolders, moveItem, moveTargetId]);
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
@@ -1353,5 +1355,4 @@ export default function StoragePage() {
     </div>
   );
 }
-
 

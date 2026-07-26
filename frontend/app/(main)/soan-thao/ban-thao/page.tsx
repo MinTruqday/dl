@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
@@ -19,11 +19,7 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDrafts();
-  }, []);
-
-  const fetchDrafts = async () => {
+  const fetchDrafts = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getMyDocumentsAPI();
@@ -34,7 +30,11 @@ export default function DraftsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchDrafts();
+  }, [fetchDrafts]);
 
   return (
     <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6 font-sans text-[#1D1D1F]">

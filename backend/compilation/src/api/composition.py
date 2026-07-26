@@ -1,8 +1,5 @@
-from typing import Any, List, Optional
-
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter
-from loguru import logger
+from fastapi import APIRouter, Depends
 from src.schemas.composition import (
     AutoSaveRequest,
     FindReplaceRequest,
@@ -15,20 +12,7 @@ from src.schemas.composition import (
 )
 from src.services.composition import CompositionService
 
-from src.core.infrastructure.configuration import settings
-from src.core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from src.core.dependency import get_current_user
-
-def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
-    from src.core.dependency import Role, Tier
-    if (
-        getattr(current_user.ai_tier, "value", current_user.ai_tier) != Tier.PREMIUM.value
-        and getattr(current_user.role, "value", current_user.role) != Role.ADMIN.value
-    ):
-        raise HTTPException(
-            status_code=403, detail="Tính năng AI nâng cao chỉ dành cho tài khoản đã nâng cấp gói trả phí"
-        )
-    return current_user
 
 router = APIRouter(route_class=LoggingRoute, prefix="/soan-thao")
 

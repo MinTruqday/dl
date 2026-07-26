@@ -9,8 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY humanity/requirements.txt .
 
 RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt \
-    && addgroup --system app \
-    && adduser --system --ingroup app app
+    && groupadd --system app \
+    && useradd --system --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app
 
 COPY humanity/src/ ./src/
 

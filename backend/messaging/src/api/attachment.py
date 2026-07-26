@@ -16,17 +16,25 @@ from src.api.thread import publish_personal_message
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tin-nhan")
 
-@router.post("/{receiver_id}/tai-lieu/chia-se", response_model=APIResponse[Any])
+@router.post(
+    "/{receiver_id}/tai-lieu/chia-se",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def share_document(
     receiver_id: str, req: dict, current_user=Depends(get_current_user)
 ):
     document_id = req.get("document_id")
     if not document_id:
-        return APIResponse(message="Yêu cầu chia sẻ không cung cấp đầy đủ mã định danh tài liệu", status=400)
+        raise HTTPException(
+            status_code=400,
+            detail="Yêu cầu chia sẻ không cung cấp đầy đủ mã định danh tài liệu",
+        )
     result = await AttachmentService.share_document(receiver_id, document_id, current_user)
     if not result:
-        return APIResponse(
-            message="Không tìm thấy tài liệu trong kho lưu trữ", status=404
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy tài liệu trong kho lưu trữ",
         )
     await publish_personal_message({"type": "new_message", "data": result}, receiver_id)
     return APIResponse(data=result, message="Chia sẻ tài liệu hoàn tất", status=201)

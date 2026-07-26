@@ -44,7 +44,7 @@ async def get_withdrawal_queue(
 )
 async def verify_withdrawal(
     withdrawal_id: str,
-    action: Literal["approve", "reject"],
+    action: Literal["approve", "reject", "complete"],
     reason: str = Query(default="", max_length=500),
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),

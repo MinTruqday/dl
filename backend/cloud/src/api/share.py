@@ -8,7 +8,11 @@ from src.services.share import ShareService
 
 router = APIRouter(route_class=LoggingRoute, prefix="/luu-tru")
 
-@router.post("/link-chia-se/tao", response_model=APIResponse[Any])
+@router.post(
+    "/link-chia-se/tao",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def create_protected_share_link(
     item_id: str = Body(..., embed=True),
     password: Optional[str] = Body(None, embed=True),

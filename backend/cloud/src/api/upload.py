@@ -206,7 +206,7 @@ async def get_presigned_download_url(file_path: str, current_user: CurrentUser =
     return RedirectResponse(url=url_data["download_url"], status_code=302)
 
 
-@router.post("/phan-doan", response_model=APIResponse[Any])
+@router.post("/phan-doan", response_model=APIResponse[Any], status_code=201)
 async def upload_chunk(file: UploadFile = File(...), upload_id: str = Form(...), chunk_index: int = Form(...), total_chunks: int = Form(...), filename: str = Form(...), current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])), db=Depends(get_db)) -> Any:
     try:
         normalized_id = str(UUID(upload_id))

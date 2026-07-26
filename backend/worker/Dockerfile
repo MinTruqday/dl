@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY worker/requirements.txt .
 
-RUN pip install -q --user --no-cache-dir -r requirements.txt gunicorn uvicorn[standard]
+RUN pip install -q --user --no-cache-dir -r requirements.txt
 
 FROM python:3.12-slim
 
@@ -25,11 +25,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    PIP_CACHE_DIR="/tmp/pip-cache" \
     PATH="/home/appuser/.local/bin:${PATH}"
 
 WORKDIR /app
 
-RUN useradd -m -s /bin/bash appuser
+RUN useradd -m -s /bin/bash appuser \
+    && mkdir -p /tmp/pip-cache \
+    && chown -R appuser:appuser /tmp/pip-cache
 
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 COPY --chown=appuser:appuser worker/src/ ./src/
@@ -38,5 +41,6 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"]
 
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

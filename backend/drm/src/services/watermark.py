@@ -101,7 +101,7 @@ class WatermarkService:
         try:
             async with httpx.AsyncClient() as client:
                 agent_res = await client.post(
-                    f"{settings.INTERNAL_API_URL}/drm-ai/evaluate",
+                    f"{settings.INTERNAL_API_URL}/drm-ai/danh-gia",
                     json={
                         "user_id": user_id,
                         "document_id": str(document["_id"]),

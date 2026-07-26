@@ -164,7 +164,16 @@ async def run():
 
             withdrawal = await client.post(
                 "http://finance:8000/rut-tien",
-                json={"amount": 50, "bank_info": "BANK-1234567890", "note": "Integration withdrawal"},
+                json={
+                    "amount": 50,
+                    "bank_info": {
+                        "bank_code": "VCB",
+                        "bank_name": "Integration Bank",
+                        "account_number": "1234567890",
+                        "account_name": "Finance Seller",
+                    },
+                    "note": "Integration withdrawal",
+                },
                 headers=seller_headers,
             )
             assert withdrawal.status_code == 201, withdrawal.text
@@ -179,7 +188,15 @@ async def run():
 
             second_withdrawal = await client.post(
                 "http://finance:8000/rut-tien",
-                json={"amount": 50, "bank_info": "BANK-1234567890"},
+                json={
+                    "amount": 50,
+                    "bank_info": {
+                        "bank_code": "VCB",
+                        "bank_name": "Integration Bank",
+                        "account_number": "1234567890",
+                        "account_name": "Finance Seller",
+                    },
+                },
                 headers=seller_headers,
             )
             assert second_withdrawal.status_code == 201, second_withdrawal.text
@@ -192,6 +209,70 @@ async def run():
             assert rejected.status_code == 200, rejected.text
             seller_wallet = await finance_db.wallets.find_one({"_id": seller_id})
             assert seller_wallet["balance"] == 100 and seller_wallet["withdrawable_balance"] == 100, seller_wallet
+
+            await finance_db.wallets.update_one(
+                {"_id": seller_id},
+                {"$set": {"balance": 1000, "withdrawable_balance": 1000}},
+            )
+            taxed_withdrawal = await client.post(
+                "http://finance:8000/rut-tien",
+                json={
+                    "amount": 100,
+                    "bank_info": {
+                        "bank_code": "VCB",
+                        "bank_name": "Integration Bank",
+                        "account_number": "1234567890",
+                        "account_name": "Finance Seller",
+                    },
+                },
+                headers=seller_headers,
+            )
+            assert taxed_withdrawal.status_code == 201, taxed_withdrawal.text
+            taxed_id = taxed_withdrawal.json()["data"]["withdrawal_id"]
+            taxed_row = await finance_db.withdrawal_requests.find_one({"_id": taxed_id})
+            assert taxed_row["total_deducted"] == 101, taxed_row
+            assert (
+                await client.post(
+                    f"http://finance:8000/rut-tien/{taxed_id}/huy",
+                    headers=seller_headers,
+                )
+            ).status_code == 200
+            seller_wallet = await finance_db.wallets.find_one({"_id": seller_id})
+            assert seller_wallet["balance"] == 1000 and seller_wallet["withdrawable_balance"] == 1000, seller_wallet
+
+            completed_withdrawal = await client.post(
+                "http://finance:8000/rut-tien",
+                json={
+                    "amount": 100,
+                    "bank_info": {
+                        "bank_code": "VCB",
+                        "bank_name": "Integration Bank",
+                        "account_number": "1234567890",
+                        "account_name": "Finance Seller",
+                    },
+                },
+                headers=seller_headers,
+            )
+            assert completed_withdrawal.status_code == 201, completed_withdrawal.text
+            completed_id = completed_withdrawal.json()["data"]["withdrawal_id"]
+            approved = await client.post(
+                f"http://finance:8000/rut-tien/{completed_id}/xac-minh",
+                params={"action": "approve"},
+                headers=admin_headers,
+            )
+            assert approved.status_code == 200 and approved.json()["data"]["status"] == "APPROVED", approved.text
+            completed = await client.post(
+                f"http://finance:8000/rut-tien/{completed_id}/xac-minh",
+                params={"action": "complete", "reason": "BANK-REFERENCE-001"},
+                headers=admin_headers,
+            )
+            assert completed.status_code == 200 and completed.json()["data"]["status"] == "COMPLETED", completed.text
+            assert (
+                await client.post(
+                    f"http://finance:8000/rut-tien/{completed_id}/huy",
+                    headers=seller_headers,
+                )
+            ).status_code == 404
 
             await asyncio.sleep(3)
             notifications = await notification_db.notifications.count_documents(

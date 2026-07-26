@@ -1,76 +1,66 @@
 import asyncio
 import json
 import time
+from collections import deque
 
-import jwt
-from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
-from loguru import logger
-from src.sockets.message import message_manager
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
+from src.core.security import authenticate_socket, session_is_active
+from src.sockets.message import message_manager
 
-router = APIRouter(route_class=LoggingRoute, prefix="/ws")
+
+router = APIRouter(prefix="/ws")
+
 
 @router.websocket("/{user_id}")
-async def websocket_endpoint(
-    websocket: WebSocket, user_id: str, token: str = Query(None)
-):
-    if not token:
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    if not user_id or len(user_id) > 128:
         await websocket.close(code=1008)
         return
-
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        token_user_id = payload.get("uid") or payload.get("sub")
-        if token_user_id != user_id:
-            logger.warning("WebSocket authentication failed due to User ID mismatch")
-            await websocket.close(code=1008)
-            return
-    except Exception as e:
-        logger.exception("WebSocket authentication failed due to invalid or expired token")
+    identity = await authenticate_socket(websocket)
+    if not identity or identity.user_id != user_id:
         await websocket.close(code=1008)
         return
-
-    db = database.redis
-    if db:
-        is_banned = await db.get(f"ws_ban:{user_id}")
-        if is_banned:
-            await websocket.close(code=1008)
-            return
-
-    await message_manager.connect(user_id, websocket)
-    frame_times = []
-
+    if not await message_manager.connect(user_id, websocket):
+        return
+    frame_times = deque()
     try:
         while True:
-            raw = await asyncio.wait_for(websocket.receive_text(), timeout=60.0)
-            now = time.time()
+            try:
+                raw = await asyncio.wait_for(websocket.receive_text(), timeout=45)
+            except asyncio.TimeoutError:
+                if not await session_is_active(identity):
+                    await websocket.close(code=1008)
+                    return
+                await websocket.send_json({"type": "heartbeat"})
+                continue
+            size = len(raw.encode("utf-8"))
+            if size < 2 or size > 16384:
+                await websocket.close(code=1009)
+                return
+            now = time.monotonic()
             frame_times.append(now)
-            frame_times = [t for t in frame_times if now - t <= 1.0]
-            if len(frame_times) > 5:
-                if db:
-                    await db.setex(f"ws_ban:{user_id}", 300, "banned")
-                message_manager.disconnect(user_id, websocket)
+            while frame_times and now - frame_times[0] > 1:
+                frame_times.popleft()
+            if len(frame_times) > settings.MAX_WS_FRAMES_PER_SECOND:
+                await database.redis.setex(f"ws_ban:{user_id}", 300, "rate_limit")
+                await websocket.close(code=1008)
+                return
+            if not await session_is_active(identity):
                 await websocket.close(code=1008)
                 return
             try:
                 payload = json.loads(raw)
-                if payload.get("action") == "ping":
-                    await websocket.send_json({"type": "pong"})
-                    continue
-                await message_manager._handle_ws_action(user_id, payload)
             except json.JSONDecodeError:
-                pass
-    except asyncio.TimeoutError:
-        message_manager.disconnect(user_id, websocket)
-        try:
-            await websocket.close(code=1000)
-        except Exception:
-            pass
+                await websocket.send_json({"type": "error", "data": {"code": "invalid_json"}})
+                continue
+            if isinstance(payload, dict) and payload.get("action") == "ping":
+                await websocket.send_json({"type": "pong"})
+                continue
+            await message_manager.handle_action(user_id, payload, websocket)
     except WebSocketDisconnect:
-        message_manager.disconnect(user_id, websocket)
-    except Exception as e:
-        logger.exception("Direct message stream processing failed")
-        message_manager.disconnect(user_id, websocket)
+        return
+    finally:
+        await message_manager.disconnect(user_id, websocket)

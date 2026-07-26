@@ -10,7 +10,11 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/phien-ban")
 
-@router.post("/luu/{document_id}", response_model=APIResponse[Any])
+@router.post(
+    "/luu/{document_id}",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def save_version(
     document_id: str,
     version_note: str,

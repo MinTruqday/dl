@@ -1,6 +1,4 @@
-from src.core.infrastructure.redis import redis
 import asyncio
-import os
 
 from loguru import logger
 
@@ -15,14 +13,12 @@ database = DatabaseInfrastructure()
 async def init_db():
     mongo_uri = settings.MONGODB_URI
 
-    if not mongo_uri :
-        logger.error("Failed to initialize database connection due to missing MongoDB URI")
-        import sys
-
-        sys.exit(1)
+    if not mongo_uri:
+        raise RuntimeError("MongoDB URI is required")
 
     from motor.motor_asyncio import AsyncIOMotorClient
     database.mongodb = AsyncIOMotorClient(mongo_uri)
+    await database.mongodb.admin.command("ping")
 
     from src.core.infrastructure.mq import mq
     max_retries = 5
@@ -31,14 +27,13 @@ async def init_db():
             if await mq.health_check():
                 logger.info("RabbitMQ connection established successfully")
                 break
-            else:
-                raise RuntimeError("RabbitMQ health check failed")
-        except Exception as e:
+            raise RuntimeError("RabbitMQ health check failed")
+        except Exception:
             if i == max_retries - 1:
                 logger.exception("RabbitMQ connection failed after maximum retries")
-                raise e
-            logger.exception("RabbitMQ connection failed, retrying...")
-            await asyncio.sleep(5)
+                raise
+            logger.warning("RabbitMQ connection failed, retrying")
+            await asyncio.sleep(2)
 
     await setup_indexes()
 
@@ -46,15 +41,23 @@ async def setup_indexes():
     try:
         db = database.mongodb[settings.COLLECTION_DB_NAME]
 
-        await db["status_updates"].create_index([("created_at", -1)], background=True)
-        await db["status_updates"].create_index([("user_id", 1)], background=True)
-        await db["status_updates"].create_index([("is_shadowbanned", 1)], background=True)
+        await db["collection_jobs"].create_index([("status", 1), ("created_at", -1)], background=True)
+        await db["collection_jobs"].create_index([("source", 1), ("created_at", -1)], background=True)
+        await db["collection_jobs"].create_index([("created_at", -1)], expireAfterSeconds=30 * 24 * 60 * 60)
+        content_db = database.mongodb[settings.CONTENT_DB_NAME]
+        await content_db["documents"].create_index([("source_url", 1)], background=True)
+        await content_db["documents"].create_index([("creator_id", 1), ("created_at", -1)], background=True)
 
         logger.info("MongoDB indexes created successfully")
-    except Exception as e:
+    except Exception:
         logger.exception("MongoDB index initialization failed")
+        raise
 
 async def close_db():
     if database.mongodb:
         database.mongodb.close()
-
+        database.mongodb = None
+    from src.core.infrastructure.redis import redis
+    from src.core.infrastructure.mq import mq
+    await redis.aclose()
+    await mq.aclose()

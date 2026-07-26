@@ -28,6 +28,7 @@ class NxbgdSource:
         self.is_capturing = False
         self.captured_hashes = set()
         self.page_counter = 0
+        self.source_url = None
 
     async def _handle_response(self, response: Response):
         if not self.is_capturing or not self.temp_dir:
@@ -85,7 +86,7 @@ class NxbgdSource:
             await self._browser_cm.__aexit__(None, None, None)
 
     async def compile_and_upload(self, title: str):
-        slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
+        slug = urllib.parse.quote(title.lower().replace(" ", "-"), safe="")[:50]
         safe_title = re.sub(r'[\\/*?:"<>|]', "", title).strip()
         final_pdf_name = f"{safe_title}_{uuid7().hex[:6]}.pdf"
 
@@ -112,7 +113,7 @@ class NxbgdSource:
 
             logger.info("[NXBGD] Uploading compiled document to permanent storage")
             minio_url = await storage.upload_local_file(
-                f"documents/nxbgd/{final_pdf_name}", pdf_path
+                f"system/collection/nxbgd/{final_pdf_name}", pdf_path
             )
 
             if minio_url:
@@ -121,6 +122,7 @@ class NxbgdSource:
                     "slug": slug,
                     "description": "Trích xuất tự động hoàn tất",
                     "file_url": minio_url,
+                    "source_url": self.source_url,
                     "tags": ["Nhà Xuất bản Giáo dục Việt Nam", "Unknown"],
                     "content": None,
                     "content_format": "pdf",
@@ -131,9 +133,7 @@ class NxbgdSource:
                     "views": 0,
                 }
 
-                doc_id = await database.insert_document(metadata)
-                if doc_id:
-                    pass
+                await database.insert_document(metadata)
 
         except Exception as e:
             logger.exception("[NXBGD] Document compilation or upload failed")
@@ -175,6 +175,7 @@ class NxbgdSource:
                         if doc_url.startswith("/")
                         else doc_url
                     )
+                    self.source_url = full_doc_url
                     logger.info("[NXBGD] Retrieving detailed document information")
 
                     try:

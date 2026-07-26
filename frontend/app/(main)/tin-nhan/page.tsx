@@ -886,8 +886,10 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!user?._id) return;
-    const wsUrl = `${WS_URL}/ws/${user._id}?token=${getToken()}`;
-    const socket = new WebSocket(wsUrl);
+    const authToken = getToken();
+    if (!authToken) return;
+    const wsUrl = `${WS_URL}/ws/${user._id}`;
+    const socket = new WebSocket(wsUrl, ["doclib", authToken]);
     socketRef.current = socket;
     socket.onopen = () => {
       const lastMsgId = localStorage.getItem(`last_msg_id_${user._id}`);
@@ -1157,7 +1159,7 @@ export default function MessagesPage() {
   const handleScheduleSend = async (scheduledAt: Date) => {
     if (!newMessage.trim() && imageFiles.length === 0) return;
     try {
-      showToast("Đang lên lịch gửi tin nhắn...", "info");
+      showToast("Đang lên lịch gửi tin nhắn", "info");
       
       if (imageFiles.length > 0) {
         for (let i = 0; i < imageFiles.length; i++) {
@@ -1437,7 +1439,7 @@ export default function MessagesPage() {
     const file = e.target.files?.[0];
     if (!file || !selectedConv) return;
     try {
-      showToast("Đang tải ảnh lên...", "info");
+      showToast("Đang tải ảnh lên", "info");
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch(`${API_URL}/tai-len/tap-tin`, {
@@ -1669,7 +1671,7 @@ export default function MessagesPage() {
   });
 
 
-  const loadQuickReplies = async (otherUserId: string) => {
+  const loadQuickReplies = useCallback(async (otherUserId: string) => {
     if (!user || (user.role !== "admin" && user.ai_tier !== "PRO" && user.ai_tier !== "PREMIUM")) {
       setQuickReplies([]);
       return;
@@ -1683,7 +1685,7 @@ export default function MessagesPage() {
     } finally {
       setLoadingQuickReplies(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (selectedConv) {
@@ -1691,7 +1693,7 @@ export default function MessagesPage() {
     } else {
       setQuickReplies([]);
     }
-  }, [selectedConv]);
+  }, [loadQuickReplies, selectedConv]);
 
   useEffect(() => {
     if (activeThreadParentId) {
@@ -1710,7 +1712,7 @@ export default function MessagesPage() {
     } else {
       setThreadMessages([]);
     }
-  }, [activeThreadParentId]);
+  }, [activeThreadParentId, showToast]);
   if (authLoading) return <PageLoader />;
   if (!user) return null;
 
@@ -2040,7 +2042,7 @@ export default function MessagesPage() {
                 <input
                   value={globalSearchQuery}
                   onChange={(e) => handleGlobalSearch(e.target.value)}
-                  placeholder="Tìm tin nhắn..."
+                  placeholder="Tìm tin nhắn"
                   className="w-full bg-[#E8E8ED] text-[#1D1D1F] placeholder:text-[#A1A1A6] pl-9 pr-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-[15px]"
                 />
               </div>
@@ -2794,7 +2796,6 @@ export default function MessagesPage() {
         {showSharedSidebar && selectedConv && (
           <div className="w-[300px] md:w-[320px] shrink-0 bg-[#F5F5F7] border-l border-[#D2D2D7] flex flex-col h-full overflow-hidden">
             <div className="flex-1 overflow-y-auto hide-scrollbar pt-6">
-              {/* Profile Section */}
               <div className="flex flex-col items-center px-4 pb-6">
                 <div className="w-24 h-24 rounded-full bg-[#D2D2D7] overflow-hidden mb-3 relative shadow-sm group">
                   {isGroupConv ? (
@@ -2840,7 +2841,6 @@ export default function MessagesPage() {
                 </p>
               </div>
 
-              {/* Actions Section */}
               <div className="mt-2 px-3 space-y-4">
                 <div className="bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] overflow-hidden divide-y divide-[#E8E8ED]">
                   {!isGroupConv && (
@@ -2893,7 +2893,6 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
-                {/* Media */}
                 <div className="bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] p-4">
                   <h5 className="text-[13px] font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">File phương tiện</h5>
                   {sharedAttachments.length > 0 ? (
@@ -2938,7 +2937,6 @@ export default function MessagesPage() {
                   )}
                 </div>
 
-                {/* Group Settings / Info */}
                 {isGroupConv && (
                   <>
                     <div className="mt-4 bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] p-4">
@@ -3018,7 +3016,6 @@ export default function MessagesPage() {
                   </>
                 )}
 
-                {/* Block */}
                 {!isGroupConv && (
                   <div className="bg-white rounded-[16px] shadow-sm overflow-hidden border border-[#E8E8ED] mb-6">
                     <button onClick={handleBlockUser} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-red-500 hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
@@ -3175,7 +3172,7 @@ export default function MessagesPage() {
 
               {!isRecalled && (
                 <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.18)] self-start">
-                  {["❤️", "👍", "😂", "😮", "😢", "🙏"].map((emoji) => (
+                  {["Yêu thích", "Thích", "Vui", "Bất ngờ", "Buồn", "Cảm ơn"].map((emoji) => (
                     <button
                       key={emoji}
                       onClick={() => { handleAddReaction(msgId, emoji); dismiss(); }}

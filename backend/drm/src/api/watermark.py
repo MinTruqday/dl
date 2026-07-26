@@ -43,8 +43,7 @@ async def verify_document_watermark(
             message="Trích xuất mã định danh ẩn trong tài liệu hoàn tất",
             status=200
         )
-    return APIResponse(
-        data=None,
-        message="Không tìm thấy mã định danh ẩn trong tài liệu",
-        status=404
+    raise HTTPException(
+        status_code=404,
+        detail="Không tìm thấy mã định danh ẩn trong tài liệu",
     )

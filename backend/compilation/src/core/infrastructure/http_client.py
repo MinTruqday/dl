@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from src.core.infrastructure.configuration import settings
 
 class CircuitBreakerOpenException(Exception):
-    pass
+    code = "circuit_breaker_open"
 
 class InternalHttpClient:
     def __init__(self):
@@ -27,9 +27,9 @@ class InternalHttpClient:
             if response.status_code >= 500:
                 raise httpx.RequestError(f"Internal service error: {response.status_code}")
             return response
-        except (httpx.RequestError, httpx.TimeoutException) as e:
+        except (httpx.RequestError, httpx.TimeoutException):
             logger.exception(f"Failed to execute internal HTTP request to endpoint {url}")
-            raise e
+            raise
 
     async def get(self, url: str, **kwargs):
         return await self.request("GET", url, **kwargs)

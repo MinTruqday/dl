@@ -118,6 +118,12 @@ services:
     environment:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
     depends_on:
       - traefik
     networks:
@@ -392,6 +398,7 @@ services:
     env_file:
       - .env
     depends_on:
+      - mongodb
       - redis
     volumes:
       - ./backend/websocket/src:/app/src
@@ -501,7 +508,31 @@ services:
       - ./backend/logs/drm:/app/logs
     networks:
       - doclib_network
-      
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: ./worker/Dockerfile
+    container_name: doclib_worker
+    restart: always
+    ports:
+      - 8015:8000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.worker.rule=PathPrefix(`/worker`)
+      - traefik.http.services.worker.loadbalancer.server.port=8000
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - minio
+    volumes:
+      - ./backend/worker/src:/app/src
+      - tectonic_cache:/home/appuser/.cache/Tectonic
+    networks:
+      - doclib_network
+
 networks:
   doclib_network:
     driver: bridge

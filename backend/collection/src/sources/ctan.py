@@ -4,6 +4,7 @@ import re
 import string
 import urllib.parse
 import zipfile
+from pathlib import Path
 
 import aiohttp
 import requests
@@ -20,10 +21,11 @@ from src.core.database import database
 from src.core.infrastructure.mq import mq as mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
+from src.core.infrastructure.configuration import settings
 
 class CtanSource:
     @staticmethod
-    async def run_list_collector(pages: int = 0):
+    async def run_list_collector(letter: str = "a"):
         logger.info("[CTAN] Starting alphabetical list collection process")
 
         async with managed_browser() as browser:
@@ -32,8 +34,11 @@ class CtanSource:
             await stealth_async(page)
 
             try:
-                for letter in string.ascii_uppercase:
-                    search_url = f"https://www.ctan.org/pkg/:{letter}"
+                selected_letter = letter.upper()
+                if selected_letter not in string.ascii_uppercase:
+                    raise ValueError("Invalid CTAN letter")
+                for current_letter in [selected_letter]:
+                    search_url = f"https://www.ctan.org/pkg/:{current_letter}"
                     logger.info("[CTAN] Scanning alphabetical category")
 
                     await page.goto(search_url, timeout=60000)
@@ -130,7 +135,8 @@ class CtanSource:
                         logger.info("[CTAN] Download URL created successfully")
 
                         slug = urllib.parse.quote(
-                            payload["title"].lower().replace(" ", "-")
+                            payload["title"].lower().replace(" ", "-"),
+                            safe="",
                         )[:50]
                         payload["filename"] = f"{slug}.zip"
                         payload["content_format"] = "zip"
@@ -161,7 +167,7 @@ class CtanSource:
 
         logger.info("[CTAN] Downloading and extracting file")
 
-        slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
+        slug = urllib.parse.quote(title.lower().replace(" ", "-"), safe="")[:50]
         filename = payload.get("filename") or f"{slug}.zip"
 
         temp_base = tempfile.mkdtemp(prefix="ctan_")
@@ -176,12 +182,26 @@ class CtanSource:
                 logger.info("[CTAN] Compressed file downloaded successfully")
 
                 minio_url_book = await storage.upload_local_file(
-                    f"books/ctan/{filename}", target_zip_local
+                    f"system/collection/ctan/packages/{filename}", target_zip_local
                 )
 
                 logger.info("[CTAN] Extracting downloaded file")
                 os.makedirs(extracted_folder_path, exist_ok=True)
                 with zipfile.ZipFile(target_zip_local, "r") as zip_ref:
+                    entries = zip_ref.infolist()
+                    if len(entries) > 5000:
+                        raise ValueError("Archive contains too many entries")
+                    total_size = sum(entry.file_size for entry in entries)
+                    if total_size > settings.MAX_DOWNLOAD_SIZE_BYTES:
+                        raise ValueError("Extracted archive exceeds the configured size limit")
+                    root = Path(extracted_folder_path).resolve()
+                    for entry in entries:
+                        target = (root / entry.filename).resolve()
+                        if not target.is_relative_to(root):
+                            raise ValueError("Archive contains an unsafe path")
+                        mode = entry.external_attr >> 16
+                        if mode & 0o170000 == 0o120000:
+                            raise ValueError("Archive contains a symbolic link")
                     zip_ref.extractall(extracted_folder_path)
 
                 search_root = extracted_folder_path
@@ -205,7 +225,7 @@ class CtanSource:
                 if found_pdf:
                     pdf_filename = os.path.basename(found_pdf)
                     minio_url_pdf = await storage.upload_local_file(
-                        f"documents/ctan/{pdf_filename}", found_pdf
+                        f"system/collection/ctan/documents/{pdf_filename}", found_pdf
                     )
                     logger.info("[CTAN] PDF file uploaded successfully")
                     payload["pdf_url"] = minio_url_pdf
@@ -235,7 +255,7 @@ class CtanSource:
                                     content = text_file.read()
                                     md_content += f"## File: {rel_path}\n```latex\n{content}\n```\n\n"
                             except UnicodeDecodeError:
-                                pass
+                                continue
                             except Exception as e:
                                 logger.exception("[CTAN] Nested file reading failed")
 
@@ -245,7 +265,7 @@ class CtanSource:
                     md_f.write(md_content)
 
                 minio_url_md = await storage.upload_local_file(
-                    f"documents/ctan/{md_filename}", md_path
+                    f"system/collection/ctan/documents/{md_filename}", md_path
                 )
                 logger.info("[CTAN] Source code compiled and uploaded successfully")
                 payload["markdown_url"] = minio_url_md
@@ -270,6 +290,7 @@ class CtanSource:
                     "description", "Trích xuất tự động hoàn tất"
                 ),
                 "file_url": minio_url_book,
+                "source_url": payload.get("source_url"),
                 "pdf_url": payload.get("pdf_url"),
                 "markdown_url": payload.get("markdown_url"),
                 "tags": ["CTAN"]

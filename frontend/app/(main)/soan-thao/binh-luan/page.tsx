@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getCommentsByItemAPI,
@@ -31,11 +31,7 @@ export default function CommentsPage() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
-    fetchInitData();
-  }, []);
-
-  const fetchInitData = async () => {
+  const fetchInitData = useCallback(async () => {
     setLoadingDocs(true);
     try {
       const docsData = await getMyDocumentsAPI();
@@ -48,17 +44,13 @@ export default function CommentsPage() {
       setLoadingDocs(false);
       requestAnimationFrame(() => setVisible(true));
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
-    if (selectedDocumentId) {
-      fetchComments();
-      setReplyingTo(null);
-      setReplyContent("");
-    } else setComments([]);
-  }, [selectedDocumentId]);
+    fetchInitData();
+  }, [fetchInitData]);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     setLoadingComments(true);
     try {
       const data = await getCommentsByItemAPI(selectedDocumentId);
@@ -68,7 +60,15 @@ export default function CommentsPage() {
     } finally {
       setLoadingComments(false);
     }
-  };
+  }, [selectedDocumentId]);
+
+  useEffect(() => {
+    if (selectedDocumentId) {
+      fetchComments();
+      setReplyingTo(null);
+      setReplyContent("");
+    } else setComments([]);
+  }, [fetchComments, selectedDocumentId]);
 
   const handleReplyComment = async () => {
     if (!replyContent.trim() || !selectedDocumentId) return;
@@ -156,7 +156,7 @@ export default function CommentsPage() {
                 <div className="h-full flex flex-col items-center justify-center">
                   <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
                   <p className="text-[13px] font-medium text-[#6E6E73]">
-                    Đang tải bình luận...
+                    Đang tải bình luận
                   </p>
                 </div>
               ) : comments.length === 0 ? (

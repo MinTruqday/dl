@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useCallback, useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getDocumentsAPI } from "@/features/content/services/document.service";
@@ -34,24 +34,19 @@ function SearchResultsContent() {
     if (saved) setHistory(JSON.parse(saved));
   }, []);
 
-  useEffect(() => {
-    if (query) {
-      loadResults();
-      saveToHistory(query);
-    }
-  }, [query, filters]);
-
-  const saveToHistory = (q: string) => {
-    const newHistory = [q, ...history.filter((h) => h !== q)].slice(0, 10);
-    setHistory(newHistory);
-    localStorage.setItem("doclib_search_history", JSON.stringify(newHistory));
-  };
+  const saveToHistory = useCallback((q: string) => {
+    setHistory((current) => {
+      const updated = [q, ...current.filter((item) => item !== q)].slice(0, 10);
+      localStorage.setItem("doclib_search_history", JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
   const clearHistory = () => {
     setHistory([]);
     localStorage.removeItem("doclib_search_history");
   };
 
-  const loadResults = async () => {
+  const loadResults = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getDocumentsAPI(query);
@@ -92,7 +87,14 @@ function SearchResultsContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, query]);
+
+  useEffect(() => {
+    if (query) {
+      loadResults();
+      saveToHistory(query);
+    }
+  }, [loadResults, query, saveToHistory]);
 
   return (
     <div className="w-full h-full font-sans text-[#1D1D1F]">

@@ -1,5 +1,4 @@
 from src.core.infrastructure.redis import redis
-import time
 from typing import List, Optional
 
 import jwt
@@ -11,8 +10,8 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
 from enum import Enum
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Any
 
 class Role(str, Enum):
     GUEST = "guest"
@@ -21,10 +20,12 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 class CurrentUser(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
     id: str = Field(alias="_id")
     email: str
     role: Role = Role.READER
-    permissions: List[str] = []
+    permissions: List[str] = Field(default_factory=list)
     is_active: bool = True
     full_name: str = ""
     slug: str = ""
@@ -38,10 +39,6 @@ class CurrentUser(BaseModel):
             return v.lower()
         return v
     
-    class Config:
-        populate_by_name = True
-        extra = "ignore"
-
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY
 
@@ -60,7 +57,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         if email is None or session_id is None:
             logger.warning("Token verification failed due to missing identity claims")
             raise credentials_exception
-    except jwt.PyJWTError as e:
+    except jwt.PyJWTError:
         logger.exception("Authentication decoding failed due to invalid token payload")
         raise credentials_exception
 

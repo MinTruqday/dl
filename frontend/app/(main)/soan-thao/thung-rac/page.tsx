@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getTrashAPI,
   restoreDocumentAPI,
@@ -13,11 +13,7 @@ export default function TrashPage() {
   const [trash, setTrash] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTrash();
-  }, []);
-
-  const fetchTrash = async () => {
+  const fetchTrash = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getTrashAPI();
@@ -27,7 +23,11 @@ export default function TrashPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchTrash();
+  }, [fetchTrash]);
 
   const handleRestoreDocument = async (docId: string) => {
     try {

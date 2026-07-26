@@ -1,41 +1,55 @@
-from typing import Optional
+from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field
-from typing import Any
+from pydantic import BaseModel, ConfigDict, Field
 
-class CompileRequest(BaseModel):
-    content: str
+from src.core.infrastructure.configuration import settings
 
-class KeystrokeSyncRequest(BaseModel):
-    content: str
+
+class StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class CompileRequest(StrictModel):
+    content: str = Field(min_length=1, max_length=settings.MAX_COMPILE_INPUT_BYTES)
+
+
+class KeystrokeSyncRequest(StrictModel):
+    content: str = Field(max_length=200000)
     timestamp: Optional[float] = None
 
-class InlineSuggestionRequest(BaseModel):
-    selected_text: str
-    suggested_text: str
-    comment: Optional[str] = None
 
-class ResolveSuggestionRequest(BaseModel):
-    action: str = Field(..., description="Chọn 'chấp nhận' hoặc 'từ chối'")
+class InlineSuggestionRequest(StrictModel):
+    selected_text: str = Field(min_length=1, max_length=10000)
+    suggested_text: str = Field(min_length=1, max_length=10000)
+    comment: Optional[str] = Field(default=None, max_length=5000)
 
-class PomodoroSyncRequest(BaseModel):
-    document_id: str
-    duration: int
-    words_written: int
 
-class FindReplaceRequest(BaseModel):
-    search: str
-    replace: str
+class ResolveSuggestionRequest(StrictModel):
+    action: Literal["accepted", "rejected"]
+
+
+class PomodoroSyncRequest(StrictModel):
+    document_id: str = Field(min_length=1, max_length=100)
+    duration: int = Field(ge=1, le=1440)
+    words_written: int = Field(ge=0, le=1000000)
+
+
+class FindReplaceRequest(StrictModel):
+    search: str = Field(min_length=1, max_length=1000)
+    replace: str = Field(max_length=10000)
     match_case: bool = False
 
-class AutoSaveRequest(BaseModel):
-    content: dict
 
-class InlineCommentRequest(BaseModel):
-    block_id: str
-    text: str
-    selected_text: Optional[str] = None
+class AutoSaveRequest(StrictModel):
+    content: dict[str, Any]
 
-class VersionDiffRequest(BaseModel):
-    version_id_a: str
-    version_id_b: str
+
+class InlineCommentRequest(StrictModel):
+    block_id: str = Field(min_length=1, max_length=200)
+    text: str = Field(min_length=1, max_length=10000)
+    selected_text: Optional[str] = Field(default=None, max_length=10000)
+
+
+class VersionDiffRequest(StrictModel):
+    version_id_a: str = Field(min_length=1, max_length=100)
+    version_id_b: str = Field(min_length=1, max_length=100)

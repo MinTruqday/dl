@@ -263,15 +263,13 @@ class AnnaSource:
                             payload["download_link"] = download_link
                             logger.info("[AnnaSource] Download link extracted successfully")
 
-                            ext = (
-                                payload["download_link"].split("")[-1][:4]
-                                if "" in payload["download_link"].split("/")[-1]
-                                else "pdf"
-                            )
-                            if len(ext) > 4 or "/" in ext:
+                            parsed_path = urllib.parse.urlparse(payload["download_link"]).path
+                            ext = os.path.splitext(parsed_path)[1].lstrip(".").lower() or "pdf"
+                            if not re.fullmatch(r"[a-z0-9]{1,8}", ext):
                                 ext = "pdf"
                             slug = urllib.parse.quote(
-                                payload["title"].lower().replace(" ", "-")
+                                payload["title"].lower().replace(" ", "-"),
+                                safe="",
                             )[:50]
                             payload["filename"] = f"{slug}.{ext}"
                             payload["content_format"] = ext
@@ -307,7 +305,7 @@ class AnnaSource:
 
         logger.info("[AnnaSource] Downloading document to temporary storage")
 
-        slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
+        slug = urllib.parse.quote(title.lower().replace(" ", "-"), safe="")[:50]
         ext = payload.get("content_format", "pdf")
         filename = payload.get("filename") or f"{slug}.{ext}"
 
@@ -321,7 +319,7 @@ class AnnaSource:
             if success:
                 logger.info("[AnnaSource] Document downloaded successfully")
                 minio_url = await storage.upload_local_file(
-                    f"documents/anna_archive/{filename}", target_local
+                    f"system/collection/anna_archive/{filename}", target_local
                 )
 
             if os.path.exists(target_local):
@@ -338,6 +336,7 @@ class AnnaSource:
                 "slug": slug,
                 "description": "Trích xuất tự động hoàn tất",
                 "file_url": minio_url,
+                "source_url": payload.get("source_url"),
                 "pdf_url": minio_url if ext.lower() == "pdf" else None,
                 "tags": ["AnnaSource's Archive", payload.get("author", "Unknown")],
                 "content": None,

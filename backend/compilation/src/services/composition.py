@@ -1,263 +1,184 @@
-from src.core.logic_logger import log_logic_execution
-from src.core.infrastructure.mongo import mongo
+import copy
 import json
-import os
-import uuid
+import re
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import List
 
-import httpx
-from src.core.infrastructure.http_client import http_client
 from bson import ObjectId
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
+from src.core.infrastructure.redis import redis
+from src.core.logic_logger import log_logic_execution
 from src.repositories.composition import CompositionRepository
 from src.repositories.pomodoro import PomodoroRepository
 
+
 class CompositionService:
+    @staticmethod
+    def content_db():
+        return database.mongodb[settings.CONTENT_DB_NAME]
 
     @staticmethod
-    @log_logic_execution
-    async def export_to_format(
-        content: str, format_type: str, compiler_url: str = settings.COMPILATION_URL
-    ):
-        if not content:
-            raise HTTPException(
-                status_code=400, detail="Hệ thống không thể xử lý yêu cầu với nội dung tài liệu rỗng"
-            )
-        try:
-            url = f"{compiler_url}/export/{format_type}"
-            if True:
-                response = await http_client.post(
-                    url, json={"content": content, "format": format_type}
-                )
-                if response.status_code != 200:
-                    raise HTTPException(
-                        status_code=422, detail="Quá trình xuất tài liệu sang định dạng yêu cầu gặp sự cố"
-                    )
-                return response.content
-        except httpx.TimeoutException as e:
-            raise HTTPException(status_code=408, detail="Quá trình xuất tài liệu vượt quá thời gian quy định")
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.exception("Failed to convert document to requested export format")
-            raise HTTPException(status_code=500, detail="Quá trình xuất tài liệu gặp sự cố kỹ thuật")
+    def is_admin(current_user):
+        return getattr(current_user.role, "value", current_user.role) == "admin"
 
     @staticmethod
-    @log_logic_execution
-    async def compile_editorjs_to_pdf(
-        content: str, compiler_url: str = settings.COMPILATION_URL
-    ):
-        if not content:
-            raise HTTPException(
-                status_code=400, detail="Hệ thống không thể xử lý yêu cầu với nội dung tài liệu rỗng"
-            )
-        try:
-            url = f"{compiler_url}/compile"
-            if True:
-                response = await http_client.post(url, json={"content": content})
-                if response.status_code != 200:
-                    raise HTTPException(
-                        status_code=422, detail="Hệ thống gặp sự cố trong quá trình biên dịch tài liệu"
-                    )
-                return response.content
-        except httpx.TimeoutException as e:
-            raise HTTPException(
-                status_code=408,
-                detail="Quá trình biên dịch vượt quá thời gian quy định và đã bị hủy bỏ",
-            )
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.exception("Unexpected error occurred during Tectonic compilation")
-            raise HTTPException(status_code=500, detail="Quá trình biên dịch tài liệu gặp sự cố không mong muốn")
-
-    @staticmethod
-    @log_logic_execution
-    async def sync_keystroke_buffer(
-        document_id: str, payload: dict, current_user, cache=None
-    ):
-        try:
-            if cache:
-                user_id = str(current_user.id)
-                await cache.publish(
-                    f"editor:{document_id}:keystroke", str(payload)
-                )
-                await cache.hset(
-                    f"editor_snapshot:{document_id}", user_id, str(payload)
-                )
-            return {"status": "synced_cache", "timestamp": payload.get("timestamp")}
-        except Exception as e:
-            logger.exception("Failed to synchronize document keystroke buffer from cache")
-            return {"status": "sync_failed", "error": "Quá trình đồng bộ hóa dữ liệu từ bộ nhớ đệm gặp sự cố"}
-
-    @staticmethod
-    @log_logic_execution
-    async def add_inline_suggestion(
-        document_id: str, payload: dict, current_user
-    ):
+    async def get_document(document_id: str, current_user, edit: bool = False):
         user_id = str(current_user.id)
+        access = [
+            {"creator_id": user_id},
+            {"coauthors": user_id},
+            {"collaborators.user_id": user_id},
+            {"shared_with.user_id": user_id},
+        ]
+        if not edit:
+            access.append({"visibility": "public", "status": "published"})
+        query = {"_id": document_id}
+        if not CompositionService.is_admin(current_user):
+            query["$or"] = access
+        document = await CompositionService.content_db().documents.find_one(query)
+        if not document:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc thiếu quyền truy cập")
+        return document
+
+    @staticmethod
+    @log_logic_execution
+    async def sync_keystroke_buffer(document_id: str, payload: dict, current_user, cache=None):
+        await CompositionService.get_document(document_id, current_user, edit=True)
+        user_id = str(current_user.id)
+        serialized = json.dumps(payload, ensure_ascii=False)
+        await redis.publish(f"editor:{document_id}:keystroke", serialized)
+        await redis.setex(f"editor_snapshot:{document_id}:{user_id}", 3600, serialized)
+        return {"status": "synced", "timestamp": payload.get("timestamp")}
+
+    @staticmethod
+    @log_logic_execution
+    async def add_inline_suggestion(document_id: str, payload: dict, current_user):
+        await CompositionService.get_document(document_id, current_user)
+        suggestion_id = str(uuid7())
         await CompositionRepository.insert_suggestion(
             {
-                "document_id": str(document_id),
-                "reviewer_id": user_id,
-                "selected_text": payload.get("selected_text"),
-                "suggested_text": payload.get("suggested_text"),
+                "_id": suggestion_id,
+                "document_id": document_id,
+                "reviewer_id": str(current_user.id),
+                "selected_text": payload["selected_text"],
+                "suggested_text": payload["suggested_text"],
                 "comment": payload.get("comment"),
                 "status": "pending",
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("New inline suggestion successfully registered")
-        return {"message": "Thực hiện ghi nhận thông tin đề xuất chỉnh sửa hoàn tất"}
+        return {"_id": suggestion_id}
 
     @staticmethod
     @log_logic_execution
-    async def resolve_suggestion(
-        suggestion_id: str, payload: dict, current_user
-    ):
-        user_id = str(current_user.id)
-        sug = await CompositionRepository.find_suggestion(
-            {"_id": ObjectId(suggestion_id)}
+    async def resolve_suggestion(suggestion_id: str, payload: dict, current_user):
+        suggestion = await CompositionRepository.find_suggestion({"_id": suggestion_id})
+        if not suggestion:
+            raise HTTPException(status_code=404, detail="Không tìm thấy đề xuất chỉnh sửa")
+        document = await CompositionService.get_document(
+            suggestion["document_id"],
+            current_user,
         )
-        if not sug:
-            raise HTTPException(
-                status_code=404, detail="Không tìm thấy dữ liệu đề xuất chỉnh sửa trên hệ thống"
-            )
-        doc = None
-        try:
-            if True:
-                r = await http_client.get(
-                    f"{settings.CONTENT_URL}/tai-lieu/{sug['document_id']}",
-                )
-                if r.status_code == 200:
-                    doc = r.json().get("data")
-        except Exception as e:
-            logger.exception("Failed to fetch document metadata to verify authorization")
+        user_id = str(current_user.id)
         if (
-            doc
-            and str(doc.get("creator_id")) != user_id
-            and sug.get("reviewer_id") != user_id
+            str(document.get("creator_id")) != user_id
+            and suggestion.get("reviewer_id") != user_id
+            and not CompositionService.is_admin(current_user)
         ):
-            raise HTTPException(
-                status_code=403,
-                detail="Tài khoản không có đủ thẩm quyền để giải quyết đề xuất chỉnh sửa này",
-            )
-
-        action = payload.get("action", "rejected")
-        await CompositionRepository.update_suggestion(
-            {"_id": ObjectId(suggestion_id)},
+            raise HTTPException(status_code=403, detail="Không có quyền giải quyết đề xuất")
+        result = await CompositionRepository.update_suggestion(
+            {"_id": suggestion_id, "status": "pending"},
             {
                 "$set": {
-                    "status": action,
+                    "status": payload["action"],
+                    "resolved_by": user_id,
                     "resolved_at": datetime.now(timezone.utc),
                 }
             },
         )
-        logger.info("Inline suggestion successfully resolved")
-        return {"message": "Thực hiện xử lý đề xuất chỉnh sửa hoàn tất"}
+        if result.modified_count != 1:
+            raise HTTPException(status_code=409, detail="Đề xuất đã được giải quyết")
+        return {"status": payload["action"]}
 
     @staticmethod
     @log_logic_execution
     async def sync_pomodoro_session(payload: dict, current_user):
-        user_id = str(current_user.id)
+        await CompositionService.get_document(payload["document_id"], current_user)
+        session_id = str(uuid7())
         await PomodoroRepository.insert_session(
             {
-                "user_id": user_id,
-                "document_id": str(payload.get("document_id")),
-                "duration_minutes": payload.get("duration"),
-                "words_written": payload.get("words_written"),
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "_id": session_id,
+                "user_id": str(current_user.id),
+                "document_id": payload["document_id"],
+                "duration_minutes": payload["duration"],
+                "words_written": payload["words_written"],
+                "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Pomodoro session metrics successfully recorded")
-        return {"status": "The session metrics have been successfully recorded"}
+        return {"_id": session_id, "status": "recorded"}
 
     @staticmethod
     @log_logic_execution
     async def auto_save_draft(document_id: str, content: dict, current_user):
-        import re
-
-        if isinstance(content, str):
-            content = re.sub(
-                r"<(script|iframe|object|embed|applet|style|link|meta)(.*?)>(.*?)</\1>",
-                "",
-                content,
-                flags=re.IGNORECASE | re.DOTALL,
-            )
-            content = re.sub(r" on\w+\s*=", " ", content, flags=re.IGNORECASE)
-        elif isinstance(content, dict):
-            content_str = json.dumps(content)
-            content_str = re.sub(
-                r"<(script|iframe|object|embed|applet|style|link|meta)(.*?)>(.*?)</\1>",
-                "",
-                content_str,
-                flags=re.IGNORECASE | re.DOTALL,
-            )
-            content_str = re.sub(r" on\w+\s*=", " ", content_str, flags=re.IGNORECASE)
-            content = json.loads(content_str)
-
-        user_id = str(current_user.id)
+        document = await CompositionService.get_document(document_id, current_user, edit=True)
+        serialized = json.dumps(content, ensure_ascii=False)
+        if len(serialized.encode("utf-8")) > settings.MAX_COMPILE_INPUT_BYTES:
+            raise HTTPException(status_code=413, detail="Bản nháp vượt quá kích thước cho phép")
+        blocks = content.get("blocks", [])
+        if not isinstance(blocks, list) or len(blocks) > 5000:
+            raise HTTPException(status_code=422, detail="Cấu trúc bản nháp không hợp lệ")
         toc = []
         words = 0
-        try:
-            if isinstance(content, str):
-                parsed = json.loads(content)
-            else:
-                parsed = content
-            blocks = parsed.get("blocks", [])
-            for block in blocks:
-                if block.get("type") == "header":
-                    toc.append(
-                        {
-                            "id": block.get("id"),
-                            "text": block.get("data", {}).get("text", ""),
-                            "level": block.get("data", {}).get("level", 1),
-                        }
-                    )
-                if "data" in block and "text" in block["data"]:
-                    words += len(str(block["data"]["text"]).split())
-        except Exception as e:
-            logger.exception("Document structure analysis failed during draft parsing")
-
-        reading_time_minutes = max(1, words // 200)
-        try:
-            if True:
-                await http_client.put(
-                    f"{settings.CONTENT_URL}/tai-lieu/{document_id}/noi-dung",
-                    json={
-                        "draft_content": content,
-                        "toc": toc,
-                        "reading_time_minutes": reading_time_minutes,
-                    },
-                    headers={"X-User-Id": user_id},
+        for block in blocks:
+            if not isinstance(block, dict):
+                continue
+            data = block.get("data", {})
+            if block.get("type") == "header":
+                toc.append(
+                    {
+                        "id": block.get("id"),
+                        "text": str(data.get("text", ""))[:1000],
+                        "level": max(1, min(int(data.get("level", 1)), 6)),
+                    }
                 )
-        except Exception as e:
-            logger.exception("Failed to persist document draft to content management system")
-        return {
-            "message": "Thực hiện thao tác lưu tự động bản nháp hoàn tất",
-            "timestamp": str(datetime.now(timezone.utc)),
-        }
+            words += len(str(data.get("text", "")).split())
+        now = datetime.now(timezone.utc)
+        result = await CompositionService.content_db().documents.update_one(
+            {"_id": document["_id"]},
+            {
+                "$set": {
+                    "draft_content": content,
+                    "toc": toc,
+                    "reading_time_minutes": max(1, (words + 199) // 200),
+                    "updated_at": now,
+                }
+            },
+        )
+        if result.modified_count != 1:
+            raise HTTPException(status_code=409, detail="Bản nháp không có thay đổi")
+        return {"timestamp": now.isoformat()}
 
     @staticmethod
     @log_logic_execution
     async def submit_for_review(document_id: str, current_user):
-        user_id = str(current_user.id)
-        try:
-            if True:
-                await http_client.post(
-                    f"{settings.CONTENT_URL}/ban-nhap/{document_id}/kiem-duyet",
-                    json={"action": "pending_review"},
-                    headers={"X-User-Id": user_id},
-                )
-        except Exception as e:
-            logger.exception("Failed to submit document for administrative review")
-        logger.info("Document successfully transitioned to pending review status")
-        return {"message": "Đưa tài liệu vào hàng đợi xét duyệt hoàn tất"}
+        document = await CompositionService.get_document(document_id, current_user, edit=True)
+        if (
+            str(document.get("creator_id")) != str(current_user.id)
+            and not CompositionService.is_admin(current_user)
+        ):
+            raise HTTPException(status_code=403, detail="Chỉ chủ sở hữu mới có thể gửi xét duyệt")
+        result = await CompositionService.content_db().documents.update_one(
+            {"_id": document_id, "status": {"$nin": ["pending_review", "published"]}},
+            {"$set": {"status": "pending_review", "updated_at": datetime.now(timezone.utc)}},
+        )
+        if result.modified_count != 1:
+            raise HTTPException(status_code=409, detail="Tài liệu không thể chuyển sang trạng thái xét duyệt")
+        return {"status": "pending_review"}
 
     @staticmethod
     @log_logic_execution
@@ -268,185 +189,138 @@ class CompositionService:
         match_case: bool,
         current_user,
     ):
-        import re
-
-        user_id = str(current_user.id)
-        document = None
-        try:
-            if True:
-                r = await http_client.get(
-                    f"{settings.CONTENT_URL}/tai-lieu/{document_id}",
-                )
-                if r.status_code == 200:
-                    document = r.json().get("data")
-        except Exception as e:
-            logger.exception("Failed to fetch document metadata from content management system")
-        if not document or str(document.get("creator_id")) != user_id:
-            raise HTTPException(
-                status_code=403,
-                detail="Không tìm thấy tài liệu hoặc tài khoản không có quyền truy cập",
-            )
-
+        document = await CompositionService.get_document(document_id, current_user, edit=True)
+        if str(document.get("creator_id")) != str(current_user.id) and not CompositionService.is_admin(current_user):
+            raise HTTPException(status_code=403, detail="Chỉ chủ sở hữu mới có thể thay đổi toàn cục")
         flags = 0 if match_case else re.IGNORECASE
         pattern = re.compile(re.escape(search_term), flags=flags)
-        new_title = pattern.sub(replace_term, document.get("title", ""))
-        new_desc = pattern.sub(replace_term, document.get("description", ""))
-
-        content = document.get("content")
-        new_content = None
-        if content and isinstance(content, dict) and ("blocks" in content):
-            new_content = content.copy()
-            new_blocks = []
-            for block in content.get("blocks", []):
-                new_block = block.copy()
-                if "data" in block and "text" in block["data"]:
-                    new_block["data"]["text"] = pattern.sub(
-                        replace_term, block["data"]["text"]
-                    )
-                elif "data" in block and "items" in block["data"]:
-                    new_block["data"]["items"] = [
-                        pattern.sub(replace_term, item)
-                        for item in block["data"]["items"]
+        update = {
+            "title": pattern.sub(replace_term, str(document.get("title", ""))),
+            "description": pattern.sub(replace_term, str(document.get("description", ""))),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        source_content = document.get("content")
+        if isinstance(source_content, dict):
+            new_content = copy.deepcopy(source_content)
+            for block in new_content.get("blocks", []):
+                data = block.get("data", {})
+                if isinstance(data.get("text"), str):
+                    data["text"] = pattern.sub(replace_term, data["text"])
+                if isinstance(data.get("items"), list):
+                    data["items"] = [
+                        pattern.sub(replace_term, item) if isinstance(item, str) else item
+                        for item in data["items"]
                     ]
-                new_blocks.append(new_block)
-            new_content["blocks"] = new_blocks
-
-        update_payload = {
-            "title": new_title,
-            "description": new_desc,
-        }
-        if new_content:
-            update_payload["content"] = new_content
-        try:
-            if True:
-                await http_client.put(
-                    f"{settings.CONTENT_URL}/tai-lieu/{document_id}",
-                    json=update_payload,
-                    headers={"X-User-Id": user_id},
-                )
-                await http_client.post(
-                    f"{settings.CONTENT_URL}/phien-ban/luu/{document_id}",
-                    params={"version_note": f"Tìm và thay thế: '{search_term}' → '{replace_term}'"},
-                    headers={"X-User-Id": user_id},
-                )
-        except Exception as e:
-            logger.exception("Failed to persist updated document content after find and replace")
-        
-        logger.info("Global find and replace operation completed successfully")
-        return {
-            "message": "Thao tác tìm kiếm và thay thế hoàn tất",
-            "affected_fields": ["title", "description", "content"],
-        }
-
-    @staticmethod
-    @log_logic_execution
-    async def add_inline_comment(
-        document_id: str, data: dict, current_user
-    ) -> dict:
-        comment_id = str(uuid7())
-        comment = {
-            "_id": comment_id,
-            "document_id": document_id,
-            "user_id": str(current_user.id),
-            "user_name": current_user.full_name,
-            "block_id": data["block_id"],
-            "text": data["text"],
-            "selected_text": data.get("selected_text", ""),
-            "status": "open",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-        await CompositionRepository.insert_comment(comment)
-        return {"_id": comment_id, "message": "Thực hiện thêm mới bình luận theo ngữ cảnh hoàn tất"}
-
-    @staticmethod
-    @log_logic_execution
-    async def get_inline_comments(
-        document_id: str, current_user
-    ) -> List[dict]:
-        cursor = (
-            CompositionRepository
-            .find_comments({"document_id": document_id, "status": "open"})
-            .sort("created_at", -1)
+            update["content"] = new_content
+        await CompositionService.content_db().document_versions.insert_one(
+            {
+                "_id": str(uuid7()),
+                "document_id": document_id,
+                "creator_id": str(current_user.id),
+                "note": "Tìm và thay thế",
+                "snapshot": {
+                    "title": document.get("title"),
+                    "description": document.get("description"),
+                    "content": document.get("content"),
+                    "cover_url": document.get("cover_url"),
+                    "tags": document.get("tags", []),
+                    "categories": document.get("categories", []),
+                },
+                "created_at": datetime.now(timezone.utc),
+            }
         )
-        comments = await cursor 
-        for c in comments:
-            c["_id"] = str(c.get("_id", ""))
-            if isinstance(c.get("created_at"), datetime):
-                c["created_at"] = c["created_at"].isoformat()
-            elif not c.get("created_at"):
-                c["created_at"] = datetime.now(timezone.utc).isoformat().isoformat()
+        await CompositionService.content_db().documents.update_one(
+            {"_id": document_id},
+            {"$set": update},
+        )
+        return {"affected_fields": list(update)}
+
+    @staticmethod
+    @log_logic_execution
+    async def add_inline_comment(document_id: str, data: dict, current_user) -> dict:
+        await CompositionService.get_document(document_id, current_user)
+        comment_id = str(uuid7())
+        await CompositionRepository.insert_comment(
+            {
+                "_id": comment_id,
+                "document_id": document_id,
+                "user_id": str(current_user.id),
+                "user_name": current_user.full_name,
+                "block_id": data["block_id"],
+                "text": data["text"],
+                "selected_text": data.get("selected_text", ""),
+                "status": "open",
+                "created_at": datetime.now(timezone.utc),
+            }
+        )
+        return {"_id": comment_id}
+
+    @staticmethod
+    @log_logic_execution
+    async def get_inline_comments(document_id: str, current_user) -> List[dict]:
+        await CompositionService.get_document(document_id, current_user)
+        comments = await CompositionRepository.find_comments(
+            {"document_id": document_id, "status": "open"}
+        ).sort("created_at", -1).execute()
+        for comment in comments:
+            comment["_id"] = str(comment["_id"])
+            if isinstance(comment.get("created_at"), datetime):
+                comment["created_at"] = comment["created_at"].isoformat()
         return comments
 
     @staticmethod
     @log_logic_execution
     async def resolve_comment(comment_id: str, current_user) -> dict:
-        comment = await CompositionRepository.find_comment(
-            {"_id": comment_id}
-        )
+        comment = await CompositionRepository.find_comment({"_id": comment_id})
         if not comment:
-            raise HTTPException(
-                status_code=404, detail="Không tìm thấy dữ liệu bình luận trực tiếp trên hệ thống"
-            )
-
-        doc = None
-        try:
-            if True:
-                r = await http_client.get(
-                    f"{settings.CONTENT_URL}/tai-lieu/{comment['document_id']}",
-                )
-                if r.status_code == 200:
-                    doc = r.json().get("data")
-        except Exception as e:
-            logger.exception("Failed to fetch document metadata to verify authorization")
+            raise HTTPException(status_code=404, detail="Không tìm thấy bình luận")
+        document = await CompositionService.get_document(comment["document_id"], current_user)
+        user_id = str(current_user.id)
         if (
-            doc
-            and str(doc.get("creator_id")) != str(current_user.id)
-            and comment.get("user_id") != str(current_user.id)
+            str(document.get("creator_id")) != user_id
+            and comment.get("user_id") != user_id
+            and not CompositionService.is_admin(current_user)
         ):
-            raise HTTPException(
-                status_code=403, detail="Tài khoản không có đủ thẩm quyền để đánh dấu giải quyết bình luận này"
-            )
-
-        await CompositionRepository.update_comment(
-            {"_id": comment_id},
+            raise HTTPException(status_code=403, detail="Không có quyền giải quyết bình luận")
+        result = await CompositionRepository.update_comment(
+            {"_id": comment_id, "status": "open"},
             {
                 "$set": {
                     "status": "resolved",
-                    "resolved_by": str(current_user.id),
-                    "resolved_at": datetime.now(timezone.utc).isoformat(),
+                    "resolved_by": user_id,
+                    "resolved_at": datetime.now(timezone.utc),
                 }
             },
         )
-        return {"message": "Thực hiện đánh dấu giải quyết bình luận hoàn tất"}
+        if result.modified_count != 1:
+            raise HTTPException(status_code=409, detail="Bình luận đã được giải quyết")
+        return {"status": "resolved"}
 
     @staticmethod
     @log_logic_execution
     async def get_version_diff(
-        document_id: str, version_id_a: str, version_id_b: str, current_user
+        document_id: str,
+        version_id_a: str,
+        version_id_b: str,
+        current_user,
     ) -> dict:
-        v_a, v_b = None, None
-        try:
-            if True:
-                ra = await http_client.get(
-                    f"{settings.CONTENT_URL}/phien-ban/tai-lieu/{document_id}",
-                )
-                if ra.status_code == 200:
-                    versions = ra.json().get("data", [])
-                    for v in versions:
-                        if str(v.get("_id")) == version_id_a:
-                            v_a = v
-                        if str(v.get("_id")) == version_id_b:
-                            v_b = v
-        except Exception as e:
-            logger.exception("Failed to retrieve document version history for comparison")
-        if not v_a or not v_b:
-            raise HTTPException(
-                status_code=404, detail="Hệ thống không tìm thấy các phiên bản tài liệu yêu cầu để thực hiện so sánh"
-            )
+        await CompositionService.get_document(document_id, current_user)
+        ids = [version_id_a, version_id_b]
+        object_ids = [ObjectId(value) for value in ids if ObjectId.is_valid(value)]
+        versions = await CompositionService.content_db().document_versions.find(
+            {
+                "document_id": document_id,
+                "_id": {"$in": ids + object_ids},
+            }
+        ).to_list(length=2)
+        by_id = {str(version["_id"]): version for version in versions}
+        if version_id_a not in by_id or version_id_b not in by_id:
+            raise HTTPException(status_code=404, detail="Không tìm thấy đủ hai phiên bản")
+        first = by_id[version_id_a]
+        second = by_id[version_id_b]
         return {
-            "version_a": v_a.get("content"),
-            "version_b": v_b.get("content"),
-            "timestamp_a": v_a.get("created_at"),
-            "timestamp_b": v_b.get("created_at"),
+            "version_a": first.get("snapshot", {}).get("content", first.get("content")),
+            "version_b": second.get("snapshot", {}).get("content", second.get("content")),
+            "timestamp_a": first.get("created_at"),
+            "timestamp_b": second.get("created_at"),
         }
-

@@ -1,123 +1,121 @@
 import asyncio
-import glob
+import io
 import os
 import re
+import resource
+import signal
 import tempfile
-
-from loguru import logger
-from uuid6 import uuid7
+import zipfile
 
 from src.core.infrastructure.configuration import settings
 
+
+compile_semaphore = asyncio.Semaphore(settings.MAX_CONCURRENT_COMPILATIONS)
+
+
+def limit_process():
+    resource.setrlimit(resource.RLIMIT_CPU, (25, 25))
+    resource.setrlimit(resource.RLIMIT_AS, (4 * 1024 * 1024 * 1024, 4 * 1024 * 1024 * 1024))
+    resource.setrlimit(resource.RLIMIT_FSIZE, (settings.MAX_COMPILE_OUTPUT_BYTES, settings.MAX_COMPILE_OUTPUT_BYTES))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
+    resource.setrlimit(resource.RLIMIT_NPROC, (128, 128))
+
+
+async def run_process(arguments: list[str], working_directory: str):
+    environment = os.environ.copy()
+    environment["GHCRTS"] = "-N1"
+    process = await asyncio.create_subprocess_exec(
+        *arguments,
+        cwd=working_directory,
+        env=environment,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        limit=2 * 1024 * 1024,
+        preexec_fn=limit_process,
+        start_new_session=True,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
+    except asyncio.TimeoutError:
+        os.killpg(process.pid, signal.SIGKILL)
+        await process.wait()
+        raise ValueError("Quá trình biên dịch vượt quá thời gian tối đa")
+    if process.returncode != 0:
+        message = stderr.decode("utf-8", errors="ignore")[-2000:]
+        raise ValueError(message or "Quá trình biên dịch thất bại")
+    return stdout, stderr
+
+
 class LatexEngine:
-    DANGEROUS_PATTERNS = [
-        r"\\input\s*\{?\s*/",
-        r"\\include\s*\{?\s*/",
-        r"\\input\s*\{?\s*\.",
-        r"\\include\s*\{?\s*\.",
-        r"\\lstinputlisting",
-        r"\\openin",
-        r"\\read",
-        r"\\newwrite",
-        r"\\openout",
-        r"\\write",
+    dangerous_patterns = [
+        r"\\(?:input|include|lstinputlisting|openin|read|newwrite|openout|write|immediate|write18)\b",
+        r"\\usepackage\s*\{[^}]*shellesc[^}]*\}",
+        r"(?:https?|file|ftp)://",
+        r"\\(?:catcode|csname)\b",
     ]
 
     @staticmethod
+    def validate_content(content: str):
+        encoded = content.encode("utf-8")
+        if not encoded or len(encoded) > settings.MAX_COMPILE_INPUT_BYTES:
+            raise ValueError("Kích thước nội dung biên dịch không hợp lệ")
+        for pattern in LatexEngine.dangerous_patterns:
+            if re.search(pattern, content, re.IGNORECASE):
+                raise ValueError("Mã nguồn tài liệu chứa chỉ thị không an toàn")
+
+    @staticmethod
     async def compile_to_pdf(content: str) -> bytes:
-        for pattern in LatexEngine.DANGEROUS_PATTERNS:
-            if re.search(pattern, content):
-                raise Exception("Mã nguồn tài liệu chứa các chỉ thị không an toàn hoặc không được phép")
-
-        job_id = str(uuid7())
-        temp_dir = tempfile.gettempdir()
-        tex_path = os.path.join(temp_dir, f"{job_id}.tex")
-        pdf_path = os.path.join(temp_dir, f"{job_id}.pdf")
-
-        with open(tex_path, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        process = None
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "timeout",
-                "-k",
-                "35",
-                "30",
-                "tectonic",
-                "--synctex",
-                "--keep-logs",
-                "-Z",
-                "continue-on-errors",
-                "--outdir",
-                temp_dir,
-                tex_path,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                limit=1024 * 1024 * 2,
-            )
-            await asyncio.wait_for(
-                process.communicate(), timeout=30.0
-            )
-
-            if not os.path.exists(pdf_path):
-                raise Exception("Quá trình biên dịch thất bại do lỗi cú pháp trong tài liệu")
-
-            with open(pdf_path, "rb") as f:
-                return f.read()
-
-        except asyncio.TimeoutError as e:
-            if process:
-                try:
-                    process.kill()
-                except Exception as e:
-                    logger.exception("Failed to terminate orphaned compilation process")
-            raise Exception("Quá trình biên dịch tài liệu vượt quá thời gian tối đa cho phép")
-
-        finally:
-            for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
-                try:
-                    os.remove(filepath)
-                except Exception as e:
-                    logger.exception("Failed to clean up temporary compilation artifacts")
+        LatexEngine.validate_content(content)
+        async with compile_semaphore:
+            with tempfile.TemporaryDirectory(prefix="doclib_latex_") as temp_dir:
+                tex_path = os.path.join(temp_dir, "main.tex")
+                pdf_path = os.path.join(temp_dir, "main.pdf")
+                with open(tex_path, "w", encoding="utf-8") as stream:
+                    stream.write(content)
+                await run_process(
+                    [
+                        "tectonic",
+                        "--untrusted",
+                        "--outdir",
+                        temp_dir,
+                        tex_path,
+                    ],
+                    temp_dir,
+                )
+                if not os.path.isfile(pdf_path):
+                    raise ValueError("Quá trình biên dịch không tạo được tệp PDF")
+                size = os.path.getsize(pdf_path)
+                if size < 1 or size > settings.MAX_COMPILE_OUTPUT_BYTES:
+                    raise ValueError("Kích thước tệp kết quả không hợp lệ")
+                with open(pdf_path, "rb") as stream:
+                    return stream.read()
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
-        job_id = str(uuid7())
-        temp_dir = tempfile.gettempdir()
-        tex_path = os.path.join(temp_dir, f"{job_id}.tex")
-        out_path = os.path.join(temp_dir, f"{job_id}.{target_format}")
-
-        with open(tex_path, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "pandoc",
-                tex_path,
-                "-o",
-                out_path,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await asyncio.wait_for(
-                process.communicate(), timeout=30.0
-            )
-
-            if not os.path.exists(out_path):
-                raise Exception("Quá trình chuyển đổi định dạng tài liệu gặp sự cố")
-
-            with open(out_path, "rb") as f:
-                return f.read()
-        finally:
-            for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
-                try:
-                    os.remove(filepath)
-                except Exception as e:
-                    logger.exception("Failed to clean up temporary compilation artifacts")
+        LatexEngine.validate_content(content)
+        if target_format not in {"docx", "html"}:
+            raise ValueError("Định dạng xuất không được hỗ trợ")
+        async with compile_semaphore:
+            with tempfile.TemporaryDirectory(prefix="doclib_latex_export_") as temp_dir:
+                tex_path = os.path.join(temp_dir, "main.tex")
+                output_path = os.path.join(temp_dir, f"document.{target_format}")
+                with open(tex_path, "w", encoding="utf-8") as stream:
+                    stream.write(content)
+                await run_process(
+                    ["pandoc", tex_path, "-o", output_path],
+                    temp_dir,
+                )
+                if not os.path.isfile(output_path):
+                    raise ValueError("Quá trình xuất không tạo được tệp kết quả")
+                size = os.path.getsize(output_path)
+                if size < 1 or size > settings.MAX_COMPILE_OUTPUT_BYTES:
+                    raise ValueError("Kích thước tệp kết quả không hợp lệ")
+                with open(output_path, "rb") as stream:
+                    return stream.read()
 
     @staticmethod
     def format_latex(content: str) -> dict:
+        LatexEngine.validate_content(content)
         lines = content.split("\n")
         formatted = []
         indent_level = 0
@@ -126,25 +124,19 @@ class LatexEngine:
             if stripped.startswith("\\end{"):
                 indent_level = max(0, indent_level - 1)
             formatted.append("    " * indent_level + stripped)
-            if stripped.startswith("\\begin{") and (
-                not stripped.startswith("\\begin{document}")
-            ):
+            if stripped.startswith("\\begin{") and not stripped.startswith("\\begin{document}"):
                 indent_level += 1
         return {"formatted_content": "\n".join(formatted)}
 
     @staticmethod
     def export_project_zip(content: str) -> bytes:
-        import io
-        import zipfile
-
+        LatexEngine.validate_content(content)
         zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            zip_file.writestr("main.tex", content.encode("utf-8"))
-            zip_file.writestr(
-                "README.md",
-                "Exported from the document compilation service".encode("utf-8"),
-            )
-            zip_file.writestr(
-                ".gitignore", "*.pdf\n*.aux\n*.log\n*.out".encode("utf-8")
-            )
-        return zip_buffer.getvalue()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("main.tex", content.encode("utf-8"))
+            archive.writestr("README.md", b"Exported from DocLib")
+            archive.writestr(".gitignore", b"*.pdf\n*.aux\n*.log\n*.out")
+        result = zip_buffer.getvalue()
+        if len(result) > settings.MAX_COMPILE_OUTPUT_BYTES:
+            raise ValueError("Kích thước tệp kết quả không hợp lệ")
+        return result

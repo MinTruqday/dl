@@ -59,7 +59,13 @@ async def delete_announcement(
         message="Xóa thông báo vĩnh viễn hoàn tất",
     )
 
-@router.post("/gui-di", response_model=APIResponse[Any], include_in_schema=False, dependencies=[Depends(verify_internal_token)])
+@router.post(
+    "/gui-di",
+    response_model=APIResponse[Any],
+    status_code=201,
+    include_in_schema=False,
+    dependencies=[Depends(verify_internal_token)],
+)
 async def create_announcement(data: AnnouncementCreate, db=Depends(get_db)):
     return APIResponse(
         data=await AnnouncementService.create_announcement(data, db),

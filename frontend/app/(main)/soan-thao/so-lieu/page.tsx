@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   getDocumentAnalyticsAPI,
@@ -63,11 +63,7 @@ export default function StatsPage() {
   const [newPrice, setNewPrice] = useState(0);
   const [settingPrice, setSettingPrice] = useState(false);
 
-  useEffect(() => {
-    fetchStatsData();
-  }, []);
-
-  const fetchStatsData = async () => {
+  const fetchStatsData = useCallback(async () => {
     setLoading(true);
     try {
       const revData = await getAuthorRevenueAPI();
@@ -79,7 +75,11 @@ export default function StatsPage() {
       setLoading(false);
       requestAnimationFrame(() => setVisible(true));
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchStatsData();
+  }, [fetchStatsData]);
 
   const handleViewDeepAnalytics = async (
     docId: string,
@@ -301,7 +301,7 @@ export default function StatsPage() {
               <div className="flex flex-col items-center justify-center py-24">
                 <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
                 <p className="text-[13px] font-medium text-[#6E6E73]">
-                  Đang phân tích dữ liệu...
+                  Đang phân tích dữ liệu
                 </p>
               </div>
             ) : (

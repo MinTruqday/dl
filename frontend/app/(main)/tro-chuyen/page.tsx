@@ -11,7 +11,7 @@ import {
   API_URL,
 } from "@/features/authentication/services/session.service";
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useToast } from "@/shared/contexts/ToastContext";
 import ReactMarkdown from "react-markdown";
@@ -339,7 +339,7 @@ function CustomInstructionsModal({
             <textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              placeholder="Ví dụ: Luôn bắt đầu phản hồi bằng tóm tắt TL;DR ngắn gọn..."
+              placeholder="Ví dụ: Luôn bắt đầu phản hồi bằng tóm tắt TL;DR ngắn gọn"
               rows={5}
               className="w-full p-3.5 rounded-[12px] border border-[#D2D2D7] focus:border-[#0071E3] outline-none text-[14px] text-[#1D1D1F] resize-none mb-4"
             />
@@ -490,7 +490,7 @@ const UserMessage = ({ content }: { content: string }) => {
     if (displayContent.length > 400) {
       displayContent = displayContent.slice(0, 400);
     }
-    displayContent += "...";
+    displayContent += " [còn tiếp]";
   }
 
   return (
@@ -570,13 +570,13 @@ export default function TroChuyenPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mirrorRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth() as any;
+  const currentUserId = user?.id || user?._id;
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const token = getToken();
-      const userId = user?.id || user?._id;
-      if (!userId) return;
-      const res = await fetch(`${API_URL}/lich-su?user_id=${userId}`, {
+      if (!currentUserId) return;
+      const res = await fetch(`${API_URL}/lich-su?user_id=${currentUserId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -586,11 +586,11 @@ export default function TroChuyenPage() {
     } catch (err) {
       console.error("Error loading chat history:", err);
     }
-  };
+  }, [currentUserId]);
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [fetchHistory]);
 
   useEffect(() => {
     if (scrollRef.current)
@@ -1272,7 +1272,7 @@ export default function TroChuyenPage() {
                                         <div className="flex gap-2 items-center py-1">
                                           <Loader2 className="w-4 h-4 text-[#0071E3] animate-spin" />
                                           <span className="text-[14px] text-[#6E6E73] font-medium animate-pulse">
-                                            Đang kích hoạt không gian suy luận...
+                                            Đang kích hoạt không gian suy luận
                                           </span>
                                         </div>
                                       )}
@@ -1386,9 +1386,10 @@ export default function TroChuyenPage() {
                 type="file"
                 ref={folderInputRef}
                 className="hidden"
-                // @ts-ignore
-                webkitdirectory=""
-                directory=""
+                {...({
+                  webkitdirectory: "",
+                  directory: "",
+                } as Record<string, string>)}
                 multiple
                 onChange={(e) => {
                   handleFileUpload(e, "folder");
@@ -1503,7 +1504,6 @@ export default function TroChuyenPage() {
                     
                     mirror.value = newValue;
                     
-                    // Measure single-line wrap WITHOUT transitions
                     const baseClass = "absolute top-0 left-0 w-full min-h-[56px] text-[17px] leading-[24px] font-medium font-sans opacity-0 invisible pointer-events-none -z-10 resize-none";
                     mirror.className = `${baseClass} py-[16px] pl-[56px] pr-[180px]`;
                     mirror.style.height = "auto";
@@ -1515,7 +1515,6 @@ export default function TroChuyenPage() {
                     setIsExpanded(shouldExpand);
                     
                     if (shouldExpand) {
-                       // Measure expanded height WITHOUT transitions
                        mirror.className = `${baseClass} px-4 pt-4 pb-[56px]`;
                        mirror.style.height = "auto";
                        el.style.height = `${Math.min(mirror.scrollHeight, 200)}px`;

@@ -15,19 +15,6 @@ from src.tools.drm import (
 from src.schemas.drm import DRMPolicyOutput, WatermarkConfig, AntiExfiltrationFlags
 
 class DRMEnforcementEngine:
-    def __init__(self):
-        self._redis = None
-
-    def _get_redis(self):
-        if self._redis is None:
-            try:
-                import redis as redis_lib
-                from src.core.infrastructure.configuration import settings
-                self._redis = redis_lib.from_url(settings.REDIS_URI, decode_responses=True)
-            except Exception as e:
-                logger.warning(f"DRM Enforcement Redis connection unavailable: {e}")
-        return self._redis
-
     async def fast_deterministic_enforce(
         self,
         user_id: str,

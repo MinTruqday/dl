@@ -15,7 +15,11 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/noi-bat")
 
-@router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.post(
+    "/tai-lieu/{document_id}",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def create_highlight(
     document_id: str,
     data: HighlightCreateRequest,

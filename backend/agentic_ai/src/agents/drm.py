@@ -1,12 +1,11 @@
 import asyncio
 import json
-import redis
 from typing import Any, Dict, Optional
 from loguru import logger
 
 from langchain_core.prompts import ChatPromptTemplate
 from src.agents.planning import llm
-from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.redis import redis
 from src.core.registry import PromptType, registry
 from src.core.security.drm_enforcement import drm_enforcement_engine
 from src.schemas.drm import DRMPolicyOutput
@@ -40,16 +39,14 @@ async def evaluate_drm_policy(
     1. Fast 0-Token Deterministic Enforcement (< 2ms).
     2. AI LLM Escalator ONLY on ambiguous high-risk incidents.
     """
+    cache_key = f"drm_policy:{document_id}:{user_id}"
     try:
-        redis_client = redis.from_url(settings.REDIS_URI, decode_responses=True)
-        cache_key = f"drm_policy:{document_id}:{user_id}"
-        cached_result = redis_client.get(cache_key)
+        cached_result = await redis.get(cache_key)
         if cached_result:
             logger.info("DRM Policy found in cache")
             return json.loads(cached_result)
-    except Exception as e:
-        logger.warning(f"DRM Cache read failed: {e}")
-        redis_client = None
+    except Exception:
+        logger.exception("DRM cache read failed")
 
     fast_result = await drm_enforcement_engine.fast_deterministic_enforce(
         user_id=user_id,
@@ -62,11 +59,10 @@ async def evaluate_drm_policy(
     )
 
     if not fast_result.get("requires_ai_escalation", False):
-        if redis_client:
-            try:
-                redis_client.setex(cache_key, 60, json.dumps(fast_result))
-            except Exception:
-                pass
+        try:
+            await redis.setex(cache_key, 60, json.dumps(fast_result))
+        except Exception:
+            logger.exception("DRM cache write failed")
         return fast_result
 
     try:
@@ -81,10 +77,9 @@ async def evaluate_drm_policy(
         logger.warning(f"AI Escalation fallback: {e}")
         final_dict = fast_result
 
-    if redis_client:
-        try:
-            redis_client.setex(cache_key, 60, json.dumps(final_dict))
-        except Exception:
-            pass
+    try:
+        await redis.setex(cache_key, 60, json.dumps(final_dict))
+    except Exception:
+        logger.exception("DRM cache write failed")
 
     return final_dict

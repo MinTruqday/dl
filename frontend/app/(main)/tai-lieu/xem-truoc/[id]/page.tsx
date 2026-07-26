@@ -183,7 +183,7 @@ export default function DocumentViewer() {
         setLoading(false);
       }
     },
-    [id, router],
+    [id, rawName, rawUrl, router],
   );
 
   const fetchSessions = useCallback(async () => {
@@ -484,7 +484,7 @@ export default function DocumentViewer() {
         });
         y += fontSize;
       });
-    }, [text, readingMode, zoom]);
+    }, [text]);
     return (
       <div ref={containerRef} className="w-full relative select-none">
         <canvas ref={canvasRef} className="block w-full select-none" />

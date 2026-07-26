@@ -123,7 +123,11 @@ export default function WalletPage() {
     if (!bankAccount.trim()) return showToast("Số tài khoản không được để trống", "error");
     if (!accountHolder.trim()) return showToast("Tên chủ tài khoản không được để trống", "error");
 
-    const bankInfo = `${bankName.trim()} | ${bankAccount.trim()} | ${accountHolder.trim()}`;
+    const bankInfo = {
+      bank_name: bankName.trim(),
+      account_number: bankAccount.trim(),
+      account_name: accountHolder.trim(),
+    };
 
     setWithdrawLoading(true);
     try {
@@ -310,7 +314,7 @@ export default function WalletPage() {
                 type="text"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
-                placeholder="VD: Vietcombank, MB Bank..."
+                placeholder="VD: Vietcombank, MB Bank"
                 className="apple-input w-full"
               />
             </div>
@@ -381,12 +385,12 @@ export default function WalletPage() {
             <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Số dư khả dụng</h2>
             <div className="flex items-baseline justify-center gap-1">
               <span className="text-[48px] font-bold tracking-tight text-[#1D1D1F]">
-                {isLoading ? "..." : balance.toLocaleString()}
+                {isLoading ? "Đang tải" : balance.toLocaleString()}
               </span>
               <span className="text-[20px] font-medium text-[#6E6E73]">dl</span>
             </div>
             <p className="text-[13px] text-[#6E6E73] mt-1">
-              ≈ {isLoading ? "..." : (balance * 1000).toLocaleString()} VNĐ
+              ≈ {isLoading ? "Đang tải" : (balance * 1000).toLocaleString()} VNĐ
             </p>
             <div className="flex flex-col gap-3 mt-8">
               <button

@@ -28,7 +28,7 @@ async def translate_message(
         message_id, target_lang, current_user, bearer_token
     )
     if not result:
-        return APIResponse(message="Không tìm thấy tin nhắn cần dịch", status=404)
+        raise HTTPException(status_code=404, detail="Không tìm thấy tin nhắn cần dịch")
     await publish_personal_message(
         {
             "type": "message_translated",
@@ -62,10 +62,9 @@ async def get_quick_replies(
     bearer_token: str = Depends(oauth2_scheme),
 ):
     if not current_user.has_ai_access():
-        return APIResponse(
-            data={"replies": []},
-            message="Tính năng Gợi ý trả lời thông minh chỉ dành cho người dùng gói Chuyên sâu hoặc Toàn năng",
-            status=403
+        raise HTTPException(
+            status_code=403,
+            detail="Tính năng gợi ý trả lời thông minh yêu cầu gói Chuyên sâu hoặc Toàn năng",
         )
 
 
@@ -146,5 +145,4 @@ async def set_vip_priority(other_user_id: str, req: dict, current_user=Depends(g
     is_vip = req.get("is_vip", True)
     result = await EnhancementService.set_vip_priority(other_user_id, is_vip, current_user)
     return APIResponse(data=result, message="Cập nhật thẻ ưu tiên VIP cuộc trò chuyện thành công")
-
 

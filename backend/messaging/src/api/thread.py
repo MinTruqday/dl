@@ -30,7 +30,7 @@ async def publish_personal_message(message: dict, receiver_id: str):
     for target_id in targets:
         await redis.publish(f"message_delivery:{target_id}", payload)
 
-@router.post("/", response_model=APIResponse[Any])
+@router.post("/", response_model=APIResponse[Any], status_code=201)
 async def send_message(req: Creation, current_user=Depends(get_current_user)):
     msg = await ThreadService.send_message(
         req.receiver_id,
@@ -92,10 +92,10 @@ async def edit_message(
 ):
     content = req.get("content")
     if not content:
-        return APIResponse(message="Nội dung tin nhắn không được để trống", status=400)
+        raise HTTPException(status_code=400, detail="Nội dung tin nhắn không được để trống")
     result = await ThreadService.edit_message(message_id, content, current_user)
     if not result:
-        return APIResponse(message="Không thể chỉnh sửa tin nhắn", status=403)
+        raise HTTPException(status_code=403, detail="Không thể chỉnh sửa tin nhắn")
     other_id = (
         result["receiver_id"]
         if result["sender_id"] == current_user.id
@@ -110,7 +110,7 @@ async def edit_message(
 async def recall_message(message_id: str, current_user=Depends(get_current_user)):
     result = await ThreadService.recall_message(message_id, current_user)
     if not result:
-        return APIResponse(message="Không có quyền thu hồi tin nhắn", status=403)
+        raise HTTPException(status_code=403, detail="Không có quyền thu hồi tin nhắn")
     other_id = (
         result["receiver_id"]
         if result["sender_id"] == current_user.id
@@ -135,7 +135,7 @@ async def forward_message(req: dict, current_user=Depends(get_current_user)):
     message_id = req.get("message_id")
     receiver_ids = req.get("receiver_ids", [])
     if not message_id or not receiver_ids or len(receiver_ids) > 20:
-        return APIResponse(message="Dữ liệu chuyển tiếp không hợp lệ", status=400)
+        raise HTTPException(status_code=400, detail="Dữ liệu chuyển tiếp không hợp lệ")
     
     result = await ThreadService.forward_message(message_id, receiver_ids, current_user)
     for msg in result.get("messages", []):
@@ -144,13 +144,13 @@ async def forward_message(req: dict, current_user=Depends(get_current_user)):
         )
     return APIResponse(data=result, message="Chuyển tiếp tin nhắn hoàn tất")
 
-@router.post("/binh-chon", response_model=APIResponse[Any])
+@router.post("/binh-chon", response_model=APIResponse[Any], status_code=201)
 async def create_poll(req: dict, current_user=Depends(get_current_user)):
     receiver_id = req.get("receiver_id")
     question = req.get("question")
     options = req.get("options", [])
     if not receiver_id or not isinstance(question, str) or not question.strip() or not 2 <= len(options) <= 10:
-        return APIResponse(message="Dữ liệu bình chọn không hợp lệ", status=400)
+        raise HTTPException(status_code=400, detail="Dữ liệu bình chọn không hợp lệ")
         
     msg = await ThreadService.create_poll(receiver_id, question, options, current_user)
     await publish_personal_message(
@@ -162,7 +162,7 @@ async def create_poll(req: dict, current_user=Depends(get_current_user)):
 async def vote_poll(message_id: str, req: dict, current_user=Depends(get_current_user)):
     option_id = req.get("option_id")
     if not option_id:
-        return APIResponse(message="Lựa chọn không hợp lệ", status=400)
+        raise HTTPException(status_code=400, detail="Lựa chọn không hợp lệ")
         
     result = await ThreadService.vote_poll(message_id, option_id, current_user)
     other_id = (
@@ -184,4 +184,3 @@ async def delete_for_me(message_id: str, current_user=Depends(get_current_user))
 async def restore_message(message_id: str, current_user=Depends(get_current_user)):
     result = await ThreadService.restore_message(message_id, current_user)
     return APIResponse(data=result, message="Khôi phục tin nhắn thành công")
-

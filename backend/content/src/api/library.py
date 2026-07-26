@@ -16,7 +16,7 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(route_class=LoggingRoute, prefix="/thu-vien")
 
-@router.post("/danh-sach", response_model=APIResponse[Any])
+@router.post("/danh-sach", response_model=APIResponse[Any], status_code=201)
 async def create_reading_list(
     data: ReadingListCreate,
     current_user: CurrentUser = Depends(get_current_user),

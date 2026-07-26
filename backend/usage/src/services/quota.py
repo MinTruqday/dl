@@ -1,15 +1,12 @@
-from src.core.logic_logger import log_logic_execution
-from src.core.infrastructure.redis import redis
-from src.core.infrastructure.mongo import mongo
-import json
-import math
-from datetime import datetime, timezone
-
 from fastapi import HTTPException
-from loguru import logger
 
+from src.core.dependency import Role
 from src.core.infrastructure.configuration import settings
-from src.schemas.quota import QuotaLimit
+from src.core.infrastructure.mongo import mongo
+from src.core.infrastructure.redis import redis
+from src.core.logic_logger import log_logic_execution
+from src.schemas.quota import QuotaLimit, Tier
+
 
 class QuotaService:
     @staticmethod
@@ -62,7 +59,6 @@ class QuotaService:
     @staticmethod
     @log_logic_execution
     async def update_role_quota(tier: str, limits_dict: dict):
-        from src.schemas.quota import Role, Tier
         tier_upper = tier.upper()
         tier = tier_upper if tier_upper != Role.ADMIN.value.upper() else Role.ADMIN.value
         global_cfg = await QuotaService.get_global_config_from_db()
@@ -79,8 +75,6 @@ class QuotaService:
         user_id: str, role: str, ai_tier: str = "BASIC"
     ) -> QuotaLimit:
         global_cfg = await QuotaService.get_global_config_from_db()
-
-        from src.schemas.quota import Role, Tier
         normalized_role = str(role).lower()
         normalized_tier = str(ai_tier).upper()
         target_tier = Role.ADMIN.value if normalized_role == Role.ADMIN.value else normalized_tier

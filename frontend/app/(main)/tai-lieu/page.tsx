@@ -111,17 +111,26 @@ export default function DocumentsPage() {
   const [isCreating, setIsCreating] = useState(false);
 
   const isAdmin = user?.role === "admin";
-  const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const cursorRef = useRef<string | null>(null);
+  const hasMoreRef = useRef(true);
+  const isRefreshingRef = useRef(false);
+  const requestIdRef = useRef(0);
   const observerTarget = useRef<HTMLDivElement>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const fetchData = useCallback(
     async (isLoadMore = false) => {
-      if (isRefreshing || (!hasMore && isLoadMore)) return;
+      if (
+        isLoadMore &&
+        (isRefreshingRef.current || !hasMoreRef.current)
+      )
+        return;
+      const requestId = ++requestIdRef.current;
+      isRefreshingRef.current = true;
       setIsRefreshing(true);
       try {
-        const currentCursor = isLoadMore ? cursor : undefined;
+        const currentCursor = isLoadMore ? cursorRef.current : undefined;
         const [docsData, foldersData] = await Promise.all([
           isAdmin
             ? getDocumentsAPI(
@@ -140,8 +149,7 @@ export default function DocumentsPage() {
           !isLoadMore ? getFoldersAPI(currentFolder?._id) : Promise.resolve([]),
         ]);
         let docs = docsData.data || docsData || [];
-        
-        // Always filter on the frontend because the API does not support folder_id filtering
+        if (requestId !== requestIdRef.current) return;
         if (currentFolder) {
           const folderId = currentFolder._id || currentFolder.id;
           docs = docs.filter((d: any) => (d.folder_id || d.folder) === folderId);
@@ -161,17 +169,26 @@ export default function DocumentsPage() {
                 .toLowerCase()
                 .includes(searchQuery.toLowerCase()),
           );
-          
-        setHasMore(docs.length >= 20);
-        if (docs.length > 0)
-          setCursor(docs[docs.length - 1].id || docs[docs.length - 1]._id);
+        const moreAvailable = docs.length >= 20;
+        hasMoreRef.current = moreAvailable;
+        setHasMore(moreAvailable);
+        if (docs.length > 0) {
+          const nextCursor =
+            docs[docs.length - 1].id || docs[docs.length - 1]._id;
+          cursorRef.current = nextCursor;
+        } else if (!isLoadMore) {
+          cursorRef.current = null;
+        }
         setDocuments((prev) => (isLoadMore ? [...prev, ...docs] : docs));
         if (!isLoadMore) setFolders(foldersData.data || foldersData || []);
       } catch (err: any) {
         showToast("Lỗi trích xuất danh sách tài liệu từ hệ thống", "error");
       } finally {
-        setIsRefreshing(false);
-        setIsLoading(false);
+        if (requestId === requestIdRef.current) {
+          isRefreshingRef.current = false;
+          setIsRefreshing(false);
+          setIsLoading(false);
+        }
       }
     },
     [
@@ -180,10 +197,7 @@ export default function DocumentsPage() {
       currentFolder,
       filterStar,
       filterFormat,
-      cursor,
-      hasMore,
       showToast,
-      isRefreshing,
     ],
   );
 
@@ -195,7 +209,7 @@ export default function DocumentsPage() {
         publisher_name: isAdmin ? "DocLib" : user.full_name || "",
       }));
     }
-  }, [user, authLoading, isAdmin, currentFolder, filterStar, filterFormat]);
+  }, [authLoading, fetchData, isAdmin, user]);
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {

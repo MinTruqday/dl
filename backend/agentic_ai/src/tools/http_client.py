@@ -47,6 +47,7 @@ def check_system_access(token: str) -> bool:
         raw_token = token.removeprefix("Bearer ").strip()
         payload = jwt.decode(raw_token, settings.SECRET_KEY, algorithms=["HS256"])
         from src.schemas.auth import Role
+        role = str(payload.get("role", "")).lower()
         return role == Role.ADMIN.value
     except Exception:
         return False

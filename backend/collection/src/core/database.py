@@ -1,35 +1,49 @@
-from src.core.infrastructure.mongo import mongo
-import os
+from datetime import datetime, timezone
 
 from loguru import logger
+from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
-from motor.motor_asyncio import AsyncIOMotorClient
+from src.core.infrastructure.database import database as infrastructure
+
 
 class Database:
-    def __init__(self):
-        self.uri = settings.MONGODB_URI
-        self.client = AsyncIOMotorClient(self.uri)
-        self.db = self.client.doclib
+    def get_collection(self):
+        if infrastructure.mongodb is None:
+            raise RuntimeError("MongoDB connection is not initialized")
+        return infrastructure.mongodb[settings.CONTENT_DB_NAME]["documents"]
 
     async def insert_document(self, document_data: dict):
-        try:
-            res = await self.client["doclib_content"]["documents"].insert_one(document_data)
-            logger.info("Document record created successfully")
-            return str(res.inserted_id)
-        except Exception as e:
-            logger.exception("MongoDB document insertion failed")
-            return None
+        now = datetime.now(timezone.utc)
+        document = {
+            "_id": str(uuid7()),
+            "created_at": now,
+            "updated_at": now,
+            **document_data,
+        }
+        identity = document.get("source_url") or document.get("file_url")
+        if not identity:
+            raise ValueError("Collected document requires a source identity")
+        query = (
+            {"source_url": identity}
+            if document.get("source_url")
+            else {"file_url": identity}
+        )
+        result = await self.get_collection().find_one_and_update(
+            query,
+            {"$setOnInsert": document},
+            upsert=True,
+            return_document=True,
+        )
+        logger.info("Collected document record persisted successfully")
+        return str(result["_id"])
 
     async def update_document(self, document_id: str, update_data: dict):
-        try:
-            from bson import ObjectId
+        result = await self.get_collection().update_one(
+            {"_id": document_id},
+            {"$set": {**update_data, "updated_at": datetime.now(timezone.utc)}},
+        )
+        return result.modified_count == 1
 
-            await self.client["doclib_content"]["documents"].update_one(
-                {"_id": ObjectId(document_id)}, {"$set": update_data}
-            )
-            logger.info("Document record updated successfully")
-        except Exception as e:
-            logger.exception("MongoDB document update failed")
 
 database = Database()

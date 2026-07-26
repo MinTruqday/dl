@@ -1,17 +1,22 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
 from fastapi import HTTPException
 from uuid6 import uuid7
-import httpx
-from loguru import logger
+
 from src.core.dependency import Tier
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.logic_logger import log_logic_execution
 from src.schemas.wallet import Transaction, TransactionType
-from src.services.deposit import DepositService
 
 
-ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELLED"}
+ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {
+    "PENDING",
+    "APPROVED",
+    "COMPLETED",
+    "REJECTED",
+    "CANCELLED",
+}
 
 
 class WithdrawalService:
@@ -93,7 +98,7 @@ class WithdrawalService:
                     "$match": {
                         "user_id": user_id,
                         "created_at": {"$gte": week_start},
-                        "status": {"$in": ["PENDING", "APPROVED"]},
+                        "status": {"$in": ["PENDING", "APPROVED", "COMPLETED"]},
                     }
                 },
                 {"$group": {"_id": None, "count": {"$sum": 1}}},
@@ -120,10 +125,6 @@ class WithdrawalService:
                 detail=f"Số dư khả dụng không đủ chi trả khoản rút {amount} dl cộng phí thuế {tax_amount} dl ({tax_percent}% cho lượt thứ {tax_percent} trong tuần). Tổng trừ: {total_deduction} dl"
             )
 
-        AUTO_PAYOUT_THRESHOLD_DL = 500_000
-        is_auto_payout = amount < AUTO_PAYOUT_THRESHOLD_DL
-        initial_status = "APPROVED" if is_auto_payout else "PENDING"
-
         withdrawal_id = str(uuid7())
         async with await database.mongodb.start_session() as session:
             async with session.start_transaction():
@@ -148,8 +149,7 @@ class WithdrawalService:
                         "total_deducted": total_deduction,
                         "bank_info": data["bank_info"],
                         "note": data.get("note"),
-                        "status": initial_status,
-                        "auto_payout": is_auto_payout,
+                        "status": "PENDING",
                         "created_at": now,
                     },
                     session=session,
@@ -158,7 +158,7 @@ class WithdrawalService:
                     user_id=user_id,
                     amount=-total_deduction,
                     type=TransactionType.WITHDRAW,
-                    note=f"Rút {amount} dl về ngân hàng qua Napas 24/7 (Phí thuế {tax_percent}%: {tax_amount} dl - Status: {initial_status})",
+                    note=f"Giữ {total_deduction} dl cho yêu cầu rút tiền, gồm {amount} dl và phí {tax_amount} dl",
                     reference_id=withdrawal_id,
                 )
                 await db.transactions.insert_one(
@@ -166,36 +166,11 @@ class WithdrawalService:
                     session=session,
                 )
 
-        if is_auto_payout and settings.PAYOS_CLIENT_ID and settings.PAYOS_API_KEY:
-            try:
-                async with httpx.AsyncClient(timeout=15.0) as http_client:
-                    bank_info_obj = data.get("bank_info", {})
-                    payout_data = {
-                        "accountNumber": bank_info_obj.get("account_number", ""),
-                        "bankCode": bank_info_obj.get("bank_code", "VCB"),
-                        "amount": amount,
-                        "description": f"DocLib rut tien tu dong {withdrawal_id[:8]}"
-                    }
-                    signature = DepositService._generate_payos_signature(payout_data)
-                    payout_headers = {
-                        "x-client-id": settings.PAYOS_CLIENT_ID,
-                        "x-api-key": settings.PAYOS_API_KEY,
-                        "x-signature": signature
-                    }
-                    resp = await http_client.post("https://api-merchant.payos.vn/v2/payouts", json=payout_data, headers=payout_headers)
-                    if resp.status_code == 200:
-                        logger.info(f"Instant Auto-Payout executed successfully for withdrawal {withdrawal_id}")
-                    else:
-                        logger.warning(f"Instant Auto-Payout response code {resp.status_code}: {resp.text}")
-            except Exception as e:
-                logger.error(f"Instant Auto-Payout API integration error: {e}")
-
-        if is_auto_payout:
-            msg = f"Hệ thống đã tự động duyệt và chuyển {amount} dl về tài khoản ngân hàng của bạn qua Napas 24/7!"
-        else:
-            msg = f"Yêu cầu rút tiền {amount} dl đã được ghi nhận và đang chờ Admin duyệt an toàn (do vượt hạn mức tự động 500.000 dl)"
-
-        return {"message": msg, "withdrawal_id": withdrawal_id, "status": initial_status, "auto_payout": is_auto_payout}
+        return {
+            "message": f"Yêu cầu rút tiền {amount} dl đang chờ xác minh",
+            "withdrawal_id": withdrawal_id,
+            "status": "PENDING",
+        }
 
     @staticmethod
     @log_logic_execution
@@ -236,47 +211,65 @@ class WithdrawalService:
         current_user,
     ) -> dict:
         normalized_action = action.lower()
-        if normalized_action not in {"approve", "reject"}:
+        if normalized_action not in {"approve", "reject", "complete"}:
             raise HTTPException(status_code=400, detail="Hành động xử lý không hợp lệ")
-        if normalized_action == "reject" and len(reason.strip()) < 5:
-            raise HTTPException(status_code=400, detail="Lý do từ chối phải có ít nhất 5 ký tự")
+        reason_value = reason.strip()
+        if normalized_action in {"reject", "complete"} and len(reason_value) < 5:
+            detail = (
+                "Lý do từ chối phải có ít nhất 5 ký tự"
+                if normalized_action == "reject"
+                else "Mã đối soát phải có ít nhất 5 ký tự"
+            )
+            raise HTTPException(status_code=400, detail=detail)
         db = WithdrawalService._finance_db()
         withdrawal = await db.withdrawal_requests.find_one({"_id": withdrawal_id})
         if not withdrawal:
             raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu rút tiền")
         if withdrawal["user_id"] == str(current_user.id):
             raise HTTPException(status_code=403, detail="Không thể tự xử lý yêu cầu rút tiền của chính mình")
-        new_status = "APPROVED" if normalized_action == "approve" else "REJECTED"
+        new_status = {
+            "approve": "APPROVED",
+            "reject": "REJECTED",
+            "complete": "COMPLETED",
+        }[normalized_action]
+        expected_status = "APPROVED" if new_status == "COMPLETED" else "PENDING"
+        now = datetime.now(timezone.utc)
+        update_fields = {
+            "status": new_status,
+            "processed_by": str(current_user.id),
+            "processed_at": now,
+        }
+        if new_status == "REJECTED":
+            update_fields["rejection_reason"] = reason_value
+        if new_status == "COMPLETED":
+            update_fields["completed_at"] = now
+            update_fields["payout_reference"] = reason_value
         async with await database.mongodb.start_session() as session:
             async with session.start_transaction():
                 update = await db.withdrawal_requests.update_one(
-                    {"_id": withdrawal_id, "status": "PENDING"},
-                    {
-                        "$set": {
-                            "status": new_status,
-                            "processed_by": str(current_user.id),
-                            "processed_at": datetime.now(timezone.utc),
-                            "rejection_reason": reason.strip() if new_status == "REJECTED" else None,
-                        }
-                    },
+                    {"_id": withdrawal_id, "status": expected_status},
+                    {"$set": update_fields},
                     session=session,
                 )
                 if update.modified_count != 1:
                     raise HTTPException(status_code=409, detail="Yêu cầu rút tiền đã được xử lý")
                 if new_status == "REJECTED":
+                    refund_amount = int(
+                        withdrawal.get("total_deducted", withdrawal["amount"])
+                    )
                     await db.wallets.update_one(
                         {"_id": withdrawal["user_id"]},
                         {
                             "$inc": {
-                                "balance": withdrawal["amount"],
-                                "withdrawable_balance": withdrawal["amount"],
+                                "balance": refund_amount,
+                                "withdrawable_balance": refund_amount,
                             }
                         },
                         session=session,
                     )
                     refund = Transaction(
                         user_id=withdrawal["user_id"],
-                        amount=withdrawal["amount"],
+                        amount=refund_amount,
                         type=TransactionType.REFUND,
                         note="Reserved withdrawal funds restored after rejection",
                         reference_id=withdrawal_id,
@@ -285,40 +278,25 @@ class WithdrawalService:
                         refund.model_dump(by_alias=True),
                         session=session,
                     )
-                bank_info = str(withdrawal["bank_info"])
-                masked_bank = bank_info[:4] + "***" + bank_info[-3:] if len(bank_info) > 8 else "***"
-
-                if new_status == "APPROVED" and settings.PAYOS_CLIENT_ID and settings.PAYOS_API_KEY:
-                    try:
-                        async with httpx.AsyncClient(timeout=15.0) as http_client:
-                            payout_data = {
-                                "accountNumber": withdrawal.get("bank_info", {}).get("account_number", ""),
-                                "bankCode": withdrawal.get("bank_info", {}).get("bank_code", ""),
-                                "amount": withdrawal["amount"],
-                                "description": f"DocLib rut tien {withdrawal_id[:8]}"
-                            }
-                            signature = DepositService._generate_payos_signature(payout_data)
-                            payout_headers = {
-                                "x-client-id": settings.PAYOS_CLIENT_ID,
-                                "x-api-key": settings.PAYOS_API_KEY,
-                                "x-signature": signature
-                            }
-                            resp = await http_client.post("https://api-merchant.payos.vn/v2/payouts", json=payout_data, headers=payout_headers)
-                            if resp.status_code == 200:
-                                logger.info(f"PayOS Payout Gateway executed successfully for withdrawal {withdrawal_id}")
-                            else:
-                                logger.warning(f"PayOS Payout response code {resp.status_code}: {resp.text}")
-                    except Exception as e:
-                        logger.error(f"PayOS Payout API integration error: {e}")
-
+                bank_info = withdrawal.get("bank_info", {})
+                account_number = (
+                    str(bank_info.get("account_number", ""))
+                    if isinstance(bank_info, dict)
+                    else str(bank_info)
+                )
+                masked_bank = (
+                    account_number[:3] + "***" + account_number[-3:]
+                    if len(account_number) > 8
+                    else "***"
+                )
                 await db.audit_logs.insert_one(
                     {
                         "action": f"WITHDRAWAL_{new_status}",
                         "actor_id": str(current_user.id),
                         "withdrawal_id": withdrawal_id,
                         "bank_info_masked": masked_bank,
-                        "reason": reason.strip(),
-                        "timestamp": datetime.now(timezone.utc),
+                        "reason": reason_value,
+                        "timestamp": now,
                     },
                     session=session,
                 )
@@ -343,19 +321,22 @@ class WithdrawalService:
                 )
                 if update.modified_count != 1:
                     raise HTTPException(status_code=409, detail="Yêu cầu rút tiền đã được xử lý")
+                refund_amount = int(
+                    withdrawal.get("total_deducted", withdrawal["amount"])
+                )
                 await db.wallets.update_one(
                     {"_id": user_id},
                     {
                         "$inc": {
-                            "balance": withdrawal["amount"],
-                            "withdrawable_balance": withdrawal["amount"],
+                            "balance": refund_amount,
+                            "withdrawable_balance": refund_amount,
                         }
                     },
                     session=session,
                 )
                 refund = Transaction(
                     user_id=user_id,
-                    amount=withdrawal["amount"],
+                    amount=refund_amount,
                     type=TransactionType.REFUND,
                     note="Reserved withdrawal funds restored after cancellation",
                     reference_id=withdrawal_id,

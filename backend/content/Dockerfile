@@ -12,7 +12,7 @@ RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY content/src/ ./src/
 
-RUN addgroup --system app && adduser --system --ingroup app app && chown -R app:app /app
+RUN groupadd --system app && useradd --system --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app && chown -R app:app /app
 
 USER app
 

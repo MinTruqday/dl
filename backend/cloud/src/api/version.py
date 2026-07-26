@@ -8,7 +8,11 @@ from src.services.version import VersionService
 
 router = APIRouter(route_class=LoggingRoute, prefix="/luu-tru")
 
-@router.post("/phien-ban/{file_id}", response_model=APIResponse[Any])
+@router.post(
+    "/phien-ban/{file_id}",
+    response_model=APIResponse[Any],
+    status_code=201,
+)
 async def create_file_version(
     file_id: str,
     new_url: str = Body(..., embed=True),

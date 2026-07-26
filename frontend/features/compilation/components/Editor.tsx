@@ -23,6 +23,7 @@ import {
 import {
   API_URL,
   getAuthHeaders,
+  getToken,
 } from "@/features/authentication/services/session.service";
 import {
   Sparkles,
@@ -113,10 +114,12 @@ export default function Editor({
 
   useEffect(() => {
     if (!documentId) return;
-    let wsUrl = `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace("http", "ws")}/ws/crdt/${documentId}`;
-    let ws: WebSocket;
+    const authToken = getToken();
+    if (!authToken) return;
+    const wsUrl = `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace("http", "ws")}/ws/crdt/${documentId}`;
+    let ws: WebSocket | null = null;
     try {
-      ws = new WebSocket(wsUrl);
+      ws = new WebSocket(wsUrl, ["doclib", authToken]);
       ws.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data);
@@ -128,10 +131,8 @@ export default function Editor({
               const parsedContent = typeof data.content === "string" ? JSON.parse(data.content) : data.content;
               editorRef.current.render(parsedContent);
             }
-            // Temporarily ignore user count logic or extract it if necessary
           }
         } catch (err) {
-          // Fallback for non-JSON messages (like raw user count bytes)
           setOnlineUsers((prev) => prev);
         }
       };
@@ -141,7 +142,7 @@ export default function Editor({
       console.error("WebSocket Error", e);
     }
     return () => {
-      if (ws) ws.close();
+      ws?.close();
     };
   }, [documentId]);
 

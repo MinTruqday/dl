@@ -62,7 +62,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             return (
               <div
                 key={t.id}
-                className="relative bg-white border border-zinc-200 rounded-2xl p-4 shadow-xl pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-[420ms] ease-out min-w-[300px] max-w-[400px] flex items-center gap-3"
+                className="relative bg-white border border-zinc-200 rounded-2xl p-4 shadow-xl pointer-events-auto animate-in fade-in slide-in-from-bottom-4 [transition-duration:420ms] ease-out min-w-[300px] max-w-[400px] flex items-center gap-3"
               >
                 <div className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${t.type === "error" ? "bg-red-50 text-red-600" : t.type === "success" ? "bg-green-50 text-green-600" : "bg-zinc-100 text-zinc-900"}`}>
                   {icon}
