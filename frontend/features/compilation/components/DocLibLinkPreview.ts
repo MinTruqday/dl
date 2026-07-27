@@ -151,9 +151,11 @@ export default class DocLibLinkPreview implements BlockTool {
       const insertLink = () => {
         if (input.value) {
           this.data.link = input.value;
-          try {
+          if (URL.canParse(input.value)) {
             this.data.meta.site_name = new URL(input.value).hostname;
-          } catch (e) {}
+          } else {
+            this.data.meta.site_name = input.value;
+          }
           this.buildUI();
         }
       };

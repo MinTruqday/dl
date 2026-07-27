@@ -3,6 +3,7 @@ export default class DocLibDragDrop {
   private holder: HTMLElement | null = null;
   private dragPlaceholder: HTMLElement;
   private draggedBlock: HTMLElement | null = null;
+  private initTimer: ReturnType<typeof setTimeout>;
 
   constructor(editor: any) {
     this.editor = editor;
@@ -22,7 +23,7 @@ export default class DocLibDragDrop {
       document.head.appendChild(style);
     }
 
-    setTimeout(() => this.init(), 500);
+    this.initTimer = setTimeout(() => this.init(), 500);
   }
 
   private init() {
@@ -32,96 +33,77 @@ export default class DocLibDragDrop {
     const toolbar = document.querySelector(".ce-toolbar");
     if (!toolbar) return;
 
-    document.addEventListener("mousedown", (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const dragHandle = target.closest(".ce-toolbar__settings-btn");
-
-      if (dragHandle) {
-        const currentBlockIndex = this.editor.blocks.getCurrentBlockIndex();
-        if (currentBlockIndex < 0) return;
-
-        this.draggedBlock = this.holder!.children[
-          currentBlockIndex
-        ] as HTMLElement;
-        if (this.draggedBlock) {
-          this.draggedBlock.draggable = true;
-          this.draggedBlock.classList.add("ce-block--dragging");
-        }
-      }
-    });
-
-    this.holder.addEventListener("dragstart", (e: DragEvent) => {
-      if (!this.draggedBlock) {
-        e.preventDefault();
-        return;
-      }
-      if (e.dataTransfer) {
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", "doclib-block");
-      }
-    });
-
-    this.holder.addEventListener("dragover", (e: DragEvent) => {
-      e.preventDefault();
-      if (!this.draggedBlock) return;
-
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-
-      const target = e.target as HTMLElement;
-      const targetBlock = target.closest(".ce-block");
-
-      if (targetBlock && targetBlock !== this.draggedBlock) {
-        const rect = targetBlock.getBoundingClientRect();
-        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-
-        if (next) {
-          targetBlock.parentNode?.insertBefore(
-            this.dragPlaceholder,
-            targetBlock.nextSibling,
-          );
-        } else {
-          targetBlock.parentNode?.insertBefore(
-            this.dragPlaceholder,
-            targetBlock,
-          );
-        }
-      }
-    });
-
-    this.holder.addEventListener("drop", async (e: DragEvent) => {
-      e.preventDefault();
-      if (!this.draggedBlock || !this.dragPlaceholder.parentNode) {
-        this.cleanup();
-        return;
-      }
-
-      const blocks = Array.from(this.holder!.children).filter((c) =>
-        c.classList.contains("ce-block"),
-      );
-      const fromIndex = blocks.indexOf(this.draggedBlock);
-
-      this.dragPlaceholder.parentNode.insertBefore(
-        this.draggedBlock,
-        this.dragPlaceholder,
-      );
-
-      const newBlocks = Array.from(this.holder!.children).filter((c) =>
-        c.classList.contains("ce-block"),
-      );
-      const toIndex = newBlocks.indexOf(this.draggedBlock);
-
-      if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-        await this.editor.blocks.move(toIndex, fromIndex);
-      }
-
-      this.cleanup();
-    });
-
-    this.holder.addEventListener("dragend", () => this.cleanup());
-    document.addEventListener("mouseup", () => this.cleanup());
+    document.addEventListener("mousedown", this.handleMouseDown);
+    this.holder.addEventListener("dragstart", this.handleDragStart);
+    this.holder.addEventListener("dragover", this.handleDragOver);
+    this.holder.addEventListener("drop", this.handleDrop);
+    this.holder.addEventListener("dragend", this.cleanup);
+    document.addEventListener("mouseup", this.cleanup);
   }
 
-  private cleanup() {
+  private handleMouseDown = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const dragHandle = target.closest(".ce-toolbar__settings-btn");
+    if (!dragHandle || !this.holder) return;
+    const currentBlockIndex = this.editor.blocks.getCurrentBlockIndex();
+    if (currentBlockIndex < 0) return;
+    this.draggedBlock = this.holder.children[currentBlockIndex] as HTMLElement;
+    if (this.draggedBlock) {
+      this.draggedBlock.draggable = true;
+      this.draggedBlock.classList.add("ce-block--dragging");
+    }
+  };
+
+  private handleDragStart = (e: DragEvent) => {
+    if (!this.draggedBlock) {
+      e.preventDefault();
+      return;
+    }
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", "doclib-block");
+    }
+  };
+
+  private handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    if (!this.draggedBlock) return;
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    const targetBlock = (e.target as HTMLElement).closest(".ce-block");
+    if (!targetBlock || targetBlock === this.draggedBlock) return;
+    const rect = targetBlock.getBoundingClientRect();
+    const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+    targetBlock.parentNode?.insertBefore(
+      this.dragPlaceholder,
+      next ? targetBlock.nextSibling : targetBlock,
+    );
+  };
+
+  private handleDrop = async (e: DragEvent) => {
+    e.preventDefault();
+    if (!this.holder || !this.draggedBlock || !this.dragPlaceholder.parentNode) {
+      this.cleanup();
+      return;
+    }
+    const blocks = Array.from(this.holder.children).filter((element) =>
+      element.classList.contains("ce-block"),
+    );
+    const fromIndex = blocks.indexOf(this.draggedBlock);
+    this.dragPlaceholder.parentNode.insertBefore(
+      this.draggedBlock,
+      this.dragPlaceholder,
+    );
+    const movedBlocks = Array.from(this.holder.children).filter((element) =>
+      element.classList.contains("ce-block"),
+    );
+    const toIndex = movedBlocks.indexOf(this.draggedBlock);
+    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+      await this.editor.blocks.move(toIndex, fromIndex);
+    }
+    this.cleanup();
+  };
+
+  private cleanup = () => {
     if (this.draggedBlock) {
       this.draggedBlock.draggable = false;
       this.draggedBlock.classList.remove("ce-block--dragging");
@@ -130,5 +112,17 @@ export default class DocLibDragDrop {
     if (this.dragPlaceholder.parentNode) {
       this.dragPlaceholder.parentNode.removeChild(this.dragPlaceholder);
     }
+  };
+
+  public destroy() {
+    clearTimeout(this.initTimer);
+    document.removeEventListener("mousedown", this.handleMouseDown);
+    document.removeEventListener("mouseup", this.cleanup);
+    this.holder?.removeEventListener("dragstart", this.handleDragStart);
+    this.holder?.removeEventListener("dragover", this.handleDragOver);
+    this.holder?.removeEventListener("drop", this.handleDrop);
+    this.holder?.removeEventListener("dragend", this.cleanup);
+    this.cleanup();
+    this.holder = null;
   }
 }

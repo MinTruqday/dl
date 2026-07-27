@@ -58,6 +58,7 @@ class Settings(BaseModel):
     AGENT_SECURITY_VIOLATION_THRESHOLD: int = int(os.getenv("AGENT_SECURITY_VIOLATION_THRESHOLD", "5"))
     AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(os.getenv("AGENT_SLOW_DURATION_MS_THRESHOLD", "30000"))
     AGENT_ROUTE_CONFIDENCE_THRESHOLD: float = float(os.getenv("AGENT_ROUTE_CONFIDENCE_THRESHOLD", "0.55"))
+    AGENT_FILE_ROOT: str = os.getenv("AGENT_FILE_ROOT", "/tmp/doclib_agent_files")
     FINETUNE_MODELS_DIR: str = os.getenv("FINETUNE_MODELS_DIR", "/tmp/doclib_finetune/models")
     FINETUNE_ADAPTERS_DIR: str = os.getenv("FINETUNE_ADAPTERS_DIR", "/tmp/doclib_finetune/adapters")
     FINETUNE_GGUF_DIR: str = os.getenv("FINETUNE_GGUF_DIR", "/tmp/doclib_finetune/gguf")

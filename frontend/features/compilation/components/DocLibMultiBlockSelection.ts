@@ -4,6 +4,7 @@ export default class DocLibMultiBlockSelection {
   private isSelecting: boolean = false;
   private startBlockIndex: number = -1;
   private currentSelection: Set<number> = new Set();
+  private initTimer: ReturnType<typeof setTimeout>;
 
   constructor(editor: any) {
     this.editor = editor;
@@ -17,66 +18,64 @@ export default class DocLibMultiBlockSelection {
       document.head.appendChild(style);
     }
 
-    setTimeout(() => this.init(), 500);
+    this.initTimer = setTimeout(() => this.init(), 500);
   }
 
   private init() {
     this.holder = document.querySelector(".codex-editor__redactor");
     if (!this.holder) return;
 
-    document.addEventListener("mousedown", (e: MouseEvent) => {
-      if (e.shiftKey) {
-        const target = e.target as HTMLElement;
-        const blockEl = target.closest(".ce-block");
-        if (blockEl) {
-          e.preventDefault();
-          this.isSelecting = true;
-          const blocks = Array.from(this.holder!.querySelectorAll(".ce-block"));
-          this.startBlockIndex = blocks.indexOf(blockEl);
-          this.toggleSelection(this.startBlockIndex);
-        }
-      } else {
-        this.clearSelection();
-      }
-    });
-
-    document.addEventListener("mouseover", (e: MouseEvent) => {
-      if (!this.isSelecting || this.startBlockIndex === -1) return;
-
-      const target = e.target as HTMLElement;
-      const blockEl = target.closest(".ce-block");
-      if (blockEl) {
-        const blocks = Array.from(this.holder!.querySelectorAll(".ce-block"));
-        const hoverIndex = blocks.indexOf(blockEl as HTMLElement);
-        this.selectRange(this.startBlockIndex, hoverIndex);
-      }
-    });
-
-    document.addEventListener("mouseup", () => {
-      this.isSelecting = false;
-    });
-
-    document.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (
-        (e.key === "Backspace" || e.key === "Delete") &&
-        this.currentSelection.size > 0
-      ) {
-        e.preventDefault();
-        const indices = Array.from(this.currentSelection).sort((a, b) => b - a);
-        indices.forEach((index) => {
-          try {
-            this.editor.blocks.delete(index);
-          } catch (err) {
-            console.warn("Could not delete block at index", index, err);
-          }
-        });
-        this.clearSelection();
-      }
-      if (e.key === "Escape") {
-        this.clearSelection();
-      }
-    });
+    document.addEventListener("mousedown", this.handleMouseDown);
+    document.addEventListener("mouseover", this.handleMouseOver);
+    document.addEventListener("mouseup", this.handleMouseUp);
+    document.addEventListener("keydown", this.handleKeyDown);
   }
+
+  private handleMouseDown = (e: MouseEvent) => {
+    if (!e.shiftKey) {
+      this.clearSelection();
+      return;
+    }
+    const block = (e.target as HTMLElement).closest(".ce-block");
+    if (!block || !this.holder || !this.holder.contains(block)) return;
+    e.preventDefault();
+    this.isSelecting = true;
+    const blocks = Array.from(this.holder.querySelectorAll(".ce-block"));
+    this.startBlockIndex = blocks.indexOf(block);
+    this.toggleSelection(this.startBlockIndex);
+  };
+
+  private handleMouseOver = (e: MouseEvent) => {
+    if (!this.isSelecting || this.startBlockIndex === -1 || !this.holder)
+      return;
+    const block = (e.target as HTMLElement).closest(".ce-block");
+    if (!block || !this.holder.contains(block)) return;
+    const blocks = Array.from(this.holder.querySelectorAll(".ce-block"));
+    this.selectRange(this.startBlockIndex, blocks.indexOf(block));
+  };
+
+  private handleMouseUp = () => {
+    this.isSelecting = false;
+  };
+
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (
+      (e.key === "Backspace" || e.key === "Delete") &&
+      this.currentSelection.size > 0
+    ) {
+      e.preventDefault();
+      const indices = Array.from(this.currentSelection).sort((a, b) => b - a);
+      indices.forEach((index) => {
+        try {
+          this.editor.blocks.delete(index);
+        } catch (error) {
+          console.warn("Could not delete block at index", index, error);
+        }
+      });
+      this.clearSelection();
+    }
+    if (e.key === "Escape") this.clearSelection();
+  };
 
   private toggleSelection(index: number) {
     if (this.currentSelection.has(index)) {
@@ -113,5 +112,15 @@ export default class DocLibMultiBlockSelection {
         block.classList.remove("ce-block--selected");
       }
     });
+  }
+
+  public destroy() {
+    clearTimeout(this.initTimer);
+    document.removeEventListener("mousedown", this.handleMouseDown);
+    document.removeEventListener("mouseover", this.handleMouseOver);
+    document.removeEventListener("mouseup", this.handleMouseUp);
+    document.removeEventListener("keydown", this.handleKeyDown);
+    this.clearSelection();
+    this.holder = null;
   }
 }

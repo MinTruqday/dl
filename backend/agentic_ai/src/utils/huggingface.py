@@ -12,6 +12,7 @@ from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResu
 from pydantic import Field
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from loguru import logger
+from src.utils.structured_output import validate_structured_output
 
 def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
     from huggingface_hub import HfApi
@@ -74,9 +75,6 @@ class HFInferenceChat(BaseChatModel):
             "max_tokens": kwargs.get("max_tokens", 512),
             "temperature": kwargs.get("temperature", 0.1),
         }
-        if "response_format" in kwargs:
-            chat_kwargs["response_format"] = kwargs["response_format"]
-
         response = await self.client.chat_completion(**chat_kwargs)
         content = response.choices[0].message.content
         return ChatResult(
@@ -133,18 +131,7 @@ class HFInferenceChat(BaseChatModel):
 
     def with_structured_output(self, schema, **kwargs):
         from langchain_core.runnables import RunnableLambda
-        import json
-        
-        def extract_and_parse(text: str):
-            try:
-                if "```json" in text:
-                    text = text.split("```json")[1].split("```")[0]
-                elif "```" in text:
-                    text = text.split("```")[1].split("```")[0]
-                data = json.loads(text.strip())
-                return schema(**data)
-            except Exception as e:
-                raise ValueError(f"Failed to parse structured output: {e}. Raw text: {text}")
+
         @retry(
             stop=stop_after_attempt(3),
             wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -153,23 +140,25 @@ class HFInferenceChat(BaseChatModel):
             before_sleep=lambda retry_state: logger.warning(f"Retrying _ainvoke structured output due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})")
         )
         async def _ainvoke(messages, **kwargs_inner):
-            schema_json = schema.schema_json()
+            schema_json = (
+                schema.model_json_schema()
+                if hasattr(schema, "model_json_schema")
+                else schema.schema()
+            )
             sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
-            
-            kwargs_inner["response_format"] = {"type": "json_object"}
-            
             res = await self.ainvoke(msgs, **kwargs_inner)
-            return extract_and_parse(res.content)
-            
+            return validate_structured_output(res.content, schema)
+
         def _invoke(messages, **kwargs_inner):
-            schema_json = schema.schema_json()
+            schema_json = (
+                schema.model_json_schema()
+                if hasattr(schema, "model_json_schema")
+                else schema.schema()
+            )
             sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
-            kwargs_inner["response_format"] = {"type": "json_object"}
             res = self.invoke(msgs, **kwargs_inner)
-            return extract_and_parse(res.content)
-            
-        runnable = RunnableLambda(_invoke)
-        runnable.ainvoke = _ainvoke
-        return runnable
+            return validate_structured_output(res.content, schema)
+
+        return RunnableLambda(_invoke, afunc=_ainvoke)

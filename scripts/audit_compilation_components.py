@@ -36,6 +36,7 @@ def main():
     )
     wired.update(re.findall(r"new (DocLib\w+)", editor_source))
     tool_keys = re.findall(r"tools\.(\w+)\s*=", editor_source)
+    component_classes = []
 
     for name in sorted(set(imported_names) - wired):
         issues.append((EDITOR, f"unwired_import:{name}"))
@@ -55,11 +56,18 @@ def main():
         if not re.search(r"export\s+default\s+class", source):
             continue
         name = path.stem
-        if name in PLUGINS or "isInline" in source or "isTune" in source:
+        if name in PLUGINS:
+            continue
+        component_classes.append(name)
+        if "isInline" in source or "isTune" in source:
             continue
         for member in ("toolbox", "render", "save"):
             if member not in source:
                 issues.append((path, f"missing_contract:{member}"))
+
+    inactive_classes = set(component_classes) - set(imported_modules)
+    if inactive_classes and "(require as any).context(" not in editor_source:
+        issues.append((EDITOR, f"unreachable_components:{len(inactive_classes)}"))
 
     for path, issue in issues:
         print(f"{path.relative_to(ROOT)}:{issue}")
@@ -67,7 +75,8 @@ def main():
         return 1
     print(
         f"compilation_component_audit_passed files={len(files)} "
-        f"imports={len(imports)} tools={len(tool_keys)}"
+        f"components={len(component_classes)} direct={len(imports) - len(PLUGINS)} "
+        f"registry={len(inactive_classes)} tools={len(tool_keys)}"
     )
     return 0
 

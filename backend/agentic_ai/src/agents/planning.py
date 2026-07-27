@@ -1,25 +1,21 @@
-import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-import httpx
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from huggingface_hub import AsyncInferenceClient
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import JsonOutputParser
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
-from pydantic import BaseModel, Field
-from src.schemas.planning import ExecutionPlan, PlanNode
-from src.utils.resilience import with_retry
+from src.schemas.planning import ExecutionPlan
+from src.utils.huggingface import HFInferenceChat
+from src.utils.structured_output import extract_json_value
 
 from src.core.infrastructure.configuration import settings
 from src.memory.memo import memo_manager
 
-_hf_endpoint = HuggingFaceEndpoint(
-    task="conversational",
-    repo_id=settings.LLM_MODEL,
-    huggingfacehub_api_token=settings.HF_TOKEN,
-    temperature=0.1,
+_hf_client = AsyncInferenceClient(
+    model=settings.LLM_MODEL,
+    token=settings.HF_TOKEN,
 )
-llm = ChatHuggingFace(llm=_hf_endpoint)
+llm = HFInferenceChat(client=_hf_client, model=settings.LLM_MODEL)
 
 class PlanAgent:
     """
@@ -35,6 +31,7 @@ class PlanAgent:
 
     def __init__(self):
         self.llm = llm
+        self.structured_llm = self.llm.with_structured_output(ExecutionPlan)
         self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
         self._redis = None
         try:
@@ -43,10 +40,6 @@ class PlanAgent:
         except Exception:
             self._redis = None
             logger.exception("Planner Redis client initialization failed")
-
-    @with_retry(max_retries=3, base_wait=2, max_wait=10)
-    async def _invoke_llm(self, messages):
-        return await self.llm.ainvoke(messages)
 
     async def stream_plan(self, req_data: Dict[str, Any]):
         logger.info("Executing execution planning with streaming")
@@ -88,21 +81,15 @@ class PlanAgent:
             ]
 
             try:
-                response = await self._invoke_llm(messages)
-                accumulated_json = str(response.content)
-                if "</think>" in accumulated_json:
-                    accumulated_json = accumulated_json.split("</think>", 1)[1]
+                parsed_model = await self.structured_llm.ainvoke(messages)
+                parsed_result = (
+                    parsed_model.model_dump()
+                    if hasattr(parsed_model, "model_dump")
+                    else parsed_model.dict()
+                )
             except Exception:
                 logger.exception("Plan model invocation failed")
-                accumulated_json = ""
-
-            if not accumulated_json.strip():
                 parsed_result = {"steps": []}
-            else:
-                try:
-                    parsed_result = self.parser.invoke(AIMessage(content=accumulated_json))
-                except Exception:
-                    parsed_result = {"steps": []}
 
             nodes = parsed_result.get("nodes", [])
             valid_nodes = []
@@ -200,15 +187,12 @@ class PlanAgent:
         ]
         
         try:
-            response = await self._invoke_llm(messages)
-            content_str = response.content
-            if "</think>" in content_str:
-                content_str = content_str.split("</think>")[-1].strip()
-            if "```json" in content_str:
-                content_str = content_str.split("```json")[1].split("```")[0].strip()
-            
-            parsed_plan = self.parser.parse(content_str)
-            return parsed_plan
+            parsed_model = await self.structured_llm.ainvoke(messages)
+            return (
+                parsed_model.model_dump()
+                if hasattr(parsed_model, "model_dump")
+                else parsed_model.dict()
+            )
         except Exception as e:
             logger.exception("Replanning failed")
             return current_plan
@@ -238,14 +222,7 @@ class CriticAgent:
                 HumanMessage(content=json.dumps(nodes, ensure_ascii=False))
             ]
             response = await self.llm.ainvoke(messages)
-            content = response.content.strip()
-            
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].strip()
-                
-            reviewed_nodes = json.loads(content)
+            reviewed_nodes = extract_json_value(response.content)
             if isinstance(reviewed_nodes, list) and all(isinstance(n, dict) for n in reviewed_nodes):
                 logger.info("Critic Agent approved and optimized the plan")
                 return reviewed_nodes

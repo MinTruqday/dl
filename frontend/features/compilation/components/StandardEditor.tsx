@@ -118,6 +118,7 @@ export default function StandardEditor({
     containerRef.current.appendChild(holderDiv);
 
     let cancelled = false;
+    const pluginInstances: Array<{ destroy?: () => void }> = [];
 
     const init = async () => {
       const EditorJSModule = (await import("@editorjs/editorjs")).default;
@@ -540,15 +541,46 @@ export default function StandardEditor({
       if (DocLibThesaurus) tools.thesaurus = DocLibThesaurus;
       if (DocLibEquationArray) tools.equationArray = DocLibEquationArray;
 
+      const componentContext = (require as any).context(
+        "./",
+        false,
+        /^\.\/DocLib[^/]+\.ts$/,
+      );
+      const registeredClasses = new Set(
+        Object.values(tools).map((entry) => entry?.class || entry),
+      );
+      const pluginNames = new Set([
+        "DocLibDragDrop",
+        "DocLibMultiBlockSelection",
+        "DocLibUndo",
+      ]);
+      componentContext.keys().forEach((path: string) => {
+        const name = path.slice(2, -3);
+        const toolClass = componentContext(path).default;
+        if (
+          !toolClass ||
+          pluginNames.has(name) ||
+          registeredClasses.has(toolClass)
+        )
+          return;
+        const key = name.charAt(6).toLowerCase() + name.slice(7);
+        tools[key] = toolClass;
+        registeredClasses.add(toolClass);
+      });
+
       const editor = new EditorJSModule({
         holder: holderDiv,
         tools,
         data,
         placeholder: "Start writing",
         onReady: () => {
-          if (DocLibUndo) new DocLibUndo({ editor });
-          if (DocLibDragDrop) new DocLibDragDrop(editor);
-          if (DocLibMultiBlockSelection) new DocLibMultiBlockSelection(editor);
+          if (cancelled) return;
+          if (DocLibUndo)
+            pluginInstances.push(new DocLibUndo({ editor }));
+          if (DocLibDragDrop)
+            pluginInstances.push(new DocLibDragDrop(editor));
+          if (DocLibMultiBlockSelection)
+            pluginInstances.push(new DocLibMultiBlockSelection(editor));
         },
         onChange: async () => {
           try {
@@ -631,6 +663,7 @@ export default function StandardEditor({
 
     return () => {
       cancelled = true;
+      pluginInstances.forEach((plugin) => plugin.destroy?.());
       if (actualEditorRef.current && actualEditorRef.current.destroy) {
         actualEditorRef.current.destroy();
         actualEditorRef.current = null;

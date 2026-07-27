@@ -1,24 +1,21 @@
-import asyncio
-import json
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 from loguru import logger
 
+from huggingface_hub import AsyncInferenceClient
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.schemas.guardrails import SecurityAssessment
+from src.utils.huggingface import HFInferenceChat
 
 class GuardrailsEngine:
     def __init__(self):
-        self._hf = HuggingFaceEndpoint(
-            repo_id=settings.LLM_MODEL,
-            huggingfacehub_api_token=settings.HF_TOKEN,
-            temperature=0.0,
-            task="conversational",
+        self._hf = AsyncInferenceClient(
+            model=settings.LLM_MODEL,
+            token=settings.HF_TOKEN,
         )
-        self.llm = ChatHuggingFace(llm=self._hf)
+        self.llm = HFInferenceChat(client=self._hf, model=settings.LLM_MODEL)
         self._redis = None
 
     def _get_redis(self):

@@ -10,6 +10,9 @@ export default class DocLibUndo {
   private holder: HTMLElement | null = null;
   private undoBtn: HTMLButtonElement | null = null;
   private redoBtn: HTMLButtonElement | null = null;
+  private wrapper: HTMLElement | null = null;
+  private observerTimer: ReturnType<typeof setTimeout> | null = null;
+  private destroyed = false;
 
   constructor({
     editor,
@@ -37,8 +40,8 @@ export default class DocLibUndo {
   }
 
   private async initialize() {
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("doclib-undo-wrapper");
+    this.wrapper = document.createElement("div");
+    this.wrapper.classList.add("doclib-undo-wrapper");
 
     this.undoBtn = document.createElement("button");
     this.undoBtn.classList.add("doclib-undo-btn");
@@ -54,35 +57,26 @@ export default class DocLibUndo {
     this.redoBtn.title = "Redo (Cmd+Shift+Z)";
     this.redoBtn.disabled = true;
 
-    wrapper.appendChild(this.undoBtn);
-    wrapper.appendChild(this.redoBtn);
-    document.body.appendChild(wrapper);
+    this.wrapper.appendChild(this.undoBtn);
+    this.wrapper.appendChild(this.redoBtn);
+    document.body.appendChild(this.wrapper);
 
     this.undoBtn.addEventListener("click", () => this.undo());
     this.redoBtn.addEventListener("click", () => this.redo());
 
     try {
       const initialData = await this.editor.save();
+      if (this.destroyed) return;
       this.history.push(initialData);
       this.position = 0;
-    } catch (e) {}
+    } catch (error) {
+      console.warn("Could not initialize undo history", error);
+    }
 
-    document.addEventListener("keydown", (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
-        e.preventDefault();
-        if (e.shiftKey) {
-          this.redo();
-        } else {
-          this.undo();
-        }
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === "y") {
-        e.preventDefault();
-        this.redo();
-      }
-    });
+    document.addEventListener("keydown", this.handleKeyDown);
 
-    setTimeout(() => {
+    this.observerTimer = setTimeout(() => {
+      if (this.destroyed) return;
       this.holder = document.querySelector(".codex-editor__redactor");
       if (this.holder) {
         this.observer = new MutationObserver(() => this.saveState());
@@ -103,6 +97,7 @@ export default class DocLibUndo {
     this.debounceTimer = setTimeout(async () => {
       try {
         const data = await this.editor.save();
+        if (this.destroyed) return;
 
         const lastData = this.history[this.position];
         if (JSON.stringify(data.blocks) === JSON.stringify(lastData?.blocks))
@@ -119,9 +114,26 @@ export default class DocLibUndo {
           this.position++;
         }
         this.updateUI();
-      } catch (e) {}
+      } catch (error) {
+        console.warn("Could not save undo state", error);
+      }
     }, 400);
   }
+
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+      e.preventDefault();
+      if (e.shiftKey) {
+        this.redo();
+      } else {
+        this.undo();
+      }
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === "y") {
+      e.preventDefault();
+      this.redo();
+    }
+  };
 
   public async undo() {
     if (this.position > 0) {
@@ -147,5 +159,16 @@ export default class DocLibUndo {
     if (this.undoBtn) this.undoBtn.disabled = this.position <= 0;
     if (this.redoBtn)
       this.redoBtn.disabled = this.position >= this.history.length - 1;
+  }
+
+  public destroy() {
+    this.destroyed = true;
+    document.removeEventListener("keydown", this.handleKeyDown);
+    if (this.observerTimer) clearTimeout(this.observerTimer);
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.observer?.disconnect();
+    this.wrapper?.remove();
+    this.observer = null;
+    this.wrapper = null;
   }
 }
