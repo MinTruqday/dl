@@ -120,7 +120,7 @@ class PlanAgent:
                     {
                         "id": "fallback_1",
                         "agent": "Reasoning",
-                        "task": "Provide a safe Vietnamese response without unsupported claims",
+                        "task": "Provide a safe response in the user's language without unsupported claims",
                         "dependencies": []
                     }
                 ]
@@ -129,7 +129,7 @@ class PlanAgent:
 
         except Exception:
             logger.exception("Plan generation error")
-            yield {"type": "plan", "nodes": [{"id": "fallback", "agent": "Knowledge", "task": "Provide a safe Vietnamese failure response", "dependencies": []}]}
+            yield {"type": "plan", "nodes": [{"id": "fallback", "agent": "Knowledge", "task": "Provide a safe failure response in the user's language", "dependencies": []}]}
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         import hashlib

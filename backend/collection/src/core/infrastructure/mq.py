@@ -27,7 +27,7 @@ class RabbitMQClient:
             try:
                 self.connection = await aio_pika.connect_robust(self.url)
                 self.channel = await self.connection.channel()
-                logger.info("RabbitMQ connection established successfully")
+                logger.info("RabbitMQ connection established")
                 return
             except Exception:
                 logger.warning("RabbitMQ connection failed, retrying")

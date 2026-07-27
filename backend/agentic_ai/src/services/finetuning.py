@@ -104,7 +104,7 @@ def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
         sync_update({"status": "cancelled"})
     except Exception:
         logger.exception("Model fine-tuning process error")
-        sync_update({"status": "failed", "error_message": "Quá trình tinh chỉnh mô hình gặp sự cố bất ngờ"})
+        sync_update({"status": "failed", "error_code": "model_finetuning_failed"})
     finally:
         active_jobs.pop(job_id, None)
 
@@ -135,7 +135,7 @@ async def get_dataset(dataset_id: str, user_id: str):
         {"_id": dataset_id, "user_id": user_id}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
     return doc
 
 @log_logic_execution
@@ -149,7 +149,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
             {"dataset_id": dataset_id}
         )
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
+    raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
 
 @log_logic_execution
 async def add_samples(dataset_id: str, req: dict):
@@ -159,7 +159,7 @@ async def add_samples(dataset_id: str, req: dict):
         {"_id": dataset_id, "user_id": user_id}
     )
     if not dataset:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
     documents = [
         {
             "_id": str(uuid7()),
@@ -193,7 +193,7 @@ async def get_samples(
     if not await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
     cursor = mongo.find("finetune_samples", {"dataset_id": dataset_id}).sort("created_at", 1).skip(int(skip)).limit(int(limit))
     return await cursor.to_list(length=None)
 
@@ -203,7 +203,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     if not await FinetuneRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
     if (
         await FinetuneRepository.delete_sample(
             {"_id": sample_id, "dataset_id": dataset_id}
@@ -217,7 +217,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
             {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}},
         )
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy mẫu dữ liệu yêu cầu")
+    raise HTTPException(status_code=404, detail={"code": "finetuning_sample_not_found"})
 
 @log_logic_execution
 async def import_feedback(req: dict):
@@ -232,7 +232,7 @@ async def import_feedback(req: dict):
             "_id": ds_id,
             "user_id": user_id,
             "name": f"Data Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H%M')}",
-            "description": "Trích xuất dữ liệu phản hồi tích cực hoàn tất",
+            "description": "",
             "source": "feedback",
             "sample_count": 0,
             "status": "draft",
@@ -282,7 +282,7 @@ async def import_documents(req: dict):
             "_id": ds_id,
             "user_id": user_id,
             "name": f"Data Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H%M')}",
-            "description": "Trích xuất dữ liệu huấn luyện hoàn tất",
+            "description": "",
             "source": "documents",
             "sample_count": 0,
             "status": "draft",
@@ -359,9 +359,9 @@ async def create_job(req: dict):
         {"_id": ds_id, "user_id": user_id}
     )
     if not dataset:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy bộ dữ liệu yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
     if dataset.get("sample_count", 0) < 10:
-        return {"error": "Bộ dữ liệu chưa đạt số lượng mẫu tối thiểu để tiến hành huấn luyện"}
+        return {"error_code": "finetuning_dataset_too_small", "minimum_samples": 10}
     job_id = str(uuid7())
     job = {
         "_id": job_id,
@@ -392,9 +392,9 @@ async def start_job(job_id: str, req: dict):
         {"_id": job_id, "user_id": req.get("user_id"), "status": "pending"}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_job_not_found"})
     if job_id in active_jobs:
-        return {"error": "Tiến trình huấn luyện này đang được thực thi"}
+        return {"error_code": "finetuning_job_already_running"}
     samples = await mongo.find("finetune_samples", {"dataset_id": job["dataset_id"]}).to_list(length=None)
     config = {
         "base_model": job.get("base_model") or settings.LLM_MODEL,
@@ -440,7 +440,7 @@ async def list_jobs(user_id: str):
 async def get_job(job_id: str, user_id: str):
     job = await mongo.find_one("finetune_jobs", {"_id": job_id, "user_id": user_id})
     if not job:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_job_not_found"})
     return job
 
 @log_logic_execution
@@ -449,7 +449,7 @@ async def cancel_job(job_id: str, req: dict):
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_job_not_found"})
     result = await FinetuneRepository.update_job(
         {
             "_id": job_id,
@@ -467,7 +467,7 @@ async def cancel_job(job_id: str, req: dict):
         )
         return {"status": "cancelled"}
     raise HTTPException(
-        status_code=400, detail="Hệ thống không thể hủy tiến trình huấn luyện vào lúc này"
+        status_code=400, detail={"code": "finetuning_job_not_cancellable"}
     )
 
 @log_logic_execution
@@ -478,7 +478,7 @@ async def deploy_model(job_id: str, req: dict):
     )
     if not job:
         raise HTTPException(
-            status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện đã hoàn thành để triển khai"
+            status_code=404, detail={"code": "deployable_finetuning_job_not_found"}
         )
     model_name = job.get("merged_model_name", job["job_name"])
     gguf_path = job.get("gguf_path")
@@ -487,7 +487,7 @@ async def deploy_model(job_id: str, req: dict):
     hf_token = settings.HF_TOKEN
     if not hf_token:
         raise HTTPException(
-            status_code=500, detail="Hệ thống thiếu thông tin xác thực để kết nối với kho lưu trữ"
+            status_code=500, detail={"code": "model_registry_credentials_missing"}
         )
 
     try:
@@ -499,7 +499,7 @@ async def deploy_model(job_id: str, req: dict):
 
         repo_id = f"{hf_username}/{model_name}"
 
-        logger.info("Remote model repository created successfully")
+        logger.info("Remote model repository created")
         api.create_repo(repo_id=repo_id, exist_ok=True)
 
         if merged_path:
@@ -527,10 +527,10 @@ async def deploy_model(job_id: str, req: dict):
             {"_id": job_id}, {"$set": {"merged_model_name": repo_id}}
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("Model deployment to remote repository error")
         raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình triển khai mô hình"
+            status_code=500, detail={"code": "model_deployment_failed"}
         )
 
     await FinetuneRepository.update_job(
@@ -546,7 +546,7 @@ async def evaluate_model(job_id: str, req: dict):
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình huấn luyện yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "finetuning_job_not_found"})
     model_name = job.get("merged_model_name") or job.get("base_model")
     use_judge = req.get("use_judge", True)
     evaluation._dataset = req.get("test_samples", [])

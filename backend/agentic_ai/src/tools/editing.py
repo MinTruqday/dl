@@ -42,15 +42,18 @@ async def read_document_section(
     </contract>
     """
     token = config.get("configurable", {}).get("token")
-    if not token: return "Authentication token is missing or invalid"
+    if not token:
+        return json.dumps({"status": "authentication_required"})
     headers = {"Authorization": token}
     from src.tools.http_client import make_api_request, INTERNAL_API_URL
     try:
         res = await make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
-        if res.status_code != 200: return "Document detailed information extraction failed"
+        if res.status_code != 200:
+            return json.dumps({"status": "document_retrieval_failed"})
         doc_data = res.json().get("data", {})
-    except Exception as e:
-        raise Exception(f"Error loading document {e}")
+    except Exception:
+        logger.exception("Document loading failed")
+        return json.dumps({"status": "document_service_unavailable"})
 
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
@@ -60,18 +63,35 @@ async def read_document_section(
             parsed = json.loads(content)
             blocks = parsed.get("blocks", [])
             sliced_blocks = blocks[start_index:start_index + limit]
-            return f"Document section retrieved successfully with blocks {start_index} to {start_index + len(sliced_blocks) - 1} out of {len(blocks)}\n" + json.dumps(sliced_blocks, ensure_ascii=False, indent=2)
+            return json.dumps(
+                {
+                    "status": "success",
+                    "start_index": start_index,
+                    "end_index": start_index + len(sliced_blocks) - 1,
+                    "total_blocks": len(blocks),
+                    "blocks": sliced_blocks,
+                },
+                ensure_ascii=False,
+            )
         except (json.JSONDecodeError, TypeError):
-            return "Document format is JSON but content parsing failed"
+            return json.dumps({"status": "document_content_invalid"})
     elif format == "doclibx":
         lines = content.splitlines()
         sliced_lines = lines[start_index:start_index + limit]
-        res_str = f"Showing lines {start_index} to {start_index + len(sliced_lines) - 1} out of {len(lines)}:\n"
-        for i, line in enumerate(sliced_lines):
-            res_str += f"{start_index + i}: {line}\n"
-        return res_str
+        return json.dumps(
+            {
+                "status": "success",
+                "start_index": start_index,
+                "end_index": start_index + len(sliced_lines) - 1,
+                "total_lines": len(lines),
+                "lines": sliced_lines,
+            },
+            ensure_ascii=False,
+        )
     else:
-        return f"Document format {format} is unknown or unsupported"
+        return json.dumps(
+            {"status": "unsupported_document_format", "format": format}
+        )
 
 @tool
 async def edit_document_text(
@@ -92,15 +112,18 @@ async def edit_document_text(
     </contract>
     """
     token = config.get("configurable", {}).get("token")
-    if not token: return "Authentication token is missing or invalid"
+    if not token:
+        return json.dumps({"status": "authentication_required"})
     headers = {"Authorization": token}
     from src.tools.http_client import make_api_request, INTERNAL_API_URL
     try:
         res = await make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
-        if res.status_code != 200: return "Document detailed information extraction failed"
+        if res.status_code != 200:
+            return json.dumps({"status": "document_retrieval_failed"})
         doc_data = res.json().get("data", {})
-    except Exception as e:
-        raise Exception(f"Error loading document {e}")
+    except Exception:
+        logger.exception("Document loading failed")
+        return json.dumps({"status": "document_service_unavailable"})
 
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
@@ -122,7 +145,12 @@ async def edit_document_text(
             content = content.replace(best_match, new_string, 1) if not replace_all else content.replace(best_match, new_string)
             new_content = content
         else:
-            return f"Exact old_string not found and no close fuzzy match (highest ratio: {highest_ratio})"
+            return json.dumps(
+                {
+                    "status": "document_text_not_found",
+                    "highest_similarity": highest_ratio,
+                }
+            )
     else:
         if replace_all:
             new_content = content.replace(old_string, new_string)
@@ -134,12 +162,19 @@ async def edit_document_text(
         res_content = await make_api_request(
             "PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/noi-dung", headers=headers, json=content_payload
         )
-        if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
+        if res_content.status_code not in [200, 201]:
+            return json.dumps(
+                {
+                    "status": "document_update_failed",
+                    "upstream_status": res_content.status_code,
+                }
+            )
         await _broadcast_update(document_id, new_content)
-    except Exception as e:
-        raise Exception(f"Error during content update {e}")
+    except Exception:
+        logger.exception("Document content update failed")
+        return json.dumps({"status": "document_service_unavailable"})
         
-    return "Document text replaced successfully"
+    return json.dumps({"status": "success", "document_id": document_id})
 
 @tool
 async def edit_document_block(
@@ -162,60 +197,67 @@ async def edit_document_block(
     </contract>
     """
     token = config.get("configurable", {}).get("token")
-    if not token: return "Authentication token is missing or invalid"
+    if not token:
+        return json.dumps({"status": "authentication_required"})
     headers = {"Authorization": token}
     from src.tools.http_client import make_api_request, INTERNAL_API_URL
     try:
         res = await make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
-        if res.status_code != 200: return "Document detailed information extraction failed"
+        if res.status_code != 200:
+            return json.dumps({"status": "document_retrieval_failed"})
         doc_data = res.json().get("data", {})
-    except Exception as e:
-        raise Exception(f"Error loading document {e}")
+    except Exception:
+        logger.exception("Document loading failed")
+        return json.dumps({"status": "document_service_unavailable"})
 
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
     
     if format not in ["json", "doclib"]:
-        return "Tool applicability restricted to JSON EditorJS documents"
+        return json.dumps(
+            {"status": "unsupported_document_format", "format": format}
+        )
         
     try:
         parsed = json.loads(content)
         blocks = parsed.get("blocks", [])
     except (json.JSONDecodeError, TypeError):
-        return "Document content validation failed as JSON"
+        return json.dumps({"status": "document_content_invalid"})
         
     if action in ["insert", "replace"]:
         try:
             new_block = json.loads(new_block_json)
         except (json.JSONDecodeError, TypeError):
-            return "Provided new_block_json is not a valid JSON string"
+            return json.dumps({"status": "new_block_invalid"})
             
     if block_id:
         target_index = next((i for i, b in enumerate(blocks) if b.get("id") == block_id), -1)
         if target_index != -1:
             block_index = target_index
         else:
-            return f"Block ID {block_id} not found"
+            return json.dumps(
+                {"status": "document_block_not_found", "block_id": block_id}
+            )
 
     if action == "delete":
         if 0 <= block_index < len(blocks):
             blocks.pop(block_index)
         else:
-            return "Target block_index is out of bounds"
+            return json.dumps({"status": "block_index_out_of_bounds"})
     elif action == "replace":
         if 0 <= block_index < len(blocks):
             if "id" not in new_block and "id" in blocks[block_index]:
                 new_block["id"] = blocks[block_index]["id"]
             blocks[block_index] = new_block
         else:
-            return "Target block_index is out of bounds"
+            return json.dumps({"status": "block_index_out_of_bounds"})
     elif action == "insert":
         if 0 <= block_index <= len(blocks):
             blocks.insert(block_index, new_block)
         else:
-            return "Target block_index is out of bounds"
+            return json.dumps({"status": "block_index_out_of_bounds"})
     else:
-        return "Requested action is unknown and not supported"
+        return json.dumps({"status": "unsupported_block_action", "action": action})
         
     parsed["blocks"] = blocks
     new_content = json.dumps(parsed)
@@ -225,12 +267,21 @@ async def edit_document_block(
         res_content = await make_api_request(
             "PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/noi-dung", headers=headers, json=content_payload
         )
-        if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
+        if res_content.status_code not in [200, 201]:
+            return json.dumps(
+                {
+                    "status": "document_update_failed",
+                    "upstream_status": res_content.status_code,
+                }
+            )
         await _broadcast_update(document_id, new_content)
-    except Exception as e:
-        raise Exception(f"Error during content update {e}")
+    except Exception:
+        logger.exception("Document content update failed")
+        return json.dumps({"status": "document_service_unavailable"})
         
-    return f"Document block {action} operation completed successfully"
+    return json.dumps(
+        {"status": "success", "document_id": document_id, "action": action}
+    )
 
 @tool
 async def propose_document_edits(
@@ -248,15 +299,18 @@ async def propose_document_edits(
     </contract>
     """
     token = config.get("configurable", {}).get("token")
-    if not token: return "Authentication token is missing or invalid"
+    if not token:
+        return json.dumps({"status": "authentication_required"})
     headers = {"Authorization": token}
     from src.tools.http_client import make_api_request, INTERNAL_API_URL
     try:
         res = await make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
-        if res.status_code != 200: return "Document detailed information extraction failed"
+        if res.status_code != 200:
+            return json.dumps({"status": "document_retrieval_failed"})
         doc_data = res.json().get("data", {})
-    except Exception as e:
-        raise Exception(f"Error loading document {e}")
+    except Exception:
+        logger.exception("Document loading failed")
+        return json.dumps({"status": "document_service_unavailable"})
 
     format = doc_data.get("content_format", "doclib")
     content = doc_data.get("content", "")
@@ -267,25 +321,32 @@ async def propose_document_edits(
             blocks = parsed.get("blocks", [])
             blocks.append({
                 "type": "paragraph",
-                "data": {"text": f"<mark class=\"cdx-marker\">PROPOSED EDIT:</mark> {proposed_text}"}
+                "data": {"text": f"<mark class=\"cdx-marker\">{proposed_text}</mark>"}
             })
             parsed["blocks"] = blocks
             new_content = json.dumps(parsed)
         except (json.JSONDecodeError, TypeError):
-            return "Document parsing failed during proposal generation"
+            return json.dumps({"status": "document_content_invalid"})
     elif format == "doclibx":
-        new_content = content + f"\n\n% PROPOSED EDIT:\n% {proposed_text}\n"
+        new_content = content + f"\n\n\\begin{{quote}}\n{proposed_text}\n\\end{{quote}}\n"
     else:
-        new_content = content + f"\n\n[PROPOSED EDIT]: {proposed_text}"
+        new_content = content + f"\n\n{proposed_text}"
         
     content_payload = {"content": new_content, "content_format": format}
     try:
         res_content = await make_api_request(
             "PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/noi-dung", headers=headers, json=content_payload
         )
-        if res_content.status_code not in [200, 201]: return f"Document content update failed with API status code {res_content.status_code}"
+        if res_content.status_code not in [200, 201]:
+            return json.dumps(
+                {
+                    "status": "document_update_failed",
+                    "upstream_status": res_content.status_code,
+                }
+            )
         await _broadcast_update(document_id, new_content)
-    except Exception as e:
-        raise Exception(f"Error during content update {e}")
+    except Exception:
+        logger.exception("Document content update failed")
+        return json.dumps({"status": "document_service_unavailable"})
         
-    return "Proposed edits added to document successfully"
+    return json.dumps({"status": "success", "document_id": document_id})

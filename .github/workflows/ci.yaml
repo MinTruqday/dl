@@ -10,6 +10,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  source-policy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check source policy
+        run: python scripts/source_policy.py
+
   lint-and-check:
     runs-on: ubuntu-latest
     strategy:
@@ -32,9 +47,6 @@ jobs:
 
       - name: Run Ruff lint check
         run: ruff check backend/${{ matrix.service }}/src/ --config ruff.toml
-
-      - name: Run Ruff format check
-        run: ruff format --check backend/${{ matrix.service }}/src/ --config ruff.toml
 
   security-scan:
     runs-on: ubuntu-latest

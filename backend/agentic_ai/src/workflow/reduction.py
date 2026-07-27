@@ -1,4 +1,5 @@
 import operator
+import json
 from typing import Annotated, List, TypedDict
 
 from langchain_core.tools import tool
@@ -87,12 +88,15 @@ async def agent_summarize_long_document(document_id: str, config: dict) -> str:
 
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Vui lòng xác thực thông tin tài khoản để tiếp tục quá trình"
+        return json.dumps({"status": "authentication_required"})
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Nội dung gốc của tài liệu hiện không khả dụng"
+        return json.dumps({"status": "document_content_unavailable"})
 
     res = await map_reduce_app.ainvoke(
         {"document_text": text, "chunks": [], "summaries": [], "final_summary": ""}
     )
-    return f"Tiến trình tổng hợp tài liệu hoàn tất\n\n{res['final_summary']}"
+    return json.dumps(
+        {"status": "success", "summary": res["final_summary"]},
+        ensure_ascii=False,
+    )

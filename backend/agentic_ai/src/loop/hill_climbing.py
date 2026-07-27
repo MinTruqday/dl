@@ -8,9 +8,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Literal, Optional
 
 from loguru import logger
+from pydantic import BaseModel, Field
 
 
 IssueCategory = Literal[
+    "execution_failure",
     "prompt_quality",
     "tool_failure",
     "grader_too_strict",
@@ -18,6 +20,8 @@ IssueCategory = Literal[
     "timeout",
     "hallucination",
     "routing_error",
+    "security_violation",
+    "performance",
     "token_budget",
 ]
 
@@ -55,6 +59,25 @@ class ImprovementSuggestion:
     impact_score: float = 0.5
 
 
+class ImprovementProposal(BaseModel):
+    issue_id: str
+    improvement_type: Literal[
+        "prompt_tweak",
+        "tool_config",
+        "grader_config",
+        "routing_rule",
+    ]
+    title: str
+    description: str
+    proposed_change: str
+    proposed_config: Dict[str, Any] = Field(default_factory=dict)
+    impact_score: float = Field(ge=0.0, le=1.0)
+
+
+class ImprovementProposalBatch(BaseModel):
+    proposals: List[ImprovementProposal] = Field(default_factory=list)
+
+
 
 class TraceAnalysisAgent:
 
@@ -70,7 +93,7 @@ class TraceAnalysisAgent:
             logger.info(f"TraceAnalysisAgent fetched {len(traces)} traces from last {self.lookback_hours}h")
             return traces
         except Exception as e:
-            logger.exception(f"TraceAnalysisAgent failed to fetch traces {e}")
+            logger.exception("TraceAnalysisAgent failed to fetch traces")
             return []
 
     def compute_trace_stats(self, traces: List[Dict]) -> Dict[str, Any]:
@@ -118,16 +141,23 @@ class TraceAnalysisAgent:
             result = await llm.ainvoke(prompt)
             return result.content.strip()
         except Exception as e:
-            logger.exception(f"TraceAnalysisAgent LLM analysis failed {e}")
+            logger.exception("TraceAnalysisAgent LLM analysis failed")
             return ""
 
 
 
 class IssueDetector:
-    FAILURE_RATE_THRESHOLD = 0.15
-    TOOL_FAILURE_THRESHOLD = 3
-    SECURITY_VIOLATION_THRESHOLD = 5
-    SLOW_DURATION_MS_THRESHOLD = 30_000
+    def __init__(self):
+        from src.core.infrastructure.configuration import settings
+
+        self.FAILURE_RATE_THRESHOLD = settings.AGENT_FAILURE_RATE_THRESHOLD
+        self.TOOL_FAILURE_THRESHOLD = settings.AGENT_TOOL_FAILURE_THRESHOLD
+        self.SECURITY_VIOLATION_THRESHOLD = (
+            settings.AGENT_SECURITY_VIOLATION_THRESHOLD
+        )
+        self.SLOW_DURATION_MS_THRESHOLD = (
+            settings.AGENT_SLOW_DURATION_MS_THRESHOLD
+        )
 
     def detect_from_stats(self, stats: Dict, traces: List[Dict]) -> List[DetectedIssue]:
         issues: List[DetectedIssue] = []
@@ -135,12 +165,13 @@ class IssueDetector:
         if stats.get("failure_rate", 0) > self.FAILURE_RATE_THRESHOLD:
             issues.append(DetectedIssue(
                 issue_id=str(uuid7()),
-                category="prompt_quality",
-                title="High Agent Failure Rate",
-                description=(
-                    f"Agent failure rate is {stats['failure_rate']:.1%} "
-                    f"(threshold: {self.FAILURE_RATE_THRESHOLD:.1%}). "
-                    f"This may indicate prompt quality issues or task routing problems."
+                category="execution_failure",
+                title="high_agent_failure_rate",
+                description=json.dumps(
+                    {
+                        "failure_rate": stats["failure_rate"],
+                        "threshold": self.FAILURE_RATE_THRESHOLD,
+                    }
                 ),
                 affected_component="workflow/orchestration",
                 evidence_count=int(stats["failure_rate"] * stats["total_traces"]),
@@ -153,10 +184,13 @@ class IssueDetector:
                 issues.append(DetectedIssue(
                     issue_id=str(uuid7()),
                     category="tool_failure",
-                    title=f"Recurring Tool Failure: {tool_name}",
-                    description=(
-                        f"Tool '{tool_name}' has failed {failure_count} times in the last traces. "
-                        f"This may indicate parameter issues, API timeouts, or tool misconfiguration."
+                    title="recurring_tool_failure",
+                    description=json.dumps(
+                        {
+                            "tool_name": tool_name,
+                            "failure_count": failure_count,
+                            "threshold": self.TOOL_FAILURE_THRESHOLD,
+                        }
                     ),
                     affected_component=f"tools/{tool_name}",
                     evidence_count=failure_count,
@@ -166,11 +200,13 @@ class IssueDetector:
         if stats.get("security_violations", 0) >= self.SECURITY_VIOLATION_THRESHOLD:
             issues.append(DetectedIssue(
                 issue_id=str(uuid7()),
-                category="routing_error",
-                title="Security Violation Spike",
-                description=(
-                    f"Detected {stats['security_violations']} security violations. "
-                    f"The security prompts may need strengthening or routing rules updated."
+                category="security_violation",
+                title="security_violation_spike",
+                description=json.dumps(
+                    {
+                        "violation_count": stats["security_violations"],
+                        "threshold": self.SECURITY_VIOLATION_THRESHOLD,
+                    }
                 ),
                 affected_component="harness/security",
                 evidence_count=stats["security_violations"],
@@ -180,12 +216,13 @@ class IssueDetector:
         if stats.get("avg_duration_ms", 0) > self.SLOW_DURATION_MS_THRESHOLD:
             issues.append(DetectedIssue(
                 issue_id=str(uuid7()),
-                category="timeout",
-                title="High Average Response Time",
-                description=(
-                    f"Average response time is {stats['avg_duration_ms']}ms "
-                    f"(threshold: {self.SLOW_DURATION_MS_THRESHOLD}ms). "
-                    f"Consider reducing plan complexity or increasing timeouts."
+                category="performance",
+                title="high_average_response_time",
+                description=json.dumps(
+                    {
+                        "average_duration_ms": stats["avg_duration_ms"],
+                        "threshold_ms": self.SLOW_DURATION_MS_THRESHOLD,
+                    }
                 ),
                 affected_component="harness/orchestration",
                 evidence_count=stats["total_traces"],
@@ -201,101 +238,52 @@ class HarnessImprover:
     async def generate_suggestions(
         self, issues: List[DetectedIssue], llm_analysis: str = ""
     ) -> List[ImprovementSuggestion]:
-        suggestions: List[ImprovementSuggestion] = []
+        if not issues:
+            return []
 
-        for issue in issues:
-            suggestion = await self._suggest_for_issue(issue, llm_analysis)
-            if suggestion:
-                suggestions.append(suggestion)
+        try:
+            from src.core.registry import PromptType, registry
+            from src.workflow.graph import llm
 
-        logger.info(f"HarnessImprover generated {len(suggestions)} improvement suggestions")
-        return suggestions
-
-    async def _suggest_for_issue(
-        self, issue: DetectedIssue, llm_analysis: str
-    ) -> Optional[ImprovementSuggestion]:
-        if issue.category == "prompt_quality":
-            return ImprovementSuggestion(
-                improvement_id=str(uuid7()),
-                issue_id=issue.issue_id,
-                improvement_type="prompt_tweak",
-                title=f"Improve prompt for: {issue.title}",
-                description=(
-                    f"The agent is failing frequently ({issue.evidence_count} times). "
-                    f"Suggest adding more explicit instructions, examples, or constraints "
-                    f"to the system prompt to reduce ambiguity."
-                ),
-                proposed_change="Add clarifying instructions and few-shot examples to BRAIN_SYSTEM prompt",
-                proposed_config={
-                    "prompt_type": "BRAIN_SYSTEM",
-                    "action": "append_suffix",
-                    "suffix": (
-                        "\n\n<critical_instructions>\nIMPORTANT: If you are uncertain about how to proceed, "
-                        "choose the Knowledge agent to gather more information before acting. "
-                        "Never leave a response empty or say 'I cannot help with this'.\n</critical_instructions>"
-                    ),
-                },
-                impact_score=0.7,
+            issue_payload = [
+                {
+                    "issue_id": issue.issue_id,
+                    "category": issue.category,
+                    "affected_component": issue.affected_component,
+                    "evidence_count": issue.evidence_count,
+                    "severity": issue.severity,
+                    "example_session_ids": issue.example_session_ids,
+                }
+                for issue in issues
+            ]
+            prompt = registry.get(PromptType.HARNESS_IMPROVEMENT).format(
+                issues=json.dumps(issue_payload, default=str),
+                analysis=llm_analysis,
             )
-
-        elif issue.category == "tool_failure":
-            tool_name = issue.affected_component.split("/")[-1]
-            return ImprovementSuggestion(
-                improvement_id=str(uuid7()),
-                issue_id=issue.issue_id,
-                improvement_type="tool_config",
-                title=f"Fix tool configuration: {tool_name}",
-                description=(
-                    f"Tool '{tool_name}' is failing repeatedly. "
-                    f"Suggest increasing timeout and retry count."
-                ),
-                proposed_change=f"Increase timeout and retries for tool '{tool_name}'",
-                proposed_config={
-                    "tool_name": tool_name,
-                    "config_key": "timeout",
-                    "action": "increase_by",
-                    "value": 10.0,
-                    "max_retries_action": "increase_by",
-                    "max_retries_value": 1,
-                },
-                impact_score=0.6,
+            model = llm.with_structured_output(ImprovementProposalBatch)
+            result = await model.ainvoke(prompt)
+            valid_issue_ids = {issue.issue_id for issue in issues}
+            suggestions = [
+                ImprovementSuggestion(
+                    improvement_id=str(uuid7()),
+                    issue_id=proposal.issue_id,
+                    improvement_type=proposal.improvement_type,
+                    title=proposal.title,
+                    description=proposal.description,
+                    proposed_change=proposal.proposed_change,
+                    proposed_config=proposal.proposed_config,
+                    impact_score=proposal.impact_score,
+                )
+                for proposal in result.proposals
+                if proposal.issue_id in valid_issue_ids
+            ]
+            logger.info(
+                f"HarnessImprover generated {len(suggestions)} improvement suggestions"
             )
-
-        elif issue.category == "timeout":
-            return ImprovementSuggestion(
-                improvement_id=str(uuid7()),
-                issue_id=issue.issue_id,
-                improvement_type="grader_config",
-                title="Reduce plan complexity threshold",
-                description="High response times suggest plans are too complex. Reduce max_plan_steps.",
-                proposed_change="Reduce max_plan_steps for reader role from 6 to 4",
-                proposed_config={
-                    "component": "governance/role_policies",
-                    "role": "reader",
-                    "field": "max_plan_steps",
-                    "action": "set",
-                    "value": 4,
-                },
-                impact_score=0.5,
-            )
-
-        elif issue.category == "routing_error":
-            return ImprovementSuggestion(
-                improvement_id=str(uuid7()),
-                issue_id=issue.issue_id,
-                improvement_type="prompt_tweak",
-                title="Strengthen security prompt",
-                description="Security violations detected. Strengthen the security scanning prompt.",
-                proposed_change="Add stricter keywords to security scanner",
-                proposed_config={
-                    "component": "harness/security",
-                    "action": "add_blocked_patterns",
-                    "patterns": ["jailbreak", "ignore previous instructions", "pretend you are"],
-                },
-                impact_score=0.8,
-            )
-
-        return None
+            return suggestions
+        except Exception:
+            logger.exception("Harness improvement proposal generation failed")
+            return []
 
 
 
@@ -315,15 +303,20 @@ class PromptVersionControl:
         logger.info(f"PromptVersionControl snapshotted {prompt_type} (version={version_id})")
         return version_id
 
-    def rollback(self, prompt_type: str) -> Optional[str]:
+    def restore(self, prompt_type: str, version_id: str) -> Optional[str]:
         versions = self._versions.get(prompt_type, [])
-        if len(versions) < 2:
-            logger.warning(f"PromptVersionControl no previous version for {prompt_type}")
-            return None
-        versions.pop()
-        prev = versions[-1]
-        logger.info(f"PromptVersionControl rolled back {prompt_type} to version {prev['version_id']}")
-        return prev["content"]
+        for index in range(len(versions) - 1, -1, -1):
+            version = versions[index]
+            if version["version_id"] == version_id:
+                del versions[index:]
+                logger.info(
+                    f"PromptVersionControl restored {prompt_type} to version {version_id}"
+                )
+                return version["content"]
+        logger.warning(
+            f"PromptVersionControl version {version_id} not found for {prompt_type}"
+        )
+        return None
 
     def get_history(self, prompt_type: str) -> List[Dict]:
         return list(self._versions.get(prompt_type, []))
@@ -350,30 +343,45 @@ class PromptOptimizer:
                 logger.warning(f"PromptOptimizer unknown improvement type '{suggestion.improvement_type}'")
                 return False
         except Exception as e:
-            logger.exception(f"PromptOptimizer failed to apply improvement {suggestion.improvement_id} {e}")
+            logger.exception(f"PromptOptimizer failed to apply improvement {suggestion.improvement_id}")
             return False
 
     async def _apply_prompt_tweak(self, config: Dict, suggestion: ImprovementSuggestion) -> bool:
         try:
             from src.core.registry import PromptType, registry
-            prompt_type_str = config.get("prompt_type", "BRAIN_SYSTEM")
+            prompt_type_str = config.get("prompt_type")
+            if not prompt_type_str or prompt_type_str not in PromptType.__members__:
+                return False
             prompt_type = PromptType[prompt_type_str]
-            current_content = registry.get(prompt_type)
-
-            version_id = self.version_control.snapshot(prompt_type_str, current_content)
-            suggestion.rollback_config = {"version_id": version_id, "prompt_type": prompt_type_str}
+            current_content = registry.get_base(prompt_type)
 
             if config.get("action") == "append_suffix":
-                new_content = current_content + config.get("suffix", "")
-                registry.update(prompt_type, new_content)
-                logger.info(f"PromptOptimizer applied prompt suffix to {prompt_type_str} (version={version_id})")
-                return True
+                suffix = config.get("suffix", "")
+                if not suffix:
+                    return False
+                new_content = current_content + suffix
             elif config.get("action") == "replace":
-                new_content = config.get("new_content", current_content)
-                registry.update(prompt_type, new_content)
-                return True
+                new_content = config.get("new_content")
+                if not new_content:
+                    return False
+            else:
+                return False
+
+            version_id = self.version_control.snapshot(
+                prompt_type_str,
+                current_content,
+            )
+            suggestion.rollback_config = {
+                "version_id": version_id,
+                "prompt_type": prompt_type_str,
+            }
+            registry.update(prompt_type, new_content)
+            logger.info(
+                f"PromptOptimizer updated {prompt_type_str} version={version_id}"
+            )
+            return True
         except Exception as e:
-            logger.exception(f"PromptOptimizer prompt tweak failed {e}")
+            logger.exception("PromptOptimizer prompt tweak failed")
         return False
 
     async def _apply_tool_config(self, config: Dict, suggestion: ImprovementSuggestion) -> bool:
@@ -382,26 +390,31 @@ class PromptOptimizer:
             f"PromptOptimizer: tool config improvement for '{tool_name}' logged. "
             f"Requires manual deployment: {suggestion.proposed_change}"
         )
-        return True
+        return False
 
     async def _apply_grader_config(self, config: Dict, suggestion: ImprovementSuggestion) -> bool:
         try:
             if config.get("component") == "governance/role_policies":
                 from src.harness.governance import ROLE_POLICIES
-                role = config.get("role", "reader")
+                role = config.get("role")
                 field_name = config.get("field")
                 value = config.get("value")
-                if role in ROLE_POLICIES and field_name and value is not None:
+                if (
+                    config.get("action") == "set"
+                    and role in ROLE_POLICIES
+                    and field_name in ROLE_POLICIES[role]
+                    and isinstance(value, (int, float, bool))
+                ):
                     ROLE_POLICIES[role][field_name] = value
                     logger.info(f"PromptOptimizer updated governance {role}.{field_name} = {value}")
                     return True
         except Exception as e:
-            logger.exception(f"PromptOptimizer grader config failed {e}")
+            logger.exception("PromptOptimizer grader config failed")
         return False
 
     async def _apply_routing_rule(self, config: Dict, suggestion: ImprovementSuggestion) -> bool:
         logger.info(f"PromptOptimizer routing rule change logged {suggestion.proposed_change}")
-        return True
+        return False
 
     async def rollback_improvement(self, suggestion: ImprovementSuggestion) -> bool:
         if not suggestion.rollback_config:
@@ -411,14 +424,18 @@ class PromptOptimizer:
             if suggestion.improvement_type == "prompt_tweak":
                 from src.core.registry import PromptType, registry
                 prompt_type_str = suggestion.rollback_config.get("prompt_type")
-                prev_content = self.version_control.rollback(prompt_type_str)
+                version_id = suggestion.rollback_config.get("version_id")
+                prev_content = self.version_control.restore(
+                    prompt_type_str,
+                    version_id,
+                )
                 if prev_content:
                     prompt_type = PromptType[prompt_type_str]
                     registry.update(prompt_type, prev_content)
                     logger.info(f"PromptOptimizer rolled back {prompt_type_str}")
                     return True
         except Exception as e:
-            logger.exception(f"PromptOptimizer rollback failed {e}")
+            logger.exception("PromptOptimizer rollback failed")
         return False
 
 

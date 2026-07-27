@@ -151,9 +151,8 @@ export default class DocLibImage implements BlockTool {
 
           const endpoint = this.config.endpoints?.byFile || "/api/uploadFile";
 
-          // Show uploading state (simple text change)
           uploader.innerHTML =
-            '<div style="padding: 20px; font-weight: 500;">Uploading...</div>';
+      '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
 
           fetch(endpoint, {
             method: "POST",
@@ -164,7 +163,6 @@ export default class DocLibImage implements BlockTool {
               if (res.success === 1 && res.file && res.file.url) {
                 if (this.data.file) this.data.file.url = res.file.url;
               } else {
-                // Fallback if backend doesn't match EditorJS format
                 if (this.data.file)
                   this.data.file.url =
                     res.url || res.data?.url || URL.createObjectURL(file);
@@ -172,7 +170,7 @@ export default class DocLibImage implements BlockTool {
               this.buildUI();
             })
             .catch((err) => {
-              console.error("Lỗi đồng bộ dữ liệu hình ảnh", err);
+              console.error("Image upload failed", err);
               if (this.data.file)
                 this.data.file.url = URL.createObjectURL(file);
               this.buildUI();
@@ -185,7 +183,7 @@ export default class DocLibImage implements BlockTool {
 
       uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = prompt("Vui lòng cung cấp đường dẫn hình ảnh tĩnh (Direct Image URL):");
+        const url = prompt("Enter a direct image URL");
         if (url) {
           if (this.data.file) this.data.file.url = url;
           this.buildUI();

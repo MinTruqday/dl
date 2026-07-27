@@ -37,7 +37,7 @@ async def approve_improvement(improvement_id: str, approver: str = Role.ADMIN.va
     if not success:
         raise HTTPException(
             status_code=400,
-            detail=f"Không thể phê duyệt đề xuất cải tiến {improvement_id}. Vui lòng kiểm tra lại trạng thái và tính hợp lệ của đề xuất"
+            detail={"code": "improvement_approval_failed", "improvement_id": improvement_id},
         )
     return {
         "status": "approved_and_applied",
@@ -51,7 +51,7 @@ async def reject_improvement(improvement_id: str):
     if not success:
         raise HTTPException(
             status_code=404,
-            detail=f"Hệ thống không tìm thấy đề xuất cải tiến {improvement_id}"
+            detail={"code": "improvement_not_found", "improvement_id": improvement_id},
         )
     return {
         "status": "rejected",
@@ -64,7 +64,7 @@ async def rollback_improvement(improvement_id: str):
     if not success:
         raise HTTPException(
             status_code=400,
-            detail=f"Không thể hoàn tác đề xuất {improvement_id}. Cải tiến này có thể chưa được áp dụng hoặc thiếu cấu hình khôi phục"
+            detail={"code": "improvement_rollback_failed", "improvement_id": improvement_id},
         )
     return {
         "status": "rolled_back",

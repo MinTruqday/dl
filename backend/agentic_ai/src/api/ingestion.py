@@ -20,7 +20,7 @@ async def ingest_endpoint(
             user_id=str(current_user.id),
             is_admin=current_user.role == Role.ADMIN,
         )
-        logger.info(f"Document ingestion completed successfully document_id={req.document_id}")
+        logger.info(f"Document ingestion completed document_id={req.document_id}")
         return result
     except Exception as e:
         logger.exception("Document ingestion pipeline error")
@@ -39,10 +39,10 @@ async def delete_document_endpoint(
     logger.info(f"Started document deletion from Qdrant vector store document_id={document_id}")
     try:
         await vector_store.delete_by_document(document_id)
-        logger.info(f"Document deletion completed successfully document_id={document_id}")
+        logger.info(f"Document deletion completed document_id={document_id}")
         return {
             "status": "success",
-            "message": "Hủy bỏ toàn bộ dữ liệu vector của tài liệu hoàn tất"
+            "message_code": "document_vectors_deleted",
         }
     except Exception as e:
         logger.exception("Document deletion error")

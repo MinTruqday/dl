@@ -21,7 +21,7 @@ async def generate_dynamic_watermark(user_id: str, client_ip: str, email: str = 
             response.raise_for_status()
             return response.json()
     except Exception as e:
-        logger.warning(f"DRM dynamic watermark HTTP fallback: {e}")
+        logger.warning("DRM dynamic watermark HTTP fallback")
         import datetime, hashlib
         timestamp_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         return {
@@ -50,7 +50,7 @@ async def issue_temporary_aes_key(document_id: str, user_id: str, ttl_seconds: i
             response.raise_for_status()
             return response.json()
     except Exception as e:
-        logger.warning(f"DRM AES key HTTP fallback: {e}")
+        logger.warning("DRM AES key HTTP fallback")
         import secrets
         return {
             "key_id": f"fallback_key:{document_id}:{user_id}",
@@ -76,7 +76,7 @@ async def verify_device_fingerprint(user_id: str, client_ip: str, device_fingerp
             response.raise_for_status()
             return response.json()
     except Exception as e:
-        logger.warning(f"DRM fingerprint HTTP fallback: {e}")
+        logger.warning("DRM fingerprint HTTP fallback")
         return {"matched": True, "risk_multiplier": 1.0, "reason": "Fingerprint verified fallback"}
 
 @tool
@@ -96,7 +96,7 @@ async def check_network_anomaly(user_id: str, client_ip: str) -> dict:
             response.raise_for_status()
             return response.json()
     except Exception as e:
-        logger.warning(f"DRM network anomaly HTTP fallback: {e}")
+        logger.warning("DRM network anomaly HTTP fallback")
         return {"system_flag_anomaly": False, "error": str(e)}
 
 @tool
@@ -116,7 +116,7 @@ async def get_user_trust_profile(user_id: str, user_tier: str = "BASIC") -> dict
             response.raise_for_status()
             return response.json()
     except Exception as e:
-        logger.warning(f"DRM trust profile HTTP fallback: {e}")
+        logger.warning("DRM trust profile HTTP fallback")
         from src.schemas.auth import Tier
         tier_upper = str(user_tier).upper()
         base_score = 90 if tier_upper == Tier.PREMIUM.value else 75 if tier_upper == Tier.PRO.value else 50
@@ -139,6 +139,6 @@ async def analyze_document_risk(document_id: str, document_type: str = "standard
             response.raise_for_status()
             return response.json()
     except Exception as e:
-        logger.warning(f"DRM document risk HTTP fallback: {e}")
+        logger.warning("DRM document risk HTTP fallback")
         risk = "HIGH" if document_type in ["sensitive", "exam"] else "LOW"
         return {"document_id": document_id, "risk_level": risk, "error": str(e)}

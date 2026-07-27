@@ -59,13 +59,13 @@ class NxbgdSource:
                         if "png" in url.lower() or "png" in content_type:
                             ext = ".png"
 
-                        filename = f"nxbgd_page_{self.page_counter:03d}{ext}"
+                        filename = "nxbgd_page_{self.page_counter:03d}{ext}"
                         save_path = os.path.join(self.temp_dir, filename)
 
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info("[NXBGD] Document page captured and saved successfully")
+                        logger.info("[NXBGD] Document page captured and saved")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
@@ -167,7 +167,7 @@ class NxbgdSource:
                     if href and href not in document_urls:
                         document_urls.append(href)
 
-                logger.info("[NXBGD] Found document elements on category page successfully")
+                logger.info("[NXBGD] Found document elements on category page")
 
                 for doc_url in document_urls:
                     full_doc_url = (
@@ -245,7 +245,7 @@ class NxbgdSource:
                                 ):
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info("[NXBGD] Document scanning completed successfully")
+                                        logger.info("[NXBGD] Document scanning completed")
                                         break
                                 else:
                                     stable_count = 0

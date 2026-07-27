@@ -88,7 +88,7 @@ export default class DocLibSmartArtList implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-sal-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", () => {
             this.data.items.splice(i, 1);
             renderList();

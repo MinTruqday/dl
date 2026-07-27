@@ -117,7 +117,7 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info("Test dataset loaded successfully")
+            logger.info("Test dataset loaded")
         except Exception as e:
             logger.exception("Test dataset loading error")
             self._dataset = []
@@ -187,13 +187,13 @@ class EvaluationHarness:
         from src.core.infrastructure.configuration import settings
 
         if not self._dataset:
-            return {"error": "Lỗi đánh giá do chưa tải bộ dữ liệu"}
+            return {"error_code": "evaluation_dataset_not_loaded"}
 
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
         except Exception:
             logger.exception("Evaluation client initialization failed")
-            return {"error": "Hệ thống không thể khởi tạo tiến trình đánh giá"}
+            return {"error_code": "evaluation_client_initialization_failed"}
 
         results = []
         for sample in self._dataset:

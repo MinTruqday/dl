@@ -122,27 +122,33 @@ class EngineAgent:
             logger.exception("Search result re-ranking failed")
             return results
 
-    async def _tavily_search(self, query: str) -> str:
+    async def _tavily_search(self, query: str) -> List[dict]:
         cached = self._load_cache(query)
         if cached:
             logger.info("Search cache hit")
-            return cached
+            try:
+                return json.loads(cached)
+            except json.JSONDecodeError:
+                pass
 
         response = await asyncio.to_thread(
             self.client.search, query=query, search_depth="advanced", max_results=8
         )
         results = response.get("results", [])
         if not results:
-            return ""
+            return []
 
         reranked = self._rerank_results(query, results)
-
-        formatted = ""
-        for res in reranked[:5]:
-            formatted += f"- {res.get('title')} {res.get('content')}\n  Source link {res.get('url')}\n"
-
-        self._save_cache(query, formatted)
-        return formatted
+        normalized = [
+            {
+                "title": result.get("title", ""),
+                "content": result.get("content", ""),
+                "url": result.get("url", ""),
+            }
+            for result in reranked[:5]
+        ]
+        self._save_cache(query, json.dumps(normalized, ensure_ascii=False))
+        return normalized
 
     async def _playwright_scrape(self, url: str) -> str:
         try:
@@ -174,24 +180,25 @@ class EngineAgent:
 
         if _is_ssrf_attempt(query):
             logger.warning("Blocked unauthorized network request")
-            return "Request rejected due to severe violation of information security rules"
+            return json.dumps({"status": "network_request_blocked"})
 
         if not self.api_key_valid:
-            return "The system could not extract any valuable information from the search data sources"
+            return json.dumps({"status": "search_service_unavailable"})
 
         try:
             from huggingface_hub import AsyncInferenceClient
             from langchain_core.messages import HumanMessage
             from src.utils.huggingface import HFInferenceChat
-            from src.schemas.engine import SubQueries
+            from src.schemas.engine import SearchEvaluation, SubQueries
             from src.core.registry import registry, PromptType
             
             client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
             llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
             structured_llm = llm.with_structured_output(SubQueries)
+            evaluation_llm = llm.with_structured_output(SearchEvaluation)
             
             max_iterations = 3
-            accumulated_results = ""
+            accumulated_results = []
             current_query = query
             
             for i in range(max_iterations):
@@ -208,49 +215,71 @@ class EngineAgent:
                 tasks = [self._tavily_search(q) for q in search_queries]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 
-                iteration_text = ""
-                for res in results:
-                    if isinstance(res, str) and res:
-                        iteration_text += res + "\n"
-                        
-                accumulated_results += iteration_text
+                for result in results:
+                    if isinstance(result, list):
+                        accumulated_results.extend(result)
                 
-                if not accumulated_results.strip():
+                if not accumulated_results:
                     break
 
                 eval_prompt_template = registry.get(PromptType.AGENTIC_SEARCH_EVALUATION)
-                eval_prompt = eval_prompt_template.format(query=query, information=accumulated_results[:5000])
-                eval_response = await llm.ainvoke([HumanMessage(content=eval_prompt)])
+                eval_prompt = eval_prompt_template.format(
+                    query=query,
+                    information=json.dumps(
+                        accumulated_results,
+                        ensure_ascii=False,
+                    )[:5000],
+                )
+                eval_response = await evaluation_llm.ainvoke(
+                    [HumanMessage(content=eval_prompt)]
+                )
                 
-                if "YES" in eval_response.content.upper():
-                    logger.info("Self-evaluation: Sufficient information gathered.")
+                if eval_response.sufficient:
+                    logger.info("Self-evaluation: Sufficient information gathered")
                     break
                 else:
                     logger.info("Self-evaluation: Insufficient information. Re-formulating query")
                     
-                    urls = re.findall(r"Source link (https?://[^\s]+)", accumulated_results)
+                    urls = [
+                        result.get("url")
+                        for result in accumulated_results
+                        if result.get("url")
+                    ]
                     if urls:
                         logger.info(f"Triggering Playwright fallback on {urls[0]}")
                         scraped = await self._playwright_scrape(urls[0])
                         if scraped:
-                            accumulated_results += f"\n\n[Playwright Deep Scrape of {urls[0]}]\n{scraped}\n"
-                            
-                    current_query = f"{query} details and deeper context"
+                            accumulated_results.append(
+                                {
+                                    "title": "",
+                                    "content": scraped,
+                                    "url": urls[0],
+                                }
+                            )
+                    candidates = [
+                        candidate
+                        for candidate in search_queries
+                        if candidate != current_query
+                    ]
+                    current_query = candidates[-1] if candidates else query
                     
             if accumulated_results:
-                return accumulated_results
+                return json.dumps(
+                    {"status": "success", "results": accumulated_results},
+                    ensure_ascii=False,
+                )
                 
         except Exception:
             logger.exception("Agentic RAG search system encountered an issue")
 
-        return "The system could not extract any valuable information from the search data sources"
+        return json.dumps({"status": "search_results_unavailable"})
 
     async def image_search(self, query: str) -> str:
         logger.info("Searching for images")
 
         if _is_ssrf_attempt(query):
             logger.warning("Blocked unauthorized network request")
-            return "Request rejected due to severe violation of information security rules"
+            return json.dumps({"status": "network_request_blocked"})
 
         if self.api_key_valid:
             try:

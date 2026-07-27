@@ -32,7 +32,7 @@ async def setup_indexes():
         await db["subscriptions"].create_index("expires_at")
         await db["quota_configs"].create_index("updated_at")
 
-        logger.info("MongoDB indexes successfully created and applied")
+        logger.info("MongoDB indexes created and applied")
     except Exception:
         logger.exception("Failed to initialize MongoDB indexes")
         raise

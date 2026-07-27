@@ -65,7 +65,7 @@ class CtanSource:
                             )
                             book_urls.add(full_url)
 
-                    logger.info("[CTAN] Category data collected successfully")
+                    logger.info("[CTAN] Category data collected")
                     for url in book_urls:
                         if not await dedup.is_collected("ctan_url", url):
                             await mq_client.publish(
@@ -132,7 +132,7 @@ class CtanSource:
                         )
                         payload["download_link"] = full_download_url
 
-                        logger.info("[CTAN] Download URL created successfully")
+                        logger.info("[CTAN] Download URL created")
 
                         slug = urllib.parse.quote(
                             payload["title"].lower().replace(" ", "-"),
@@ -179,7 +179,7 @@ class CtanSource:
         try:
             success = await download_file_with_retry(url, target_zip_local)
             if success:
-                logger.info("[CTAN] Compressed file downloaded successfully")
+                logger.info("[CTAN] Compressed file downloaded")
 
                 minio_url_book = await storage.upload_local_file(
                     f"system/collection/ctan/packages/{filename}", target_zip_local
@@ -227,7 +227,7 @@ class CtanSource:
                     minio_url_pdf = await storage.upload_local_file(
                         f"system/collection/ctan/documents/{pdf_filename}", found_pdf
                     )
-                    logger.info("[CTAN] PDF file uploaded successfully")
+                    logger.info("[CTAN] PDF file uploaded")
                     payload["pdf_url"] = minio_url_pdf
 
                 md_content = f"# Source code for {title}\n\n"
@@ -267,10 +267,10 @@ class CtanSource:
                 minio_url_md = await storage.upload_local_file(
                     f"system/collection/ctan/documents/{md_filename}", md_path
                 )
-                logger.info("[CTAN] Source code compiled and uploaded successfully")
+                logger.info("[CTAN] Source code compiled and uploaded")
                 payload["markdown_url"] = minio_url_md
 
-                logger.info("[CTAN] Compressed file processed successfully")
+                logger.info("[CTAN] Compressed file processed")
             else:
                 logger.error("[CTAN] Compressed file download from remote server failed")
                 return
@@ -281,7 +281,7 @@ class CtanSource:
             shutil.rmtree(temp_base, ignore_errors=True)
 
         if minio_url_book:
-            logger.info("[CTAN] Compressed file saved permanently successfully")
+            logger.info("[CTAN] Compressed file saved permanently")
 
             book_document = {
                 "title": title,

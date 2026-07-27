@@ -26,7 +26,7 @@ class LibraryService:
             "created_at": datetime.now(timezone.utc),
         }
         await ReadingRepository.insert_list(new_list)
-        logger.info("Reading collection created successfully")
+        logger.info("Reading collection created")
         return new_list
 
     @staticmethod

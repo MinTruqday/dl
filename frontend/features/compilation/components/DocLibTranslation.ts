@@ -87,7 +87,7 @@ export default class DocLibTranslation implements BlockTool {
 
     const arrow = document.createElement("div");
     arrow.classList.add("doclib-trans-arrow");
-    arrow.innerText = "➔";
+    arrow.innerText = "->";
 
     const col2 = document.createElement("div");
     col2.classList.add("doclib-trans-col");

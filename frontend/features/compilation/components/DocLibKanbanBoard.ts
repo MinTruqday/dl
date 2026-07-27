@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibKanbanBoard implements BlockTool {
@@ -77,8 +76,9 @@ export default class DocLibKanbanBoard implements BlockTool {
 
   private buildUI() {
     if (!this.wrapper) return;
-    this.wrapper.innerHTML = "";
-    this.wrapper.classList.add("doclib-kanban-wrapper");
+    const wrapper = this.wrapper;
+    wrapper.innerHTML = "";
+    wrapper.classList.add("doclib-kanban-wrapper");
 
     let draggedTask: { colId: string; taskId: string } | null = null;
 
@@ -192,7 +192,7 @@ export default class DocLibKanbanBoard implements BlockTool {
         colEl.appendChild(addBtn);
       }
 
-      this.wrapper.appendChild(colEl);
+      wrapper.appendChild(colEl);
     });
 
     if (!this.readOnly) {
@@ -207,7 +207,7 @@ export default class DocLibKanbanBoard implements BlockTool {
         });
         this.buildUI();
       });
-      this.wrapper.appendChild(addCol);
+      wrapper.appendChild(addCol);
     }
   }
 

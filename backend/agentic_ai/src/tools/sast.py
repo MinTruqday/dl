@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import tempfile
@@ -17,23 +18,40 @@ class PythonAstScanner:
                 if isinstance(node, ast.Call):
                     if isinstance(node.func, ast.Name):
                         if node.func.id in ["eval", "exec"]:
-                            findings.append(f"Dangerous function '{node.func.id}' found at line {node.lineno}")
+                            findings.append(
+                                {
+                                    "rule": "dynamic_code_execution",
+                                    "symbol": node.func.id,
+                                    "line": node.lineno,
+                                }
+                            )
                     elif isinstance(node.func, ast.Attribute):
                         if node.func.attr in ["system", "popen", "call"]:
-                            findings.append(f"Potential command injection via '{node.func.attr}' found at line {node.lineno}")
+                            findings.append(
+                                {
+                                    "rule": "command_execution",
+                                    "symbol": node.func.attr,
+                                    "line": node.lineno,
+                                }
+                            )
                 elif isinstance(node, ast.Assign):
                     for target in node.targets:
                         if isinstance(target, ast.Name) and any(keyword in target.id.lower() for keyword in ["password", "secret", "token", "api_key"]):
                             if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
-                                findings.append(f"Hardcoded secret assigned to '{target.id}' found at line {node.lineno}")
+                                findings.append(
+                                    {
+                                        "rule": "hardcoded_secret",
+                                        "symbol": target.id,
+                                        "line": node.lineno,
+                                    }
+                                )
         except SyntaxError:
-            return "OWASP Top 10 check: Code syntax is invalid, AST parsing failed."
-        except Exception as e:
-            return f"OWASP Top 10 check: AST parsing error: {str(e)}"
-            
-        if not findings:
-            return "OWASP Top 10 check: No AST-based vulnerabilities found."
-        return "OWASP Top 10 check: Vulnerabilities found via AST:\n" + "\n".join(findings)
+            return json.dumps({"status": "invalid_syntax", "findings": []})
+        except Exception:
+            logger.exception("AST security scan failed")
+            return json.dumps({"status": "scan_failed", "findings": []})
+
+        return json.dumps({"status": "success", "findings": findings})
 
 
 class SASTScanner:
@@ -59,15 +77,21 @@ class SASTScanner:
             system_prompt = registry.get(PromptType.SAST_OWASP_SCAN).replace("{{code}}", code)
             messages = [
                 SystemMessage(content=system_prompt),
-                HumanMessage(content="Please analyze the code for OWASP vulnerabilities.")
+                HumanMessage(content=code)
             ]
             response = await llm.ainvoke(messages, max_tokens=1024, temperature=0.1)
             llm_result = response.content.strip()
-        except Exception as e:
+        except Exception:
             logger.exception("LLM OWASP analysis failed")
-            llm_result = f"Error during LLM analysis: {e}"
-            
-        return f"{ast_result}\n\nDeep Scan Result:\n{llm_result}" 
+            llm_result = json.dumps({"status": "model_analysis_failed"})
+
+        return json.dumps(
+            {
+                "ast": json.loads(ast_result),
+                "model_analysis": llm_result,
+            },
+            ensure_ascii=False,
+        )
 
     @staticmethod
     def run_bandit_on_code(code: str) -> str:
@@ -80,15 +104,21 @@ class SASTScanner:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             output = (result.stdout or "").strip()
             if not output:
-                output = (result.stderr or "Bandit returned no output").strip()
-            return output if output else "Bandit execution completed with no findings"
+                output = (result.stderr or "").strip()
+            return json.dumps(
+                {
+                    "status": "success",
+                    "return_code": result.returncode,
+                    "output": output,
+                }
+            )
         except FileNotFoundError:
-            return "Bandit dependency is missing in the current environment"
+            return json.dumps({"status": "dependency_missing"})
         except subprocess.TimeoutExpired:
-            return "Bandit execution timed out"
+            return json.dumps({"status": "timeout"})
         except Exception:
             logger.exception("Bandit execution failed")
-            return "Bandit execution failed"
+            return json.dumps({"status": "execution_failed"})
         finally:
             try:
                 os.unlink(tmp_path)
@@ -102,14 +132,20 @@ class SASTScanner:
             cmd = ["bandit", "-r", target_path, "-f", "txt", "-ll"]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
             output = (result.stdout or "").strip()
-            return output if output else "Bandit execution completed with no findings"
+            return json.dumps(
+                {
+                    "status": "success",
+                    "return_code": result.returncode,
+                    "output": output,
+                }
+            )
         except FileNotFoundError:
-            return "Bandit dependency is missing in the current environment"
+            return json.dumps({"status": "dependency_missing"})
         except subprocess.TimeoutExpired:
-            return "Bandit execution timed out"
+            return json.dumps({"status": "timeout"})
         except Exception:
             logger.exception("Bandit execution failed")
-            return "Bandit execution failed"
+            return json.dumps({"status": "execution_failed"})
 
     @staticmethod
     def run_semgrep_on_code(code: str) -> str:
@@ -122,15 +158,21 @@ class SASTScanner:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
             output = (result.stdout or "").strip()
             if not output:
-                output = (result.stderr or "Semgrep returned no output").strip()
-            return output if output else "Semgrep execution completed with no findings"
+                output = (result.stderr or "").strip()
+            return json.dumps(
+                {
+                    "status": "success",
+                    "return_code": result.returncode,
+                    "output": output,
+                }
+            )
         except FileNotFoundError:
-            return "Semgrep dependency is missing in the current environment"
+            return json.dumps({"status": "dependency_missing"})
         except subprocess.TimeoutExpired:
-            return "Semgrep execution timed out"
+            return json.dumps({"status": "timeout"})
         except Exception:
             logger.exception("Semgrep execution failed")
-            return "Semgrep execution failed"
+            return json.dumps({"status": "execution_failed"})
         finally:
             try:
                 os.unlink(tmp_path)
@@ -144,24 +186,33 @@ class SASTScanner:
             cmd = ["semgrep", "scan", "--config", "auto", "--quiet", target_path]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
             output = (result.stdout or "").strip()
-            return output if output else "Semgrep execution completed with no findings"
+            return json.dumps(
+                {
+                    "status": "success",
+                    "return_code": result.returncode,
+                    "output": output,
+                }
+            )
         except FileNotFoundError:
-            return "Semgrep dependency is missing in the current environment"
+            return json.dumps({"status": "dependency_missing"})
         except subprocess.TimeoutExpired:
-            return "Semgrep execution timed out"
+            return json.dumps({"status": "timeout"})
         except Exception:
             logger.exception("Semgrep execution failed")
-            return "Semgrep execution failed"
+            return json.dumps({"status": "execution_failed"})
 
     @classmethod
     async def full_scan(cls, code: str) -> str:
         bandit_result = cls.run_bandit_on_code(code)
         semgrep_result = cls.run_semgrep_on_code(code)
         owasp_result = await cls.run_owasp_patterns(code)
-        return (
-            f"Bandit: \n{bandit_result}\n\n"
-            f"Semgrep: \n{semgrep_result}\n\n"
-            f"OWASP Top 10: \n{owasp_result}"
+        return json.dumps(
+            {
+                "bandit": json.loads(bandit_result),
+                "semgrep": json.loads(semgrep_result),
+                "owasp": json.loads(owasp_result),
+            },
+            ensure_ascii=False,
         )
 
 

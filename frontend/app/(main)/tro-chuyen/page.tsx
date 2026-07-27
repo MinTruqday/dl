@@ -1285,16 +1285,19 @@ export default function TroChuyenPage() {
                             let docPayloadStr = "";
                             let mindmapPayloadStr = "";
                             let displaySegment = segment;
-                            if (segment.includes("<!--RECOMMENDED_DOCS_PAYLOAD:")) {
-                              const parts = segment.split("<!--RECOMMENDED_DOCS_PAYLOAD:");
+                            const payloadEnd = "</agentic-payload>";
+                            const docPayloadStart = '<agentic-payload kind="RECOMMENDED_DOCS_PAYLOAD">';
+                            const mindmapPayloadStart = '<agentic-payload kind="MINDMAP_PAYLOAD">';
+                            if (segment.includes(docPayloadStart)) {
+                              const parts = segment.split(docPayloadStart);
                               displaySegment = parts[0];
-                              const endParts = parts[1]?.split("-->");
+                              const endParts = parts[1]?.split(payloadEnd);
                               if (endParts) docPayloadStr = endParts[0];
                             }
-                            if (displaySegment.includes("<!--MINDMAP_PAYLOAD:")) {
-                              const parts = displaySegment.split("<!--MINDMAP_PAYLOAD:");
+                            if (displaySegment.includes(mindmapPayloadStart)) {
+                              const parts = displaySegment.split(mindmapPayloadStart);
                               displaySegment = parts[0];
-                              const endParts = parts[1]?.split("-->");
+                              const endParts = parts[1]?.split(payloadEnd);
                               if (endParts) mindmapPayloadStr = endParts[0];
                             }
 
@@ -1483,7 +1486,6 @@ export default function TroChuyenPage() {
               )}
 
               <form onSubmit={handleSubmit} className="relative flex w-full">
-                {/* Mirror textarea for perfect synchronous height measurement without CSS transition interference */}
                 <textarea
                   ref={mirrorRef}
                   className="absolute top-0 left-0 w-full min-h-[56px] text-[17px] leading-[24px] font-medium font-sans opacity-0 invisible pointer-events-none -z-10 resize-none"

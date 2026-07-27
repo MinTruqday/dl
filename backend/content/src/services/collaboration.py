@@ -101,7 +101,7 @@ class CollaborationService:
             "Send invitation",
             "A new editorial collaboration invitation has been processed and dispatched via the internal notification system",
         )
-        logger.info("Collaboration invitation processed and sent successfully")
+        logger.info("Collaboration invitation processed and sent")
         return {
             "message": "Xử lý và gửi lời mời tham gia cộng tác hoàn tất",
             "invite_id": invite["_id"],
@@ -153,7 +153,7 @@ class CollaborationService:
             "Accepted" if status == "ACCEPTED" else "Declined",
             "The recipient has officially registered their response to the pending editorial collaboration invitation",
         )
-        logger.info("Collaboration invitation response processed successfully")
+        logger.info("Collaboration invitation response processed")
         return {"message": "Ghi nhận trạng thái phản hồi lời mời cộng tác hoàn tất"}
 
     @staticmethod
@@ -238,7 +238,7 @@ class CollaborationService:
             "Collaborator removed",
             "The specified collaborator has been effectively removed from the authorized modification list",
         )
-        logger.info("Collaborator removed successfully")
+        logger.info("Collaborator removed")
         return {"message": "Đã thu hồi quyền và xóa thành viên khỏi danh sách cộng tác"}
 
     @staticmethod
@@ -334,7 +334,7 @@ class CollaborationService:
             "Transfer ownership",
             "The primary administrative ownership rights of the document have been securely reassigned",
         )
-        logger.info("Document ownership transferred successfully")
+        logger.info("Document ownership transferred")
         return {"message": "Cập nhật và chuyển giao quyền sở hữu tài liệu hoàn tất"}
 
     @staticmethod

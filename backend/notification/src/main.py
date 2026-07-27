@@ -27,7 +27,7 @@ logger.add(
 async def lifespan(app: FastAPI):
     await init_db()
     await redis.get_client().ping()
-    logger.info("Notification service initialized successfully")
+    logger.info("Notification service initialized")
     try:
         yield
     finally:

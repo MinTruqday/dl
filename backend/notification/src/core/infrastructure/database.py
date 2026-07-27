@@ -35,7 +35,7 @@ async def setup_indexes():
         unique=True,
         partialFilterExpression={"idempotency_key": {"$type": "string"}},
     )
-    logger.info("Notification database indexes initialized successfully")
+    logger.info("Notification database indexes initialized")
 
 
 async def close_db():

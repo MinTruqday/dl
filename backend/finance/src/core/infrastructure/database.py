@@ -71,7 +71,7 @@ async def setup_indexes():
     await db["withdrawal_requests"].create_index([("status", 1), ("created_at", -1)])
     await db["withdrawal_requests"].create_index([("user_id", 1), ("created_at", -1)])
     await db["outbox_events"].create_index([("status", 1), ("next_attempt_at", 1)])
-    logger.info("Finance database indexes initialized successfully")
+    logger.info("Finance database indexes initialized")
 
 
 async def close_db():

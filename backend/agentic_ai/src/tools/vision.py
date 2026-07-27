@@ -42,11 +42,11 @@ class VisionTool:
                 max_tokens=1024,
             )
             result = response.choices[0].message.content
-            logger.info("Vision analysis completed successfully")
+            logger.info("Vision analysis completed")
             return result
         except Exception:
             logger.exception("Vision analysis failed")
-            return "Hệ thống không thể phân tích hình ảnh này"
+            raise RuntimeError("vision_analysis_failed")
 
     async def describe_image(self, image_base64: str) -> str:
         return await self.analyze_image(

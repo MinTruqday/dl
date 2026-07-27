@@ -38,11 +38,11 @@ class SpawnedAgent:
         ]
         try:
             response = await self.llm.ainvoke(messages)
-            logger.info(f"Spawned agent '{self.role}' execution completed successfully")
+            logger.info(f"Spawned agent '{self.role}' execution completed")
             return response.content.strip()
         except Exception:
             logger.exception(f"Spawned agent '{self.role}' execution failed")
-            return f"MODULE SPAWNED_AGENT({self.role}): Execution failed"
+            raise RuntimeError("spawned_agent_execution_failed")
 
 
 class AgentSpawner:

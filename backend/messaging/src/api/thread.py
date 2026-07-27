@@ -2,7 +2,7 @@ from src.core.infrastructure.redis import redis
 from typing import Any
 
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from src.schemas.thread import Creation
 from src.services.thread import ThreadService
 

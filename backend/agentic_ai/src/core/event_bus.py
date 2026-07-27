@@ -15,7 +15,7 @@ class EventBus:
 
     async def connect(self):
         if not settings.RABBITMQ_URI:
-            logger.warning("RABBITMQ_URI is not set. EventBus will not connect.")
+            logger.warning("RABBITMQ_URI is not set. EventBus will not connect")
             return
 
         try:
@@ -26,7 +26,7 @@ class EventBus:
             )
             logger.info("Connected to RabbitMQ Event Bus")
         except Exception as e:
-            logger.error(f"Failed to connect to RabbitMQ: {e}")
+            logger.error("Failed to connect to RabbitMQ")
 
     async def publish(self, routing_key: str, message: Dict[str, Any]):
         if not self.exchange:
@@ -40,7 +40,7 @@ class EventBus:
             )
             logger.debug(f"Published event [{routing_key}]: {message}")
         except Exception as e:
-            logger.error(f"Error publishing event {routing_key}: {e}")
+            logger.error(f"Error publishing event {routing_key}")
 
     async def subscribe(self, routing_key: str, callback: Callable[[Dict[str, Any]], Any]):
         if not self.channel or not self.exchange:
@@ -62,7 +62,7 @@ class EventBus:
             await queue.consume(process_message)
             logger.info(f"Subscribed to events: {routing_key}")
         except Exception as e:
-            logger.error(f"Error subscribing to {routing_key}: {e}")
+            logger.error(f"Error subscribing to {routing_key}")
 
     async def close(self):
         if self.connection:

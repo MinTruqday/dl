@@ -4,7 +4,6 @@ import {
 } from "@/features/authentication/services/session.service";
 
 async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment: boolean) {
-  // 1. Request Presigned URL
   const reqRes = await fetch(`${API_URL}/tai-len/yeu-cau-presigned-url`, {
     method: "POST",
     headers: {
@@ -25,7 +24,6 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
   
   const { upload_url, file_path } = reqData.data;
 
-  // 2. Upload file directly to MinIO using PUT
   const putRes = await fetch(upload_url, {
     method: "PUT",
     headers: {
@@ -36,7 +34,6 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
   
   if (!putRes.ok) throw new Error("Lỗi đẩy luồng dữ liệu (Stream) lên máy chủ lưu trữ");
 
-  // 3. Confirm upload
   const confirmRes = await fetch(`${API_URL}/tai-len/xac-nhan`, {
     method: "POST",
     headers: {

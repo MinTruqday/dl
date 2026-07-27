@@ -45,7 +45,7 @@ async def initialize_bucket():
         except ClientError as e:
             logger.info(f"Initializing storage bucket {bucket}")
             await storage_client.create_bucket(Bucket=bucket)
-            logger.info(f"Storage bucket initialized successfully {bucket}")
+            logger.info(f"Storage bucket initialized {bucket}")
 
 async def upload_file(
     file_content: bytes,

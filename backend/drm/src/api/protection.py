@@ -97,7 +97,7 @@ async def issue_temporary_aes_key(document_id: str, user_id: str, ttl_seconds: i
         await redis.get_client().setex(key_id, ttl_seconds, raw_key)
         status = "issued"
     except Exception as e:
-        logger.warning(f"DRM Redis key issuance fallback: {e}")
+        logger.warning("DRM Redis key issuance fallback")
         status = "issued_fallback"
 
     return {

@@ -9,18 +9,15 @@ DocLib Orchestration Graph configuring the state machine nodes, edges, and condi
 </contract>
 """
 import asyncio
-import os
 from typing import Annotated, List, Literal, Optional, Sequence, TypedDict
 
 import langchain
-from langchain_community.cache import RedisCache
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langgraph.graph import END, StateGraph
 from loguru import logger
 from pydantic import BaseModel, Field
-from redis import Redis
 from src.memory.management import memory_manager
 
 from src.rag.embedding import embedder
@@ -54,7 +51,7 @@ try:
     langchain.llm_cache = RedisSemanticCache(
         redis_url=redis_url, embedding=embedder
     )
-    logger.info("Redis semantic cache initialized successfully")
+    logger.info("Redis semantic cache initialized")
 except Exception as e:
     logger.exception("Redis semantic cache initialization error")
 
@@ -293,20 +290,16 @@ async def generate_direct(state: AgentState):
     try:
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
-    except Exception as e:
+    except Exception:
         logger.exception("AI response synthesis and generation encountered an error")
-        return {
-            "generation": "Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        }
+        raise RuntimeError("direct_generation_failed")
 
 async def generate(state: AgentState):
     question = state["question"]
     documents = list(state.get("documents", []))
     user_id = state.get("user_id")
     if not user_id:
-        return {
-            "generation": "Yêu cầu cần xác thực quyền truy cập, vui lòng đăng nhập để tiếp tục"
-        }
+        raise PermissionError("authentication_required")
     user_context = await memory_manager.get_user_preferences(user_id)
     if state.get("file_data"):
         documents.append(f"[Attached Personal Documents]\n{state['file_data'][:6000]}")
@@ -347,11 +340,9 @@ async def generate(state: AgentState):
         response = await llm_generate.ainvoke([HumanMessage(content=content)])
         generation = response.content
         return {"generation": generation}
-    except Exception as e:
+    except Exception:
         logger.exception("Document content generation error")
-        return {
-            "generation": "Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        }
+        raise RuntimeError("document_generation_failed")
 
 async def grade_generation(state: AgentState):
     documents = state.get("documents", [])

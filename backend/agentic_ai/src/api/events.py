@@ -48,7 +48,7 @@ async def receive_webhook(request: Request, body: WebhookPayload = Body()):
             "event_type": event_type.value,
         }
     except Exception as e:
-        logger.exception(f"Webhook processing error {e}")
+        logger.exception("Webhook processing error")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post(
@@ -124,7 +124,7 @@ async def create_schedule(req: CreateScheduleRequest):
 )
 async def delete_schedule(schedule_id: str):
     if schedule_id not in cron_scheduler._schedules:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy lịch trình thực thi yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
     cron_scheduler.unregister(schedule_id)
     return {"status": "deleted", "schedule_id": schedule_id}
 
@@ -136,7 +136,7 @@ async def delete_schedule(schedule_id: str):
 async def toggle_schedule(schedule_id: str):
     schedule = cron_scheduler._schedules.get(schedule_id)
     if not schedule:
-        raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy lịch trình thực thi yêu cầu")
+        raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
     schedule.enabled = not schedule.enabled
     return {
         "schedule_id": schedule_id,

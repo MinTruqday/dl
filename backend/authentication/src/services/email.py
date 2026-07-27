@@ -50,4 +50,4 @@ class EmailService:
                 raise Exception("Quá trình thiết lập kết nối đến máy chủ thư điện tử gặp sự cố")
 
         success = await asyncio.to_thread(send_sync)
-        logger.info("Password recovery email notification dispatched successfully to upstream server")
+        logger.info("Password recovery email notification dispatched to upstream server")

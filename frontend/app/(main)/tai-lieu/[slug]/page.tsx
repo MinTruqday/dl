@@ -264,7 +264,7 @@ export default function DocumentDetailsPage() {
               >
                 <ShoppingCart className="w-5 h-5" />{" "}
                 {isPurchasing
-                  ? "Đang xử lý..."
+                ? "Đang xử lý"
                   : `Mua với ${docData.price_dl || 0} dl`}
               </button>
             )}

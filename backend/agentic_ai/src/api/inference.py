@@ -56,14 +56,14 @@ async def _check_quota(current_user: CurrentUser):
             if resp.status_code != 200:
                 raise HTTPException(
                     status_code=429,
-                    detail="Tài khoản của bạn đã sử dụng vượt mức dung lượng AI cho phép",
+                    detail={"code": "ai_quota_exceeded"},
                 )
             return resp.json().get("data", {})
     except HTTPException:
         raise
     except Exception:
         logger.exception("AI quota verification error")
-        raise HTTPException(status_code=503, detail="Dịch vụ hạn mức AI tạm thời không khả dụng")
+        raise HTTPException(status_code=503, detail={"code": "quota_service_unavailable"})
 
 async def _consume_quota(
     current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
@@ -84,7 +84,7 @@ async def _consume_quota(
             response.raise_for_status()
     except Exception:
         logger.exception("AI quota consumption error")
-        raise HTTPException(status_code=503, detail="Không thể ghi nhận hạn mức AI đã sử dụng")
+        raise HTTPException(status_code=503, detail={"code": "quota_consumption_failed"})
 
 async def _chat_direct(
     messages: List[dict],
@@ -107,7 +107,7 @@ def _public_ai_error(operation: str, exc: Exception) -> HTTPException:
     logger.exception("AI endpoint failed operation={}", operation)
     return HTTPException(
         status_code=500,
-        detail="Hệ thống gặp sự cố khi xử lý yêu cầu, vui lòng thử lại sau",
+        detail={"code": f"{operation}_failed"},
     )
 
 async def _run_ai_with_quota(
@@ -197,15 +197,18 @@ async def generate_quick_replies(
                 )
             )
             if not valid:
-                replies = ["Đồng ý", "Cảm ơn", "Tôi hiểu"]
+                replies = []
         except json.JSONDecodeError:
-            replies = ["Đồng ý", "Cảm ơn", "Tuyệt vời"]
+            replies = []
             
         logger.info("Quick reply generation completed")
-        return {"replies": replies[:3]}
+        return {
+            "replies": replies[:3],
+            "error_code": None if replies else "quick_replies_invalid_output",
+        }
     except Exception:
         logger.exception("Quick reply generation failed")
-        return {"replies": ["Đồng ý", "Cảm ơn", "Tôi hiểu"]}
+        return {"replies": [], "error_code": "quick_replies_unavailable"}
 
 @router.post("/tao-ma")
 async def generate_code(
@@ -236,7 +239,7 @@ async def grammar_check(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng",
+                detail={"code": "premium_tier_required"},
             )
 
         prompt = registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
@@ -254,7 +257,7 @@ async def grammar_check(
         return {
             "corrected_text": result.strip(),
             "score": grammar_score,
-            "message": "Hoàn tất kiểm tra ngữ pháp",
+            "message_code": "grammar_check_completed",
         }
     except Exception as exc:
         raise _public_ai_error("grammar_check", exc)
@@ -292,7 +295,7 @@ async def check_plagiarism(
             logger.warning("Plagiarism detection access denied due to service tier")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
+                detail={"code": "premium_tier_required"}
             )
 
         from src.rag.embedding import embedder
@@ -307,13 +310,13 @@ async def check_plagiarism(
             return {
                 "plagiarism_score": 0.0,
                 "status": "clean",
-                "message": "Tài liệu có tính nguyên bản cao, không phát hiện trùng lặp",
+                "message_code": "plagiarism_not_detected",
                 "matches": [],
             }
 
         context = "\n".join(
             [
-                f"- Match (Score: {m['score']:.2f}): {m['text'][:200]}"
+                "- Match (Score: {m['score']:.2f}): {m['text'][:200]}"
                 for m in significant_matches
             ]
         )
@@ -341,7 +344,7 @@ async def check_plagiarism(
         return {
             "plagiarism_score": round(max_score, 1),
             "status": "danger" if max_score > 85 else "warning",
-            "message": "Phát hiện nội dung trùng lặp",
+            "message_code": "plagiarism_detected",
             "matches": significant_matches[:3],
         }
     except Exception as exc:
@@ -374,7 +377,7 @@ async def unified_action(
         prompt = prompts.get(req.action)
         if not prompt:
             logger.warning(f"Invalid unified action requested {req.action}")
-            raise HTTPException(status_code=400, detail="Thao tác yêu cầu không hợp lệ")
+            raise HTTPException(status_code=400, detail={"code": "invalid_action"})
 
         result = await _run_ai_with_quota(
             current_user,
@@ -400,7 +403,7 @@ async def get_synonyms(
             logger.warning("Synonym retrieval access denied due to service tier")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
+                detail={"code": "premium_tier_required"}
             )
 
         prompt = registry.get(PromptType.SYNONYMS).format(text=req.text)
@@ -428,7 +431,7 @@ async def suggest_citations(
             logger.warning("Citation suggestion access denied due to service tier")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
+                detail={"code": "premium_tier_required"}
             )
 
         from src.rag.embedding import embedder
@@ -471,7 +474,7 @@ async def transform_tone(
             logger.warning("Tone transformation access denied due to service tier")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
+                detail={"code": "premium_tier_required"}
             )
 
         action = "expand and transform" if req.expansion else "transform"
@@ -502,7 +505,7 @@ async def peer_review(
             logger.warning("Content review access denied due to service tier")
             raise HTTPException(
                 status_code=403,
-                detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
+                detail={"code": "premium_tier_required"}
             )
 
         criteria_str = (
@@ -565,7 +568,7 @@ async def extract_text(req: dict, current_user: CurrentUser = Depends(get_curren
         if not file_url:
             logger.warning("Missing file location URL in request")
             raise HTTPException(
-                status_code=400, detail="Yêu cầu bị từ chối do thiếu thông tin đường dẫn tệp tin"
+                status_code=400, detail={"code": "file_path_required"}
             )
 
         from src.rag.pipeline import ingestion_pipeline
@@ -580,7 +583,7 @@ async def extract_text(req: dict, current_user: CurrentUser = Depends(get_curren
         logger.exception("Document text extraction failed")
         raise HTTPException(
             status_code=500,
-            detail="Hệ thống không thể trích xuất nội dung từ tệp tin được cung cấp",
+            detail={"code": "file_text_extraction_failed"},
         )
 
 @router.post("/phan-tich-tai-lieu")
@@ -628,10 +631,10 @@ async def delete_vector_document(document_id: str):
 
         await vector_store.delete_by_document(document_id)
         logger.info(f"Completed vector index deletion for document {document_id}")
-        return {"status": "success", "message": "Hủy bỏ toàn bộ dữ liệu vector của tài liệu hoàn tất"}
+        return {"status": "success", "message_code": "document_vectors_deleted"}
     except Exception:
         logger.exception("Vector index deletion error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình xóa dữ liệu, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail={"code": "document_vector_deletion_failed"})
 
 def _extract_json(text: str) -> dict:
     import re

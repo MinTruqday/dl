@@ -86,7 +86,7 @@ async def setup_indexes():
     await db["users"].create_index([("role", 1), ("is_active", 1)])
     await db["users"].create_index("created_at")
     await db["user_duplicate_archive"].create_index("original_id", unique=True)
-    logger.info("Humanity database indexes initialized successfully")
+    logger.info("Humanity database indexes initialized")
 
 
 async def close_db():

@@ -74,7 +74,7 @@ async def evaluate_drm_policy(
         else:
             final_dict = fast_result
     except Exception as e:
-        logger.warning(f"AI Escalation fallback: {e}")
+        logger.warning("AI Escalation fallback")
         final_dict = fast_result
 
     try:

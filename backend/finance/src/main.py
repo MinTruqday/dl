@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     await redis.get_client().ping()
     outbox_task = asyncio.create_task(process_outbox())
-    logger.info("Finance service initialized successfully")
+    logger.info("Finance service initialized")
     try:
         yield
     finally:

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibVerticalTimeline implements BlockTool {
@@ -78,8 +77,9 @@ export default class DocLibVerticalTimeline implements BlockTool {
 
   private buildUI() {
     if (!this.wrapper) return;
-    this.wrapper.innerHTML = "";
-    this.wrapper.classList.add("doclib-tl-wrapper");
+    const wrapper = this.wrapper;
+    wrapper.innerHTML = "";
+    wrapper.classList.add("doclib-tl-wrapper");
 
     this.data.events.forEach((event, idx) => {
       const el = document.createElement("div");
@@ -111,7 +111,7 @@ export default class DocLibVerticalTimeline implements BlockTool {
 
       el.appendChild(content);
       el.appendChild(dot);
-      this.wrapper.appendChild(el);
+      wrapper.appendChild(el);
     });
 
     if (!this.readOnly) {
@@ -187,7 +187,7 @@ export default class DocLibVerticalTimeline implements BlockTool {
       });
 
       editArea.appendChild(addBtn);
-      this.wrapper.appendChild(editArea);
+      wrapper.appendChild(editArea);
     }
   }
 

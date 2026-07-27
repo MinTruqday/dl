@@ -36,7 +36,7 @@ class PublicationService:
                 }
             },
         )
-        logger.info("Document SEO metadata updated successfully")
+        logger.info("Document SEO metadata updated")
         return {"message": "Cập nhật dữ liệu SEO và thẻ phân loại hoàn tất"}
 
     @staticmethod
@@ -87,7 +87,7 @@ class PublicationService:
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu cần lên lịch")
-        logger.info("Document publication schedule configured successfully")
+        logger.info("Document publication schedule configured")
         return {"message": "Thiết lập lịch trình xuất bản tự động hoàn tất"}
 
     @staticmethod
@@ -132,5 +132,5 @@ class PublicationService:
                 },
             )
             raise HTTPException(status_code=503, detail="Hàng đợi xuất bản tạm thời không khả dụng")
-        logger.info("Document publication process initiated successfully")
+        logger.info("Document publication process initiated")
         return await docs_collection.find_one({"_id": document_id})

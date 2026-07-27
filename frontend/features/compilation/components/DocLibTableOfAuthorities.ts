@@ -107,10 +107,9 @@ export default class DocLibTableOfAuthorities implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-toa-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", () => {
             this.data[listKey].splice(i, 1);
-            // Re-render entirely
             container.innerHTML = "";
             container.appendChild(head);
             container.appendChild(renderSection("Cases", "cases"));

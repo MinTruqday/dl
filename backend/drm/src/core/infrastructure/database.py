@@ -31,7 +31,7 @@ async def setup_indexes():
         await db["document_drm_settings"].create_index("document_id", unique=True)
         await db["copyright_disputes"].create_index([("status", 1), ("created_at", -1)])
         await db["audit_logs"].create_index([("user_id", 1), ("created_at", -1)])
-        logger.info("MongoDB index creation completed successfully")
+        logger.info("MongoDB index creation completed")
     except Exception:
         logger.exception("Failed to create MongoDB indexes")
         raise

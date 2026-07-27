@@ -24,7 +24,7 @@ async def manage_user_instructions(
     """
     token = config.get("configurable", {}).get("token") if config else None
     if not token:
-        return "Yêu cầu xác thực tài khoản để quản lý chỉ dẫn cá nhân"
+        return json.dumps({"status": "authentication_required"})
 
     headers = {"Authorization": token}
     action_type = action.strip().lower()
@@ -40,14 +40,15 @@ async def manage_user_instructions(
             if res.status_code == 200:
                 data = res.json().get("data", {})
                 instructions = data.get("instructions", "")
-                if not instructions:
-                    return "Bạn chưa cài đặt chỉ dẫn cá nhân nào"
-                return f"Chỉ dẫn cá nhân hiện tại của bạn: {instructions}"
-            return "Không thể trích xuất cài đặt chỉ dẫn cá nhân"
+                return json.dumps({
+                    "status": "success",
+                    "instructions": instructions,
+                }, ensure_ascii=False)
+            return json.dumps({"status": "instruction_retrieval_failed"})
 
         elif action_type == "set":
             if not instruction.strip():
-                return "Nội dung chỉ dẫn không được để trống"
+                return json.dumps({"status": "instruction_required"})
             res = await make_api_request(
                 "POST",
                 f"{INTERNAL_API_URL}/tro-chuyen/tuy-chon-ca-nhan",
@@ -56,8 +57,11 @@ async def manage_user_instructions(
                 timeout=30.0,
             )
             if res.status_code == 200:
-                return f"Đã lưu chỉ dẫn cá nhân mới thành công: '{instruction.strip()}'"
-            return "Lưu chỉ dẫn cá nhân thất bại"
+                return json.dumps({
+                    "status": "success",
+                    "instructions": instruction.strip(),
+                }, ensure_ascii=False)
+            return json.dumps({"status": "instruction_update_failed"})
 
         elif action_type == "clear":
             res = await make_api_request(
@@ -67,10 +71,10 @@ async def manage_user_instructions(
                 timeout=30.0,
             )
             if res.status_code == 200:
-                return "Đã xóa toàn bộ chỉ dẫn cá nhân thành công"
-            return "Xóa chỉ dẫn cá nhân thất bại"
+                return json.dumps({"status": "success", "instructions": ""})
+            return json.dumps({"status": "instruction_clear_failed"})
 
-        return "Hành động không hợp lệ. Vui lòng chọn 'get', 'set' hoặc 'clear'"
-    except Exception as e:
+        return json.dumps({"status": "invalid_instruction_action"})
+    except Exception:
         logger.exception("Failed to execute manage_user_instructions")
-        return "Đã xảy ra lỗi hệ thống khi xử lý chỉ dẫn cá nhân"
+        return json.dumps({"status": "instruction_operation_failed"})

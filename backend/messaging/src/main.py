@@ -37,7 +37,7 @@ async def scheduled_message_worker():
 async def lifespan(app: FastAPI):
     await init_db()
     worker = asyncio.create_task(scheduled_message_worker())
-    logger.info("Messaging service initialized successfully")
+    logger.info("Messaging service initialized")
     try:
         yield
     finally:

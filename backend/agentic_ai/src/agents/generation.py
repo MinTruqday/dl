@@ -27,8 +27,7 @@ class GenerationAgent:
         scan = await security.ascan_input(query)
         if scan.blocked:
             logger.warning("Detected invalid operation")
-            yield "Yêu cầu của bạn vi phạm chính sách bảo mật, hệ thống không thể tiếp tục xử lý"
-            return
+            raise PermissionError("input_security_blocked")
 
         try:
             from langchain_core.messages import HumanMessage
@@ -47,19 +46,12 @@ class GenerationAgent:
                 query=query, gathered_data=gathered_data
             )
 
-            try:
-                async for chunk in llm.astream([HumanMessage(content=final_prompt)]):
-                    if chunk.content:
-                        yield chunk.content
-            except RuntimeError as e:
-                if "StopIteration" in str(e):
-                    logger.warning("StopIteration during final generation")
-                    yield "Hệ thống đang gặp lỗi khi tạo phản hồi"
-                else:
-                    raise
+            async for chunk in llm.astream([HumanMessage(content=final_prompt)]):
+                if chunk.content:
+                    yield chunk.content
 
         except Exception:
             logger.exception("Error generating response content")
-            yield "Hệ thống đã gặp lỗi bất ngờ trong quá trình tạo phản hồi, vui lòng thử lại sau"
+            raise RuntimeError("response_generation_failed")
 
 response_generator = GenerationAgent()

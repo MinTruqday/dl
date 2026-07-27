@@ -1,4 +1,3 @@
-import re
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -99,21 +98,14 @@ class SemanticRouterValidator:
                 node = {**node, "agent": "Reasoning"}
                 agent = "Reasoning"
                 
-            if agent == "MCTSAgent":
-                complex_keywords = ["algorithm", "optimize", "complex", "performance", "tree", "graph", "dynamic programming"]
-                is_complex = any(k in task_desc.lower() for k in complex_keywords) or len(task_desc) > 150
-                if not is_complex:
-                    logger.info("MCTSAgent downgraded to SwarmAgent due to low task complexity")
-                    node = {**node, "agent": "SwarmAgent"}
-            
             validated.append(node)
         return validated
 
 
 INTENTS = {
-    "chat": "Conversational chat, greeting, casual talk, hello, xin chào, trò chuyện",
-    "action": "Create file, edit code, run command, system modification, delete, tạo và chỉnh sửa",
-    "knowledge": "Search documents, read file, lookup guidelines, retrieve internal data, tìm tài liệu"
+    "chat": "Conversational chat, greetings, casual talk and social exchanges",
+    "action": "Authenticated system mutations and registered tool operations",
+    "knowledge": "Document retrieval, factual questions, analysis and content generation"
 }
 
 class RouteAgent:
@@ -139,17 +131,6 @@ class RouteAgent:
         return self._intent_vecs
 
     async def execute(self, query: str) -> dict:
-        normalized = re.sub(r"[^\w\s]", "", query.casefold()).strip()
-        quick_responses = {
-            "xin chào": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
-            "chào": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
-            "hello": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
-            "hi": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
-            "hey": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
-        }
-        if normalized in quick_responses:
-            return {"route": "chat", "answer": quick_responses[normalized]}
-
         embedder = self._get_embedder()
         try:
             query_vec = await embedder.embed_query(query)
@@ -162,11 +143,11 @@ class RouteAgent:
                     best_score = score
                     best_route = intent
 
-            if best_score > 0.55:
+            if best_score > settings.AGENT_ROUTE_CONFIDENCE_THRESHOLD:
                 logger.info(f"Intent classified as {best_route} with confidence {best_score:.3f}")
                 return {"route": best_route, "answer": ""}
             else:
-                logger.warning(f"Low confidence intent ({best_score:.3f}). Defaulting to knowledge.")
+                logger.warning(f"Low confidence intent ({best_score:.3f}). Defaulting to knowledge")
                 return {"route": "knowledge", "answer": ""}
                 
         except Exception:

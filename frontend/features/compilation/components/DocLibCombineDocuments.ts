@@ -74,23 +74,23 @@ export default class DocLibCombineDocuments implements BlockTool {
       return doc;
     };
 
-    container.appendChild(createDoc("doc1", "📄", "DocLib Doc 1"));
+    container.appendChild(createDoc("doc1", "DOC", "DocLib Doc 1"));
 
     const plus = document.createElement("div");
     plus.classList.add("doclib-combine-arrow");
     plus.innerText = "+";
     container.appendChild(plus);
 
-    container.appendChild(createDoc("doc2", "📝", "DocLib Doc 2"));
+    container.appendChild(createDoc("doc2", "TEXT", "DocLib Doc 2"));
 
     const arrow = document.createElement("div");
     arrow.classList.add("doclib-combine-arrow");
-    arrow.innerText = "➔";
+    arrow.innerText = "->";
     container.appendChild(arrow);
 
     const merged = document.createElement("div");
     merged.classList.add("doclib-combine-merged");
-    merged.innerHTML = `<div class="doclib-combine-icon">📚</div>`;
+    merged.innerHTML = `<div class="doclib-combine-icon">MERGED</div>`;
     const mTitle = document.createElement("div");
     mTitle.classList.add("doclib-combine-title");
     mTitle.innerText = this.data.mergedTitle;

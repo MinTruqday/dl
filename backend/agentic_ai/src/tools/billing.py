@@ -1,3 +1,5 @@
+import json
+
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
@@ -17,7 +19,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "High security operation, please log in to your account and try again"
+        return json.dumps({"status": "authentication_required"})
     headers = {"Authorization": token}
     try:
         response = await make_api_request(
@@ -29,13 +31,13 @@ async def get_user_balance(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", {})
             balance = data.get("balance", 0)
-            return f"Your current account balance is {balance} credits"
+            return json.dumps({"status": "success", "balance": balance})
         elif response.status_code == 401:
-            return "Your session has expired. Please log in again"
-        raise Exception("Failed to load account balance")
-    except Exception as e:
+            return json.dumps({"status": "authentication_required"})
+        return json.dumps({"status": "balance_retrieval_failed"})
+    except Exception:
         logger.exception("Failed to access balance data")
-        raise Exception(f"An unexpected error occurred, please try again {e}")
+        return json.dumps({"status": "balance_service_unavailable"})
 
 @tool
 async def get_transaction_history(config: RunnableConfig) -> str:
@@ -51,7 +53,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Please authenticate your account to view transaction history details"
+        return json.dumps({"status": "authentication_required"})
     headers = {"Authorization": token}
     try:
         response = await make_api_request(
@@ -62,19 +64,14 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
-            if not data:
-                return "No recent payment transactions recorded"
-            history_text = ""
-            for i, tx in enumerate(data[:5]):
-                tx_type = "Deposit" if tx.get("type") == "TOPUP" else "Payment"
-                amount = tx.get("amount", 0)
-                note = tx.get("note", "No content")
-                history_text += f"{i+1} {tx_type} transaction of {amount} credits with note {note}\n"
-            return f"Here is your recent transaction history:\n{history_text}"
-        return "System is experiencing issues retrieving your payment transaction history"
-    except Exception as e:
+            return json.dumps(
+                {"status": "success", "transactions": data[:5]},
+                ensure_ascii=False,
+            )
+        return json.dumps({"status": "transaction_history_retrieval_failed"})
+    except Exception:
         logger.exception("Failed to retrieve payment transaction history")
-        raise Exception(f"An unexpected error occurred, please try again {e}")
+        return json.dumps({"status": "billing_service_unavailable"})
 
 @tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
@@ -90,9 +87,9 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Valid account login is required to use a gift voucher"
+        return json.dumps({"status": "authentication_required"})
     if not code or not code.strip():
-        return "This promo code is invalid or has already been used"
+        return json.dumps({"status": "voucher_code_required"})
     headers = {"Authorization": token}
     try:
         response = await make_api_request(
@@ -105,11 +102,11 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         if response.status_code == 200:
             res_data = response.json().get("data", {})
             bonus = res_data.get("bonus_dl", 0)
-            return f"Gift voucher redeemed successfully. Your account has been credited with {bonus} credits"
-        return "The system cannot process the gift voucher redemption request at this time"
-    except Exception as e:
+            return json.dumps({"status": "success", "credited_amount": bonus})
+        return json.dumps({"status": "voucher_redemption_failed"})
+    except Exception:
         logger.exception("Failed to process reward redemption request")
-        raise Exception(f"An unexpected error occurred, please try again {e}")
+        return json.dumps({"status": "billing_service_unavailable"})
 
 @tool
 async def get_revenue_report(config: RunnableConfig) -> str:
@@ -125,7 +122,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Admin authorization required to access revenue reports"
+        return json.dumps({"status": "admin_authorization_required"})
     headers = {"Authorization": token}
     try:
         response = await make_api_request(
@@ -136,11 +133,13 @@ async def get_revenue_report(config: RunnableConfig) -> str:
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
-            return f"Platform revenue report: Total revenue is {data.get('total_revenue', 0)} dl"
-        return "Unable to load system revenue report"
-    except Exception as e:
+            return json.dumps(
+                {"status": "success", "total_revenue": data.get("total_revenue", 0)}
+            )
+        return json.dumps({"status": "revenue_report_retrieval_failed"})
+    except Exception:
         logger.exception("Failed to load revenue report")
-        raise Exception(f"An unexpected error occurred {e}")
+        return json.dumps({"status": "billing_service_unavailable"})
 
 @tool
 async def transfer_user_funds(recipient_identifier: str, amount: int, note: str = "", config: RunnableConfig = None) -> str:
@@ -156,7 +155,7 @@ async def transfer_user_funds(recipient_identifier: str, amount: int, note: str 
     """
     token = config.get("configurable", {}).get("token") if config else None
     if not token:
-        return "Authentication required to perform P2P fund transfer"
+        return json.dumps({"status": "authentication_required"})
     headers = {"Authorization": token, "Content-Type": "application/json"}
     try:
         response = await make_api_request(
@@ -174,10 +173,17 @@ async def transfer_user_funds(recipient_identifier: str, amount: int, note: str 
             data = response.json().get("data", {})
             recipient_name = data.get("recipient", {}).get("name", recipient_identifier)
             remaining = data.get("remaining_balance", 0)
-            return f"Successfully transferred {amount} dl to {recipient_name}. Remaining balance: {remaining} dl"
+            return json.dumps(
+                {
+                    "status": "success",
+                    "amount": amount,
+                    "recipient": recipient_name,
+                    "remaining_balance": remaining,
+                },
+                ensure_ascii=False,
+            )
         else:
-            detail = response.json().get("detail") or "Fund transfer failed"
-            return f"Transfer failed: {detail}"
+            return json.dumps({"status": "fund_transfer_failed"})
     except Exception:
         logger.exception("Failed to execute P2P fund transfer")
-        return "Fund transfer failed because the billing service is unavailable"
+        return json.dumps({"status": "billing_service_unavailable"})

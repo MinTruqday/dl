@@ -82,13 +82,13 @@ export default function Editor({
   const [lastKeystroke, setLastKeystroke] = useState(Date.now());
   const lastContentRef = useRef<string>(initialContent || "");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [saveStatus, setSaveStatus] = useState<string>("Đã lưu");
+  const [saveStatus, setSaveStatus] = useState<string>("Saved");
   const { showToast } = useToast();
   const { user } = useAuth() as any;
 
   const checkPremiumAI = () => {
     if (user?.ai_tier === "PREMIUM" || user?.role === "admin") return true;
-    showToast("Lỗi phân quyền truy cập tính năng AI độc quyền", "error");
+    showToast("AI access is not available", "error");
     return false;
   };
 
@@ -103,7 +103,7 @@ export default function Editor({
   const [onlineUsers, setOnlineUsers] = useState<number>(1);
   const [localText, setLocalText] = useState(initialContent || "");
   const [showTranslateModal, setShowTranslateModal] = useState(false);
-  const [targetLang, setTargetLang] = useState("Tiếng Anh");
+  const [targetLang, setTargetLang] = useState("English");
   const [isTranslating, setIsTranslating] = useState(false);
   const [originalContentForUndo, setOriginalContentForUndo] = useState<
     string | null
@@ -156,28 +156,28 @@ export default function Editor({
         if (b.data?.text) text += b.data.text + " ";
       });
       if (!text || text.length < 50) {
-        showToast("Lỗi thiếu hụt khối lượng dữ liệu ngữ cảnh tối thiểu", "info");
+        showToast("More content is required", "info");
         return;
       }
-      showToast("Đang khởi chạy luồng phân tích cú pháp bằng mô hình AI", "info");
+      showToast("Analyzing grammar", "info");
       const res = await grammarCheckAPI(text);
       if (res.data) {
-        showToast(`Kết quả phân tích: Điểm độ tin cậy ${res.data.score}/100.`, "success");
+        showToast(`Grammar confidence score: ${res.data.score}/100`, "success");
         if (res.data.corrected_text) {
           editorRef.current.blocks.insert("paragraph", {
-            text: `<i>[Đề xuất sửa ngữ pháp]: ${res.data.corrected_text}</i>`,
+            text: `<i>[Grammar suggestion]: ${res.data.corrected_text}</i>`,
           });
         }
       }
     } catch (err: any) {
-      showToast(err.message || "Lỗi thiết lập kênh giao tiếp với máy chủ AI", "error");
+      showToast(err.message || "AI service connection failed", "error");
     }
   };
 
   const handleCompilePreview = async () => {
     if (!editorRef.current) return;
     setIsCompiling(true);
-      showToast("Đang khởi chạy luồng kết xuất mã nguồn LaTeX", "info");
+      showToast("Exporting LaTeX", "info");
     try {
       const data = await editorRef.current.save();
       let latexCode = "";
@@ -194,7 +194,7 @@ export default function Editor({
       });
 
       if (!latexCode.trim()) {
-        showToast("Lỗi thiếu hụt dữ liệu đầu vào cho trình biên dịch", "info");
+        showToast("Compilation input is required", "info");
         setIsCompiling(false);
         return;
       }
@@ -215,9 +215,9 @@ ${latexCode}
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setPreviewPdfUrl(pdfUrl);
       setIsPreview(true);
-      showToast("Kết xuất mã nguồn LaTeX hoàn tất", "success");
+      showToast("LaTeX export completed", "success");
     } catch (err: any) {
-      showToast(err.message || "Lỗi trong quá trình kết xuất mã nguồn LaTeX", "error");
+      showToast(err.message || "LaTeX export failed", "error");
       setIsCompiling(false);
     }
   };
@@ -225,7 +225,7 @@ ${latexCode}
   const handleExportWord = async () => {
     if (!documentId) return;
     setIsExportingWord(true);
-      showToast("Đang khởi chạy tiến trình kết xuất định dạng Word", "info");
+      showToast("Exporting Word document", "info");
     try {
       const { exportToWordAPI } =
         await import("@/features/compilation/services/editorjs.service");
@@ -238,9 +238,9 @@ ${latexCode}
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      showToast("Kết xuất định dạng Word hoàn tất", "success");
+      showToast("Word export completed", "success");
     } catch (err: any) {
-      showToast(err.message || "Lỗi trong quá trình kết xuất định dạng Word", "error");
+      showToast(err.message || "Word export failed", "error");
     } finally {
       setIsExportingWord(false);
     }
@@ -251,10 +251,10 @@ ${latexCode}
     setIsFinding(true);
     try {
       await globalFindReplaceAPI(documentId, findText, replaceText, false);
-      showToast("Tiến trình thay thế chuỗi ký tự cục bộ hoàn tất", "success");
+      showToast("Text replacement completed", "success");
       setShowFindReplace(false);
     } catch (err: any) {
-      showToast(err.message || "Lỗi thực thi biểu thức thay thế chuỗi", "error");
+      showToast(err.message || "Text replacement failed", "error");
     } finally {
       setIsFinding(false);
     }
@@ -273,7 +273,7 @@ ${latexCode}
 
       if (!targetWord || targetWord.split(" ").length > 3) {
         showToast(
-          "Lỗi vi phạm giới hạn độ dài tham số đầu vào (Max 3 tokens)",
+          "The input may contain at most three words",
           "info",
         );
         setIsSuggesting(false);
@@ -283,12 +283,12 @@ ${latexCode}
       const res = await getSynonymsAPI(targetWord);
       const synonyms = res.data?.synonyms || [];
       if (synonyms.length > 0) {
-        showToast(`Kết quả phân tích cụm từ "${targetWord}": ${synonyms.join(", ")}`, "info");
+        showToast(`Synonyms for "${targetWord}": ${synonyms.join(", ")}`, "info");
       } else {
-        showToast("Lỗi không tìm thấy ánh xạ đồng nghĩa tương đương", "info");
+        showToast("No synonyms found", "info");
       }
     } catch (err: any) {
-      showToast(err.message || "Lỗi truy xuất bộ dữ liệu mạng ngữ nghĩa", "error");
+      showToast(err.message || "Synonym lookup failed", "error");
     } finally {
       setIsSuggesting(false);
     }
@@ -311,12 +311,12 @@ ${latexCode}
           },
         );
         if (!res.ok)
-          throw new Error("Lỗi xác thực luồng dữ liệu phản hồi");
+          throw new Error("Invalid response stream");
         const data = await res.json();
         setSidebarData(data.data || []);
       }
     } catch (err: any) {
-      showToast("Lỗi trích xuất bộ sưu tập dữ liệu điều hướng", "error");
+      showToast("Table of contents extraction failed", "error");
     } finally {
       setLoadingSidebar(false);
     }
@@ -345,12 +345,12 @@ ${latexCode}
       const result = await res.json();
       const conflicts = result.data?.conflicts || [];
       if (conflicts.length > 0) {
-        showToast(`Lỗi xung đột cây logic nội dung: ${conflicts[0]}`, "error");
+        showToast(`Content consistency conflict: ${conflicts[0]}`, "error");
       } else {
-        showToast("Kết quả đối chiếu: Tính nhất quán logic đạt chuẩn", "success");
+        showToast("Content consistency check passed", "success");
       }
     } catch (err: any) {
-      showToast("Lỗi thực thi luồng kiểm định tính toàn vẹn logic", "error");
+      showToast("Content consistency check failed", "error");
     } finally {
       setIsSuggesting(false);
     }
@@ -361,7 +361,7 @@ ${latexCode}
     if (!editorRef.current && contentFormat === "json") return;
     setIsTranslating(true);
     setShowTranslateModal(false);
-    showToast(`Đang khởi chạy luồng phiên dịch ngữ nghĩa sang ${targetLang}`, "info");
+    showToast(`Translating to ${targetLang}`, "info");
 
     try {
       if (contentFormat === "latex") {
@@ -373,7 +373,7 @@ ${latexCode}
           latexValueRef.current = translated;
           setLocalText(translated);
           if (onSave) onSave(translated);
-          showToast("Tiến trình phiên dịch ngữ nghĩa hoàn tất", "success");
+          showToast("Translation completed", "success");
         }
       } else {
         if (!editorRef.current) return;
@@ -402,10 +402,10 @@ ${latexCode}
         data.blocks = newBlocks;
         await editorRef.current.render(data);
         if (onSave) onSave(JSON.stringify(data));
-        showToast("Tiến trình phiên dịch khối dữ liệu hoàn tất", "success");
+        showToast("Block translation completed", "success");
       }
     } catch (err: any) {
-      showToast("Lỗi thực thi mô hình phiên dịch: " + err.message, "error");
+      showToast("Translation failed: " + err.message, "error");
     } finally {
       setIsTranslating(false);
     }
@@ -424,7 +424,7 @@ ${latexCode}
       if (onSave) onSave(originalContentForUndo);
     }
     setOriginalContentForUndo(null);
-    showToast("Khôi phục cấu trúc dữ liệu nguyên bản hoàn tất", "success");
+    showToast("Original content restored", "success");
   };
 
   return (
@@ -439,7 +439,7 @@ ${latexCode}
               disabled={isSuggesting}
               className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
             >
-              Gợi ý từ ngữ
+              Synonyms
             </button>
 
             <button
@@ -448,14 +448,14 @@ ${latexCode}
               className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
             >
               <Network className="w-3.5 h-3.5" />
-              Kiểm tra tính logic
+              Check consistency
             </button>
             <button
               onClick={handleGrammarCheck}
               className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
             >
               <CheckCheck className="w-3.5 h-3.5" />
-              Kiểm tra ngữ pháp
+              Check grammar
             </button>
             <button
               onClick={handleCompilePreview}
@@ -467,7 +467,7 @@ ${latexCode}
               ) : (
                 <Binary className="w-3.5 h-3.5" />
               )}
-              Biên dịch LaTeX
+              Export LaTeX
             </button>
 
             <button
@@ -475,7 +475,7 @@ ${latexCode}
               className={`px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 ${showFindReplace ? "bg-black text-white border-black hover:bg-zinc-800" : ""}`}
             >
               <Search className="w-3.5 h-3.5" />
-              Tìm kiếm / Thay thế
+              Find and replace
             </button>
 
             <div className="w-px h-6 bg-zinc-200 mx-1 shrink-0" />
@@ -494,14 +494,14 @@ ${latexCode}
               ) : (
                 <Languages className="w-3.5 h-3.5" />
               )}
-              {originalContentForUndo ? "Nguyên bản" : "Dịch tài liệu"}
+              {originalContentForUndo ? "Original" : "Translate"}
             </button>
           </div>
           <div className="flex gap-2 shrink-0">
             <button
               onClick={() => setIsPreview(!isPreview)}
               className={`p-1.5 border ${isPreview ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}  `}
-              title="Bật/Tắt bản xem trước PDF"
+              title="Toggle PDF preview"
             >
               <FileText className="w-4 h-4" />
             </button>
@@ -520,7 +520,7 @@ ${latexCode}
                 setActiveSidebar(activeSidebar === "toc" ? "none" : "toc")
               }
               className={`p-1.5 border ${activeSidebar === "toc" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}`}
-              title="Mục lục"
+              title="Table of contents"
             >
               <List className="w-4 h-4" />
             </button>
@@ -531,7 +531,7 @@ ${latexCode}
                 )
               }
               className={`p-1.5 border ${activeSidebar === "history" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}`}
-              title="Lịch sử phiên bản"
+              title="Version history"
             >
               <History className="w-4 h-4" />
             </button>
@@ -560,7 +560,7 @@ ${latexCode}
             <div className="flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-tight">
-                  Tìm kiếm và thay thế
+                  Find and replace
                 </span>
                 <button
                   onClick={() => setShowFindReplace(false)}
@@ -593,7 +593,7 @@ ${latexCode}
                   {isFinding ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    "Thay thế toàn cục"
+                    "Replace all"
                   )}
                 </button>
               </div>
@@ -606,7 +606,7 @@ ${latexCode}
             <div className="flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-tight">
-                  Dịch tài liệu
+                  Translate document
                 </span>
                 <button
                   onClick={() => setShowTranslateModal(false)}
@@ -622,19 +622,19 @@ ${latexCode}
                   value={targetLang}
                   onChange={(e) => setTargetLang(e.target.value)}
                 >
-                  <option value="Tiếng Anh">Tiếng Anh</option>
-                  <option value="Tiếng Việt">Tiếng Việt</option>
-                  <option value="Tiếng Pháp">Tiếng Pháp</option>
-                  <option value="Tiếng Trung">Tiếng Trung</option>
-                  <option value="Tiếng Nhật">Tiếng Nhật</option>
-                  <option value="Tiếng Hàn">Tiếng Hàn</option>
+                  <option value="English">English</option>
+                  <option value="Vietnamese">Vietnamese</option>
+                  <option value="French">French</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
                 </select>
                 <button
                   onClick={handleTranslate}
                   disabled={isTranslating}
                   className="px-4 py-1.5 bg-black text-white text-xs font-bold rounded-md hover:bg-zinc-800"
                 >
-                  Bắt đầu dịch
+                  Translate
                 </button>
               </div>
             </div>
@@ -679,10 +679,10 @@ ${latexCode}
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-white">
               <span className="text-xs font-bold uppercase tracking-tight">
                 {activeSidebar === "comments"
-                  ? "Nhận xét nội dòng"
+                  ? "Inline comments"
                   : activeSidebar === "history"
-                    ? "Lịch sử phiên bản"
-                    : "Mục lục"}
+                    ? "Version history"
+                    : "Table of contents"}
               </span>
               <button
                 onClick={() => setActiveSidebar("none")}
@@ -700,7 +700,7 @@ ${latexCode}
                 ) : activeSidebar === "toc" ? (
                   tocData.length === 0 ? (
                     <div className="p-8 border border-zinc-200 bg-white text-xs text-zinc-400 text-center italic">
-                      Chưa có thẻ Header nào
+                      No headings found
                     </div>
                   ) : (
                     tocData.map((item, idx) => (
@@ -728,7 +728,7 @@ ${latexCode}
                   )
                 ) : sidebarData.length === 0 ? (
                   <div className="p-8 border border-zinc-200 bg-white text-xs text-zinc-400 text-center italic">
-                    Chưa có dữ liệu để hiển thị
+                    No data available
                   </div>
                 ) : activeSidebar === "history" ? (
                   sidebarData.map((v, idx) => (
@@ -745,7 +745,7 @@ ${latexCode}
                         <Clock className="w-3 h-3 text-zinc-300" />
                       </div>
                       <p className="text-xs font-medium text-black">
-                        Bản lưu bởi {v.author_name || "Hệ thống"}
+                        Saved by {v.author_name || "System"}
                       </p>
                     </div>
                   ))
@@ -786,14 +786,14 @@ ${latexCode}
                         <MessageSquare className="w-3 h-3 text-zinc-300" />
                       </div>
                       <p className="text-xs font-bold text-black border-b border-zinc-100 pb-1">
-                        {c.user_name || "Khách"}
+                        {c.user_name || "Guest"}
                       </p>
                       <p className="text-xs font-medium text-black">
                         {c.text || c.content}
                       </p>
                       <div className="pt-2 flex justify-end">
                         <button className="text-[10px] font-bold text-zinc-400  uppercase">
-                          Giải quyết
+                          Resolve
                         </button>
                       </div>
                     </div>
@@ -808,7 +808,7 @@ ${latexCode}
           <div className="w-1/2 h-full border-l border-zinc-200 overflow-hidden bg-white flex flex-col relative">
             <div className="px-4 py-3 bg-black text-white text-xs flex justify-between items-center">
               <span className="font-bold uppercase tracking-tight">
-                Bản in PDF
+                PDF preview
               </span>
               <a
                 href={previewPdfUrl}
@@ -831,26 +831,26 @@ ${latexCode}
       <div className="h-10 border-t border-[#D2D2D7] bg-white px-6 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">Tốc độ</span>
+            <span className="text-[13px] text-[#6E6E73]">Speed</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {stats.wpm} WPM
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">Số ký tự</span>
+            <span className="text-[13px] text-[#6E6E73]">Characters</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {stats.charCount}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">Thời gian đọc</span>
+            <span className="text-[13px] text-[#6E6E73]">Reading time</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
-              {readingTime} phút
+              {readingTime} minutes
             </span>
           </div>
           {tags.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-[13px] text-[#6E6E73]">Thẻ</span>
+              <span className="text-[13px] text-[#6E6E73]">Tags</span>
               <div className="flex gap-1.5">
                 {tags.map((t, idx) => (
                   <span
@@ -867,7 +867,7 @@ ${latexCode}
         <div className="flex items-center gap-4">
           {plagiarismScore !== null && (
             <div className="flex items-center gap-2 px-3 py-1 bg-[#F5F5F7] rounded-full">
-              <span className="text-[13px] text-[#6E6E73]">Bản quyền</span>
+              <span className="text-[13px] text-[#6E6E73]">Copyright</span>
               <span
                 className={`text-[13px] font-medium ${plagiarismScore > 20 ? "text-[#FF3B30]" : "text-[#34C759]"}`}
               >
@@ -879,15 +879,15 @@ ${latexCode}
             <span
               className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-[#34C759]" : "bg-[#D2D2D7]"}`}
             ></span>
-            <span className="text-[13px] text-[#6E6E73]">Cộng tác</span>
+            <span className="text-[13px] text-[#6E6E73]">Collaboration</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {onlineUsers > 1
-                ? `${onlineUsers} trực tuyến`
-                : "Đang trực tuyến"}
+                ? `${onlineUsers} online`
+                : "Online"}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">Trạng thái</span>
+            <span className="text-[13px] text-[#6E6E73]">Status</span>
             <span className="text-[13px] font-medium text-[#1D1D1F]">
               {saveStatus}
             </span>
@@ -900,7 +900,7 @@ ${latexCode}
               }}
             />
           </div>
-          <span className="text-[13px] text-[#6E6E73]">Mục tiêu ngày</span>
+          <span className="text-[13px] text-[#6E6E73]">Daily goal</span>
         </div>
       </div>
     </div>

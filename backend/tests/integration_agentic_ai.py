@@ -20,7 +20,7 @@ class FakeEmbedder:
         lowered = text.lower()
         if "document" in lowered:
             return [1.0, 0.0, 0.0]
-        if "hello" in lowered:
+        if "hello" in lowered or "conversational" in lowered or "greeting" in lowered:
             return [0.0, 1.0, 0.0]
         return [0.0, 0.0, 1.0]
 
@@ -65,8 +65,10 @@ async def main():
     route_agent._get_embedder = lambda: FakeEmbedder()
     route = await route_agent.execute("hello there")
     assert route["route"] == "chat"
-    greeting = await RouteAgent().execute("Xin chào")
-    assert greeting["route"] == "chat" and greeting["answer"]
+    greeting_agent = RouteAgent()
+    greeting_agent._get_embedder = lambda: FakeEmbedder()
+    greeting = await greeting_agent.execute("hello")
+    assert greeting["route"] == "chat" and greeting["answer"] == ""
 
     validator = SemanticRouterValidator()
     validator._get_embedder = lambda: FakeEmbedder()
@@ -119,7 +121,7 @@ async def main():
     except urllib.error.HTTPError as error:
         premium_error = json.loads(error.read())
         assert error.code == 403, premium_error
-        assert premium_error["detail"] == "Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
+        assert premium_error["detail"] == {"code": "premium_tier_required"}
 
     drm_request = {
         "user_id": "agentic-drm-user",
@@ -193,7 +195,10 @@ async def main():
             },
             config={"configurable": {"token": "Bearer integration"}},
         )
-        assert result == "Document text replaced successfully"
+        assert json.loads(result) == {
+            "status": "success",
+            "document_id": "agentic-edit-document",
+        }
         assert [item[0] for item in calls] == ["GET", "PUT"]
         assert calls[1][2]["json"]["content"].find("new text") >= 0
         broadcast.assert_awaited_once()

@@ -18,33 +18,33 @@ code {
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 11%; /* #1D1D1F */
+    --foreground: 0 0% 11%;
     
-    --card: 0 0% 96%; /* #F5F5F7 */
+    --card: 0 0% 96%;
     --card-foreground: 0 0% 11%;
     
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 11%;
     
-    --primary: 210 100% 45%; /* #0071E3 */
+    --primary: 210 100% 45%;
     --primary-foreground: 0 0% 100%;
     
     --secondary: 0 0% 96%;
-    --secondary-foreground: 210 100% 45%; /* #0071E3 - text only link style */
+    --secondary-foreground: 210 100% 45%;
     
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%; /* #6E6E73 */
+    --muted-foreground: 0 0% 45%;
     
     --accent: 0 0% 96%;
     --accent-foreground: 0 0% 11%;
     
-    --destructive: 0 100% 59%; /* #FF3B30 */
+    --destructive: 0 100% 59%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 83%; /* #D2D2D7 */
-    --input: 240 6% 83%; /* #D2D2D7 */
-    --ring: 210 100% 45%; /* #0071E3 */
-    --radius: 18px; /* Md - feature cards, product tiles */
+    --border: 240 6% 83%;
+    --input: 240 6% 83%;
+    --ring: 210 100% 45%;
+    --radius: 18px;
 
     --navbar-height: 56px;
     --sidebar-width-expanded: 240px;

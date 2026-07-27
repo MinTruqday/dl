@@ -212,7 +212,7 @@ export default function UsersManagementPage() {
                   <input
                     ref={searchInputRef}
                     type="text"
-                    placeholder="Tìm kiếm email, tên..."
+              placeholder="Tìm kiếm email, tên"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-[#F5F5F7] h-10 px-4 pr-10 text-[15px] rounded-full focus:outline-none focus:ring-2 focus:ring-[#0071E3]/20 transition-all border border-transparent focus:border-[#0071E3]/20"

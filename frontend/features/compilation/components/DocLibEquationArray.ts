@@ -94,7 +94,7 @@ export default class DocLibEquationArray implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-eqarray-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", () => {
             this.data.equations.splice(i, 1);
             renderList();
@@ -108,7 +108,6 @@ export default class DocLibEquationArray implements BlockTool {
         list.appendChild(row);
       });
 
-      // Adjust bracket size
       const h = Math.max(40, this.data.equations.length * 30);
       lBracket.style.fontSize = `${h}px`;
     };

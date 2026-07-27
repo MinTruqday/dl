@@ -57,13 +57,13 @@ export default class DocLibMacroButton implements BlockTool {
     btn.classList.add("doclib-macro-btn");
     btn.innerText = this.data.label;
     btn.addEventListener("click", () => {
-      btn.innerText = "Processing...";
+    btn.innerText = "Processing";
       btn.style.opacity = "0.7";
       setTimeout(() => {
         btn.innerText = this.data.label;
         btn.style.opacity = "1";
         if (this.readOnly) {
-          alert(`Luồng macro đã thực thi: ${this.data.macroId}`);
+          alert(`Macro executed: ${this.data.macroId}`);
         }
       }, 1000);
     });

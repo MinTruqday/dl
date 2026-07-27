@@ -71,7 +71,6 @@ export default class DocLibSmartArtRelationship implements BlockTool {
     container.appendChild(center);
 
     const renderSatellites = () => {
-      // Clear old satellites and lines
       Array.from(container.children).forEach((child) => {
         if (child !== center && !child.classList.contains("doclib-rel-add")) {
           child.remove();
@@ -83,11 +82,10 @@ export default class DocLibSmartArtRelationship implements BlockTool {
       const angleStep = (2 * Math.PI) / count;
 
       this.data.satellites.forEach((sat: string, i: number) => {
-        const angle = i * angleStep - Math.PI / 2; // Start from top
+        const angle = i * angleStep - Math.PI / 2;
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
 
-        // Line
         const line = document.createElement("div");
         line.classList.add("doclib-rel-line");
         line.style.width = `${radius}px`;
@@ -96,7 +94,6 @@ export default class DocLibSmartArtRelationship implements BlockTool {
         line.style.transform = `translateY(-50%) rotate(${angle}rad)`;
         container.appendChild(line);
 
-        // Satellite
         const satEl = document.createElement("div");
         satEl.classList.add("doclib-rel-sat");
         satEl.style.transform = `translate(${x}px, ${y}px)`;
@@ -110,7 +107,7 @@ export default class DocLibSmartArtRelationship implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-rel-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.contentEditable = "false";
           del.addEventListener("click", () => {
             this.data.satellites.splice(i, 1);

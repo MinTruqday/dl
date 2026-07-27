@@ -110,7 +110,7 @@ export default class DocLibFormListBox implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-lb-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", (e) => {
             e.stopPropagation();
             this.data.options.splice(i, 1);

@@ -1,11 +1,7 @@
 import path from "path";
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   transpilePackages: [
     "editorjs-chartjs",
     "editorjs-comment",

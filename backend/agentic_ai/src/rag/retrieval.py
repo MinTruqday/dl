@@ -162,7 +162,7 @@ class RetrievalRag:
         except ImportError:
             logger.warning("rank_bm25 not installed, skipping BM25 Hybrid Fusion")
         except Exception as e:
-            logger.error(f"Hybrid search fusion error: {e}")
+            logger.error("Hybrid search fusion error")
 
         if not current_reranker:
             return documents[:k]

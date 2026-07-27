@@ -180,7 +180,7 @@ class MCTSGenerator:
             return root.state
 
         best_node = max(root.children, key=lambda c: c.visits)
-        logger.info("MCTS branch selection completed successfully")
+        logger.info("MCTS branch selection completed")
 
         result = best_node.state
         self._save_cache(task, result)

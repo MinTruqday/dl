@@ -388,7 +388,18 @@ class WorkerRunner:
                 await asyncio.sleep(5)
 
     async def start(self):
-        await mq.connect()
+        for attempt in range(1, 11):
+            try:
+                await mq.connect()
+                break
+            except Exception:
+                if attempt == 10:
+                    raise
+                logger.warning(
+                    "Worker message queue connection delayed attempt={}",
+                    attempt,
+                )
+                await asyncio.sleep(min(attempt, 5))
         self.tasks = [
             asyncio.create_task(self.consume(queue_name), name=f"worker:{queue_name}")
             for queue_name in HANDLERS

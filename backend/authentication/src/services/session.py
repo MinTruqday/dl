@@ -70,7 +70,7 @@ class SessionService:
             "ip": client_ip,
             "timestamp": datetime.now(timezone.utc),
         })
-        logger.info("User account registration process completed successfully")
+        logger.info("User account registration process completed")
         return {
             "email": user_in.email.lower(),
             "full_name": user_in.full_name,
@@ -179,7 +179,7 @@ class SessionService:
             "ip": client_ip,
             "timestamp": datetime.now(timezone.utc),
         })
-        logger.info("User authentication process completed successfully")
+        logger.info("User authentication process completed")
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -194,7 +194,7 @@ class SessionService:
     async def revoke_all_sessions(current_user: UserInDB):
         user_id_str = str(current_user.id)
         await IdentityRepository.revoke_all_sessions(user_id_str)
-        logger.info("Revocation of all active user sessions completed successfully")
+        logger.info("Revocation of all active user sessions completed")
         return {"message": "Thực hiện đăng xuất khỏi tất cả các thiết bị hoàn tất"}
 
     @staticmethod
@@ -263,7 +263,7 @@ class SessionService:
                 "timestamp": datetime.now(timezone.utc),
             },
         )
-        logger.info("User account password modification completed successfully")
+        logger.info("User account password modification completed")
         return {"status": "ok", "message": "Thực hiện thay đổi mật khẩu tài khoản hoàn tất"}
 
     @staticmethod

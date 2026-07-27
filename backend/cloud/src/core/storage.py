@@ -47,7 +47,7 @@ async def initialize_bucket():
         except ClientError as e:
             logger.info(f"Initializing storage bucket {bucket}")
             await storage_client.create_bucket(Bucket=bucket)
-            logger.info(f"Storage bucket {bucket} initialized successfully")
+            logger.info(f"Storage bucket {bucket} initialized")
     await storage_client.put_bucket_lifecycle_configuration(
         Bucket=MINIO_PRIVATE_BUCKET,
         LifecycleConfiguration={

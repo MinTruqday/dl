@@ -87,7 +87,7 @@ export default class DocLibCompatibilityChecker implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-compat-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", () => {
             this.data.issues.splice(i, 1);
             renderList();

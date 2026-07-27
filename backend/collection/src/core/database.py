@@ -35,7 +35,7 @@ class Database:
             upsert=True,
             return_document=True,
         )
-        logger.info("Collected document record persisted successfully")
+        logger.info("Collected document record persisted")
         return str(result["_id"])
 
     async def update_document(self, document_id: str, update_data: dict):

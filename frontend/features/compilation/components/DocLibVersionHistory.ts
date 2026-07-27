@@ -109,7 +109,7 @@ export default class DocLibVersionHistory implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-vh-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", () => {
             this.data.versions.splice(i, 1);
             renderList();

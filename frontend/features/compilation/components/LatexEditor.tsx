@@ -59,7 +59,6 @@ export default function LatexEditor({
 
   useEffect(() => {
     return () => {
-      // Clean temp files on unmount
       cleanTempFilesAPI().catch(() => {});
     };
   }, []);
@@ -74,7 +73,6 @@ export default function LatexEditor({
         editor.setValue(targetContent);
       }
     } catch (err) {
-      // fallback to initialContent
     }
   };
 
@@ -110,9 +108,9 @@ export default function LatexEditor({
     if (documentId) {
       autoSaveTimeoutRef.current = setTimeout(() => {
         cloudAutoSaveAPI(documentId, text)
-          .then(() => showToast("Đồng bộ dữ liệu nháp LaTeX lên hệ thống đám mây hoàn tất", "success"))
+          .then(() => showToast("LaTeX draft synchronized", "success"))
           .catch(() => {});
-      }, 5000); // 5 seconds auto save
+      }, 5000);
     }
   };
 

@@ -23,18 +23,18 @@ async def resume_workflow(
     try:
         state = await supervisor_app.aget_state(config)
         if not state or not state.next:
-            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình cần tiếp tục")
+            raise HTTPException(status_code=404, detail={"code": "workflow_not_resumable"})
         if str(state.values.get("req_data", {}).get("user_id", "")) != str(current_user.id):
-            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình cần tiếp tục")
+            raise HTTPException(status_code=404, detail={"code": "workflow_not_resumable"})
 
         await supervisor_app.aupdate_state(config, {}, as_node=state.next[0])
         logger.info(f"Workflow resumed for thread {thread_id}")
-        return {"message": "Tiến trình đã được tiếp tục"}
+        return {"message_code": "workflow_resumed"}
     except HTTPException:
         raise
     except Exception:
         logger.exception(f"Workflow resume failed for thread {thread_id}")
-        raise HTTPException(status_code=500, detail="Hệ thống không thể tiếp tục tiến trình")
+        raise HTTPException(status_code=500, detail={"code": "workflow_resume_failed"})
 
 
 @router.post("/huy-bo/{thread_id}")
@@ -53,15 +53,15 @@ async def cancel_workflow(
     try:
         state = await supervisor_app.aget_state(config)
         if not state or str(state.values.get("req_data", {}).get("user_id", "")) != str(current_user.id):
-            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tiến trình cần hủy")
+            raise HTTPException(status_code=404, detail={"code": "workflow_not_cancellable"})
         await supervisor_app.aupdate_state(
             config,
-            {"error": "Tiến trình đã bị hủy theo yêu cầu của người dùng", "next_nodes": ["trimmer"]},
+            {"error": "workflow_cancelled", "next_nodes": ["trimmer"]},
         )
         logger.info(f"Workflow cancelled for thread {thread_id}")
-        return {"message": "Tiến trình đã bị hủy"}
+        return {"message_code": "workflow_cancelled"}
     except HTTPException:
         raise
     except Exception:
         logger.exception(f"Workflow cancel failed for thread {thread_id}")
-        raise HTTPException(status_code=500, detail="Hệ thống không thể hủy tiến trình")
+        raise HTTPException(status_code=500, detail={"code": "workflow_cancellation_failed"})

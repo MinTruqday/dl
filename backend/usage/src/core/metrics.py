@@ -21,18 +21,18 @@ class MetricsCollector:
 
     def render(self, service_name: str) -> str:
         lines = []
-        lines.append(f'# HELP http_requests_total Total HTTP requests')
-        lines.append(f'# TYPE http_requests_total counter')
+        lines.append('# HELP http_requests_total Total HTTP requests')
+        lines.append('# TYPE http_requests_total counter')
         for key, count in self._request_count.items():
             method, path = key.split('_', 1)
             lines.append(f'http_requests_total{{service="{service_name}",method="{method}",path="{path}"}} {count}')
-        lines.append(f'# HELP http_request_duration_seconds_total Total request duration in seconds')
-        lines.append(f'# TYPE http_request_duration_seconds_total counter')
+        lines.append('# HELP http_request_duration_seconds_total Total request duration in seconds')
+        lines.append('# TYPE http_request_duration_seconds_total counter')
         for key, duration in self._request_duration.items():
             method, path = key.split('_', 1)
-            lines.append(f'http_request_duration_seconds_total{{service="{service_name}",method="{method}",path="{path}"}} {duration:.4f}')
-        lines.append(f'# HELP http_errors_total Total HTTP 5xx errors')
-        lines.append(f'# TYPE http_errors_total counter')
+            lines.append('http_request_duration_seconds_total{{service="{service_name}",method="{method}",path="{path}"}} {duration:.4f}')
+        lines.append('# HELP http_errors_total Total HTTP 5xx errors')
+        lines.append('# TYPE http_errors_total counter')
         for key, count in self._error_count.items():
             method, path = key.split('_', 1)
             lines.append(f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}')

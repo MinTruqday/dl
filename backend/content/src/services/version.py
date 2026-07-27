@@ -39,7 +39,7 @@ class VersionService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Document version snapshot saved successfully")
+        logger.info("Document version snapshot saved")
         return {"message": "Lưu trữ phiên bản lịch sử tài liệu hoàn tất"}
 
     @staticmethod
@@ -77,5 +77,5 @@ class VersionService:
         await DocumentRepository.update_one(
             {"_id": version["document_id"]}, {"$set": update_data}
         )
-        logger.info("Document version restored successfully")
+        logger.info("Document version restored")
         return {"message": "Khôi phục tài liệu về phiên bản lịch sử hoàn tất"}

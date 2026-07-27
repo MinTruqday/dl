@@ -75,7 +75,6 @@ export function AnnouncementProvider({
 
     fetchAnnouncements();
 
-    // Poll for new announcements every 30 seconds
     const interval = setInterval(() => {
       fetchAnnouncements();
     }, 30000);

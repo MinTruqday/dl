@@ -3,6 +3,8 @@
 __pycache__/
 node_modules/
 frontend/.next/
+frontend/next-env.d.ts
+frontend/tsconfig.tsbuildinfo
 frontend/public/
 backend/logs/
 backend/.venv/

@@ -30,7 +30,7 @@ async def init_db():
     for i in range(max_retries):
         try:
             if await mq.health_check():
-                logger.info("RabbitMQ connection established successfully")
+                logger.info("RabbitMQ connection established")
                 break
             else:
                 raise Exception("MQ health check failed")
@@ -65,7 +65,7 @@ async def setup_indexes():
         await db["bookmarks"].create_index([("user_id", 1), ("document_id", 1)], unique=True)
         await db["highlights"].create_index([("user_id", 1), ("document_id", 1), ("created_at", -1)])
 
-        logger.info("MongoDB indexing initialized successfully")
+        logger.info("MongoDB indexing initialized")
     except Exception:
         logger.exception("MongoDB indexing error")
         raise

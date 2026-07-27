@@ -69,7 +69,7 @@ class CoderAgent:
                 
                 verification_error = self._verify_code(final_code)
                 if not verification_error:
-                    logger.info("Coder verification passed successfully")
+                    logger.info("Coder verification passed")
                     break
                     
                 logger.warning(f"Coder verification failed on attempt {attempt+1}: {verification_error[:100]}")
@@ -79,7 +79,7 @@ class CoderAgent:
             response_content = f"Implementation generated.\nExplanation: {final_logic}"
             state.messages.append(AIMessage(content=response_content))
             state.artifacts["code"] = final_code
-            logger.info("Coder execution completed successfully")
+            logger.info("Coder execution completed")
         except Exception:
             logger.exception("Coder LLM generation failed")
             state.messages.append(AIMessage(content="LLM generation failed"))

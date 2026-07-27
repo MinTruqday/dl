@@ -19,7 +19,7 @@ export default function PaymentResultPage() {
     const orderCode = searchParams.get("orderCode");
     const cancelParam = searchParams.get("cancel");
     const statusParam = searchParams.get("status");
-    const codeParam = searchParams.get("code"); // PayOS success code: "00" = success
+    const codeParam = searchParams.get("code");
 
     if (cancelParam === "true" || statusParam === "CANCELLED") {
       setStatus("cancelled");
@@ -136,7 +136,7 @@ export default function PaymentResultPage() {
               <span className="text-[15px] font-semibold text-[#1D1D1F]">
                 {(paymentInfo.amount_paid || paymentInfo.amount)
                   ? `${Number(paymentInfo.amount_paid || paymentInfo.amount).toLocaleString()} VNĐ`
-                  : <span className="text-[#6E6E73] text-[13px]">Đang cập nhật...</span>
+              : <span className="text-[#6E6E73] text-[13px]">Đang cập nhật</span>
                 }
               </span>
             </div>

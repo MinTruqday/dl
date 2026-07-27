@@ -1,3 +1,4 @@
+import json
 import time
 from typing import Any, Dict, List, Literal
 
@@ -29,7 +30,7 @@ async def supervisor_node(state: ActingState):
         logger.warning("AI task execution exceeded hard timeout")
         return {
             "next_nodes": ["trimmer"],
-            "error": "Hệ thống đã tự động dừng tiến trình do vượt quá thời gian xử lý cho phép",
+            "error": "execution_timeout",
         }
 
     steps = state.get("steps", [])
@@ -41,7 +42,7 @@ async def supervisor_node(state: ActingState):
     if replan_count > 6:
         return {
             "next_nodes": ["trimmer"],
-            "error": "Tiến trình bị hủy do vượt quá giới hạn số bước lập kế hoạch",
+            "error": "planning_limit_exceeded",
         }
 
     if not steps:
@@ -83,7 +84,7 @@ async def supervisor_node(state: ActingState):
             is_running = any(status == "running" for status in task_status.values())
             if not is_running:
                 logger.error("DAG Deadlock detected!")
-                return {"next_nodes": ["trimmer"], "error": "DAG Deadlock detected"}
+                return {"next_nodes": ["trimmer"], "error": "dag_deadlock"}
             return {"steps": steps, "task_status": task_status, "next_nodes": []}
 
     route_map = {
@@ -177,12 +178,12 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                     break
 
             if replan_count >= 3:
-                final_res = "The agent was unable to complete the task"
+                final_res = json.dumps({"status": "task_execution_failed"})
             return final_res
 
         except Exception:
             logger.exception("Execution server internal error")
-            return "The execution step failed"
+            return json.dumps({"status": "execution_step_failed"})
 
     task_results = await asyncio.gather(*[_exec_task(t) for t in my_tasks])
 
@@ -195,7 +196,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         "task_status": task_status,
         "completed_tasks": completed_tasks,
         "consolidated_results": [f"[{agent_name} - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)],
-        "last_agent_result": task_results[-1] if task_results else "Completed",
+        "last_agent_result": task_results[-1] if task_results else json.dumps({"status": "completed"}),
     }
 
 async def code_interpreter_node(state: ActingState):
@@ -258,20 +259,22 @@ async def swarm_node(state: ActingState):
                     if "messages" in state_update:
                         final_messages = state_update["messages"]
         except GraphRecursionError:
-            logger.warning("Swarm recursion limit reached. Halting swarm execution.")
-            final_messages.append(AIMessage(content="Mã nguồn vi phạm chính sách bảo mật hoặc rơi vào vòng lặp vô tận. Bị hệ thống bảo mật tự động ngắt kết nối."))
+            logger.warning("Swarm recursion limit reached. Halting swarm execution")
+            final_messages.append(AIMessage(content=json.dumps({"status": "recursion_limit_reached"})))
 
-        parts = []
-        if final_artifacts.get("code"):
-            parts.append(f"[Generated Code]\n{final_artifacts['code']}")
-        if final_artifacts.get("review"):
-            parts.append(f"[Code Review]\n{final_artifacts['review']}")
-        if final_artifacts.get("security_report"):
-            parts.append(f"[Security Report]\n{final_artifacts['security_report']}")
-        if not parts and final_messages:
-            parts = [msg.content for msg in final_messages if hasattr(msg, "content")]
-
-        return "\n\n".join(parts) if parts else "Swarm produced no output"
+        messages = [
+            msg.content
+            for msg in final_messages
+            if hasattr(msg, "content")
+        ]
+        return json.dumps(
+            {
+                "status": "success" if final_artifacts or messages else "empty",
+                "artifacts": final_artifacts,
+                "messages": messages,
+            },
+            ensure_ascii=False,
+        )
 
     task_results = await asyncio.gather(*[_run_swarm(t) for t in my_tasks])
     
@@ -284,7 +287,7 @@ async def swarm_node(state: ActingState):
         "task_status": task_status,
         "completed_tasks": completed_tasks,
         "consolidated_results": [f"[SwarmAgent - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)],
-        "last_agent_result": task_results[-1] if task_results else "Completed",
+        "last_agent_result": task_results[-1] if task_results else json.dumps({"status": "completed"}),
     }
 
 async def mcts_node(state: ActingState):
@@ -306,7 +309,14 @@ async def mcts_node(state: ActingState):
         current_task = task_obj.get("task", "")
         init_state = {"task": current_task, "code": "", "approach": ""}
         best_state = await mcts_agent.search(init_state)
-        return f"MCTS approach '{best_state.get('approach', '')}' produced code:\n{best_state.get('code', '')}"
+        return json.dumps(
+            {
+                "status": "success",
+                "approach": best_state.get("approach", ""),
+                "code": best_state.get("code", ""),
+            },
+            ensure_ascii=False,
+        )
 
     task_results = await asyncio.gather(*[_run_mcts(t) for t in my_tasks])
     
@@ -319,7 +329,7 @@ async def mcts_node(state: ActingState):
         "task_status": task_status,
         "completed_tasks": completed_tasks,
         "consolidated_results": [f"[MCTSAgent - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)],
-        "last_agent_result": task_results[-1] if task_results else "Completed",
+        "last_agent_result": task_results[-1] if task_results else json.dumps({"status": "completed"}),
     }
 
 async def trimmer_node(state: ActingState):
@@ -368,7 +378,7 @@ async def sanitizer_node(state: ActingState):
     if not is_valid:
         logger.warning(f"Governance enforcement failed: {error_msg}")
         return {
-            "error": "Phát hiện rủi ro an toàn tài nguyên. Tiến trình bị hệ thống bảo mật tự động ngắt kết nối.",
+            "error": "resource_safety_limit_exceeded",
             "next_nodes": ["aggregator"]
         }
         
@@ -435,7 +445,7 @@ class OrchestrationWorkflow:
     async def execute_plan(self, req_data):
         from src.memory.global_state import global_state
         logger.info(f"Initializing orchestration execution stream for query length {len(req_data.get('query', ''))}")
-        yield {"type": "status", "node": "Hệ thống đang tiến hành phân tích yêu cầu"}
+        yield {"type": "status", "code": "analyzing_request"}
 
         session_id = req_data.get("session_id", str(uuid7()))
 
@@ -491,10 +501,10 @@ class OrchestrationWorkflow:
                         }
 
                 elif node_name == "aggregator":
-                    yield {"type": "status", "node": "Hệ thống đang tổng hợp dữ liệu phản hồi"}
+                    yield {"type": "status", "code": "synthesizing_response"}
 
         if not final_results:
-            final_results = ["Unable to locate data"]
+            final_results = ["No supporting data was produced"]
 
         query = req_data.get("query", "")
         full_response_chunks = []

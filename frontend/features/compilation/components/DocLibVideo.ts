@@ -100,7 +100,7 @@ export default class DocLibVideo implements BlockTool {
           const endpoint = this.config?.endpoints?.byFile || "/api/uploadFile";
 
           uploader.innerHTML =
-            '<div style="padding: 20px; font-weight: 500;">Uploading...</div>';
+      '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
 
           fetch(endpoint, { method: "POST", body: formData })
             .then((res) => res.json())
@@ -114,7 +114,7 @@ export default class DocLibVideo implements BlockTool {
               this.buildUI();
             })
             .catch((err) => {
-              console.error("Lỗi đồng bộ luồng dữ liệu video", err);
+              console.error("Video upload failed", err);
               this.data.url = URL.createObjectURL(file);
 
               this.buildUI();
@@ -126,7 +126,7 @@ export default class DocLibVideo implements BlockTool {
 
       uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = prompt("Vui lòng cung cấp đường dẫn truy cập tĩnh (Direct URL):");
+        const url = prompt("Enter a direct video URL");
         if (url) {
           this.data.url = url;
 

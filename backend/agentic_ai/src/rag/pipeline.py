@@ -287,7 +287,7 @@ class PipelineRag:
             )
             obj = s3.get_object(Bucket=bucket, Key=object_key)
             data = obj["Body"].read()
-            logger.info("File data downloaded successfully")
+            logger.info("File data downloaded")
             return data
         except Exception as e:
             logger.exception("File download error")
@@ -310,7 +310,7 @@ class PipelineRag:
                 logger.info("Analyzing file data using Docling")
                 parse_res = document_parser._parse_file_with_docling(tmp_path)
                 full_text = parse_res.get("markdown", "")
-                logger.info("Document content analyzed successfully")
+                logger.info("Document content analyzed")
                 return full_text
             finally:
                 tmp_path.unlink(missing_ok=True)
@@ -355,7 +355,7 @@ class PipelineRag:
                     await memory_manager._redis.sadd(
                         f"graphrag:edges:{document_id}", edge_data
                     )
-                logger.info("Successfully pushed entities to GraphRAG store")
+                logger.info("Pushed entities to GraphRAG store")
         except Exception as e:
             logger.exception("GraphRAG entity extraction failed")
 

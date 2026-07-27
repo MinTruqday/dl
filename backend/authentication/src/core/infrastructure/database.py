@@ -42,7 +42,7 @@ async def setup_indexes():
     await db["password_reset_tokens"].create_index("expires_at", expireAfterSeconds=0)
     await db["passkey_challenges"].create_index("expires_at", expireAfterSeconds=0)
     await db["audit_logs"].create_index([("actor_email", 1), ("timestamp", -1)])
-    logger.info("Authentication database indexes initialized successfully")
+    logger.info("Authentication database indexes initialized")
 
 
 async def close_db():

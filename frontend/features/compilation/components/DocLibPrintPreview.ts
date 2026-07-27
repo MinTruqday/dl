@@ -127,7 +127,7 @@ export default class DocLibPrintPreview implements BlockTool {
 
     const updatePreview = () => {
       let width = 80;
-      let height = 113; // A4 approx ratio
+      let height = 113;
 
       if (this.data.paperSize === "Letter") {
         height = 104;
@@ -148,13 +148,12 @@ export default class DocLibPrintPreview implements BlockTool {
       if (this.data.margins === "Narrow") padding = "5px";
       if (this.data.margins === "Wide") padding = "20px";
 
-      // Simulate margin lines via border-image or box-shadow? Just padding.
       paper.style.boxSizing = "border-box";
       paper.style.borderWidth = padding;
       paper.style.borderStyle = "solid";
       paper.style.borderColor = "transparent";
       paper.style.backgroundClip = "content-box";
-      paper.style.backgroundColor = "#e2e8f0"; // Simulate text area
+      paper.style.backgroundColor = "#e2e8f0";
       paper.style.boxShadow =
         "0 0 0 1px #94a3b8 inset, 0 4px 6px -1px rgba(0,0,0,0.1)";
     };

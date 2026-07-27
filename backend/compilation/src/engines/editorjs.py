@@ -503,7 +503,7 @@ class EditorjsEngine:
             return f'<span style="background: #f0f0f0; padding: 2px 4px; border: 1px dashed #ccc; font-family: monospace;">{{{san(s(d.get("content", d.get("name", ""))))}}}</span>'
 
         if t == "sparklines":
-            return f'<table style="width: 100px; display: inline-table; margin: 0 5px; border-collapse: collapse;"><tr><td style="height: 20px; background: linear-gradient(to right, #4CAF50 0%, #4CAF50 40%, #ddd 40%, #ddd 100%); border: 1px solid #aaa;"></td></tr></table>'
+            return '<table style="width: 100px; display: inline-table; margin: 0 5px; border-collapse: collapse;"><tr><td style="height: 20px; background: linear-gradient(to right, #4CAF50 0%, #4CAF50 40%, #ddd 40%, #ddd 100%); border: 1px solid #aaa;"></td></tr></table>'
 
         if t == "oleObject":
             name = san(s(d.get("name", d.get("title", "Embedded Object"))))

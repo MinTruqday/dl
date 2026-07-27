@@ -140,9 +140,9 @@ class HallucinationGrader(BaseGrader):
             if result.is_hallucination_or_refusal and result.confidence > 0.7:
                 return GraderResult(grader_name=self.name, passed=False,
                     score=1.0 - result.confidence,
-                    feedback=f"System detected signs of data hallucination (confidence: {result.confidence:.2f}): {result.explanation}. Please provide responses based on verified information.")
+                    feedback="System detected signs of data hallucination (confidence: {result.confidence:.2f}): {result.explanation}. Please provide responses based on verified information.")
         except Exception as e:
-            logger.warning(f"HallucinationGrader error, skipping {e}")
+            logger.warning("HallucinationGrader error, skipping")
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 
@@ -168,10 +168,10 @@ class RelevanceGrader(BaseGrader):
             if not result.is_relevant or result.relevance_score < 0.5:
                 return GraderResult(grader_name=self.name, passed=False,
                     score=result.relevance_score,
-                    feedback=f"Response relevance is insufficient (score: {result.relevance_score:.2f}): {result.feedback}")
+                    feedback="Response relevance is insufficient (score: {result.relevance_score:.2f}): {result.feedback}")
             return GraderResult(grader_name=self.name, passed=True, score=result.relevance_score)
         except Exception as e:
-            logger.warning(f"RelevanceGrader error, skipping {e}")
+            logger.warning("RelevanceGrader error, skipping")
             return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 
@@ -255,7 +255,7 @@ class RubricMiddleware:
             try:
                 last_response = await agent_callable(*current_args, **current_kwargs)
             except Exception as e:
-                logger.exception(f"Agent callable failed on attempt {attempt} {e}")
+                logger.exception(f"Agent callable failed on attempt {attempt}")
                 last_response = f"Execution error: {e}"
 
             rubric_result = await self.rubric.evaluate(
@@ -277,7 +277,7 @@ class RubricMiddleware:
                     current_kwargs = new_kwargs
                 await asyncio.sleep(self.retry_delay_seconds)
 
-        logger.warning(f"RubricMiddleware max retries ({self.max_retries}) reached.")
+        logger.warning(f"RubricMiddleware max retries ({self.max_retries}) reached")
         return last_response, last_rubric_result
 
     def get_history(self) -> list[RubricResult]:

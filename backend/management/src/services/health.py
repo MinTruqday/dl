@@ -61,7 +61,7 @@ class HealthService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không tìm thấy hồ sơ người dùng yêu cầu"
             )
-        logger.info("Account access privileges updated successfully")
+        logger.info("Account access privileges updated")
         return {"message": "Cập nhật quyền truy cập hệ thống hoàn tất"}
 
     @staticmethod
@@ -80,7 +80,7 @@ class HealthService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không tìm thấy hồ sơ người dùng yêu cầu"
             )
-        logger.info("Account status updated successfully")
+        logger.info("Account status updated")
         return {"message": "Cập nhật trạng thái hoạt động tài khoản hoàn tất"}
 
     @staticmethod
@@ -99,7 +99,7 @@ class HealthService:
             },
             upsert=True,
         )
-        logger.warning("System maintenance mode toggled successfully")
+        logger.warning("System maintenance mode toggled")
         return {"message": "Cập nhật cấu hình bảo trì hệ thống hoàn tất"}
 
     @staticmethod
@@ -122,7 +122,7 @@ class HealthService:
         object_name = f"system/backups/doclib-{timestamp}.json.gz"
         await upload_file(compressed, object_name, content_type="application/gzip")
         await mongo.insert_one("backup_jobs", {"_id": str(uuid7()), "object_name": object_name, "size_bytes": len(compressed), "status": "completed", "created_at": datetime.now(timezone.utc)})
-        logger.info("System data backup completed successfully")
+        logger.info("System data backup completed")
         return {"object_name": object_name, "size_bytes": len(compressed), "status": "completed"}
 
     @staticmethod
@@ -154,9 +154,9 @@ class HealthService:
                 rag_status = "unreachable"
         load_avg = os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0]
         cpu_usage = (
-            f"{min(load_avg[0] / os.cpu_count() * 100, 100):.1f}%"
+            "{min(load_avg[0] / os.cpu_count() * 100, 100):.1f}%"
             if hasattr(os, "cpu_count")
-            else f"{min(load_avg[0] * 10, 100):.1f}%"
+            else "{min(load_avg[0] * 10, 100):.1f}%"
         )
         return {
             "status": (
@@ -285,7 +285,7 @@ class HealthService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Bug report recorded successfully")
+        logger.info("Bug report recorded")
         return {"message": "Báo cáo sự cố hệ thống đã được ghi nhận hoàn tất"}
 
     @staticmethod
@@ -302,7 +302,7 @@ class HealthService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info("Policy proposal submitted successfully")
+        logger.info("Policy proposal submitted")
 
 
     @staticmethod

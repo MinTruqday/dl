@@ -26,7 +26,7 @@ logger.add(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    logger.info("DRM service initialized successfully")
+    logger.info("DRM service initialized")
     try:
         yield
     finally:

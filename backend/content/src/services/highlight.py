@@ -36,7 +36,7 @@ class HighlightService:
             "created_at": datetime.now(timezone.utc),
         }
         await HighlightRepository.insert_one(highlight)
-        logger.info("Document text highlight created successfully")
+        logger.info("Document text highlight created")
         return highlight
 
     @staticmethod

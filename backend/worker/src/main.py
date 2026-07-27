@@ -25,10 +25,10 @@ def require_internal_token(x_internal_token: str = Header(default="")):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
-    await init_storage()
-    await worker_runner.start()
     try:
+        await init_db()
+        await init_storage()
+        await worker_runner.start()
         yield
     finally:
         await worker_runner.close()

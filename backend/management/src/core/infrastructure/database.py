@@ -34,7 +34,7 @@ async def setup_indexes():
         await db["telemetry"].create_index([("timestamp", -1)], background=True)
         await db["system_config"].create_index("key", unique=True)
 
-        logger.info("MongoDB indexing initialized successfully")
+        logger.info("MongoDB indexing initialized")
     except Exception:
         logger.exception("MongoDB indexing error")
         raise

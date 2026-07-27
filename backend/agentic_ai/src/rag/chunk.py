@@ -41,7 +41,7 @@ class ChunkRag:
                     similarity_threshold=0.5,
                 )
                 self.type = "chonkie_semantic"
-                logger.info("Semantic chunking tool initialized successfully")
+                logger.info("Semantic chunking tool initialized")
             except Exception as e:
                 logger.exception("Semantic chunking tool initialization failed, falling back to standard mode")
                 try:
@@ -50,7 +50,7 @@ class ChunkRag:
                         chunk_overlap=64,
                     )
                     self.type = "chonkie_token"
-                    logger.info("Token chunker loaded successfully")
+                    logger.info("Token chunker loaded")
                 except Exception as e:
                     logger.exception("Error occurred while initializing text chunker processor")
 

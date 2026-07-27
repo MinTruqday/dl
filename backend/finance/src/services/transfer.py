@@ -68,7 +68,7 @@ class TransferService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.warning(f"Redis idempotency lock bypass fallback: {e}")
+            logger.warning("Redis idempotency lock bypass fallback")
 
         recipient_info = await TransferService.verify_recipient(identifier)
         recipient_id = recipient_info["recipient_id"]

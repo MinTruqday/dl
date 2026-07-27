@@ -28,7 +28,7 @@ logger.add(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    logger.info("Document compilation service initialized successfully")
+    logger.info("Document compilation service initialized")
     try:
         yield
     finally:

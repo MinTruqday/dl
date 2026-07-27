@@ -44,7 +44,7 @@ class ReasoningAgent:
             return content
         except Exception:
             logger.exception("Reasoning task execution error")
-            return "Mô hình AI đang gặp trục trặc trong quá trình suy luận, vui lòng thử lại sau"
+            raise RuntimeError("reasoning_agent_failed")
 
     async def evaluate_quality(
         self, query: str, answer: str, context_documents: List[Dict]

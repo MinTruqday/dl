@@ -1,8 +1,4 @@
-import asyncio
-import json
-
 from loguru import logger
-from langchain_core.messages import HumanMessage, SystemMessage
 
 class MCPClientAgent:
     """
@@ -14,25 +10,23 @@ class MCPClientAgent:
     def __init__(self):
         self.available_servers = []
 
-    async def execute(self, task: str) -> str:
-        logger.info(f"MCPAgent received task: {task}")
-        from src.workflow.graph import llm
-        from src.core.registry import PromptType, registry
-        
-        system_prompt = registry.get(PromptType.MCP_AGENT)
+    async def execute(
+        self,
+        directory_uuid: str,
+        tool_name: str,
+        arguments: dict,
+    ):
+        logger.info(f"MCPAgent invoking registered tool {tool_name}")
         try:
-            messages = [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=f"Task: {task}")
-            ]
-            
-            response = await llm.ainvoke(messages)
-            
-            tool_result = "External execution completed via MCP JSON-RPC protocol"
-            
-            return f"MCPAgent Log:\n{response.content}\n\nMCP Tool Result:\n{tool_result}"
-        except Exception:
+            from src.services.mcp import MCPService
+
+            return await MCPService.execute_tool(
+                directory_uuid,
+                tool_name,
+                arguments,
+            )
+        except Exception as exc:
             logger.exception("MCPAgent execution failed")
-            return "MCPAgent was unable to complete the external tool invocation"
+            raise RuntimeError("mcp_tool_execution_failed") from exc
 
 mcp_client = MCPClientAgent()

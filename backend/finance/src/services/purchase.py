@@ -249,7 +249,7 @@ class PurchaseService:
                         )
             except DuplicateKeyError:
                 return {"message": "Tài liệu đã được mua", "status": "owned"}
-            logger.info("Document purchase transaction completed successfully")
+            logger.info("Document purchase transaction completed")
             return {"message": "Mua tài liệu hoàn tất", "status": "purchased", "purchase_id": purchase_id}
         finally:
             try:

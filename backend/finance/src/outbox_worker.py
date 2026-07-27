@@ -10,7 +10,7 @@ from src.core.infrastructure.mongo import mongo
 
 
 async def process_outbox():
-    logger.info("Finance outbox worker started successfully")
+    logger.info("Finance outbox worker started")
     while True:
         event = None
         try:

@@ -57,12 +57,12 @@ class AnalysisAgent:
                     "image_data": image_data,
                 }
             )
-            return result.get(
-                "generation",
-                "Hệ thống không tìm thấy thông tin phù hợp trong các tài liệu hiện có",
-            )
+            generation = result.get("generation")
+            if not generation:
+                raise RuntimeError("knowledge_pipeline_returned_no_generation")
+            return generation
         except Exception:
             logger.exception("Knowledge base access error")
-            return "Không thể kết nối đến máy chủ dữ liệu, vui lòng làm mới trang và thử lại"
+            raise RuntimeError("knowledge_pipeline_failed")
 
 researcher = AnalysisAgent()

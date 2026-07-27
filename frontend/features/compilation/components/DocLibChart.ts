@@ -223,11 +223,9 @@ export default class DocLibChart implements BlockTool {
     };
 
     if (!this.readOnly) {
-      // Config Panel
       const configPanel = document.createElement("div");
       configPanel.classList.add("doclib-chart-config");
 
-      // Title Config
       const titleItem = document.createElement("div");
       titleItem.classList.add("doclib-chart-config-item");
       const titleLabel = document.createElement("div");
@@ -245,7 +243,6 @@ export default class DocLibChart implements BlockTool {
       titleItem.appendChild(titleInput);
       configPanel.appendChild(titleItem);
 
-      // Legend Toggle
       const legendLabel = document.createElement("label");
       legendLabel.classList.add("doclib-chart-config-check");
       const legendCheck = document.createElement("input");
@@ -259,7 +256,6 @@ export default class DocLibChart implements BlockTool {
       legendLabel.appendChild(document.createTextNode("Show Legend"));
       configPanel.appendChild(legendLabel);
 
-      // Stacked Toggle
       if (this.data.type === "bar") {
         const stackedLabel = document.createElement("label");
         stackedLabel.classList.add("doclib-chart-config-check");
@@ -275,7 +271,6 @@ export default class DocLibChart implements BlockTool {
         configPanel.appendChild(stackedLabel);
       }
 
-      // Tension Slider
       if (["line", "radar"].includes(this.data.type)) {
         const tensionItem = document.createElement("div");
         tensionItem.classList.add("doclib-chart-config-item");
@@ -306,7 +301,6 @@ export default class DocLibChart implements BlockTool {
       const editor = document.createElement("div");
       editor.classList.add("doclib-chart-editor");
 
-      // Header Row
       const headerRow = document.createElement("div");
       headerRow.classList.add("doclib-chart-row");
       const emptyCell = document.createElement("div");
@@ -328,7 +322,6 @@ export default class DocLibChart implements BlockTool {
         });
         cell.appendChild(input);
 
-        // Color Picker for Dataset
         const colorPicker = document.createElement("input");
         colorPicker.type = "color";
         colorPicker.classList.add("doclib-chart-color-picker");
@@ -337,13 +330,12 @@ export default class DocLibChart implements BlockTool {
           : "#3b82f6";
         colorPicker.title = "Pick dataset color";
         colorPicker.addEventListener("input", () => {
-          ds.backgroundColor = colorPicker.value + "99"; // Add alpha
+          ds.backgroundColor = colorPicker.value + "99";
           ds.borderColor = colorPicker.value;
           renderChart();
         });
         cell.appendChild(colorPicker);
 
-        // Delete Dataset Button
         const delBtn = document.createElement("button");
         delBtn.classList.add("doclib-chart-btn", "danger");
         delBtn.style.padding = "2px 6px";
@@ -358,7 +350,6 @@ export default class DocLibChart implements BlockTool {
       });
       editor.appendChild(headerRow);
 
-      // Data Rows
       this.data.labels.forEach((label, labelIndex) => {
         const row = document.createElement("div");
         row.classList.add("doclib-chart-row");

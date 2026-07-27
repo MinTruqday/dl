@@ -1,19 +1,20 @@
-// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 type CitationStyle = "APA" | "MLA" | "Chicago";
+type CitationData = {
+  style: CitationStyle;
+  author: string;
+  year: string;
+  title: string;
+  source: string;
+  url: string;
+};
+type CitationTextKey = Exclude<keyof CitationData, "style">;
 
 export default class DocLibCitation implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private data: {
-    style: CitationStyle;
-    author: string;
-    year: string;
-    title: string;
-    source: string;
-    url: string;
-  };
+  private data: CitationData;
   private readOnly: boolean;
 
   static get toolbox() {
@@ -143,7 +144,7 @@ export default class DocLibCitation implements BlockTool {
     });
 
     const fields: {
-      key: keyof typeof this.data;
+      key: CitationTextKey;
       label: string;
       placeholder: string;
     }[] = [
@@ -173,7 +174,7 @@ export default class DocLibCitation implements BlockTool {
       input.value = this.data[key] as string;
       input.placeholder = placeholder;
       input.addEventListener("input", () => {
-        (this.data as any)[key] = input.value;
+        this.data[key] = input.value;
         output.innerHTML = this.formatCitation(this.data);
       });
 

@@ -64,7 +64,7 @@ async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if not token or not settings.SECRET_KEY or not hmac.compare_digest(token, settings.SECRET_KEY):
-            return JSONResponse(status_code=403, content={"detail": "Mã xác thực nội bộ không hợp lệ"})
+            return JSONResponse(status_code=403, content={"detail": {"code": "invalid_internal_token"}})
     return await call_next(request)
 
 app.middleware("http")(add_trace_id_header)
@@ -144,7 +144,7 @@ async def harness_status():
         "evaluation": evaluation.get_dashboard_metrics(),
     }
 async def startup_event():
-    logger.info("Agentic AI system initialized successfully")
+    logger.info("Agentic AI system initialized")
     from src.store.vector import vector_store
     from src.core.infrastructure.configuration import settings
     try:
@@ -170,14 +170,14 @@ async def startup_event():
             await db["finetune_jobs"].create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
-            logger.info("MongoDB indexing initialized successfully")
+            logger.info("MongoDB indexing initialized")
     except Exception as e:
         logger.exception("MongoDB indexing error")
     try:
         from src.loop.event import cron_scheduler, event_driven_loop
         await event_driven_loop.start_worker()
         await cron_scheduler.start()
-        logger.info("Event-driven loop started successfully")
+        logger.info("Event-driven loop started")
     except Exception as e:
         logger.exception("Event-driven loop startup error")
 async def shutdown_event():

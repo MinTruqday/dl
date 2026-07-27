@@ -46,7 +46,7 @@ class ToolHarness:
             max_retries=max_retries,
             is_async=is_async,
         )
-        logger.info(f"AI tool registered successfully {name}")
+        logger.info(f"AI tool registered {name}")
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry
@@ -85,7 +85,7 @@ class ToolHarness:
                     )
 
                 duration_ms = int((time.monotonic() - start_ms) * 1000)
-                logger.info(f"AI tool executed successfully {definition.name}")
+                logger.info(f"AI tool executed {definition.name}")
                 return ToolResult(
                     success=True,
                     data=result_data,

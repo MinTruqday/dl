@@ -22,10 +22,10 @@ class HistoryService:
         first_query = data.get("first_query", "")
         if not user_id:
             raise HTTPException(
-                status_code=400, detail="Yêu cầu bị từ chối do thiếu thông định danh người dùng"
+                status_code=400, detail={"code": "user_id_required"}
             )
 
-        title = first_query[:40] if first_query else "Cuộc trò chuyện mới"
+        title = first_query[:40]
         session = {
             "_id": str(uuid7()),
             "user_id": user_id,
@@ -58,7 +58,7 @@ class HistoryService:
             {"_id": session_id, "user_id": user_id}
         )
         if not session:
-            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy lịch sử cuộc trò chuyện yêu cầu")
+            raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
         messages = await (
             ChatRepository
             .find_ai_messages({"session_id": session_id})
@@ -81,7 +81,7 @@ class HistoryService:
             },
         )
         if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy lịch sử cuộc trò chuyện yêu cầu")
+            raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
         return {"status": "success"}
 
     @staticmethod
@@ -91,7 +91,7 @@ class HistoryService:
             {"_id": session_id, "user_id": user_id}
         )
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy lịch sử cuộc trò chuyện yêu cầu")
+            raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
         return {"status": "success"}
 
     @staticmethod
@@ -101,7 +101,7 @@ class HistoryService:
         role = data.get("role")
         content = data.get("content")
         if not user_id or not role or not content:
-            raise HTTPException(status_code=400, detail="Yêu cầu bị từ chối do thiếu các thông tin bắt buộc")
+            raise HTTPException(status_code=400, detail={"code": "required_message_fields_missing"})
         message_id = str(uuid7())
         message = {
             "_id": message_id,

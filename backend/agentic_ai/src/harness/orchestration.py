@@ -88,12 +88,12 @@ class OrchestrationHarness:
             logger.error("Paused to prevent system overload")
             yield {
                 "type": "error",
-                "message": "Hệ thống đang quá tải, vui lòng thử lại sau",
+                "code": "system_overloaded",
             }
             return
 
         self._open_session(session_id)
-        logger.info("Session initialized successfully")
+        logger.info("Session initialized")
 
         try:
             async with asyncio.timeout(SESSION_HARD_TIMEOUT_SECONDS):
@@ -101,7 +101,7 @@ class OrchestrationHarness:
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
                         logger.info("Current session was forcibly stopped by the system")
-                        yield {"type": "error", "message": "Phiên làm việc đã bị hủy"}
+                        yield {"type": "error", "code": "session_cancelled"}
                         return
                     yield event
 
@@ -119,7 +119,7 @@ class OrchestrationHarness:
             )
             yield {
                 "type": "error",
-                "message": "Quá thời gian xử lý yêu cầu",
+                "code": "execution_timeout",
             }
 
         except asyncio.CancelledError:
@@ -127,7 +127,7 @@ class OrchestrationHarness:
             logger.warning("Session disconnected session_id={}", session_id)
             yield {
                 "type": "error",
-                "message": "Mất kết nối",
+                "code": "client_disconnected",
             }
 
         except Exception:
@@ -136,7 +136,7 @@ class OrchestrationHarness:
             logger.exception("Session orchestration error")
             yield {
                 "type": "error",
-                "message": "Hệ thống gặp lỗi khi điều phối yêu cầu, vui lòng thử lại sau",
+                "code": "orchestration_failed",
             }
 
     def cancel_session(self, session_id: str):

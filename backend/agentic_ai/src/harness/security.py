@@ -39,7 +39,7 @@ class SecurityHarness:
             )
             self.analyzer = AnalyzerEngine(nlp_engine=provider.create_engine())
             self.anonymizer = AnonymizerEngine()
-            logger.info("Presidio security engines initialized successfully")
+            logger.info("Presidio security engines initialized")
         except ImportError:
             logger.warning("Presidio dependencies unavailable, using deterministic PII scanning")
         except Exception:
@@ -59,9 +59,9 @@ class SecurityHarness:
         sanitized = text
 
         pii_patterns = (
-            (r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[REDACTED EMAIL]"),
-            (r"\b(?:\+?84|0)(?:\d[ .-]?){9,10}\b", "[REDACTED PHONE]"),
-            (r"\b(?:\d[ -]*?){13,19}\b", "[REDACTED CARD]"),
+            (r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[PII_EMAIL]"),
+            (r"(?<!\w)\+?[1-9]\d(?:[\s().-]?\d){7,14}(?!\w)", "[PII_PHONE]"),
+            (r"\b(?:\d[ -]*?){13,19}\b", "[PII_CARD]"),
         )
         for pattern, replacement in pii_patterns:
             updated = re.sub(pattern, replacement, sanitized)
@@ -97,18 +97,7 @@ class SecurityHarness:
             except Exception:
                 logger.exception("Presidio scan failed")
 
-        review_markers = (
-            "jailbreak",
-            "developer message",
-            "hidden instruction",
-            "bypass policy",
-            "roleplay as",
-        )
-        requires_ai_review = (
-            len(text) > 4000
-            or self._anomaly_score(text) > 0.18
-            or any(marker in text.lower() for marker in review_markers)
-        )
+        requires_ai_review = bool(sanitized.strip())
         if (
             not allow_ai_review
             or not requires_ai_review
@@ -128,10 +117,10 @@ class SecurityHarness:
                 violations.append(f"prompt_injection:{result.reason[:60]}")
             if result.has_credentials:
                 violations.append("credential_leak")
-                if result.has_pii and "pii_detected" not in violations:
-                    violations.append("pii_detected")
-                    if result.sanitized_text:
-                        sanitized = result.sanitized_text
+            if result.has_pii and "pii_detected" not in violations:
+                violations.append("pii_detected")
+                if result.sanitized_text:
+                    sanitized = result.sanitized_text
         except Exception:
             logger.exception("AI security tracing failed")
             violations.append("security_classifier_unavailable")
@@ -168,7 +157,7 @@ class SecurityHarness:
         ]
 
         if injection_violations or credential_violations or classifier_failures:
-            logger.warning("Malicious command or credential leak blocked successfully")
+            logger.warning("Malicious command or credential leak blocked")
             return ScanResult(
                 passed=False,
                 blocked=True,
@@ -199,7 +188,7 @@ class SecurityHarness:
         ).strip()
         if any("credential_leak" in v for v in violations):
             logger.error("System proactively blocked and neutralized credential leak risk")
-            return "Hệ thống bảo mật đã tự động chặn phản hồi do phát hiện rủi ro rò rỉ thông tin xác thực"
+            raise PermissionError("output_credential_leak_blocked")
         return sanitized
 
 security = SecurityHarness()

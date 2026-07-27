@@ -18,7 +18,7 @@ from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 async def lifespan(app: FastAPI):
     await init_db()
     await redis.get_client().ping()
-    logger.info("Authentication service initialized successfully")
+    logger.info("Authentication service initialized")
     try:
         yield
     finally:

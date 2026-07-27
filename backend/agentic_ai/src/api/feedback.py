@@ -27,11 +27,11 @@ async def submit_feedback(
         }
 
         await mongo.insert_one(collection="rag_feedback", document=feedback_doc)
-        logger.info("User feedback persisted successfully")
+        logger.info("User feedback persisted")
         return {
             "status": "success",
-            "message": "Chân thành cảm ơn phản hồi đóng góp của bạn",
+            "message_code": "feedback_recorded",
         }
     except Exception:
         logger.exception("User feedback persistence error")
-        return {"status": "error", "message": "Hệ thống không thể ghi nhận phản hồi vào lúc này, vui lòng thử lại sau"}
+        return {"status": "error", "error_code": "feedback_persistence_failed"}

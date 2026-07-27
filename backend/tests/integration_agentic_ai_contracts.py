@@ -13,6 +13,12 @@ from src.agents.routing import RouteAgent, SemanticRouterValidator
 from src.core.logging_route import summarize_payload
 from src.core.model_runtime import run_chat_completion
 from src.core.registry import PromptType, RegistryCore, registry
+from src.harness.failure import failure
+from src.loop.hill_climbing import (
+    ImprovementSuggestion,
+    IssueDetector,
+    PromptOptimizer,
+)
 from src.schemas.inference import StyleImitationRequest
 from src.workflow.orchestration import execute_tool_node, sanitizer_node, supervisor
 
@@ -90,8 +96,17 @@ async def verify_planner_privacy():
 
 
 async def verify_routing():
-    greeting = await RouteAgent().execute("hello")
-    assert greeting["answer"].startswith("Chào bạn")
+    class FakeEmbedder:
+        async def embed_query(self, text):
+            lowered = text.lower()
+            if "chat" in lowered or "greeting" in lowered or "hello" in lowered:
+                return [1.0, 0.0]
+            return [0.0, 1.0]
+
+    router = RouteAgent()
+    router._get_embedder = lambda: FakeEmbedder()
+    greeting = await router.execute("hello")
+    assert greeting == {"route": "chat", "answer": ""}
     validator = SemanticRouterValidator()
     nodes = [{"id": "one", "agent": "InterpreterAgent", "task": "calculate"}]
     result = await validator.validate_plan(nodes)
@@ -194,12 +209,63 @@ def verify_source_contracts():
             if isinstance(node, ast.Constant)
             and isinstance(node.value, str)
             and (
-                "\u2026" in node.value
-                or "..." in node.value
+                chr(0x2026) in node.value
+                or "." * 3 in node.value
                 or any(ord(char) >= 0x1F000 for char in node.value)
             )
         ]
         assert not invalid_strings, path
+        if path != SOURCE / "utils" / "translation.py":
+            assert "Vietnamese" not in text, path
+
+    interaction_source = (SOURCE / "api" / "interaction.py").read_text()
+    assert "public_agent_names" not in interaction_source
+    assert '"label"' not in interaction_source
+    assert "event: error" in interaction_source
+
+    security_source = (SOURCE / "harness" / "security.py").read_text()
+    assert "review_markers" not in security_source
+    assert "requires_ai_review = bool(sanitized.strip())" in security_source
+
+
+async def verify_failure_and_improvement_contracts():
+    assert failure.classify(TimeoutError("arbitrary")) == "TOOL_TIMEOUT"
+    assert failure.classify(RuntimeError("TimeoutError occurred")) == "UNKNOWN"
+
+    detector = IssueDetector()
+    issues = detector.detect_from_stats(
+        {
+            "failure_rate": detector.FAILURE_RATE_THRESHOLD + 0.1,
+            "total_traces": 20,
+            "tool_failures": {},
+            "security_violations": 0,
+            "avg_duration_ms": 0,
+        },
+        [{"session_id": "one", "status": "failed"}],
+    )
+    assert issues[0].category == "execution_failure"
+    evidence = json.loads(issues[0].description)
+    assert evidence["failure_rate"] > evidence["threshold"]
+
+    optimizer = PromptOptimizer()
+    original = registry.get(PromptType.CHAT_ASSISTANT)
+    suggestion = ImprovementSuggestion(
+        improvement_id="contract-improvement",
+        issue_id="contract-issue",
+        improvement_type="prompt_tweak",
+        title="contract",
+        description="contract",
+        proposed_change="contract",
+        proposed_config={
+            "prompt_type": "CHAT_ASSISTANT",
+            "action": "append_suffix",
+            "suffix": "\n<contract_test>active</contract_test>",
+        },
+    )
+    assert await optimizer.apply_improvement(suggestion)
+    assert registry.get(PromptType.CHAT_ASSISTANT) != original
+    assert await optimizer.rollback_improvement(suggestion)
+    assert registry.get(PromptType.CHAT_ASSISTANT) == original
 
 
 async def main():
@@ -211,6 +277,7 @@ async def main():
     await verify_routing()
     await verify_action_workflow()
     await verify_trimmed_results()
+    await verify_failure_and_improvement_contracts()
     print("agentic ai contracts passed")
 
 

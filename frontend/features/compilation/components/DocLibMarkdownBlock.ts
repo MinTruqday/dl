@@ -99,7 +99,6 @@ export default class DocLibMarkdownBlock implements BlockTool {
 
         const preview = document.createElement("div");
         preview.classList.add("doclib-md-preview");
-        // Very basic simple markdown parsing for demo purposes
         let html = this.data.md
           .replace(/^# (.*$)/gim, "<h1>$1</h1>")
           .replace(/^## (.*$)/gim, "<h2>$1</h2>")

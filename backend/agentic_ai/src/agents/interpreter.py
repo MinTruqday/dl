@@ -17,7 +17,7 @@ class InterpreterAgent:
         logger.warning(
             "Interpreter execution refused because no isolated service is configured"
         )
-        return "Tính năng thực thi mã đang tạm khóa để bảo đảm an toàn hệ thống"
+        return "isolated_code_execution_unavailable"
 
 
 interpreter = InterpreterAgent()

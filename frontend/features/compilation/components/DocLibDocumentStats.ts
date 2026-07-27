@@ -90,7 +90,6 @@ export default class DocLibDocumentStats implements BlockTool {
       btn.classList.add("doclib-stats-refresh");
       btn.innerText = "Simulate Refresh Stats";
       btn.addEventListener("click", () => {
-        // Simulation only
         this.data.words = Math.floor(Math.random() * 500) + 100;
         this.data.characters =
           this.data.words * 5 + Math.floor(Math.random() * 100);

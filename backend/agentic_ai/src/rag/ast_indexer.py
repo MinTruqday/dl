@@ -62,7 +62,7 @@ class ASTIndexer:
                             ASTNodeChunk(f"method_{node.name}", child.name, method_snippet, child.lineno).to_dict()
                         )
                         
-        logger.info("AST indexing execution completed successfully")
+        logger.info("AST indexing execution completed")
         return chunks
         
     def build_graph_relations(self, chunks: List[Dict[str, Any]]) -> Dict[str, Any]:

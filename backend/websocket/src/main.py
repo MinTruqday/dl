@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     await composition_socket_manager.start()
     await message_manager.start()
-    logger.info("WebSocket service initialized successfully")
+    logger.info("WebSocket service initialized")
     try:
         yield
     finally:

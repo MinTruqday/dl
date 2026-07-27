@@ -20,7 +20,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại hệ thống",
+        detail={"code": "authentication_required"},
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -85,7 +85,7 @@ def require_role(required_roles: List[Role]):
             logger.warning("Access denied due to insufficient authorization privileges")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bạn không có đủ quyền hạn để thực hiện thao tác này",
+                detail={"code": "insufficient_permissions"},
             )
         return current_user
 
@@ -106,7 +106,7 @@ class RateLimiting:
         if current is not None and int(current) >= self.calls:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Hệ thống đang quá tải yêu cầu, vui lòng thử lại sau ít phút",
+                detail={"code": "rate_limit_exceeded"},
             )
         await redis.pipeline_incr_expire(key, self.period)
         return True
@@ -123,7 +123,7 @@ def require_permissions(required_permissions: List[str]):
         if missing:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Thao tác bị từ chối do bạn không có đủ đặc quyền truy cập",
+            detail={"code": "privileged_access_required"},
             )
         return current_user
 
@@ -140,7 +140,7 @@ def get_current_user_from_header(
     if not x_user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Không tìm thấy thông tin định danh hợp lệ của người dùng",
+            detail={"code": "user_identity_not_found"},
         )
     return AuthenticatedUser(x_user_id, x_user_name)
 

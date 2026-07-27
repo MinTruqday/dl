@@ -75,7 +75,7 @@ export default class DocLibSmartArtProcess implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-sap-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", () => {
             this.data.steps.splice(i, 1);
             renderSteps();
@@ -87,7 +87,7 @@ export default class DocLibSmartArtProcess implements BlockTool {
         if (i < this.data.steps.length - 1) {
           const arrow = document.createElement("div");
           arrow.classList.add("doclib-sap-arrow");
-          arrow.innerHTML = "➔";
+          arrow.innerHTML = "->";
           itemWrap.appendChild(arrow);
         }
 

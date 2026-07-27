@@ -36,7 +36,7 @@ class AgenticFirewall:
                 )
                 raise HTTPException(
                     status_code=403,
-                    detail="Hệ thống phát hiện nội dung độc hại hoặc yêu cầu thao túng (Prompt Injection) trong dữ liệu đầu vào. Hành động đã bị chặn"
+                    detail={"code": "prompt_injection_blocked"}
                 )
                 
         return True

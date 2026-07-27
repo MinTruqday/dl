@@ -151,7 +151,7 @@ class CronScheduler:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.exception(f"CronScheduler error in schedule '{schedule.name}' with {e}")
+                logger.exception(f"CronScheduler error in schedule '{schedule.name}'")
                 await asyncio.sleep(5)
 
 
@@ -227,7 +227,7 @@ class EventDrivenLoop:
                     )
                     self._update_registry.record(update)
             except Exception as e:
-                logger.exception(f"EventDrivenLoop handler '{handler.description}' failed with {e}")
+                logger.exception(f"EventDrivenLoop handler '{handler.description}' failed")
                 update = SystemUpdate(
                     update_id=str(uuid7()),
                     event_id=event.event_id,
@@ -264,7 +264,7 @@ class EventDrivenLoop:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.exception(f"EventDrivenLoop worker error {e}")
+                logger.exception("EventDrivenLoop worker error")
 
     def get_stats(self) -> Dict[str, Any]:
         return {
@@ -304,7 +304,7 @@ async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
             from src.loop.hill_climbing import hill_climbing_loop
             asyncio.create_task(hill_climbing_loop.analyze_and_improve())
         except Exception as e:
-            logger.warning(f"Heartbeat hill climbing trigger failed {e}")
+            logger.warning("Heartbeat hill climbing trigger failed")
     return "Heartbeat processed"
 
 

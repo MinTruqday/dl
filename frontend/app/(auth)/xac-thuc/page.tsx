@@ -129,7 +129,7 @@ function VerifyCodeContent() {
                 disabled={resending}
                 className="text-[13px] font-medium text-[#0071E3] hover:text-[#0055C6]"
               >
-                {resending ? "Đang gửi..." : "Gửi lại mã xác thực"}
+                {resending ? "Đang gửi" : "Gửi lại mã xác thực"}
               </button>
             )}
             <button

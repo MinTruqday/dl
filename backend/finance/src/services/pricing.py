@@ -23,7 +23,7 @@ class PricingService:
             "updated_at": datetime.now(timezone.utc),
         }
         await PricingRepository.update_document(document_id, {"$set": update})
-        logger.info("Document pricing configuration successfully updated")
+        logger.info("Document pricing configuration updated")
         return {"message": "Cập nhật cấu hình giá bán tài liệu hoàn tất"}
 
     @staticmethod

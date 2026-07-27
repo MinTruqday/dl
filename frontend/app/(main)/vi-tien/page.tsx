@@ -375,11 +375,9 @@ export default function WalletPage() {
         </ModalFooter>
       </Modal>
 
-      {/* ===== MAIN CONTENT ===== */}
       <div
         className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
       >
-        {/* Sidebar */}
         <aside className="w-full md:w-[280px] shrink-0 space-y-6">
           <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
             <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Số dư khả dụng</h2>
@@ -411,7 +409,6 @@ export default function WalletPage() {
           </div>
         </aside>
 
-        {/* Transaction history */}
         <main className="flex-1 min-w-0">
           <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 min-h-[500px]">
             <div className="flex items-center justify-between mb-6">

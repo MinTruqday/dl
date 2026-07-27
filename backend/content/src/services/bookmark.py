@@ -89,7 +89,7 @@ class BookmarkService:
             "created_at": datetime.now(timezone.utc),
         }
         await BookmarkRepository.insert_folder(folder)
-        logger.info("Bookmark folder created successfully")
+        logger.info("Bookmark folder created")
         return folder
 
     @staticmethod

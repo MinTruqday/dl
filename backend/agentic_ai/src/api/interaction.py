@@ -37,8 +37,9 @@ async def chat_endpoint(
     if not scan.passed:
         logger.warning("Query execution blocked due to security policy violation")
         return {
-            "answer": "Nội dung yêu cầu vi phạm chính sách bảo mật và không thể xử lý",
+            "answer": "",
             "route": "blocked",
+            "error_code": "input_security_blocked",
         }
 
     req.query = scan.sanitized_text
@@ -58,14 +59,16 @@ async def chat_endpoint(
                     if doc_res.status_code not in [200, 201]:
                         logger.warning(f"Document {doc_id} access denied or not found")
                         return {
-                            "answer": "Tài liệu không tồn tại hoặc bạn không có quyền truy cập",
+                            "answer": "",
                             "route": "error",
+                            "error_code": "document_access_denied",
                         }
-                except Exception as e:
+                except Exception:
                     logger.exception(f"Document {doc_id} access verification error")
                     return {
-                        "answer": "Hệ thống tạm thời không thể xác minh quyền truy cập tài liệu",
+                        "answer": "",
                         "route": "error",
+                        "error_code": "document_access_verification_failed",
                     }
 
         route_data = {}
@@ -120,14 +123,16 @@ async def chat_endpoint(
 
         final_answer = await security.ascan_output(final_answer)
         return {
-            "answer": final_answer or "Hệ thống tạm thời không thể phản hồi, vui lòng thử lại sau",
+            "answer": final_answer,
             "route": "agentic_ai",
+            "error_code": None if final_answer else "empty_model_response",
         }
-    except Exception as e:
+    except Exception:
         logger.exception("AI agent workflow execution error")
         return {
-            "answer": "Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau",
+            "answer": "",
             "route": "error",
+            "error_code": "agent_workflow_failed",
         }
 
 async def _check_upload_quota(req: ChatRequest):
@@ -140,7 +145,7 @@ async def _check_upload_quota(req: ChatRequest):
         item_type = "image"
         
     if not item_type:
-        return True, ""
+        return True, None
         
     try:
         from src.core.infrastructure.database import database
@@ -149,7 +154,7 @@ async def _check_upload_quota(req: ChatRequest):
         is_admin = user.get("role") == Role.ADMIN.value if user else False
         
         if is_admin or ai_tier != Tier.BASIC.value:
-            return True, ""
+            return True, None
 
         async with httpx.AsyncClient(timeout=10.0) as c:
             resp = await c.get(
@@ -158,12 +163,11 @@ async def _check_upload_quota(req: ChatRequest):
                 headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
             )
             if resp.status_code != 200:
-                detail = resp.json().get("detail") or "Tài khoản của bạn đã vượt mức giới hạn dung lượng tải lên"
-                return False, detail
-            return True, ""
-    except Exception as e:
+                return False, "upload_quota_exceeded"
+            return True, None
+    except Exception:
         logger.exception("Upload quota verification error")
-        return False, "Hệ thống tạm thời không thể xác minh dung lượng lưu trữ"
+        return False, "upload_quota_verification_failed"
 
 async def _consume_upload_quota(req: ChatRequest):
     item_type = None
@@ -192,7 +196,7 @@ async def _consume_upload_quota(req: ChatRequest):
                 json={"user_id": req.user_id, "item_type": item_type, "req_reset_hours": 24},
                 headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
             )
-    except Exception as e:
+    except Exception:
         logger.exception("Upload quota consumption error")
 
 @router.post("/phat-truc-tiep")
@@ -218,7 +222,7 @@ async def stream_endpoint(
             agentops.record_security_event(
                 session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
             )
-            yield f"event: message\ndata: {json.dumps({'chunk': 'Nội dung yêu cầu chứa dữ liệu vi phạm chính sách bảo mật và không thể xử lý'})}\n\n"
+            yield f"event: error\ndata: {json.dumps({'code': 'input_security_blocked'})}\n\n"
             yield "event: done\ndata: [DONE]\n\n"
             return
 
@@ -232,9 +236,9 @@ async def stream_endpoint(
         agentops.record_session_start(session_id, user_id, req.query)
 
         try:
-            is_quota_ok, quota_msg = await _check_upload_quota(req)
+            is_quota_ok, quota_code = await _check_upload_quota(req)
             if not is_quota_ok:
-                yield f"event: message\ndata: {json.dumps({'chunk': quota_msg})}\n\n"
+                yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
                 yield "event: done\ndata: [DONE]\n\n"
                 agentops.record_session_end(session_id, "failed")
                 return
@@ -252,12 +256,12 @@ async def stream_endpoint(
                         )
                         if doc_res.status_code not in [200, 201]:
                             logger.warning(f"Document {doc_id} access denied or not found")
-                            yield f"event: message\ndata: {json.dumps({'chunk': 'Tài liệu không tồn tại hoặc bạn không có quyền truy cập'})}\n\n"
+                            yield f"event: error\ndata: {json.dumps({'code': 'document_access_denied'})}\n\n"
                             agentops.record_session_end(session_id, "failed")
                             return
-                    except Exception as e:
+                    except Exception:
                         logger.exception(f"Document {doc_id} access verification error")
-                        yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống tạm thời không thể xác minh quyền truy cập tài liệu'})}\n\n"
+                        yield f"event: error\ndata: {json.dumps({'code': 'document_access_verification_failed'})}\n\n"
                         agentops.record_session_end(session_id, "failed")
                         return
 
@@ -319,12 +323,11 @@ async def stream_endpoint(
                             yield "event: message\ndata: " + json.dumps(
                                 {"chunk": final_answer}
                             ) + "\n\n"
-                    except RuntimeError as e:
-                        if "StopIteration" in str(e):
-                            logger.warning("StopIteration during LLM chat stream")
-                            yield "event: message\ndata: " + json.dumps({'chunk': 'Hệ thống đang gặp lỗi khi kết nối mô hình ngôn ngữ'}) + "\n\n"
-                        else:
-                            logger.exception("RuntimeError during LLM chat stream")
+                    except RuntimeError:
+                        logger.exception("Runtime error during LLM chat stream")
+                        yield "event: error\ndata: " + json.dumps(
+                            {"code": "model_generation_failed"}
+                        ) + "\n\n"
                     except Exception:
                         logger.exception("Unexpected error during LLM chat stream")
 
@@ -365,7 +368,7 @@ async def stream_endpoint(
                         logger.exception("Error in drain_supervisor")
                         await heartbeat_queue.put({
                             "type": "error",
-                            "message": "Hệ thống gặp lỗi khi điều phối yêu cầu, vui lòng thử lại sau",
+                            "code": "orchestration_failed",
                         })
                     finally:
                         await heartbeat_queue.put({"type": "__done__"})
@@ -382,13 +385,12 @@ async def stream_endpoint(
                         elif event_type == "heartbeat":
                             yield "event: heartbeat\ndata: {}\n\n"
                         elif event_type == "status":
-                            node_msg = event.get('node', '')
-                            yield f"event: status\ndata: {json.dumps({'node': node_msg})}\n\n"
+                            yield f"event: status\ndata: {json.dumps({'code': event.get('code', 'processing')})}\n\n"
                         elif event_type == "plan":
                             public_steps = [
                                 {
                                     "id": str(step.get("id", index + 1)),
-                                    "label": f"Bước {index + 1}",
+                                    "index": index + 1,
                                     "status": "pending",
                                 }
                                 for index, step in enumerate(event.get("steps", []))
@@ -402,22 +404,13 @@ async def stream_endpoint(
                                 success=True,
                             )
                             agent_name = event.get('agent', 'unknown')
-                            public_agent_names = {
-                                "interpreter": "Xử lý tính toán",
-                                "search_engine": "Tìm kiếm thông tin",
-                                "action": "Thực hiện thao tác",
-                                "knowledge": "Tra cứu tài liệu",
-                                "reasoning": "Phân tích yêu cầu",
-                                "swarm": "Kiểm tra mã nguồn",
-                                "mcts": "Đánh giá phương án",
-                            }
-                            yield f"event: tool\ndata: {json.dumps({'agent': public_agent_names.get(agent_name, 'Xử lý yêu cầu'), 'status': 'completed'})}\n\n"
+                            yield f"event: tool\ndata: {json.dumps({'agent': agent_name, 'status': 'completed'})}\n\n"
                         elif event_type == "message":
                             message_chunk = str(event.get("chunk", ""))
                             final_answer += message_chunk
                             yield f"event: message\ndata: {json.dumps({'chunk': message_chunk})}\n\n"
                         elif event_type == "error":
-                            yield f"event: message\ndata: {json.dumps({'chunk': event['message']})}\n\n"
+                            yield f"event: error\ndata: {json.dumps({'code': event.get('code', 'execution_failed')})}\n\n"
                 finally:
                     hb_task.cancel()
                     exec_task.cancel()
@@ -457,16 +450,16 @@ async def stream_endpoint(
                     ]
                     asyncio.create_task(memo_manager.add_memory(mem_data, user_id))
 
-                except Exception as e:
+                except Exception:
                     logger.exception("Chat history persistence to database error")
 
             await _consume_upload_quota(req)
             agentops.record_session_end(session_id, "done")
 
-        except Exception as e:
+        except Exception:
             logger.exception("Chat stream execution unexpected error")
             agentops.record_session_end(session_id, "failed")
-            yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau'})}\n\n"
+            yield f"event: error\ndata: {json.dumps({'code': 'chat_stream_failed'})}\n\n"
 
         yield "event: done\ndata: [DONE]\n\n"
 
@@ -504,7 +497,7 @@ async def save_user_instructions(
     )
     return {
         "status": "success",
-        "message": "Cập nhật chỉ dẫn cá nhân thành công",
+        "message_code": "user_instructions_updated",
         "data": {"instructions": instructions},
     }
 
@@ -518,5 +511,5 @@ async def clear_user_instructions(
     await db.user_instructions.delete_one({"_id": user_id})
     return {
         "status": "success",
-        "message": "Xóa toàn bộ chỉ dẫn cá nhân thành công",
+        "message_code": "user_instructions_cleared",
     }

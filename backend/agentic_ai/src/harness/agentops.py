@@ -70,7 +70,7 @@ class AgentopsHarness:
             started_at=datetime.now(timezone.utc),
         )
         self._sessions[session_id] = metrics
-        logger.info("Started recording session successfully")
+        logger.info("Started recording session")
 
     def record_session_end(
         self,
@@ -125,7 +125,7 @@ class AgentopsHarness:
             metrics.total_tokens_in += prompt_tokens
             metrics.total_tokens_out += completion_tokens
             metrics.llm_latencies_ms.append(duration_ms)
-        logger.info("Recorded language model call event successfully")
+        logger.info("Recorded language model call event")
 
     def record_security_event(
         self,
@@ -167,7 +167,7 @@ class AgentopsHarness:
                 ),
             }
             await AgentRepository.insert_trace(doc)
-            logger.info("Saved session history successfully")
+            logger.info("Saved session history")
         except Exception as e:
             logger.exception("Error saving session history")
 

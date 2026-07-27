@@ -49,7 +49,6 @@ export default class DocLibOutlineLevel implements BlockTool {
       .doclib-outline-text:focus { border-bottom-color: #3b82f6; }
       .doclib-outline-text:empty:before { content: "DocLib Outline Text"; color: #94a3b8; font-weight: normal; font-style: italic; }
       
-      /* Dynamic Levels */
       .doclib-outline[data-level="Level 1"] .doclib-outline-text { font-size: 24px; }
       .doclib-outline[data-level="Level 2"] .doclib-outline-text { font-size: 20px; margin-left: 24px; }
       .doclib-outline[data-level="Level 3"] .doclib-outline-text { font-size: 18px; margin-left: 48px; }
@@ -68,7 +67,7 @@ export default class DocLibOutlineLevel implements BlockTool {
 
       const leftBtn = document.createElement("button");
       leftBtn.classList.add("doclib-outline-btn");
-      leftBtn.innerText = "◄";
+      leftBtn.innerText = "<";
 
       const lvl = document.createElement("div");
       lvl.classList.add("doclib-outline-lvl");
@@ -76,7 +75,7 @@ export default class DocLibOutlineLevel implements BlockTool {
 
       const rightBtn = document.createElement("button");
       rightBtn.classList.add("doclib-outline-btn");
-      rightBtn.innerText = "►";
+      rightBtn.innerText = ">";
 
       const updateLevel = (delta: number) => {
         let cur = parseInt(this.data.level.replace("Level ", ""));

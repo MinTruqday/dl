@@ -146,7 +146,7 @@ export default class DocLibKanban implements BlockTool {
           if (colIndex > 0) {
             const moveLeft = document.createElement("button");
             moveLeft.classList.add("doclib-kb-nav-btn");
-            moveLeft.innerHTML = "◄";
+            moveLeft.innerText = "<";
             moveLeft.addEventListener("click", () => {
               this.data.columns[colIndex].tasks.splice(taskIndex, 1);
               this.data.columns[colIndex - 1].tasks.push(task);
@@ -158,7 +158,7 @@ export default class DocLibKanban implements BlockTool {
           if (colIndex < this.data.columns.length - 1) {
             const moveRight = document.createElement("button");
             moveRight.classList.add("doclib-kb-nav-btn");
-            moveRight.innerHTML = "►";
+            moveRight.innerText = ">";
             moveRight.addEventListener("click", () => {
               this.data.columns[colIndex].tasks.splice(taskIndex, 1);
               this.data.columns[colIndex + 1].tasks.push(task);

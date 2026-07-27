@@ -36,7 +36,7 @@ class PremiumTune {
   render() {
     const wrapper = document.createElement("div");
     wrapper.classList.add("ce-popover-item");
-    wrapper.innerHTML = `<div class="ce-popover-item__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div><div class="ce-popover-item__title">Đánh dấu Trả phí</div>`;
+    wrapper.innerHTML = `<div class="ce-popover-item__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div><div class="ce-popover-item__title">Mark as premium</div>`;
     wrapper.addEventListener("click", () => {
       this.data.isPremium = !this.data.isPremium;
       wrapper.classList.toggle("ce-popover-item--active", this.data.isPremium);
@@ -329,7 +329,7 @@ export default function StandardEditor({
           class: DocLibHeader,
           inlineToolbar: true,
           config: {
-            placeholder: "Nhập tiêu đề...",
+            placeholder: "Enter a title",
             levels: [1, 2, 3, 4, 5, 6],
             defaultLevel: 2,
           },
@@ -462,6 +462,32 @@ export default function StandardEditor({
       if (DocLibTableOfContents) tools.tableOfContents = DocLibTableOfContents;
       if (DocLibMailMerge) tools.mailMerge = DocLibMailMerge;
       if (DocLibBibliography) tools.bibliography = DocLibBibliography;
+      if (DocLibDropCap) tools.dropCap = DocLibDropCap;
+      if (DocLibIndex) tools.index = DocLibIndex;
+      if (DocLibCoverPage) tools.coverPage = DocLibCoverPage;
+      if (DocLibTableOfFigures) tools.tableOfFigures = DocLibTableOfFigures;
+      if (DocLibCrossReference) tools.crossReference = DocLibCrossReference;
+      if (DocLibTextDirection) tools.textDirection = DocLibTextDirection;
+      if (DocLibShape) tools.shape = DocLibShape;
+      if (DocLibPageBorder) tools.pageBorder = DocLibPageBorder;
+      if (DocLibLetterhead) tools.letterhead = DocLibLetterhead;
+      if (DocLibBordersAndShading) tools.bordersAndShading = DocLibBordersAndShading;
+      if (DocLibPageNumber) tools.pageNumber = DocLibPageNumber;
+      if (DocLibHeaderBlock) tools.headerBlock = DocLibHeaderBlock;
+      if (DocLibFooterBlock) tools.footerBlock = DocLibFooterBlock;
+      if (DocLibPageColor) tools.pageColor = DocLibPageColor;
+      if (DocLibSectionBreak) tools.sectionBreak = DocLibSectionBreak;
+      if (DocLibLineNumbers) tools.lineNumbers = DocLibLineNumbers;
+      if (DocLibTextBox) tools.textBox = DocLibTextBox;
+      if (DocLibWordArt) tools.wordArt = DocLibWordArt;
+      if (DocLibSmartArtCycle) tools.smartArtCycle = DocLibSmartArtCycle;
+      if (DocLibSmartArtHierarchy) tools.smartArtHierarchy = DocLibSmartArtHierarchy;
+      if (DocLibWatermarkImage) tools.watermarkImage = DocLibWatermarkImage;
+      if (DocLibDateAndTime) tools.dateAndTime = DocLibDateAndTime;
+      if (DocLibFormCheckBox) tools.formCheckBox = DocLibFormCheckBox;
+      if (DocLibFormDropdown) tools.formDropdown = DocLibFormDropdown;
+      if (DocLibMacroButton) tools.macroButton = DocLibMacroButton;
+      if (DocLibSimpleImage) tools.simpleImage = DocLibSimpleImage;
 
       if (DocLibDirectoryTree) tools.directoryTree = DocLibDirectoryTree;
       if (DocLibJsonViewer) tools.jsonViewer = DocLibJsonViewer;
@@ -518,7 +544,7 @@ export default function StandardEditor({
         holder: holderDiv,
         tools,
         data,
-        placeholder: "Bắt đầu soạn thảo",
+        placeholder: "Start writing",
         onReady: () => {
           if (DocLibUndo) new DocLibUndo({ editor });
           if (DocLibDragDrop) new DocLibDragDrop(editor);
@@ -526,7 +552,7 @@ export default function StandardEditor({
         },
         onChange: async () => {
           try {
-            if (setSaveStatus) setSaveStatus("Đang lưu");
+            if (setSaveStatus) setSaveStatus("Saving");
             const saved = await editor.save();
             const text = saved.blocks.map((b) => b.data?.text || "").join(" ");
             const words = text.trim().split(/\s+/).length;
@@ -570,19 +596,19 @@ export default function StandardEditor({
                   const { autoSaveDraftAPI } =
                     await import("@/features/compilation/services/editorjs.service");
                   await autoSaveDraftAPI(documentId, saved);
-                  if (setSaveStatus) setSaveStatus("Lưu trữ hoàn tất");
+                  if (setSaveStatus) setSaveStatus("Saved");
                 } catch (e: any) {
-                  if (setSaveStatus) setSaveStatus("Lỗi lưu trữ bản thảo");
+                  if (setSaveStatus) setSaveStatus("Save failed");
                 }
               } else {
-                if (setSaveStatus) setSaveStatus("Lưu trữ hoàn tất");
+                if (setSaveStatus) setSaveStatus("Saved");
               }
             }, 2000);
           } catch (err: any) {
-            if (setSaveStatus) setSaveStatus("Lỗi lưu trữ bản thảo");
+            if (setSaveStatus) setSaveStatus("Save failed");
             if (showToast)
               showToast(
-                "Lỗi tiến trình đồng bộ dữ liệu tự động: " + (err.message || ""),
+                "Autosave failed: " + (err.message || ""),
                 "error",
               );
           }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibFile implements BlockTool {
@@ -134,7 +133,7 @@ export default class DocLibFile implements BlockTool {
           const endpoint = this.config?.endpoints?.byFile || "/api/uploadFile";
 
           uploader.innerHTML =
-            '<div style="padding: 20px; font-weight: 500;">Uploading...</div>';
+      '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
 
           fetch(endpoint, { method: "POST", body: formData })
             .then((res) => res.json())
@@ -163,7 +162,7 @@ export default class DocLibFile implements BlockTool {
               this.buildUI();
             })
             .catch((err) => {
-              console.error("Lỗi đồng bộ dữ liệu tập tin", err);
+              console.error("File upload failed", err);
               const fallbackUrl = URL.createObjectURL(file);
               if (this.data.file) this.data.file.url = fallbackUrl;
               this.data.file = {
@@ -182,16 +181,17 @@ export default class DocLibFile implements BlockTool {
 
       uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = prompt("Vui lòng cung cấp đường dẫn truy cập tĩnh (Direct URL):");
+        const url = prompt("Enter a direct file URL");
         if (url) {
+          const fileName = url.split("/").pop() || url;
           if (this.data.file) this.data.file.url = url;
           this.data.file = {
             url,
-            name: url.split("/").pop(),
+            name: fileName,
             size: 0,
             extension: "FILE",
           };
-          this.data.title = url.split("/").pop();
+          this.data.title = fileName;
           this.buildUI();
         }
       });

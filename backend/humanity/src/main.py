@@ -17,7 +17,7 @@ from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 async def lifespan(app: FastAPI):
     await init_db()
     await redis.get_client().ping()
-    logger.info("Humanity service initialized successfully")
+    logger.info("Humanity service initialized")
     try:
         yield
     finally:

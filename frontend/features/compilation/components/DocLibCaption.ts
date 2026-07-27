@@ -60,7 +60,6 @@ export default class DocLibCaption implements BlockTool {
     text.innerText = this.data.text;
 
     if (!this.readOnly) {
-      // In a real scenario, you'd have a config menu for label/number. For now, editable.
       text.contentEditable = "true";
       text.addEventListener("input", () => {
         this.data.text = text.innerText;

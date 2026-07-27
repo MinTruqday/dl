@@ -92,7 +92,7 @@ class AnnaSource:
                             )
                             document_urls.add(full_url)
 
-                    logger.info("[AnnaSource] Document links extracted successfully")
+                    logger.info("[AnnaSource] Document links extracted")
                     new_urls_found = 0
 
                     for url in document_urls:
@@ -103,7 +103,7 @@ class AnnaSource:
                             await dedup.mark_collected("anna_url", url)
                             new_urls_found += 1
 
-                    logger.info("[AnnaSource] Document links added to queue successfully")
+                    logger.info("[AnnaSource] Document links added to queue")
                     if page_num >= pages:
                         logger.info("[AnnaSource] Page limit reached, stopping scan")
                         break
@@ -194,7 +194,7 @@ class AnnaSource:
                     await author_el.inner_text() if author_el else "Unknown"
                 )
 
-                logger.info("[AnnaSource] Document information extracted successfully")
+                logger.info("[AnnaSource] Document information extracted")
 
                 cover_el = (
                     await page.query_selector('img[src*="covers/"]')
@@ -261,7 +261,7 @@ class AnnaSource:
 
                         if download_link:
                             payload["download_link"] = download_link
-                            logger.info("[AnnaSource] Download link extracted successfully")
+                            logger.info("[AnnaSource] Download link extracted")
 
                             parsed_path = urllib.parse.urlparse(payload["download_link"]).path
                             ext = os.path.splitext(parsed_path)[1].lstrip(".").lower() or "pdf"
@@ -317,7 +317,7 @@ class AnnaSource:
 
             success = await download_file_with_retry(url, target_local)
             if success:
-                logger.info("[AnnaSource] Document downloaded successfully")
+                logger.info("[AnnaSource] Document downloaded")
                 minio_url = await storage.upload_local_file(
                     f"system/collection/anna_archive/{filename}", target_local
                 )
@@ -329,7 +329,7 @@ class AnnaSource:
             raise
 
         if minio_url:
-            logger.info("[AnnaSource] Downloaded document transferred to permanent storage successfully")
+            logger.info("[AnnaSource] Downloaded document transferred to permanent storage")
 
             metadata = {
                 "title": title,

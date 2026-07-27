@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 
 import httpx
+from loguru import logger
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query, status
 from src.api.dependency import get_current_user_optional, get_db
@@ -47,7 +48,7 @@ async def smart_search(
             resp = await client.post(
                 f"{rag_url}/chat",
                 json={
-                    "query": f"Searching for documents related to the requested criteria",
+                    "query": "Searching for documents related to the requested criteria",
                     "user_id": str(current_user.id),
                     "thinking": True,
                 },
@@ -61,7 +62,7 @@ async def smart_search(
                     data=await DocumentService.get_text_search(query, limit),
                     message="Thực hiện truy vấn tìm kiếm văn bản hoàn tất",
                 )
-    except Exception as e:
+    except Exception:
         logger.exception("Semantic search execution error")
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
@@ -78,5 +79,4 @@ async def get_ai_recommendations(
         data=await DocumentService.get_trending_documents(limit),
         message="Trích xuất danh sách đề xuất tài liệu từ hệ thống AI hoàn tất",
     )
-
 

@@ -289,7 +289,7 @@ export default function CollectorPage() {
             {logs.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center opacity-50">
                 <Terminal className="w-10 h-10 mb-3" />
-                <p>Waiting for collector events...</p>
+          <p>Đang chờ sự kiện thu thập</p>
               </div>
             ) : (
               <div className="space-y-2">

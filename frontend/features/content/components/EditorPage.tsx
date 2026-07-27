@@ -406,7 +406,7 @@ function StudioContent() {
                     <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                       <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73] mb-4" />
                       <p className="text-[14px] text-[#6E6E73]">
-                        Biên dịch LaTeX...
+                Biên dịch LaTeX
                       </p>
                     </div>
                   ) : previewPdfUrl ? (

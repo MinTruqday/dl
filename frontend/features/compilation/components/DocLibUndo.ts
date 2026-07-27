@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { API } from "@editorjs/editorjs";
 
 export default class DocLibUndo {
@@ -9,8 +8,8 @@ export default class DocLibUndo {
   private isUndoing: boolean = false;
   private observer: MutationObserver | null = null;
   private holder: HTMLElement | null = null;
-  private undoBtn: HTMLElement | null = null;
-  private redoBtn: HTMLElement | null = null;
+  private undoBtn: HTMLButtonElement | null = null;
+  private redoBtn: HTMLButtonElement | null = null;
 
   constructor({
     editor,

@@ -70,16 +70,16 @@ class State:
                         if match:
                             page_num = int(match.group(1))
                             tile_num = int(match.group(2))
-                            filename = f"nxbst_page_{page_num:04d}_tile{tile_num}.jpg"
+                            filename = "nxbst_page_{page_num:04d}_tile{tile_num}.jpg"
                         else:
-                            filename = f"nxbst_page_unknown_{self.page_counter:04d}_{uuid7().hex[:4]}.jpg"
+                            filename = "nxbst_page_unknown_{self.page_counter:04d}_{uuid7().hex[:4]}.jpg"
 
                         save_path = os.path.join(self.temp_dir, filename)
 
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info("[NXBST] Screenshot captured successfully")
+                        logger.info("[NXBST] Screenshot captured")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
@@ -196,7 +196,7 @@ class State:
                 logger.info("[NXBST] Compiling images into PDF file")
                 with open(pdf_path, "wb") as f:
                     f.write(img2pdf.convert(images))
-                logger.info("[NXBST] Document compiled successfully")
+                logger.info("[NXBST] Document compiled")
 
             logger.info("[NXBST] Transferring compiled document to permanent storage")
             minio_url = await storage.upload_local_file(
@@ -288,7 +288,7 @@ class NxbstSource:
                                     )
                                     await dedup.mark_collected("nxbst_url", full_url)
 
-                        logger.info("[NXBST] Document added to queue successfully")
+                        logger.info("[NXBST] Document added to queue")
 
                         if current_page >= pages:
                             logger.info("[NXBST] Reached collection page limit for category")
@@ -338,7 +338,7 @@ class NxbstSource:
                 author_el = await page.query_selector("#detail .author a")
                 raw_author = await author_el.inner_text() if author_el else "Unknown"
 
-                logger.info("[NXBST] Data extracted successfully, downloading")
+                logger.info("[NXBST] Data extracted, downloading")
 
                 read_btn_css = (
                     '#whatchNow, a:has-text("Read Book"), a:has-text("View Now")'
@@ -358,7 +358,7 @@ class NxbstSource:
                     state_manager.captured_hashes = set()
                     state_manager.page_counter = 0
 
-                    logger.info("[NXBST] Network filter initialized successfully")
+                    logger.info("[NXBST] Network filter initialized")
                     state_manager.is_capturing = True
 
                     await read_btn.click()

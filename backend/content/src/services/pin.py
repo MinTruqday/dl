@@ -67,7 +67,7 @@ class PinService:
             },
             upsert=True,
         )
-        logger.info("Document successfully pinned to user collection")
+        logger.info("Document pinned to user collection")
         return {"status": "success", "message": "Ghim tài liệu vào danh sách ưu tiên hoàn tất"}
 
     @staticmethod

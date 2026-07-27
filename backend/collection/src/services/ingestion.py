@@ -51,7 +51,7 @@ async def trigger_collection(req: Collection):
         published = await mq_client.publish(SOURCE_QUEUES[req.source], payload)
         if not published:
             raise RuntimeError("RabbitMQ rejected the collection job")
-        logger.info("Background data collection initialized successfully")
+        logger.info("Background data collection initialized")
         return {
             "status": "success",
             "job_id": job_id,
@@ -100,7 +100,7 @@ async def stop_collection():
                 }
             },
         )
-        logger.info("Data collection process paused successfully")
+        logger.info("Data collection process paused")
         return {"status": "success", "message": "Đã dừng toàn bộ tiến trình thu thập dữ liệu"}
     except Exception:
         logger.exception("Failed to pause data collection streams")

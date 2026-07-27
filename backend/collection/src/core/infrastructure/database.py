@@ -25,7 +25,7 @@ async def init_db():
     for i in range(max_retries):
         try:
             if await mq.health_check():
-                logger.info("RabbitMQ connection established successfully")
+                logger.info("RabbitMQ connection established")
                 break
             raise RuntimeError("RabbitMQ health check failed")
         except Exception:
@@ -48,7 +48,7 @@ async def setup_indexes():
         await content_db["documents"].create_index([("source_url", 1)], background=True)
         await content_db["documents"].create_index([("creator_id", 1), ("created_at", -1)], background=True)
 
-        logger.info("MongoDB indexes created successfully")
+        logger.info("MongoDB indexes created")
     except Exception:
         logger.exception("MongoDB index initialization failed")
         raise

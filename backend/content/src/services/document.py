@@ -249,7 +249,7 @@ class DocumentService:
             stored_document["access_password_hash"] = pwd_context.hash(doc_in.password)
             stored_document["is_password_protected"] = True
         await docs_collection.insert_one(stored_document)
-        logger.info("Document successfully created in the system")
+        logger.info("Document created in the system")
         return doc_doc
 
     @staticmethod
@@ -360,7 +360,7 @@ class DocumentService:
             except Exception:
                 logger.exception("Document update notification dispatch failed")
 
-        logger.info("Document content successfully synchronized and updated")
+        logger.info("Document content synchronized and updated")
 
         if redis:
             await redis.delete(f"document:{document_id}")
@@ -574,7 +574,7 @@ class DocumentService:
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
 
-        logger.info("Document successfully moved to the recycle bin")
+        logger.info("Document moved to the recycle bin")
         return {"message": "Tài liệu đã được di chuyển vào thùng rác hệ thống"}
 
     @staticmethod
@@ -594,7 +594,7 @@ class DocumentService:
                 status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu trong thùng rác"
             )
 
-        logger.info("Document successfully restored from the recycle bin")
+        logger.info("Document restored from the recycle bin")
         return {"message": "Tài liệu đã được khôi phục hoàn tất từ thùng rác"}
 
     @staticmethod
@@ -643,7 +643,7 @@ class DocumentService:
                 }
             },
         )
-        logger.info("Document password protection enabled successfully")
+        logger.info("Document password protection enabled")
         return {"message": "Thiết lập mật khẩu bảo vệ tài liệu hoàn tất"}
 
     @staticmethod
@@ -679,7 +679,7 @@ class DocumentService:
         await DocumentRepository.update_one(
             {"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}}
         )
-        logger.info("Collaboration invitation sent successfully")
+        logger.info("Collaboration invitation sent")
         return {"message": "Gửi lời mời tham gia cộng tác hoàn tất"}
 
     @staticmethod

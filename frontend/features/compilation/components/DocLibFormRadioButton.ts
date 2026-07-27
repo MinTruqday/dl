@@ -104,7 +104,7 @@ export default class DocLibFormRadioButton implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-radio-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", () => {
             this.data.options.splice(i, 1);
             if (this.data.selectedIdx === i) this.data.selectedIdx = -1;

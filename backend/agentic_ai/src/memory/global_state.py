@@ -33,7 +33,7 @@ class GlobalStateManager:
             {"$set": {"key": key, "value": value, "updated_at": datetime.datetime.utcnow()}},
             upsert=True,
         )
-        logger.info("Global preference synchronization completed successfully")
+        logger.info("Global preference synchronization completed")
 
     async def get_preference(self, key: str, default: Any = None) -> Any:
         doc = await self._prefs.find_one({"key": key})
@@ -51,7 +51,7 @@ class GlobalStateManager:
             },
             upsert=True,
         )
-        logger.info("Project context synchronization completed successfully")
+        logger.info("Project context synchronization completed")
 
     def get_project_context(self, project_id: str) -> Dict[str, Any]:
         return {}
@@ -70,7 +70,7 @@ class GlobalStateManager:
         if embedding:
             doc["embedding"] = embedding
         await self._episodes.insert_one(doc)
-        logger.info("Episodic memory stored successfully")
+        logger.info("Episodic memory stored")
 
     async def get_recent_episodes(self, k: int = 3) -> List[str]:
         cursor = self._episodes.find(

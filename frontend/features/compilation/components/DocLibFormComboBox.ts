@@ -91,7 +91,7 @@ export default class DocLibFormComboBox implements BlockTool {
 
     const toggle = document.createElement("div");
     toggle.classList.add("doclib-combo-toggle");
-    toggle.innerHTML = "▼";
+    toggle.innerHTML = "v";
 
     const list = document.createElement("div");
     list.classList.add("doclib-combo-list");
@@ -116,7 +116,7 @@ export default class DocLibFormComboBox implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-combo-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", (e) => {
             e.stopPropagation();
             this.data.options.splice(i, 1);

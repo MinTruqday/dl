@@ -1,3 +1,5 @@
+import json
+
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
@@ -31,7 +33,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Please log into the system to browse your document library"
+        return json.dumps({"status": "authentication_required"})
     headers = {"Authorization": token}
     try:
         response = await make_api_request(
@@ -42,16 +44,14 @@ async def get_my_documents(config: RunnableConfig) -> str:
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
-            if not data:
-                return "Your personal library currently does not have any documents"
-            res = "Here is the list of your available documents\n"
-            for doc in data:
-                res += f"Document {doc.get('title')} is currently in {doc.get('status')} status\n"
-            return res
-        return "Encountered difficulties loading the document list from the database"
-    except Exception as e:
+            return json.dumps(
+                {"status": "success", "documents": data},
+                ensure_ascii=False,
+            )
+        return json.dumps({"status": "document_list_retrieval_failed"})
+    except Exception:
         logger.exception("Failed to load document list from MongoDB")
-        raise Exception(f"An unexpected error occurred, please try again {e}")
+        return json.dumps({"status": "document_service_unavailable"})
 
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
@@ -67,9 +67,9 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "You need to authenticate your identity to continue"
+        return json.dumps({"status": "authentication_required"})
     if not check_system_access(token):
-        return "Security warning: You do not have sufficient privileges to access this area"
+        return json.dumps({"status": "insufficient_permissions"})
 
     headers = {"Authorization": token}
     try:
@@ -81,16 +81,14 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
-            if not data:
-                return "There are no documents in your trash bin"
-            res = "The following documents are located within the trash bin\n"
-            for doc in data:
-                res += f"Document {doc.get('title')} was deleted on {doc.get('deleted_at')}\n"
-            return res
-        return "Connection to trash bin data is currently experiencing issues"
-    except Exception as e:
+            return json.dumps(
+                {"status": "success", "documents": data},
+                ensure_ascii=False,
+            )
+        return json.dumps({"status": "trash_document_list_retrieval_failed"})
+    except Exception:
         logger.exception("Failed to load deleted items list")
-        raise Exception(f"An unexpected error occurred, please try again {e}")
+        return json.dumps({"status": "document_service_unavailable"})
 
 @tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
@@ -106,7 +104,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "The system requires you to log in to confirm ownership before deleting a document"
+        return json.dumps({"status": "authentication_required"})
 
     headers = {"Authorization": token}
     try:
@@ -120,14 +118,14 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
             try:
                 from src.store.vector import vector_store
                 await vector_store.delete_by_document(document_id)
-                logger.info("Document index cleanup completed successfully")
+                logger.info("Document index cleanup completed")
             except Exception as e:
                 logger.exception("Failed to clean up document index")
-            return "The document has been completely removed from the system"
-        return "Document deletion failed due to a system error"
-    except Exception as e:
+            return json.dumps({"status": "success", "document_id": document_id})
+        return json.dumps({"status": "document_deletion_failed"})
+    except Exception:
         logger.exception("Document deletion failed due to system error")
-        raise Exception(f"An unexpected error occurred, please try again {e}")
+        return json.dumps({"status": "document_service_unavailable"})
 
 @tool
 async def restore_document(document_id: str, config: RunnableConfig) -> str:
@@ -143,7 +141,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "You need to authenticate your identity to continue"
+        return json.dumps({"status": "authentication_required"})
 
     headers = {"Authorization": token}
     try:
@@ -154,11 +152,11 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
             timeout=30.0,
         )
         if response.status_code == 200:
-            return "Your document has been successfully restored to its original state"
-        return "Document restoration from the trash bin failed"
-    except Exception as e:
+            return json.dumps({"status": "success", "document_id": document_id})
+        return json.dumps({"status": "document_restoration_failed"})
+    except Exception:
         logger.exception("Document restoration from trash failed")
-        raise Exception(f"An unexpected error occurred, please try again {e}")
+        return json.dumps({"status": "document_service_unavailable"})
 
 @tool
 async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
@@ -174,9 +172,9 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "You need to authenticate your identity to continue"
+        return json.dumps({"status": "authentication_required"})
     if not check_system_access(token):
-        return "You do not have sufficient privileges to perform this operation"
+        return json.dumps({"status": "insufficient_permissions"})
 
     headers = {"Authorization": token}
     try:
@@ -190,11 +188,17 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
             data = response.json().get("data", {})
             readers = data.get("readers_started", 0)
             rate = data.get("dropoff_rate", 0)
-            return f"Reader analytics show {readers} readers with a bounce rate of {rate}%"
-        return "Error aggregating and exporting statistical report data"
-    except Exception as e:
+            return json.dumps(
+                {
+                    "status": "success",
+                    "readers_started": readers,
+                    "dropoff_rate": rate,
+                }
+            )
+        return json.dumps({"status": "document_analytics_retrieval_failed"})
+    except Exception:
         logger.exception("Failed to retrieve analytics data")
-        raise Exception(f"An unexpected error occurred, please try again {e}")
+        return json.dumps({"status": "document_service_unavailable"})
 
 @tool
 async def read_document(document_id: str, config: RunnableConfig) -> str:
@@ -210,10 +214,10 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication required to read document content"
+        return json.dumps({"status": "authentication_required"})
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Document content is empty or could not be loaded"
+        return json.dumps({"status": "document_content_unavailable"})
     return text
 
 @tool
@@ -228,7 +232,6 @@ async def recommend_documents(query: str, config: RunnableConfig) -> str:
     CRITICAL: Returns a structured summary of the top 3 matching documents including title, link, price, and match description.
     </contract>
     """
-    import json
     import os
     from motor.motor_asyncio import AsyncIOMotorClient
     from src.core.infrastructure.database import database
@@ -259,17 +262,21 @@ async def recommend_documents(query: str, config: RunnableConfig) -> str:
             docs = await db["documents"].find({"status": "published", "is_deleted": {"$ne": True}}).limit(3).to_list(length=3)
 
         if not docs:
-            return "Không tìm thấy tài liệu phù hợp trong hệ thống"
+            return json.dumps({
+                "status": "success",
+                "query": query,
+                "recommendations": [],
+            }, ensure_ascii=False)
 
         recommendations = []
         for doc in docs:
             doc_id = str(doc.get("_id") or doc.get("id"))
             recommendations.append({
                 "id": doc_id,
-                "title": doc.get("title", "Tài liệu kỹ thuật"),
+                "title": doc.get("title") or "",
                 "slug": doc.get("slug", ""),
                 "price_dl": doc.get("price_dl", 0),
-                "summary": doc.get("summary") or doc.get("description") or "Tài liệu hướng dẫn và cấu trúc dự án chuẩn",
+                "summary": doc.get("summary") or doc.get("description") or "",
                 "url": f"/tai-lieu/xem-truoc/{doc_id}",
             })
 
@@ -278,11 +285,11 @@ async def recommend_documents(query: str, config: RunnableConfig) -> str:
             "query": query,
             "recommendations": recommendations,
         }
-        output_text = f"Đã tìm thấy 3 tài liệu phù hợp nhất cho yêu cầu '{query}':\n"
-        for idx, rec in enumerate(recommendations, 1):
-            output_text += f"{idx}. {rec['title']} (Giá: {rec['price_dl']} DL) - Xem tại: {rec['url']}\n"
-        output_text += f"\n<!--RECOMMENDED_DOCS_PAYLOAD:{json.dumps(result_payload, ensure_ascii=False)}-->"
-        return output_text
-    except Exception as e:
+        return (
+            '<agentic-payload kind="RECOMMENDED_DOCS_PAYLOAD">'
+            f"{json.dumps(result_payload, ensure_ascii=False)}"
+            "</agentic-payload>"
+        )
+    except Exception:
         logger.exception("Failed to execute document recommendation tool")
-        return "Đã xảy ra lỗi khi tìm kiếm tài liệu gợi ý"
+        return json.dumps({"status": "document_recommendation_failed"})

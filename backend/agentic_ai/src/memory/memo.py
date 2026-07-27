@@ -29,9 +29,9 @@ class EntityStore:
                 return
             edge_data = json.dumps({"source_id": memory_id, "text": entity_text, "type": entity_type, "created_at": datetime.now(timezone.utc).isoformat()})
             await memory_manager._redis.sadd(f"entity:graph:{user_id}:edges", edge_data)
-            logger.info(f"Upserted entity '{entity_text}' of type '{entity_type}'")
-        except Exception as e:
-            logger.warning(f"Failed to upsert entity '{entity_text}': {e}")
+            logger.info("Memory entity upserted type={}", entity_type)
+        except Exception:
+            logger.exception("Memory entity upsert failed")
 
     async def _link_entities_for_memory(self, memory_id: str, text: str, user_id: str):
         system_prompt = registry.get(PromptType.GRAPHRAG_ENTITY_EXTRACTION)
@@ -49,8 +49,8 @@ class EntityStore:
             for rel in res.relations:
                 await self._upsert_entity(rel.source, rel.relation, memory_id, user_id)
                 await self._upsert_entity(rel.target, "TARGET_NODE", memory_id, user_id)
-        except Exception as e:
-            logger.exception(f"Entity extraction failed: {e}")
+        except Exception:
+            logger.exception("Memory entity extraction failed")
 
     async def search(self, query: str, user_id: str) -> List[Dict]:
         return await self.search_graph(query, user_id)
@@ -66,8 +66,8 @@ class EntityStore:
                 if query.lower() in data.get("text", "").lower():
                     results.append(data)
             return results
-        except Exception as e:
-            logger.warning(f"Entity graph search failed: {e}")
+        except Exception:
+            logger.exception("Memory entity graph search failed")
             return []
 
     async def get_graph(self, user_id: str) -> Dict[str, Any]:
@@ -78,8 +78,8 @@ class EntityStore:
             parsed_edges = [json.loads(e) for e in edges]
             nodes = list({e.get("text") for e in parsed_edges if e.get("text")})
             return {"user_id": user_id, "nodes": nodes, "edges": parsed_edges}
-        except Exception as e:
-            logger.warning(f"Failed to get graph for user '{user_id}': {e}")
+        except Exception:
+            logger.exception("Memory entity graph read failed")
             return {"user_id": user_id, "nodes": [], "edges": []}
 
     async def delete_graph(self, user_id: str, entity_name: Optional[str] = None) -> bool:
@@ -89,7 +89,7 @@ class EntityStore:
             key = f"entity:graph:{user_id}:edges"
             if not entity_name:
                 await memory_manager._redis.delete(key)
-                logger.info(f"Deleted entire entity graph for user '{user_id}'")
+                logger.info("Memory entity graph deleted")
                 return True
 
             edges = await memory_manager._redis.smembers(key)
@@ -97,10 +97,10 @@ class EntityStore:
                 data = json.loads(e)
                 if data.get("text") == entity_name:
                     await memory_manager._redis.srem(key, e)
-            logger.info(f"Deleted entity '{entity_name}' from graph for user '{user_id}'")
+            logger.info("Memory graph entity deleted")
             return True
-        except Exception as e:
-            logger.warning(f"Failed to delete graph for user '{user_id}': {e}")
+        except Exception:
+            logger.exception("Memory entity graph delete failed")
             return False
 
 class ProjectStore:
@@ -113,8 +113,8 @@ class ProjectStore:
                 return None
             data = await memory_manager._redis.get(f"project:{project_id}")
             return json.loads(data) if data else None
-        except Exception as e:
-            logger.warning(f"Failed to get project '{project_id}': {e}")
+        except Exception:
+            logger.exception("Memory project read failed")
             return None
 
     async def add_project(self, project_id: str, name: str, org_id: str):
@@ -123,8 +123,8 @@ class ProjectStore:
                 return
             data = json.dumps({"id": project_id, "name": name, "org_id": org_id})
             await memory_manager._redis.set(f"project:{project_id}", data)
-        except Exception as e:
-            logger.warning(f"Failed to add project '{project_id}': {e}")
+        except Exception:
+            logger.exception("Memory project write failed")
 
 class MemoryManager:
     def __init__(self):
@@ -166,8 +166,8 @@ class MemoryManager:
                         ),
                     )
                 self._initialized = True
-            except Exception as e:
-                logger.warning(f"Memory collection initialization delayed or network unreachable: {e}")
+            except Exception:
+                logger.exception("Memory collection initialization failed")
 
     def _calculate_recency_score(self, created_at_iso: str, decay_rate: float = 0.01) -> float:
         try:
@@ -190,8 +190,8 @@ class MemoryManager:
             structured_llm = self.llm.with_structured_output(MemoryOperation)
             msg = [SystemMessage(content=prompt), HumanMessage(content="Analyze and resolve conflicts.")]
             return await structured_llm.ainvoke(msg)
-        except Exception as e:
-            logger.exception(f"Conflict resolution failed for user '{user_id}'. Error: {str(e)}")
+        except Exception:
+            logger.exception("Memory conflict resolution failed")
             return MemoryOperation()
 
     async def _extract_operations(self, messages: List[Dict], memory_scope: str = "user") -> MemoryOperation:
@@ -202,8 +202,8 @@ class MemoryManager:
             structured_llm = self.llm.with_structured_output(MemoryOperation)
             msg = [SystemMessage(content=system_prompt), HumanMessage(content=chat_text)]
             return await structured_llm.ainvoke(msg)
-        except Exception as e:
-            logger.exception(f"Memory extraction execution failed. Input length: {len(messages)} messages. Error: {str(e)}")
+        except Exception:
+            logger.exception("Memory extraction failed message_count={}", len(messages))
             return MemoryOperation()
 
     def _build_filter(
@@ -256,8 +256,8 @@ class MemoryManager:
             records, _ = await self.client.scroll(collection_name=self.collection_name, limit=1000, with_payload=True)
             user_set = {r.payload.get("user_id") for r in records if r.payload and r.payload.get("user_id")}
             return sorted(list(user_set))
-        except Exception as e:
-            logger.warning(f"Failed to list memory users: {e}")
+        except Exception:
+            logger.exception("Memory user listing failed")
             return []
 
     async def agents(self) -> List[str]:
@@ -266,8 +266,8 @@ class MemoryManager:
             records, _ = await self.client.scroll(collection_name=self.collection_name, limit=1000, with_payload=True)
             agent_set = {r.payload.get("agent_id") for r in records if r.payload and r.payload.get("agent_id")}
             return sorted(list(agent_set))
-        except Exception as e:
-            logger.warning(f"Failed to list memory agents: {e}")
+        except Exception:
+            logger.exception("Memory agent listing failed")
             return []
 
     async def runs(self) -> List[str]:
@@ -276,8 +276,8 @@ class MemoryManager:
             records, _ = await self.client.scroll(collection_name=self.collection_name, limit=1000, with_payload=True)
             run_set = {r.payload.get("run_id") for r in records if r.payload and r.payload.get("run_id")}
             return sorted(list(run_set))
-        except Exception as e:
-            logger.warning(f"Failed to list memory runs: {e}")
+        except Exception:
+            logger.exception("Memory run listing failed")
             return []
 
     async def _create_procedural_memory(self, messages: List[Dict]) -> MemoryOperation:
@@ -289,8 +289,8 @@ class MemoryManager:
             structured_llm = self.llm.with_structured_output(MemoryOperation)
             msg = [SystemMessage(content=system_prompt), HumanMessage(content=chat_text)]
             return await structured_llm.ainvoke(msg)
-        except Exception as e:
-            logger.exception(f"Procedural memory extraction failed. Error: {str(e)}")
+        except Exception:
+            logger.exception("Procedural memory extraction failed")
             return MemoryOperation()
 
     async def add(
@@ -367,20 +367,20 @@ class MemoryManager:
                 asyncio.create_task(memory_manager.save_memory_history(item_id, "ADD", None, item.content))
                 if user_id:
                     asyncio.create_task(self._entity_store._link_entities_for_memory(item_id, item.content, user_id))
-            except Exception as e:
-                logger.exception(f"Failed to generate embedding for memory content hash: {content_hash}. Error: {str(e)}")
+            except Exception:
+                logger.exception("Memory embedding generation failed")
 
         if points:
             try:
                 await self.client.upsert(collection_name=self.collection_name, points=points)
-                logger.info(f"Successfully upserted {len(points)} memory points for user_id='{user_id}'.")
+                logger.info("Memory points upserted count={}", len(points))
                 for p in points:
                     if p.payload.get("memory_type") == "entity":
                         edge_data = json.dumps({"source_id": p.id, "text": p.payload.get("text"), "created_at": p.payload.get("created_at")})
                         if memory_manager._redis:
                             await memory_manager._redis.sadd(f"entity:graph:{user_id}:edges", edge_data)
-            except Exception as e:
-                logger.exception(f"Failed to upsert memory points: {str(e)}")
+            except Exception:
+                logger.exception("Memory point upsert failed")
 
         for item in operations.update:
             if item.id:
@@ -448,8 +448,8 @@ class MemoryManager:
                 with_payload=True
             )
             return [r.payload for r in records if r.payload and not self._is_expired(r.payload)]
-        except Exception as e:
-            logger.exception(f"Failed to execute get_all for user_id='{user_id}'. Error: {str(e)}")
+        except Exception:
+            logger.exception("Memory listing failed")
             return []
 
     def _is_expired(self, payload: Dict) -> bool:
@@ -521,8 +521,8 @@ class MemoryManager:
                 memories = memories[:limit]
 
             return memories
-        except Exception as e:
-            logger.exception(f"Failed to execute search for query '{query}'. Error: {str(e)}")
+        except Exception:
+            logger.exception("Memory search failed")
             return []
 
     async def get_memories(self, user_id: str, query: Optional[str] = None, agent_id: Optional[str] = None, run_id: Optional[str] = None) -> str:
@@ -558,9 +558,9 @@ class MemoryManager:
                     points=[PointStruct(id=memory_id, vector=vector, payload=payload)]
                 )
                 asyncio.create_task(memory_manager.save_memory_history(memory_id, "UPDATE", old_content, new_content))
-                logger.info(f"Successfully updated memory '{memory_id}'.")
-        except Exception as e:
-            logger.exception(f"Failed to update memory '{memory_id}'. Error: {str(e)}")
+                logger.info("Memory updated")
+        except Exception:
+            logger.exception("Memory update failed")
 
     update_memory = update
 
@@ -574,9 +574,9 @@ class MemoryManager:
                     points_selector=[memory_id]
                 )
                 asyncio.create_task(memory_manager.save_memory_history(memory_id, "DELETE", old_content, None))
-                logger.info(f"Successfully deleted memory '{memory_id}'.")
-        except Exception as e:
-            logger.exception(f"Failed to delete memory '{memory_id}'. Error: {str(e)}")
+                logger.info("Memory deleted")
+        except Exception:
+            logger.exception("Memory delete failed")
 
     delete_memory = delete
 
@@ -588,9 +588,9 @@ class MemoryManager:
                 collection_name=self.collection_name,
                 points_selector=Filter(must=query_filter.must)
             )
-            logger.info(f"Successfully executed bulk delete_all.")
-        except Exception as e:
-            logger.exception(f"Failed to execute bulk delete_all. Error: {str(e)}")
+            logger.info("Memory bulk delete completed")
+        except Exception:
+            logger.exception("Memory bulk delete failed")
 
     async def history(self, memory_id: str) -> List[Dict]:
         try:
@@ -614,9 +614,9 @@ class MemoryManager:
             msg = [SystemMessage(content=system_prompt), HumanMessage(content=query)]
             response = await self.llm.ainvoke(msg)
             return response.content
-        except Exception as e:
-            logger.exception(f"Chat execution failed for user '{user_id}'. Error: {str(e)}")
-            return "I'm sorry, I encountered an error while accessing my memory."
+        except Exception:
+            logger.exception("Memory chat failed")
+            raise RuntimeError("memory_chat_failed")
 
     @property
     def project(self):
@@ -629,16 +629,16 @@ class MemoryManager:
     async def reset(self):
         try:
             await self.client.delete_collection(self.collection_name)
-            logger.info("Successfully reset entire memory collection.")
-        except Exception as e:
-            logger.exception(f"Failed to reset memory collection. Error: {str(e)}")
+            logger.info("Memory collection reset")
+        except Exception:
+            logger.exception("Memory collection reset failed")
 
     async def close(self):
         try:
             if hasattr(self.client, 'close'):
                 await self.client.close()
-            logger.info("Successfully closed memory client.")
-        except Exception as e:
-            logger.exception(f"Failed to close memory client. Error: {str(e)}")
+            logger.info("Memory client closed")
+        except Exception:
+            logger.exception("Memory client close failed")
 
 memo_manager = MemoryManager()

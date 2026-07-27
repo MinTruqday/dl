@@ -128,7 +128,7 @@ class ContextHarness:
             estimated_tokens=estimated,
         )
 
-        logger.info("Context data compiled successfully")
+        logger.info("Context data compiled")
         return ctx
 
     async def save_turn(
@@ -156,7 +156,7 @@ class ContextHarness:
             return
         try:
             await redis.delete(f"session:{session_id}:history")
-            logger.info("Session history deleted successfully")
+            logger.info("Session history deleted")
         except Exception as e:
             logger.exception("Error deleting session from memory")
 

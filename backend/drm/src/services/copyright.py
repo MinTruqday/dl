@@ -26,7 +26,7 @@ class CopyrightService:
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy tranh chấp bản quyền")
-        logger.info("Copyright dispute resolved successfully")
+        logger.info("Copyright dispute resolved")
         return {"message": "Đã giải quyết tranh chấp bản quyền"}
     
     @staticmethod

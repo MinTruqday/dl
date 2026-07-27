@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -33,77 +34,108 @@ class SecOpsAgent:
             logger.exception("SLM execution error")
             raise e
 
-    async def _check_nvd_cves(self, code: str) -> str:
+    async def _assess_dependency_vulnerabilities(self, code: str) -> str:
         import re
-        import asyncio
         
         imports = re.findall(r"^(?:import|from)\s+([a-zA-Z0-9_]+)", code, re.MULTILINE)
         if not imports:
-            return "No external libraries detected for NVD CVE lookup."
-        
-        unique_libs = list(set(imports))
-        logger.info(f"Checking NVD CVEs for libraries: {unique_libs}")
+            return json.dumps({"status": "not_applicable", "packages": []})
 
-        await asyncio.sleep(0.5)
-        
-        vulnerabilities = []
-        for lib in unique_libs:
-            if lib.lower() in ["requests", "urllib3", "pyyaml", "jinja2"]:
-                vulnerabilities.append(f"[NVD-CVE-WARNING] Library '{lib}' has known historical vulnerabilities. Ensure version is strictly pinned and updated.")
-        
-        if not vulnerabilities:
-            return "NVD CVE Check: All detected libraries appear secure."
-        return "NVD CVE Check Results:\n" + "\n".join(vulnerabilities)
+        return json.dumps(
+            {
+                "status": "not_assessed",
+                "reason_code": "dependency_versions_unavailable",
+                "packages": sorted(set(imports)),
+            }
+        )
 
     async def scan_standalone(self, code: str) -> str:
         sast_output = await SASTScanner.full_scan(code)
-        nvd_output = await self._check_nvd_cves(code)
+        dependency_output = await self._assess_dependency_vulnerabilities(code)
         system_prompt = registry.get(PromptType.SWARM_SECOPS)
-        human_msg = f"Code:\n{code}\n\nSAST Results:\n{sast_output}\n\n{nvd_output}"
+        human_msg = json.dumps(
+            {
+                "code": code,
+                "sast": json.loads(sast_output),
+                "dependencies": json.loads(dependency_output),
+            },
+            ensure_ascii=False,
+        )
         try:
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
             eval_result = await self._invoke_slm(messages)
-            return (
-                f"Secure: {eval_result.is_secure}\n"
-                f"Summary: {eval_result.vulnerability_summary}\n\n"
-                f"SAST Output:\n{sast_output}"
+            return json.dumps(
+                {
+                    "status": "success",
+                    "is_secure": eval_result.is_secure,
+                    "summary": eval_result.vulnerability_summary,
+                    "sast": json.loads(sast_output),
+                    "dependencies": json.loads(dependency_output),
+                },
+                ensure_ascii=False,
             )
         except Exception:
             logger.exception("SecOps standalone LLM evaluation failed")
-            return f"LLM evaluation failed. Raw SAST output:\n{sast_output}"
+            return json.dumps(
+                {
+                    "status": "model_evaluation_failed",
+                    "sast": json.loads(sast_output),
+                    "dependencies": json.loads(dependency_output),
+                },
+                ensure_ascii=False,
+            )
 
     async def execute(self, state: SwarmState) -> SwarmState:
         logger.info("SecOps execution started via LLM")
 
         code_to_review = state.artifacts.get("code", "")
         if not code_to_review:
-            state.messages.append(AIMessage(content="Missing code artifact for scanning"))
+            state.messages.append(AIMessage(content=json.dumps({"status": "code_artifact_missing"})))
             state.current_agent = "supervisor"
             return state
 
         sast_output = await SASTScanner.full_scan(code_to_review)
-        nvd_output = await self._check_nvd_cves(code_to_review)
+        dependency_output = await self._assess_dependency_vulnerabilities(code_to_review)
 
         system_prompt = registry.get(PromptType.SWARM_SECOPS)
-        human_msg = f"Code:\n{code_to_review}\n\nSAST Results:\n{sast_output}\n\n{nvd_output}"
+        human_msg = json.dumps(
+            {
+                "code": code_to_review,
+                "sast": json.loads(sast_output),
+                "dependencies": json.loads(dependency_output),
+            },
+            ensure_ascii=False,
+        )
 
         try:
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
             eval_result = await self._invoke_slm(messages)
 
-            scan_results = (
-                f"Security evaluation completed. "
-                f"Secure: {eval_result.is_secure}. "
-                f"Details: {eval_result.vulnerability_summary}\n\n"
-                f"SAST Output:\n{sast_output}"
+            scan_results = json.dumps(
+                {
+                    "status": "success",
+                    "is_secure": eval_result.is_secure,
+                    "summary": eval_result.vulnerability_summary,
+                    "sast": json.loads(sast_output),
+                    "dependencies": json.loads(dependency_output),
+                },
+                ensure_ascii=False,
             )
             state.messages.append(AIMessage(content=scan_results))
             state.artifacts["security_report"] = scan_results
-            logger.info("SecOps LLM evaluation completed successfully")
+            logger.info("SecOps LLM evaluation completed")
         except Exception:
             logger.exception("SecOps LLM evaluation failed")
-            state.messages.append(AIMessage(content=f"LLM evaluation failed. SAST raw output:\n{sast_output}"))
-            state.artifacts["security_report"] = f"Raw SAST output:\n{sast_output}"
+            scan_results = json.dumps(
+                {
+                    "status": "model_evaluation_failed",
+                    "sast": json.loads(sast_output),
+                    "dependencies": json.loads(dependency_output),
+                },
+                ensure_ascii=False,
+            )
+            state.messages.append(AIMessage(content=scan_results))
+            state.artifacts["security_report"] = scan_results
 
         state.current_agent = "supervisor"
         return state

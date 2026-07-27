@@ -347,7 +347,7 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
                 check=True,
                 timeout=1800,
             )
-            logger.info("Exported deployment model successfully")
+            logger.info("Exported deployment model")
             result["gguf_path"] = gguf_path
         else:
             logger.warning("Format conversion not supported")

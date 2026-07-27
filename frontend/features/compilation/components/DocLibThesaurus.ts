@@ -99,7 +99,7 @@ export default class DocLibThesaurus implements BlockTool {
 
           const del = document.createElement("button");
           del.classList.add("doclib-thes-del");
-          del.innerText = "✕";
+          del.innerText = "x";
           del.addEventListener("click", () => {
             this.data.synonyms.splice(i, 1);
             renderList();

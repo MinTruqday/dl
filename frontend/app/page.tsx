@@ -69,7 +69,6 @@ export default function IntroSplash() {
     const metisChars = METIS.split("");
     const SLOTS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-    // Dynamic layout state
     const layout = {
       W: 0, H: 0, cx: 0, cy: 0, FS: 0, FONT: "",
       helloW: 0, metisW: 0, doclibW: 0, exclW: 0,
@@ -274,7 +273,6 @@ export default function IntroSplash() {
     <div className="fixed inset-0 bg-white overflow-hidden">
       <canvas ref={canvasRef} className="absolute inset-0 block w-full h-full" />
 
-      {/* Container occupies exactly the lower half of the screen */}
       <div className="absolute inset-x-0 bottom-0 top-1/2 flex items-center justify-center pointer-events-none">
         <button
           onClick={() => router.push("/kham-pha")}
@@ -297,4 +295,3 @@ export default function IntroSplash() {
     </div>
   );
 }
-

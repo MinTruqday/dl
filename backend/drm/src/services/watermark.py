@@ -43,7 +43,7 @@ class WatermarkService:
                         items[i] = f"{items[i]}{stealth_payload}"
             return json.dumps(content_dict, ensure_ascii=False)
         except Exception as e:
-            logger.error(f"Lỗi khi tiêm thủy vân vào EditorJS AST: {e}")
+            logger.error("Lỗi khi tiêm thủy vân vào EditorJS AST")
             return raw_json_content
 
     @staticmethod
@@ -73,7 +73,7 @@ class WatermarkService:
             return '\n\n'.join(watermarked_blocks)
             
         except Exception as e:
-            logger.error(f"Lỗi khi tiêm thủy vân vào LaTeX: {e}")
+            logger.error("Lỗi khi tiêm thủy vân vào LaTeX")
             return raw_latex
 
     @staticmethod
@@ -258,7 +258,7 @@ class WatermarkService:
             )
             
         if not enable_aes:
-            logger.info("Document exported successfully without AES encryption (Dynamic DRM Policy)")
+            logger.info("Document exported without AES encryption (Dynamic DRM Policy)")
             return pdf_data, "pdf", "application/pdf"
             
         import os
@@ -286,7 +286,7 @@ class WatermarkService:
             logger.exception("AES encryption failed for document content")
             raise HTTPException(status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình mã hóa tài liệu")
 
-        logger.info(f"Successfully exported E-DRM document, file_id={file_id}")
+        logger.info(f"Exported E-DRM document, file_id={file_id}")
         return final_doclib_data, "doclib", "application/octet-stream"
 
     @staticmethod

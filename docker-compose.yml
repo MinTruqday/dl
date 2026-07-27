@@ -45,6 +45,16 @@ services:
       - 15672:15672
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test:
+        - CMD
+        - rabbitmq-diagnostics
+        - -q
+        - ping
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 12
     networks:
       - doclib_network
 
@@ -524,9 +534,12 @@ services:
     env_file:
       - .env
     depends_on:
-      - mongodb
-      - rabbitmq
-      - minio
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_started
     volumes:
       - ./backend/worker/src:/app/src
       - tectonic_cache:/home/appuser/.cache/Tectonic

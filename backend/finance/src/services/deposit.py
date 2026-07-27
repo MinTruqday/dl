@@ -339,7 +339,7 @@ class DepositService:
             if should_close_session:
                 await session.commit_transaction()
 
-            logger.info("Deposit transaction successfully verified and funds credited to wallet")
+            logger.info("Deposit transaction verified and funds credited to wallet")
             return True
         except Exception:
             if should_close_session:

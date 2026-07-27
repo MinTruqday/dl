@@ -48,13 +48,13 @@ class ConversionRag:
         self._minio_secret = settings.MINIO_SECRET_KEY
         self._minio_region = settings.MINIO_REGION
         self._docling: Optional[_DoclingModel] = None
-        logger.info("Document analysis tool initialized successfully")
+        logger.info("Document analysis tool initialized")
 
     def _get_docling(self) -> _DoclingModel:
         if self._docling is None:
             logger.info("Loading Docling document converter engine")
             self._docling = _DoclingModel()
-            logger.info("Docling document converter loaded successfully")
+            logger.info("Docling document converter loaded")
         return self._docling
 
     def _parse_file_with_docling(self, file_path: Path) -> Dict:
@@ -98,7 +98,7 @@ class ConversionRag:
                 md = MarkItDown()
                 res = md.convert(str(file_path))
                 markdown = res.text_content
-                logger.info("Successfully converted document using MarkItDown fallback")
+                logger.info("Converted document using MarkItDown fallback")
             except Exception as md_err:
                 logger.warning(f"MarkItDown fallback error for {file_path.name}: {md_err}")
                 try:
@@ -126,7 +126,7 @@ class ConversionRag:
         try:
             if file_ext in [".doclib", ".doclibx"]:
                 if len(file_bytes) < 60:
-                    return {"error": "Tệp tin DocLib bị hỏng hoặc không hợp lệ"}
+                    return {"error": "invalid_doclib_file"}
 
                 import uuid
                 import base64
@@ -144,7 +144,7 @@ class ConversionRag:
                 license_doc = await db.drm_licenses.find_one({"file_id": file_id})
 
                 if not license_doc or not license_doc.get("aes_key"):
-                    return {"error": "Không tìm thấy giấy phép giải mã cho tài liệu này"}
+                    return {"error": "document_decryption_license_not_found"}
 
                 aes_key = base64.b64decode(license_doc.get("aes_key"))
                 try:
@@ -152,7 +152,7 @@ class ConversionRag:
                     decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
                     raw_text = decrypted_data.decode("utf-8")
                 except Exception:
-                    return {"error": "Giải mã tài liệu thất bại"}
+                    return {"error": "document_decryption_failed"}
 
                 chunks = self._split_markdown_to_chunks(raw_text)
                 return {
@@ -166,9 +166,9 @@ class ConversionRag:
             res = await loop.run_in_executor(None, self._parse_file_with_docling, tmp_path)
             res.pop("docling_document", None)
             return res
-        except Exception as e:
+        except Exception:
             logger.exception("Document content analysis error")
-            return {"error": f"Lỗi phân tích cú pháp tài liệu {e}"}
+            return {"error": "document_parsing_failed"}
         finally:
             tmp_path.unlink(missing_ok=True)
 
@@ -207,7 +207,7 @@ class ConversionRag:
                 return extracted
 
             tables = await loop.run_in_executor(None, _extract)
-            logger.info("Extracted data tables successfully")
+            logger.info("Extracted data tables")
             return tables
         except Exception as e:
             logger.exception("Data table extraction error")
@@ -321,7 +321,7 @@ class ConversionRag:
                 }
             )
 
-        logger.info("Created text chunks successfully")
+        logger.info("Created text chunks")
         return ingestion_chunks
 
     async def get_markdown(self, file_url: str) -> str:
@@ -383,7 +383,7 @@ class ConversionRag:
                     ext = mapped_ext
                     break
 
-            logger.info("Retrieved file content from storage successfully")
+            logger.info("Retrieved file content from storage")
             return data, ext
 
         except Exception as e:
