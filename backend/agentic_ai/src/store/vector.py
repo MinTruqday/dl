@@ -3,7 +3,6 @@ import os
 from typing import Dict, List, Optional
 
 import httpx
-from fastapi import Query
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import (
@@ -98,9 +97,7 @@ class VectorStore:
         self,
         query_vector: List[float],
         document_ids: Optional[List[str]] = None,
-        limit: int = Query(
-            default=20, le=100
-        ),
+        limit: int = 20,
     ) -> List[Dict]:
         query_filter = None
         if document_ids:
@@ -110,6 +107,8 @@ class VectorStore:
                 ]
             )
 
+        if limit < 1 or limit > 100:
+            raise ValueError("Vector query limit must be between 1 and 100")
         try:
             results = await self.client.search(
                 collection_name=self.collection_name,
@@ -126,9 +125,9 @@ class VectorStore:
                 }
                 for hit in results
             ]
-        except Exception as e:
+        except Exception:
             logger.exception("Search query parsing and processing error")
-            return []
+            raise
 
     async def delete_by_document(self, document_id: str):
         try:

@@ -94,7 +94,6 @@ async def supervisor_node(state: ActingState):
         "Reasoning": "reasoning",
         "SwarmAgent": "swarm",
         "MCTSAgent": "mcts",
-        "MCPAgent": "mcp_client"
     }
 
     next_nodes = list(set([route_map.get(s.get("agent", "Action"), "action") for s in ready_tasks]))
@@ -109,7 +108,6 @@ async def supervisor_node(state: ActingState):
 
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     import asyncio
-    import re
     
     steps = state.get("steps", [])
     task_status = state.get("task_status", {})
@@ -120,12 +118,6 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         return {}
 
     req_data = state.get("req_data", {})
-
-    def _extract_code_block(text: str) -> str:
-        match = re.search(r"```(?:python)?\s*\n(.*?)```", text, re.DOTALL)
-        if match:
-            return match.group(1).strip()
-        return ""
 
     async def _exec_task(task_obj):
         current_task = task_obj.get("task", "")
@@ -140,37 +132,17 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 if agent_name == "Action":
                     token = req_data.get("token")
                     user_id = req_data.get("user_id")
-                    res = await tool_callable.execute(current_task, {}, user_id, token)
+                    res = await tool_callable.execute(
+                        current_task,
+                        {},
+                        user_id,
+                        token,
+                        auto_approve=bool(req_data.get("approve_tools", False)),
+                    )
                 elif agent_name == "Knowledge":
                     res = await tool_callable.execute(req_data)
                 else:
                     res = await tool_callable.execute(current_task)
-
-                code_block = _extract_code_block(str(res))
-                if code_block and agent_name in ("InterpreterAgent", "Action"):
-                    from src.harness.sandbox import CodeSandbox
-                    sandbox = CodeSandbox(use_docker=False)
-                    sandbox_retry = 0
-                    while sandbox_retry < 2:
-                        success, stdout, stderr, artifacts = sandbox.execute_code(code_block)
-                        if success:
-                            artifact_str = ""
-                            if artifacts:
-                                artifact_str = f"\n[Generated Artifacts]\n" + "\n".join(artifacts)
-                            res = f"{res}\n\n[Sandbox Output]\n{stdout.strip()}{artifact_str}"
-                            break
-                        else:
-                            sandbox_retry += 1
-                            if sandbox_retry < 2:
-                                current_task = f"{current_task}\n\n[Previous code failed with error]\n{stderr}\nFix the code and retry."
-                                if agent_name == "Action":
-                                    res = await tool_callable.execute(current_task, {}, req_data.get("user_id"), req_data.get("token"))
-                                else:
-                                    res = await tool_callable.execute(current_task)
-                                code_block = _extract_code_block(str(res))
-                            else:
-                                res = f"{res}\n\n[Sandbox Error]\n{stderr.strip()}"
-                    sandbox.cleanup()
 
                 from src.core.registry import PromptType, registry
 
@@ -192,7 +164,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                                 {"role": "user", "content": f"Task: {current_task}\nFailed Output: {res}\nFeedback: {eval_res.feedback}\nRevised Task for next time: {eval_res.revised_task}"}
                             ]
                             asyncio.create_task(memo_manager.add_memory(mem_data, user_id))
-                        except Exception as e:
+                        except Exception:
                             logger.exception("Failed to inject procedural memory")
                         current_task = eval_res.revised_task or current_task
                         final_res = res
@@ -368,10 +340,14 @@ async def trimmer_node(state: ActingState):
             )
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
-        except Exception as e:
+        except Exception:
             logger.exception("Summary trimmer execution error")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
-        return {"consolidated_results": [trimmed], "next_nodes": ["aggregator"]}
+        return {
+            "consolidated_results": [trimmed],
+            "results_trimmed": True,
+            "next_nodes": ["aggregator"],
+        }
 
     return {"next_nodes": ["aggregator"]}
 
@@ -385,6 +361,8 @@ async def sanitizer_node(state: ActingState):
     results = state.get("consolidated_results", [])
     if not results:
         return {"next_nodes": ["aggregator"]}
+    if state.get("results_trimmed"):
+        results = results[-1:]
         
     is_valid, error_msg = enforce_resource_limits(results)
     if not is_valid:
@@ -452,10 +430,7 @@ class OrchestrationWorkflow:
             self.sync_client,
             db_name=settings.AGENTIC_AI_DB_NAME,
         )
-        self.app = self.workflow.compile(
-            checkpointer=self.checkpointer,
-            interrupt_before=["action"],
-        )
+        self.app = self.workflow.compile(checkpointer=self.checkpointer)
 
     async def execute_plan(self, req_data):
         from src.memory.global_state import global_state
@@ -481,6 +456,7 @@ class OrchestrationWorkflow:
             "next_nodes": [],
             "error": "",
             "replan_count": 0,
+            "results_trimmed": False,
         }
 
         final_results = []
@@ -511,7 +487,7 @@ class OrchestrationWorkflow:
                         yield {
                             "type": "tool_result",
                             "agent": node_name,
-                            "content": state_update.get("last_agent_result", "Completed"),
+                            "status": "completed",
                         }
 
                 elif node_name == "aggregator":
@@ -524,7 +500,8 @@ class OrchestrationWorkflow:
         full_response_chunks = []
         async for chunk in response_generator.aggregate_stream(query, final_results):
             full_response_chunks.append(chunk.get("chunk", "") if isinstance(chunk, dict) else str(chunk))
-            yield {"type": "message", "chunk": chunk}
+            content = chunk.get("chunk", "") if isinstance(chunk, dict) else str(chunk)
+            yield {"type": "message", "chunk": content}
 
         try:
             combined = " ".join(full_response_chunks)

@@ -1,6 +1,7 @@
 import asyncio
 import traceback
 import time
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, Literal, Optional
@@ -56,15 +57,51 @@ _FAILURE_PATTERNS = {
 }
 
 _SUGGESTIONS: Dict[FailureType, str] = {
-    "BAD_MODEL_CALL": "Kiểm tra lại cấu trúc prompt và format instructions gửi tới mô hình ngôn ngữ",
-    "INVALID_TOOL_ARGUMENT": "Xem xét lại schema đầu vào của tool và cách agent truyền tham số",
-    "MISSING_CONTEXT": "Xác minh rằng context selection đã cung cấp đủ dữ liệu trước khi thực thi",
-    "TOOL_TIMEOUT": "Tăng timeout hoặc kiểm tra tính khả dụng của dịch vụ phụ thuộc",
-    "PERMISSION_DENIED": "Xem lại role policy và quyền truy cập tool được cấp cho phiên này",
-    "PLAN_PARSE_ERROR": "Kiểm tra prompt sinh kế hoạch và format instructions của JSON output parser",
-    "RETRIEVAL_FAILURE": "Kiểm tra trạng thái Qdrant và pipeline truy xuất tài liệu",
-    "UNKNOWN": "Thu thập thêm thông tin từ stack trace và log để phân loại chính xác hơn",
+    "BAD_MODEL_CALL": "Review the prompt structure and model format instructions",
+    "INVALID_TOOL_ARGUMENT": "Review the tool input schema and agent argument mapping",
+    "MISSING_CONTEXT": "Verify that context selection supplied all required data",
+    "TOOL_TIMEOUT": "Review the timeout and dependent service availability",
+    "PERMISSION_DENIED": "Review the role policy and tool access granted to this session",
+    "PLAN_PARSE_ERROR": "Review the planning prompt and JSON parser format instructions",
+    "RETRIEVAL_FAILURE": "Check Qdrant health and the document retrieval pipeline",
+    "UNKNOWN": "Use the stack trace and diagnostic logs to refine classification",
 }
+
+def _redact_diagnostics(value: str) -> str:
+    text = str(value)
+    text = re.sub(
+        r"(?i)(authorization|password|secret|token|api[_-]?key)\s*[:=]\s*[^\s,;]+",
+        r"\1=[REDACTED]",
+        text,
+    )
+    text = re.sub(
+        r"(?i)\b(?:mongodb|postgres(?:ql)?|mysql|redis)://[^\s]+",
+        "[REDACTED CONNECTION]",
+        text,
+    )
+    text = re.sub(
+        r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+",
+        "[REDACTED EMAIL]",
+        text,
+    )
+    return text
+
+def _summarize_context(context_snapshot: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    if not context_snapshot:
+        return {}
+    summary = {}
+    for key, value in list(context_snapshot.items())[:30]:
+        normalized = str(key).lower()
+        if any(marker in normalized for marker in ("token", "secret", "password", "key", "authorization")):
+            summary[str(key)[:80]] = "[REDACTED]"
+        elif isinstance(value, (str, bytes, list, tuple, dict, set)):
+            summary[str(key)[:80]] = {
+                "type": type(value).__name__,
+                "size": len(value),
+            }
+        else:
+            summary[str(key)[:80]] = type(value).__name__
+    return summary
 
 def _classify_failure(error: Exception, node: str = "") -> FailureType:
     error_type = type(error).__name__
@@ -97,16 +134,16 @@ class FailureAttributionHarness:
         context_snapshot: Optional[Dict[str, Any]] = None,
     ) -> FailureRecord:
         failure_type = _classify_failure(error, node)
-        stack = traceback.format_exc()
+        stack = _redact_diagnostics(traceback.format_exc())
         record = FailureRecord(
             session_id=session_id,
             user_id=user_id,
             failure_type=failure_type,
             node=node,
             tool_name=tool_name,
-            error_message=str(error)[:500],
+            error_message=_redact_diagnostics(str(error))[:500],
             stack_trace=stack[:2000],
-            context_snapshot=context_snapshot or {},
+            context_snapshot=_summarize_context(context_snapshot),
             occurred_at=datetime.now(timezone.utc),
             suggestion=_SUGGESTIONS.get(failure_type, ""),
         )

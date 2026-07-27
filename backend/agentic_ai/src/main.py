@@ -1,4 +1,6 @@
 import sys
+import hmac
+import re
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from loguru import logger
@@ -8,11 +10,33 @@ from src.core.middleware import add_trace_id_header, trace_id_filter
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.dependency import Role, require_role
 logger.remove()
+
+def _safe_log_sink(message):
+    text = str(message)
+    text = re.sub(
+        r"(?i)(authorization|password|secret|token|api[_-]?key|user_id|email)\s*[:=]\s*[^\s,;]+",
+        r"\1=[REDACTED]",
+        text,
+    )
+    text = re.sub(
+        r"(?i)\b(?:mongodb|postgres(?:ql)?|mysql|redis)://[^\s]+",
+        "[REDACTED CONNECTION]",
+        text,
+    )
+    text = re.sub(
+        r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+",
+        "[REDACTED EMAIL]",
+        text,
+    )
+    sys.stdout.write(text)
+
 logger.add(
-    sys.stdout,
+    _safe_log_sink,
     format="{time:YYYY-MM-DD HH:mm:ss} {level} [{extra[trace_id]}] {message}",
     filter=trace_id_filter,
     level="INFO",
+    backtrace=False,
+    diagnose=False,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from src.harness.agentops import agentops
@@ -39,19 +63,20 @@ from fastapi.responses import JSONResponse
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
-        if token != settings.SECRET_KEY:
-            return JSONResponse(status_code=403, content={"detail": "Forbidden invalid internal token"})
+        if not token or not settings.SECRET_KEY or not hmac.compare_digest(token, settings.SECRET_KEY):
+            return JSONResponse(status_code=403, content={"detail": "Mã xác thực nội bộ không hợp lệ"})
     return await call_next(request)
 
 app.middleware("http")(add_trace_id_header)
+allowed_origins = (
+    settings.CORS_ALLOWED_ORIGINS.split(",")
+    if settings.CORS_ALLOWED_ORIGINS
+    else ["*"]
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=(
-        settings.CORS_ALLOWED_ORIGINS.split(",")
-        if settings.CORS_ALLOWED_ORIGINS
-        else ["*"]
-    ),
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials="*" not in allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -161,44 +186,44 @@ async def shutdown_event():
         await cron_scheduler.stop()
         await event_driven_loop.stop_worker()
     except Exception:
-        pass
+        logger.exception("Event loop shutdown failed")
     try:
         from src.core.infrastructure.redis import redis
         await redis.aclose()
     except Exception:
-        pass
+        logger.exception("Redis shutdown failed")
     try:
         from src.core.infrastructure.mq import mq
         await mq.aclose()
     except Exception:
-        pass
+        logger.exception("Message queue shutdown failed")
     try:
         from src.core.infrastructure.database import close_db
         await close_db()
     except Exception:
-        pass
+        logger.exception("Database shutdown failed")
     try:
         from src.store.vector import vector_store
         await vector_store.client.close()
     except Exception:
-        pass
+        logger.exception("Vector store shutdown failed")
     try:
         from src.memory.memo import memo_manager
         await memo_manager.close()
     except Exception:
-        pass
+        logger.exception("Memo manager shutdown failed")
     try:
         from src.memory.management import memory_manager
         if memory_manager._redis:
             await memory_manager._redis.aclose()
     except Exception:
-        pass
+        logger.exception("Memory manager shutdown failed")
     try:
         from src.workflow.orchestration import supervisor
         supervisor.checkpointer.close()
         supervisor.sync_client.close()
     except Exception:
-        pass
+        logger.exception("Workflow checkpointer shutdown failed")
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):

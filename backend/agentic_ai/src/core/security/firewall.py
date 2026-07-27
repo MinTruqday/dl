@@ -10,7 +10,7 @@ class AgenticFirewall:
     <contract>
     - Precondition: Receives a raw input string from the user or retrieved documents.
     - Postcondition: Returns True if safe, otherwise raises an HTTPException (Hard Block).
-    - Error Handling: Uses Tiếng Việt in HTTPException details for End-users, and English in logger.
+    - Error Handling: Uses localized HTTPException details for end users and English logs.
     </contract>
     """
     
@@ -28,9 +28,12 @@ class AgenticFirewall:
         if not text:
             return True
             
-        for pattern in cls.SUSPICIOUS_PATTERNS:
+        for pattern_index, pattern in enumerate(cls.SUSPICIOUS_PATTERNS):
             if pattern.search(text):
-                logger.error(f"Firewall blocked a potential prompt injection attack. Pattern matched: {pattern.pattern}")
+                logger.warning(
+                    "Firewall blocked potential prompt injection rule={}",
+                    pattern_index,
+                )
                 raise HTTPException(
                     status_code=403,
                     detail="Hệ thống phát hiện nội dung độc hại hoặc yêu cầu thao túng (Prompt Injection) trong dữ liệu đầu vào. Hành động đã bị chặn"

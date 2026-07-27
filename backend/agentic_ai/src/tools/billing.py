@@ -178,7 +178,6 @@ async def transfer_user_funds(recipient_identifier: str, amount: int, note: str 
         else:
             detail = response.json().get("detail") or "Fund transfer failed"
             return f"Transfer failed: {detail}"
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to execute P2P fund transfer")
-        return f"Transfer failed due to system error: {e}"
-
+        return "Fund transfer failed because the billing service is unavailable"

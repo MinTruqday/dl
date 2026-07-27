@@ -14,7 +14,7 @@ async def evaluate_drm_request(
     x_internal_token: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
     if x_internal_token != settings.SECRET_KEY:
-        raise HTTPException(status_code=403, detail="Forbidden: invalid internal token")
+        raise HTTPException(status_code=403, detail="Mã xác thực nội bộ không hợp lệ")
     try:
         policy = await evaluate_drm_policy(
             user_id=request.user_id,

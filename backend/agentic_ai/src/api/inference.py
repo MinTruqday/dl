@@ -4,14 +4,15 @@ import json
 from typing import Any, List, Optional
 
 import httpx
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, HTTPException
 from huggingface_hub import AsyncInferenceClient
 from loguru import logger
-from src.core.registry import PromptType, registry
 
+from src.core.dependency import CurrentUser, Role, get_current_user, verify_internal_token
 from src.core.infrastructure.configuration import settings
-from src.core.dependency import get_current_user, verify_internal_token
+from src.core.logging_route import LoggingRoute
+from src.core.model_runtime import run_chat_completion
+from src.core.registry import PromptType, registry
 from src.schemas.inference import (
     ActionRequest,
     CitationRequest,
@@ -32,14 +33,14 @@ from src.schemas.inference import (
     SemanticDiffRequest,
     QuickRepliesRequest,
 )
-from src.core.dependency import CurrentUser, Role
+from src.schemas.auth import Tier
 
 router = APIRouter(route_class=LoggingRoute, prefix="/suy-luan")
 
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
 async def _check_quota(current_user: CurrentUser):
-    logger.info(f"Started AI quota verification for user_id={current_user.id}")
+    logger.info("AI quota verification started")
     try:
         async with httpx.AsyncClient(timeout=10.0) as c:
             resp = await c.get(
@@ -67,7 +68,7 @@ async def _check_quota(current_user: CurrentUser):
 async def _consume_quota(
     current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
 ):
-    logger.info(f"Started AI quota consumption for user_id={current_user.id}, tokens={tokens}")
+    logger.info("AI quota consumption started tokens={}", tokens)
     try:
         async with httpx.AsyncClient(timeout=10.0) as c:
             response = await c.post(
@@ -91,23 +92,23 @@ async def _chat_direct(
     temperature: float = 0.3,
     model: str = settings.LLM_MODEL,
 ) -> str:
-    import asyncio
-    
-    last_exception = None
-    for attempt in range(4):
-        try:
-            response = await client.chat_completion(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-            )
-            msg = response.choices[0].message
-            content = msg.content or ""
-            return content
-        except Exception as e:
-            logger.exception("AI text generation execution error")
-            raise Exception("Unexpected error during execution")
+    return await run_chat_completion(
+        client=client,
+        messages=messages,
+        model=model,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+
+
+def _public_ai_error(operation: str, exc: Exception) -> HTTPException:
+    if isinstance(exc, HTTPException):
+        return exc
+    logger.exception("AI endpoint failed operation={}", operation)
+    return HTTPException(
+        status_code=500,
+        detail="Hệ thống gặp sự cố khi xử lý yêu cầu, vui lòng thử lại sau",
+    )
 
 async def _run_ai_with_quota(
     current_user: CurrentUser,
@@ -130,7 +131,7 @@ async def _run_ai_with_quota(
 async def generate_text(
     req: GenerationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started text generation API request for user_id={current_user.id}")
+    logger.info("Text generation started")
     try:
         result = await _run_ai_with_quota(
             current_user,
@@ -138,19 +139,16 @@ async def generate_text(
             max_tokens=req.max_tokens,
             temperature=req.temperature,
         )
-        logger.info(f"Completed text generation API request for user_id={current_user.id}")
+        logger.info("Text generation completed")
         return {"result": result}
-    except Exception as e:
-        logger.exception("Text generation error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("text_generation", exc)
 
 @router.post("/dich-thuat")
 async def translate_text(
     req: TranslationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started translation API request to {req.target_lang} for user_id={current_user.id}")
+    logger.info("Translation started target_language={}", req.target_lang)
     try:
         prompt = registry.get(PromptType.TRANSLATE).format(
             target_lang=req.target_lang, text=req.text
@@ -161,21 +159,21 @@ async def translate_text(
             max_tokens=len(req.text) * 3,
             temperature=0.1,
         )
-        logger.info(f"Completed translation API request for user_id={current_user.id}")
+        logger.info("Translation completed")
         return {"translation": result.strip()}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau {e}"
-        )
+    except Exception as exc:
+        raise _public_ai_error("translation", exc)
 
 @router.post("/goi-y-tra-loi")
 async def generate_quick_replies(
     req: QuickRepliesRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started quick replies generation API request for user_id={current_user.id}")
+    logger.info("Quick reply generation started")
     try:
         history_text = "\n".join(req.history_messages)
-        prompt = f"Dựa vào bối cảnh cuộc trò chuyện sau:\n{history_text}\nHãy đưa ra đúng 3 câu trả lời ngắn gọn, tự nhiên, lịch sự (dưới 6 từ mỗi câu) phù hợp với ngữ cảnh nhất. Trả về đúng định dạng JSON list chứa các chuỗi, không có văn bản nào khác. Ví dụ: [\"Tôi đồng ý\", \"Cảm ơn bạn\", \"Tuyệt vời\"]."
+        prompt = registry.get(PromptType.QUICK_REPLIES).format(
+            history=history_text
+        )
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
@@ -186,15 +184,27 @@ async def generate_quick_replies(
         try:
             clean_result = result.strip().strip('`').removeprefix('json').strip()
             replies = json.loads(clean_result)
-            if not isinstance(replies, list):
+            valid = (
+                isinstance(replies, list)
+                and len(replies) == 3
+                and all(
+                    isinstance(reply, str)
+                    and 1 <= len(reply.split()) <= 6
+                    and "." * 3 not in reply
+                    and chr(8230) not in reply
+                    and not any(ord(char) >= 0x1F000 for char in reply)
+                    for reply in replies
+                )
+            )
+            if not valid:
                 replies = ["Đồng ý", "Cảm ơn", "Tôi hiểu"]
         except json.JSONDecodeError:
             replies = ["Đồng ý", "Cảm ơn", "Tuyệt vời"]
             
-        logger.info(f"Completed quick replies API request for user_id={current_user.id}")
+        logger.info("Quick reply generation completed")
         return {"replies": replies[:3]}
-    except Exception as e:
-        logger.exception("Error generating quick replies")
+    except Exception:
+        logger.exception("Quick reply generation failed")
         return {"replies": ["Đồng ý", "Cảm ơn", "Tôi hiểu"]}
 
 @router.post("/tao-ma")
@@ -212,10 +222,8 @@ async def generate_code(
             temperature=0.2,
         )
         return {"code": result.strip()}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau {e}"
-        )
+    except Exception as exc:
+        raise _public_ai_error("code_generation", exc)
 
 @router.post("/kiem-tra-ngu-phap")
 async def grammar_check(
@@ -248,16 +256,14 @@ async def grammar_check(
             "score": grammar_score,
             "message": "Hoàn tất kiểm tra ngữ pháp",
         }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Hệ thống gặp sự cố bất ngờ trong quá trình thực thi, vui lòng thử lại sau {e}"
-        )
+    except Exception as exc:
+        raise _public_ai_error("grammar_check", exc)
 
 @router.post("/tom-tat")
 async def summarize_text(
     req: SummarizeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started text summarization API request for user_id={current_user.id}")
+    logger.info("Text summarization started")
     try:
         prompt = registry.get(PromptType.SUMMARIZE).format(
             language=req.language, text=req.text
@@ -268,25 +274,22 @@ async def summarize_text(
             max_tokens=300,
             temperature=0.3,
         )
-        logger.info(f"Completed text summarization API request for user_id={current_user.id}")
+        logger.info("Text summarization completed")
         return {"summary": result.strip()}
-    except Exception as e:
-        logger.exception("Text summarization error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("summarization", exc)
 
 @router.post("/kiem-tra-dao-van")
 async def check_plagiarism(
     req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started plagiarism detection API request for user_id={current_user.id}")
+    logger.info("Plagiarism detection started")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
-            logger.warning(f"Plagiarism detection access denied for user_id={current_user.id} insufficient permissions")
+            logger.warning("Plagiarism detection access denied due to service tier")
             raise HTTPException(
                 status_code=403,
                 detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
@@ -331,29 +334,24 @@ async def check_plagiarism(
             json_match = re.search(r"\{.*\}", result, re.DOTALL)
             if json_match:
                 return json_mod.loads(json_match.group())
-        except Exception as e:
-            logger.exception("Plagiarism detection JSON output parsing error")
+        except (json.JSONDecodeError, TypeError, ValueError):
+            logger.warning("Plagiarism model output was not valid JSON")
 
         max_score = max([m["score"] for m in significant_matches]) * 100
         return {
             "plagiarism_score": round(max_score, 1),
-            "status": (
-                "warning" if max_score > 60 else "danger" if max_score > 85 else "clean"
-            ),
+            "status": "danger" if max_score > 85 else "warning",
             "message": "Phát hiện nội dung trùng lặp",
             "matches": significant_matches[:3],
         }
-    except Exception as e:
-        logger.exception("Plagiarism detection error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("plagiarism_detection", exc)
 
 @router.post("/hanh-dong")
 async def unified_action(
     req: ActionRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started unified action API ({req.action}) for user_id={current_user.id}")
+    logger.info("Unified action started action={}", req.action)
     try:
         prompts = {
             "autocomplete": registry.get(PromptType.AUTOCOMPLETE).format(
@@ -384,25 +382,22 @@ async def unified_action(
             max_tokens=500,
             temperature=0.3,
         )
-        logger.info(f"Completed unified action API ({req.action}) for user_id={current_user.id}")
+        logger.info("Unified action completed action={}", req.action)
         return {"result": result.strip()}
-    except Exception as e:
-        logger.exception("Unified AI action execution error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("unified_action", exc)
 
 @router.post("/tu-dong-nghia")
 async def get_synonyms(
     req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started synonym retrieval API request for user_id={current_user.id}")
+    logger.info("Synonym retrieval started")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
-            logger.warning(f"Synonym retrieval access denied for user_id={current_user.id} insufficient permissions")
+            logger.warning("Synonym retrieval access denied due to service tier")
             raise HTTPException(
                 status_code=403,
                 detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
@@ -415,25 +410,22 @@ async def get_synonyms(
             max_tokens=100,
             temperature=0.5,
         )
-        logger.info(f"Completed synonym retrieval API request for user_id={current_user.id}")
+        logger.info("Synonym retrieval completed")
         return {"synonyms": [s.strip() for s in result.split(",")]}
-    except Exception as e:
-        logger.exception("Synonym retrieval error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("synonym_retrieval", exc)
 
 @router.post("/trich-dan-thong-minh")
 async def suggest_citations(
     req: CitationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started citation suggestion API request for user_id={current_user.id}")
+    logger.info("Citation suggestion started")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
-            logger.warning(f"Citation suggestion access denied for user_id={current_user.id} insufficient permissions")
+            logger.warning("Citation suggestion access denied due to service tier")
             raise HTTPException(
                 status_code=403,
                 detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
@@ -461,25 +453,22 @@ async def suggest_citations(
             max_tokens=500,
             temperature=0.3,
         )
-        logger.info(f"Completed citation suggestion API request for user_id={current_user.id}")
+        logger.info("Citation suggestion completed")
         return {"citations": result.strip()}
-    except Exception as e:
-        logger.exception("Citation suggestion generation error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("citation_suggestion", exc)
 
 @router.post("/bien-doi-van-ban")
 async def transform_tone(
     req: ToneRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started tone transformation API request for user_id={current_user.id}")
+    logger.info("Tone transformation started")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
-            logger.warning(f"Tone transformation access denied for user_id={current_user.id} insufficient permissions")
+            logger.warning("Tone transformation access denied due to service tier")
             raise HTTPException(
                 status_code=403,
                 detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
@@ -495,25 +484,22 @@ async def transform_tone(
             max_tokens=1000 if req.expansion else 500,
             temperature=0.4,
         )
-        logger.info(f"Completed tone transformation API request for user_id={current_user.id}")
+        logger.info("Tone transformation completed")
         return {"transformed_text": result.strip()}
-    except Exception as e:
-        logger.exception("Tone transformation error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("tone_transformation", exc)
 
 @router.post("/kiem-duyet-noi-dung")
 async def peer_review(
     req: ReviewRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started content review API request for user_id={current_user.id}")
+    logger.info("Content review started")
     try:
         if (
             current_user.role != Role.ADMIN
             and current_user.ai_tier.value != Tier.PREMIUM.value
         ):
-            logger.warning(f"Content review access denied for user_id={current_user.id} insufficient permissions")
+            logger.warning("Content review access denied due to service tier")
             raise HTTPException(
                 status_code=403,
                 detail="Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
@@ -533,19 +519,16 @@ async def peer_review(
             max_tokens=1024,
             temperature=0.2,
         )
-        logger.info(f"Completed content review API request for user_id={current_user.id}")
+        logger.info("Content review completed")
         return {"review_report": result.strip()}
-    except Exception as e:
-        logger.exception("Content review error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("content_review", exc)
 
 @router.post("/tong-hop-tai-lieu")
 async def multi_doc_synthesis(
     req: SynthesisRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started multi-document synthesis API request for user_id={current_user.id}")
+    logger.info("Multi-document synthesis started document_count={}", len(req.document_ids))
     try:
         from src.rag.embedding import embedder
         from src.store.vector import vector_store
@@ -555,7 +538,7 @@ async def multi_doc_synthesis(
         all_context = []
         for doc_id in req.document_ids:
             matches = await vector_store.query(
-                query_vector=query_vector, document_id=doc_id, limit=3
+                query_vector=query_vector, document_ids=[doc_id], limit=3
             )
             for m in matches:
                 all_context.append(f"[From document {doc_id}]: {m['text']}")
@@ -569,17 +552,14 @@ async def multi_doc_synthesis(
             max_tokens=1024,
             temperature=0.3,
         )
-        logger.info(f"Completed multi-document synthesis API request for user_id={current_user.id}")
+        logger.info("Multi-document synthesis completed")
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
-    except Exception as e:
-        logger.exception("Multi-document synthesis error")
-        raise HTTPException(
-            status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau"
-        )
+    except Exception as exc:
+        raise _public_ai_error("multi_document_synthesis", exc)
 
 @router.post("/trich-xuat-van-ban")
 async def extract_text(req: dict, current_user: CurrentUser = Depends(get_current_user)):
-    logger.info(f"Started document text extraction API request for user_id={current_user.id}")
+    logger.info("Document text extraction started")
     try:
         file_url = req.get("file_url")
         if not file_url:
@@ -592,12 +572,15 @@ async def extract_text(req: dict, current_user: CurrentUser = Depends(get_curren
 
         extracted_text = await ingestion_pipeline._extract_text(file_url)
 
-        logger.info(f"Completed document text extraction API request for user_id={current_user.id}")
+        logger.info("Document text extraction completed")
         return {"extracted_text": extracted_text}
-    except Exception as e:
-        logger.exception("Document text extraction pipeline error")
+    except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise
+        logger.exception("Document text extraction failed")
         raise HTTPException(
-            status_code=500, detail="Hệ thống không thể trích xuất nội dung từ tệp tin được cung cấp"
+            status_code=500,
+            detail="Hệ thống không thể trích xuất nội dung từ tệp tin được cung cấp",
         )
 
 @router.post("/phan-tich-tai-lieu")
@@ -626,14 +609,13 @@ async def analyze_document(
 
         json_match = re.search(r"\{.*\}", result, re.DOTALL)
         if json_match:
-            logger.info(f"Completed document analysis API request for user_id={current_user.id}")
+            logger.info("Document analysis completed")
             return json_mod.loads(json_match.group())
         else:
             logger.warning("LLM returned malformed JSON response during document analysis")
             raise ValueError("Language model returned invalid format")
-    except Exception as e:
-        logger.exception("Document analysis error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình phân tích tài liệu, vui lòng thử lại sau")
+    except Exception as exc:
+        raise _public_ai_error("document_analysis", exc)
 
 @router.delete(
     "/vector/{document_id}",
@@ -647,7 +629,7 @@ async def delete_vector_document(document_id: str):
         await vector_store.delete_by_document(document_id)
         logger.info(f"Completed vector index deletion for document {document_id}")
         return {"status": "success", "message": "Hủy bỏ toàn bộ dữ liệu vector của tài liệu hoàn tất"}
-    except Exception as e:
+    except Exception:
         logger.exception("Vector index deletion error")
         raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình xóa dữ liệu, vui lòng thử lại sau")
 
@@ -658,15 +640,15 @@ def _extract_json(text: str) -> dict:
     if match:
         try:
             return json.loads(match.group(0))
-        except:
-            pass
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return {}
     return {}
 
 @router.post("/giai-thich-thuat-ngu")
 async def extract_glossary(
     req: GlossaryRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started glossary extraction API request for user_id={current_user.id}")
+    logger.info("Glossary extraction started")
     try:
         prompt = registry.get(PromptType.EXTRACT_GLOSSARY).format(text=req.text)
         result = await _run_ai_with_quota(
@@ -676,36 +658,34 @@ async def extract_glossary(
             temperature=0.3,
         )
         data = _extract_json(result)
-        logger.info(f"Completed glossary extraction API request for user_id={current_user.id}")
+        logger.info("Glossary extraction completed")
         return data if data else {"glossary": []}
-    except Exception as e:
-        logger.exception("Glossary extraction error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+    except Exception as exc:
+        raise _public_ai_error("glossary_extraction", exc)
 
 @router.post("/bat-chuoc-van-phong")
 async def imitate_style(
     req: StyleImitationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started style imitation API request for user_id={current_user.id}")
+    logger.info("Style imitation started")
     try:
-        prompt = registry.get(PromptType.IMITATE_STYLE).format(reference_text=req.reference_text, text=req.text)
+        prompt = registry.get(PromptType.IMITATE_STYLE).format(reference_text=req.style_sample, text=req.text)
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=2000,
+            max_tokens=min(req.target_length or 2000, 4000),
             temperature=0.5,
         )
-        logger.info(f"Completed style imitation API request for user_id={current_user.id}")
+        logger.info("Style imitation completed")
         return {"result": result}
-    except Exception as e:
-        logger.exception("Style imitation error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+    except Exception as exc:
+        raise _public_ai_error("style_imitation", exc)
 
 @router.post("/nhap-van-ban-voi-ky-uc")
 async def draft_with_memory(
     req: DraftWithMemoryRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started draft_with_memory API request for user_id={current_user.id}")
+    logger.info("Memory-aware drafting started")
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.DRAFT_WITH_MEMORY).format(prompt=req.prompt)
@@ -715,17 +695,16 @@ async def draft_with_memory(
             max_tokens=2000,
             temperature=0.5,
         )
-        logger.info(f"Completed draft_with_memory API request for user_id={current_user.id}")
+        logger.info("Memory-aware drafting completed")
         return {"draft": result}
-    except Exception as e:
-        logger.exception("draft_with_memory error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+    except Exception as exc:
+        raise _public_ai_error("draft_with_memory", exc)
 
 @router.post("/trich-xuat-luu-tru")
 async def extract_to_storage(
     req: ExtractToStorageRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started extract_to_storage API request for user_id={current_user.id}")
+    logger.info("Artifact extraction started")
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.EXTRACT_TO_ARTIFACTS).format(goals=', '.join(req.extraction_goals), text=req.text[:3000])
@@ -736,17 +715,16 @@ async def extract_to_storage(
             temperature=0.1,
         )
         data = _extract_json(result)
-        logger.info(f"Completed extract_to_storage API request for user_id={current_user.id}")
+        logger.info("Artifact extraction completed")
         return {"summary": json.dumps(data, ensure_ascii=False) if data else "{}"}
-    except Exception as e:
-        logger.exception("extract_to_storage error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+    except Exception as exc:
+        raise _public_ai_error("extract_to_storage", exc)
 
 @router.post("/kiem-chung-su-that")
 async def web_fact_check(
     req: WebFactCheckRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started web_fact_check API request for user_id={current_user.id}")
+    logger.info("Web fact check started")
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.WEB_FACT_CHECK).format(text=req.text[:3000])
@@ -756,17 +734,16 @@ async def web_fact_check(
             max_tokens=2000,
             temperature=0.2,
         )
-        logger.info(f"Completed web_fact_check API request for user_id={current_user.id}")
+        logger.info("Web fact check completed")
         return {"fact_check_report": result}
-    except Exception as e:
-        logger.exception("web_fact_check error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+    except Exception as exc:
+        raise _public_ai_error("web_fact_check", exc)
 
 @router.post("/kiem-duyet-an-toan")
 async def compliance_screen(
     req: ComplianceScreenRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started compliance_screen API request for user_id={current_user.id}")
+    logger.info("Compliance screening started")
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.COMPLIANCE_SCREENER).format(text=req.text[:3000])
@@ -776,17 +753,16 @@ async def compliance_screen(
             max_tokens=2000,
             temperature=0.2,
         )
-        logger.info(f"Completed compliance_screen API request for user_id={current_user.id}")
+        logger.info("Compliance screening completed")
         return {"compliance_report": result}
-    except Exception as e:
-        logger.exception("compliance_screen error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+    except Exception as exc:
+        raise _public_ai_error("compliance_screen", exc)
 
 @router.post("/so-sanh-ngu-nghia")
 async def semantic_diff(
     req: SemanticDiffRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
-    logger.info(f"Started semantic_diff API request for user_id={current_user.id}")
+    logger.info("Semantic comparison started")
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.SEMANTIC_DIFF).format(text1=req.text1[:2000], text2=req.text2[:2000])
@@ -796,8 +772,7 @@ async def semantic_diff(
             max_tokens=2000,
             temperature=0.3,
         )
-        logger.info(f"Completed semantic_diff API request for user_id={current_user.id}")
+        logger.info("Semantic comparison completed")
         return {"diff_report": result}
-    except Exception as e:
-        logger.exception("semantic_diff error")
-        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố bất ngờ trong quá trình tổng hợp dữ liệu, vui lòng thử lại sau")
+    except Exception as exc:
+        raise _public_ai_error("semantic_diff", exc)

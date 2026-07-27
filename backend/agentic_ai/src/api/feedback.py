@@ -32,6 +32,6 @@ async def submit_feedback(
             "status": "success",
             "message": "Chân thành cảm ơn phản hồi đóng góp của bạn",
         }
-    except Exception as e:
+    except Exception:
         logger.exception("User feedback persistence error")
-        return {"status": "error", "message": f"Hệ thống không thể ghi nhận phản hồi vào lúc này, vui lòng thử lại sau {e}"}
+        return {"status": "error", "message": "Hệ thống không thể ghi nhận phản hồi vào lúc này, vui lòng thử lại sau"}

@@ -24,10 +24,10 @@ class GuardrailsEngine:
     def _get_redis(self):
         if self._redis is None:
             try:
-                import redis as redis_lib
+                import redis.asyncio as redis_lib
                 self._redis = redis_lib.from_url(settings.REDIS_URI, decode_responses=True)
-            except Exception as e:
-                logger.warning(f"Guardrails Redis connection unavailable: {e}")
+            except Exception:
+                logger.exception("Guardrails Redis client initialization failed")
         return self._redis
 
     async def async_inspect_input(self, prompt: str) -> Dict[str, Any]:
@@ -37,11 +37,11 @@ class GuardrailsEngine:
         redis_client = self._get_redis()
         if redis_client:
             try:
-                custom_rules = redis_client.smembers("security:guardrails:patterns")
+                custom_rules = await redis_client.smembers("security:guardrails:patterns")
                 lowered = prompt.lower()
                 for pattern in custom_rules:
                     if pattern and re.search(pattern, lowered):
-                        logger.warning(f"Guardrails dynamic rule matched: {pattern}")
+                        logger.warning("Guardrails dynamic rule matched")
                         return {
                             "is_safe": False,
                             "risk_score": 0.95,
@@ -49,8 +49,8 @@ class GuardrailsEngine:
                             "reason": f"Matched dynamic security rule: {pattern}",
                             "sanitized_text": prompt
                         }
-            except Exception as e:
-                logger.warning(f"Dynamic rule check failed: {e}")
+            except Exception:
+                logger.exception("Dynamic guardrail rule check failed")
 
         try:
             system_prompt = registry.get(PromptType.PROMPT_INJECTION_DETECTOR)
@@ -64,36 +64,19 @@ class GuardrailsEngine:
                 "reason": assessment.reason,
                 "sanitized_text": prompt
             }
-        except Exception as e:
-            logger.warning(f"AI Safety Classifier fallback triggered: {e}")
+        except Exception:
+            logger.exception("AI safety classifier failed")
             return {
-                "is_safe": True,
-                "risk_score": 0.1,
-                "threat_category": "none",
-                "reason": "AI safety check completed with fallback",
+                "is_safe": False,
+                "risk_score": 1.0,
+                "threat_category": "classifier_unavailable",
+                "reason": "Security classification unavailable",
                 "sanitized_text": prompt
             }
 
     def inspect_input(self, prompt: str) -> Dict[str, Any]:
         if not prompt or not prompt.strip():
             return {"is_safe": True, "risk_score": 0.0, "reason": "Empty input", "sanitized_text": ""}
-
-        redis_client = self._get_redis()
-        if redis_client:
-            try:
-                custom_rules = redis_client.smembers("security:guardrails:patterns")
-                lowered = prompt.lower()
-                for pattern in custom_rules:
-                    if pattern and re.search(pattern, lowered):
-                        return {
-                            "is_safe": False,
-                            "risk_score": 0.95,
-                            "threat_category": "dynamic_rule_violation",
-                            "reason": f"Matched dynamic security rule: {pattern}",
-                            "sanitized_text": prompt
-                        }
-            except Exception:
-                pass
 
         return {
             "is_safe": True,

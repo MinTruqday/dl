@@ -1,55 +1,112 @@
-import time
 import json
-from typing import Callable, Any
+import time
+from typing import Any, Callable
+
 from fastapi import HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
 from loguru import logger
 
-def mask_sensitive_data(data: Any) -> Any:
-    if isinstance(data, dict):
-        masked_data = {}
-        for k, v in data.items():
-            if any(s in k.lower() for s in ['password', 'token', 'secret', 'key', 'authorization']):
-                masked_data[k] = "***"
-            else:
-                masked_data[k] = mask_sensitive_data(v)
-        return masked_data
-    elif isinstance(data, list):
-        return [mask_sensitive_data(item) for item in data]
-    return data
+
+SENSITIVE_FIELD_MARKERS = frozenset(
+    {
+        "authorization",
+        "cookie",
+        "credential",
+        "key",
+        "password",
+        "secret",
+        "token",
+    }
+)
+
+
+def _safe_field_name(name: Any) -> str:
+    normalized = str(name).strip().lower()
+    if any(marker in normalized for marker in SENSITIVE_FIELD_MARKERS):
+        return "[sensitive]"
+    return normalized[:80]
+
+
+def summarize_payload(body: bytes) -> dict[str, Any]:
+    summary: dict[str, Any] = {"body_bytes": len(body)}
+    if not body:
+        summary["body_type"] = "empty"
+        return summary
+    try:
+        payload = json.loads(body)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        summary["body_type"] = "non_json"
+        return summary
+    if isinstance(payload, dict):
+        summary["body_type"] = "object"
+        summary["body_fields"] = sorted(
+            {_safe_field_name(key) for key in payload.keys()}
+        )[:30]
+    elif isinstance(payload, list):
+        summary["body_type"] = "array"
+        summary["body_items"] = len(payload)
+    else:
+        summary["body_type"] = type(payload).__name__
+    return summary
+
 
 class LoggingRoute(APIRoute):
     def get_route_handler(self) -> Callable:
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:
-            body = await request.body()
-            body_str = ""
-            if body:
-                try:
-                    payload = json.loads(body)
-                    masked_payload = mask_sensitive_data(payload)
-                    body_str = json.dumps(masked_payload, ensure_ascii=False)[:500]
-                except (UnicodeDecodeError, json.JSONDecodeError):
-                    body_str = body.decode('utf-8', errors='ignore')[:500]
-            
-            query = str(request.query_params)
-            logger.info(f"API Request Started for {request.method} {request.url.path} with Query {query} and Body {body_str}")
-            
-            start_time = time.time()
+            body_summary = summarize_payload(await request.body())
+            query_fields = sorted(
+                {_safe_field_name(key) for key in request.query_params.keys()}
+            )[:30]
+            logger.info(
+                "API request started method={} path={} query_fields={} body_summary={}",
+                request.method,
+                request.url.path,
+                query_fields,
+                body_summary,
+            )
+            started_at = time.monotonic()
             try:
                 response: Response = await original_route_handler(request)
-                process_time = time.time() - start_time
-                logger.info(f"API Request Completed for {request.method} {request.url.path} with Status {response.status_code} in {process_time:.3f}s")
-                return response
-            except (HTTPException, RequestValidationError):
-                process_time = time.time() - start_time
-                logger.warning(f"API Request Rejected for {request.method} {request.url.path} after {process_time:.3f}s")
+            except HTTPException as exc:
+                duration_ms = int((time.monotonic() - started_at) * 1000)
+                logger.warning(
+                    "API request rejected method={} path={} status={} duration_ms={}",
+                    request.method,
+                    request.url.path,
+                    exc.status_code,
+                    duration_ms,
+                )
+                raise
+            except RequestValidationError as exc:
+                duration_ms = int((time.monotonic() - started_at) * 1000)
+                logger.warning(
+                    "API request validation failed method={} path={} issues={} duration_ms={}",
+                    request.method,
+                    request.url.path,
+                    len(exc.errors()),
+                    duration_ms,
+                )
                 raise
             except Exception:
-                process_time = time.time() - start_time
-                logger.exception(f"Unexpected system error while processing API request {request.method} {request.url.path} after {process_time:.3f}s")
+                duration_ms = int((time.monotonic() - started_at) * 1000)
+                logger.exception(
+                    "API request failed method={} path={} duration_ms={}",
+                    request.method,
+                    request.url.path,
+                    duration_ms,
+                )
                 raise
+            duration_ms = int((time.monotonic() - started_at) * 1000)
+            logger.info(
+                "API request completed method={} path={} status={} duration_ms={}",
+                request.method,
+                request.url.path,
+                response.status_code,
+                duration_ms,
+            )
+            return response
 
         return custom_route_handler

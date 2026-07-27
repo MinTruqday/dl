@@ -15,7 +15,7 @@ class QueryOptimization(BaseModel):
     question: str = Field(description="<input_context>The optimal, search-engine-friendly query string stripped of conversational fluff.</input_context>")
 
 class RouteDecision(BaseModel):
-    reasoning: str = Field(description="<internal_thought>A short explanation (1-2 sentences) of why this specific route was chosen based on the user's intent.</internal_thought>")
+    reasoning: str = Field(description="<routing_logic>A concise route justification without private reasoning.</routing_logic>")
     route: Literal["action", "knowledge", "chat"] = Field(description="<routing_logic>Selected route. 'action': execute tools/modify state. 'knowledge': factual question needing RAG. 'chat': casual greeting or generic conversational filler.</routing_logic>")
     answer: str = Field(default="", description="<conditional_output>If route is 'chat', provide the direct response here. Otherwise, return an empty string.</conditional_output>")
 

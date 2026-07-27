@@ -80,13 +80,46 @@ async def main():
         algorithm="HS256",
     )
     reader_token = jwt.encode(
-        {"uid": "reader", "sub": "reader@example.com", "role": "reader"},
+        {
+            "uid": "reader",
+            "sub": "reader@example.com",
+            "role": "reader",
+            "sid": "agentic-integration-session",
+            "ai_tier": "BASIC",
+        },
         SECRET_KEY,
         algorithm="HS256",
     )
+    from src.core.infrastructure.redis import redis
+    await redis.sadd("user_sessions:reader", "agentic-integration-session")
     assert check_system_access(f"Bearer {admin_token}") is True
     assert check_system_access(reader_token) is False
     assert check_system_access("invalid") is False
+
+    status, premium_error = call(
+        "POST",
+        "/suy-luan/kiem-tra-ngu-phap",
+        {"text": "DOCLIB_PRIVATE_SENTINEL"},
+        internal=False,
+    )
+    assert status == 401, premium_error
+
+    request = urllib.request.Request(
+        "http://127.0.0.1:8000/suy-luan/kiem-tra-ngu-phap",
+        data=json.dumps({"text": "DOCLIB_PRIVATE_SENTINEL"}).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {reader_token}",
+        },
+        method="POST",
+    )
+    try:
+        urllib.request.urlopen(request, timeout=30)
+        raise AssertionError("Basic account unexpectedly accessed premium grammar check")
+    except urllib.error.HTTPError as error:
+        premium_error = json.loads(error.read())
+        assert error.code == 403, premium_error
+        assert premium_error["detail"] == "Tính năng này yêu cầu nâng cấp gói dịch vụ để sử dụng"
 
     drm_request = {
         "user_id": "agentic-drm-user",

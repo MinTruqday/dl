@@ -88,7 +88,7 @@ class OrchestrationHarness:
             logger.error("Paused to prevent system overload")
             yield {
                 "type": "error",
-                "message": "System overloaded, please retry",
+                "message": "Hệ thống đang quá tải, vui lòng thử lại sau",
             }
             return
 
@@ -109,30 +109,34 @@ class OrchestrationHarness:
             self._circuit_breaker.record_success()
             logger.info("Session completed without errors")
 
-        except asyncio.TimeoutError as e:
+        except asyncio.TimeoutError:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.exception("Execution timeout, session cancelled")
+            logger.warning(
+                "Session timed out session_id={} timeout_seconds={}",
+                session_id,
+                SESSION_HARD_TIMEOUT_SECONDS,
+            )
             yield {
                 "type": "error",
                 "message": "Quá thời gian xử lý yêu cầu",
             }
 
-        except asyncio.CancelledError as e:
+        except asyncio.CancelledError:
             self._close_session(session_id, "cancelled")
-            logger.exception("Session cancelled")
+            logger.warning("Session disconnected session_id={}", session_id)
             yield {
                 "type": "error",
                 "message": "Mất kết nối",
             }
 
-        except Exception as e:
+        except Exception:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
             logger.exception("Session orchestration error")
             yield {
                 "type": "error",
-                "message": f"Orchestration error, please retry {e}",
+                "message": "Hệ thống gặp lỗi khi điều phối yêu cầu, vui lòng thử lại sau",
             }
 
     def cancel_session(self, session_id: str):

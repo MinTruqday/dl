@@ -19,8 +19,7 @@ VALID_AGENTS = {
     "Knowledge": "Retrieves information from the local document library using semantic vector search",
     "Reasoning": "Performs deep logical analysis, reasoning, evaluation, and multi-step problem solving",
     "SwarmAgent": "Writes, reviews, and secures complex software code using a multi-agent team",
-    "MCTSAgent": "Solves complex logic problems by exploring multiple solution branches via Monte Carlo Tree Search",
-    "MCPAgent": "Interacts with external services and third-party software (Jira, GitHub, Slack) via Model Context Protocol"
+    "MCTSAgent": "Solves complex logic problems by exploring multiple solution branches via Monte Carlo Tree Search"
 }
 
 
@@ -94,6 +93,11 @@ class SemanticRouterValidator:
                 logger.warning(f"Invalid agent '{agent}' corrected to '{corrected}'")
                 node = {**node, "agent": corrected}
                 agent = corrected
+
+            if agent == "InterpreterAgent":
+                logger.warning("Interpreter execution unavailable, routing task to Reasoning")
+                node = {**node, "agent": "Reasoning"}
+                agent = "Reasoning"
                 
             if agent == "MCTSAgent":
                 complex_keywords = ["algorithm", "optimize", "complex", "performance", "tree", "graph", "dynamic programming"]
@@ -139,9 +143,9 @@ class RouteAgent:
         quick_responses = {
             "xin chào": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
             "chào": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
-            "hello": "Hello. How can I help you today?",
-            "hi": "Hello. How can I help you today?",
-            "hey": "Hello. How can I help you today?",
+            "hello": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
+            "hi": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
+            "hey": "Chào bạn. Tôi có thể giúp gì cho bạn hôm nay?",
         }
         if normalized in quick_responses:
             return {"route": "chat", "answer": quick_responses[normalized]}

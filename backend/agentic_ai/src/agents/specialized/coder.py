@@ -1,6 +1,4 @@
-import os
-import subprocess
-import tempfile
+import ast
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -28,29 +26,12 @@ class CoderAgent:
         self.llm = llm
 
     def _verify_code(self, code: str) -> str:
-        error_msg = ""
-        fd, path = tempfile.mkstemp(suffix=".py")
         try:
-            with os.fdopen(fd, 'w') as f:
-                f.write(code)
-            
-            result = subprocess.run(
-                ["python", path],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            if result.returncode != 0:
-                error_msg = result.stderr or result.stdout or "Unknown execution error"
-        except subprocess.TimeoutExpired:
-            error_msg = "Execution timed out after 5 seconds. Possible infinite loop."
-        except Exception as e:
-            error_msg = f"Sandbox verification failed: {str(e)}"
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
-                
-        return error_msg
+            ast.parse(code)
+            compile(code, "<generated-code>", "exec")
+            return ""
+        except (SyntaxError, ValueError, TypeError) as exc:
+            return f"Static code validation failed with {type(exc).__name__}"
 
     async def execute(self, state: SwarmState) -> SwarmState:
         logger.info("Coder execution started via LLM")

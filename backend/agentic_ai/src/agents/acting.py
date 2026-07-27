@@ -78,12 +78,15 @@ class ActingAgent:
                     res = await llm_with_tools.ainvoke(messages)
                 except Exception as e:
                     if _is_validation_error(e):
-                        logger.warning(f"LLM output validation error (attempt {attempt+1}): {e}")
+                        logger.warning(
+                            "Tool selection validation failed attempt={} error_type={}",
+                            attempt + 1,
+                            type(e).__name__,
+                        )
                         messages.append(HumanMessage(
                             content=(
-                                f"Your previous response failed validation: {e}. "
-                                "This often happens if you pass a JSON list instead of a JSON object for tool arguments. "
-                                "YOU MUST generate a valid JSON dictionary for the tool arguments."
+                                "The previous response failed schema validation. "
+                                "Return exactly one registered tool call with a JSON object for arguments."
                             )
                         ))
                         if is_last(attempt):
@@ -93,7 +96,11 @@ class ActingAgent:
 
                 invalid_calls = getattr(res, "invalid_tool_calls", [])
                 if invalid_calls:
-                    logger.warning(f"LLM produced invalid tool calls (attempt {attempt+1}): {invalid_calls}")
+                    logger.warning(
+                        "Tool selection produced invalid calls attempt={} count={}",
+                        attempt + 1,
+                        len(invalid_calls),
+                    )
                     messages.append(HumanMessage(
                         content=(
                             f"Your tool calls were invalid: {invalid_calls}. "
@@ -106,7 +113,11 @@ class ActingAgent:
                     continue
 
                 if not res.tool_calls:
-                    logger.warning(f"LLM failed to call a tool (attempt {attempt+1}). Response: {res.content}")
+                    logger.warning(
+                        "Tool selection returned no call attempt={} response_chars={}",
+                        attempt + 1,
+                        len(str(res.content)),
+                    )
                     messages.append(HumanMessage(
                         content="You did not call any tools. You MUST respond by invoking exactly ONE tool from the provided list. Do not respond with plain text."
                     ))
@@ -124,14 +135,19 @@ class ActingAgent:
                 if tool_name in _REQUIRES_APPROVAL_TOOLS and not auto_approve:
                     return "Thao tác này yêu cầu xác nhận ủy quyền trực tiếp từ bạn"
 
-                logger.info("Initializing utility")
+                logger.info("Tool execution started tool={}", tool_name)
                 selected_tool = self.tool_map[tool_name]
                 try:
                     tool_result = await selected_tool.ainvoke(
                         tool_params, config={"configurable": {"token": token, "user_id": user_id}}
                     )
+                    logger.info(
+                        "Tool execution completed tool={} output_chars={}",
+                        tool_name,
+                        len(str(tool_result)),
+                    )
                     return str(tool_result)
-                except Exception as e:
+                except Exception:
                     messages.append(res)
                     messages.append(ToolMessage(
                         content="The system encountered an error while executing the utility and requests a verification of the input data",
@@ -141,9 +157,9 @@ class ActingAgent:
                     if is_last(attempt):
                         return "Thao tác thực hiện không hoàn tất sau nhiều lần thử lại, vui lòng kiểm tra lại yêu cầu"
 
-        except Exception as e:
+        except Exception:
             logger.exception("Execution process interrupted")
-            return f"Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát {e}"
+            return "Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát"
 
 
 actor = ActingAgent()

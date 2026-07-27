@@ -234,7 +234,7 @@ async def retrieve_internet(state: AgentState):
 
 async def grade_documents(state: AgentState):
     question = state["question"]
-    documents = state.get("documents", [])
+    documents = list(state.get("documents", []))
     from src.core.registry import PromptType, registry
 
     prompt = PromptTemplate(
@@ -301,7 +301,7 @@ async def generate_direct(state: AgentState):
 
 async def generate(state: AgentState):
     question = state["question"]
-    documents = state.get("documents", [])
+    documents = list(state.get("documents", []))
     user_id = state.get("user_id")
     if not user_id:
         return {

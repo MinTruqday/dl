@@ -191,8 +191,9 @@ class EvaluationHarness:
 
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
-        except Exception as e:
-            return {"error": f"Lỗi khởi tạo máy khách đánh giá {e}"}
+        except Exception:
+            logger.exception("Evaluation client initialization failed")
+            return {"error": "Hệ thống không thể khởi tạo tiến trình đánh giá"}
 
         results = []
         for sample in self._dataset:

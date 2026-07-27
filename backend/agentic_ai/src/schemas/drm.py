@@ -21,7 +21,7 @@ class AESKeySession(BaseModel):
 
 class DRMPolicyOutput(BaseModel):
     decision: str = Field(description="<critical_instructions>MUST be one of: LEVEL_0, LEVEL_1, LEVEL_2, LEVEL_3, BLOCKED.</critical_instructions>")
-    reasoning: str = Field(description="<internal_thought>Technical justification for decision.</internal_thought>")
+    reasoning: str = Field(description="<decision_context>Concise technical justification for the policy decision.</decision_context>")
     watermark: WatermarkConfig = Field(default_factory=WatermarkConfig, description="<critical_instructions>Watermark configuration.</critical_instructions>")
     anti_exfiltration: AntiExfiltrationFlags = Field(default_factory=AntiExfiltrationFlags, description="<critical_instructions>Anti-exfiltration flags.</critical_instructions>")
     enable_aes_encryption: bool = Field(default=False, description="<metis_constraint>Enable AES-256-GCM container.</metis_constraint>")

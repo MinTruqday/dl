@@ -59,10 +59,10 @@ class AnalysisAgent:
             )
             return result.get(
                 "generation",
-                "The system could not extract any relevant information from the available documents",
+                "Hệ thống không tìm thấy thông tin phù hợp trong các tài liệu hiện có",
             )
-        except Exception as e:
+        except Exception:
             logger.exception("Knowledge base access error")
-            return f"Không thể kết nối đến máy chủ dữ liệu, vui lòng làm mới trang và thử lại {e}"
+            return "Không thể kết nối đến máy chủ dữ liệu, vui lòng làm mới trang và thử lại"
 
 researcher = AnalysisAgent()

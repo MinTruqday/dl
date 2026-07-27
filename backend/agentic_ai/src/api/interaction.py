@@ -16,6 +16,7 @@ from src.harness.orchestration import orchestration
 from src.harness.security import security
 from src.schemas.interaction import ChatRequest
 from src.core.dependency import CurrentUser, get_current_user
+from src.schemas.auth import Role, Tier
 from src.workflow.orchestration import supervisor
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tro-chuyen")
@@ -27,7 +28,7 @@ async def chat_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     req.user_id = str(current_user.id)
-    logger.info(f"Started Chat streaming process for user_id={req.user_id} with query length={len(req.query)}")
+    logger.info("Chat request started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     if token:
         req.token = token.replace("Bearer ", "")
@@ -144,7 +145,6 @@ async def _check_upload_quota(req: ChatRequest):
     try:
         from src.core.infrastructure.database import database
         user = await database.mongodb[settings.AGENTIC_AI_DB_NAME].users.find_one({"_id": req.user_id})
-        from src.schemas.auth import Role, Tier
         ai_tier = user.get("ai_tier", Tier.BASIC.value) if user else Tier.BASIC.value
         is_admin = user.get("role") == Role.ADMIN.value if user else False
         
@@ -202,7 +202,7 @@ async def stream_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     req.user_id = str(current_user.id)
-    logger.info(f"Started Server-Sent Events stream for user_id={req.user_id} with query length={len(req.query)}")
+    logger.info("Chat stream started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
 
@@ -353,9 +353,7 @@ async def stream_endpoint(
 
                         from src.agents.planning import planner
                         async for chunk in planner.stream_plan(req_dict):
-                            if chunk["type"] == "message":
-                                await heartbeat_queue.put({"type": "message", "chunk": chunk["chunk"]})
-                            elif chunk["type"] == "plan":
+                            if chunk["type"] == "plan":
                                 req_dict["plan"] = chunk["nodes"]
                                 await heartbeat_queue.put({"type": "plan", "steps": chunk["nodes"]})
 
@@ -363,9 +361,12 @@ async def stream_endpoint(
                             supervisor.execute_plan, req_dict, session_id
                         ):
                             await heartbeat_queue.put(event)
-                    except Exception as e:
+                    except Exception:
                         logger.exception("Error in drain_supervisor")
-                        await heartbeat_queue.put({"type": "error", "message": str(e)})
+                        await heartbeat_queue.put({
+                            "type": "error",
+                            "message": "Hệ thống gặp lỗi khi điều phối yêu cầu, vui lòng thử lại sau",
+                        })
                     finally:
                         await heartbeat_queue.put({"type": "__done__"})
 
@@ -384,7 +385,15 @@ async def stream_endpoint(
                             node_msg = event.get('node', '')
                             yield f"event: status\ndata: {json.dumps({'node': node_msg})}\n\n"
                         elif event_type == "plan":
-                            yield f"event: plan\ndata: {json.dumps({'steps': event['steps']})}\n\n"
+                            public_steps = [
+                                {
+                                    "id": str(step.get("id", index + 1)),
+                                    "label": f"Bước {index + 1}",
+                                    "status": "pending",
+                                }
+                                for index, step in enumerate(event.get("steps", []))
+                            ]
+                            yield f"event: plan\ndata: {json.dumps({'steps': public_steps})}\n\n"
                         elif event_type == "tool_result":
                             agentops.record_tool_call(
                                 session_id,
@@ -393,14 +402,20 @@ async def stream_endpoint(
                                 success=True,
                             )
                             agent_name = event.get('agent', 'unknown')
-                            content = event.get('content', 'Completed')
-                            chunk_size = 50
-                            for i in range(0, len(content), chunk_size):
-                                chunk_str = content[i:i+chunk_size]
-                                yield f"event: tool_stream\ndata: {json.dumps({'agent': agent_name, 'chunk': chunk_str})}\n\n"
+                            public_agent_names = {
+                                "interpreter": "Xử lý tính toán",
+                                "search_engine": "Tìm kiếm thông tin",
+                                "action": "Thực hiện thao tác",
+                                "knowledge": "Tra cứu tài liệu",
+                                "reasoning": "Phân tích yêu cầu",
+                                "swarm": "Kiểm tra mã nguồn",
+                                "mcts": "Đánh giá phương án",
+                            }
+                            yield f"event: tool\ndata: {json.dumps({'agent': public_agent_names.get(agent_name, 'Xử lý yêu cầu'), 'status': 'completed'})}\n\n"
                         elif event_type == "message":
-                            final_answer += event["chunk"]
-                            yield f"event: message\ndata: {json.dumps({'chunk': event['chunk']})}\n\n"
+                            message_chunk = str(event.get("chunk", ""))
+                            final_answer += message_chunk
+                            yield f"event: message\ndata: {json.dumps({'chunk': message_chunk})}\n\n"
                         elif event_type == "error":
                             yield f"event: message\ndata: {json.dumps({'chunk': event['message']})}\n\n"
                 finally:
@@ -505,4 +520,3 @@ async def clear_user_instructions(
         "status": "success",
         "message": "Xóa toàn bộ chỉ dẫn cá nhân thành công",
     }
-

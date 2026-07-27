@@ -42,8 +42,8 @@ class SecurityHarness:
             logger.info("Presidio security engines initialized successfully")
         except ImportError:
             logger.warning("Presidio dependencies unavailable, using deterministic PII scanning")
-        except Exception as e:
-            logger.error(f"Presidio initialization failed, using deterministic PII scanning: {e}")
+        except Exception:
+            logger.exception("Presidio initialization failed, using deterministic PII scanning")
 
     async def _adetect_security_issues(
         self, text: str, allow_ai_review: bool = True
@@ -89,13 +89,13 @@ class SecurityHarness:
 
         if self.analyzer and self.anonymizer:
             try:
-                results = self.analyzer.analyze(text=text, entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"], language='en')
+                results = self.analyzer.analyze(text=sanitized, entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"], language='en')
                 if results:
                     violations.append("pii_detected")
-                    anonymized_result = self.anonymizer.anonymize(text=text, analyzer_results=results)
+                    anonymized_result = self.anonymizer.anonymize(text=sanitized, analyzer_results=results)
                     sanitized = anonymized_result.text
-            except Exception as e:
-                logger.error(f"Presidio scan error: {e}")
+            except Exception:
+                logger.exception("Presidio scan failed")
 
         review_markers = (
             "jailbreak",
@@ -109,7 +109,11 @@ class SecurityHarness:
             or self._anomaly_score(text) > 0.18
             or any(marker in text.lower() for marker in review_markers)
         )
-        if not allow_ai_review or not requires_ai_review:
+        if (
+            not allow_ai_review
+            or not requires_ai_review
+            or any("credential_leak" in violation for violation in violations)
+        ):
             return sanitized, list(dict.fromkeys(violations))
 
         try:
@@ -117,7 +121,7 @@ class SecurityHarness:
             llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
             structured_llm = llm.with_structured_output(SecurityEvaluation)
             
-            prompt = registry.get(PromptType.SECURITY_SCAN).format(text=text)
+            prompt = registry.get(PromptType.SECURITY_SCAN).format(text=sanitized)
             
             result = await structured_llm.ainvoke([HumanMessage(content=prompt)])
             if result.is_malicious:
@@ -128,8 +132,9 @@ class SecurityHarness:
                     violations.append("pii_detected")
                     if result.sanitized_text:
                         sanitized = result.sanitized_text
-        except Exception as e:
+        except Exception:
             logger.exception("AI security tracing failed")
+            violations.append("security_classifier_unavailable")
             
         return sanitized, violations
 
@@ -158,7 +163,11 @@ class SecurityHarness:
         injection_score = min(len(injection_violations) * 0.4, 1.0)
         risk_score = min(injection_score + anomaly * 0.2, 1.0)
 
-        if injection_violations or credential_violations:
+        classifier_failures = [
+            v for v in violations if "security_classifier_unavailable" in v
+        ]
+
+        if injection_violations or credential_violations or classifier_failures:
             logger.warning("Malicious command or credential leak blocked successfully")
             return ScanResult(
                 passed=False,

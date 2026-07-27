@@ -3,6 +3,7 @@ from typing import Optional
 import httpx
 import jwt
 from loguru import logger
+from urllib.parse import urlsplit
 from src.core.infrastructure.configuration import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL
@@ -29,18 +30,63 @@ async def make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
 
     max_retries = 3 if method.upper() == "GET" else 1
     client = get_client()
+    parsed_url = urlsplit(url)
+    target = f"{parsed_url.hostname or 'unknown'}{parsed_url.path}"
+    logger.info(
+        "Internal API request started method={} target={} max_attempts={}",
+        method.upper(),
+        target,
+        max_retries,
+    )
     for attempt in range(max_retries):
+        started_at = asyncio.get_running_loop().time()
         try:
             response = await client.request(method, url, **kwargs)
             if response.status_code not in [429, 500, 502, 503, 504]:
+                logger.info(
+                    "Internal API request completed method={} target={} status={} attempt={} duration_ms={}",
+                    method.upper(),
+                    target,
+                    response.status_code,
+                    attempt + 1,
+                    int((asyncio.get_running_loop().time() - started_at) * 1000),
+                )
                 return response
             if attempt == max_retries - 1:
                 response.raise_for_status()
-        except Exception as e:
+            logger.warning(
+                "Internal API retry scheduled method={} target={} status={} attempt={}",
+                method.upper(),
+                target,
+                response.status_code,
+                attempt + 1,
+            )
+        except (httpx.TimeoutException, httpx.NetworkError) as exc:
+            logger.warning(
+                "Internal API transient failure method={} target={} attempt={} error_type={}",
+                method.upper(),
+                target,
+                attempt + 1,
+                type(exc).__name__,
+            )
             if attempt == max_retries - 1:
-                raise e
+                logger.exception(
+                    "Internal API request exhausted retries method={} target={} attempts={}",
+                    method.upper(),
+                    target,
+                    max_retries,
+                )
+                raise
+        except Exception:
+            logger.exception(
+                "Internal API request failed method={} target={} attempt={}",
+                method.upper(),
+                target,
+                attempt + 1,
+            )
+            raise
         await asyncio.sleep(2**attempt)
-    return response
+    raise RuntimeError("Internal API request ended without a response")
 
 def check_system_access(token: str) -> bool:
     try:

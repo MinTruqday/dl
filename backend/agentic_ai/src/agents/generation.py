@@ -58,8 +58,8 @@ class GenerationAgent:
                 else:
                     raise
 
-        except Exception as e:
+        except Exception:
             logger.exception("Error generating response content")
-            yield f"Hệ thống đã gặp lỗi bất ngờ trong quá trình tạo phản hồi, vui lòng thử lại sau {e}"
+            yield "Hệ thống đã gặp lỗi bất ngờ trong quá trình tạo phản hồi, vui lòng thử lại sau"
 
 response_generator = GenerationAgent()

@@ -108,3 +108,4 @@ class ActingState(TypedDict):
     start_time: float
     artifacts: Dict[str, Any]
     dynamic_injections: List[Any]
+    results_trimmed: bool

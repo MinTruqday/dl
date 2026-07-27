@@ -38,12 +38,11 @@ class PlanAgent:
         self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
         self._redis = None
         try:
-            import redis as redis_lib
+            import redis.asyncio as redis_lib
             self._redis = redis_lib.from_url(settings.REDIS_URI, decode_responses=True)
-            self._redis.ping()
-        except Exception as e:
+        except Exception:
             self._redis = None
-            logger.warning(f"Planner Redis connection unavailable, caching disabled: {e}")
+            logger.exception("Planner Redis client initialization failed")
 
     @with_retry(max_retries=3, base_wait=2, max_wait=10)
     async def _invoke_llm(self, messages):
@@ -88,35 +87,14 @@ class PlanAgent:
                 HumanMessage(content=prompt),
             ]
 
-            accumulated_json = ""
-            think_ended = False
-
             try:
-                async for chunk in self.llm.astream(messages):
-                    if not chunk.content:
-                        continue
-                    content = chunk.content
-
-                    if think_ended:
-                        accumulated_json += content
-                    else:
-                        if "</think>" in content or "```json" in content:
-                            think_ended = True
-                            split_str = "</think>" if "</think>" in content else "```json"
-                            parts = content.split(split_str)
-                            if parts[0]:
-                                yield {"type": "message", "chunk": parts[0] + ("</think>\n" if split_str == "</think>" else "")}
-                            if len(parts) > 1:
-                                accumulated_json += ("```json" if split_str == "```json" else "") + parts[1]
-                        else:
-                            yield {"type": "message", "chunk": content}
-            except RuntimeError as e:
-                if "StopIteration" in str(e):
-                    logger.warning("Stream ended unexpectedly with StopIteration")
-                else:
-                    logger.exception("Runtime error during LLM stream")
+                response = await self._invoke_llm(messages)
+                accumulated_json = str(response.content)
+                if "</think>" in accumulated_json:
+                    accumulated_json = accumulated_json.split("</think>", 1)[1]
             except Exception:
-                logger.exception("Unexpected error during LLM stream")
+                logger.exception("Plan model invocation failed")
+                accumulated_json = ""
 
             if not accumulated_json.strip():
                 parsed_result = {"steps": []}
@@ -141,17 +119,17 @@ class PlanAgent:
                 valid_nodes = [
                     {
                         "id": "fallback_1",
-                        "agent": "Knowledge",
-                        "task": "Inform user request exceeds capabilities",
+                        "agent": "Reasoning",
+                        "task": "Provide a safe Vietnamese response without unsupported claims",
                         "dependencies": []
                     }
                 ]
 
             yield {"type": "plan", "nodes": valid_nodes}
 
-        except Exception as e:
+        except Exception:
             logger.exception("Plan generation error")
-            yield {"type": "plan", "nodes": [{"id": "fallback", "agent": "Knowledge", "task": f"Inform user about analysis failure {e}", "dependencies": []}]}
+            yield {"type": "plan", "nodes": [{"id": "fallback", "agent": "Knowledge", "task": "Provide a safe Vietnamese failure response", "dependencies": []}]}
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         import hashlib
@@ -165,11 +143,22 @@ class PlanAgent:
             return nodes
 
         query = req_data.get("query", "")
-        cache_key = f"plan:{hashlib.sha256(query.encode()).hexdigest()}"
+        cache_scope = _json.dumps(
+            {
+                "user_id": req_data.get("user_id", "guest"),
+                "query": query,
+                "history": req_data.get("conversation_history", []),
+                "context": req_data.get("context", ""),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            default=str,
+        )
+        cache_key = f"plan:{hashlib.sha256(cache_scope.encode()).hexdigest()}"
 
         if self._redis:
             try:
-                cached = self._redis.get(cache_key)
+                cached = await self._redis.get(cache_key)
                 if cached:
                     logger.info("Planner cache hit for query")
                     return _json.loads(cached)
@@ -185,7 +174,7 @@ class PlanAgent:
 
         if nodes and self._redis:
             try:
-                self._redis.setex(cache_key, 3600, _json.dumps(nodes))
+                await self._redis.setex(cache_key, 3600, _json.dumps(nodes))
             except Exception:
                 logger.exception("Planner cache write failed")
 

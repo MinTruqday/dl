@@ -1,4 +1,3 @@
-from src.tools.workspace_search import glob_search, grep_search
 from src.tools.editing import (
     read_document_section,
     edit_document_text,
@@ -21,14 +20,11 @@ from src.tools.document import (
     read_document,
     recommend_documents,
 )
-from src.tools.web_scraper import playwright_scrape
 from src.tools.mindmap import generate_mindmap
 from src.tools.instructions import manage_user_instructions
 from src.workflow.reduction import agent_summarize_long_document
 
 tools = [
-    glob_search,
-    grep_search,
     agent_summarize_long_document,
     get_user_balance,
     get_transaction_history,
@@ -48,8 +44,6 @@ tools = [
     edit_document_text,
     edit_document_block,
     propose_document_edits,
-    playwright_scrape,
 ]
-
 
 
