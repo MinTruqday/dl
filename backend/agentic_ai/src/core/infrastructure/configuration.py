@@ -53,25 +53,11 @@ class Settings(BaseModel):
     DRM_URL: str = get_service_url("DRM")
     WEBSOCKET_URL: str = get_service_url("WEBSOCKET")
     AGENTIC_AI_DB_NAME: str = os.getenv("AGENTIC_AI_DB_NAME", "doclib_agentic_ai")
-    AGENT_FAILURE_RATE_THRESHOLD: float = float(
-        os.getenv("AGENT_FAILURE_RATE_THRESHOLD", "0.15")
-    )
-    AGENT_TOOL_FAILURE_THRESHOLD: int = int(
-        os.getenv("AGENT_TOOL_FAILURE_THRESHOLD", "3")
-    )
-    AGENT_SECURITY_VIOLATION_THRESHOLD: int = int(
-        os.getenv("AGENT_SECURITY_VIOLATION_THRESHOLD", "5")
-    )
-    AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(
-        os.getenv("AGENT_SLOW_DURATION_MS_THRESHOLD", "30000")
-    )
-    AGENT_ROUTE_CONFIDENCE_THRESHOLD: float = float(
-        os.getenv("AGENT_ROUTE_CONFIDENCE_THRESHOLD", "0.55")
-    )
-    AGENT_FILE_ROOT: str = os.getenv(
-        "AGENT_FILE_ROOT",
-        "/tmp/doclib_workspace",
-    )
+    AGENT_FAILURE_RATE_THRESHOLD: float = float(os.getenv("AGENT_FAILURE_RATE_THRESHOLD", "0.15"))
+    AGENT_TOOL_FAILURE_THRESHOLD: int = int(os.getenv("AGENT_TOOL_FAILURE_THRESHOLD", "3"))
+    AGENT_SECURITY_VIOLATION_THRESHOLD: int = int(os.getenv("AGENT_SECURITY_VIOLATION_THRESHOLD", "5"))
+    AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(os.getenv("AGENT_SLOW_DURATION_MS_THRESHOLD", "30000"))
+    AGENT_ROUTE_CONFIDENCE_THRESHOLD: float = float(os.getenv("AGENT_ROUTE_CONFIDENCE_THRESHOLD", "0.55"))
     FINETUNE_MODELS_DIR: str = os.getenv("FINETUNE_MODELS_DIR", "/tmp/doclib_finetune/models")
     FINETUNE_ADAPTERS_DIR: str = os.getenv("FINETUNE_ADAPTERS_DIR", "/tmp/doclib_finetune/adapters")
     FINETUNE_GGUF_DIR: str = os.getenv("FINETUNE_GGUF_DIR", "/tmp/doclib_finetune/gguf")

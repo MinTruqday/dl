@@ -25,6 +25,9 @@ jobs:
       - name: Check source policy
         run: python scripts/source_policy.py
 
+      - name: Audit compilation components
+        run: python scripts/audit_compilation_components.py
+
   lint-and-check:
     runs-on: ubuntu-latest
     strategy:

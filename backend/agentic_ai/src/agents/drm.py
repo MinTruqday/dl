@@ -34,11 +34,6 @@ async def evaluate_drm_policy(
     device_fingerprint: Optional[str] = None,
     email: str = ""
 ) -> Dict[str, Any]:
-    """
-    Evaluates DRM Policy using Hybrid Architecture:
-    1. Fast 0-Token Deterministic Enforcement (< 2ms).
-    2. AI LLM Escalator ONLY on ambiguous high-risk incidents.
-    """
     cache_key = f"drm_policy:{document_id}:{user_id}"
     try:
         cached_result = await redis.get(cache_key)
@@ -74,7 +69,7 @@ async def evaluate_drm_policy(
         else:
             final_dict = fast_result
     except Exception as e:
-        logger.warning("AI Escalation fallback")
+        logger.warning(f"AI Escalation fallback: {e}")
         final_dict = fast_result
 
     try:

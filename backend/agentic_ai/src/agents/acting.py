@@ -1,11 +1,5 @@
-import asyncio
-import json
-
-import httpx
-from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from loguru import logger
-from pydantic import ValidationError
 from src.core.registry import PromptType, registry
 from src.agents.planning import llm
 from src.tools import tools
@@ -22,27 +16,15 @@ _REQUIRES_APPROVAL_TOOLS = frozenset({
     "redeem_coupon",
 })
 
-
 def _is_validation_error(exc: Exception) -> bool:
-    return isinstance(
-        exc,
-        (
-            ValidationError,
-            OutputParserException,
-            json.JSONDecodeError,
-            TypeError,
-            ValueError,
-        ),
+    return (
+        "validation error" in str(exc).lower()
+        or "validation" in str(type(exc)).lower()
     )
 
-
-_TRANSIENT_TOOL_ERRORS = (
-    asyncio.TimeoutError,
-    TimeoutError,
-    httpx.TimeoutException,
-    httpx.NetworkError,
-)
-
+def _is_transient_error(exc: Exception) -> bool:
+    s = str(exc)
+    return any(code in s for code in ("504", "503", "500")) or "timeout" in s.lower()
 
 class ActingAgent:
     """
@@ -75,7 +57,7 @@ class ActingAgent:
         self, action: str, params: dict, user_id: str, token: str = None, auto_approve: bool = False
     ) -> str:
         if not token and action != "public_query":
-            return json.dumps({"status": "authentication_required"})
+            return "Bạn cần phải xác thực danh tính để tiếp tục thực hiện thao tác này"
 
         system_prompt = registry.get(PromptType.TOOL_DISPATCHER)
 
@@ -105,7 +87,7 @@ class ActingAgent:
                             )
                         ))
                         if is_last(attempt):
-                            return json.dumps({"status": "tool_selection_failed"})
+                            return "Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát"
                         continue
                     raise
 
@@ -124,7 +106,7 @@ class ActingAgent:
                         )
                     ))
                     if is_last(attempt):
-                        return json.dumps({"status": "tool_selection_failed"})
+                        return "Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát"
                     continue
 
                 if not res.tool_calls:
@@ -137,7 +119,7 @@ class ActingAgent:
                         content="You did not call any tools. You MUST respond by invoking exactly ONE tool from the provided list. Do not respond with plain text."
                     ))
                     if is_last(attempt):
-                        return json.dumps({"status": "tool_not_selected"})
+                        return "Hệ thống không tìm thấy công cụ phù hợp để xử lý yêu cầu của bạn"
                     continue
 
                 tool_call = res.tool_calls[0]
@@ -145,13 +127,10 @@ class ActingAgent:
                 tool_params = tool_call["args"]
 
                 if tool_name not in self.tool_map:
-                    return json.dumps({"status": "tool_unavailable"})
+                    return "Công cụ bạn yêu cầu hiện không khả dụng hoặc không tồn tại trên hệ thống"
 
                 if tool_name in _REQUIRES_APPROVAL_TOOLS and not auto_approve:
-                    return json.dumps({
-                        "status": "approval_required",
-                        "tool": tool_name,
-                    })
+                    return "Thao tác này yêu cầu xác nhận ủy quyền trực tiếp từ bạn"
 
                 logger.info("Tool execution started tool={}", tool_name)
                 selected_tool = self.tool_map[tool_name]
@@ -165,30 +144,18 @@ class ActingAgent:
                         len(str(tool_result)),
                     )
                     return str(tool_result)
-                except _TRANSIENT_TOOL_ERRORS:
+                except Exception:
                     messages.append(res)
                     messages.append(ToolMessage(
-                        content=json.dumps({"status": "transient_tool_failure"}),
+                        content="The system encountered an error while executing the utility and requests a verification of the input data",
                         tool_call_id=tool_call["id"],
                     ))
-                    logger.exception("Transient tool execution error")
+                    logger.exception("Data processing issue encountered, system is automatically retrying")
                     if is_last(attempt):
-                        return json.dumps({
-                            "status": "tool_execution_failed",
-                            "tool": tool_name,
-                        })
-                except Exception:
-                    logger.exception("Non-transient tool execution error")
-                    return json.dumps(
-                        {
-                            "status": "tool_execution_failed",
-                            "tool": tool_name,
-                        }
-                    )
+                        return "Thao tác thực hiện không hoàn tất sau nhiều lần thử lại, vui lòng kiểm tra lại yêu cầu"
 
         except Exception:
             logger.exception("Execution process interrupted")
-            return json.dumps({"status": "action_execution_failed"})
-
+            return "Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát"
 
 actor = ActingAgent()
