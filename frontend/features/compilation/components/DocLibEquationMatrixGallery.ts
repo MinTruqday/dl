@@ -5,7 +5,7 @@ export default class DocLibEquationMatrixGallery implements BlockTool {
     id: "DocLibEquationMatrixGallery",
     title: "DocLib EquationMatrixGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bded5255613d011f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,20 18,4 16,14 5,18 18,5 11,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

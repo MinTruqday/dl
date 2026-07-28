@@ -5,7 +5,7 @@ export default class DocLibDraftView implements BlockTool {
     id: "DocLibDraftView",
     title: "DocLib DraftView",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a89edf06bab6d1b3"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 6,10 20,16 9,13 7,12 15,8"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

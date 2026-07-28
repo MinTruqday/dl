@@ -5,7 +5,7 @@ export default class DocLibBordersAndShading implements BlockTool {
     id: "DocLibBordersAndShading",
     title: "DocLib BordersAndShading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="76a2043d59b30828"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,13 8,14 8,13 12,10 17,6 4,11"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

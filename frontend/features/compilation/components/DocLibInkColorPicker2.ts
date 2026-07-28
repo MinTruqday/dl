@@ -5,7 +5,7 @@ export default class DocLibInkColorPicker2 implements BlockTool {
     id: "DocLibInkColorPicker2",
     title: "DocLib InkColorPicker2",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d26f2b977fe82bc8"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,13 13,19 12,15 13,17 7,8 16,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

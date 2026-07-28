@@ -5,7 +5,7 @@ export default class DocLibShadingColorPicker implements BlockTool {
     id: "DocLibShadingColorPicker",
     title: "DocLib ShadingColorPicker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="81b565e690408fe1"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,15 20,13 12,17 11,8 14,17 19,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

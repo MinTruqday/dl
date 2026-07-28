@@ -5,7 +5,7 @@ export default class DocLibReviewFilterByToday implements BlockTool {
     id: "DocLibReviewFilterByToday",
     title: "DocLib ReviewFilterByToday",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="08dd0151420b0554"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,4 5,17 19,15 9,20 19,15 8,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

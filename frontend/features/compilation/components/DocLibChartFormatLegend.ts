@@ -5,7 +5,7 @@ export default class DocLibChartFormatLegend implements BlockTool {
     id: "DocLibChartFormatLegend",
     title: "DocLib ChartFormatLegend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d80f502652b72474"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,19 16,8 18,17 6,18 18,12 20,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

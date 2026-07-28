@@ -5,7 +5,7 @@ export default class DocLibLineFocusThreeLines implements BlockTool {
     id: "DocLibLineFocusThreeLines",
     title: "DocLib LineFocusThreeLines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92a6ce7f5c684a96"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,17 6,12 11,6 10,18 18,17 5,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

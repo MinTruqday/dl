@@ -5,7 +5,7 @@ export default class DocLibRepaginate implements BlockTool {
     id: "DocLibRepaginate",
     title: "DocLib Repaginate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="82b6a9636cfedf02"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,16 20,18 10,20 6,6 20,9 15,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

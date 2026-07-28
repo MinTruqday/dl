@@ -5,7 +5,7 @@ export default class DocLibBorderInsideHorizontal implements BlockTool {
     id: "DocLibBorderInsideHorizontal",
     title: "DocLib BorderInsideHorizontal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="42590d80861d6515"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,8 17,13 19,16 20,8 8,20 20,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

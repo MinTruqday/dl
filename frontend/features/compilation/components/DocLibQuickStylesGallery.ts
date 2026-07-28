@@ -5,7 +5,7 @@ export default class DocLibQuickStylesGallery implements BlockTool {
     id: "DocLibQuickStylesGallery",
     title: "DocLib QuickStylesGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="efb6ad6ed845e6ae"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,16 7,12 16,5 13,8 8,7 11,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

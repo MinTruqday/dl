@@ -5,7 +5,7 @@ export default class DocLibMakeSegmentCurved implements BlockTool {
     id: "DocLibMakeSegmentCurved",
     title: "DocLib MakeSegmentCurved",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1353d7f28670fefc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,19 15,8 19,14 20,18 9,5 11,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

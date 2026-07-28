@@ -5,7 +5,7 @@ export default class DocLibReviewSendForReview implements BlockTool {
     id: "DocLibReviewSendForReview",
     title: "DocLib ReviewSendForReview",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d780ea6f258f42eb"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,13 17,13 7,11 19,18 9,18 11,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

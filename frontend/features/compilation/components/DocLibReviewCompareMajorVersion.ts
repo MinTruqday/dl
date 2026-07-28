@@ -5,7 +5,7 @@ export default class DocLibReviewCompareMajorVersion implements BlockTool {
     id: "DocLibReviewCompareMajorVersion",
     title: "DocLib ReviewCompareMajorVersion",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cf413d5e511835d1"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,18 14,13 17,11 6,9 15,4 10,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

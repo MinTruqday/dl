@@ -5,7 +5,7 @@ export default class DocLibTableCellPrevious implements BlockTool {
     id: "DocLibTableCellPrevious",
     title: "DocLib TableCellPrevious",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c69d90dd7753166"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,7 17,17 15,19 19,4 5,17 15,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

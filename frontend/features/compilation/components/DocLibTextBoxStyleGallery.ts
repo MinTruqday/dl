@@ -5,7 +5,7 @@ export default class DocLibTextBoxStyleGallery implements BlockTool {
     id: "DocLibTextBoxStyleGallery",
     title: "DocLib TextBoxStyleGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46d8f2bde68f83f4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,16 8,6 13,11 16,10 16,17 5,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

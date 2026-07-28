@@ -5,7 +5,7 @@ export default class DocLibDefineNewBullet implements BlockTool {
     id: "DocLibDefineNewBullet",
     title: "DocLib DefineNewBullet",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12bca374273f1abb"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,5 14,18 9,16 13,4 12,10 7,6"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

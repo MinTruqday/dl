@@ -5,7 +5,7 @@ export default class DocLibMailMergeCreateHeaderSource implements BlockTool {
     id: "DocLibMailMergeCreateHeaderSource",
     title: "DocLib MailMergeCreateHeaderSource",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="304400e9669e6df5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,4 4,16 4,9 11,11 8,7 7,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

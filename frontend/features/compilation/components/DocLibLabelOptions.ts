@@ -5,7 +5,7 @@ export default class DocLibLabelOptions implements BlockTool {
     id: "DocLibLabelOptions",
     title: "DocLib LabelOptions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="830f403c4ff8986e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,19 17,13 15,14 20,12 13,5 11,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

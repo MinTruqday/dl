@@ -5,7 +5,7 @@ export default class DocLibChartFormatAxisAndSelect implements BlockTool {
     id: "DocLibChartFormatAxisAndSelect",
     title: "DocLib ChartFormatAxisAndSelect",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eba71409b351f6ab"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,18 7,13 13,17 12,5 7,7 15,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibMacroPlay implements BlockTool {
     id: "DocLibMacroPlay",
     title: "DocLib MacroPlay",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5ec737e8bc818ead"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,16 8,15 5,14 10,7 4,15 18,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

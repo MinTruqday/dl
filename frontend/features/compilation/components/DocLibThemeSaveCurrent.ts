@@ -5,7 +5,7 @@ export default class DocLibThemeSaveCurrent implements BlockTool {
     id: "DocLibThemeSaveCurrent",
     title: "DocLib ThemeSaveCurrent",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bfc19f53d0c20882"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,10 10,19 8,11 12,15 11,5 9,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

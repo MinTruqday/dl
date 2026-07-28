@@ -5,7 +5,7 @@ export default class DocLibOpenOptionsLanguage implements BlockTool {
     id: "DocLibOpenOptionsLanguage",
     title: "DocLib OpenOptionsLanguage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0c65e4ee99c19980"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,20 11,4 4,10 4,13 10,19 6,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

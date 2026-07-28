@@ -12,6 +12,14 @@ COMPONENTS = ROOT / "frontend" / "features" / "compilation" / "components"
 EDITOR = COMPONENTS / "StandardEditor.tsx"
 CATALOG = COMPONENTS / "word-command-catalog.ts"
 MANIFEST = COMPONENTS / "word-feature-manifest.json"
+BACKEND_MANIFEST = (
+    ROOT
+    / "backend"
+    / "compilation"
+    / "src"
+    / "resources"
+    / "word-feature-manifest.json"
+)
 WORD_SOURCE = "https://github.com/OfficeDev/office-fluent-ui-command-identifiers/blob/master/Microsoft%20365/Current%20Channel/wordcontrols.xlsx"
 INTERACTIVE_TYPES = {
     "button",
@@ -192,16 +200,35 @@ def title_for(name):
     return "DocLib " + name
 
 
-def feature_record(name, row, origin):
+def feature_record(name, row, origin, tool_key=None, mode=None):
+    if origin == "microsoft-word":
+        location = " ".join(
+            value
+            for value in (
+                row.get("Tab", ""),
+                row.get("Group/Context Menu Name", ""),
+            )
+            if value
+        )
+        description = (
+            f"DocLib feature mapped to Microsoft Word {row.get('Control Type', 'control')} {location}"
+        ).strip()
+    elif origin == "word-compatible":
+        description = "DocLib editing feature"
+    else:
+        description = "DocLib EditorJS feature"
     return {
         "id": "DocLib" + name,
         "title": title_for(name),
         "icon": icon_for("DocLib" + name),
-        "origin": origin,
+        "product": "doclib",
+        "description": description,
         "microsoftControlId": name if origin == "microsoft-word" else None,
         "controlType": row.get("Control Type") if row else None,
         "tab": row.get("Tab") if row else None,
         "group": row.get("Group/Context Menu Name") if row else None,
+        "toolKey": tool_key,
+        "mode": mode,
         "source": WORD_SOURCE if origin == "microsoft-word" else None,
     }
 
@@ -217,7 +244,7 @@ def update_existing_file(path, record):
             f'    id: "{record["id"]}",\n'
             f'    title: "{record["title"]}",\n'
             f"    icon: '{record['icon']}',\n"
-            f'    origin: "{record["origin"]}",\n'
+            '    product: "doclib",\n'
             "  } as const;\n"
         )
         source = (
@@ -225,6 +252,11 @@ def update_existing_file(path, record):
             + metadata
             + source[class_match.end():]
         )
+    source = re.sub(
+        r'    origin: "(?:microsoft-word|word-compatible|doclib-native)",',
+        '    product: "doclib",',
+        source,
+    )
     source = re.sub(
         r"<svg\b.*?</svg>",
         record["icon"],
@@ -267,7 +299,7 @@ export default class {identifier} implements BlockTool {{
     id: "{identifier}",
     title: "{title}",
     icon: '{icon}',
-    origin: "microsoft-word",
+    product: "doclib",
   }} as const;
 
   static get toolbox() {{
@@ -433,11 +465,34 @@ def main():
             origin = "word-compatible"
         else:
             origin = "doclib-native"
-        record = feature_record(name, row, origin)
+        feature_source = (
+            COMPONENTS / f"{class_name}.ts"
+        ).read_text(encoding="utf-8")
+        mode_match = re.search(
+            r'readonly mode = "([^"]+)"',
+            feature_source,
+        )
+        tool_key = None
+        if mode_match and class_name in commands:
+            mode = mode_match.group(1)
+            tool_key = mode[:1].lower() + mode[1:]
+        record = feature_record(
+            name,
+            row,
+            origin,
+            tool_key,
+            mode_match.group(1) if mode_match else None,
+        )
         update_existing_file(COMPONENTS / f"{class_name}.ts", record)
         records.append(record)
     for name, row in selected:
-        record = feature_record(name, row, "microsoft-word")
+        record = feature_record(
+            name,
+            row,
+            "microsoft-word",
+            name[:1].lower() + name[1:],
+            name,
+        )
         path = COMPONENTS / f"{record['id']}.ts"
         if path.exists():
             raise SystemExit(f"Feature already exists {path.name}")
@@ -445,7 +500,7 @@ def main():
         commands.add(record["id"])
         records.append(record)
     records.sort(key=lambda record: record["id"])
-    MANIFEST.write_text(
+    manifest_content = (
         json.dumps(
             {
                 "schemaVersion": 1,
@@ -469,9 +524,11 @@ def main():
             ensure_ascii=True,
             indent=2,
         )
-        + "\n",
-        encoding="utf-8",
+        + "\n"
     )
+    MANIFEST.write_text(manifest_content, encoding="utf-8")
+    BACKEND_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    BACKEND_MANIFEST.write_text(manifest_content, encoding="utf-8")
     write_catalog(commands)
     print(
         json.dumps(

@@ -5,7 +5,7 @@ export default class DocLibStraightVertex implements BlockTool {
     id: "DocLibStraightVertex",
     title: "DocLib StraightVertex",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9795e26fe8a6e09c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,17 9,13 15,17 7,7 15,19 5,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

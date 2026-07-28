@@ -5,7 +5,7 @@ export default class DocLibFormatPainter implements BlockTool {
     id: "DocLibFormatPainter",
     title: "DocLib FormatPainter",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab16c9da68a124db"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,9 18,18 6,12 6,19 20,5 20,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

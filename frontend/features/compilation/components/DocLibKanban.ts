@@ -5,7 +5,7 @@ export default class DocLibKanban implements BlockTool {
     id: "DocLibKanban",
     title: "DocLib Kanban",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bba3a666a78199af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,14 17,4 18,14 4,9 6,20 20,20"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

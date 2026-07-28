@@ -5,7 +5,7 @@ export default class DocLibPictureEditClassic implements BlockTool {
     id: "DocLibPictureEditClassic",
     title: "DocLib PictureEditClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="54fcec4c30a6cd08"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,18 19,12 18,17 5,12 14,18 19,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

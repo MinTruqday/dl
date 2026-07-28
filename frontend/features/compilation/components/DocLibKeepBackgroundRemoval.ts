@@ -5,7 +5,7 @@ export default class DocLibKeepBackgroundRemoval implements BlockTool {
     id: "DocLibKeepBackgroundRemoval",
     title: "DocLib KeepBackgroundRemoval",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3bfc9f05c47e245"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 18,6 11,7 9,5 9,4 6,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

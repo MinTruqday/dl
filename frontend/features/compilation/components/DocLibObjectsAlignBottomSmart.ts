@@ -5,7 +5,7 @@ export default class DocLibObjectsAlignBottomSmart implements BlockTool {
     id: "DocLibObjectsAlignBottomSmart",
     title: "DocLib ObjectsAlignBottomSmart",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d9bf869784dc532c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,8 19,19 17,20 19,14 6,17 17,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

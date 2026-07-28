@@ -5,7 +5,7 @@ export default class DocLibContentControlRepeating implements BlockTool {
     id: "DocLibContentControlRepeating",
     title: "DocLib ContentControlRepeating",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="adabcc8a534e7ea3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,5 4,6 19,14 11,14 8,5 18,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

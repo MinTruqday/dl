@@ -5,7 +5,7 @@ export default class DocLibChartChangeType implements BlockTool {
     id: "DocLibChartChangeType",
     title: "DocLib ChartChangeType",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a607146a9e0041f4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,11 7,8 9,4 18,10 6,13 6,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

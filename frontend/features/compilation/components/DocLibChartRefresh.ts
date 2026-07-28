@@ -5,7 +5,7 @@ export default class DocLibChartRefresh implements BlockTool {
     id: "DocLibChartRefresh",
     title: "DocLib ChartRefresh",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd769b8258940fb4"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,20 6,15 7,16 19,14 5,16 12,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

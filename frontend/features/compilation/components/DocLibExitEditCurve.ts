@@ -5,7 +5,7 @@ export default class DocLibExitEditCurve implements BlockTool {
     id: "DocLibExitEditCurve",
     title: "DocLib ExitEditCurve",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f4303ea4712eaf5a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,18 15,15 15,16 9,9 19,15 6,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

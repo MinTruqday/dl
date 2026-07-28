@@ -5,7 +5,7 @@ export default class DocLibShapeOutlineDashes implements BlockTool {
     id: "DocLibShapeOutlineDashes",
     title: "DocLib ShapeOutlineDashes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="834c47f8294adf54"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,12 7,14 11,10 6,20 17,19 8,17"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

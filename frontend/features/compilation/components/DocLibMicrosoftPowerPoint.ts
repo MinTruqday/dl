@@ -5,7 +5,7 @@ export default class DocLibMicrosoftPowerPoint implements BlockTool {
     id: "DocLibMicrosoftPowerPoint",
     title: "DocLib MicrosoftPowerPoint",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b9a92825fd9aff2"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,5 14,15 14,17 9,8 10,7 13,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

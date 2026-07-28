@@ -5,7 +5,7 @@ export default class DocLibListIndentsAdjust implements BlockTool {
     id: "DocLibListIndentsAdjust",
     title: "DocLib ListIndentsAdjust",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1cf4cb23d6b93ff6"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,10 20,5 14,19 16,12 16,5 17,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

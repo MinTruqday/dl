@@ -5,7 +5,7 @@ export default class DocLibWordCount implements BlockTool {
     id: "DocLibWordCount",
     title: "DocLib WordCount",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec0ee7e385c94691"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,18 14,10 18,18 6,13 13,15 6,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

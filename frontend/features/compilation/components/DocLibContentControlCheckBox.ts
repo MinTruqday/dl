@@ -5,7 +5,7 @@ export default class DocLibContentControlCheckBox implements BlockTool {
     id: "DocLibContentControlCheckBox",
     title: "DocLib ContentControlCheckBox",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8e0c2621723fd0c4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,16 8,20 16,16 8,13 7,12 16,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibIndentDecrease implements BlockTool {
     id: "DocLibIndentDecrease",
     title: "DocLib IndentDecrease",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a89816b42d52a3e4"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,20 9,14 15,18 14,11 8,12 14,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

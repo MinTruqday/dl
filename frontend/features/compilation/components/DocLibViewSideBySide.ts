@@ -5,7 +5,7 @@ export default class DocLibViewSideBySide implements BlockTool {
     id: "DocLibViewSideBySide",
     title: "DocLib ViewSideBySide",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cd3f1b00c5345acd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,16 14,4 14,5 9,5 7,6 19,6"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibMermaid implements BlockTool {
     id: "DocLibMermaid",
     title: "DocLib Mermaid",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cc3114cfadd78f92"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,19 7,7 7,15 11,14 19,18 16,19"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

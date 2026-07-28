@@ -5,7 +5,7 @@ export default class DocLibTableAutoFitWindow implements BlockTool {
     id: "DocLibTableAutoFitWindow",
     title: "DocLib TableAutoFitWindow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f1209f952d3a24eb"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,19 10,17 15,11 6,18 4,12 8,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibAlignDistributeVertically implements BlockTool {
     id: "DocLibAlignDistributeVertically",
     title: "DocLib AlignDistributeVertically",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16cb06800a67dffc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,20 10,13 14,5 6,18 6,6 12,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

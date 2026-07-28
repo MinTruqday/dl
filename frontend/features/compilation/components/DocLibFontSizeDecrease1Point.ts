@@ -5,7 +5,7 @@ export default class DocLibFontSizeDecrease1Point implements BlockTool {
     id: "DocLibFontSizeDecrease1Point",
     title: "DocLib FontSizeDecrease1Point",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="35b655ebb9a117cd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,16 4,18 19,12 10,5 15,15 5,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

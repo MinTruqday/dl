@@ -5,7 +5,7 @@ export default class DocLibChartFormatDownBars implements BlockTool {
     id: "DocLibChartFormatDownBars",
     title: "DocLib ChartFormatDownBars",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c8cf24d05eec40b8"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,7 6,8 13,19 17,18 13,17 19,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

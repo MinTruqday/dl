@@ -5,7 +5,7 @@ export default class DocLibChart3DView implements BlockTool {
     id: "DocLibChart3DView",
     title: "DocLib Chart3DView",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="efcf50b7716e56c6"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,7 16,17 15,12 5,15 10,20 18,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

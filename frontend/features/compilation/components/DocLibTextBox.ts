@@ -5,7 +5,7 @@ export default class DocLibTextBox implements BlockTool {
     id: "DocLibTextBox",
     title: "DocLib TextBox",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a9d8d524c8d9badf"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,16 13,6 17,17 20,6 14,19 4,11"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

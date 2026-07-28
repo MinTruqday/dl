@@ -5,7 +5,7 @@ export default class DocLibFileConfirmConversions implements BlockTool {
     id: "DocLibFileConfirmConversions",
     title: "DocLib FileConfirmConversions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f484216c30ec6d9d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,17 20,10 18,19 11,8 16,18 6,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibObjectEditShapeMenu implements BlockTool {
     id: "DocLibObjectEditShapeMenu",
     title: "DocLib ObjectEditShapeMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8c028f94e051b843"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,6 11,16 7,17 18,20 4,17 8,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

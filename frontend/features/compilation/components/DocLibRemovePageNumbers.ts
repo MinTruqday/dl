@@ -5,7 +5,7 @@ export default class DocLibRemovePageNumbers implements BlockTool {
     id: "DocLibRemovePageNumbers",
     title: "DocLib RemovePageNumbers",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3d2a9679427bf4b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,10 20,5 16,9 8,11 4,9 9,18"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibFontSubstitution implements BlockTool {
     id: "DocLibFontSubstitution",
     title: "DocLib FontSubstitution",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="87bc43eacddb7d85"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,5 20,17 5,19 10,18 15,8 14,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

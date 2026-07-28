@@ -5,7 +5,7 @@ export default class DocLibFilePrintMenu implements BlockTool {
     id: "DocLibFilePrintMenu",
     title: "DocLib FilePrintMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1aa4122774048f79"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,15 5,9 18,8 11,6 9,15 9,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

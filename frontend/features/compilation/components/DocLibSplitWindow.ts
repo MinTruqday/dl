@@ -5,7 +5,7 @@ export default class DocLibSplitWindow implements BlockTool {
     id: "DocLibSplitWindow",
     title: "DocLib SplitWindow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fdbbfc23e1a27e19"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,4 18,5 8,13 11,12 5,9 10,6"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

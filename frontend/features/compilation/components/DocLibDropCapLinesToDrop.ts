@@ -5,7 +5,7 @@ export default class DocLibDropCapLinesToDrop implements BlockTool {
     id: "DocLibDropCapLinesToDrop",
     title: "DocLib DropCapLinesToDrop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24ba8ed7496c39f9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,20 10,15 9,10 10,15 10,17 18,5"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

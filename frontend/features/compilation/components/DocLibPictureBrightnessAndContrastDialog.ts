@@ -5,7 +5,7 @@ export default class DocLibPictureBrightnessAndContrastDialog implements BlockTo
     id: "DocLibPictureBrightnessAndContrastDialog",
     title: "DocLib PictureBrightnessAndContrastDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2503a8490527c810"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,7 19,9 9,9 17,20 7,14 12,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

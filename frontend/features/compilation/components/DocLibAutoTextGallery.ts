@@ -5,7 +5,7 @@ export default class DocLibAutoTextGallery implements BlockTool {
     id: "DocLibAutoTextGallery",
     title: "DocLib AutoTextGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a051019b5b4e187"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,9 20,12 15,14 8,20 4,13 9,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

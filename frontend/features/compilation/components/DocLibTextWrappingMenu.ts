@@ -5,7 +5,7 @@ export default class DocLibTextWrappingMenu implements BlockTool {
     id: "DocLibTextWrappingMenu",
     title: "DocLib TextWrappingMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c93ddae346e48f5f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,14 18,10 6,11 11,14 18,20 7,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibGoToTableOfContents implements BlockTool {
     id: "DocLibGoToTableOfContents",
     title: "DocLib GoToTableOfContents",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="640c4b1d12be633d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,16 11,16 5,7 18,14 9,9 17,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

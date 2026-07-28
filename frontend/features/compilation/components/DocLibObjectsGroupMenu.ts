@@ -5,7 +5,7 @@ export default class DocLibObjectsGroupMenu implements BlockTool {
     id: "DocLibObjectsGroupMenu",
     title: "DocLib ObjectsGroupMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="473215d55dd681ae"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,20 8,13 12,14 14,8 20,6 5,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

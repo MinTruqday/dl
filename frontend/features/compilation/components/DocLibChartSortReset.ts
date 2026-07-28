@@ -5,7 +5,7 @@ export default class DocLibChartSortReset implements BlockTool {
     id: "DocLibChartSortReset",
     title: "DocLib ChartSortReset",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a9dddbac1f7c38c4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 19,6 18,9 9,13 12,20 13,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

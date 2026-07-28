@@ -5,7 +5,7 @@ export default class DocLibShadowOptionsDialog implements BlockTool {
     id: "DocLibShadowOptionsDialog",
     title: "DocLib ShadowOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="20e35dc39b056d2c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,10 12,12 6,9 11,14 12,6 14,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

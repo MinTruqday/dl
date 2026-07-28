@@ -171,6 +171,62 @@ async def main():
         )
         assert status == 200 and payload["data"]["content"] is None, payload
         from src.engines.editorjs import EditorjsEngine
+        from src.engines.editorjs_capabilities import capability_manifest
+        manifest = capability_manifest()
+        assert len(manifest["features"]) == 2449
+        assert manifest["microsoftInteractiveControlCount"] == 2005
+        assert call(
+            "GET",
+            "/soan-thao/editorjs/capabilities",
+        )[0] == 401
+        status, payload, media = call(
+            "GET",
+            "/soan-thao/editorjs/capabilities?query=Copy&limit=10",
+            owner_token,
+        )
+        assert status == 200 and payload["total"] > 0, payload
+        copy_capability = next(
+            item
+            for item in payload["items"]
+            if item["id"] == "DocLibCopy"
+        )
+        assert copy_capability["toolKey"] == "copy"
+        assert copy_capability["mode"] == "Copy"
+        assert copy_capability["product"] == "doclib"
+        command_content = json.dumps(
+            {
+                "blocks": [
+                    {
+                        "type": "copy",
+                        "data": {
+                            "feature": "DocLibCopy",
+                            "mode": "Copy",
+                            "applied": True,
+                        },
+                    }
+                ]
+            }
+        )
+        assert EditorjsEngine._parse_content(command_content)[0]["type"] == "copy"
+        invalid_command_content = json.dumps(
+            {
+                "blocks": [
+                    {
+                        "type": "copy",
+                        "data": {
+                            "feature": "DocLibCut",
+                            "mode": "Copy",
+                            "applied": True,
+                        },
+                    }
+                ]
+            }
+        )
+        try:
+            EditorjsEngine._parse_content(invalid_command_content)
+            raise AssertionError("Invalid command capability accepted")
+        except ValueError:
+            pass
         assert EditorjsEngine._safe_image_url("http://mongodb:27017/private") == ""
         assert EditorjsEngine._safe_link_url('javascript:alert("unsafe")') == ""
         rendered = EditorjsEngine._render_block(

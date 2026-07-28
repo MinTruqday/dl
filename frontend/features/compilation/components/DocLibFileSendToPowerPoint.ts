@@ -5,7 +5,7 @@ export default class DocLibFileSendToPowerPoint implements BlockTool {
     id: "DocLibFileSendToPowerPoint",
     title: "DocLib FileSendToPowerPoint",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7eabaf7c311c43b9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,5 9,9 19,15 20,19 10,20 7,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

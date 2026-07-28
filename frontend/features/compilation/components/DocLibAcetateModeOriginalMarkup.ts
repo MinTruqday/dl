@@ -5,7 +5,7 @@ export default class DocLibAcetateModeOriginalMarkup implements BlockTool {
     id: "DocLibAcetateModeOriginalMarkup",
     title: "DocLib AcetateModeOriginalMarkup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="071fa6fb6ab5a006"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,18 17,17 8,15 11,10 14,9 20,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

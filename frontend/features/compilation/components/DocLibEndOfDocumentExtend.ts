@@ -5,7 +5,7 @@ export default class DocLibEndOfDocumentExtend implements BlockTool {
     id: "DocLibEndOfDocumentExtend",
     title: "DocLib EndOfDocumentExtend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f7a42bf2881dd81"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,7 19,8 10,14 4,14 12,5 17,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

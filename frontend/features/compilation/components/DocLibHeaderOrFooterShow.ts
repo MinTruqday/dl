@@ -5,7 +5,7 @@ export default class DocLibHeaderOrFooterShow implements BlockTool {
     id: "DocLibHeaderOrFooterShow",
     title: "DocLib HeaderOrFooterShow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="31437174e49a4378"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,20 15,18 11,5 20,5 20,19 19,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

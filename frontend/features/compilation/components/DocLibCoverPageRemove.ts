@@ -5,7 +5,7 @@ export default class DocLibCoverPageRemove implements BlockTool {
     id: "DocLibCoverPageRemove",
     title: "DocLib CoverPageRemove",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c66e1cec980d2b2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,4 8,6 18,13 10,12 13,16 6,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

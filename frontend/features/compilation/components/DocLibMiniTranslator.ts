@@ -5,7 +5,7 @@ export default class DocLibMiniTranslator implements BlockTool {
     id: "DocLibMiniTranslator",
     title: "DocLib MiniTranslator",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9befc5bf34370a3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,7 18,10 9,20 14,14 15,11 5,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibFootnoteContinuationSeparator implements BlockTool {
     id: "DocLibFootnoteContinuationSeparator",
     title: "DocLib FootnoteContinuationSeparator",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc9256f7fdecbf07"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,14 5,13 19,19 8,11 5,20 16,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

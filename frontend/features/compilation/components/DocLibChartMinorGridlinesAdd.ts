@@ -5,7 +5,7 @@ export default class DocLibChartMinorGridlinesAdd implements BlockTool {
     id: "DocLibChartMinorGridlinesAdd",
     title: "DocLib ChartMinorGridlinesAdd",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d0e03108c174f20"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,18 7,20 8,10 15,19 13,11 5,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

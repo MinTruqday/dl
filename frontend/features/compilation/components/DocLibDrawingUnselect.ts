@@ -5,7 +5,7 @@ export default class DocLibDrawingUnselect implements BlockTool {
     id: "DocLibDrawingUnselect",
     title: "DocLib DrawingUnselect",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e7468c12251f8ba"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,18 6,10 4,17 14,20 18,15 17,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

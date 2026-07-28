@@ -5,7 +5,7 @@ export default class DocLibAsianLayoutPhoneticGuide implements BlockTool {
     id: "DocLibAsianLayoutPhoneticGuide",
     title: "DocLib AsianLayoutPhoneticGuide",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be761033228363e8"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,20 20,4 4,16 18,15 19,6 10,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibContentControlRemove implements BlockTool {
     id: "DocLibContentControlRemove",
     title: "DocLib ContentControlRemove",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="85298a8bcb2a7bc7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,11 6,7 20,12 8,16 9,14 9,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

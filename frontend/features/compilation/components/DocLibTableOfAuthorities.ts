@@ -5,7 +5,7 @@ export default class DocLibTableOfAuthorities implements BlockTool {
     id: "DocLibTableOfAuthorities",
     title: "DocLib TableOfAuthorities",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a1041aa8a7a0c9a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,20 18,4 6,7 16,5 19,9 5,9"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

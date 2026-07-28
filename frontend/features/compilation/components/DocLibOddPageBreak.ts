@@ -5,7 +5,7 @@ export default class DocLibOddPageBreak implements BlockTool {
     id: "DocLibOddPageBreak",
     title: "DocLib OddPageBreak",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1ffb2b22ac95435c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,17 13,4 6,17 20,11 6,19 13,4"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

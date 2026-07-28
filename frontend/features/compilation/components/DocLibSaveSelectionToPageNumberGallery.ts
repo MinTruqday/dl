@@ -5,7 +5,7 @@ export default class DocLibSaveSelectionToPageNumberGallery implements BlockTool
     id: "DocLibSaveSelectionToPageNumberGallery",
     title: "DocLib SaveSelectionToPageNumberGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5f77d90c6179f595"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,4 17,16 16,6 11,17 19,17 19,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

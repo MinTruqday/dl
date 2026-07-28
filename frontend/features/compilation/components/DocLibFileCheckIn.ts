@@ -5,7 +5,7 @@ export default class DocLibFileCheckIn implements BlockTool {
     id: "DocLibFileCheckIn",
     title: "DocLib FileCheckIn",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0637dce19f64b737"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 20,8 10,19 17,8 13,19 5,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

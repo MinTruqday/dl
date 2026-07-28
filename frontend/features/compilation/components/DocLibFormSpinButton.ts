@@ -5,7 +5,7 @@ export default class DocLibFormSpinButton implements BlockTool {
     id: "DocLibFormSpinButton",
     title: "DocLib FormSpinButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d2967285d4704db"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,11 5,10 12,7 8,19 19,15 8,17"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

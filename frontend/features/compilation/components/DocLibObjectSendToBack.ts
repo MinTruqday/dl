@@ -5,7 +5,7 @@ export default class DocLibObjectSendToBack implements BlockTool {
     id: "DocLibObjectSendToBack",
     title: "DocLib ObjectSendToBack",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a119df13bd30357"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 8,7 12,11 7,6 19,19 5,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibMasterDocumentShow implements BlockTool {
     id: "DocLibMasterDocumentShow",
     title: "DocLib MasterDocumentShow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="131838f66d460856"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,11 9,12 11,6 12,5 19,15 6,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

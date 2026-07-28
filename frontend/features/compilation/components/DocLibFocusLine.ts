@@ -5,7 +5,7 @@ export default class DocLibFocusLine implements BlockTool {
     id: "DocLibFocusLine",
     title: "DocLib FocusLine",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f28f79d49bc68f4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,10 13,8 9,5 6,10 14,15 16,15"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

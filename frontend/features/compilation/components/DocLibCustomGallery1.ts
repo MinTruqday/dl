@@ -5,7 +5,7 @@ export default class DocLibCustomGallery1 implements BlockTool {
     id: "DocLibCustomGallery1",
     title: "DocLib CustomGallery1",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e34a81a1307211ca"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,10 14,12 18,16 4,19 8,14 4,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

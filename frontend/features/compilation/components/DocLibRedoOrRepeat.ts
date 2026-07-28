@@ -5,7 +5,7 @@ export default class DocLibRedoOrRepeat implements BlockTool {
     id: "DocLibRedoOrRepeat",
     title: "DocLib RedoOrRepeat",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1b7cdae68649e2ed"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,9 18,13 19,9 9,20 8,8 20,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibStylesPaneNewStyle implements BlockTool {
     id: "DocLibStylesPaneNewStyle",
     title: "DocLib StylesPaneNewStyle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b326d388a3db5d7c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,8 11,4 14,19 12,9 18,20 15,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

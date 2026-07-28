@@ -5,7 +5,7 @@ export default class DocLibDrawingCanvasInsert implements BlockTool {
     id: "DocLibDrawingCanvasInsert",
     title: "DocLib DrawingCanvasInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92f812608a1f0b51"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,14 5,15 6,18 15,17 17,5 15,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibRecolorColorPicker implements BlockTool {
     id: "DocLibRecolorColorPicker",
     title: "DocLib RecolorColorPicker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="937ff43dc65bb02c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,12 10,14 15,10 10,14 4,8 17,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

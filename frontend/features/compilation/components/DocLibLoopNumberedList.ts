@@ -5,7 +5,7 @@ export default class DocLibLoopNumberedList implements BlockTool {
     id: "DocLibLoopNumberedList",
     title: "DocLib LoopNumberedList",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3e6e77cb39be2381"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,12 4,20 10,7 5,14 9,12 8,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

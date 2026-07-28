@@ -5,7 +5,7 @@ export default class DocLibFootnoteNext implements BlockTool {
     id: "DocLibFootnoteNext",
     title: "DocLib FootnoteNext",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba909e377b52e40d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,12 9,8 8,18 11,17 16,10 10,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

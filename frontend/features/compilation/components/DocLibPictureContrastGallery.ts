@@ -5,7 +5,7 @@ export default class DocLibPictureContrastGallery implements BlockTool {
     id: "DocLibPictureContrastGallery",
     title: "DocLib PictureContrastGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ac38a72109deebbd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,9 18,20 13,5 18,6 6,18 7,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

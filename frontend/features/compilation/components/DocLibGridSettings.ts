@@ -5,7 +5,7 @@ export default class DocLibGridSettings implements BlockTool {
     id: "DocLibGridSettings",
     title: "DocLib GridSettings",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a2462cb9979d403"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,6 17,20 4,6 12,7 5,19 11,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

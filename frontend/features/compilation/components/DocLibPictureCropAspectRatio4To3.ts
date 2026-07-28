@@ -5,7 +5,7 @@ export default class DocLibPictureCropAspectRatio4To3 implements BlockTool {
     id: "DocLibPictureCropAspectRatio4To3",
     title: "DocLib PictureCropAspectRatio4To3",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="981873d70a0f8629"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,11 17,15 14,19 19,11 19,15 17,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

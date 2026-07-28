@@ -5,7 +5,7 @@ export default class DocLibForward implements BlockTool {
     id: "DocLibForward",
     title: "DocLib Forward",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9d5113c10b7d4a9"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,13 4,13 20,17 12,20 16,17 4,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibDrawInkMode implements BlockTool {
     id: "DocLibDrawInkMode",
     title: "DocLib DrawInkMode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9220163b0acfbb6"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,4 5,18 10,6 17,16 18,15 15,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

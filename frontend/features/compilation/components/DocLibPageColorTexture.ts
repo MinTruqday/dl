@@ -5,7 +5,7 @@ export default class DocLibPageColorTexture implements BlockTool {
     id: "DocLibPageColorTexture",
     title: "DocLib PageColorTexture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24c117fe62bc88ae"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,10 10,20 17,5 4,8 20,15 10,8"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

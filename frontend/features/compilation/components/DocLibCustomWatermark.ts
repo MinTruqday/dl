@@ -5,7 +5,7 @@ export default class DocLibCustomWatermark implements BlockTool {
     id: "DocLibCustomWatermark",
     title: "DocLib CustomWatermark",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c06792ab8badb6ca"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,5 14,5 7,7 16,19 5,19 17,10"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

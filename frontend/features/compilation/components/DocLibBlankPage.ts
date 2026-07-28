@@ -5,7 +5,7 @@ export default class DocLibBlankPage implements BlockTool {
     id: "DocLibBlankPage",
     title: "DocLib BlankPage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f44d865fe88ac77"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,4 16,20 20,4 6,4 16,18 5,15"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

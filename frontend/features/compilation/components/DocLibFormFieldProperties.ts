@@ -5,7 +5,7 @@ export default class DocLibFormFieldProperties implements BlockTool {
     id: "DocLibFormFieldProperties",
     title: "DocLib FormFieldProperties",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c926f3accf7fc970"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,8 9,6 7,12 18,14 4,20 4,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

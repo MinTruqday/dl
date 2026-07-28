@@ -5,7 +5,7 @@ export default class DocLibContentControlDate implements BlockTool {
     id: "DocLibContentControlDate",
     title: "DocLib ContentControlDate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="64044e780e445637"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,8 14,5 18,4 5,8 15,5 4,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

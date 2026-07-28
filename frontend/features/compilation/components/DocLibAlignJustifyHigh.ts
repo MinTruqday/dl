@@ -5,7 +5,7 @@ export default class DocLibAlignJustifyHigh implements BlockTool {
     id: "DocLibAlignJustifyHigh",
     title: "DocLib AlignJustifyHigh",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0153576cc22cf741"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,19 6,10 11,14 13,18 5,5 4,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

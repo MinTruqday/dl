@@ -5,7 +5,7 @@ export default class DocLibPasteSetDefault implements BlockTool {
     id: "DocLibPasteSetDefault",
     title: "DocLib PasteSetDefault",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d0070484c834b5b0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,11 8,17 17,5 15,10 13,5 13,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

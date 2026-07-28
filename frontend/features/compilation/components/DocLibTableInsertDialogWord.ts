@@ -5,7 +5,7 @@ export default class DocLibTableInsertDialogWord implements BlockTool {
     id: "DocLibTableInsertDialogWord",
     title: "DocLib TableInsertDialogWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2ff8c06fa6eaf179"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,14 9,13 17,17 7,6 20,6 8,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibSelectCurrentTabs implements BlockTool {
     id: "DocLibSelectCurrentTabs",
     title: "DocLib SelectCurrentTabs",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3de96a071da9548c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,16 8,11 16,20 20,8 6,10 11,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

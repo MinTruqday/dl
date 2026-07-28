@@ -5,7 +5,7 @@ export default class DocLibTableBordersMenu implements BlockTool {
     id: "DocLibTableBordersMenu",
     title: "DocLib TableBordersMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="57e67a589c52b3da"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,13 7,7 7,18 13,18 13,20 20,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

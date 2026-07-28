@@ -5,7 +5,7 @@ export default class DocLibObjectsAlignRightSmart implements BlockTool {
     id: "DocLibObjectsAlignRightSmart",
     title: "DocLib ObjectsAlignRightSmart",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c396c5223c73c418"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,18 14,4 13,17 13,11 17,5 20,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

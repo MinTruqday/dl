@@ -5,7 +5,7 @@ export default class DocLibGutterMargin implements BlockTool {
     id: "DocLibGutterMargin",
     title: "DocLib GutterMargin",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ffe8d8fd055cc75c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,15 16,19 9,11 16,11 6,8 20,14"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

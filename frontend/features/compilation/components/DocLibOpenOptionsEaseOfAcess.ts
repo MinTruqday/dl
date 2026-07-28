@@ -5,7 +5,7 @@ export default class DocLibOpenOptionsEaseOfAcess implements BlockTool {
     id: "DocLibOpenOptionsEaseOfAcess",
     title: "DocLib OpenOptionsEaseOfAcess",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a737b6119772c41d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,8 16,4 19,16 13,16 19,7 19,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

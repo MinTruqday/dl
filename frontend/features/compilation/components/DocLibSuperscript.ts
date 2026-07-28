@@ -5,7 +5,7 @@ export default class DocLibSuperscript implements InlineTool {
     id: "DocLibSuperscript",
     title: "DocLib Superscript",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="99e7a14bc4c34da5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,14 12,11 13,12 13,16 8,17 19,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   private api: API;

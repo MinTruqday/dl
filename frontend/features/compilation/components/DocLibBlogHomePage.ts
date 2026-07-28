@@ -5,7 +5,7 @@ export default class DocLibBlogHomePage implements BlockTool {
     id: "DocLibBlogHomePage",
     title: "DocLib BlogHomePage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a2b792acd399f8e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,13 6,12 5,10 10,10 20,10 15,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

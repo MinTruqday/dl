@@ -5,7 +5,7 @@ export default class DocLibDrawingCanvasResize implements BlockTool {
     id: "DocLibDrawingCanvasResize",
     title: "DocLib DrawingCanvasResize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="48305f3cc75a20ea"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,18 14,13 16,9 19,17 12,9 10,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

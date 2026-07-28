@@ -5,7 +5,7 @@ export default class DocLibViewGridlines implements BlockTool {
     id: "DocLibViewGridlines",
     title: "DocLib ViewGridlines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eb096beaea81444c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,13 9,17 17,14 4,12 19,7 20,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

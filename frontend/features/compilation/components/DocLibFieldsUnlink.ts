@@ -5,7 +5,7 @@ export default class DocLibFieldsUnlink implements BlockTool {
     id: "DocLibFieldsUnlink",
     title: "DocLib FieldsUnlink",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9f516e205a69bb6d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,17 12,19 9,7 4,11 16,11 17,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

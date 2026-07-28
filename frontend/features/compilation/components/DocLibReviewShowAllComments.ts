@@ -5,7 +5,7 @@ export default class DocLibReviewShowAllComments implements BlockTool {
     id: "DocLibReviewShowAllComments",
     title: "DocLib ReviewShowAllComments",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c15c910b1694c83"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,8 18,20 11,7 12,16 7,20 14,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

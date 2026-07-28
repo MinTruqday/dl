@@ -5,7 +5,7 @@ export default class DocLibLineNumbersSuppress implements BlockTool {
     id: "DocLibLineNumbersSuppress",
     title: "DocLib LineNumbersSuppress",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="65d0212d994bc622"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,8 20,15 4,11 15,4 7,10 17,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

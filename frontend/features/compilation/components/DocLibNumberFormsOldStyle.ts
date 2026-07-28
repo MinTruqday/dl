@@ -5,7 +5,7 @@ export default class DocLibNumberFormsOldStyle implements BlockTool {
     id: "DocLibNumberFormsOldStyle",
     title: "DocLib NumberFormsOldStyle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2341d8f3220cd7e6"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,18 16,9 4,16 15,13 9,18 13,6"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

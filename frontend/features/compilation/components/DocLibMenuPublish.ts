@@ -5,7 +5,7 @@ export default class DocLibMenuPublish implements BlockTool {
     id: "DocLibMenuPublish",
     title: "DocLib MenuPublish",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eafec42d4c7ed95b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,20 13,15 12,11 17,10 19,14 17,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

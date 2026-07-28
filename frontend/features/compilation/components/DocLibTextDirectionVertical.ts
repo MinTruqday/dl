@@ -5,7 +5,7 @@ export default class DocLibTextDirectionVertical implements BlockTool {
     id: "DocLibTextDirectionVertical",
     title: "DocLib TextDirectionVertical",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f996c51dc1236349"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,18 14,16 10,5 18,9 11,17 11,11"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

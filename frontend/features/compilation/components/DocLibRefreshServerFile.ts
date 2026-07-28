@@ -5,7 +5,7 @@ export default class DocLibRefreshServerFile implements BlockTool {
     id: "DocLibRefreshServerFile",
     title: "DocLib RefreshServerFile",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a432905df0873e75"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,20 12,12 6,20 15,19 8,8 6,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

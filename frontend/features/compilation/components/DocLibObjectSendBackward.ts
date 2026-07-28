@@ -5,7 +5,7 @@ export default class DocLibObjectSendBackward implements BlockTool {
     id: "DocLibObjectSendBackward",
     title: "DocLib ObjectSendBackward",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b8c413845640433b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,13 6,17 5,17 20,12 20,10 18,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

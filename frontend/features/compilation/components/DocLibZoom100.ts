@@ -5,7 +5,7 @@ export default class DocLibZoom100 implements BlockTool {
     id: "DocLibZoom100",
     title: "DocLib Zoom100",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c53a9d1fd027fb9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,19 20,9 19,6 12,19 20,16 4,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

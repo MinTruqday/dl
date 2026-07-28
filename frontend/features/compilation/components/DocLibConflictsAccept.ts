@@ -5,7 +5,7 @@ export default class DocLibConflictsAccept implements BlockTool {
     id: "DocLibConflictsAccept",
     title: "DocLib ConflictsAccept",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2c0b1ec674523e0c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,15 17,15 18,18 15,16 14,20 15,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

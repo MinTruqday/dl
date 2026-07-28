@@ -5,7 +5,7 @@ export default class DocLibPictureResetAndSize implements BlockTool {
     id: "DocLibPictureResetAndSize",
     title: "DocLib PictureResetAndSize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dbea33b0cae882eb"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,17 4,10 19,15 15,18 11,5 4,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

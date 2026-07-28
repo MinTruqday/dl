@@ -5,7 +5,7 @@ export default class DocLibFramesRemove implements BlockTool {
     id: "DocLibFramesRemove",
     title: "DocLib FramesRemove",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="064af80dd53e4920"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,10 14,17 13,15 9,19 20,16 14,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibChartFormatLeaderLines implements BlockTool {
     id: "DocLibChartFormatLeaderLines",
     title: "DocLib ChartFormatLeaderLines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f2dba4c33665016"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,15 20,12 4,4 16,9 4,7 19,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

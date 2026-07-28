@@ -5,7 +5,7 @@ export default class DocLibOfficeOnTheWeb implements BlockTool {
     id: "DocLibOfficeOnTheWeb",
     title: "DocLib OfficeOnTheWeb",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f1fa9f1d3ef7ac59"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,16 10,16 15,13 6,8 14,18 9,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

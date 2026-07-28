@@ -5,7 +5,7 @@ export default class DocLibAddNode implements BlockTool {
     id: "DocLibAddNode",
     title: "DocLib AddNode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6259edbf8b7790de"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,8 20,8 7,4 12,5 19,20 16,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

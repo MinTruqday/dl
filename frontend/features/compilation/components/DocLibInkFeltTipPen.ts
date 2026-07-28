@@ -5,7 +5,7 @@ export default class DocLibInkFeltTipPen implements BlockTool {
     id: "DocLibInkFeltTipPen",
     title: "DocLib InkFeltTipPen",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16537db2282b4152"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,19 10,12 10,13 18,18 6,14 5,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

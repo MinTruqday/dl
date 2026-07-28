@@ -5,7 +5,7 @@ export default class DocLibWritingAssistanceCheckDocument implements BlockTool {
     id: "DocLibWritingAssistanceCheckDocument",
     title: "DocLib WritingAssistanceCheckDocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ee3310587092caa9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,4 20,7 14,14 19,20 17,13 17,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

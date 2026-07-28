@@ -5,7 +5,7 @@ export default class DocLibHyperlink implements InlineTool {
     id: "DocLibHyperlink",
     title: "DocLib Hyperlink",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a3385f500f040aa3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,9 14,16 19,8 14,14 20,12 13,8"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

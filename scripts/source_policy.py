@@ -440,7 +440,8 @@ def scan_compilation_registry(issues):
         )
         return
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest_source = manifest_path.read_text(encoding="utf-8")
+        manifest = json.loads(manifest_source)
         records = manifest["features"]
     except (json.JSONDecodeError, KeyError, TypeError):
         issues.append(
@@ -451,13 +452,37 @@ def scan_compilation_registry(issues):
             )
         )
         return
+    backend_manifest_path = (
+        ROOT
+        / "backend"
+        / "compilation"
+        / "src"
+        / "resources"
+        / "word-feature-manifest.json"
+    )
+    if (
+        not backend_manifest_path.is_file()
+        or backend_manifest_path.read_text(encoding="utf-8") != manifest_source
+    ):
+        issues.append(
+            (
+                backend_manifest_path.relative_to(ROOT),
+                1,
+                "word_feature_backend_manifest_mismatch",
+            )
+        )
     record_ids = [record.get("id") for record in records]
     record_titles = [record.get("title") for record in records]
     record_icons = [record.get("icon") for record in records]
     official_records = [
         record
         for record in records
-        if record.get("origin") == "microsoft-word"
+        if record.get("microsoftControlId")
+    ]
+    command_records = [
+        record
+        for record in records
+        if record.get("toolKey") is not None
     ]
     if len(records) != 2449 or set(record_ids) != feature_names:
         issues.append(
@@ -497,6 +522,14 @@ def scan_compilation_registry(issues):
                 "word_feature_title_prefix_missing",
             )
         )
+    if any(record.get("product") != "doclib" for record in records):
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                "word_feature_product_mismatch",
+            )
+        )
     if len(official_records) != 2009 or any(
         not record.get("microsoftControlId") or not record.get("source")
         for record in official_records
@@ -506,6 +539,18 @@ def scan_compilation_registry(issues):
                 manifest_path.relative_to(ROOT),
                 1,
                 f"word_feature_official_mapping:{len(official_records)}",
+            )
+        )
+    if (
+        len(command_records) != 2296
+        or len({record.get("toolKey") for record in command_records}) != 2296
+        or any(not record.get("mode") for record in command_records)
+    ):
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                f"word_feature_tool_mapping:{len(command_records)}",
             )
         )
     for record in records:

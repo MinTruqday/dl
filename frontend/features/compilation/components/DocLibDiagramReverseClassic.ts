@@ -5,7 +5,7 @@ export default class DocLibDiagramReverseClassic implements BlockTool {
     id: "DocLibDiagramReverseClassic",
     title: "DocLib DiagramReverseClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="938eb70f844e0526"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,10 17,19 17,14 9,8 10,14 18,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

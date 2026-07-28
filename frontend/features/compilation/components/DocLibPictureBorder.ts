@@ -5,7 +5,7 @@ export default class DocLibPictureBorder implements BlockTool {
     id: "DocLibPictureBorder",
     title: "DocLib PictureBorder",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aa79b414a5e4274d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,6 14,7 16,11 9,13 19,9 8,8"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibClipArtInsert implements BlockTool {
     id: "DocLibClipArtInsert",
     title: "DocLib ClipArtInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="976fd032aeac8b83"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,13 8,20 8,6 7,16 13,7 20,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

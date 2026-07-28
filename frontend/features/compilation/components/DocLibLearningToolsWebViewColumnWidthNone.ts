@@ -5,7 +5,7 @@ export default class DocLibLearningToolsWebViewColumnWidthNone implements BlockT
     id: "DocLibLearningToolsWebViewColumnWidthNone",
     title: "DocLib LearningToolsWebViewColumnWidthNone",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="946b9aefa0b28c71"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,9 5,5 11,12 8,15 11,9 11,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

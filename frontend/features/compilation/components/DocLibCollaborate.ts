@@ -5,7 +5,7 @@ export default class DocLibCollaborate implements BlockTool {
     id: "DocLibCollaborate",
     title: "DocLib Collaborate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5243db68b49ac3de"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,20 19,6 14,5 12,5 13,15 12,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

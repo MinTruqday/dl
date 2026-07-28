@@ -5,7 +5,7 @@ export default class DocLibPageSizeGallery implements BlockTool {
     id: "DocLibPageSizeGallery",
     title: "DocLib PageSizeGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e7111cb569971e70"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,4 15,15 7,19 17,14 7,16 13,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

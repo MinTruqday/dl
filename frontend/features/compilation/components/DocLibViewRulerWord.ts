@@ -5,7 +5,7 @@ export default class DocLibViewRulerWord implements BlockTool {
     id: "DocLibViewRulerWord",
     title: "DocLib ViewRulerWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b78c6b52c9cf4ae"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,5 15,15 14,7 10,8 17,4 4,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

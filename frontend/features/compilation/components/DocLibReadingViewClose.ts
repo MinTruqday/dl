@@ -5,7 +5,7 @@ export default class DocLibReadingViewClose implements BlockTool {
     id: "DocLibReadingViewClose",
     title: "DocLib ReadingViewClose",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="653978ed9bbea620"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,10 5,20 6,7 17,19 5,6 11,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

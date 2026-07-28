@@ -5,7 +5,7 @@ export default class DocLibChartEditDataSource implements BlockTool {
     id: "DocLibChartEditDataSource",
     title: "DocLib ChartEditDataSource",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="df949ba840f7ebeb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,16 6,19 17,13 18,18 8,15 6,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

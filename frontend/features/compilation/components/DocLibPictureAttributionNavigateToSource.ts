@@ -5,7 +5,7 @@ export default class DocLibPictureAttributionNavigateToSource implements BlockTo
     id: "DocLibPictureAttributionNavigateToSource",
     title: "DocLib PictureAttributionNavigateToSource",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bf7498df9ea99775"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,18 20,6 9,20 19,19 8,19 17,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

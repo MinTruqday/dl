@@ -5,7 +5,7 @@ export default class DocLibCustomFooterGallery implements BlockTool {
     id: "DocLibCustomFooterGallery",
     title: "DocLib CustomFooterGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5dde3f6638549252"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,5 16,4 9,20 14,18 20,8 6,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

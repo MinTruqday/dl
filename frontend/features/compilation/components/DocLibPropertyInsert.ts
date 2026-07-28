@@ -5,7 +5,7 @@ export default class DocLibPropertyInsert implements BlockTool {
     id: "DocLibPropertyInsert",
     title: "DocLib PropertyInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2a726ddf67a629a6"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,16 11,6 5,17 11,17 15,17 19,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

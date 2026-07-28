@@ -5,7 +5,7 @@ export default class DocLibSubdocument implements BlockTool {
     id: "DocLibSubdocument",
     title: "DocLib Subdocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16d29829b7363666"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,10 20,11 17,7 7,4 6,8 12,5"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

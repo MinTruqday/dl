@@ -5,7 +5,7 @@ export default class DocLibBroadcastSendInvitation implements BlockTool {
     id: "DocLibBroadcastSendInvitation",
     title: "DocLib BroadcastSendInvitation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f1a9f9302ac7248f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,20 15,18 12,16 6,11 6,16 10,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

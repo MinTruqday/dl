@@ -5,7 +5,7 @@ export default class DocLibEmDash implements BlockTool {
     id: "DocLibEmDash",
     title: "DocLib EmDash",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="046dc61526b8c753"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,11 15,8 8,18 16,19 16,5 5,13"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

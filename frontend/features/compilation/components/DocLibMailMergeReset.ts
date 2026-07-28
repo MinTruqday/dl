@@ -5,7 +5,7 @@ export default class DocLibMailMergeReset implements BlockTool {
     id: "DocLibMailMergeReset",
     title: "DocLib MailMergeReset",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fde3b4a63d3459d1"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,10 14,17 14,5 8,9 16,7 5,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

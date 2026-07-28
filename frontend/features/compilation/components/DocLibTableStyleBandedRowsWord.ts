@@ -5,7 +5,7 @@ export default class DocLibTableStyleBandedRowsWord implements BlockTool {
     id: "DocLibTableStyleBandedRowsWord",
     title: "DocLib TableStyleBandedRowsWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e987a0d5bc35825"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,20 7,17 10,12 7,7 8,6 4,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

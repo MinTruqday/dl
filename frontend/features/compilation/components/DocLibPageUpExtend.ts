@@ -5,7 +5,7 @@ export default class DocLibPageUpExtend implements BlockTool {
     id: "DocLibPageUpExtend",
     title: "DocLib PageUpExtend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f36117e0435e6519"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,16 10,7 20,13 20,12 19,11 11,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

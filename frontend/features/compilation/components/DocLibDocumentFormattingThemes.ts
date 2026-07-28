@@ -5,7 +5,7 @@ export default class DocLibDocumentFormattingThemes implements BlockTool {
     id: "DocLibDocumentFormattingThemes",
     title: "DocLib DocumentFormattingThemes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="81363bfd5b6af6fc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,7 12,19 10,8 12,18 19,13 17,8"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

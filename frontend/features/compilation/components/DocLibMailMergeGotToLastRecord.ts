@@ -5,7 +5,7 @@ export default class DocLibMailMergeGotToLastRecord implements BlockTool {
     id: "DocLibMailMergeGotToLastRecord",
     title: "DocLib MailMergeGotToLastRecord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e42bbd61413cda93"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,13 6,16 18,13 18,15 4,11 19,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

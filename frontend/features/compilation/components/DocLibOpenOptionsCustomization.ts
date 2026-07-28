@@ -5,7 +5,7 @@ export default class DocLibOpenOptionsCustomization implements BlockTool {
     id: "DocLibOpenOptionsCustomization",
     title: "DocLib OpenOptionsCustomization",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f0eef587f35e9924"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,4 11,20 9,13 4,6 19,15 8,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

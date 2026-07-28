@@ -5,7 +5,7 @@ export default class DocLibSmartArtReorderDown implements BlockTool {
     id: "DocLibSmartArtReorderDown",
     title: "DocLib SmartArtReorderDown",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="87fff3921874efed"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,4 9,14 11,18 5,20 8,7 6,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

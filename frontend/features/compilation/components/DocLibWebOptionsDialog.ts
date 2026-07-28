@@ -5,7 +5,7 @@ export default class DocLibWebOptionsDialog implements BlockTool {
     id: "DocLibWebOptionsDialog",
     title: "DocLib WebOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="41dcf73811a17b47"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,20 13,9 4,12 8,7 12,13 14,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

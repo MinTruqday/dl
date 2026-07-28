@@ -5,7 +5,7 @@ export default class DocLibLineSpacingDouble implements BlockTool {
     id: "DocLibLineSpacingDouble",
     title: "DocLib LineSpacingDouble",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c98a94b2c6cd4447"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,6 16,12 15,5 4,7 7,6 4,17"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

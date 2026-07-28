@@ -5,7 +5,7 @@ export default class DocLibRightToLeftRun implements BlockTool {
     id: "DocLibRightToLeftRun",
     title: "DocLib RightToLeftRun",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="85c95103accf3b2c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,18 17,7 6,7 12,14 18,19 14,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibOpenPath implements BlockTool {
     id: "DocLibOpenPath",
     title: "DocLib OpenPath",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e09e5c554c3e741b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,9 11,4 12,15 18,14 16,12 18,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

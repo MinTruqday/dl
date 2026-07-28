@@ -5,7 +5,7 @@ export default class DocLibDiagramFitToContentsClassic implements BlockTool {
     id: "DocLibDiagramFitToContentsClassic",
     title: "DocLib DiagramFitToContentsClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b3e0c710b1c6ae48"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,7 16,20 11,15 8,8 5,5 6,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibMailMergeEditList implements BlockTool {
     id: "DocLibMailMergeEditList",
     title: "DocLib MailMergeEditList",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6df01f8044ac6282"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,6 18,13 4,6 17,15 7,6 19,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

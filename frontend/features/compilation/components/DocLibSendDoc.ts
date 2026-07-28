@@ -5,7 +5,7 @@ export default class DocLibSendDoc implements BlockTool {
     id: "DocLibSendDoc",
     title: "DocLib SendDoc",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ef897ead7ab4729a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,5 11,7 7,14 16,5 4,8 14,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibWindowSideBySideSynchronousScrolling implements Block
     id: "DocLibWindowSideBySideSynchronousScrolling",
     title: "DocLib WindowSideBySideSynchronousScrolling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c2f31408f0ed4c92"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,9 7,12 6,20 12,14 10,5 8,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

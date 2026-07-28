@@ -5,7 +5,7 @@ export default class DocLibInsert3DModelDefault implements BlockTool {
     id: "DocLibInsert3DModelDefault",
     title: "DocLib Insert3DModelDefault",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0da9f1c1b2e97b55"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,20 7,10 12,16 8,4 17,12 16,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

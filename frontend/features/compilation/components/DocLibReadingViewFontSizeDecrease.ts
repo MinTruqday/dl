@@ -5,7 +5,7 @@ export default class DocLibReadingViewFontSizeDecrease implements BlockTool {
     id: "DocLibReadingViewFontSizeDecrease",
     title: "DocLib ReadingViewFontSizeDecrease",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="407046b3fe691c5c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,14 6,13 20,7 15,11 11,4 5,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

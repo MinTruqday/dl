@@ -5,7 +5,7 @@ export default class DocLibToggle implements BlockTool {
     id: "DocLibToggle",
     title: "DocLib Toggle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f170dbeac285bc4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,10 17,7 6,10 10,13 8,5 8,16"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

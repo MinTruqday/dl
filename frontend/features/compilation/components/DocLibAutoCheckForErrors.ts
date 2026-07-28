@@ -5,7 +5,7 @@ export default class DocLibAutoCheckForErrors implements BlockTool {
     id: "DocLibAutoCheckForErrors",
     title: "DocLib AutoCheckForErrors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f00f606078b470bd"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,19 15,15 5,14 14,6 15,12 8,12"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

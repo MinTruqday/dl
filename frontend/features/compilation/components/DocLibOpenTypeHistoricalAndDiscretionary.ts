@@ -5,7 +5,7 @@ export default class DocLibOpenTypeHistoricalAndDiscretionary implements BlockTo
     id: "DocLibOpenTypeHistoricalAndDiscretionary",
     title: "DocLib OpenTypeHistoricalAndDiscretionary",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b853ad83c8e6765e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,19 7,16 17,13 20,13 16,19 15,20"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

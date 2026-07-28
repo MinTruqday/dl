@@ -5,7 +5,7 @@ export default class DocLibWordLeftExtend implements BlockTool {
     id: "DocLibWordLeftExtend",
     title: "DocLib WordLeftExtend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a29644a53ea50d55"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,18 4,16 15,16 17,4 7,16 11,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

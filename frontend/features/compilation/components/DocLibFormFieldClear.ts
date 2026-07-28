@@ -5,7 +5,7 @@ export default class DocLibFormFieldClear implements BlockTool {
     id: "DocLibFormFieldClear",
     title: "DocLib FormFieldClear",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86f35e0d98a04195"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 13,17 20,11 18,17 4,6 9,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

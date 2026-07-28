@@ -5,7 +5,7 @@ export default class DocLibWebGoForward implements BlockTool {
     id: "DocLibWebGoForward",
     title: "DocLib WebGoForward",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="64e1fe7c949f519c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,8 20,9 16,10 17,7 13,12 11,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

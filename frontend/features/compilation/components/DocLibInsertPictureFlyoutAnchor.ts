@@ -5,7 +5,7 @@ export default class DocLibInsertPictureFlyoutAnchor implements BlockTool {
     id: "DocLibInsertPictureFlyoutAnchor",
     title: "DocLib InsertPictureFlyoutAnchor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="547215e2ec0d94ff"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,16 8,9 19,17 16,4 15,19 9,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

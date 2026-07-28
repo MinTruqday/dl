@@ -5,7 +5,7 @@ export default class DocLibPictureSaturationGallery implements BlockTool {
     id: "DocLibPictureSaturationGallery",
     title: "DocLib PictureSaturationGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fe7ab65baa4064b6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,7 16,10 4,17 19,16 7,16 20,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibReviewOtherAuthors implements BlockTool {
     id: "DocLibReviewOtherAuthors",
     title: "DocLib ReviewOtherAuthors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="39602c3ee13ed8a1"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,15 14,15 8,15 16,12 6,14 15,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

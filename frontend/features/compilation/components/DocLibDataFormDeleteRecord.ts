@@ -5,7 +5,7 @@ export default class DocLibDataFormDeleteRecord implements BlockTool {
     id: "DocLibDataFormDeleteRecord",
     title: "DocLib DataFormDeleteRecord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d2e681f62e47ef76"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,13 14,12 16,7 5,20 4,4 19,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

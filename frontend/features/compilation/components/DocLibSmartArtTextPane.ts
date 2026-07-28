@@ -5,7 +5,7 @@ export default class DocLibSmartArtTextPane implements BlockTool {
     id: "DocLibSmartArtTextPane",
     title: "DocLib SmartArtTextPane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="02d335f8f578995f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,11 6,14 11,5 4,14 7,19 14,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

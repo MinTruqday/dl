@@ -5,7 +5,7 @@ export default class DocLibPasteExcelTableSourceFormatting implements BlockTool 
     id: "DocLibPasteExcelTableSourceFormatting",
     title: "DocLib PasteExcelTableSourceFormatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855c1332dc592e87"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,11 6,20 20,8 16,20 15,17 18,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

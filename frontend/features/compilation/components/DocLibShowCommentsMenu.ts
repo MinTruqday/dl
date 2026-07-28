@@ -5,7 +5,7 @@ export default class DocLibShowCommentsMenu implements BlockTool {
     id: "DocLibShowCommentsMenu",
     title: "DocLib ShowCommentsMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e7c8f6546804d80"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,9 11,20 6,13 13,13 11,4 10,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

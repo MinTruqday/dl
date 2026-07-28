@@ -5,7 +5,7 @@ export default class DocLibCropAspectRatio implements BlockTool {
     id: "DocLibCropAspectRatio",
     title: "DocLib CropAspectRatio",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="52684d1bda0386f8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,6 13,14 18,7 19,14 7,6 4,13"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

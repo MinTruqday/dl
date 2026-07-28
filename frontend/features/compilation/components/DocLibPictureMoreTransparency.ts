@@ -5,7 +5,7 @@ export default class DocLibPictureMoreTransparency implements BlockTool {
     id: "DocLibPictureMoreTransparency",
     title: "DocLib PictureMoreTransparency",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0626fc3d5d68238c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,8 18,14 12,6 5,8 19,13 5,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

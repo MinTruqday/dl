@@ -5,7 +5,7 @@ export default class DocLibBroadcastEdit implements BlockTool {
     id: "DocLibBroadcastEdit",
     title: "DocLib BroadcastEdit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d1265d2e300b0ca"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,5 20,10 10,4 10,19 6,20 10,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibChartSortRightClickMenu implements BlockTool {
     id: "DocLibChartSortRightClickMenu",
     title: "DocLib ChartSortRightClickMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b66d789bf96298c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,4 15,5 8,18 11,8 9,16 14,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

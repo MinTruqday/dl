@@ -5,7 +5,7 @@ export default class DocLibAltTextPaneRibbon implements BlockTool {
     id: "DocLibAltTextPaneRibbon",
     title: "DocLib AltTextPaneRibbon",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b5cb142446c3ef31"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,20 7,6 6,12 5,19 11,12 8,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

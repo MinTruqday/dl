@@ -5,7 +5,7 @@ export default class DocLibEnDash implements BlockTool {
     id: "DocLibEnDash",
     title: "DocLib EnDash",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c93f04f1cb2f0d6c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,16 8,7 20,17 17,10 6,4 8,15"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

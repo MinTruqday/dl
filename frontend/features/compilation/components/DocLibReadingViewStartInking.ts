@@ -5,7 +5,7 @@ export default class DocLibReadingViewStartInking implements BlockTool {
     id: "DocLibReadingViewStartInking",
     title: "DocLib ReadingViewStartInking",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="269f98c05d34bfad"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,10 20,9 12,5 8,7 9,8 5,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

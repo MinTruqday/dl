@@ -5,7 +5,7 @@ export default class DocLibTextBoxInsertVerticalWord implements BlockTool {
     id: "DocLibTextBoxInsertVerticalWord",
     title: "DocLib TextBoxInsertVerticalWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f22f0a53b20f623a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 14,19 12,19 17,11 9,8 20,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

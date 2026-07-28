@@ -5,7 +5,7 @@ export default class DocLibInsertMobilePicture implements BlockTool {
     id: "DocLibInsertMobilePicture",
     title: "DocLib InsertMobilePicture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="898832cb40120c36"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,4 20,20 17,5 16,7 12,12 12,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

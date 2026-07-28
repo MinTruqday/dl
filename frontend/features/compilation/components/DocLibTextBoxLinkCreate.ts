@@ -5,7 +5,7 @@ export default class DocLibTextBoxLinkCreate implements BlockTool {
     id: "DocLibTextBoxLinkCreate",
     title: "DocLib TextBoxLinkCreate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1d990bb47da90948"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,4 15,14 10,20 13,8 7,17 10,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibBorderDiagonalUp implements BlockTool {
     id: "DocLibBorderDiagonalUp",
     title: "DocLib BorderDiagonalUp",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="892fb5c52b56fc7a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,17 15,14 13,5 18,7 13,17 4,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

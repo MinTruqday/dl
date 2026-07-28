@@ -5,7 +5,7 @@ export default class DocLibTableFormulaDialog implements BlockTool {
     id: "DocLibTableFormulaDialog",
     title: "DocLib TableFormulaDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7bf3cbca94b52d81"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,9 20,19 16,15 15,14 15,15 4,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibAudioPlayer implements BlockTool {
     id: "DocLibAudioPlayer",
     title: "DocLib AudioPlayer",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d4edf687225bed1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,20 12,20 4,10 20,17 9,19 6,19"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

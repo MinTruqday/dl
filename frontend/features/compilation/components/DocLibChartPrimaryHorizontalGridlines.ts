@@ -5,7 +5,7 @@ export default class DocLibChartPrimaryHorizontalGridlines implements BlockTool 
     id: "DocLibChartPrimaryHorizontalGridlines",
     title: "DocLib ChartPrimaryHorizontalGridlines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2f1ab59377c0865d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,13 15,15 4,9 19,12 11,6 12,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

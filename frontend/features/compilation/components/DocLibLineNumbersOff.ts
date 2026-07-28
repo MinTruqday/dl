@@ -5,7 +5,7 @@ export default class DocLibLineNumbersOff implements BlockTool {
     id: "DocLibLineNumbersOff",
     title: "DocLib LineNumbersOff",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b204c5cc25a756cd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,8 14,4 7,18 5,5 7,4 11,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

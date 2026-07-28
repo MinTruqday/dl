@@ -5,7 +5,7 @@ export default class DocLibMenuAccessibility implements BlockTool {
     id: "DocLibMenuAccessibility",
     title: "DocLib MenuAccessibility",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b01246d219d7cab9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,5 6,10 12,15 19,19 10,19 8,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

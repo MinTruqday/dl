@@ -5,7 +5,7 @@ export default class DocLibDictationMenu implements BlockTool {
     id: "DocLibDictationMenu",
     title: "DocLib DictationMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d341d0e7209a170"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,5 16,18 16,13 12,14 11,8 8,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibDigitalSignature implements BlockTool {
     id: "DocLibDigitalSignature",
     title: "DocLib DigitalSignature",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba1b2e375a980f64"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,14 16,8 9,20 19,19 8,15 4,16"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

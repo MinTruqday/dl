@@ -5,7 +5,7 @@ export default class DocLibAsianLayoutCharacterScaling implements BlockTool {
     id: "DocLibAsianLayoutCharacterScaling",
     title: "DocLib AsianLayoutCharacterScaling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="440835b8783e47e7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,12 6,18 5,15 7,14 5,14 13,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

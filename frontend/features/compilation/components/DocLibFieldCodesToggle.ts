@@ -5,7 +5,7 @@ export default class DocLibFieldCodesToggle implements BlockTool {
     id: "DocLibFieldCodesToggle",
     title: "DocLib FieldCodesToggle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3e58912c44266eec"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,7 13,14 4,8 12,19 15,17 6,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

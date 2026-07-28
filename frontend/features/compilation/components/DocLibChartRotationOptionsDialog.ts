@@ -5,7 +5,7 @@ export default class DocLibChartRotationOptionsDialog implements BlockTool {
     id: "DocLibChartRotationOptionsDialog",
     title: "DocLib ChartRotationOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="813bd46771dcad5f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,12 12,5 15,20 7,14 19,18 8,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

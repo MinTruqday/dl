@@ -5,7 +5,7 @@ export default class DocLibHeaderFooterClose implements BlockTool {
     id: "DocLibHeaderFooterClose",
     title: "DocLib HeaderFooterClose",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="781be31d83aaa2f4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,14 10,16 16,4 13,10 18,20 4,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

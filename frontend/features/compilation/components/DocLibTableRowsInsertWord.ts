@@ -5,7 +5,7 @@ export default class DocLibTableRowsInsertWord implements BlockTool {
     id: "DocLibTableRowsInsertWord",
     title: "DocLib TableRowsInsertWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cf529d1585814c6e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,18 8,8 18,14 12,12 7,19 16,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

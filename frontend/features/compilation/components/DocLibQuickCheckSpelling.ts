@@ -5,7 +5,7 @@ export default class DocLibQuickCheckSpelling implements BlockTool {
     id: "DocLibQuickCheckSpelling",
     title: "DocLib QuickCheckSpelling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b56abaff01782fb"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,5 5,9 6,10 15,17 18,14 17,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

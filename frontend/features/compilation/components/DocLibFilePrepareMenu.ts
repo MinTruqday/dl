@@ -5,7 +5,7 @@ export default class DocLibFilePrepareMenu implements BlockTool {
     id: "DocLibFilePrepareMenu",
     title: "DocLib FilePrepareMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e07b19c25afc609"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,11 11,7 7,9 15,13 16,18 20,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

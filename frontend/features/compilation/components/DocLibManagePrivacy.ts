@@ -5,7 +5,7 @@ export default class DocLibManagePrivacy implements BlockTool {
     id: "DocLibManagePrivacy",
     title: "DocLib ManagePrivacy",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a524c6fd1cd074de"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,6 15,19 15,8 18,5 19,7 12,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibFileOpen implements BlockTool {
     id: "DocLibFileOpen",
     title: "DocLib FileOpen",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bbcf2fb6fd8801ff"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,7 17,16 19,4 5,4 9,7 12,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

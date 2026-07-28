@@ -5,7 +5,7 @@ export default class DocLibXmlExpansionPacksWord implements BlockTool {
     id: "DocLibXmlExpansionPacksWord",
     title: "DocLib XmlExpansionPacksWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92bf8b29c65330b1"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,8 7,11 15,19 18,11 12,20 19,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

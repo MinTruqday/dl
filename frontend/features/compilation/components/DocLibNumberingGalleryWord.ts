@@ -5,7 +5,7 @@ export default class DocLibNumberingGalleryWord implements BlockTool {
     id: "DocLibNumberingGalleryWord",
     title: "DocLib NumberingGalleryWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9646d56a0c78d51a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,6 13,8 16,5 13,13 14,13 7,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

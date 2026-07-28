@@ -5,7 +5,7 @@ export default class DocLibGraphicChangeMenu implements BlockTool {
     id: "DocLibGraphicChangeMenu",
     title: "DocLib GraphicChangeMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f94ab57e4c460e7f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,10 15,11 12,6 18,12 8,19 14,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

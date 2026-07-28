@@ -5,7 +5,7 @@ export default class DocLibTextBoxInsertVertical implements BlockTool {
     id: "DocLibTextBoxInsertVertical",
     title: "DocLib TextBoxInsertVertical",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="527bd0206963741c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,8 8,19 7,18 18,15 17,17 17,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

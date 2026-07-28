@@ -5,7 +5,7 @@ export default class DocLibTableOfContents implements BlockTool {
     id: "DocLibTableOfContents",
     title: "DocLib TableOfContents",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1868a65ff5a86705"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,6 17,14 11,19 5,9 10,12 11,14"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

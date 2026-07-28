@@ -5,7 +5,7 @@ export default class DocLibLineFocusNone implements BlockTool {
     id: "DocLibLineFocusNone",
     title: "DocLib LineFocusNone",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="354375db31d34b1b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,20 19,19 19,11 11,14 15,20 10,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

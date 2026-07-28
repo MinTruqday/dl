@@ -5,7 +5,7 @@ export default class DocLibPageMovement implements BlockTool {
     id: "DocLibPageMovement",
     title: "DocLib PageMovement",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8cb120991936a36e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,11 19,4 12,7 14,12 4,13 10,9"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

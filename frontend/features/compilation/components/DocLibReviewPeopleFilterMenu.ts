@@ -5,7 +5,7 @@ export default class DocLibReviewPeopleFilterMenu implements BlockTool {
     id: "DocLibReviewPeopleFilterMenu",
     title: "DocLib ReviewPeopleFilterMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2ec7f86323360e96"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,16 14,18 5,7 18,18 12,5 5,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibBibliographyStyle implements BlockTool {
     id: "DocLibBibliographyStyle",
     title: "DocLib BibliographyStyle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c74ceb44c9b71222"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,12 18,4 18,17 5,4 9,16 5,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

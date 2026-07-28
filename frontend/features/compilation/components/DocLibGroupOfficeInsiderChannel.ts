@@ -5,7 +5,7 @@ export default class DocLibGroupOfficeInsiderChannel implements BlockTool {
     id: "DocLibGroupOfficeInsiderChannel",
     title: "DocLib GroupOfficeInsiderChannel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e4fe3803cbc96eea"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,20 9,7 20,18 12,17 16,18 15,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibArtisticEffects implements BlockTool {
     id: "DocLibArtisticEffects",
     title: "DocLib ArtisticEffects",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cfe43f1928596645"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,11 16,12 10,8 4,5 7,18 11,16"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibBoldRun implements BlockTool {
     id: "DocLibBoldRun",
     title: "DocLib BoldRun",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3cc7fefb19a4472d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,16 20,17 12,15 7,15 18,5 11,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

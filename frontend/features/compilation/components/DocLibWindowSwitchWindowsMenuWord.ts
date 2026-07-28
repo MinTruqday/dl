@@ -5,7 +5,7 @@ export default class DocLibWindowSwitchWindowsMenuWord implements BlockTool {
     id: "DocLibWindowSwitchWindowsMenuWord",
     title: "DocLib WindowSwitchWindowsMenuWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fa610d28546f63a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,17 20,10 18,6 12,11 10,4 16,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

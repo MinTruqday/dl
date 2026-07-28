@@ -5,7 +5,7 @@ export default class DocLibGroupControls implements BlockTool {
     id: "DocLibGroupControls",
     title: "DocLib GroupControls",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4c7c408a2e5a96bc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,9 17,6 16,9 18,5 6,18 14,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

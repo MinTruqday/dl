@@ -5,7 +5,7 @@ export default class DocLibHorizontalLineInsert implements BlockTool {
     id: "DocLibHorizontalLineInsert",
     title: "DocLib HorizontalLineInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="85dbc0a55068df0a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,19 9,16 16,6 6,14 19,12 10,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibFifthCorrectionAlternative implements BlockTool {
     id: "DocLibFifthCorrectionAlternative",
     title: "DocLib FifthCorrectionAlternative",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fff61d1de1a0770a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,12 16,16 8,11 4,14 14,9 16,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

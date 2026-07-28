@@ -5,7 +5,7 @@ export default class DocLibUnderlineDouble implements BlockTool {
     id: "DocLibUnderlineDouble",
     title: "DocLib UnderlineDouble",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3bb451345064d52e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,14 17,5 16,19 13,16 16,4 17,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibCallout implements BlockTool {
     id: "DocLibCallout",
     title: "DocLib Callout",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3ff24e4f255afbfb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,8 14,15 7,9 17,17 11,4 12,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

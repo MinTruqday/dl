@@ -5,7 +5,7 @@ export default class DocLibReviewShowSourceDocumentsMenu implements BlockTool {
     id: "DocLibReviewShowSourceDocumentsMenu",
     title: "DocLib ReviewShowSourceDocumentsMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8cb37e9ffa0a47ab"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,13 11,10 16,14 7,5 6,9 5,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibChartSecondaryVerticalGridlines implements BlockTool 
     id: "DocLibChartSecondaryVerticalGridlines",
     title: "DocLib ChartSecondaryVerticalGridlines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ecf880038187e9cf"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,14 13,7 14,20 16,7 6,4 13,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

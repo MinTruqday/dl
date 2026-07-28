@@ -5,7 +5,7 @@ export default class DocLibExpandCollapse implements BlockTool {
     id: "DocLibExpandCollapse",
     title: "DocLib ExpandCollapse",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6a469c9bb649b933"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,6 7,6 16,9 19,4 13,8 16,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

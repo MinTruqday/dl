@@ -5,7 +5,7 @@ export default class DocLibBroadcastNotesSplitButton implements BlockTool {
     id: "DocLibBroadcastNotesSplitButton",
     title: "DocLib BroadcastNotesSplitButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ef8baf55a0d84a02"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,7 9,4 11,16 10,6 13,15 8,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

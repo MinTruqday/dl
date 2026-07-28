@@ -5,7 +5,7 @@ export default class DocLibAsianLayoutCombineCharacters implements BlockTool {
     id: "DocLibAsianLayoutCombineCharacters",
     title: "DocLib AsianLayoutCombineCharacters",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c3fada501bbd82ee"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,16 18,16 14,6 15,4 13,15 9,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

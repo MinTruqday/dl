@@ -5,7 +5,7 @@ export default class DocLibGoToEndOfWindow implements BlockTool {
     id: "DocLibGoToEndOfWindow",
     title: "DocLib GoToEndOfWindow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="685d8dc74d4a0968"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,12 9,16 13,10 13,6 20,11 15,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

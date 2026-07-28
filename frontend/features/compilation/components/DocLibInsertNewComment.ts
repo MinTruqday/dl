@@ -5,7 +5,7 @@ export default class DocLibInsertNewComment implements BlockTool {
     id: "DocLibInsertNewComment",
     title: "DocLib InsertNewComment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a223025ffc6ad00"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,4 18,7 4,15 7,4 4,6 12,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

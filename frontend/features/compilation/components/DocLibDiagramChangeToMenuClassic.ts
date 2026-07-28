@@ -5,7 +5,7 @@ export default class DocLibDiagramChangeToMenuClassic implements BlockTool {
     id: "DocLibDiagramChangeToMenuClassic",
     title: "DocLib DiagramChangeToMenuClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e27bd0e6b95a9d07"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,8 8,13 19,9 8,11 9,19 8,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

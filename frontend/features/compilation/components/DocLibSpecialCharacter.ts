@@ -5,7 +5,7 @@ export default class DocLibSpecialCharacter implements InlineTool {
     id: "DocLibSpecialCharacter",
     title: "DocLib SpecialCharacter",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="253c11e2f2daa59f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,13 4,9 8,18 16,10 19,17 12,13"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   static get isInline() {

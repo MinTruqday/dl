@@ -5,7 +5,7 @@ export default class DocLibDraftViewClassic implements BlockTool {
     id: "DocLibDraftViewClassic",
     title: "DocLib DraftViewClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5cb4a0a7031ba262"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,14 11,18 7,14 13,17 19,16 10,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTableCellAlignBottom implements BlockTool {
     id: "DocLibTableCellAlignBottom",
     title: "DocLib TableCellAlignBottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f115ae4669e729b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,4 9,11 4,9 16,6 18,4 12,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

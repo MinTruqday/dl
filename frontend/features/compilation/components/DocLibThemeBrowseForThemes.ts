@@ -5,7 +5,7 @@ export default class DocLibThemeBrowseForThemes implements BlockTool {
     id: "DocLibThemeBrowseForThemes",
     title: "DocLib ThemeBrowseForThemes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c4be8d4a45f43592"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,7 9,10 5,10 6,14 10,10 4,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

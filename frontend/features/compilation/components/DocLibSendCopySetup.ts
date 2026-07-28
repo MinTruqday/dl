@@ -5,7 +5,7 @@ export default class DocLibSendCopySetup implements BlockTool {
     id: "DocLibSendCopySetup",
     title: "DocLib SendCopySetup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="35a749b85a6510d3"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,18 9,18 9,20 20,11 19,15 15,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

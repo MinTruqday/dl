@@ -5,7 +5,7 @@ export default class DocLibCompatibilityChecker implements BlockTool {
     id: "DocLibCompatibilityChecker",
     title: "DocLib CompatibilityChecker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9131d5cea557438b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,19 13,6 16,6 20,7 14,14 18,17"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

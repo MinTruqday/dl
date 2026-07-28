@@ -5,7 +5,7 @@ export default class DocLibSmartArtOrganizationChartStandard implements BlockToo
     id: "DocLibSmartArtOrganizationChartStandard",
     title: "DocLib SmartArtOrganizationChartStandard",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46dfb0976ecee76f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,6 10,19 12,6 14,13 4,7 19,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

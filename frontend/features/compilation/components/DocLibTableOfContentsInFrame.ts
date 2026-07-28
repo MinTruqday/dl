@@ -5,7 +5,7 @@ export default class DocLibTableOfContentsInFrame implements BlockTool {
     id: "DocLibTableOfContentsInFrame",
     title: "DocLib TableOfContentsInFrame",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="753dd50351aa403f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,14 13,7 17,4 17,16 9,12 5,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

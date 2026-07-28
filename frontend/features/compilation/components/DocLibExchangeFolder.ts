@@ -5,7 +5,7 @@ export default class DocLibExchangeFolder implements BlockTool {
     id: "DocLibExchangeFolder",
     title: "DocLib ExchangeFolder",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eb507343a5c0b5fa"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,16 17,20 16,9 15,16 12,16 16,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

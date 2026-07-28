@@ -5,7 +5,7 @@ export default class DocLibHeaderFooterDifferentOddEvenPageWord implements Block
     id: "DocLibHeaderFooterDifferentOddEvenPageWord",
     title: "DocLib HeaderFooterDifferentOddEvenPageWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c00a3433cced62e1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,14 5,4 4,20 17,8 17,18 9,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

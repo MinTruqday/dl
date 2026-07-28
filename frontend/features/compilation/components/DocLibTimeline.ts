@@ -5,7 +5,7 @@ export default class DocLibTimeline implements BlockTool {
     id: "DocLibTimeline",
     title: "DocLib Timeline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4187bedb46182280"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,20 7,19 6,11 4,13 11,4 15,10"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

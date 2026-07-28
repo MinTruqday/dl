@@ -5,7 +5,7 @@ export default class DocLibFrameInsertOrFormat implements BlockTool {
     id: "DocLibFrameInsertOrFormat",
     title: "DocLib FrameInsertOrFormat",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6a19bda246239aab"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,12 6,13 6,5 5,5 7,8 14,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

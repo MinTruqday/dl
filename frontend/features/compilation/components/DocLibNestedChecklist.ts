@@ -5,7 +5,7 @@ export default class DocLibNestedChecklist implements BlockTool {
     id: "DocLibNestedChecklist",
     title: "DocLib NestedChecklist",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7fd01601be5a94d0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,8 9,5 7,9 16,8 7,15 7,14"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

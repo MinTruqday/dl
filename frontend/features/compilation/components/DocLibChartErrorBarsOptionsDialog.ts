@@ -5,7 +5,7 @@ export default class DocLibChartErrorBarsOptionsDialog implements BlockTool {
     id: "DocLibChartErrorBarsOptionsDialog",
     title: "DocLib ChartErrorBarsOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38426e5c210205ed"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,19 12,11 20,6 9,20 6,8 17,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

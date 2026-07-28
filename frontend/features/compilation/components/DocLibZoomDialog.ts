@@ -5,7 +5,7 @@ export default class DocLibZoomDialog implements BlockTool {
     id: "DocLibZoomDialog",
     title: "DocLib ZoomDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="409f0fc8fd0f188d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,10 19,17 19,19 11,9 5,9 12,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

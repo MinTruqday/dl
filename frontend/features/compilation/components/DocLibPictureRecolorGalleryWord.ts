@@ -5,7 +5,7 @@ export default class DocLibPictureRecolorGalleryWord implements BlockTool {
     id: "DocLibPictureRecolorGalleryWord",
     title: "DocLib PictureRecolorGalleryWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a60f10563872f86d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,19 20,5 9,16 14,11 19,4 19,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

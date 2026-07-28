@@ -5,7 +5,7 @@ export default class DocLibTranslation implements BlockTool {
     id: "DocLibTranslation",
     title: "DocLib Translation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a541e82be1fd08c1"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,18 15,13 8,19 12,10 19,19 9,7"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

@@ -5,7 +5,7 @@ export default class DocLibFullScreenViewClassic implements BlockTool {
     id: "DocLibFullScreenViewClassic",
     title: "DocLib FullScreenViewClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="01e1fff17dfa73c6"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,8 4,7 10,16 17,15 16,17 11,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

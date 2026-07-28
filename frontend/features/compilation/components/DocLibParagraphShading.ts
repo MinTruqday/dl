@@ -5,7 +5,7 @@ export default class DocLibParagraphShading implements BlockTool {
     id: "DocLibParagraphShading",
     title: "DocLib ParagraphShading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="63dba87a313e7b1d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,19 19,7 19,15 8,16 11,6 12,19"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

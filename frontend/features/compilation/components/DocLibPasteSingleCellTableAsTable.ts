@@ -5,7 +5,7 @@ export default class DocLibPasteSingleCellTableAsTable implements BlockTool {
     id: "DocLibPasteSingleCellTableAsTable",
     title: "DocLib PasteSingleCellTableAsTable",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59be939ef694c89f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,7 15,9 12,16 17,10 9,16 10,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibUnderlineColorPicker implements BlockTool {
     id: "DocLibUnderlineColorPicker",
     title: "DocLib UnderlineColorPicker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0c581e36e01f2ed7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,7 17,7 7,18 16,15 11,20 11,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

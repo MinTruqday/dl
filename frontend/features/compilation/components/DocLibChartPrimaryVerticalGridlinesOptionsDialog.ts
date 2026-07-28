@@ -5,7 +5,7 @@ export default class DocLibChartPrimaryVerticalGridlinesOptionsDialog implements
     id: "DocLibChartPrimaryVerticalGridlinesOptionsDialog",
     title: "DocLib ChartPrimaryVerticalGridlinesOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="956969642cdd9697"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,7 7,19 14,4 18,19 20,9 9,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

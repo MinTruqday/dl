@@ -5,7 +5,7 @@ export default class DocLibDateAndTime implements BlockTool {
     id: "DocLibDateAndTime",
     title: "DocLib DateAndTime",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6daf2a2048b1afb0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,9 12,19 8,11 9,10 18,8 5,12"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

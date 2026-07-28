@@ -5,7 +5,7 @@ export default class DocLibChartFormatSeriesLine implements BlockTool {
     id: "DocLibChartFormatSeriesLine",
     title: "DocLib ChartFormatSeriesLine",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dc4f224020a1ec5c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,15 4,17 19,12 19,11 14,19 10,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

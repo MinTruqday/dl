@@ -5,7 +5,7 @@ export default class DocLibEquationLaTexFormat implements BlockTool {
     id: "DocLibEquationLaTexFormat",
     title: "DocLib EquationLaTexFormat",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e807f536ffa20eae"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,11 11,7 4,13 18,8 18,6 17,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTextBoxInsertWord implements BlockTool {
     id: "DocLibTextBoxInsertWord",
     title: "DocLib TextBoxInsertWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="627c4e9ff7996a3a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,9 14,10 13,4 8,11 19,11 18,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

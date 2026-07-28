@@ -5,7 +5,7 @@ export default class DocLibBlogOpenExisting implements BlockTool {
     id: "DocLibBlogOpenExisting",
     title: "DocLib BlogOpenExisting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7d2c813fc8e6223"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,10 17,6 18,10 17,5 16,14 7,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

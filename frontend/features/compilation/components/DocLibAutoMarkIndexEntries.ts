@@ -5,7 +5,7 @@ export default class DocLibAutoMarkIndexEntries implements BlockTool {
     id: "DocLibAutoMarkIndexEntries",
     title: "DocLib AutoMarkIndexEntries",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be984680a0f6d293"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,20 6,13 11,12 10,15 16,20 12,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

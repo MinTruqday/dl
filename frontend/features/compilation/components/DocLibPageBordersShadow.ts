@@ -5,7 +5,7 @@ export default class DocLibPageBordersShadow implements BlockTool {
     id: "DocLibPageBordersShadow",
     title: "DocLib PageBordersShadow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f029287becf0276"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,6 14,20 7,7 6,20 16,14 15,19"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

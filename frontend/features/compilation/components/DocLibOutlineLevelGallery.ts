@@ -5,7 +5,7 @@ export default class DocLibOutlineLevelGallery implements BlockTool {
     id: "DocLibOutlineLevelGallery",
     title: "DocLib OutlineLevelGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="adad0a6f412df278"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,7 14,13 18,15 8,5 20,8 12,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

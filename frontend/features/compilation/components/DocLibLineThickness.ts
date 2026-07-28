@@ -5,7 +5,7 @@ export default class DocLibLineThickness implements BlockTool {
     id: "DocLibLineThickness",
     title: "DocLib LineThickness",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c3423be8d92e8d49"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,19 12,15 17,16 9,9 6,15 7,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

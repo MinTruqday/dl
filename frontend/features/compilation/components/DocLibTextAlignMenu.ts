@@ -5,7 +5,7 @@ export default class DocLibTextAlignMenu implements BlockTool {
     id: "DocLibTextAlignMenu",
     title: "DocLib TextAlignMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="984cf4efd561837b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,12 10,5 13,16 16,8 17,5 6,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

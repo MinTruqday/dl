@@ -5,7 +5,7 @@ export default class DocLibInkEraser implements BlockTool {
     id: "DocLibInkEraser",
     title: "DocLib InkEraser",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f85096e873874e5"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,18 13,12 20,9 18,12 4,18 13,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

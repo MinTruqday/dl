@@ -5,7 +5,7 @@ export default class DocLibChartFormatPlotArea implements BlockTool {
     id: "DocLibChartFormatPlotArea",
     title: "DocLib ChartFormatPlotArea",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e0b7fcbc2fbbf41c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,17 18,5 17,4 10,15 4,13 11,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

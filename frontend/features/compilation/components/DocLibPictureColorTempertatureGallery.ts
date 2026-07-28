@@ -5,7 +5,7 @@ export default class DocLibPictureColorTempertatureGallery implements BlockTool 
     id: "DocLibPictureColorTempertatureGallery",
     title: "DocLib PictureColorTempertatureGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ae111003d3454ae"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,8 4,4 14,5 20,8 13,19 6,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

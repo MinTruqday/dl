@@ -5,7 +5,7 @@ export default class DocLibTextFillGradientGallery implements BlockTool {
     id: "DocLibTextFillGradientGallery",
     title: "DocLib TextFillGradientGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24cf13564ced7913"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,7 6,5 12,20 6,6 13,14 4,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

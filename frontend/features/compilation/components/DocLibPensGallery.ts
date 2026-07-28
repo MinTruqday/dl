@@ -5,7 +5,7 @@ export default class DocLibPensGallery implements BlockTool {
     id: "DocLibPensGallery",
     title: "DocLib PensGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eaac0f131a697cfa"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,6 19,6 13,7 9,16 10,6 18,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibGridlines implements BlockTool {
     id: "DocLibGridlines",
     title: "DocLib Gridlines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7e88c9ecb6294434"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 18,19 16,11 4,5 15,17 7,9"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

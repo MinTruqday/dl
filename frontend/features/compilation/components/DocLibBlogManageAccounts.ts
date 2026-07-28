@@ -5,7 +5,7 @@ export default class DocLibBlogManageAccounts implements BlockTool {
     id: "DocLibBlogManageAccounts",
     title: "DocLib BlogManageAccounts",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aed79a56c3a64d2a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,15 5,5 12,17 13,12 7,16 13,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

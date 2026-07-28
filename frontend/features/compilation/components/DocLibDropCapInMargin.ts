@@ -5,7 +5,7 @@ export default class DocLibDropCapInMargin implements BlockTool {
     id: "DocLibDropCapInMargin",
     title: "DocLib DropCapInMargin",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="42862ca1cc6a5567"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,19 14,12 4,8 4,5 20,20 16,8"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

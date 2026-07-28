@@ -5,7 +5,7 @@ export default class DocLibSendCopyAddressBookTo implements BlockTool {
     id: "DocLibSendCopyAddressBookTo",
     title: "DocLib SendCopyAddressBookTo",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a5db3ed6ec0b803"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,12 13,20 12,9 18,7 13,4 17,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibOrganizationChartSelectAllAssistants implements Block
     id: "DocLibOrganizationChartSelectAllAssistants",
     title: "DocLib OrganizationChartSelectAllAssistants",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c8cbde496fe9d48b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,20 5,9 13,16 12,7 20,13 18,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

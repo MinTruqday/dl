@@ -5,7 +5,7 @@ export default class DocLibWindowSideBySide implements BlockTool {
     id: "DocLibWindowSideBySide",
     title: "DocLib WindowSideBySide",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ea83bf505a168b03"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,16 8,16 9,9 7,7 15,20 18,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

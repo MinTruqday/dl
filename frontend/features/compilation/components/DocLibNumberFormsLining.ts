@@ -5,7 +5,7 @@ export default class DocLibNumberFormsLining implements BlockTool {
     id: "DocLibNumberFormsLining",
     title: "DocLib NumberFormsLining",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92068ff2ad5e0651"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,10 11,8 7,13 10,17 9,10 14,13"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibBringForward implements BlockTool {
     id: "DocLibBringForward",
     title: "DocLib BringForward",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="caf8f49b718dd7b3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,14 10,6 15,9 15,13 18,6 17,15"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibPointEraserMedium implements BlockTool {
     id: "DocLibPointEraserMedium",
     title: "DocLib PointEraserMedium",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="91cf7ff890444666"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,7 12,14 12,4 6,4 16,15 14,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibMailMergeRuleNextRecordIf implements BlockTool {
     id: "DocLibMailMergeRuleNextRecordIf",
     title: "DocLib MailMergeRuleNextRecordIf",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="47457f3b8032ee72"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,5 12,12 13,20 4,16 10,4 16,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

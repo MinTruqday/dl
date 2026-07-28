@@ -5,7 +5,7 @@ export default class DocLibPageDownExtend implements BlockTool {
     id: "DocLibPageDownExtend",
     title: "DocLib PageDownExtend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5838a9bf43298f7a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,9 20,8 20,11 11,7 7,11 8,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

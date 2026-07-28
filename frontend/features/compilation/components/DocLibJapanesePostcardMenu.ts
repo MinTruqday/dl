@@ -5,7 +5,7 @@ export default class DocLibJapanesePostcardMenu implements BlockTool {
     id: "DocLibJapanesePostcardMenu",
     title: "DocLib JapanesePostcardMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f15a778ef456b41d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,9 4,10 10,5 14,16 5,20 12,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTrackChangesAdvancedOptions implements BlockTool {
     id: "DocLibTrackChangesAdvancedOptions",
     title: "DocLib TrackChangesAdvancedOptions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a1c2ab09d77b5d1c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,11 5,13 15,8 12,15 12,5 6,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibDropCapInsertGallery implements BlockTool {
     id: "DocLibDropCapInsertGallery",
     title: "DocLib DropCapInsertGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69d22fcaafd1da26"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,10 17,19 9,9 18,8 13,6 13,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

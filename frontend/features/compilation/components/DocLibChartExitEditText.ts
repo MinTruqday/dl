@@ -5,7 +5,7 @@ export default class DocLibChartExitEditText implements BlockTool {
     id: "DocLibChartExitEditText",
     title: "DocLib ChartExitEditText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dfb8a48f70dd2af8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,18 15,11 14,4 12,14 12,10 11,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

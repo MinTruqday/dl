@@ -5,7 +5,7 @@ export default class DocLibSelectMenuExcel implements BlockTool {
     id: "DocLibSelectMenuExcel",
     title: "DocLib SelectMenuExcel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a64bcb1248db3e6"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,19 5,11 6,9 13,13 15,16 4,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

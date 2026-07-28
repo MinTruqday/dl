@@ -5,7 +5,7 @@ export default class DocLibOpenOptionsWordCustomizeRibbon implements BlockTool {
     id: "DocLibOpenOptionsWordCustomizeRibbon",
     title: "DocLib OpenOptionsWordCustomizeRibbon",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7408bba118955de7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,12 4,12 11,17 12,14 8,16 6,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

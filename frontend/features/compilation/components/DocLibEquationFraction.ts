@@ -5,7 +5,7 @@ export default class DocLibEquationFraction implements BlockTool {
     id: "DocLibEquationFraction",
     title: "DocLib EquationFraction",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="74f1bc887f517689"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,7 5,4 12,17 20,5 16,6 15,7"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

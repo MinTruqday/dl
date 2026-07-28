@@ -5,7 +5,7 @@ export default class DocLibMovieFromClipOrganizerInsert implements BlockTool {
     id: "DocLibMovieFromClipOrganizerInsert",
     title: "DocLib MovieFromClipOrganizerInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e157551f921b413"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,8 19,17 15,20 14,6 20,8 12,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

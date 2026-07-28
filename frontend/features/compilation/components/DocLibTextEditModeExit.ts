@@ -5,7 +5,7 @@ export default class DocLibTextEditModeExit implements BlockTool {
     id: "DocLibTextEditModeExit",
     title: "DocLib TextEditModeExit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cdb1d6bb7148e97b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,11 14,4 15,8 16,8 8,14 13,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

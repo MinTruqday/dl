@@ -5,7 +5,7 @@ export default class DocLibAddToFavorites implements BlockTool {
     id: "DocLibAddToFavorites",
     title: "DocLib AddToFavorites",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab6d9fba862386b2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,11 10,20 19,5 19,12 19,8 12,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibSectionBreak implements BlockTool {
     id: "DocLibSectionBreak",
     title: "DocLib SectionBreak",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6cd21d4d30acdebb"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,10 16,13 18,6 5,4 4,12 12,14"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

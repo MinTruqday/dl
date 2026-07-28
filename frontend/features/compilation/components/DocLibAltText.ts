@@ -5,7 +5,7 @@ export default class DocLibAltText implements BlockTool {
     id: "DocLibAltText",
     title: "DocLib AltText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="52b95c5a22667b9f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,19 11,9 4,4 8,10 11,9 12,7"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibSaveSelectionToPageNumberBottom implements BlockTool 
     id: "DocLibSaveSelectionToPageNumberBottom",
     title: "DocLib SaveSelectionToPageNumberBottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="903b8564cafb200c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,12 18,19 19,17 19,16 18,19 16,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTemplate implements InlineTool {
     id: "DocLibTemplate",
     title: "DocLib Template",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d2446f8edb78c65"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,6 6,14 20,17 8,20 4,4 14,11"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

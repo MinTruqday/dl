@@ -5,7 +5,7 @@ export default class DocLibQuickTablesInsertGallery implements BlockTool {
     id: "DocLibQuickTablesInsertGallery",
     title: "DocLib QuickTablesInsertGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f7ccfb7d207382a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,9 7,17 10,11 9,12 8,13 6,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

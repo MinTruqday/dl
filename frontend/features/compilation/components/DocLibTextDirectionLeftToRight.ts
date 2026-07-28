@@ -5,7 +5,7 @@ export default class DocLibTextDirectionLeftToRight implements BlockTool {
     id: "DocLibTextDirectionLeftToRight",
     title: "DocLib TextDirectionLeftToRight",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="40440aecf19e6a93"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,4 14,19 7,9 8,15 13,17 5,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

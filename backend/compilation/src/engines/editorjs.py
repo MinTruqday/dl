@@ -12,6 +12,10 @@ from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
+from src.engines.editorjs_capabilities import (
+    capabilities_by_tool_key,
+    validate_command_block,
+)
 
 class EditorjsEngine:
 
@@ -121,6 +125,9 @@ class EditorjsEngine:
             EditorjsEngine._san,
             EditorjsEngine._render_block,
         )
+
+        if t in capabilities_by_tool_key():
+            return ""
 
         if t == "paragraph":
             align = d.get("alignment", d.get("align", "left"))
@@ -597,6 +604,14 @@ class EditorjsEngine:
         blocks = parsed_content.get("blocks", []) if isinstance(parsed_content, dict) else []
         if not isinstance(blocks, list) or not blocks or len(blocks) > 5000:
             raise ValueError("Tài liệu không chứa danh sách khối hợp lệ")
+        for block in blocks:
+            if (
+                not isinstance(block, dict)
+                or not isinstance(block.get("type"), str)
+                or not isinstance(block.get("data"), dict)
+            ):
+                raise ValueError("Khối EditorJS không hợp lệ")
+            validate_command_block(block)
         return blocks
 
     @staticmethod

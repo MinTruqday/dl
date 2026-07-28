@@ -6,7 +6,7 @@ export default class DocLibUndo {
     id: "DocLibUndo",
     title: "DocLib Undo",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9677c876d1c9039"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,5 9,20 11,15 12,10 12,17 10,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   private editor: any;

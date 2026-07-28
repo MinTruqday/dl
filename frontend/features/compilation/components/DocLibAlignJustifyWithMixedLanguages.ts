@@ -5,7 +5,7 @@ export default class DocLibAlignJustifyWithMixedLanguages implements BlockTool {
     id: "DocLibAlignJustifyWithMixedLanguages",
     title: "DocLib AlignJustifyWithMixedLanguages",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e50d81b4aeb0a9b4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,17 14,14 8,10 20,14 8,16 10,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

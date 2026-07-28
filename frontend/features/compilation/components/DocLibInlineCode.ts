@@ -5,7 +5,7 @@ export default class DocLibInlineCode implements InlineTool {
     id: "DocLibInlineCode",
     title: "DocLib InlineCode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a10d344167a0547d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,17 5,18 5,11 20,10 12,18 7,7"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

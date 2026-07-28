@@ -5,7 +5,7 @@ export default class DocLibThumbnails implements BlockTool {
     id: "DocLibThumbnails",
     title: "DocLib Thumbnails",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abc4a1de940b423b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,13 12,5 16,15 19,12 16,8 12,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

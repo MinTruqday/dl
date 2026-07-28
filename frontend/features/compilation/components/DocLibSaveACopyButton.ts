@@ -5,7 +5,7 @@ export default class DocLibSaveACopyButton implements BlockTool {
     id: "DocLibSaveACopyButton",
     title: "DocLib SaveACopyButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46de3564e5962816"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,5 6,19 12,18 10,9 17,11 18,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

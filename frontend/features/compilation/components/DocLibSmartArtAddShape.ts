@@ -5,7 +5,7 @@ export default class DocLibSmartArtAddShape implements BlockTool {
     id: "DocLibSmartArtAddShape",
     title: "DocLib SmartArtAddShape",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3271258315a64221"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,15 7,16 8,17 19,20 14,10 14,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

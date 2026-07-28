@@ -5,7 +5,7 @@ export default class DocLibJapaneseGreetingsInsertMenu implements BlockTool {
     id: "DocLibJapaneseGreetingsInsertMenu",
     title: "DocLib JapaneseGreetingsInsertMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="248fd77406465528"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,11 15,18 10,6 4,10 5,11 12,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

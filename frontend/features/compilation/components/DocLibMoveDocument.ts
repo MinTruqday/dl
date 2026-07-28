@@ -5,7 +5,7 @@ export default class DocLibMoveDocument implements BlockTool {
     id: "DocLibMoveDocument",
     title: "DocLib MoveDocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="13d92bdc6e4f6f0c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,17 13,20 12,15 13,16 6,15 4,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

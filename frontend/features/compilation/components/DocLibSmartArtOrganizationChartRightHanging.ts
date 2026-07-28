@@ -5,7 +5,7 @@ export default class DocLibSmartArtOrganizationChartRightHanging implements Bloc
     id: "DocLibSmartArtOrganizationChartRightHanging",
     title: "DocLib SmartArtOrganizationChartRightHanging",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d882d689ed3d95c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,4 15,6 9,11 17,11 8,9 6,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibAutoFormat implements BlockTool {
     id: "DocLibAutoFormat",
     title: "DocLib AutoFormat",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff736f73905c1fb7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,17 13,17 12,11 18,17 8,16 18,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibEquationLargeOperatorGallery implements BlockTool {
     id: "DocLibEquationLargeOperatorGallery",
     title: "DocLib EquationLargeOperatorGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d55673fab5ad5916"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,5 17,16 15,7 8,9 18,12 4,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

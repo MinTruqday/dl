@@ -5,7 +5,7 @@ export default class DocLibComment implements InlineTool {
     id: "DocLibComment",
     title: "DocLib Comment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="94cb7ff0e1529dc6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,20 12,6 8,18 8,15 14,17 9,15"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

@@ -5,7 +5,7 @@ export default class DocLibNextPageSectionBreak implements BlockTool {
     id: "DocLibNextPageSectionBreak",
     title: "DocLib NextPageSectionBreak",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4cc8be8bdc3168b3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,17 7,7 20,19 6,13 19,8 15,4"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

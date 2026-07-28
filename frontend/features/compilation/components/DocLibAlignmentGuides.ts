@@ -5,7 +5,7 @@ export default class DocLibAlignmentGuides implements BlockTool {
     id: "DocLibAlignmentGuides",
     title: "DocLib AlignmentGuides",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="03c916fc7e858d14"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,18 9,18 11,18 9,7 9,8 11,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

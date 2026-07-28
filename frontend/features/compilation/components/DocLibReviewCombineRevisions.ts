@@ -5,7 +5,7 @@ export default class DocLibReviewCombineRevisions implements BlockTool {
     id: "DocLibReviewCombineRevisions",
     title: "DocLib ReviewCombineRevisions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="27f19e47e78581cb"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,7 9,7 14,18 14,20 11,17 7,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

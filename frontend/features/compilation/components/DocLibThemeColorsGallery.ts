@@ -5,7 +5,7 @@ export default class DocLibThemeColorsGallery implements BlockTool {
     id: "DocLibThemeColorsGallery",
     title: "DocLib ThemeColorsGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d3746c33c53d793"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,8 6,12 13,19 15,15 12,13 17,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

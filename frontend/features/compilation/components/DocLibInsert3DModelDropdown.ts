@@ -5,7 +5,7 @@ export default class DocLibInsert3DModelDropdown implements BlockTool {
     id: "DocLibInsert3DModelDropdown",
     title: "DocLib Insert3DModelDropdown",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d443ebb3cf33882"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,4 15,4 13,9 9,15 7,11 18,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

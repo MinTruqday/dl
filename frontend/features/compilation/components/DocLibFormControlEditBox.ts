@@ -5,7 +5,7 @@ export default class DocLibFormControlEditBox implements BlockTool {
     id: "DocLibFormControlEditBox",
     title: "DocLib FormControlEditBox",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f9f9d1e3cca7e8f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,10 8,17 13,19 11,11 18,4 19,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

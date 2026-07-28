@@ -5,7 +5,7 @@ export default class DocLibThemeEffects implements BlockTool {
     id: "DocLibThemeEffects",
     title: "DocLib ThemeEffects",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e11eed7cd8d70d11"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,17 20,9 16,15 17,4 12,11 14,14"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

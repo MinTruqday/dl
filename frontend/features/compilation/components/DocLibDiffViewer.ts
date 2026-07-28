@@ -5,7 +5,7 @@ export default class DocLibDiffViewer implements BlockTool {
     id: "DocLibDiffViewer",
     title: "DocLib DiffViewer",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f75688e7b6039bd1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,5 4,14 16,7 6,9 16,5 7,12"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

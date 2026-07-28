@@ -5,7 +5,7 @@ export default class DocLibTableAutoFitMenu implements BlockTool {
     id: "DocLibTableAutoFitMenu",
     title: "DocLib TableAutoFitMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="53be5316749cb90a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,7 19,9 18,7 19,14 5,10 4,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

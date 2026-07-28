@@ -5,7 +5,7 @@ export default class DocLibShowNavigationPaneHeadingsView implements BlockTool {
     id: "DocLibShowNavigationPaneHeadingsView",
     title: "DocLib ShowNavigationPaneHeadingsView",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c1ccf6b6284b7a6d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,4 12,16 10,11 7,11 9,13 6,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

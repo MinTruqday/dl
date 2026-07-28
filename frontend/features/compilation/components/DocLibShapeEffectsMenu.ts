@@ -5,7 +5,7 @@ export default class DocLibShapeEffectsMenu implements BlockTool {
     id: "DocLibShapeEffectsMenu",
     title: "DocLib ShapeEffectsMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2060740731a3df02"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,15 18,11 19,14 6,6 9,19 9,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

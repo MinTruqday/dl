@@ -5,7 +5,7 @@ export default class DocLibDiagramResizeClassic implements BlockTool {
     id: "DocLibDiagramResizeClassic",
     title: "DocLib DiagramResizeClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0a81b872f8dbed3d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,14 18,16 14,19 20,14 14,13 9,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

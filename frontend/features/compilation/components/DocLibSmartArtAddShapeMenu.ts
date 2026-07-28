@@ -5,7 +5,7 @@ export default class DocLibSmartArtAddShapeMenu implements BlockTool {
     id: "DocLibSmartArtAddShapeMenu",
     title: "DocLib SmartArtAddShapeMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dcbd1bc6d58d853d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,6 14,15 13,9 18,14 10,17 16,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

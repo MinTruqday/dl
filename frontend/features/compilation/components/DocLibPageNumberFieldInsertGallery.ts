@@ -5,7 +5,7 @@ export default class DocLibPageNumberFieldInsertGallery implements BlockTool {
     id: "DocLibPageNumberFieldInsertGallery",
     title: "DocLib PageNumberFieldInsertGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b9e5f181c66a38bc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,12 7,14 15,8 9,5 8,19 10,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

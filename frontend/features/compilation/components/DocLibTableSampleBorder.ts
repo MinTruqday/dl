@@ -5,7 +5,7 @@ export default class DocLibTableSampleBorder implements BlockTool {
     id: "DocLibTableSampleBorder",
     title: "DocLib TableSampleBorder",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f87cecb0ae535150"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,9 19,10 8,19 17,16 17,13 16,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

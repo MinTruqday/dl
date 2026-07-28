@@ -5,7 +5,7 @@ export default class DocLibTableSelectMenu implements BlockTool {
     id: "DocLibTableSelectMenu",
     title: "DocLib TableSelectMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9c68fffa326bed8b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,6 4,16 20,9 20,7 6,14 8,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibBibliography implements BlockTool {
     id: "DocLibBibliography",
     title: "DocLib Bibliography",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5bc707fec98026ec"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,16 11,20 18,13 8,19 17,7 20,4"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

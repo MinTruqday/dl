@@ -5,7 +5,7 @@ export default class DocLibVoiceInsertInComment implements BlockTool {
     id: "DocLibVoiceInsertInComment",
     title: "DocLib VoiceInsertInComment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a64a118e42cae99"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,19 12,11 11,14 8,4 8,20 10,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibMailMergeMergeFieldInsert implements BlockTool {
     id: "DocLibMailMergeMergeFieldInsert",
     title: "DocLib MailMergeMergeFieldInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fbfdbf2106137c5e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,19 8,20 10,6 9,13 8,7 10,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

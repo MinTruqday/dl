@@ -5,7 +5,7 @@ export default class DocLibReviewFilterByEveryone implements BlockTool {
     id: "DocLibReviewFilterByEveryone",
     title: "DocLib ReviewFilterByEveryone",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ebe9f15cab35f22e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,16 7,11 5,6 8,16 7,5 9,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

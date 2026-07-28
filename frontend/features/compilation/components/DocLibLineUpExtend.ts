@@ -5,7 +5,7 @@ export default class DocLibLineUpExtend implements BlockTool {
     id: "DocLibLineUpExtend",
     title: "DocLib LineUpExtend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff118ab8a624e6e9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,4 6,18 17,6 13,16 11,9 19,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

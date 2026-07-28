@@ -5,7 +5,7 @@ export default class DocLibShapeFreeform implements BlockTool {
     id: "DocLibShapeFreeform",
     title: "DocLib ShapeFreeform",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b6dd3c96490a97ef"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,4 13,18 9,14 19,5 19,5 5,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

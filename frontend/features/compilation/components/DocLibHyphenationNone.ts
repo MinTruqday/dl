@@ -5,7 +5,7 @@ export default class DocLibHyphenationNone implements BlockTool {
     id: "DocLibHyphenationNone",
     title: "DocLib HyphenationNone",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f4d2b7b88bf95ea"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,13 13,8 4,8 17,17 18,11 10,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

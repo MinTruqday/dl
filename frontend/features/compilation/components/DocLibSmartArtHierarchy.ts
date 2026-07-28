@@ -5,7 +5,7 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
     id: "DocLibSmartArtHierarchy",
     title: "DocLib SmartArtHierarchy",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3428308ba490c0c6"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,10 18,7 15,12 9,15 12,12 19,4"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

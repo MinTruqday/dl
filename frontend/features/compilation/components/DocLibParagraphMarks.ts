@@ -5,7 +5,7 @@ export default class DocLibParagraphMarks implements BlockTool {
     id: "DocLibParagraphMarks",
     title: "DocLib ParagraphMarks",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="642be93382c2ea79"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,13 16,4 15,11 17,6 10,8 20,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

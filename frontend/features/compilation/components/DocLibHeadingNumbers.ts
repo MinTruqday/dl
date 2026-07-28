@@ -5,7 +5,7 @@ export default class DocLibHeadingNumbers implements BlockTool {
     id: "DocLibHeadingNumbers",
     title: "DocLib HeadingNumbers",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="02df4dde926ffbcc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,6 13,5 14,13 17,4 9,4 16,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

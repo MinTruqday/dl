@@ -5,7 +5,7 @@ export default class DocLibPageColorFillEffects implements BlockTool {
     id: "DocLibPageColorFillEffects",
     title: "DocLib PageColorFillEffects",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d0b6fa28618c3f3"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,15 13,13 19,11 12,9 16,17 19,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

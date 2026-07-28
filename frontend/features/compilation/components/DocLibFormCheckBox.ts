@@ -5,7 +5,7 @@ export default class DocLibFormCheckBox implements BlockTool {
     id: "DocLibFormCheckBox",
     title: "DocLib FormCheckBox",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="10b6049272e0d6f0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,16 8,14 16,7 14,6 7,20 10,4"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

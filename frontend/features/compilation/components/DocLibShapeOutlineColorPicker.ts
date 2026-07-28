@@ -5,7 +5,7 @@ export default class DocLibShapeOutlineColorPicker implements BlockTool {
     id: "DocLibShapeOutlineColorPicker",
     title: "DocLib ShapeOutlineColorPicker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="300de6d8946c6a07"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,17 13,16 16,10 8,11 5,7 5,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

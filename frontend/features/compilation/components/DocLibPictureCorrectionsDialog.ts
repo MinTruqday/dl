@@ -5,7 +5,7 @@ export default class DocLibPictureCorrectionsDialog implements BlockTool {
     id: "DocLibPictureCorrectionsDialog",
     title: "DocLib PictureCorrectionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e29d44f000a87b16"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,8 4,6 4,19 8,9 5,10 10,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

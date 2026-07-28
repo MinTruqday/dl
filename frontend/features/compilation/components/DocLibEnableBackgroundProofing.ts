@@ -5,7 +5,7 @@ export default class DocLibEnableBackgroundProofing implements BlockTool {
     id: "DocLibEnableBackgroundProofing",
     title: "DocLib EnableBackgroundProofing",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de268afbdf1cb38f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,8 6,17 6,15 13,11 20,13 10,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

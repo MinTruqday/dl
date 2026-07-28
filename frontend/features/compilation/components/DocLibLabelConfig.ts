@@ -5,7 +5,7 @@ export default class DocLibLabelConfig implements BlockTool {
     id: "DocLibLabelConfig",
     title: "DocLib LabelConfig",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fac2663da2da18ce"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,11 4,14 13,18 11,6 4,8 17,10"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

@@ -5,7 +5,7 @@ export default class DocLibShapeConnectorStyleElbow implements BlockTool {
     id: "DocLibShapeConnectorStyleElbow",
     title: "DocLib ShapeConnectorStyleElbow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d944c17064581adc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,4 10,14 19,7 13,20 6,17 18,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

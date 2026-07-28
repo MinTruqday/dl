@@ -5,7 +5,7 @@ export default class DocLibSaveSelectionToPageNumberTop implements BlockTool {
     id: "DocLibSaveSelectionToPageNumberTop",
     title: "DocLib SaveSelectionToPageNumberTop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="171ddb9ca1ae335f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,16 19,7 12,8 4,14 19,16 8,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

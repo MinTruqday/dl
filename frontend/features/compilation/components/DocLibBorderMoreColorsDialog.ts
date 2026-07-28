@@ -5,7 +5,7 @@ export default class DocLibBorderMoreColorsDialog implements BlockTool {
     id: "DocLibBorderMoreColorsDialog",
     title: "DocLib BorderMoreColorsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f35ec1bee91b8505"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,13 10,7 16,14 18,9 17,12 17,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

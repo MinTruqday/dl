@@ -5,7 +5,7 @@ export default class DocLibAddDataLabelShapesMenu implements BlockTool {
     id: "DocLibAddDataLabelShapesMenu",
     title: "DocLib AddDataLabelShapesMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15a70c3747ddd0fb"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,18 16,8 7,4 8,17 15,15 5,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

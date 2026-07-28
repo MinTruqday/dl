@@ -5,7 +5,7 @@ export default class DocLibInkBallpointPen implements BlockTool {
     id: "DocLibInkBallpointPen",
     title: "DocLib InkBallpointPen",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b426483fa3fdb80"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,19 19,16 16,16 19,13 4,13 13,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

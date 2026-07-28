@@ -5,7 +5,7 @@ export default class DocLibTableWrapping implements BlockTool {
     id: "DocLibTableWrapping",
     title: "DocLib TableWrapping",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a4a1f111c68b2a10"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,12 7,4 15,7 12,20 11,13 8,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

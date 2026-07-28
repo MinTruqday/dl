@@ -5,7 +5,7 @@ export default class DocLibShapeFillEffectMoreTexturesDialogClassic implements B
     id: "DocLibShapeFillEffectMoreTexturesDialogClassic",
     title: "DocLib ShapeFillEffectMoreTexturesDialogClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7a946341919c0ca0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,16 18,18 13,7 16,11 8,14 13,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

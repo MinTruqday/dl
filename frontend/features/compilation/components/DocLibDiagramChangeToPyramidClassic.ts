@@ -5,7 +5,7 @@ export default class DocLibDiagramChangeToPyramidClassic implements BlockTool {
     id: "DocLibDiagramChangeToPyramidClassic",
     title: "DocLib DiagramChangeToPyramidClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78108ffe1bd69594"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,20 11,20 14,14 17,16 9,15 12,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

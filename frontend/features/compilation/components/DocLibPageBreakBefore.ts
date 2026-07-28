@@ -5,7 +5,7 @@ export default class DocLibPageBreakBefore implements BlockTool {
     id: "DocLibPageBreakBefore",
     title: "DocLib PageBreakBefore",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0475ee64f7448f9c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,19 4,19 13,4 11,7 15,18 4,15"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

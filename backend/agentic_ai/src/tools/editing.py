@@ -194,6 +194,7 @@ async def edit_document_block(
     - Use this for EditorJS documents ONLY (format='json').
     - action must be 'insert' (inserts before index), 'replace' (replaces block at index), or 'delete' (removes block at index).
     - new_block_json is required for 'insert' and 'replace' and must be a valid JSON string for a single EditorJS block.
+    - Search EditorJS capabilities before introducing a block type that is not already present in the document.
     </contract>
     """
     token = config.get("configurable", {}).get("token")

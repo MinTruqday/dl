@@ -5,7 +5,7 @@ export default class DocLibHyperlinkOpenInNative implements BlockTool {
     id: "DocLibHyperlinkOpenInNative",
     title: "DocLib HyperlinkOpenInNative",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="01aa91d9d2c21a07"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,4 13,17 10,11 13,11 5,14 5,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTableCellAlignMiddleRight implements BlockTool {
     id: "DocLibTableCellAlignMiddleRight",
     title: "DocLib TableCellAlignMiddleRight",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dba9fe540b94eaaa"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,20 20,20 15,16 17,4 6,13 8,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

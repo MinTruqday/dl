@@ -5,7 +5,7 @@ export default class DocLibEndnotesConvertAll implements BlockTool {
     id: "DocLibEndnotesConvertAll",
     title: "DocLib EndnotesConvertAll",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9f4db0902ed4c1ca"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,13 10,12 16,12 10,19 8,19 7,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

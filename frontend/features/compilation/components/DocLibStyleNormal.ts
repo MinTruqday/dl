@@ -5,7 +5,7 @@ export default class DocLibStyleNormal implements BlockTool {
     id: "DocLibStyleNormal",
     title: "DocLib StyleNormal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aae89a8c29cbc409"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,15 5,8 11,20 13,13 7,15 9,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibShapeChangeShapeGallery implements BlockTool {
     id: "DocLibShapeChangeShapeGallery",
     title: "DocLib ShapeChangeShapeGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e76f4577dfdc6ae"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,20 10,6 10,19 15,8 6,6 9,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

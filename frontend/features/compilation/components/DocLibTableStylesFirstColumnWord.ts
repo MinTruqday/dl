@@ -5,7 +5,7 @@ export default class DocLibTableStylesFirstColumnWord implements BlockTool {
     id: "DocLibTableStylesFirstColumnWord",
     title: "DocLib TableStylesFirstColumnWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2fcee3b4c709a95a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,6 10,14 16,13 20,9 7,4 4,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

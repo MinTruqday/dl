@@ -5,7 +5,7 @@ export default class DocLibMailMergeHelper implements BlockTool {
     id: "DocLibMailMergeHelper",
     title: "DocLib MailMergeHelper",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f3f7b57217efdb7"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,16 8,6 20,11 19,17 11,14 20,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

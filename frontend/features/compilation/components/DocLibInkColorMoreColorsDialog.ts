@@ -5,7 +5,7 @@ export default class DocLibInkColorMoreColorsDialog implements BlockTool {
     id: "DocLibInkColorMoreColorsDialog",
     title: "DocLib InkColorMoreColorsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b19fcff50e126a8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,12 18,4 16,8 8,19 4,14 13,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

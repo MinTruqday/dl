@@ -5,7 +5,7 @@ export default class DocLibTableStyleHeaderRowWord implements BlockTool {
     id: "DocLibTableStyleHeaderRowWord",
     title: "DocLib TableStyleHeaderRowWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1062b1ae930d112c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,17 11,8 15,17 4,14 11,12 5,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

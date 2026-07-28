@@ -5,7 +5,7 @@ export default class DocLibMailMergeStartEnvelopes implements BlockTool {
     id: "DocLibMailMergeStartEnvelopes",
     title: "DocLib MailMergeStartEnvelopes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="860d3f17a9c5081f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,17 16,10 20,14 12,18 15,4 9,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTextBoxNextLinked implements BlockTool {
     id: "DocLibTextBoxNextLinked",
     title: "DocLib TextBoxNextLinked",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a21d93295253e0be"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,16 15,11 18,19 7,7 15,8 18,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

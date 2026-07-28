@@ -5,7 +5,7 @@ export default class DocLibTableDesignBandedColumns implements BlockTool {
     id: "DocLibTableDesignBandedColumns",
     title: "DocLib TableDesignBandedColumns",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a7e4a22f4f810587"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,11 13,17 15,14 9,20 6,14 13,18"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

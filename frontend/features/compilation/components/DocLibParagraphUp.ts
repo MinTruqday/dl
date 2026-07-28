@@ -5,7 +5,7 @@ export default class DocLibParagraphUp implements BlockTool {
     id: "DocLibParagraphUp",
     title: "DocLib ParagraphUp",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d981efbabb302239"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,14 5,20 4,18 4,10 14,15 5,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

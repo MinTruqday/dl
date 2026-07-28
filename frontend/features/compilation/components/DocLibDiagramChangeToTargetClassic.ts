@@ -5,7 +5,7 @@ export default class DocLibDiagramChangeToTargetClassic implements BlockTool {
     id: "DocLibDiagramChangeToTargetClassic",
     title: "DocLib DiagramChangeToTargetClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7ec97d4b561c88de"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,18 10,11 5,15 4,5 13,19 9,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

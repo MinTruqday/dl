@@ -5,7 +5,7 @@ export default class DocLibSetNumberingValue implements BlockTool {
     id: "DocLibSetNumberingValue",
     title: "DocLib SetNumberingValue",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1efd3af36e53ddcb"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,19 11,9 12,19 4,20 7,18 20,20"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

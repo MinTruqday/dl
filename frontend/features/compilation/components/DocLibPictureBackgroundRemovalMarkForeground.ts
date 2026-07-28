@@ -5,7 +5,7 @@ export default class DocLibPictureBackgroundRemovalMarkForeground implements Blo
     id: "DocLibPictureBackgroundRemovalMarkForeground",
     title: "DocLib PictureBackgroundRemovalMarkForeground",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7cbb242356e5e7f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,20 12,19 6,12 13,12 6,20 16,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

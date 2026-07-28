@@ -5,7 +5,7 @@ export default class DocLibChartFormatMinorGridlinesAndSelect implements BlockTo
     id: "DocLibChartFormatMinorGridlinesAndSelect",
     title: "DocLib ChartFormatMinorGridlinesAndSelect",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b883e6964d46d934"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,16 13,18 13,6 17,5 19,8 6,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibAsianLayoutMenu implements BlockTool {
     id: "DocLibAsianLayoutMenu",
     title: "DocLib AsianLayoutMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec951f5497059c8a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,17 18,20 19,9 7,6 6,9 6,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

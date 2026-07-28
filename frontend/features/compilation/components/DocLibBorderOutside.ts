@@ -5,7 +5,7 @@ export default class DocLibBorderOutside implements BlockTool {
     id: "DocLibBorderOutside",
     title: "DocLib BorderOutside",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6e6a07729d1d365d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,8 11,16 8,16 7,12 9,15 11,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

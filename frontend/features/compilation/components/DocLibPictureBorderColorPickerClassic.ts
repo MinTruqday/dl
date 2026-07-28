@@ -5,7 +5,7 @@ export default class DocLibPictureBorderColorPickerClassic implements BlockTool 
     id: "DocLibPictureBorderColorPickerClassic",
     title: "DocLib PictureBorderColorPickerClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="703a6a4b44de95d3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,11 8,11 4,5 17,11 11,17 12,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

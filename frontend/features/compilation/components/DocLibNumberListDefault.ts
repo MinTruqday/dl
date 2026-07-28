@@ -5,7 +5,7 @@ export default class DocLibNumberListDefault implements BlockTool {
     id: "DocLibNumberListDefault",
     title: "DocLib NumberListDefault",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="340e7277602f362f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,18 16,4 15,17 7,17 11,20 7,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

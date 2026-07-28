@@ -5,7 +5,7 @@ export default class DocLibFileExit implements BlockTool {
     id: "DocLibFileExit",
     title: "DocLib FileExit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="08ae86cf624a546e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,8 19,7 17,10 20,12 18,9 11,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

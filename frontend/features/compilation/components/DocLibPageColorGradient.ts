@@ -5,7 +5,7 @@ export default class DocLibPageColorGradient implements BlockTool {
     id: "DocLibPageColorGradient",
     title: "DocLib PageColorGradient",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26d4d0e4cecd2bd6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,12 8,11 6,5 13,14 13,18 5,7"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibWindowResetPosition implements BlockTool {
     id: "DocLibWindowResetPosition",
     title: "DocLib WindowResetPosition",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b223a3bc9427c5c6"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,5 14,5 16,9 14,15 8,8 18,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

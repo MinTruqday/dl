@@ -5,7 +5,7 @@ export default class DocLibOrganizationChartSelectBranch implements BlockTool {
     id: "DocLibOrganizationChartSelectBranch",
     title: "DocLib OrganizationChartSelectBranch",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5edbcdb2f382bbf"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,20 5,19 17,9 13,8 8,8 4,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

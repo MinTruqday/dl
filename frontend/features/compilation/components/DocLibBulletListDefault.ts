@@ -5,7 +5,7 @@ export default class DocLibBulletListDefault implements BlockTool {
     id: "DocLibBulletListDefault",
     title: "DocLib BulletListDefault",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b9798b624666d851"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,6 7,17 6,4 16,17 11,15 8,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

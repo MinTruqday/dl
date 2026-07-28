@@ -5,7 +5,7 @@ export default class DocLibChartGridlinesGallery implements BlockTool {
     id: "DocLibChartGridlinesGallery",
     title: "DocLib ChartGridlinesGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b03a8601e3079f7c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,11 19,5 10,11 10,9 6,12 9,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibReflection implements BlockTool {
     id: "DocLibReflection",
     title: "DocLib Reflection",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c00cdb5a1dc5e3c1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,16 19,9 16,14 10,10 8,15 16,4"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

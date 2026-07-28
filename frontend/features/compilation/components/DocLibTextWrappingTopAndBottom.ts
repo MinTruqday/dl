@@ -5,7 +5,7 @@ export default class DocLibTextWrappingTopAndBottom implements BlockTool {
     id: "DocLibTextWrappingTopAndBottom",
     title: "DocLib TextWrappingTopAndBottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e59e8a97d5be321"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,8 15,20 10,10 10,20 14,13 4,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

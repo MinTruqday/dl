@@ -5,7 +5,7 @@ export default class DocLibSymbolFont implements BlockTool {
     id: "DocLibSymbolFont",
     title: "DocLib SymbolFont",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab44e93e9987d8f7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,4 16,15 4,20 16,13 19,18 13,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

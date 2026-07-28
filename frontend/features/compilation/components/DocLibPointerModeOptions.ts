@@ -5,7 +5,7 @@ export default class DocLibPointerModeOptions implements BlockTool {
     id: "DocLibPointerModeOptions",
     title: "DocLib PointerModeOptions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="97d70918988537dc"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,15 13,11 20,18 8,20 9,9 19,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

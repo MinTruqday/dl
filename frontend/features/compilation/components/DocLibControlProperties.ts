@@ -5,7 +5,7 @@ export default class DocLibControlProperties implements BlockTool {
     id: "DocLibControlProperties",
     title: "DocLib ControlProperties",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d631b59d4b5fb8db"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,19 15,8 11,14 18,19 17,8 12,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

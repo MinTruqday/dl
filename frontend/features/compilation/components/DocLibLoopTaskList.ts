@@ -5,7 +5,7 @@ export default class DocLibLoopTaskList implements BlockTool {
     id: "DocLibLoopTaskList",
     title: "DocLib LoopTaskList",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15453d3a40ae9a1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,5 14,11 17,8 5,17 5,12 12,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

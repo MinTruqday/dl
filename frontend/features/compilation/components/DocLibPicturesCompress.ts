@@ -5,7 +5,7 @@ export default class DocLibPicturesCompress implements BlockTool {
     id: "DocLibPicturesCompress",
     title: "DocLib PicturesCompress",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="342432007727f219"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,6 20,4 4,9 8,12 4,17 18,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibLegacyFormsText implements BlockTool {
     id: "DocLibLegacyFormsText",
     title: "DocLib LegacyFormsText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a650e810927fe98c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,16 15,20 14,12 16,8 17,14 4,16"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

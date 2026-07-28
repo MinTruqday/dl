@@ -5,7 +5,7 @@ export default class DocLibDateAndTimeInsert implements BlockTool {
     id: "DocLibDateAndTimeInsert",
     title: "DocLib DateAndTimeInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abf7d314c890ae08"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,13 11,7 17,12 8,12 5,15 9,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

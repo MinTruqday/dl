@@ -10,6 +10,7 @@ from src.tools.billing import (
     get_revenue_report,
 )
 from src.tools.document import (
+    search_editorjs_capabilities,
     create_document,
     update_document_metadata,
     replace_document_content,
@@ -28,6 +29,7 @@ from src.workflow.reduction import agent_summarize_long_document
 
 tools = [
     agent_summarize_long_document,
+    search_editorjs_capabilities,
     create_document,
     update_document_metadata,
     replace_document_content,

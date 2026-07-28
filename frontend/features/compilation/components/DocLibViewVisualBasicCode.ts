@@ -5,7 +5,7 @@ export default class DocLibViewVisualBasicCode implements BlockTool {
     id: "DocLibViewVisualBasicCode",
     title: "DocLib ViewVisualBasicCode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b20883249845297c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,12 16,6 20,5 11,9 10,13 8,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

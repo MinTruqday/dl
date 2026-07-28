@@ -5,7 +5,7 @@ export default class DocLibMacroRecordOrStop implements BlockTool {
     id: "DocLibMacroRecordOrStop",
     title: "DocLib MacroRecordOrStop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c50b0c40fe944cf7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,15 16,17 20,16 12,13 12,10 9,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibHistoryTab implements BlockTool {
     id: "DocLibHistoryTab",
     title: "DocLib HistoryTab",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9531a2e067344d0c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,19 13,7 5,5 13,16 10,9 17,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

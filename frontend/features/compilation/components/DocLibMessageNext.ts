@@ -5,7 +5,7 @@ export default class DocLibMessageNext implements BlockTool {
     id: "DocLibMessageNext",
     title: "DocLib MessageNext",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="208b76c6119f1dd8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,7 20,15 4,10 16,16 13,4 9,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

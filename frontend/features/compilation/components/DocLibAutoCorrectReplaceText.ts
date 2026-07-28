@@ -5,7 +5,7 @@ export default class DocLibAutoCorrectReplaceText implements BlockTool {
     id: "DocLibAutoCorrectReplaceText",
     title: "DocLib AutoCorrectReplaceText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1fc808bc432e0f2d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,17 12,5 20,16 19,15 12,6 18,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

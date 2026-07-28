@@ -5,7 +5,7 @@ export default class DocLibFooterFromBottom implements BlockTool {
     id: "DocLibFooterFromBottom",
     title: "DocLib FooterFromBottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f3bfbe20f85f18c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,12 17,9 19,18 7,8 17,6 17,14"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

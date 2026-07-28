@@ -5,7 +5,7 @@ export default class DocLibZoomOnePage implements BlockTool {
     id: "DocLibZoomOnePage",
     title: "DocLib ZoomOnePage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e131a804376a8c28"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,19 19,8 8,8 8,10 13,15 7,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

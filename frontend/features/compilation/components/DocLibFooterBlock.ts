@@ -5,7 +5,7 @@ export default class DocLibFooterBlock implements BlockTool {
     id: "DocLibFooterBlock",
     title: "DocLib FooterBlock",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f8841b5505193a8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,4 18,15 16,17 15,19 4,17 6,19"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

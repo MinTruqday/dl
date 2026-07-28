@@ -5,7 +5,7 @@ export default class DocLibMailMergeCreateDataSource implements BlockTool {
     id: "DocLibMailMergeCreateDataSource",
     title: "DocLib MailMergeCreateDataSource",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d3b82b688a49c548"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,18 13,6 6,9 14,8 4,12 16,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

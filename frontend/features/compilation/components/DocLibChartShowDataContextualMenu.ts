@@ -5,7 +5,7 @@ export default class DocLibChartShowDataContextualMenu implements BlockTool {
     id: "DocLibChartShowDataContextualMenu",
     title: "DocLib ChartShowDataContextualMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cd15b2dc0645d14b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,8 12,20 10,5 9,11 16,16 20,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

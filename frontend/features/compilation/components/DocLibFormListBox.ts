@@ -5,7 +5,7 @@ export default class DocLibFormListBox implements BlockTool {
     id: "DocLibFormListBox",
     title: "DocLib FormListBox",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6838bac9185c1916"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,9 20,18 11,11 12,9 11,17 8,11"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

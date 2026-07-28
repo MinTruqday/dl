@@ -5,7 +5,7 @@ export default class DocLibDocInfoAuthor implements BlockTool {
     id: "DocLibDocInfoAuthor",
     title: "DocLib DocInfoAuthor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a32dbeddb947280"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,20 19,20 19,16 16,13 10,20 12,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibMailMergeJapanesePostalBarcode implements BlockTool {
     id: "DocLibMailMergeJapanesePostalBarcode",
     title: "DocLib MailMergeJapanesePostalBarcode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="07b4f47f422a2a7a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,14 10,12 19,12 12,7 7,17 5,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibSelectCurrentIndent implements BlockTool {
     id: "DocLibSelectCurrentIndent",
     title: "DocLib SelectCurrentIndent",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="556d60b38e462151"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,11 15,13 10,6 20,17 10,14 14,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

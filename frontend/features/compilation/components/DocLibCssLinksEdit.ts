@@ -5,7 +5,7 @@ export default class DocLibCssLinksEdit implements BlockTool {
     id: "DocLibCssLinksEdit",
     title: "DocLib CssLinksEdit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f98f8976163594e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,20 14,19 16,18 8,14 19,10 8,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

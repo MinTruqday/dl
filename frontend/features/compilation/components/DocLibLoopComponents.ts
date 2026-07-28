@@ -5,7 +5,7 @@ export default class DocLibLoopComponents implements BlockTool {
     id: "DocLibLoopComponents",
     title: "DocLib LoopComponents",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a056002ebc2e99e5"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,5 4,16 5,16 4,12 13,18 14,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

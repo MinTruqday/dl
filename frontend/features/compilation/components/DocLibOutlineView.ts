@@ -5,7 +5,7 @@ export default class DocLibOutlineView implements BlockTool {
     id: "DocLibOutlineView",
     title: "DocLib OutlineView",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cd9e2ee3593a7c90"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,9 16,10 8,11 9,12 20,16 16,18"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

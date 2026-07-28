@@ -5,7 +5,7 @@ export default class DocLibMdiChildSystemMenu implements BlockTool {
     id: "DocLibMdiChildSystemMenu",
     title: "DocLib MdiChildSystemMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fe9afd11cda7f4f0"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,5 19,4 5,18 10,6 7,6 15,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

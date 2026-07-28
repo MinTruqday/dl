@@ -5,7 +5,7 @@ export default class DocLibOrganizationChartResize implements BlockTool {
     id: "DocLibOrganizationChartResize",
     title: "DocLib OrganizationChartResize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="99b48d09dc3fcd55"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,14 9,13 20,16 5,4 18,6 13,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

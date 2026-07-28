@@ -5,7 +5,7 @@ export default class DocLibOrganizationChartSelectAllConnectors implements Block
     id: "DocLibOrganizationChartSelectAllConnectors",
     title: "DocLib OrganizationChartSelectAllConnectors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ddc579575c89ba40"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 6,6 11,5 20,17 13,15 15,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

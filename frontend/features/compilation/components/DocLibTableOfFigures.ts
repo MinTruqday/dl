@@ -5,7 +5,7 @@ export default class DocLibTableOfFigures implements BlockTool {
     id: "DocLibTableOfFigures",
     title: "DocLib TableOfFigures",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="041b16d81b176ef5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,14 9,16 14,10 12,11 5,12 15,8"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

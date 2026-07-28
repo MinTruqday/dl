@@ -5,7 +5,7 @@ export default class DocLibShowNavigationPaneNewInAccCheckerSplitButton implemen
     id: "DocLibShowNavigationPaneNewInAccCheckerSplitButton",
     title: "DocLib ShowNavigationPaneNewInAccCheckerSplitButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86280a0d72b950e0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,10 14,17 16,19 16,7 16,9 5,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

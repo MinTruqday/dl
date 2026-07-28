@@ -5,7 +5,7 @@ export default class DocLibSmartArtEditIn2D implements BlockTool {
     id: "DocLibSmartArtEditIn2D",
     title: "DocLib SmartArtEditIn2D",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1431f71754fc9390"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,19 13,10 20,18 15,12 16,16 5,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

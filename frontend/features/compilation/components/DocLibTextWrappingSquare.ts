@@ -5,7 +5,7 @@ export default class DocLibTextWrappingSquare implements BlockTool {
     id: "DocLibTextWrappingSquare",
     title: "DocLib TextWrappingSquare",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9140dad78ea459e0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,17 18,15 10,15 8,7 17,13 12,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

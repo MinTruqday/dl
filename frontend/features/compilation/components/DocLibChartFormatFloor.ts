@@ -5,7 +5,7 @@ export default class DocLibChartFormatFloor implements BlockTool {
     id: "DocLibChartFormatFloor",
     title: "DocLib ChartFormatFloor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="faa9cc46930c740d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,20 4,6 15,16 18,17 10,8 14,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

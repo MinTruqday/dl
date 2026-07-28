@@ -5,7 +5,7 @@ export default class DocLibWindowRestore implements BlockTool {
     id: "DocLibWindowRestore",
     title: "DocLib WindowRestore",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73a122f9e685e338"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,12 4,15 13,18 10,9 12,9 20,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

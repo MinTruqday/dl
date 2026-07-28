@@ -5,7 +5,7 @@ export default class DocLibUnderlineGallery implements BlockTool {
     id: "DocLibUnderlineGallery",
     title: "DocLib UnderlineGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="91db79c14a8543c8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,19 6,10 10,18 20,17 18,4 18,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

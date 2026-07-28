@@ -5,7 +5,7 @@ export default class DocLibTableFixedColumnWidth implements BlockTool {
     id: "DocLibTableFixedColumnWidth",
     title: "DocLib TableFixedColumnWidth",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="332d268b01ce1589"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,15 8,7 5,6 8,5 17,18 17,15"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibPageBreak implements BlockTool {
     id: "DocLibPageBreak",
     title: "DocLib PageBreak",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca59aa56b42b1f64"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,8 4,5 14,13 18,19 19,16 10,13"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

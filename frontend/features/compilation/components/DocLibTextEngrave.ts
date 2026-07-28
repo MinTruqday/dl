@@ -5,7 +5,7 @@ export default class DocLibTextEngrave implements BlockTool {
     id: "DocLibTextEngrave",
     title: "DocLib TextEngrave",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b1d9e264ad8badae"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,17 9,19 7,7 7,8 10,7 9,10"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

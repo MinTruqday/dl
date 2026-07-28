@@ -5,7 +5,7 @@ export default class DocLibPageBorders3D implements BlockTool {
     id: "DocLibPageBorders3D",
     title: "DocLib PageBorders3D",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7e78e36321f10ee0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,5 10,18 20,7 18,7 18,14 16,9"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

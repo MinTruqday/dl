@@ -5,7 +5,7 @@ export default class DocLibGoToSection implements BlockTool {
     id: "DocLibGoToSection",
     title: "DocLib GoToSection",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c9ea5efbefcd32f5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,17 13,17 5,5 20,11 6,18 16,6"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

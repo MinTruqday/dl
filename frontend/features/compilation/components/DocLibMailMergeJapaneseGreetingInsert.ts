@@ -5,7 +5,7 @@ export default class DocLibMailMergeJapaneseGreetingInsert implements BlockTool 
     id: "DocLibMailMergeJapaneseGreetingInsert",
     title: "DocLib MailMergeJapaneseGreetingInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fdab2b9b992a95b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,18 12,19 19,14 20,10 6,6 12,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

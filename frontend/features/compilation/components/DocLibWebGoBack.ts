@@ -5,7 +5,7 @@ export default class DocLibWebGoBack implements BlockTool {
     id: "DocLibWebGoBack",
     title: "DocLib WebGoBack",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4c8fe37e2b596cc0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,11 10,11 13,8 10,9 16,19 6,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

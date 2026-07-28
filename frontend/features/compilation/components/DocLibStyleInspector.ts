@@ -5,7 +5,7 @@ export default class DocLibStyleInspector implements BlockTool {
     id: "DocLibStyleInspector",
     title: "DocLib StyleInspector",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aef5e3f74a65e865"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,11 10,13 10,20 15,20 8,9 12,18"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

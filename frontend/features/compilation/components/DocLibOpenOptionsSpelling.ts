@@ -5,7 +5,7 @@ export default class DocLibOpenOptionsSpelling implements BlockTool {
     id: "DocLibOpenOptionsSpelling",
     title: "DocLib OpenOptionsSpelling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="994607c686323395"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,6 11,15 19,20 4,17 18,16 14,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

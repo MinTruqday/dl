@@ -5,7 +5,7 @@ export default class DocLibPasteTableByOverwritingCells implements BlockTool {
     id: "DocLibPasteTableByOverwritingCells",
     title: "DocLib PasteTableByOverwritingCells",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3655369d58dbefa1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,4 7,8 7,19 5,12 20,13 16,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

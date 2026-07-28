@@ -5,7 +5,7 @@ export default class DocLibReviewHighlightChanges implements BlockTool {
     id: "DocLibReviewHighlightChanges",
     title: "DocLib ReviewHighlightChanges",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="84154170fa0f2632"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,8 18,14 16,19 8,20 17,6 14,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

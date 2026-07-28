@@ -5,7 +5,7 @@ export default class DocLibSmartArtResetShape implements BlockTool {
     id: "DocLibSmartArtResetShape",
     title: "DocLib SmartArtResetShape",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f7493f5ca1eaa2d2"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,9 16,11 12,17 13,10 15,20 8,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

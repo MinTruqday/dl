@@ -5,7 +5,7 @@ export default class DocLibDiagramChangeToVennDiagramClassic implements BlockToo
     id: "DocLibDiagramChangeToVennDiagramClassic",
     title: "DocLib DiagramChangeToVennDiagramClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5f05d398dc26cfe9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,9 11,20 20,8 7,16 7,14 20,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

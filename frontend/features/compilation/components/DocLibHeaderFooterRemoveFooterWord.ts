@@ -5,7 +5,7 @@ export default class DocLibHeaderFooterRemoveFooterWord implements BlockTool {
     id: "DocLibHeaderFooterRemoveFooterWord",
     title: "DocLib HeaderFooterRemoveFooterWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aaf98e02803f34b7"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,15 10,6 13,16 5,17 5,6 18,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

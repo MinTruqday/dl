@@ -5,7 +5,7 @@ export default class DocLibSmartArtMoreLayoutsDialog implements BlockTool {
     id: "DocLibSmartArtMoreLayoutsDialog",
     title: "DocLib SmartArtMoreLayoutsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e40b427855c9046"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,17 14,9 18,11 12,6 18,6 16,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

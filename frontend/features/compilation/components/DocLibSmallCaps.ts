@@ -5,7 +5,7 @@ export default class DocLibSmallCaps implements InlineTool {
     id: "DocLibSmallCaps",
     title: "DocLib SmallCaps",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bc9bffe0e1c5f856"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,6 4,7 8,14 14,5 15,7 13,12"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   static get isInline() {

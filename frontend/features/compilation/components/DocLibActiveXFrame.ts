@@ -5,7 +5,7 @@ export default class DocLibActiveXFrame implements BlockTool {
     id: "DocLibActiveXFrame",
     title: "DocLib ActiveXFrame",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c64535e73aaf7d76"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,5 6,14 11,9 10,20 17,13 17,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

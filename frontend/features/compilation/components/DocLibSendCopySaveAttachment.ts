@@ -5,7 +5,7 @@ export default class DocLibSendCopySaveAttachment implements BlockTool {
     id: "DocLibSendCopySaveAttachment",
     title: "DocLib SendCopySaveAttachment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6b4b36f0db7f459c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,11 7,6 19,12 5,7 19,14 6,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

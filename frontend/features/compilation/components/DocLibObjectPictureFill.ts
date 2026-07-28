@@ -5,7 +5,7 @@ export default class DocLibObjectPictureFill implements BlockTool {
     id: "DocLibObjectPictureFill",
     title: "DocLib ObjectPictureFill",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="75e78ec102aaf28d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,14 10,10 6,4 8,9 7,19 19,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

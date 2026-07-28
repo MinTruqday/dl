@@ -5,7 +5,7 @@ export default class DocLibPageOrientationGallery implements BlockTool {
     id: "DocLibPageOrientationGallery",
     title: "DocLib PageOrientationGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="396b50ab58ea423c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,9 16,5 7,17 19,13 13,18 19,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

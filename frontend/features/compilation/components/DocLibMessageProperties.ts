@@ -5,7 +5,7 @@ export default class DocLibMessageProperties implements BlockTool {
     id: "DocLibMessageProperties",
     title: "DocLib MessageProperties",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="545ff99b6ab0f7db"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,14 15,6 8,10 13,19 9,16 4,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

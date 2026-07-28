@@ -5,7 +5,7 @@ export default class DocLibDeleteSegment implements BlockTool {
     id: "DocLibDeleteSegment",
     title: "DocLib DeleteSegment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3e807ccd0dccd098"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,13 9,5 17,4 8,20 14,8 20,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

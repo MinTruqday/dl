@@ -5,7 +5,7 @@ export default class DocLibFileLinksToFiles implements BlockTool {
     id: "DocLibFileLinksToFiles",
     title: "DocLib FileLinksToFiles",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="644843fea267865d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,8 20,20 13,5 19,12 6,11 18,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

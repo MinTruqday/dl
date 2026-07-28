@@ -5,7 +5,7 @@ export default class DocLibOnePage implements BlockTool {
     id: "DocLibOnePage",
     title: "DocLib OnePage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a01ca7b06afac850"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,15 18,10 8,16 17,16 11,20 16,18"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

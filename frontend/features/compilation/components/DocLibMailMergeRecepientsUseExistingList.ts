@@ -5,7 +5,7 @@ export default class DocLibMailMergeRecepientsUseExistingList implements BlockTo
     id: "DocLibMailMergeRecepientsUseExistingList",
     title: "DocLib MailMergeRecepientsUseExistingList",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1d596236aac91554"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,8 17,7 4,18 8,20 4,12 11,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

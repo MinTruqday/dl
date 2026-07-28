@@ -5,7 +5,7 @@ export default class DocLibInsert3DModelFromOnline implements BlockTool {
     id: "DocLibInsert3DModelFromOnline",
     title: "DocLib Insert3DModelFromOnline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c6ada931c56a792b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,7 20,19 14,8 6,13 5,12 17,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

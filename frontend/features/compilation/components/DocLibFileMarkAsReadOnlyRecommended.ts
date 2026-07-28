@@ -5,7 +5,7 @@ export default class DocLibFileMarkAsReadOnlyRecommended implements BlockTool {
     id: "DocLibFileMarkAsReadOnlyRecommended",
     title: "DocLib FileMarkAsReadOnlyRecommended",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d025fe816f32babc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,7 20,14 13,20 20,5 16,18 5,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

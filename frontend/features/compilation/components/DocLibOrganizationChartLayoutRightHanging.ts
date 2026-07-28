@@ -5,7 +5,7 @@ export default class DocLibOrganizationChartLayoutRightHanging implements BlockT
     id: "DocLibOrganizationChartLayoutRightHanging",
     title: "DocLib OrganizationChartLayoutRightHanging",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="19ec7ca5106b7861"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,19 9,16 20,9 5,16 16,8 5,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibInsertBelow implements BlockTool {
     id: "DocLibInsertBelow",
     title: "DocLib InsertBelow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bbdaa6ea838ad111"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,18 17,17 16,6 9,4 16,20 5,7"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

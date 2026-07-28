@@ -5,7 +5,7 @@ export default class DocLibTableSplitTable implements BlockTool {
     id: "DocLibTableSplitTable",
     title: "DocLib TableSplitTable",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="554137d7a20a2b34"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,18 8,15 13,14 13,5 6,16 5,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

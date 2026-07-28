@@ -5,7 +5,7 @@ export default class DocLibSpeakLearnFromDocument implements BlockTool {
     id: "DocLibSpeakLearnFromDocument",
     title: "DocLib SpeakLearnFromDocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b99d0516ae5f4619"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,8 9,9 8,14 6,12 10,9 13,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

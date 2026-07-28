@@ -5,7 +5,7 @@ export default class DocLibLearningToolsWebViewPageColorInverse implements Block
     id: "DocLibLearningToolsWebViewPageColorInverse",
     title: "DocLib LearningToolsWebViewPageColorInverse",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="29a9377fc2e7fc2e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,20 8,12 11,14 18,16 5,12 8,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

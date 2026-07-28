@@ -5,7 +5,7 @@ export default class DocLibGoToEndnote implements BlockTool {
     id: "DocLibGoToEndnote",
     title: "DocLib GoToEndnote",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a28ad648a809d5f8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,6 14,8 19,13 13,14 5,13 4,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

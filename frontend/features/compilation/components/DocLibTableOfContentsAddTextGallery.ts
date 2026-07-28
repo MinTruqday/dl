@@ -5,7 +5,7 @@ export default class DocLibTableOfContentsAddTextGallery implements BlockTool {
     id: "DocLibTableOfContentsAddTextGallery",
     title: "DocLib TableOfContentsAddTextGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f2721800f72e73f7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,16 11,4 13,16 17,13 20,8 6,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

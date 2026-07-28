@@ -5,7 +5,7 @@ export default class DocLibTableInsertGallery implements BlockTool {
     id: "DocLibTableInsertGallery",
     title: "DocLib TableInsertGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1bf7b0cb3b0858d1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,13 10,20 12,12 7,9 13,5 17,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

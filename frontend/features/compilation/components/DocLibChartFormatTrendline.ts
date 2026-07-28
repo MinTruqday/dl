@@ -5,7 +5,7 @@ export default class DocLibChartFormatTrendline implements BlockTool {
     id: "DocLibChartFormatTrendline",
     title: "DocLib ChartFormatTrendline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="784fe60a9a85e318"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,15 13,14 5,18 10,11 15,9 8,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

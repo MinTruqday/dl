@@ -5,7 +5,7 @@ export default class DocLibParagraphUpExtend implements BlockTool {
     id: "DocLibParagraphUpExtend",
     title: "DocLib ParagraphUpExtend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5fa7cbee6650c782"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,18 20,4 4,16 16,15 18,12 16,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

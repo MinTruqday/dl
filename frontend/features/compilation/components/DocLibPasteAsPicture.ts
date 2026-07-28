@@ -5,7 +5,7 @@ export default class DocLibPasteAsPicture implements BlockTool {
     id: "DocLibPasteAsPicture",
     title: "DocLib PasteAsPicture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="024c70105deb66cc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,12 14,20 12,18 4,4 8,11 4,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

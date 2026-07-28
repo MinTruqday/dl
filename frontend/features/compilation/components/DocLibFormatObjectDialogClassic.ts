@@ -5,7 +5,7 @@ export default class DocLibFormatObjectDialogClassic implements BlockTool {
     id: "DocLibFormatObjectDialogClassic",
     title: "DocLib FormatObjectDialogClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="444eb96188f7277c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 19,16 4,13 9,9 20,13 13,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

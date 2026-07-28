@@ -5,7 +5,7 @@ export default class DocLibToggleLearningTools implements BlockTool {
     id: "DocLibToggleLearningTools",
     title: "DocLib ToggleLearningTools",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a44359f261032f2"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,4 6,10 8,20 20,8 20,9 7,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

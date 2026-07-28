@@ -5,7 +5,7 @@ export default class DocLibMailMergeJapaneseGreetingJapaneseOpeningSentenceInser
     id: "DocLibMailMergeJapaneseGreetingJapaneseOpeningSentenceInsert",
     title: "DocLib MailMergeJapaneseGreetingJapaneseOpeningSentenceInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c227272d850589c2"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,9 9,15 18,9 5,11 12,12 5,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

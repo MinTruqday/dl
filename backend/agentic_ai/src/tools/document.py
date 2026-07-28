@@ -7,6 +7,58 @@ from loguru import logger
 from src.tools.http_client import INTERNAL_API_URL, check_system_access, make_api_request
 
 
+@tool
+async def search_editorjs_capabilities(
+    query: str = "",
+    offset: int = 0,
+    limit: int = 50,
+    config: RunnableConfig = None,
+) -> str:
+    """
+    <module_purpose>
+    Search the authoritative DocLib EditorJS capability catalog
+    </module_purpose>
+    <contract>
+    Use this before creating or editing EditorJS blocks when the exact tool key schema or Microsoft Word control mapping is unknown
+    Every returned capability belongs to DocLib
+    microsoftControlId is source verification metadata when an official mapping exists
+    Never invent a block type control ID mode or implementation status
+    </contract>
+    """
+    token = (config or {}).get("configurable", {}).get("token")
+    if not token:
+        return json.dumps({"status": "authentication_required"})
+    try:
+        response = await make_api_request(
+            "GET",
+            f"{INTERNAL_API_URL}/soan-thao/editorjs/capabilities",
+            headers={"Authorization": token},
+            params={
+                "query": query,
+                "offset": max(offset, 0),
+                "limit": min(max(limit, 1), 200),
+            },
+            timeout=30.0,
+        )
+        if response.status_code != 200:
+            return json.dumps(
+                {
+                    "status": "capability_search_failed",
+                    "upstream_status": response.status_code,
+                }
+            )
+        return json.dumps(
+            {
+                "status": "success",
+                **response.json(),
+            },
+            ensure_ascii=False,
+        )
+    except Exception:
+        logger.exception("EditorJS capability search failed")
+        return json.dumps({"status": "compilation_service_unavailable"})
+
+
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
         res = await make_api_request(
@@ -37,6 +89,7 @@ async def create_document(
     <contract>
     Use doclib for EditorJS JSON and doclibx for LaTeX source
     EditorJS content must contain a blocks array
+    Search EditorJS capabilities before using a block type that is not already present in the document
     Empty content creates a valid starter document for the selected format
     </contract>
     """
@@ -164,6 +217,7 @@ async def replace_document_content(
     </module_purpose>
     <contract>
     Use doclib for EditorJS JSON and doclibx for LaTeX source
+    Search EditorJS capabilities before introducing a new block type
     Prefer surgical edit tools when only a small region needs modification
     </contract>
     """

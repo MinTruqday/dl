@@ -5,7 +5,7 @@ export default class DocLibTableRowsInsertAboveWord implements BlockTool {
     id: "DocLibTableRowsInsertAboveWord",
     title: "DocLib TableRowsInsertAboveWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b7ef24fec36e3c0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,11 8,15 19,7 10,9 20,19 19,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

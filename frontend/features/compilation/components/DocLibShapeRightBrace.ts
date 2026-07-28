@@ -5,7 +5,7 @@ export default class DocLibShapeRightBrace implements BlockTool {
     id: "DocLibShapeRightBrace",
     title: "DocLib ShapeRightBrace",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4128504e10a59697"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,10 16,14 20,16 18,19 11,13 19,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibShadowOnOrOffClassic implements BlockTool {
     id: "DocLibShadowOnOrOffClassic",
     title: "DocLib ShadowOnOrOffClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8ef4ceadffd63398"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,10 6,7 4,14 4,20 12,20 20,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

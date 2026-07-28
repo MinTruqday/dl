@@ -5,7 +5,7 @@ export default class DocLibPasteLinkedExcelChartDestinationTheme implements Bloc
     id: "DocLibPasteLinkedExcelChartDestinationTheme",
     title: "DocLib PasteLinkedExcelChartDestinationTheme",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7fe3229143d4386e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,10 4,13 20,12 9,12 17,4 14,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

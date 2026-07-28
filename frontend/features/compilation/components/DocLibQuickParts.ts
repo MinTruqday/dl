@@ -5,7 +5,7 @@ export default class DocLibQuickParts implements BlockTool {
     id: "DocLibQuickParts",
     title: "DocLib QuickParts",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="70cc678281f933ea"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,4 5,15 14,15 4,17 12,19 15,4"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

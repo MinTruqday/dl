@@ -5,7 +5,7 @@ export default class DocLibFileEmailAsPdfEmailAttachment implements BlockTool {
     id: "DocLibFileEmailAsPdfEmailAttachment",
     title: "DocLib FileEmailAsPdfEmailAttachment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d70082fc19ff088d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,4 15,18 12,4 12,9 11,11 19,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

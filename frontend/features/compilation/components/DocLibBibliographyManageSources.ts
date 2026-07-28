@@ -5,7 +5,7 @@ export default class DocLibBibliographyManageSources implements BlockTool {
     id: "DocLibBibliographyManageSources",
     title: "DocLib BibliographyManageSources",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="65868a3b934fa2cd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,19 6,12 15,15 13,5 12,7 16,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

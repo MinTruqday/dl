@@ -5,7 +5,7 @@ export default class DocLibOpenOptionsSaving implements BlockTool {
     id: "DocLibOpenOptionsSaving",
     title: "DocLib OpenOptionsSaving",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a93577463366644"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,15 6,18 18,7 4,4 9,12 13,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

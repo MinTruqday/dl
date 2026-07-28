@@ -5,7 +5,7 @@ export default class DocLibReviewDeleteAllCommentsInDocument implements BlockToo
     id: "DocLibReviewDeleteAllCommentsInDocument",
     title: "DocLib ReviewDeleteAllCommentsInDocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0569a706c1773cff"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,7 18,10 10,4 13,4 15,16 12,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

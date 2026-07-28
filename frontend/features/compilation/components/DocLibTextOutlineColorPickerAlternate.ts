@@ -5,7 +5,7 @@ export default class DocLibTextOutlineColorPickerAlternate implements BlockTool 
     id: "DocLibTextOutlineColorPickerAlternate",
     title: "DocLib TextOutlineColorPickerAlternate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3622223db7ef32e2"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,4 4,14 17,5 20,9 6,13 20,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

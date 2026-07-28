@@ -5,7 +5,7 @@ export default class DocLibShowCommentsContextualView implements BlockTool {
     id: "DocLibShowCommentsContextualView",
     title: "DocLib ShowCommentsContextualView",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ae61df430660c276"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,16 6,20 10,15 11,20 16,17 16,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -6,7 +6,7 @@ export default class DocLibStrikethrough implements InlineTool {
     id: "DocLibStrikethrough",
     title: "DocLib Strikethrough",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a485b8f0b84c670b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,18 18,6 18,12 5,15 4,8 5,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   private api: API;

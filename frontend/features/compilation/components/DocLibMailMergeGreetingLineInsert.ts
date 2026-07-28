@@ -5,7 +5,7 @@ export default class DocLibMailMergeGreetingLineInsert implements BlockTool {
     id: "DocLibMailMergeGreetingLineInsert",
     title: "DocLib MailMergeGreetingLineInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b38abdfb1891ff08"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,6 6,17 11,13 4,12 11,12 16,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibPictureCorrections implements BlockTool {
     id: "DocLibPictureCorrections",
     title: "DocLib PictureCorrections",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="efd187594fc807ea"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,9 20,8 15,17 11,17 12,11 4,20"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

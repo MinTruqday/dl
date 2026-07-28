@@ -5,7 +5,7 @@ export default class DocLibCitationInsert implements BlockTool {
     id: "DocLibCitationInsert",
     title: "DocLib CitationInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d10d1798b243b3c1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,17 10,20 12,20 13,10 16,13 13,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -12,7 +12,7 @@ export default class DocLibColorPicker implements InlineTool {
     id: "DocLibTextColor",
     title: "DocLib TextColor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1cb639a4ace6b4f5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,16 10,15 6,13 14,11 18,11 10,8"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   static get isInline() {

@@ -5,7 +5,7 @@ export default class DocLibObjectNudgeLeft implements BlockTool {
     id: "DocLibObjectNudgeLeft",
     title: "DocLib ObjectNudgeLeft",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="298e560a39d22bec"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,10 5,14 10,10 13,19 14,8 11,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

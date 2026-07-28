@@ -5,7 +5,7 @@ export default class DocLibSymbolInsertGallery implements BlockTool {
     id: "DocLibSymbolInsertGallery",
     title: "DocLib SymbolInsertGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e50d2690836f541"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,16 10,7 12,7 11,18 9,6 13,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

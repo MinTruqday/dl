@@ -5,7 +5,7 @@ export default class DocLibQuickPartsInsertFromOnline implements BlockTool {
     id: "DocLibQuickPartsInsertFromOnline",
     title: "DocLib QuickPartsInsertFromOnline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="644c132dd9749269"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,12 6,15 17,18 14,7 11,19 11,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

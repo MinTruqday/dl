@@ -5,7 +5,7 @@ export default class DocLibOleObjectInsertMenu implements BlockTool {
     id: "DocLibOleObjectInsertMenu",
     title: "DocLib OleObjectInsertMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff1705b8dd45b15a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,10 9,18 4,5 11,9 15,15 9,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

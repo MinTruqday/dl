@@ -5,7 +5,7 @@ export default class DocLibInsightsInDocSearch implements BlockTool {
     id: "DocLibInsightsInDocSearch",
     title: "DocLib InsightsInDocSearch",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89f8324c3cee1837"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,14 20,12 13,4 11,8 9,18 12,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

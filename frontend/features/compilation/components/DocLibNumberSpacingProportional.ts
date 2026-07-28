@@ -5,7 +5,7 @@ export default class DocLibNumberSpacingProportional implements BlockTool {
     id: "DocLibNumberSpacingProportional",
     title: "DocLib NumberSpacingProportional",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8e7ce01f0fdc6561"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,9 7,18 19,20 20,16 19,19 9,17"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

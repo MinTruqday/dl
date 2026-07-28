@@ -5,7 +5,7 @@ export default class DocLibDashedUnderline implements BlockTool {
     id: "DocLibDashedUnderline",
     title: "DocLib DashedUnderline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="192871e93777f40b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,10 15,16 8,4 10,15 8,9 4,5"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

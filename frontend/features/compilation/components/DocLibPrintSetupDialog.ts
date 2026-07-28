@@ -5,7 +5,7 @@ export default class DocLibPrintSetupDialog implements BlockTool {
     id: "DocLibPrintSetupDialog",
     title: "DocLib PrintSetupDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e577193d9dbd60c8"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,4 12,14 8,6 15,17 8,18 11,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

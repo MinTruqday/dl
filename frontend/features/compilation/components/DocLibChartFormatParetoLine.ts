@@ -5,7 +5,7 @@ export default class DocLibChartFormatParetoLine implements BlockTool {
     id: "DocLibChartFormatParetoLine",
     title: "DocLib ChartFormatParetoLine",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b60820e207b351d4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,12 19,9 11,13 17,12 5,20 14,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

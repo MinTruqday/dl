@@ -5,7 +5,7 @@ export default class DocLibTableDeleteRowsAndColumnsMenuWord implements BlockToo
     id: "DocLibTableDeleteRowsAndColumnsMenuWord",
     title: "DocLib TableDeleteRowsAndColumnsMenuWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fa9c7160eba2f5f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 16,9 18,20 17,14 15,10 8,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

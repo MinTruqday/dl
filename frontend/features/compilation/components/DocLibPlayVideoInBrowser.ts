@@ -5,7 +5,7 @@ export default class DocLibPlayVideoInBrowser implements BlockTool {
     id: "DocLibPlayVideoInBrowser",
     title: "DocLib PlayVideoInBrowser",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f2645fb2b27c053e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,19 14,12 12,9 9,15 17,4 4,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

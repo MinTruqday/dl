@@ -5,7 +5,7 @@ export default class DocLibDrawingCanvasExpand implements BlockTool {
     id: "DocLibDrawingCanvasExpand",
     title: "DocLib DrawingCanvasExpand",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7d11e462125a666f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,4 11,17 5,9 4,13 7,12 19,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

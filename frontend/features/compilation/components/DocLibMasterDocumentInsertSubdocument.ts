@@ -5,7 +5,7 @@ export default class DocLibMasterDocumentInsertSubdocument implements BlockTool 
     id: "DocLibMasterDocumentInsertSubdocument",
     title: "DocLib MasterDocumentInsertSubdocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78ccf4b9df580a3e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,4 10,19 6,7 14,15 12,7 17,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

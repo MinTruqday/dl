@@ -5,7 +5,7 @@ export default class DocLibSmartArtSmallerShape implements BlockTool {
     id: "DocLibSmartArtSmallerShape",
     title: "DocLib SmartArtSmallerShape",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0fc2eb87dda16857"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,11 18,20 4,12 6,6 8,7 5,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

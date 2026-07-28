@@ -5,7 +5,7 @@ export default class DocLibTableCellAlignmentCenter implements BlockTool {
     id: "DocLibTableCellAlignmentCenter",
     title: "DocLib TableCellAlignmentCenter",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a020ee1dec0c1c1"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,6 18,8 5,9 10,10 20,17 14,10"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

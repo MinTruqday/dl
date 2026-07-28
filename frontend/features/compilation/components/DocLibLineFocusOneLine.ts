@@ -5,7 +5,7 @@ export default class DocLibLineFocusOneLine implements BlockTool {
     id: "DocLibLineFocusOneLine",
     title: "DocLib LineFocusOneLine",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bb6e051d55fe666c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,12 9,16 4,20 4,10 12,4 8,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

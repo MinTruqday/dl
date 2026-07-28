@@ -5,7 +5,7 @@ export default class DocLibAddInsMenuAnchor implements BlockTool {
     id: "DocLibAddInsMenuAnchor",
     title: "DocLib AddInsMenuAnchor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c2b650a22a258849"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,16 16,13 12,7 4,9 9,16 4,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

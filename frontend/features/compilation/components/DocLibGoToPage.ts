@@ -5,7 +5,7 @@ export default class DocLibGoToPage implements BlockTool {
     id: "DocLibGoToPage",
     title: "DocLib GoToPage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b3e1872bc811db4c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,8 20,13 17,4 19,12 17,4 19,5"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

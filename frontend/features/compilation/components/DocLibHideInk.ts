@@ -5,7 +5,7 @@ export default class DocLibHideInk implements BlockTool {
     id: "DocLibHideInk",
     title: "DocLib HideInk",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d70631271cac3e12"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,10 19,9 15,6 15,5 13,12 5,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

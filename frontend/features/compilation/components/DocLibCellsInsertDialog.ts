@@ -5,7 +5,7 @@ export default class DocLibCellsInsertDialog implements BlockTool {
     id: "DocLibCellsInsertDialog",
     title: "DocLib CellsInsertDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3b3519a47d9a82f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,13 17,5 7,17 19,17 18,14 4,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

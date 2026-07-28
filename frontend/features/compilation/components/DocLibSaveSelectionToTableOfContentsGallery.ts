@@ -5,7 +5,7 @@ export default class DocLibSaveSelectionToTableOfContentsGallery implements Bloc
     id: "DocLibSaveSelectionToTableOfContentsGallery",
     title: "DocLib SaveSelectionToTableOfContentsGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23dfa79aef74639e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,6 18,5 5,18 18,9 18,14 20,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

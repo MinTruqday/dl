@@ -5,7 +5,7 @@ export default class DocLibFilePermissionView implements BlockTool {
     id: "DocLibFilePermissionView",
     title: "DocLib FilePermissionView",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f9d9bce81f1c586"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,8 6,6 14,7 14,19 17,17 17,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

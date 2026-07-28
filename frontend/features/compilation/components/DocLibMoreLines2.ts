@@ -5,7 +5,7 @@ export default class DocLibMoreLines2 implements BlockTool {
     id: "DocLibMoreLines2",
     title: "DocLib MoreLines2",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9c077a40ae87d7a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,9 4,15 14,15 10,7 16,20 6,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

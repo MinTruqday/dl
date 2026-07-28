@@ -5,7 +5,7 @@ export default class DocLibItalic implements BlockTool {
     id: "DocLibItalic",
     title: "DocLib Italic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d1d357897c3796d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,16 6,5 19,12 6,11 19,4 19,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

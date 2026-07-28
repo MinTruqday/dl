@@ -5,7 +5,7 @@ export default class DocLibTextFillMoreGradientsDialog implements BlockTool {
     id: "DocLibTextFillMoreGradientsDialog",
     title: "DocLib TextFillMoreGradientsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7bc4f9d9d69f717"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,5 15,8 8,7 13,10 13,18 20,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibFieldClick implements BlockTool {
     id: "DocLibFieldClick",
     title: "DocLib FieldClick",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="64d0cca2c7e68287"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,8 4,13 16,13 15,20 5,11 20,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

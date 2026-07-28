@@ -5,7 +5,7 @@ export default class DocLibFilePermissionRestrictAs implements BlockTool {
     id: "DocLibFilePermissionRestrictAs",
     title: "DocLib FilePermissionRestrictAs",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e686b6718336499f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,19 16,15 16,7 9,10 19,8 4,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibChartPrimaryVerticalAxisTitleOptionsDialog implements
     id: "DocLibChartPrimaryVerticalAxisTitleOptionsDialog",
     title: "DocLib ChartPrimaryVerticalAxisTitleOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="76e572d1fc6a6729"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,12 16,9 18,8 5,11 12,14 15,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

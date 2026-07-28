@@ -5,7 +5,7 @@ export default class DocLibParagraphSpacingIncrease implements BlockTool {
     id: "DocLibParagraphSpacingIncrease",
     title: "DocLib ParagraphSpacingIncrease",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b042de352a8642e4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,19 5,6 12,19 19,11 18,12 12,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

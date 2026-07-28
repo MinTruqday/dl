@@ -5,7 +5,7 @@ export default class DocLibLoopBulletedList implements BlockTool {
     id: "DocLibLoopBulletedList",
     title: "DocLib LoopBulletedList",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="50e4bd5ae540e90a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,11 6,9 12,17 16,14 4,13 15,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

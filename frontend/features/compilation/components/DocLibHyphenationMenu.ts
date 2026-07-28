@@ -5,7 +5,7 @@ export default class DocLibHyphenationMenu implements BlockTool {
     id: "DocLibHyphenationMenu",
     title: "DocLib HyphenationMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d494824f76c26385"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,16 15,15 20,11 18,18 7,4 20,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

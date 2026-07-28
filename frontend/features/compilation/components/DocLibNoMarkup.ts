@@ -5,7 +5,7 @@ export default class DocLibNoMarkup implements BlockTool {
     id: "DocLibNoMarkup",
     title: "DocLib NoMarkup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="98613eccec1e118e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,16 15,4 19,17 4,10 7,15 13,17"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

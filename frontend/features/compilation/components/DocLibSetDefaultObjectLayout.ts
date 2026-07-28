@@ -5,7 +5,7 @@ export default class DocLibSetDefaultObjectLayout implements BlockTool {
     id: "DocLibSetDefaultObjectLayout",
     title: "DocLib SetDefaultObjectLayout",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fbfe30cc5da275f5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,20 18,4 12,13 19,11 6,19 17,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

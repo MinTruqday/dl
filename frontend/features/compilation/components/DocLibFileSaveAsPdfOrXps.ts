@@ -5,7 +5,7 @@ export default class DocLibFileSaveAsPdfOrXps implements BlockTool {
     id: "DocLibFileSaveAsPdfOrXps",
     title: "DocLib FileSaveAsPdfOrXps",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6e7963c31233e029"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,6 18,12 5,4 7,11 19,15 11,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

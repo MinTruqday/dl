@@ -5,7 +5,7 @@ export default class DocLibMailMergeMergeToNewDocumentOptions implements BlockTo
     id: "DocLibMailMergeMergeToNewDocumentOptions",
     title: "DocLib MailMergeMergeToNewDocumentOptions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a56782deda131f0c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,5 15,5 18,6 18,16 11,20 4,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

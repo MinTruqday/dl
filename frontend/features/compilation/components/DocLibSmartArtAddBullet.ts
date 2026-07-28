@@ -5,7 +5,7 @@ export default class DocLibSmartArtAddBullet implements BlockTool {
     id: "DocLibSmartArtAddBullet",
     title: "DocLib SmartArtAddBullet",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="239f9d6a71126d94"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,10 8,8 15,5 11,16 11,11 8,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

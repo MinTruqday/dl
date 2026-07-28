@@ -5,7 +5,7 @@ export default class DocLibClipArtInsertDialog implements BlockTool {
     id: "DocLibClipArtInsertDialog",
     title: "DocLib ClipArtInsertDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5b8c46304833f057"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 6,18 8,4 6,6 7,14 4,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

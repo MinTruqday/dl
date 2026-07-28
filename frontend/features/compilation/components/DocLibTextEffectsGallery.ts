@@ -5,7 +5,7 @@ export default class DocLibTextEffectsGallery implements BlockTool {
     id: "DocLibTextEffectsGallery",
     title: "DocLib TextEffectsGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a30ae4e9d0bbcabc"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,14 11,16 8,4 19,5 14,13 8,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

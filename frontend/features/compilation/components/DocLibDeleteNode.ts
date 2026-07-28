@@ -5,7 +5,7 @@ export default class DocLibDeleteNode implements BlockTool {
     id: "DocLibDeleteNode",
     title: "DocLib DeleteNode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d55d360d2ead9d90"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,12 7,17 16,7 8,12 4,20 7,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

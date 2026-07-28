@@ -5,7 +5,7 @@ export default class DocLibChartDeleteSeries implements BlockTool {
     id: "DocLibChartDeleteSeries",
     title: "DocLib ChartDeleteSeries",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="64eb6fd1a624f2b3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,18 13,9 17,6 8,13 17,16 20,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

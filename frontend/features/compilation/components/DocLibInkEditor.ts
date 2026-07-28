@@ -5,7 +5,7 @@ export default class DocLibInkEditor implements BlockTool {
     id: "DocLibInkEditor",
     title: "DocLib InkEditor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aa36710602463237"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,7 15,10 6,6 20,8 8,15 5,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

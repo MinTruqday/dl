@@ -5,7 +5,7 @@ export default class DocLibEquationScriptGallery implements BlockTool {
     id: "DocLibEquationScriptGallery",
     title: "DocLib EquationScriptGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dfd24c3906d27700"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,10 12,10 10,10 4,4 7,18 19,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibChartDepthAxis implements BlockTool {
     id: "DocLibChartDepthAxis",
     title: "DocLib ChartDepthAxis",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="14e056a9072f708f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,7 5,20 11,17 14,11 13,5 5,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

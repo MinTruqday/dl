@@ -5,7 +5,7 @@ export default class DocLibPasteDestinationStyle implements BlockTool {
     id: "DocLibPasteDestinationStyle",
     title: "DocLib PasteDestinationStyle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ce40bea9407dde7e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,17 7,20 17,10 5,11 4,10 4,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

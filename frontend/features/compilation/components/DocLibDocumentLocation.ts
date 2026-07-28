@@ -5,7 +5,7 @@ export default class DocLibDocumentLocation implements BlockTool {
     id: "DocLibDocumentLocation",
     title: "DocLib DocumentLocation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="54b9a894d4e50cd8"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,19 19,16 12,12 16,16 5,4 5,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

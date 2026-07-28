@@ -5,7 +5,7 @@ export default class DocLibTextWrappingTight implements BlockTool {
     id: "DocLibTextWrappingTight",
     title: "DocLib TextWrappingTight",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d64951944f23f0ad"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,9 17,16 15,5 6,7 14,17 11,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

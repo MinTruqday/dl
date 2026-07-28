@@ -5,7 +5,7 @@ export default class DocLibReviewAcceptChangeAndMoveToNext implements BlockTool 
     id: "DocLibReviewAcceptChangeAndMoveToNext",
     title: "DocLib ReviewAcceptChangeAndMoveToNext",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4faaa06996736164"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,4 11,7 18,17 16,19 9,15 12,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

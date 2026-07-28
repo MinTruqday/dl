@@ -5,7 +5,7 @@ export default class DocLibActiveXLabel implements BlockTool {
     id: "DocLibActiveXLabel",
     title: "DocLib ActiveXLabel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a2e918b62a28cf8c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,16 11,16 12,10 7,8 10,10 7,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

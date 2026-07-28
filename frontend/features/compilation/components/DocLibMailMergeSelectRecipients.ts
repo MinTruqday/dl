@@ -5,7 +5,7 @@ export default class DocLibMailMergeSelectRecipients implements BlockTool {
     id: "DocLibMailMergeSelectRecipients",
     title: "DocLib MailMergeSelectRecipients",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="66850156e2f50770"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,18 5,5 9,11 11,14 4,15 17,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibObjectsUngroup implements BlockTool {
     id: "DocLibObjectsUngroup",
     title: "DocLib ObjectsUngroup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="524a1260bfdf1835"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,10 5,15 8,6 11,6 11,12 15,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

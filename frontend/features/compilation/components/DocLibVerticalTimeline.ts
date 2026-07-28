@@ -5,7 +5,7 @@ export default class DocLibVerticalTimeline implements BlockTool {
     id: "DocLibVerticalTimeline",
     title: "DocLib VerticalTimeline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="140290341e5e5d54"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,6 12,5 17,13 12,20 15,7 6,9"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

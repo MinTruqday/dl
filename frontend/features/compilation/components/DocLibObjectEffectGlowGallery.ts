@@ -5,7 +5,7 @@ export default class DocLibObjectEffectGlowGallery implements BlockTool {
     id: "DocLibObjectEffectGlowGallery",
     title: "DocLib ObjectEffectGlowGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d09d57ee9fae3ad3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,8 6,4 10,8 11,11 8,12 9,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

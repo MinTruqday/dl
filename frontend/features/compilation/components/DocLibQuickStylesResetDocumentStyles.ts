@@ -5,7 +5,7 @@ export default class DocLibQuickStylesResetDocumentStyles implements BlockTool {
     id: "DocLibQuickStylesResetDocumentStyles",
     title: "DocLib QuickStylesResetDocumentStyles",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6907215bf0dda7f1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,11 20,10 6,4 18,7 18,9 14,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

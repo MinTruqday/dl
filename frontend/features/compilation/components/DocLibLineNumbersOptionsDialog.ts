@@ -5,7 +5,7 @@ export default class DocLibLineNumbersOptionsDialog implements BlockTool {
     id: "DocLibLineNumbersOptionsDialog",
     title: "DocLib LineNumbersOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="36d1be082d7f5856"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,9 7,12 15,12 7,5 13,8 14,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

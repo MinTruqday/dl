@@ -5,7 +5,7 @@ export default class DocLibDropCap implements BlockTool {
     id: "DocLibDropCap",
     title: "DocLib DropCap",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba8d39bd3278083d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,9 10,6 20,5 12,14 4,4 20,16"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

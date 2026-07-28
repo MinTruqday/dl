@@ -5,7 +5,7 @@ export default class DocLibDiagramVennDiagramInsertClassic implements BlockTool 
     id: "DocLibDiagramVennDiagramInsertClassic",
     title: "DocLib DiagramVennDiagramInsertClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1cfb7e677bc31f59"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,17 11,5 8,12 18,8 6,17 16,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

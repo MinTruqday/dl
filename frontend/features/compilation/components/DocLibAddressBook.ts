@@ -5,7 +5,7 @@ export default class DocLibAddressBook implements BlockTool {
     id: "DocLibAddressBook",
     title: "DocLib AddressBook",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="43343a7fcc511711"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,5 11,12 4,17 10,4 17,20 16,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

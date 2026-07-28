@@ -5,7 +5,7 @@ export default class DocLibConflictViewClose implements BlockTool {
     id: "DocLibConflictViewClose",
     title: "DocLib ConflictViewClose",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7afe04609f6de06"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,9 7,6 13,12 5,10 4,16 12,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

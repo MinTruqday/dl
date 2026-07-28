@@ -5,7 +5,7 @@ export default class DocLibChartSecondaryHorizontalGridlines implements BlockToo
     id: "DocLibChartSecondaryHorizontalGridlines",
     title: "DocLib ChartSecondaryHorizontalGridlines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e0faf9072021a535"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,16 15,11 19,20 16,6 4,16 10,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

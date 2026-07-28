@@ -5,7 +5,7 @@ export default class DocLibReviewRejectChangeMenu implements BlockTool {
     id: "DocLibReviewRejectChangeMenu",
     title: "DocLib ReviewRejectChangeMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aeef462cc77c33b2"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,5 6,14 16,9 4,12 5,9 8,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

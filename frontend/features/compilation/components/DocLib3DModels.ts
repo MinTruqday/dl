@@ -5,7 +5,7 @@ export default class DocLib3DModels implements BlockTool {
     id: "DocLib3DModels",
     title: "DocLib 3DModels",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="539ead21f4d73013"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,9 7,20 10,15 18,6 11,6 9,5"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

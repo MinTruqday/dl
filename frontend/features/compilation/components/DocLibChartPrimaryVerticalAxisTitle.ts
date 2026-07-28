@@ -5,7 +5,7 @@ export default class DocLibChartPrimaryVerticalAxisTitle implements BlockTool {
     id: "DocLibChartPrimaryVerticalAxisTitle",
     title: "DocLib ChartPrimaryVerticalAxisTitle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="70c3af63ac8f24dd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,12 9,18 6,11 6,4 9,4 5,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

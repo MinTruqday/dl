@@ -5,7 +5,7 @@ export default class DocLibEquationSymbolsInsertGallery implements BlockTool {
     id: "DocLibEquationSymbolsInsertGallery",
     title: "DocLib EquationSymbolsInsertGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd2951c1ff12b46b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,11 17,10 4,5 14,9 13,6 11,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

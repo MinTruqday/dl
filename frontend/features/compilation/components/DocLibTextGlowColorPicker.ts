@@ -5,7 +5,7 @@ export default class DocLibTextGlowColorPicker implements BlockTool {
     id: "DocLibTextGlowColorPicker",
     title: "DocLib TextGlowColorPicker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b77d71f54d7aa9b4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,10 15,11 13,7 20,14 12,15 14,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

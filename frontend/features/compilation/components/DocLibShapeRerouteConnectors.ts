@@ -5,7 +5,7 @@ export default class DocLibShapeRerouteConnectors implements BlockTool {
     id: "DocLibShapeRerouteConnectors",
     title: "DocLib ShapeRerouteConnectors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1c112680a7ad7037"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,4 8,13 18,7 14,8 9,20 4,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

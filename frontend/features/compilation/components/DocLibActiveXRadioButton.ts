@@ -5,7 +5,7 @@ export default class DocLibActiveXRadioButton implements BlockTool {
     id: "DocLibActiveXRadioButton",
     title: "DocLib ActiveXRadioButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b9802b916f4d81e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,20 6,19 9,10 16,17 16,7 18,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

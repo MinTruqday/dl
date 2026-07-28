@@ -5,7 +5,7 @@ export default class DocLibDocumentProperty implements BlockTool {
     id: "DocLibDocumentProperty",
     title: "DocLib DocumentProperty",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a597c99250aaf709"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,19 18,14 16,4 13,13 15,17 20,16"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

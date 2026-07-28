@@ -5,7 +5,7 @@ export default class DocLibEmailOptions implements BlockTool {
     id: "DocLibEmailOptions",
     title: "DocLib EmailOptions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fd7dbb4ef3c4f00f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,10 4,14 9,13 6,19 14,10 15,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

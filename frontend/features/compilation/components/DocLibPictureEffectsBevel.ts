@@ -5,7 +5,7 @@ export default class DocLibPictureEffectsBevel implements BlockTool {
     id: "DocLibPictureEffectsBevel",
     title: "DocLib PictureEffectsBevel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cc97448eead9bdd0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,19 4,10 17,17 6,8 18,5 19,12"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibObjectBringInFrontOfText implements BlockTool {
     id: "DocLibObjectBringInFrontOfText",
     title: "DocLib ObjectBringInFrontOfText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="360abb6a602b3558"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,14 4,8 15,13 6,7 14,6 10,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

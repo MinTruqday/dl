@@ -5,7 +5,7 @@ export default class DocLibReset3DModelAndSize implements BlockTool {
     id: "DocLibReset3DModelAndSize",
     title: "DocLib Reset3DModelAndSize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f441b2100b435502"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,18 12,20 15,20 4,6 8,6 19,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

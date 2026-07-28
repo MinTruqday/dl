@@ -5,7 +5,7 @@ export default class DocLibMailMergeJapaneseGreetingClosingSentenceInsert implem
     id: "DocLibMailMergeJapaneseGreetingClosingSentenceInsert",
     title: "DocLib MailMergeJapaneseGreetingClosingSentenceInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5208970a8575aedf"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,12 19,14 18,19 8,6 13,5 19,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

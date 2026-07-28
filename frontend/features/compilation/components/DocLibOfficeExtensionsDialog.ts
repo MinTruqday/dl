@@ -5,7 +5,7 @@ export default class DocLibOfficeExtensionsDialog implements BlockTool {
     id: "DocLibOfficeExtensionsDialog",
     title: "DocLib OfficeExtensionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="72a34d465c599c5f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,14 13,6 11,8 7,14 5,17 6,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibListSetNumberingValue implements BlockTool {
     id: "DocLibListSetNumberingValue",
     title: "DocLib ListSetNumberingValue",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c995716cf23e3bfc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,17 15,10 8,15 12,18 19,18 4,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

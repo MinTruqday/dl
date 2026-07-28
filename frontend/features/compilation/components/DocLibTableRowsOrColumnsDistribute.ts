@@ -5,7 +5,7 @@ export default class DocLibTableRowsOrColumnsDistribute implements BlockTool {
     id: "DocLibTableRowsOrColumnsDistribute",
     title: "DocLib TableRowsOrColumnsDistribute",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7ae4c0eff7fd90eb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,11 9,5 13,19 12,18 20,12 10,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibFileWorkflowTasks implements BlockTool {
     id: "DocLibFileWorkflowTasks",
     title: "DocLib FileWorkflowTasks",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3dfa86dba489abc3"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,16 19,19 15,5 5,12 12,18 14,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

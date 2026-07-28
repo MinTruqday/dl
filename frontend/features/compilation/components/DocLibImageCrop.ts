@@ -5,7 +5,7 @@ export default class DocLibImageCrop implements BlockTool {
     id: "DocLibImageCrop",
     title: "DocLib ImageCrop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="44c11cdf59815473"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,10 15,6 8,14 20,17 19,7 6,9"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

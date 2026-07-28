@@ -5,7 +5,7 @@ export default class DocLibChartChangeDataLabelShapesGallery implements BlockToo
     id: "DocLibChartChangeDataLabelShapesGallery",
     title: "DocLib ChartChangeDataLabelShapesGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="31ade0262b080b18"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,7 7,8 13,12 15,11 18,11 14,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

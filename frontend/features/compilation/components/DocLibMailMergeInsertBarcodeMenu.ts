@@ -5,7 +5,7 @@ export default class DocLibMailMergeInsertBarcodeMenu implements BlockTool {
     id: "DocLibMailMergeInsertBarcodeMenu",
     title: "DocLib MailMergeInsertBarcodeMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8502dd27a6dbd88c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,6 4,9 17,19 16,8 14,4 9,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

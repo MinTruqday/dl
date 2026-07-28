@@ -5,7 +5,7 @@ export default class DocLibFrameSaveCurrentAs implements BlockTool {
     id: "DocLibFrameSaveCurrentAs",
     title: "DocLib FrameSaveCurrentAs",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8177e5dfa1de48c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,10 11,12 16,16 11,8 5,12 14,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

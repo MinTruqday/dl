@@ -5,7 +5,7 @@ export default class DocLibTextEffects3DRotationOptionsDialog implements BlockTo
     id: "DocLibTextEffects3DRotationOptionsDialog",
     title: "DocLib TextEffects3DRotationOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="271badb583f9ca88"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,14 7,15 16,15 19,4 13,8 17,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

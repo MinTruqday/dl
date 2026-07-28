@@ -5,7 +5,7 @@ export default class DocLibTitle implements BlockTool {
     id: "DocLibTitle",
     title: "DocLib Title",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f25a10d84d0530b7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,9 20,16 13,9 18,17 4,10 16,19"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

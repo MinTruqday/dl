@@ -5,7 +5,7 @@ export default class DocLibChartResetToMatchStyle implements BlockTool {
     id: "DocLibChartResetToMatchStyle",
     title: "DocLib ChartResetToMatchStyle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4762e15ff03ca298"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,17 8,14 6,13 13,20 13,15 8,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibMailMergeFinishAndMergeMenu implements BlockTool {
     id: "DocLibMailMergeFinishAndMergeMenu",
     title: "DocLib MailMergeFinishAndMergeMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a2e5f33790fd4edc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,12 9,8 12,19 14,20 13,8 16,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibReplyAll implements BlockTool {
     id: "DocLibReplyAll",
     title: "DocLib ReplyAll",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c8f8aa51b4ef6d75"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,14 4,17 14,5 11,19 10,8 17,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

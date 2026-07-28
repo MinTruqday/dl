@@ -5,7 +5,7 @@ export default class DocLibInsights implements BlockTool {
     id: "DocLibInsights",
     title: "DocLib Insights",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b719bb6970e22856"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,12 4,7 14,9 10,5 6,6 5,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

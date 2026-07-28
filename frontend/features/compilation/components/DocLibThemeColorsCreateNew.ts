@@ -5,7 +5,7 @@ export default class DocLibThemeColorsCreateNew implements BlockTool {
     id: "DocLibThemeColorsCreateNew",
     title: "DocLib ThemeColorsCreateNew",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d0fe94dc61272c58"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,20 16,20 16,9 14,7 7,12 11,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

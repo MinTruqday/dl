@@ -5,7 +5,7 @@ export default class DocLibCombineDocuments implements BlockTool {
     id: "DocLibCombineDocuments",
     title: "DocLib CombineDocuments",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e5c73fb414ae782"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,11 17,17 18,10 14,15 12,13 19,15"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

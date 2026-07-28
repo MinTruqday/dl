@@ -5,7 +5,7 @@ export default class DocLibParagraphWidowOrphanControl implements BlockTool {
     id: "DocLibParagraphWidowOrphanControl",
     title: "DocLib ParagraphWidowOrphanControl",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e10793f8c30beb6a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,11 15,14 12,15 18,8 12,18 8,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibFitText implements BlockTool {
     id: "DocLibFitText",
     title: "DocLib FitText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2f8e90f08930efd1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,10 12,6 5,18 5,9 15,7 8,19"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

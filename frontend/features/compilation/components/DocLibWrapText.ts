@@ -5,7 +5,7 @@ export default class DocLibWrapText implements BlockTool {
     id: "DocLibWrapText",
     title: "DocLib WrapText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="126fed8ddf115d89"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,13 20,9 6,4 12,5 7,11 11,15"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

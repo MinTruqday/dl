@@ -5,7 +5,7 @@ export default class DocLibFormComboBox implements BlockTool {
     id: "DocLibFormComboBox",
     title: "DocLib FormComboBox",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="850922ec8ab006e5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,13 4,19 6,10 10,12 8,14 16,4"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

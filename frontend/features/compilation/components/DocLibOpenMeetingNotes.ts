@@ -5,7 +5,7 @@ export default class DocLibOpenMeetingNotes implements BlockTool {
     id: "DocLibOpenMeetingNotes",
     title: "DocLib OpenMeetingNotes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f93fe353428330d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,15 20,6 5,10 4,17 17,10 19,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

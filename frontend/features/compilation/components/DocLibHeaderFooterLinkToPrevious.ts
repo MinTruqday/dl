@@ -5,7 +5,7 @@ export default class DocLibHeaderFooterLinkToPrevious implements BlockTool {
     id: "DocLibHeaderFooterLinkToPrevious",
     title: "DocLib HeaderFooterLinkToPrevious",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0ff15180bee807dc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,7 17,13 7,15 11,20 18,14 10,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

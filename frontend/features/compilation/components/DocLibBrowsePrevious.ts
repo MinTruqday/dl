@@ -5,7 +5,7 @@ export default class DocLibBrowsePrevious implements BlockTool {
     id: "DocLibBrowsePrevious",
     title: "DocLib BrowsePrevious",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="43afd177cc512184"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,9 9,4 4,17 20,17 15,20 6,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

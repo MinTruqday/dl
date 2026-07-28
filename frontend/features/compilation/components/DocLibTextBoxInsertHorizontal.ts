@@ -5,7 +5,7 @@ export default class DocLibTextBoxInsertHorizontal implements BlockTool {
     id: "DocLibTextBoxInsertHorizontal",
     title: "DocLib TextBoxInsertHorizontal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="67c6c0550197c8f6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,15 9,4 5,19 17,12 15,17 8,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibChartLegendOptionsDialogDialog implements BlockTool {
     id: "DocLibChartLegendOptionsDialogDialog",
     title: "DocLib ChartLegendOptionsDialogDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8334e491f380c04f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,5 11,13 9,13 9,15 15,19 9,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

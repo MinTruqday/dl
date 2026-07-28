@@ -5,7 +5,7 @@ export default class DocLibNumberingContinue implements BlockTool {
     id: "DocLibNumberingContinue",
     title: "DocLib NumberingContinue",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78da2a6b72178d25"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,18 12,9 16,10 9,7 4,7 18,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

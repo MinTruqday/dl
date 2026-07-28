@@ -5,7 +5,7 @@ export default class DocLibParagraphKeepLinesTogether implements BlockTool {
     id: "DocLibParagraphKeepLinesTogether",
     title: "DocLib ParagraphKeepLinesTogether",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba9b5b9deadfaee5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,6 10,8 17,6 8,12 17,16 17,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

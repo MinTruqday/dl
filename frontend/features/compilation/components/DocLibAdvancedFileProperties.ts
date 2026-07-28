@@ -5,7 +5,7 @@ export default class DocLibAdvancedFileProperties implements BlockTool {
     id: "DocLibAdvancedFileProperties",
     title: "DocLib AdvancedFileProperties",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26dffb8ffccbcd42"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,6 17,11 18,20 5,19 17,14 16,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

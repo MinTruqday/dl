@@ -5,7 +5,7 @@ export default class DocLibReviewChangeUserName implements BlockTool {
     id: "DocLibReviewChangeUserName",
     title: "DocLib ReviewChangeUserName",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e8077bf73eb682c8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,11 8,13 15,16 15,17 20,15 14,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

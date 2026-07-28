@@ -5,7 +5,7 @@ export default class DocLibCharacterFormattingReset implements BlockTool {
     id: "DocLibCharacterFormattingReset",
     title: "DocLib CharacterFormattingReset",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a8238cb2593f81e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,15 9,20 7,15 14,17 11,6 15,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibWordPicture implements BlockTool {
     id: "DocLibWordPicture",
     title: "DocLib WordPicture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="95e3aaf4de3b9a36"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,10 4,10 5,12 5,7 19,15 18,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

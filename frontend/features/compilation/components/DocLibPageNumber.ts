@@ -5,7 +5,7 @@ export default class DocLibPageNumber implements BlockTool {
     id: "DocLibPageNumber",
     title: "DocLib PageNumber",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c258c13d65161336"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,7 10,14 20,9 6,7 12,11 8,15"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

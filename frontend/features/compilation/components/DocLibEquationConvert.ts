@@ -5,7 +5,7 @@ export default class DocLibEquationConvert implements BlockTool {
     id: "DocLibEquationConvert",
     title: "DocLib EquationConvert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a0596618ae82341e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,8 4,11 8,15 5,17 17,11 9,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

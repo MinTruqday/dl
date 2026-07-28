@@ -5,7 +5,7 @@ export default class DocLibChartPrimaryHorizontalAxisOptionsDialog implements Bl
     id: "DocLibChartPrimaryHorizontalAxisOptionsDialog",
     title: "DocLib ChartPrimaryHorizontalAxisOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c656bf279ce7d8a2"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,5 8,9 7,14 16,13 15,11 20,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

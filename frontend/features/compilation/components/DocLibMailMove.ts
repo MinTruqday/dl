@@ -5,7 +5,7 @@ export default class DocLibMailMove implements BlockTool {
     id: "DocLibMailMove",
     title: "DocLib MailMove",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7853a7d926e365d6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,19 18,17 8,10 20,14 10,12 6,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

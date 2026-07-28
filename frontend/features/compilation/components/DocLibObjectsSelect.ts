@@ -5,7 +5,7 @@ export default class DocLibObjectsSelect implements BlockTool {
     id: "DocLibObjectsSelect",
     title: "DocLib ObjectsSelect",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7a6b16bd496bb5a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,17 11,9 12,18 4,9 4,4 14,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

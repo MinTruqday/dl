@@ -5,7 +5,7 @@ export default class DocLibChartDataLabelAdd implements BlockTool {
     id: "DocLibChartDataLabelAdd",
     title: "DocLib ChartDataLabelAdd",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="25d5af4e98763f59"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,13 9,14 20,20 16,8 12,15 20,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibQuickCheckAll implements BlockTool {
     id: "DocLibQuickCheckAll",
     title: "DocLib QuickCheckAll",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3e5d3b72ec7108a0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,12 12,16 19,15 12,11 17,7 13,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

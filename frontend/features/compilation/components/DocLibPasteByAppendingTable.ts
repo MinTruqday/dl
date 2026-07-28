@@ -5,7 +5,7 @@ export default class DocLibPasteByAppendingTable implements BlockTool {
     id: "DocLibPasteByAppendingTable",
     title: "DocLib PasteByAppendingTable",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="20dd2fac01b0a7e7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,4 17,6 5,10 18,14 10,13 8,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

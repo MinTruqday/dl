@@ -5,7 +5,7 @@ export default class DocLibContentControlText implements BlockTool {
     id: "DocLibContentControlText",
     title: "DocLib ContentControlText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16652a0eb6b15fb0"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,20 12,18 16,11 14,10 15,19 6,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

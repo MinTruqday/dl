@@ -5,7 +5,7 @@ export default class DocLibAutoCorrectCapsLockOff implements BlockTool {
     id: "DocLibAutoCorrectCapsLockOff",
     title: "DocLib AutoCorrectCapsLockOff",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b7c898efc329f56"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,9 5,10 18,20 10,5 17,4 5,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

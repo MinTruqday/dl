@@ -5,7 +5,7 @@ export default class DocLibHighlightColorPink implements BlockTool {
     id: "DocLibHighlightColorPink",
     title: "DocLib HighlightColorPink",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9578cea26aa47c04"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,5 6,13 8,15 9,8 18,5 18,20"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

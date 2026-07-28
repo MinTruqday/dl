@@ -5,7 +5,7 @@ export default class DocLibPictureColor implements BlockTool {
     id: "DocLibPictureColor",
     title: "DocLib PictureColor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="addebc03b2be5a4b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,5 5,7 12,7 9,11 8,12 13,11"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

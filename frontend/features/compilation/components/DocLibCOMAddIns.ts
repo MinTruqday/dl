@@ -5,7 +5,7 @@ export default class DocLibCOMAddIns implements BlockTool {
     id: "DocLibCOMAddIns",
     title: "DocLib COMAddIns",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26292aa49a7fb261"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,11 12,15 5,12 12,16 20,9 8,17"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

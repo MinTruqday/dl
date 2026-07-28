@@ -5,7 +5,7 @@ export default class DocLibSendCopySendToMailRecipient implements BlockTool {
     id: "DocLibSendCopySendToMailRecipient",
     title: "DocLib SendCopySendToMailRecipient",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="25b65aadc5f92616"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,16 9,7 14,15 8,9 11,14 20,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

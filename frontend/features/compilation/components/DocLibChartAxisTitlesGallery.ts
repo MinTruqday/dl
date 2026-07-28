@@ -5,7 +5,7 @@ export default class DocLibChartAxisTitlesGallery implements BlockTool {
     id: "DocLibChartAxisTitlesGallery",
     title: "DocLib ChartAxisTitlesGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9c1df05844a6599b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,16 6,7 4,17 8,6 11,9 7,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

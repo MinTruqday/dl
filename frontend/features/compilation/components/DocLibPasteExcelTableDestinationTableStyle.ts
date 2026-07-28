@@ -5,7 +5,7 @@ export default class DocLibPasteExcelTableDestinationTableStyle implements Block
     id: "DocLibPasteExcelTableDestinationTableStyle",
     title: "DocLib PasteExcelTableDestinationTableStyle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0b24884805f0d42"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,12 8,17 13,14 17,19 15,12 15,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibActiveXToggleButton implements BlockTool {
     id: "DocLibActiveXToggleButton",
     title: "DocLib ActiveXToggleButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="285ef50772e13929"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,13 11,11 16,8 10,11 9,7 4,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

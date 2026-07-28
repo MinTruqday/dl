@@ -5,7 +5,7 @@ export default class DocLibPictureColorReset implements BlockTool {
     id: "DocLibPictureColorReset",
     title: "DocLib PictureColorReset",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5dad37031c3a3394"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,7 8,7 15,11 4,16 11,14 12,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

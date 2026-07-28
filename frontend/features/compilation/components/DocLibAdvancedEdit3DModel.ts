@@ -5,7 +5,7 @@ export default class DocLibAdvancedEdit3DModel implements BlockTool {
     id: "DocLibAdvancedEdit3DModel",
     title: "DocLib AdvancedEdit3DModel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a7abfaaaac51cd0a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,5 16,4 6,17 5,14 17,7 15,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

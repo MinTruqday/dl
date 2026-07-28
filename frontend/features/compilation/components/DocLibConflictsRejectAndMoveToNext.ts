@@ -5,7 +5,7 @@ export default class DocLibConflictsRejectAndMoveToNext implements BlockTool {
     id: "DocLibConflictsRejectAndMoveToNext",
     title: "DocLib ConflictsRejectAndMoveToNext",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="faaada1abeabf6b2"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,4 18,13 7,5 12,12 18,9 16,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

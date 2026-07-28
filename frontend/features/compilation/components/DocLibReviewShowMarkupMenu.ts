@@ -5,7 +5,7 @@ export default class DocLibReviewShowMarkupMenu implements BlockTool {
     id: "DocLibReviewShowMarkupMenu",
     title: "DocLib ReviewShowMarkupMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f2ef5e0e89d65d0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,16 11,7 15,8 20,8 13,12 11,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

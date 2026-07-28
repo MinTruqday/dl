@@ -5,7 +5,7 @@ export default class DocLibOfficeExtensionsShowAddinFlyout implements BlockTool 
     id: "DocLibOfficeExtensionsShowAddinFlyout",
     title: "DocLib OfficeExtensionsShowAddinFlyout",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4ea1f421f968142a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,12 10,20 15,6 7,12 6,13 16,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibNextEdit implements BlockTool {
     id: "DocLibNextEdit",
     title: "DocLib NextEdit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3c10459915156e82"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,20 5,4 8,8 12,15 8,9 16,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

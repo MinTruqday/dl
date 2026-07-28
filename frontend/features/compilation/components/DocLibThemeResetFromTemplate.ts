@@ -5,7 +5,7 @@ export default class DocLibThemeResetFromTemplate implements BlockTool {
     id: "DocLibThemeResetFromTemplate",
     title: "DocLib ThemeResetFromTemplate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d20aa6b79bfcfe2"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,19 4,9 6,8 7,9 19,16 16,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibDictation implements BlockTool {
     id: "DocLibDictation",
     title: "DocLib Dictation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1567e4d922722b1e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,5 11,17 4,16 13,17 12,20 11,10"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

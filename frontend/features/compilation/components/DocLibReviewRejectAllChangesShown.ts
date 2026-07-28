@@ -5,7 +5,7 @@ export default class DocLibReviewRejectAllChangesShown implements BlockTool {
     id: "DocLibReviewRejectAllChangesShown",
     title: "DocLib ReviewRejectAllChangesShown",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0e7301c4c41dc0c2"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,17 5,13 13,16 9,11 13,20 14,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

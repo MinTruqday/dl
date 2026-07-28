@@ -5,7 +5,7 @@ export default class DocLibEquationLinearOne implements BlockTool {
     id: "DocLibEquationLinearOne",
     title: "DocLib EquationLinearOne",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d75446101e1948a8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 6,20 17,12 8,19 14,20 12,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

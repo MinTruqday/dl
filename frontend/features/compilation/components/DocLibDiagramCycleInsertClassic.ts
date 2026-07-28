@@ -5,7 +5,7 @@ export default class DocLibDiagramCycleInsertClassic implements BlockTool {
     id: "DocLibDiagramCycleInsertClassic",
     title: "DocLib DiagramCycleInsertClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="66c5214fc628b496"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 20,15 15,10 14,18 15,4 4,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

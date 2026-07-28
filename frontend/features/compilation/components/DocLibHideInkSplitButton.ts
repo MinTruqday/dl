@@ -5,7 +5,7 @@ export default class DocLibHideInkSplitButton implements BlockTool {
     id: "DocLibHideInkSplitButton",
     title: "DocLib HideInkSplitButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fa61bf1b224931f4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,16 8,14 4,9 19,10 4,11 12,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

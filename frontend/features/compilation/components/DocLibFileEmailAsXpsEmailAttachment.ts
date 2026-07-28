@@ -5,7 +5,7 @@ export default class DocLibFileEmailAsXpsEmailAttachment implements BlockTool {
     id: "DocLibFileEmailAsXpsEmailAttachment",
     title: "DocLib FileEmailAsXpsEmailAttachment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="14d2d9282957004a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,10 17,10 11,6 4,10 19,12 12,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

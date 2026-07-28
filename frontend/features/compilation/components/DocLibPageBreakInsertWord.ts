@@ -5,7 +5,7 @@ export default class DocLibPageBreakInsertWord implements BlockTool {
     id: "DocLibPageBreakInsertWord",
     title: "DocLib PageBreakInsertWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30e93b9b5cdf8e9d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,16 12,6 11,6 10,8 11,8 19,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

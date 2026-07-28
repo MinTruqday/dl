@@ -5,7 +5,7 @@ export default class DocLibSmartArtLargerShape implements BlockTool {
     id: "DocLibSmartArtLargerShape",
     title: "DocLib SmartArtLargerShape",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fda50b0d63105c2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,18 16,10 14,19 9,11 7,10 17,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

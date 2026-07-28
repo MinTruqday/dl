@@ -5,7 +5,7 @@ export default class DocLibMenuMode implements BlockTool {
     id: "DocLibMenuMode",
     title: "DocLib MenuMode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f0249ac02d316c0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,6 9,6 6,11 9,9 9,17 7,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibOutlineShowFirstLineOnly implements BlockTool {
     id: "DocLibOutlineShowFirstLineOnly",
     title: "DocLib OutlineShowFirstLineOnly",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e6ffc818703113e4"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,4 17,11 14,19 6,11 4,11 9,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

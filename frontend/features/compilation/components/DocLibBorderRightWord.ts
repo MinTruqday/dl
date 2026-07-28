@@ -5,7 +5,7 @@ export default class DocLibBorderRightWord implements BlockTool {
     id: "DocLibBorderRightWord",
     title: "DocLib BorderRightWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e419940188f0d11"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,18 4,17 11,11 17,4 13,10 8,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

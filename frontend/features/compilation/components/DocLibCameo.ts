@@ -5,7 +5,7 @@ export default class DocLibCameo implements BlockTool {
     id: "DocLibCameo",
     title: "DocLib Cameo",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3622984a3b4d14e1"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,4 20,10 12,13 7,8 8,6 12,13"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

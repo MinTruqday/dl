@@ -5,7 +5,7 @@ export default class DocLibLoopQA implements BlockTool {
     id: "DocLibLoopQA",
     title: "DocLib LoopQA",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d25d13d1155b41e4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,12 6,9 8,10 18,11 7,17 10,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

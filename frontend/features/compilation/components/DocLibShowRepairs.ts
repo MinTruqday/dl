@@ -5,7 +5,7 @@ export default class DocLibShowRepairs implements BlockTool {
     id: "DocLibShowRepairs",
     title: "DocLib ShowRepairs",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8b680f22566b4df9"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,6 19,4 5,9 13,15 12,13 17,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

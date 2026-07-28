@@ -5,7 +5,7 @@ export default class DocLibTextEffectsBevelMore3DOptionsDialog implements BlockT
     id: "DocLibTextEffectsBevelMore3DOptionsDialog",
     title: "DocLib TextEffectsBevelMore3DOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8a64b9f59a1a725"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,17 11,10 8,12 18,7 19,11 9,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

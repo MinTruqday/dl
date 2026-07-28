@@ -5,7 +5,7 @@ export default class DocLibTextEffects3DRotationGallery implements BlockTool {
     id: "DocLibTextEffects3DRotationGallery",
     title: "DocLib TextEffects3DRotationGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="65ba52afd67c1da8"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,20 18,9 14,9 16,19 9,13 7,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

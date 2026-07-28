@@ -5,7 +5,7 @@ export default class DocLibReadingViewResearchPane implements BlockTool {
     id: "DocLibReadingViewResearchPane",
     title: "DocLib ReadingViewResearchPane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="07bcc5ed450bfa61"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,5 14,20 5,15 16,16 18,9 4,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

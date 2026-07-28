@@ -5,7 +5,7 @@ export default class DocLibChartFormatDataPointAndSelect implements BlockTool {
     id: "DocLibChartFormatDataPointAndSelect",
     title: "DocLib ChartFormatDataPointAndSelect",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="94f42917fc241f9d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,10 11,10 18,6 18,8 12,12 20,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

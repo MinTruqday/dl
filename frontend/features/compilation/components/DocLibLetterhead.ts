@@ -5,7 +5,7 @@ export default class DocLibLetterhead implements BlockTool {
     id: "DocLibLetterhead",
     title: "DocLib Letterhead",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11908698bcde9d29"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,12 19,20 5,5 8,11 6,9 17,9"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

@@ -5,7 +5,7 @@ export default class DocLibGoToFootnote implements BlockTool {
     id: "DocLibGoToFootnote",
     title: "DocLib GoToFootnote",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="560586a0089ae4df"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,9 19,11 12,5 11,6 14,8 6,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

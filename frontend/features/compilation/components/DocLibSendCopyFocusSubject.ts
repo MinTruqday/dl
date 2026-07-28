@@ -5,7 +5,7 @@ export default class DocLibSendCopyFocusSubject implements BlockTool {
     id: "DocLibSendCopyFocusSubject",
     title: "DocLib SendCopyFocusSubject",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3e38565c191206d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,10 18,20 10,13 19,11 9,5 10,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

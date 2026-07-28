@@ -5,7 +5,7 @@ export default class DocLibFileNew implements BlockTool {
     id: "DocLibFileNew",
     title: "DocLib FileNew",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="14039dfb5b81e5de"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,7 8,17 10,14 12,5 10,4 13,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

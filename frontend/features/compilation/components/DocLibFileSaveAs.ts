@@ -5,7 +5,7 @@ export default class DocLibFileSaveAs implements BlockTool {
     id: "DocLibFileSaveAs",
     title: "DocLib FileSaveAs",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a823e978d6eeaa27"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,5 16,5 14,4 4,9 16,11 6,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

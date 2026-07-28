@@ -5,7 +5,7 @@ export default class DocLibTabsDialog implements BlockTool {
     id: "DocLibTabsDialog",
     title: "DocLib TabsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="05158af5483e7457"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,8 6,11 8,15 18,6 14,17 4,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

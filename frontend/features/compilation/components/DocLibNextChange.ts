@@ -5,7 +5,7 @@ export default class DocLibNextChange implements BlockTool {
     id: "DocLibNextChange",
     title: "DocLib NextChange",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0226c98309456d62"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,8 18,16 13,5 11,17 11,6 19,16"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

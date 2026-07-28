@@ -5,7 +5,7 @@ export default class DocLibSaveSelectionToPageNumberMargin implements BlockTool 
     id: "DocLibSaveSelectionToPageNumberMargin",
     title: "DocLib SaveSelectionToPageNumberMargin",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7157807cde43d6b"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,8 5,11 5,11 14,9 13,17 20,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

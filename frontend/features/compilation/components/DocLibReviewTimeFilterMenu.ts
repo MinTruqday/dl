@@ -5,7 +5,7 @@ export default class DocLibReviewTimeFilterMenu implements BlockTool {
     id: "DocLibReviewTimeFilterMenu",
     title: "DocLib ReviewTimeFilterMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="326eac0e29b45789"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,12 6,18 11,14 6,5 6,5 16,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

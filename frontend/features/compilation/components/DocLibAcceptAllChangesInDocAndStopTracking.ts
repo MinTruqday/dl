@@ -5,7 +5,7 @@ export default class DocLibAcceptAllChangesInDocAndStopTracking implements Block
     id: "DocLibAcceptAllChangesInDocAndStopTracking",
     title: "DocLib AcceptAllChangesInDocAndStopTracking",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cd98588bd2b4fc1c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,20 7,7 10,14 18,15 12,18 9,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

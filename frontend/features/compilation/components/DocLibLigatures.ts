@@ -5,7 +5,7 @@ export default class DocLibLigatures implements BlockTool {
     id: "DocLibLigatures",
     title: "DocLib Ligatures",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5acca561c27a649d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,4 16,16 11,7 19,8 19,5 4,6"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

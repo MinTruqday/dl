@@ -5,7 +5,7 @@ export default class DocLibMailMergeClearMergeType implements BlockTool {
     id: "DocLibMailMergeClearMergeType",
     title: "DocLib MailMergeClearMergeType",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="703e491b53df2c38"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,15 9,14 19,6 14,9 7,11 10,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

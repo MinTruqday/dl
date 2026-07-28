@@ -5,7 +5,7 @@ export default class DocLibFileInternetFax implements BlockTool {
     id: "DocLibFileInternetFax",
     title: "DocLib FileInternetFax",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e02ee4fed7c80acd"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,16 11,20 15,17 14,5 19,16 15,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

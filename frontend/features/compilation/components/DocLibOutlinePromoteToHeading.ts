@@ -5,7 +5,7 @@ export default class DocLibOutlinePromoteToHeading implements BlockTool {
     id: "DocLibOutlinePromoteToHeading",
     title: "DocLib OutlinePromoteToHeading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8fedba9a6f36644f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,20 20,5 13,7 19,15 10,18 14,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

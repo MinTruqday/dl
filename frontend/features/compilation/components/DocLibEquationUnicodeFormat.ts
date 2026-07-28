@@ -5,7 +5,7 @@ export default class DocLibEquationUnicodeFormat implements BlockTool {
     id: "DocLibEquationUnicodeFormat",
     title: "DocLib EquationUnicodeFormat",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6d828cb49afc25d2"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,15 8,14 5,18 7,10 7,17 19,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

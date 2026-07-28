@@ -5,7 +5,7 @@ export default class DocLibAutoSum implements BlockTool {
     id: "DocLibAutoSum",
     title: "DocLib AutoSum",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5ddcbe6b4ebb3478"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,20 7,9 14,4 5,5 7,15 10,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

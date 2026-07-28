@@ -5,7 +5,7 @@ export default class DocLibSelectCurrentColor implements BlockTool {
     id: "DocLibSelectCurrentColor",
     title: "DocLib SelectCurrentColor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e9617f6605181605"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,16 12,4 9,11 9,9 11,7 5,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

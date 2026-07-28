@@ -5,7 +5,7 @@ export default class DocLibSetLanguageMenu implements BlockTool {
     id: "DocLibSetLanguageMenu",
     title: "DocLib SetLanguageMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="902077d8412d14ef"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,19 4,16 18,15 7,5 4,7 16,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

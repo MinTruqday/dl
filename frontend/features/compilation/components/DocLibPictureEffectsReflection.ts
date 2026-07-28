@@ -5,7 +5,7 @@ export default class DocLibPictureEffectsReflection implements BlockTool {
     id: "DocLibPictureEffectsReflection",
     title: "DocLib PictureEffectsReflection",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="35d0f7698ca8dfb0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,8 13,7 8,19 6,10 16,5 8,6"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

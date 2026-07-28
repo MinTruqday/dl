@@ -5,7 +5,7 @@ export default class DocLibCellMargins implements BlockTool {
     id: "DocLibCellMargins",
     title: "DocLib CellMargins",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7780cf1aaf380d20"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,13 7,13 9,9 17,19 11,4 12,18"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

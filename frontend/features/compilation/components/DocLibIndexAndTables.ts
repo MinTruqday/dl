@@ -5,7 +5,7 @@ export default class DocLibIndexAndTables implements BlockTool {
     id: "DocLibIndexAndTables",
     title: "DocLib IndexAndTables",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be54b3babe7737a1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,20 13,20 7,4 8,12 11,18 15,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

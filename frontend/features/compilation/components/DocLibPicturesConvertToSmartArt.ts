@@ -5,7 +5,7 @@ export default class DocLibPicturesConvertToSmartArt implements BlockTool {
     id: "DocLibPicturesConvertToSmartArt",
     title: "DocLib PicturesConvertToSmartArt",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="571aef9a17462e5e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,13 5,5 10,6 16,13 8,12 8,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

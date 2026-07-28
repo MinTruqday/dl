@@ -5,7 +5,7 @@ export default class DocLibCalculate implements BlockTool {
     id: "DocLibCalculate",
     title: "DocLib Calculate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2b310fed93f8cf0e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,19 19,20 15,14 7,18 20,14 15,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

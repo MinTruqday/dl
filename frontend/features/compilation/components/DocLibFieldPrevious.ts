@@ -5,7 +5,7 @@ export default class DocLibFieldPrevious implements BlockTool {
     id: "DocLibFieldPrevious",
     title: "DocLib FieldPrevious",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f19aa66511ce6c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,7 5,17 20,4 6,10 12,16 19,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

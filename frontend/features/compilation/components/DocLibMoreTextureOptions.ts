@@ -5,7 +5,7 @@ export default class DocLibMoreTextureOptions implements BlockTool {
     id: "DocLibMoreTextureOptions",
     title: "DocLib MoreTextureOptions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e21439a7afe3aeb"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,20 20,5 7,20 11,18 7,12 17,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

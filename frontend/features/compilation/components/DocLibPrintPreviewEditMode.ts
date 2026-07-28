@@ -5,7 +5,7 @@ export default class DocLibPrintPreviewEditMode implements BlockTool {
     id: "DocLibPrintPreviewEditMode",
     title: "DocLib PrintPreviewEditMode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8155a894bb9c0324"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,4 19,16 4,7 7,6 7,14 17,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

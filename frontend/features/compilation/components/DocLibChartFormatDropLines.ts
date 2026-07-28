@@ -5,7 +5,7 @@ export default class DocLibChartFormatDropLines implements BlockTool {
     id: "DocLibChartFormatDropLines",
     title: "DocLib ChartFormatDropLines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="325cd95398d78a73"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,11 17,19 20,15 6,17 4,20 17,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

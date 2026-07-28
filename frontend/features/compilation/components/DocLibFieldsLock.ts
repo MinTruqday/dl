@@ -5,7 +5,7 @@ export default class DocLibFieldsLock implements BlockTool {
     id: "DocLibFieldsLock",
     title: "DocLib FieldsLock",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78d3196b25d59fcd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,11 12,9 7,13 10,5 4,20 5,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

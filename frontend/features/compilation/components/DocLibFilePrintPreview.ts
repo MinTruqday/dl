@@ -5,7 +5,7 @@ export default class DocLibFilePrintPreview implements BlockTool {
     id: "DocLibFilePrintPreview",
     title: "DocLib FilePrintPreview",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dac15d3fbcafbafd"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,10 12,16 5,9 20,19 13,12 8,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

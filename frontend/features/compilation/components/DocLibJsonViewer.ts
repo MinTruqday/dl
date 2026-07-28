@@ -5,7 +5,7 @@ export default class DocLibJsonViewer implements BlockTool {
     id: "DocLibJsonViewer",
     title: "DocLib JsonViewer",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9cd9ab22d45b01d6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,17 5,4 12,10 5,14 9,4 8,13"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

@@ -5,7 +5,7 @@ export default class DocLibReviewCompareMenu implements BlockTool {
     id: "DocLibReviewCompareMenu",
     title: "DocLib ReviewCompareMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="971cab9c9b1ba8a8"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,15 5,7 6,14 19,19 14,14 7,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

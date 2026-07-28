@@ -5,7 +5,7 @@ export default class DocLibTranslateToSimplifiedChinese implements BlockTool {
     id: "DocLibTranslateToSimplifiedChinese",
     title: "DocLib TranslateToSimplifiedChinese",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5583994aff640eca"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,16 4,10 4,19 18,19 5,9 6,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

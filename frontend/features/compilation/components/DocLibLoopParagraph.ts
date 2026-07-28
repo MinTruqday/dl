@@ -5,7 +5,7 @@ export default class DocLibLoopParagraph implements BlockTool {
     id: "DocLibLoopParagraph",
     title: "DocLib LoopParagraph",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="857fe6f0cce48917"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,12 13,6 4,11 5,10 12,15 5,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

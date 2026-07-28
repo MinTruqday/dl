@@ -5,7 +5,7 @@ export default class DocLibImeDictionaryUpdate implements BlockTool {
     id: "DocLibImeDictionaryUpdate",
     title: "DocLib ImeDictionaryUpdate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4da0a9de06229bcd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,11 20,5 10,4 6,5 4,10 8,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

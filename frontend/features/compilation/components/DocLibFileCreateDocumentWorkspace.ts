@@ -5,7 +5,7 @@ export default class DocLibFileCreateDocumentWorkspace implements BlockTool {
     id: "DocLibFileCreateDocumentWorkspace",
     title: "DocLib FileCreateDocumentWorkspace",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abbfe27eb4be9920"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,8 9,11 14,7 4,19 16,6 9,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

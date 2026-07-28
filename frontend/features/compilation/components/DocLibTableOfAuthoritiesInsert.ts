@@ -5,7 +5,7 @@ export default class DocLibTableOfAuthoritiesInsert implements BlockTool {
     id: "DocLibTableOfAuthoritiesInsert",
     title: "DocLib TableOfAuthoritiesInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2c5b47a93f3f8beb"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,10 7,20 16,16 7,18 5,5 8,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

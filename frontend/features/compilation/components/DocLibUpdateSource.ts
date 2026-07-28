@@ -5,7 +5,7 @@ export default class DocLibUpdateSource implements BlockTool {
     id: "DocLibUpdateSource",
     title: "DocLib UpdateSource",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f1b975c3e2a92b58"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,19 19,12 9,20 13,7 16,18 11,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

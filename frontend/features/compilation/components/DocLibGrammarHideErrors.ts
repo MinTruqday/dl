@@ -5,7 +5,7 @@ export default class DocLibGrammarHideErrors implements BlockTool {
     id: "DocLibGrammarHideErrors",
     title: "DocLib GrammarHideErrors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a1c9410b672117b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,15 16,20 16,16 4,8 13,11 16,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

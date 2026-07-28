@@ -5,7 +5,7 @@ export default class DocLibSmartArtProcess implements BlockTool {
     id: "DocLibSmartArtProcess",
     title: "DocLib SmartArtProcess",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d695e65339eba8c2"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,17 13,19 10,18 19,11 20,16 14,6"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

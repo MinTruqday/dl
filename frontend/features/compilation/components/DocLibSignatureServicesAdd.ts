@@ -5,7 +5,7 @@ export default class DocLibSignatureServicesAdd implements BlockTool {
     id: "DocLibSignatureServicesAdd",
     title: "DocLib SignatureServicesAdd",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d6e93d8a7fd59994"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,16 14,6 12,13 4,16 13,6 19,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibChartDepthAxisOptionsDialog implements BlockTool {
     id: "DocLibChartDepthAxisOptionsDialog",
     title: "DocLib ChartDepthAxisOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="53608ed4e6b76255"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,15 10,12 13,17 17,4 9,5 13,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

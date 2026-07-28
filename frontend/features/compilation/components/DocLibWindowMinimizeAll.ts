@@ -5,7 +5,7 @@ export default class DocLibWindowMinimizeAll implements BlockTool {
     id: "DocLibWindowMinimizeAll",
     title: "DocLib WindowMinimizeAll",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="45f19f1c940ecadd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,7 10,15 16,18 19,4 18,13 14,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

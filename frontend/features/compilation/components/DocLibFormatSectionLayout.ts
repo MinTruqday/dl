@@ -5,7 +5,7 @@ export default class DocLibFormatSectionLayout implements BlockTool {
     id: "DocLibFormatSectionLayout",
     title: "DocLib FormatSectionLayout",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59526f40cfc0bc22"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,18 13,17 7,9 5,4 14,15 9,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

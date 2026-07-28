@@ -5,7 +5,7 @@ export default class DocLibEditorScore implements BlockTool {
     id: "DocLibEditorScore",
     title: "DocLib EditorScore",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a591674e7f145100"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,13 5,14 12,7 17,4 12,10 4,6"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

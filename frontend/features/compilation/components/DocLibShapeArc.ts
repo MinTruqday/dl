@@ -5,7 +5,7 @@ export default class DocLibShapeArc implements BlockTool {
     id: "DocLibShapeArc",
     title: "DocLib ShapeArc",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bc4a8ed1b8e330ac"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,10 10,9 18,10 18,6 20,19 7,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

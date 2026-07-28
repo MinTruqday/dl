@@ -5,7 +5,7 @@ export default class DocLibVideo implements BlockTool {
     id: "DocLibVideo",
     title: "DocLib Video",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dd08117e66526aaf"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,12 4,11 4,18 8,9 18,5 8,12"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

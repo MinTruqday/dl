@@ -5,7 +5,7 @@ export default class DocLibSpellingHideErrors implements BlockTool {
     id: "DocLibSpellingHideErrors",
     title: "DocLib SpellingHideErrors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="675bd70a603801df"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,10 15,14 15,9 5,6 11,19 4,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

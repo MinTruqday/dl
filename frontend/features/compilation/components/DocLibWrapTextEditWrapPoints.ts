@@ -5,7 +5,7 @@ export default class DocLibWrapTextEditWrapPoints implements BlockTool {
     id: "DocLibWrapTextEditWrapPoints",
     title: "DocLib WrapTextEditWrapPoints",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f8ef58ae69755fb1"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,5 7,8 7,19 14,11 14,20 7,5"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

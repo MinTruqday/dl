@@ -5,7 +5,7 @@ export default class DocLibWebDesignMode implements BlockTool {
     id: "DocLibWebDesignMode",
     title: "DocLib WebDesignMode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c1d61bcae6ecc26"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,16 16,5 8,12 4,8 11,11 10,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

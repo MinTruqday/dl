@@ -5,7 +5,7 @@ export default class DocLibMailMergeUpdateLabels implements BlockTool {
     id: "DocLibMailMergeUpdateLabels",
     title: "DocLib MailMergeUpdateLabels",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3aaa01a7ae88dc75"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 5,18 8,4 20,19 17,11 16,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

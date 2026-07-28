@@ -5,7 +5,7 @@ export default class DocLibShapeStylesOtherThemeFillsGallery implements BlockToo
     id: "DocLibShapeStylesOtherThemeFillsGallery",
     title: "DocLib ShapeStylesOtherThemeFillsGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8cba89780f57b93f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,20 5,5 19,6 19,16 14,9 12,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibParagraphSpacingDecrease implements BlockTool {
     id: "DocLibParagraphSpacingDecrease",
     title: "DocLib ParagraphSpacingDecrease",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e5905c8412b6003"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,8 9,17 18,13 15,7 4,16 14,9"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

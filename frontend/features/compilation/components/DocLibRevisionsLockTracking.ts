@@ -5,7 +5,7 @@ export default class DocLibRevisionsLockTracking implements BlockTool {
     id: "DocLibRevisionsLockTracking",
     title: "DocLib RevisionsLockTracking",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0923179b6f699282"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,5 10,6 13,7 14,15 7,8 17,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

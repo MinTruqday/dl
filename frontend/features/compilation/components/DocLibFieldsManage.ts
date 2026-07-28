@@ -5,7 +5,7 @@ export default class DocLibFieldsManage implements BlockTool {
     id: "DocLibFieldsManage",
     title: "DocLib FieldsManage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26333861c93cbb55"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,4 9,16 18,13 4,4 13,6 19,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

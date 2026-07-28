@@ -5,7 +5,7 @@ export default class DocLibIframeEmbed implements BlockTool {
     id: "DocLibIframeEmbed",
     title: "DocLib IframeEmbed",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d38698e32ba92c8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,9 7,10 20,20 14,17 19,4 14,9"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

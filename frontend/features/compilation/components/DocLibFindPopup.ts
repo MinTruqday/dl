@@ -5,7 +5,7 @@ export default class DocLibFindPopup implements BlockTool {
     id: "DocLibFindPopup",
     title: "DocLib FindPopup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="63a88f7cb4688f04"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,19 11,9 14,6 11,8 5,5 9,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

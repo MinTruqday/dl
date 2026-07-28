@@ -5,7 +5,7 @@ export default class DocLibAddressFontsFormat implements BlockTool {
     id: "DocLibAddressFontsFormat",
     title: "DocLib AddressFontsFormat",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0a0f61bcd761ffff"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,19 16,5 15,16 4,4 12,10 17,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

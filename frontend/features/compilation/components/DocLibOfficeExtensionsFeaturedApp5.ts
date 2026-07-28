@@ -5,7 +5,7 @@ export default class DocLibOfficeExtensionsFeaturedApp5 implements BlockTool {
     id: "DocLibOfficeExtensionsFeaturedApp5",
     title: "DocLib OfficeExtensionsFeaturedApp5",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b5544d857b46882"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,4 4,16 6,14 6,15 14,17 19,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

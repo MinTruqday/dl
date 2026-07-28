@@ -6,7 +6,7 @@ export default class DocLibQuote implements BlockTool {
     id: "DocLibQuote",
     title: "DocLib Quote",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0a06b2f5667d364"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,11 9,17 5,5 11,19 19,19 18,18"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

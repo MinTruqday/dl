@@ -5,7 +5,7 @@ export default class DocLibReviewShowOnlyCommentsAndFormattingInBaloons implemen
     id: "DocLibReviewShowOnlyCommentsAndFormattingInBaloons",
     title: "DocLib ReviewShowOnlyCommentsAndFormattingInBaloons",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec723427622b7b23"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,16 5,9 17,13 8,5 6,11 19,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibParagraphDownExtend implements BlockTool {
     id: "DocLibParagraphDownExtend",
     title: "DocLib ParagraphDownExtend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="229b22195070f1ad"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,6 4,12 16,14 7,7 12,10 12,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

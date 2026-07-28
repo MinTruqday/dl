@@ -5,7 +5,7 @@ export default class DocLibTableOfContentsUpdate implements BlockTool {
     id: "DocLibTableOfContentsUpdate",
     title: "DocLib TableOfContentsUpdate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="526146113f054198"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,16 6,4 16,9 18,20 8,7 4,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

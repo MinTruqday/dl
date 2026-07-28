@@ -5,7 +5,7 @@ export default class DocLibWindowSize implements BlockTool {
     id: "DocLibWindowSize",
     title: "DocLib WindowSize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8edcb067189fb52c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,20 10,5 11,10 15,14 12,18 11,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

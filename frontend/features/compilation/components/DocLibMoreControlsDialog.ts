@@ -5,7 +5,7 @@ export default class DocLibMoreControlsDialog implements BlockTool {
     id: "DocLibMoreControlsDialog",
     title: "DocLib MoreControlsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="34d6ff001544b65e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,14 4,4 8,4 16,13 9,13 15,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

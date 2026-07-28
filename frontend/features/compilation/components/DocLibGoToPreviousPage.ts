@@ -5,7 +5,7 @@ export default class DocLibGoToPreviousPage implements BlockTool {
     id: "DocLibGoToPreviousPage",
     title: "DocLib GoToPreviousPage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="48cd5bce7fb8454c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,5 10,6 12,18 5,12 12,10 18,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

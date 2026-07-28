@@ -5,7 +5,7 @@ export default class DocLibOrganizer implements BlockTool {
     id: "DocLibOrganizer",
     title: "DocLib Organizer",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a729d47e1f445ebb"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,11 12,11 18,4 13,4 16,17 9,11"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

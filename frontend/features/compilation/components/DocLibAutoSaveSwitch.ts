@@ -5,7 +5,7 @@ export default class DocLibAutoSaveSwitch implements BlockTool {
     id: "DocLibAutoSaveSwitch",
     title: "DocLib AutoSaveSwitch",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="edae24b17472c4b2"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,8 6,11 18,16 13,12 7,5 14,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibZoomTwoPages implements BlockTool {
     id: "DocLibZoomTwoPages",
     title: "DocLib ZoomTwoPages",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="819aba805381141f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,5 20,13 19,14 7,18 7,16 19,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTextAlignGallery implements BlockTool {
     id: "DocLibTextAlignGallery",
     title: "DocLib TextAlignGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bcf77c88fbe46b0e"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,13 9,4 17,11 9,18 16,5 7,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

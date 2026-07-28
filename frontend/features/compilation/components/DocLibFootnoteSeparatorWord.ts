@@ -5,7 +5,7 @@ export default class DocLibFootnoteSeparatorWord implements BlockTool {
     id: "DocLibFootnoteSeparatorWord",
     title: "DocLib FootnoteSeparatorWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dfb40052c1937c39"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,14 4,18 10,15 9,10 17,5 20,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

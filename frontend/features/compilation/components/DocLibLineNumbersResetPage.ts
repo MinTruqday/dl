@@ -5,7 +5,7 @@ export default class DocLibLineNumbersResetPage implements BlockTool {
     id: "DocLibLineNumbersResetPage",
     title: "DocLib LineNumbersResetPage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a557e7be83c4e10f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,6 14,7 16,13 8,19 10,13 5,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

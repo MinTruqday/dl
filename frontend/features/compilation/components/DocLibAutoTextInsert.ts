@@ -5,7 +5,7 @@ export default class DocLibAutoTextInsert implements BlockTool {
     id: "DocLibAutoTextInsert",
     title: "DocLib AutoTextInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="37fa52300b24ab98"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,16 18,18 15,6 5,20 9,20 17,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

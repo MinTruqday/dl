@@ -5,7 +5,7 @@ export default class DocLibTextToOrFromTable implements BlockTool {
     id: "DocLibTextToOrFromTable",
     title: "DocLib TextToOrFromTable",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86b3eeafdd0dc078"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,13 4,9 4,17 9,5 11,4 17,5"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

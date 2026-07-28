@@ -5,7 +5,7 @@ export default class DocLibAllMarkup implements BlockTool {
     id: "DocLibAllMarkup",
     title: "DocLib AllMarkup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c78aedb1ea7d8a82"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,6 20,11 17,10 6,15 14,15 10,8"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

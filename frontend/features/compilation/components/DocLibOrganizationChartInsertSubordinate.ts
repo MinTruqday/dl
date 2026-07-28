@@ -5,7 +5,7 @@ export default class DocLibOrganizationChartInsertSubordinate implements BlockTo
     id: "DocLibOrganizationChartInsertSubordinate",
     title: "DocLib OrganizationChartInsertSubordinate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="990871eb974afe04"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,12 15,18 19,10 20,8 15,5 15,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

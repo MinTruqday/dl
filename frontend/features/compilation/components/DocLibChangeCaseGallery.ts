@@ -5,7 +5,7 @@ export default class DocLibChangeCaseGallery implements BlockTool {
     id: "DocLibChangeCaseGallery",
     title: "DocLib ChangeCaseGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9fbcb9e48acec67a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,5 19,11 6,6 15,7 9,15 5,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

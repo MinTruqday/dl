@@ -5,7 +5,7 @@ export default class DocLibCurrentEraser implements BlockTool {
     id: "DocLibCurrentEraser",
     title: "DocLib CurrentEraser",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d9307a9fe1bfbf9d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,18 7,10 8,8 8,8 4,18 10,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

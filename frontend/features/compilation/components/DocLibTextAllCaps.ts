@@ -5,7 +5,7 @@ export default class DocLibTextAllCaps implements BlockTool {
     id: "DocLibTextAllCaps",
     title: "DocLib TextAllCaps",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fd65124a2cf46c1a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,20 5,10 14,10 10,13 17,7 10,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

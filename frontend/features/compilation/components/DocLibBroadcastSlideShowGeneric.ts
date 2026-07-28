@@ -5,7 +5,7 @@ export default class DocLibBroadcastSlideShowGeneric implements BlockTool {
     id: "DocLibBroadcastSlideShowGeneric",
     title: "DocLib BroadcastSlideShowGeneric",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7cd2e2c2749372c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,5 16,14 9,9 8,14 18,5 13,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

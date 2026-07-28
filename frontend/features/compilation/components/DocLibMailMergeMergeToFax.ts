@@ -5,7 +5,7 @@ export default class DocLibMailMergeMergeToFax implements BlockTool {
     id: "DocLibMailMergeMergeToFax",
     title: "DocLib MailMergeMergeToFax",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e553e5775e981828"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,19 12,4 13,20 11,10 7,12 11,18"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibRestrictEditing implements BlockTool {
     id: "DocLibRestrictEditing",
     title: "DocLib RestrictEditing",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b3a3037d262824f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,11 18,8 10,17 15,15 17,18 8,5"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibLinkToPrevious implements BlockTool {
     id: "DocLibLinkToPrevious",
     title: "DocLib LinkToPrevious",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2ac83527b34e68b4"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,17 6,9 13,14 6,14 4,14 5,20"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

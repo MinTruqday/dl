@@ -5,7 +5,7 @@ export default class DocLibRemoveWatermark implements BlockTool {
     id: "DocLibRemoveWatermark",
     title: "DocLib RemoveWatermark",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="554824f5f8648e23"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,8 6,11 14,19 10,5 18,15 20,10"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

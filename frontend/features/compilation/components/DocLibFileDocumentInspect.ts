@@ -5,7 +5,7 @@ export default class DocLibFileDocumentInspect implements BlockTool {
     id: "DocLibFileDocumentInspect",
     title: "DocLib FileDocumentInspect",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cc9f0e05901f5472"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,10 18,9 12,18 20,16 11,10 14,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

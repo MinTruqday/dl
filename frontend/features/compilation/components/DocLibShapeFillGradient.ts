@@ -5,7 +5,7 @@ export default class DocLibShapeFillGradient implements BlockTool {
     id: "DocLibShapeFillGradient",
     title: "DocLib ShapeFillGradient",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7bdca059da5ec54a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,20 11,8 18,13 14,10 4,6 14,10"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

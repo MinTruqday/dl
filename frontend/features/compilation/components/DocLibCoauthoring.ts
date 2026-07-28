@@ -5,7 +5,7 @@ export default class DocLibCoauthoring implements BlockTool {
     id: "DocLibCoauthoring",
     title: "DocLib Coauthoring",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e6723395f8765cfe"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,16 4,17 14,20 11,20 17,11 15,4"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

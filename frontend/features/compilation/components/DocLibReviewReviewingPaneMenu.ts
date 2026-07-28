@@ -5,7 +5,7 @@ export default class DocLibReviewReviewingPaneMenu implements BlockTool {
     id: "DocLibReviewReviewingPaneMenu",
     title: "DocLib ReviewReviewingPaneMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3ba492226c0bf4fe"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,15 14,4 10,15 10,20 20,9 5,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

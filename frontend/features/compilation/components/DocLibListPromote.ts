@@ -5,7 +5,7 @@ export default class DocLibListPromote implements BlockTool {
     id: "DocLibListPromote",
     title: "DocLib ListPromote",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="130dd5f20ae432c2"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,17 13,8 14,11 20,11 11,4 14,14"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

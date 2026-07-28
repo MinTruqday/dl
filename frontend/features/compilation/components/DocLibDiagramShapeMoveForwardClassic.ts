@@ -5,7 +5,7 @@ export default class DocLibDiagramShapeMoveForwardClassic implements BlockTool {
     id: "DocLibDiagramShapeMoveForwardClassic",
     title: "DocLib DiagramShapeMoveForwardClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4cccf7c15f8d1cf0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,4 13,10 14,9 15,6 15,13 11,20"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

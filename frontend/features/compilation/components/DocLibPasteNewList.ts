@@ -5,7 +5,7 @@ export default class DocLibPasteNewList implements BlockTool {
     id: "DocLibPasteNewList",
     title: "DocLib PasteNewList",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e45009ee5b292093"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,16 13,4 10,11 19,15 4,10 20,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

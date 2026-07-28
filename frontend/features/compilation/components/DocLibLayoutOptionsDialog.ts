@@ -5,7 +5,7 @@ export default class DocLibLayoutOptionsDialog implements BlockTool {
     id: "DocLibLayoutOptionsDialog",
     title: "DocLib LayoutOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b24dfa07ec83e5ba"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,13 16,11 19,16 12,20 16,17 7,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibSpellingAndGrammar implements BlockTool {
     id: "DocLibSpellingAndGrammar",
     title: "DocLib SpellingAndGrammar",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1817110531596253"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,10 4,9 19,8 17,19 16,14 6,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

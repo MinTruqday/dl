@@ -5,7 +5,7 @@ export default class DocLibSmartArtRelationship implements BlockTool {
     id: "DocLibSmartArtRelationship",
     title: "DocLib SmartArtRelationship",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd2cde170a7aca70"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,14 5,10 14,7 19,14 14,18 11,19"/></svg>',
-    origin: "doclib-native",
+    product: "doclib",
   } as const;
 
   private api: API;

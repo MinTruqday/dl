@@ -5,7 +5,7 @@ export default class DocLibWordArtVerticalText implements BlockTool {
     id: "DocLibWordArtVerticalText",
     title: "DocLib WordArtVerticalText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b1569d8808833fcf"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,5 8,4 12,16 16,7 4,10 9,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

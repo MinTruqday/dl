@@ -5,7 +5,7 @@ export default class DocLibMailMergeGoToFirstRecord implements BlockTool {
     id: "DocLibMailMergeGoToFirstRecord",
     title: "DocLib MailMergeGoToFirstRecord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a5eb482a84875af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,13 14,15 19,8 19,9 4,13 20,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

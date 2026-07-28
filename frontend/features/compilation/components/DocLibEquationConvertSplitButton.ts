@@ -5,7 +5,7 @@ export default class DocLibEquationConvertSplitButton implements BlockTool {
     id: "DocLibEquationConvertSplitButton",
     title: "DocLib EquationConvertSplitButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5086f4d48164be40"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,19 10,12 14,19 7,17 12,4 5,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

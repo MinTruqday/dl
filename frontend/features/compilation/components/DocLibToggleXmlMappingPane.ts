@@ -5,7 +5,7 @@ export default class DocLibToggleXmlMappingPane implements BlockTool {
     id: "DocLibToggleXmlMappingPane",
     title: "DocLib ToggleXmlMappingPane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b9cf23447e18b335"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,7 5,4 11,11 13,6 13,6 7,17"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

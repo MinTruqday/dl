@@ -5,7 +5,7 @@ export default class DocLibViewDocumentActionsPane implements BlockTool {
     id: "DocLibViewDocumentActionsPane",
     title: "DocLib ViewDocumentActionsPane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c73c92e9650ebc2a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,13 14,16 20,18 5,12 12,6 11,19"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

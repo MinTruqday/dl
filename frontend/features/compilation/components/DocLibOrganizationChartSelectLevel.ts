@@ -5,7 +5,7 @@ export default class DocLibOrganizationChartSelectLevel implements BlockTool {
     id: "DocLibOrganizationChartSelectLevel",
     title: "DocLib OrganizationChartSelectLevel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12e20807d61de059"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,9 12,11 14,16 7,8 8,8 18,8"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

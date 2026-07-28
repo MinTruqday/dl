@@ -5,7 +5,7 @@ export default class DocLibCharacterSpacing implements BlockTool {
     id: "DocLibCharacterSpacing",
     title: "DocLib CharacterSpacing",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8ceefa2ece8cef01"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,4 16,16 6,8 5,5 16,15 6,8"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibOleObjectctInsert implements BlockTool {
     id: "DocLibOleObjectctInsert",
     title: "DocLib OleObjectctInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3d00dbc58404f10c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,4 19,14 17,8 7,16 15,18 8,4"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

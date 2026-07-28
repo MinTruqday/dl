@@ -5,7 +5,7 @@ export default class DocLibListNumFieldInsert implements BlockTool {
     id: "DocLibListNumFieldInsert",
     title: "DocLib ListNumFieldInsert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e1b32a0e68a72271"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,13 12,18 6,18 4,15 18,12 17,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

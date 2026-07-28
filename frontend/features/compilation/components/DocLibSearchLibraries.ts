@@ -5,7 +5,7 @@ export default class DocLibSearchLibraries implements BlockTool {
     id: "DocLibSearchLibraries",
     title: "DocLib SearchLibraries",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23517e46755ddc31"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,17 11,6 19,12 20,19 17,6 6,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

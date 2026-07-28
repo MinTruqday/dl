@@ -5,7 +5,7 @@ export default class DocLibMasterDocumentMergeSubdocuments implements BlockTool 
     id: "DocLibMasterDocumentMergeSubdocuments",
     title: "DocLib MasterDocumentMergeSubdocuments",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6bfe03b47fdb7dc5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,20 7,14 12,19 10,14 20,20 12,15"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTextboxFlyoutMenuAnchor implements BlockTool {
     id: "DocLibTextboxFlyoutMenuAnchor",
     title: "DocLib TextboxFlyoutMenuAnchor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b480a9d4869abc2b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,13 20,12 19,5 5,13 10,13 19,16"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

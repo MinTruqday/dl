@@ -5,7 +5,7 @@ export default class DocLibPictureChangeFromFile implements BlockTool {
     id: "DocLibPictureChangeFromFile",
     title: "DocLib PictureChangeFromFile",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0af5e48ec622b273"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,11 11,10 15,4 12,17 11,12 6,10"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibLigatureGalleryWord implements BlockTool {
     id: "DocLibLigatureGalleryWord",
     title: "DocLib LigatureGalleryWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="578d9457f320f5f8"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,9 16,6 9,19 11,14 7,17 9,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

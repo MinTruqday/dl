@@ -5,7 +5,7 @@ export default class DocLibLearningToolsWebViewPageColorMenu implements BlockToo
     id: "DocLibLearningToolsWebViewPageColorMenu",
     title: "DocLib LearningToolsWebViewPageColorMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1210b11cd7be108d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,20 11,15 15,7 20,9 14,6 15,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

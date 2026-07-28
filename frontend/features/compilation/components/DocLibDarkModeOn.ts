@@ -5,7 +5,7 @@ export default class DocLibDarkModeOn implements BlockTool {
     id: "DocLibDarkModeOn",
     title: "DocLib DarkModeOn",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1e152d565bced8f6"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,8 15,5 10,6 16,12 15,11 16,13"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

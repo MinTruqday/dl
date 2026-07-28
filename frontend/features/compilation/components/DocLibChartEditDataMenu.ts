@@ -5,7 +5,7 @@ export default class DocLibChartEditDataMenu implements BlockTool {
     id: "DocLibChartEditDataMenu",
     title: "DocLib ChartEditDataMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fbd48f1a9f2ed57a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,12 11,13 10,16 13,7 19,19 11,12"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

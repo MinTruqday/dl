@@ -5,7 +5,7 @@ export default class DocLibEvenPageSectionBreak implements BlockTool {
     id: "DocLibEvenPageSectionBreak",
     title: "DocLib EvenPageSectionBreak",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d6a4a09672d5e33"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,8 10,13 5,15 13,4 7,12 12,15"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

@@ -5,7 +5,7 @@ export default class DocLibTableDistributeEvenly implements BlockTool {
     id: "DocLibTableDistributeEvenly",
     title: "DocLib TableDistributeEvenly",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="285b0ee87e16da91"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,10 18,15 11,9 18,13 20,15 20,4"/></svg>',
-    origin: "word-compatible",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

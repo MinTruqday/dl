@@ -5,7 +5,7 @@ export default class DocLibChartColorsGallery implements BlockTool {
     id: "DocLibChartColorsGallery",
     title: "DocLib ChartColorsGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2fd549abb5543b20"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,13 9,5 15,20 12,19 7,9 16,6"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {

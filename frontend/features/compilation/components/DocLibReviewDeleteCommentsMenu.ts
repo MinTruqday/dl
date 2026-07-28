@@ -5,7 +5,7 @@ export default class DocLibReviewDeleteCommentsMenu implements BlockTool {
     id: "DocLibReviewDeleteCommentsMenu",
     title: "DocLib ReviewDeleteCommentsMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="649371a59324b929"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,15 15,16 15,6 19,11 15,5 6,7"/></svg>',
-    origin: "microsoft-word",
+    product: "doclib",
   } as const;
 
   static get toolbox() {
