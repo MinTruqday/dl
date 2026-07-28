@@ -92,12 +92,6 @@ class SemanticRouterValidator:
                 logger.warning(f"Invalid agent '{agent}' corrected to '{corrected}'")
                 node = {**node, "agent": corrected}
                 agent = corrected
-
-            if agent == "InterpreterAgent":
-                logger.warning("Interpreter execution unavailable, routing task to Reasoning")
-                node = {**node, "agent": "Reasoning"}
-                agent = "Reasoning"
-                
             validated.append(node)
         return validated
 

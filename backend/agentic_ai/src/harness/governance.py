@@ -173,6 +173,27 @@ class GovernanceHarness:
             )
         return PolicyDecision(allowed=True)
 
+    def check_action_permission(
+        self, session_id: str, action_type: Literal["READ", "WRITE", "EXECUTE"]
+    ) -> PolicyDecision:
+        state = self._sessions.get(session_id)
+        if not state:
+            return PolicyDecision(allowed=True)
+        role_action_matrix = {
+            "guest": {"READ"},
+            "reader": {"READ", "EXECUTE"},
+            "author": {"READ", "WRITE", "EXECUTE"},
+            "admin": {"READ", "WRITE", "EXECUTE"},
+        }
+        allowed_actions = role_action_matrix.get(state.role, {"READ"})
+        if action_type not in allowed_actions:
+            logger.warning(f"Action {action_type} denied for role {state.role} in session {session_id}")
+            return PolicyDecision(
+                allowed=False,
+                reason=f"The action type {action_type} is not authorized for the current session role",
+            )
+        return PolicyDecision(allowed=True)
+
     def get_session_summary(self, session_id: str) -> dict:
         state = self._sessions.get(session_id)
         if not state:

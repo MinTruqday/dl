@@ -109,3 +109,4 @@ class ActingState(TypedDict):
     artifacts: Dict[str, Any]
     dynamic_injections: List[Any]
     results_trimmed: bool
+    execution_history: List[Any]

@@ -87,6 +87,17 @@ async def supervisor_node(state: ActingState):
                 return {"next_nodes": ["trimmer"], "error": "dag_deadlock"}
             return {"steps": steps, "task_status": task_status, "next_nodes": []}
 
+    execution_history = state.get("execution_history", [])
+    current_sig = tuple(sorted([t["id"] for t in ready_tasks]))
+    execution_history.append(current_sig)
+    if len(execution_history) >= 3 and execution_history[-1] == execution_history[-2] == execution_history[-3]:
+        logger.warning("Infinite loop detected in supervisor execution")
+        return {
+            "next_nodes": ["trimmer"],
+            "error": "infinite_loop_detected",
+            "execution_history": execution_history,
+        }
+
     route_map = {
         "InterpreterAgent": "interpreter",
         "EngineAgent": "search_engine",
@@ -104,7 +115,8 @@ async def supervisor_node(state: ActingState):
         "task_status": task_status,
         "completed_tasks": completed_tasks,
         "next_nodes": next_nodes,
-        "dynamic_injections": dynamic_injections
+        "dynamic_injections": dynamic_injections,
+        "execution_history": execution_history,
     }
 
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
@@ -225,9 +237,9 @@ async def swarm_node(state: ActingState):
     
     from src.workflow.graph import llm
     from src.agents.swarm import create_swarm_workflow
-    from src.agents.specialized.coder import CoderAgent
-    from src.agents.specialized.reviewer import ReviewerAgent
-    from src.agents.specialized.secops import SecOpsAgent
+    from src.agents.coder import CoderAgent
+    from src.agents.reviewer import ReviewerAgent
+    from src.agents.secops import SecOpsAgent
     import asyncio
     
     specialized_agents = {
