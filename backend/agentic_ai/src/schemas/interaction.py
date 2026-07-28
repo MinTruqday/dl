@@ -9,6 +9,7 @@ class ChatRequest(BaseModel):
     """
     query: str = Field(min_length=1, max_length=100000, description="<critical_instructions>The main user query to respond to.</critical_instructions>")
     user_id: str = Field(default="", max_length=128, description="<input_context>The ID of the requesting user.</input_context>")
+    role: str = Field(default="reader", pattern=r"^(guest|reader|author|admin)$", description="<critical_instructions>The authenticated role used by execution governance.</critical_instructions>")
     document_ids: list[Annotated[str, Field(min_length=1, max_length=128)]] = Field(default_factory=list, max_length=100, description="<input_context>List of relevant document IDs.</input_context>")
     useWeb: bool = Field(default=False, description="<conditional_output>Whether to use web search.</conditional_output>")
     thinking: bool = Field(default=False, description="<conditional_output>Whether to enable deeper orchestration with public progress status.</conditional_output>")

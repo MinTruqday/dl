@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibAnnotation implements InlineTool {
+  static readonly feature = {
+    id: "DocLibAnnotation",
+    title: "DocLib Annotation",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59eaaa6fa38ae3d4"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,17 4,13 14,6 10,12 19,20 12,7"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLButtonElement | null = null;
   private _state: boolean = false;
@@ -33,7 +40,7 @@ export default class DocLibAnnotation implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59eaaa6fa38ae3d4"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,17 4,13 14,6 10,12 19,20 12,7"/></svg>';
 
     if (!document.getElementById("doclib-annotation-styles")) {
       const style = document.createElement("style");

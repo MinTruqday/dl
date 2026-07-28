@@ -41,15 +41,6 @@ class RetrievalRag:
                 self._reranker = False
         return self._reranker
 
-    def _extract_json_array(self, text: str) -> list:
-        from src.utils.structured_output import extract_json_value
-
-        try:
-            parsed = extract_json_value(text)
-            return parsed if isinstance(parsed, list) else []
-        except (TypeError, ValueError):
-            return []
-
     async def _generate_hypothetical_document(self, question: str) -> str:
         system_prompt = (
             "<system_identity>\nYou are Metis, a document generation assistant.\n</system_identity>\n"
@@ -183,15 +174,19 @@ class RetrievalRag:
             f"Given the question: {question}\n"
             f"There are {len(document_ids)} documents with IDs: {document_ids}\n"
             "For each document, generate one specific sub-query to retrieve the most relevant passage. "
-            "Output as a JSON array of strings, one per document, in the same order"
+            "Return one query per document in the same order"
         )
 
         sub_queries = [question] * len(document_ids)
         try:
-            res = await asyncio.to_thread(self.llm.invoke, decompose_prompt)
-            parsed = self._extract_json_array(res.content)
-            if isinstance(parsed, list) and len(parsed) == len(document_ids):
-                sub_queries = parsed
+            from src.schemas.routing import CrossDocumentQueries
+
+            structured_llm = self.llm.with_structured_output(CrossDocumentQueries)
+            result = await structured_llm.ainvoke(
+                [HumanMessage(content=decompose_prompt)]
+            )
+            if len(result.queries) == len(document_ids):
+                sub_queries = [query.strip() for query in result.queries]
         except Exception:
             logger.exception("Cross-document query analysis error")
 

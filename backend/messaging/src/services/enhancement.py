@@ -33,9 +33,16 @@ class EnhancementService:
             )
             translated_content = response.json().get("translation")
         except Exception:
-            translated_content = f"[Dịch tự động {target_lang}]: {content}"
-        if not translated_content:
-            translated_content = f"[Dịch tự động {target_lang}]: {content}"
+            raise HTTPException(
+                status_code=503,
+                detail="Dịch vụ dịch thuật tạm thời không khả dụng",
+            )
+        if not isinstance(translated_content, str) or not translated_content.strip():
+            raise HTTPException(
+                status_code=502,
+                detail="Dịch vụ dịch thuật trả về dữ liệu không hợp lệ",
+            )
+        translated_content = translated_content.strip()
 
         await MessageRepository.update_one(
             {"_id": message_id},
@@ -111,11 +118,26 @@ class EnhancementService:
                 json_data={"history_messages": history_messages},
                 bearer_token=bearer_token,
             )
-            if response.status_code == 200:
-                return response.json()
+            payload = response.json()
         except Exception:
-            pass
-        return {"replies": ["Đã rõ thông tin", "Tôi sẽ xem xét và phản hồi sau", "Cảm ơn bạn"]}
+            raise HTTPException(
+                status_code=503,
+                detail="Dịch vụ gợi ý trả lời tạm thời không khả dụng",
+            )
+        if isinstance(payload, dict) and payload.get("error_code"):
+            raise HTTPException(
+                status_code=502,
+                detail="Dịch vụ gợi ý trả lời không tạo được kết quả hợp lệ",
+            )
+        replies = payload.get("replies") if isinstance(payload, dict) else None
+        if not isinstance(replies, list) or not replies or any(
+            not isinstance(reply, str) or not reply.strip() for reply in replies
+        ):
+            raise HTTPException(
+                status_code=502,
+                detail="Dịch vụ gợi ý trả lời trả về dữ liệu không hợp lệ",
+            )
+        return {"replies": [reply.strip() for reply in replies[:5]]}
 
 
     @staticmethod
@@ -306,5 +328,3 @@ class EnhancementService:
                 {"$pull": {"vip_by": user_id}},
             )
         return {"is_vip": is_vip, "other_user_id": other_user_id}
-
-

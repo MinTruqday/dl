@@ -1,39 +1,89 @@
-import { API, BlockTool } from "@editorjs/editorjs";
+import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibPictureContentControl implements BlockTool {
-  private api: API;
-  private wrapper: HTMLElement | null = null;
-  private data: { content: string };
+  static readonly feature = {
+    id: "DocLibPictureContentControl",
+    title: "DocLib PictureContentControl",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ce239742e63b27e8"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,5 19,19 13,12 9,15 20,19 5,14"/></svg>',
+    origin: "word-compatible",
+  } as const;
 
   static get toolbox() {
     return {
       title: "DocLib Picture Content Control",
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>'
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ce239742e63b27e8"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,5 19,19 13,12 9,15 20,19 5,14"/></svg>',
     };
   }
 
-  constructor({ api, data }: { api: API; data: any }) {
+  static get isReadOnlySupported() {
+    return true;
+  }
+
+  readonly id = "DocLibPictureContentControl";
+  readonly title = "DocLib Picture Content Control";
+  readonly category = "automation" as const;
+  readonly mode = "PictureContentControl";
+  readonly requiresSelection = false;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
+
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
-    this.data = { content: data?.content || "" };
+    this.data = data || {};
   }
 
   render() {
     this.wrapper = document.createElement("div");
-    this.wrapper.classList.add(this.api.styles.block, "doclib-doc-lib-picture-content-control");
-    this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data?.content;
-    this.wrapper.dataset.placeholder = "Doc Lib Picture Content Control";
-
-    this.wrapper.addEventListener("input", (e: any) => {
-      this.data.content = e.target.innerHTML;
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
     });
-
+    this.wrapper.appendChild(button);
     return this.wrapper;
   }
 
   save(blockContent: HTMLElement) {
     return {
-      content: blockContent.innerHTML
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
     };
+  }
+
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    window.dispatchEvent(
+      new CustomEvent("doclib-word-automation", {
+        detail: { command: this.id, mode: this.mode },
+      }),
+    );
   }
 }

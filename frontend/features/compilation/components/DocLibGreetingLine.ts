@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibGreetingLine implements BlockTool {
+  static readonly feature = {
+    id: "DocLibGreetingLine",
+    title: "DocLib GreetingLine",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3bc0ad078809e7fe"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,9 7,11 4,13 14,20 13,13 17,6"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibGreetingLine implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Greeting Line",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3bc0ad078809e7fe"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,9 7,11 4,13 14,20 13,13 17,6"/></svg>',
     };
   }
 

@@ -34,10 +34,12 @@ class FakeResponse:
         return self._data
 
 
-def call(method: str, path: str, body=None, internal: bool = False):
+def call(method: str, path: str, body=None, internal: bool = False, bearer=None):
     headers = {"Content-Type": "application/json"}
     if internal:
         headers["X-Internal-Token"] = SECRET_KEY
+    if bearer:
+        headers["Authorization"] = f"Bearer {bearer}"
     request = urllib.request.Request(
         f"http://127.0.0.1:8000{path}",
         data=json.dumps(body).encode("utf-8") if body is not None else None,
@@ -77,7 +79,12 @@ async def main():
     assert validated[0]["agent"] == "Knowledge"
 
     admin_token = jwt.encode(
-        {"uid": "admin", "sub": "admin@example.com", "role": "admin"},
+        {
+            "uid": "admin",
+            "sub": "admin@example.com",
+            "role": "admin",
+            "sid": "agentic-admin-session",
+        },
         SECRET_KEY,
         algorithm="HS256",
     )
@@ -94,6 +101,7 @@ async def main():
     )
     from src.core.infrastructure.redis import redis
     await redis.sadd("user_sessions:reader", "agentic-integration-session")
+    await redis.sadd("user_sessions:admin", "agentic-admin-session")
     assert check_system_access(f"Bearer {admin_token}") is True
     assert check_system_access(reader_token) is False
     assert check_system_access("invalid") is False
@@ -127,10 +135,51 @@ async def main():
         "user_id": "agentic-drm-user",
         "document_id": "agentic-drm-document",
         "client_ip": "10.10.10.10",
-        "user_tier": "BASIC",
-        "document_type": "standard",
+        "device_fingerprint": "agentic-device-fingerprint",
     }
     assert call("POST", "/drm-ai/danh-gia", drm_request)[0] == 403
+    from motor.motor_asyncio import AsyncIOMotorClient
+
+    mongo = AsyncIOMotorClient(os.environ["MONGODB_URI"])
+    humanity = mongo[os.getenv("HUMANITY_DB_NAME", "doclib_humanity")]
+    content = mongo[os.getenv("CONTENT_DB_NAME", "doclib_content")]
+    drm = mongo[os.getenv("DRM_DB_NAME", "doclib_drm")]
+    agentic = mongo[os.getenv("AGENTIC_AI_DB_NAME", "doclib_agentic_ai")]
+    await humanity.users.replace_one(
+        {"_id": drm_request["user_id"]},
+        {
+            "_id": drm_request["user_id"],
+            "email": "agentic-drm@example.com",
+            "is_active": True,
+            "role": "reader",
+        },
+        upsert=True,
+    )
+    await content.documents.replace_one(
+        {"_id": drm_request["document_id"]},
+        {
+            "_id": drm_request["document_id"],
+            "slug": "agentic-drm-integration",
+            "title": "Agentic DRM integration",
+            "status": "published",
+            "visibility": "public",
+            "is_deleted": False,
+        },
+        upsert=True,
+    )
+    await drm.drm_licenses.replace_one(
+        {"_id": "agentic-drm-license"},
+        {
+            "_id": "agentic-drm-license",
+            "file_id": "agentic-drm-file",
+            "document_id": drm_request["document_id"],
+            "user_id": drm_request["user_id"],
+            "status": "ACTIVE",
+            "hardware_signature": drm_request["device_fingerprint"],
+            "recent_accesses": [{"ip": drm_request["client_ip"]}],
+        },
+        upsert=True,
+    )
     status, policy = call(
         "POST",
         "/drm-ai/danh-gia",
@@ -145,6 +194,84 @@ async def main():
         "LEVEL_3",
         "BLOCKED",
     }
+    missing_fingerprint = dict(drm_request)
+    missing_fingerprint.pop("device_fingerprint")
+    status, blocked_policy = call(
+        "POST",
+        "/drm-ai/danh-gia",
+        missing_fingerprint,
+        internal=True,
+    )
+    assert status == 200, blocked_policy
+    assert blocked_policy["data"]["decision"] == "BLOCKED"
+    assert blocked_policy["data"]["enable_aes_encryption"] is False
+    await humanity.users.delete_one({"_id": drm_request["user_id"]})
+    await content.documents.delete_one({"_id": drm_request["document_id"]})
+    await drm.drm_licenses.delete_one({"_id": "agentic-drm-license"})
+
+    assert call(
+        "POST",
+        "/tinh-chinh/tap-du-lieu",
+        {"name": "Denied dataset"},
+        bearer=reader_token,
+    )[0] == 403
+    assert call(
+        "POST",
+        "/tinh-chinh/tap-du-lieu",
+        {},
+        bearer=admin_token,
+    )[0] == 422
+    status, dataset = call(
+        "POST",
+        "/tinh-chinh/tap-du-lieu",
+        {"name": "Integration dataset", "source": "manual"},
+        bearer=admin_token,
+    )
+    assert status == 200, dataset
+    dataset_id = dataset["_id"]
+
+    status, session = call(
+        "POST",
+        "/lich-su",
+        {
+            "document_id": "integration-document",
+            "first_query": "Integration history",
+        },
+        bearer=reader_token,
+    )
+    assert status == 200, session
+    session_id = session["_id"]
+    status, message = call(
+        "POST",
+        f"/lich-su/{session_id}/tin-nhan",
+        {
+            "content": "Bounded integration message",
+            "attachments": [{"name": "evidence.txt"}],
+        },
+        bearer=reader_token,
+    )
+    assert status == 200, message
+    assert call(
+        "PUT",
+        f"/lich-su/{session_id}/tieu-de",
+        {"title": "Verified history"},
+        bearer=reader_token,
+    )[0] == 200
+    status, detail = call(
+        "GET",
+        f"/lich-su/{session_id}",
+        bearer=reader_token,
+    )
+    assert status == 200, detail
+    assert detail["title"] == "Verified history"
+    assert detail["messages"][0]["attachments"][0]["name"] == "evidence.txt"
+    assert call(
+        "DELETE",
+        f"/lich-su/{session_id}",
+        bearer=reader_token,
+    )[0] == 200
+    assert await agentic.ai_messages.count_documents({"session_id": session_id}) == 0
+    await agentic.finetune_datasets.delete_one({"_id": dataset_id})
 
     from src.main import app
 
@@ -203,6 +330,9 @@ async def main():
         assert calls[1][2]["json"]["content"].find("new text") >= 0
         broadcast.assert_awaited_once()
 
+    await redis.delete("user_sessions:reader")
+    await redis.delete("user_sessions:admin")
+    mongo.close()
     print("agentic ai integration passed")
 
 

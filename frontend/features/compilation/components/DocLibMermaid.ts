@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibMermaid implements BlockTool {
+  static readonly feature = {
+    id: "DocLibMermaid",
+    title: "DocLib Mermaid",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cc3114cfadd78f92"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,19 7,7 7,15 11,14 19,18 16,19"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { code: string };
@@ -9,7 +16,7 @@ export default class DocLibMermaid implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Mermaid",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="18" height="7" rx="2"></rect><rect x="3" y="3" width="18" height="7" rx="2"></rect><line x1="12" y1="10" x2="12" y2="14"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cc3114cfadd78f92"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,19 7,7 7,15 11,14 19,18 16,19"/></svg>',
     };
   }
 

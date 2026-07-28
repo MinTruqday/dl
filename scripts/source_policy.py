@@ -1,5 +1,6 @@
 import ast
 import io
+import json
 import pathlib
 import re
 import subprocess
@@ -198,6 +199,8 @@ def scan_compilation_registry(issues):
     relative_editor = editor_path.relative_to(ROOT)
     if "require as any" in source or ".context(" in source:
         issues.append((relative_editor, 1, "unbounded_component_registry"))
+    if "WORD_COMMAND_TOOLS" not in source:
+        issues.append((relative_editor, 1, "word_command_tools_not_registered"))
     component_names = set(
         re.findall(r'await import\("\./(DocLib[^"/]+)"\)', source)
     )
@@ -213,6 +216,58 @@ def scan_compilation_registry(issues):
             )
             continue
         component_source = component_path.read_text(encoding="utf-8")
+        if "export default" not in component_source:
+            issues.append(
+                (
+                    component_path.relative_to(ROOT),
+                    1,
+                    "component_default_export_missing",
+                )
+            )
+        if "implements BlockTool" in component_source:
+            for contract in ("toolbox", "render(", "save("):
+                if contract not in component_source:
+                    issues.append(
+                        (
+                            component_path.relative_to(ROOT),
+                            1,
+                            f"block_tool_contract_missing:{contract}",
+                        )
+                    )
+        if "implements InlineTool" in component_source:
+            for contract in ("render(", "surround("):
+                if contract not in component_source:
+                    issues.append(
+                        (
+                            component_path.relative_to(ROOT),
+                            1,
+                            f"inline_tool_contract_missing:{contract}",
+                        )
+                    )
+        if "implements BlockTune" in component_source:
+            for contract in ("render(", "save("):
+                if contract not in component_source:
+                    issues.append(
+                        (
+                            component_path.relative_to(ROOT),
+                            1,
+                            f"block_tune_contract_missing:{contract}",
+                        )
+                    )
+        if (
+            "implements BlockTool" not in component_source
+            and "implements InlineTool" not in component_source
+            and "implements BlockTune" not in component_source
+            and "render(" not in component_source
+            and "destroy(" not in component_source
+        ):
+            issues.append(
+                (
+                    component_path.relative_to(ROOT),
+                    1,
+                    "component_behavior_contract_missing",
+                )
+            )
         if (
             "private data: { content: string }" in component_source
             and len(component_source.splitlines()) < 60
@@ -224,8 +279,279 @@ def scan_compilation_registry(issues):
                     "generic_component_registered",
                 )
             )
+    catalog_path = component_root / "word-command-catalog.ts"
+    if not catalog_path.is_file():
+        issues.append(
+            (
+                catalog_path.relative_to(ROOT),
+                1,
+                "word_command_catalog_missing",
+            )
+        )
+        return
+    catalog_source = catalog_path.read_text(encoding="utf-8")
+    command_imports = re.findall(
+        r'^import (DocLib[A-Za-z0-9]+) from "\./(DocLib[A-Za-z0-9]+)";$',
+        catalog_source,
+        re.M,
+    )
+    command_names = [name for name, target in command_imports if name == target]
+    mismatched_imports = len(command_imports) - len(command_names)
+    command_entries = re.findall(
+        r"^wordCommandClasses\.push\((DocLib[A-Za-z0-9]+)\);$",
+        catalog_source,
+        re.M,
+    )
+    duplicate_commands = len(command_names) - len(set(command_names))
+    overlap = component_names.intersection(command_names)
+    feature_names = {
+        path.stem for path in component_root.glob("DocLib*.ts")
+    }
+    registered_features = component_names.union(command_names)
+    total_features = len(feature_names)
+    if len(component_names) != 153:
+        issues.append(
+            (
+                relative_editor,
+                1,
+                f"editor_component_count:{len(component_names)}",
+            )
+        )
+    if len(command_names) != 2296:
+        issues.append(
+            (
+                catalog_path.relative_to(ROOT),
+                1,
+                f"word_command_count:{len(command_names)}",
+            )
+        )
+    if mismatched_imports:
+        issues.append(
+            (
+                catalog_path.relative_to(ROOT),
+                1,
+                f"word_command_import_mismatch:{mismatched_imports}",
+            )
+        )
+    if len(command_entries) != 2296 or set(command_entries) != set(command_names):
+        issues.append(
+            (
+                catalog_path.relative_to(ROOT),
+                1,
+                f"word_command_registry_mismatch:{len(command_entries)}",
+            )
+        )
+    if duplicate_commands:
+        issues.append(
+            (
+                catalog_path.relative_to(ROOT),
+                1,
+                f"word_command_duplicates:{duplicate_commands}",
+            )
+        )
+    if overlap:
+        issues.append(
+            (
+                catalog_path.relative_to(ROOT),
+                1,
+                f"word_feature_overlap:{len(overlap)}",
+            )
+        )
+    if total_features != 2449:
+        issues.append(
+            (
+                catalog_path.relative_to(ROOT),
+                1,
+                f"word_feature_total:{total_features}",
+            )
+        )
+    if registered_features != feature_names:
+        issues.append(
+            (
+                catalog_path.relative_to(ROOT),
+                1,
+                f"word_feature_file_registry_mismatch:{len(feature_names.symmetric_difference(registered_features))}",
+            )
+        )
+    for command_name in sorted(set(command_names)):
+        command_path = component_root / f"{command_name}.ts"
+        if not command_path.is_file():
+            issues.append(
+                (
+                    catalog_path.relative_to(ROOT),
+                    1,
+                    f"word_command_file_missing:{command_name}",
+                )
+            )
+            continue
+        command_source = command_path.read_text(encoding="utf-8")
+        command_contracts = (
+            'import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";',
+            f"export default class {command_name}",
+            "implements BlockTool",
+            "static get toolbox()",
+            f'readonly id = "{command_name}";',
+            "readonly title = ",
+            "readonly category = ",
+            "readonly mode = ",
+            "readonly requiresSelection = ",
+            "constructor(",
+            "render()",
+            "save(blockContent: HTMLElement)",
+            "validate(savedData: BlockToolData)",
+            "async execute(editor: any)",
+        )
+        for contract in command_contracts:
+            if contract not in command_source:
+                issues.append(
+                    (
+                        command_path.relative_to(ROOT),
+                        1,
+                        f"word_command_file_contract:{contract}",
+                    )
+                )
+        if (
+            'from "./word-command-engine"' in command_source
+            or "createWordCommand" in command_source
+        ):
+            issues.append(
+                (
+                    command_path.relative_to(ROOT),
+                    1,
+                    "word_command_wrapper_import",
+                )
+            )
+        if len(command_source.splitlines()) < 60:
+            issues.append(
+                (
+                    command_path.relative_to(ROOT),
+                    1,
+                    "word_command_file_behavior_missing",
+                )
+            )
+    manifest_path = component_root / "word-feature-manifest.json"
+    if not manifest_path.is_file():
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                "word_feature_manifest_missing",
+            )
+        )
+        return
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        records = manifest["features"]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                "word_feature_manifest_invalid",
+            )
+        )
+        return
+    record_ids = [record.get("id") for record in records]
+    record_titles = [record.get("title") for record in records]
+    record_icons = [record.get("icon") for record in records]
+    official_records = [
+        record
+        for record in records
+        if record.get("origin") == "microsoft-word"
+    ]
+    if len(records) != 2449 or set(record_ids) != feature_names:
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                f"word_feature_manifest_count:{len(records)}",
+            )
+        )
+    if len(set(record_ids)) != 2449:
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                "word_feature_manifest_duplicate_id",
+            )
+        )
+    if (
+        len(set(record_icons)) != 2449
+        or any(not isinstance(icon, str) or "<svg" not in icon for icon in record_icons)
+    ):
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                "word_feature_icons_not_unique",
+            )
+        )
+    if any(
+        not isinstance(title, str) or not title.startswith("DocLib ")
+        for title in record_titles
+    ):
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                "word_feature_title_prefix_missing",
+            )
+        )
+    if len(official_records) != 2009 or any(
+        not record.get("microsoftControlId") or not record.get("source")
+        for record in official_records
+    ):
+        issues.append(
+            (
+                manifest_path.relative_to(ROOT),
+                1,
+                f"word_feature_official_mapping:{len(official_records)}",
+            )
+        )
+    for record in records:
+        feature_path = component_root / f"{record.get('id')}.ts"
+        if not feature_path.is_file():
+            continue
+        feature_source = feature_path.read_text(encoding="utf-8")
+        for marker, issue in (
+            ("static readonly feature = ", "word_feature_metadata_missing"),
+            (record.get("title"), "word_feature_title_mismatch"),
+            (record.get("icon"), "word_feature_icon_mismatch"),
+        ):
+            if not marker or marker not in feature_source:
+                issues.append(
+                    (
+                        feature_path.relative_to(ROOT),
+                        1,
+                        issue,
+                    )
+                )
 
 
+def scan_fail_open_contracts(issues):
+    forbidden = {
+        "issued_fallback": "fabricated_security_success",
+        "Fingerprint verified fallback": "fabricated_security_success",
+        "DRM AES key HTTP fallback": "fabricated_security_success",
+        "DRM trust profile HTTP fallback": "fabricated_security_success",
+        "DRM document risk HTTP fallback": "fabricated_security_success",
+        "Redis idempotency lock bypass": "financial_lock_bypass",
+        "[Dịch tự động": "fabricated_ai_result",
+        '"replies": ["Đã rõ thông tin"': "fabricated_ai_result",
+    }
+    roots = [
+        ROOT / "backend" / "agentic_ai" / "src",
+        ROOT / "backend" / "drm" / "src",
+        ROOT / "backend" / "finance" / "src",
+        ROOT / "backend" / "messaging" / "src",
+    ]
+    for root in roots:
+        for path in root.rglob("*.py"):
+            source = path.read_text(encoding="utf-8")
+            for marker, issue in forbidden.items():
+                if marker in source:
+                    line = source[: source.index(marker)].count("\n") + 1
+                    issues.append((path.relative_to(ROOT), line, issue))
 def main():
     issues = []
     for path in tracked_files():
@@ -244,6 +570,7 @@ def main():
         else:
             scan_config(relative_path, source, issues)
     scan_compilation_registry(issues)
+    scan_fail_open_contracts(issues)
     for path, line, issue in sorted(set(issues), key=lambda item: (str(item[0]), item[1], item[2])):
         print(f"{path}:{line}:{issue}")
     if issues:

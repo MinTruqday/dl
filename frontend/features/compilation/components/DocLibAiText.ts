@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibAiText implements BlockTool {
+  static readonly feature = {
+    id: "DocLibAiText",
+    title: "DocLib AiText",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f70a61c87e820c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 14,16 17,11 15,16 19,10 12,18"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
@@ -13,7 +20,7 @@ export default class DocLibAiText implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib AI Text",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f70a61c87e820c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 14,16 17,11 15,16 19,10 12,18"/></svg>',
     };
   }
 
@@ -77,7 +84,7 @@ export default class DocLibAiText implements BlockTool {
     const header = document.createElement("div");
     header.classList.add("doclib-ai-header");
     header.innerHTML = `
-          <svg class="doclib-ai-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f70a61c87e820c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 14,16 17,11 15,16 19,10 12,18"/></svg>
           DocLib AI Assistant
       `;
     container.appendChild(header);

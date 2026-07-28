@@ -1,39 +1,85 @@
-import { API, BlockTool } from "@editorjs/editorjs";
+import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibActiveXComboBox implements BlockTool {
-  private api: API;
-  private wrapper: HTMLElement | null = null;
-  private data: { content: string };
+  static readonly feature = {
+    id: "DocLibActiveXComboBox",
+    title: "DocLib ActiveXComboBox",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af2b9d6b80d9126e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 8,9 13,17 5,12 11,18 10,19"/></svg>',
+    origin: "microsoft-word",
+  } as const;
 
   static get toolbox() {
     return {
       title: "DocLib Active X Combo Box",
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>'
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af2b9d6b80d9126e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 8,9 13,17 5,12 11,18 10,19"/></svg>',
     };
   }
 
-  constructor({ api, data }: { api: API; data: any }) {
+  static get isReadOnlySupported() {
+    return true;
+  }
+
+  readonly id = "DocLibActiveXComboBox";
+  readonly title = "DocLib Active X Combo Box";
+  readonly category = "automation" as const;
+  readonly mode = "ActiveXComboBox";
+  readonly requiresSelection = false;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
+
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
-    this.data = { content: data?.content || "" };
+    this.data = data || {};
   }
 
   render() {
     this.wrapper = document.createElement("div");
-    this.wrapper.classList.add(this.api.styles.block, "doclib-doc-lib-active-x-combo-box");
-    this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data?.content;
-    this.wrapper.dataset.placeholder = "DocLib Active X Combo Box";
-
-    this.wrapper.addEventListener("input", (e: any) => {
-      this.data.content = e.target.innerHTML;
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
     });
-
+    this.wrapper.appendChild(button);
     return this.wrapper;
   }
 
   save(blockContent: HTMLElement) {
     return {
-      content: blockContent.innerHTML
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
     };
+  }
+
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    editor.blocks.insert("formDropdown", { label: this.title, options: [] });
   }
 }

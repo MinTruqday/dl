@@ -2,6 +2,13 @@ import { API, BlockTool } from "@editorjs/editorjs";
 import { IconWarning } from "@codexteam/icons";
 
 export default class DocLibWarning implements BlockTool {
+  static readonly feature = {
+    id: "DocLibWarning",
+    title: "DocLib Warning",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b7c81d56e715161e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,17 16,5 14,8 9,17 6,20 9,4"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private data: { title: string; message: string };
   private wrapper: HTMLElement | null = null;
@@ -33,7 +40,7 @@ export default class DocLibWarning implements BlockTool {
     this._CSS = {
       block: this.api.styles.block,
       wrapper: "cdx-warning",
-      title: "cdx-warning__title",
+      title: "DocLib cdx-warning__title",
       message: "cdx-warning__message",
     };
   }

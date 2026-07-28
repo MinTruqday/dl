@@ -42,7 +42,6 @@ class UploadType(str, Enum):
     DOCUMENT = "document"
     FOLDER = "folder"
 
-class ConsumeUploadQuotaRequest(BaseModel):
-    user_id: str = Field(min_length=1, max_length=100)
+class UploadQuotaReservationRequest(BaseModel):
     item_type: UploadType
     req_reset_hours: int = Field(default=24, ge=1, le=720)

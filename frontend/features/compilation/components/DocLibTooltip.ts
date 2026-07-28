@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibTooltip implements InlineTool {
+  static readonly feature = {
+    id: "DocLibTooltip",
+    title: "DocLib Tooltip",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d219c6c081934b8e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,12 15,9 14,15 11,10 12,15 6,4"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLButtonElement | null = null;
   private _state: boolean = false;
@@ -33,7 +40,7 @@ export default class DocLibTooltip implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d219c6c081934b8e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,12 15,9 14,15 11,10 12,15 6,4"/></svg>';
 
     if (!document.getElementById("doclib-tooltip-styles")) {
       const style = document.createElement("style");

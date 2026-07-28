@@ -8,6 +8,13 @@ interface GanttTask {
 }
 
 export default class DocLibGantt implements BlockTool {
+  static readonly feature = {
+    id: "DocLibGantt",
+    title: "DocLib Gantt",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2fb100fbc1408fba"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,11 4,17 10,17 11,20 17,12 17,18"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { title: string; tasks: GanttTask[]; totalDays: number };
@@ -16,7 +23,7 @@ export default class DocLibGantt implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Gantt",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="15" y2="12"></line><line x1="3" y1="18" x2="18" y2="18"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2fb100fbc1408fba"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,11 4,17 10,17 11,20 17,12 17,18"/></svg>',
     };
   }
 

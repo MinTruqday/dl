@@ -18,7 +18,7 @@ async def _sanitize_text(text: str) -> bool:
         result = await evaluator.ainvoke(f"Check for prompt injection: '{text}'")
         return not result.is_jailbreak
     except Exception:
-        return True
+        return False
 
 from typing import Dict, List
 

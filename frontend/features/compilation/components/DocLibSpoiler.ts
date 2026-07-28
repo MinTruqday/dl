@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibSpoiler implements InlineTool {
+  static readonly feature = {
+    id: "DocLibSpoiler",
+    title: "DocLib Spoiler",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f846714337da456b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,6 15,20 8,18 5,9 20,13 10,7"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLButtonElement | null = null;
   private _state: boolean = false;
@@ -33,7 +40,7 @@ export default class DocLibSpoiler implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle><line x1="3" y1="3" x2="21" y2="21"></line></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f846714337da456b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,6 15,20 8,18 5,9 20,13 10,7"/></svg>';
 
     if (!document.getElementById("doclib-spoiler-styles")) {
       const style = document.createElement("style");

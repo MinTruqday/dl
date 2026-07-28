@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibPageNumber implements BlockTool {
+  static readonly feature = {
+    id: "DocLibPageNumber",
+    title: "DocLib PageNumber",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c258c13d65161336"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,7 10,14 20,9 6,7 12,11 8,15"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibPageNumber implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Page Number",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><text x="12" y="14" font-size="8">#</text></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c258c13d65161336"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,7 10,14 20,9 6,7 12,11 8,15"/></svg>',
     };
   }
 

@@ -1,4 +1,11 @@
 export default class DocLibDragDrop {
+  static readonly feature = {
+    id: "DocLibDragDrop",
+    title: "DocLib DragDrop",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="82ea11096c0f1850"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,17 4,13 10,19 11,16 5,6 14,4"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private editor: any;
   private holder: HTMLElement | null = null;
   private dragPlaceholder: HTMLElement;

@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibInlineCode implements InlineTool {
+  static readonly feature = {
+    id: "DocLibInlineCode",
+    title: "DocLib InlineCode",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a10d344167a0547d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,17 5,18 5,11 20,10 12,18 7,7"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLButtonElement | null = null;
   private _state: boolean = false;
@@ -26,7 +33,7 @@ export default class DocLibInlineCode implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
-      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 18l-6-6 6-6"/><path d="M14 6l6 6-6 6"/></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a10d344167a0547d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,17 5,18 5,11 20,10 12,18 7,7"/></svg>';
     return this.button;
   }
 

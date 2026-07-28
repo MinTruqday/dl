@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibCaption implements BlockTool {
+  static readonly feature = {
+    id: "DocLibCaption",
+    title: "DocLib Caption",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="db197ac4f7591372"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,12 7,13 13,8 6,16 15,14 5,4"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibCaption implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Caption",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="db197ac4f7591372"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,12 7,13 13,8 6,16 15,14 5,4"/></svg>',
     };
   }
 

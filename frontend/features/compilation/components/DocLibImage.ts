@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibImage implements BlockTool {
+  static readonly feature = {
+    id: "DocLibImage",
+    title: "DocLib Image",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c43fb870f979be0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,20 17,20 19,19 6,7 8,14 8,11"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private config: any;
@@ -15,7 +22,7 @@ export default class DocLibImage implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Image",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c43fb870f979be0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,20 17,20 19,19 6,7 8,14 8,11"/></svg>',
     };
   }
 
@@ -71,15 +78,15 @@ export default class DocLibImage implements BlockTool {
     const tunes = [
       {
         name: "withBorder",
-        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c43fb870f979be0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,20 17,20 19,19 6,7 8,14 8,11"/></svg>',
       },
       {
         name: "withBackground",
-        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c43fb870f979be0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,20 17,20 19,19 6,7 8,14 8,11"/></svg>',
       },
       {
         name: "stretched",
-        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c43fb870f979be0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,20 17,20 19,19 6,7 8,14 8,11"/></svg>',
       },
     ];
 
@@ -135,7 +142,7 @@ export default class DocLibImage implements BlockTool {
       const uploader = document.createElement("label");
       uploader.classList.add("doclib-image-uploader");
       uploader.innerHTML = `
-              <div class="doclib-image-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
+              <div class="doclib-image-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c43fb870f979be0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,20 17,20 19,19 6,7 8,14 8,11"/></svg></div>
               <div style="font-weight: 500; font-size: 1.1em; margin-bottom: 4px;">Upload Image</div>
               <div style="font-size: 0.9em; opacity: 0.8;">Click to select file or Right click to paste URL</div>
           `;

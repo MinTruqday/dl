@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibChangeCase implements InlineTool {
+  static readonly feature = {
+    id: "DocLibChangeCase",
+    title: "DocLib ChangeCase",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="446c3f322975e3ea"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,10 16,20 11,19 10,17 7,17 20,19"/></svg>',
+    origin: "microsoft-word",
+  } as const;
+
   private api: API;
   private button: HTMLButtonElement | null = null;
   private _state: boolean = false;
@@ -21,7 +28,7 @@ export default class DocLibChangeCase implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4M12 20h8M6.9 15h6.2M10 4l-5 16M21 20l-5-16M16 4l-1 3"></path></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="446c3f322975e3ea"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,10 16,20 11,19 10,17 7,17 20,19"/></svg>';
     return this.button;
   }
 

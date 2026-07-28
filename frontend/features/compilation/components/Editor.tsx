@@ -53,6 +53,12 @@ import {
 } from "lucide-react";
 import MonacoEditor from "@monaco-editor/react";
 import { sanitizeEditorData } from "./editorjs-sanitizer";
+import WordCommandPalette from "./WordCommandPalette";
+import {
+  attachWordSettings,
+  registerWordSettings,
+  type WordOutputData,
+} from "./word-command-engine";
 
 interface EditorProps {
   documentId?: string;
@@ -110,7 +116,6 @@ export default function Editor({
     string | null
   >(null);
   const [tags, setTags] = useState<string[]>([]);
-  const [plagiarismScore, setPlagiarismScore] = useState<number | null>(null);
   const latexValueRef = useRef<string>(initialContent || "");
 
   useEffect(() => {
@@ -129,7 +134,16 @@ export default function Editor({
               latexValueRef.current = data.content;
               setLocalText(data.content);
             } else if (editorRef.current) {
-              const parsedContent = typeof data.content === "string" ? JSON.parse(data.content) : data.content;
+              const parsedContent = (
+                typeof data.content === "string"
+                  ? JSON.parse(data.content)
+                  : data.content
+              ) as WordOutputData;
+              if (parsedContent.wordSettings)
+                registerWordSettings(
+                  editorRef.current,
+                  parsedContent.wordSettings,
+                );
               editorRef.current.render(sanitizeEditorData(parsedContent));
             }
           }
@@ -145,7 +159,7 @@ export default function Editor({
     return () => {
       ws?.close();
     };
-  }, [documentId]);
+  }, [contentFormat, documentId]);
 
   const handleGrammarCheck = async () => {
     if (!checkPremiumAI()) return;
@@ -378,7 +392,10 @@ ${latexCode}
         }
       } else {
         if (!editorRef.current) return;
-        const data = await editorRef.current.save();
+        const data = attachWordSettings(
+          editorRef.current,
+          await editorRef.current.save(),
+        );
         setOriginalContentForUndo(JSON.stringify(data));
 
         const newBlocks = [];
@@ -436,6 +453,13 @@ ${latexCode}
       {!isZenMode && (
         <div className="flex justify-between items-center border-b border-zinc-200 p-3 gap-4">
           <div className="flex flex-1 overflow-x-auto no-scrollbar gap-2 items-center">
+            {contentFormat !== "latex" && (
+              <WordCommandPalette
+                editorRef={editorRef}
+                onSave={onSave}
+                showToast={showToast as any}
+              />
+            )}
             <button
               onClick={handleSynonyms}
               disabled={isSuggesting}
@@ -618,7 +642,7 @@ ${latexCode}
                 </button>
               </div>
               <div className="flex gap-2 items-center">
-                <span className="text-xs text-zinc-600 font-medium">Sang:</span>
+                <span className="text-xs text-zinc-600 font-medium">To</span>
                 <select
                   className="px-3 py-1.5 text-xs border border-zinc-200 rounded focus:outline-none bg-white"
                   value={targetLang}
@@ -867,16 +891,6 @@ ${latexCode}
           )}
         </div>
         <div className="flex items-center gap-4">
-          {plagiarismScore !== null && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-[#F5F5F7] rounded-full">
-              <span className="text-[13px] text-[#6E6E73]">Copyright</span>
-              <span
-                className={`text-[13px] font-medium ${plagiarismScore > 20 ? "text-[#FF3B30]" : "text-[#34C759]"}`}
-              >
-                {plagiarismScore}%
-              </span>
-            </div>
-          )}
           <div className="flex items-center gap-2">
             <span
               className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-[#34C759]" : "bg-[#D2D2D7]"}`}

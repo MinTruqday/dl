@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibHeaderBlock implements BlockTool {
+  static readonly feature = {
+    id: "DocLibHeaderBlock",
+    title: "DocLib HeaderBlock",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="141168bc3cbd546e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,4 6,5 13,6 20,12 5,5 11,6"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibHeaderBlock implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Header Block",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16"/><path d="M4 2v4h16V2H4z"/><path d="M12 6v16"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="141168bc3cbd546e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,4 6,5 13,6 20,12 5,5 11,6"/></svg>',
     };
   }
 

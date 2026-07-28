@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibFormToggleButton implements BlockTool {
+  static readonly feature = {
+    id: "DocLibFormToggleButton",
+    title: "DocLib FormToggleButton",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b668a2c6e2ee2aee"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,6 13,15 9,4 12,4 8,14 13,5"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibFormToggleButton implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Form Toggle Button",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"></rect><circle cx="16" cy="12" r="3"></circle></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b668a2c6e2ee2aee"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,6 13,15 9,4 12,4 8,14 13,5"/></svg>',
     };
   }
 

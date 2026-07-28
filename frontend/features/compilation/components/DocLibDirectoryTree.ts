@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibDirectoryTree implements BlockTool {
+  static readonly feature = {
+    id: "DocLibDirectoryTree",
+    title: "DocLib DirectoryTree",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d53a0076c5f3b85"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,19 11,11 10,14 12,18 14,6 4,19"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibDirectoryTree implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Directory Tree",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><path d="M13 8h4"></path><path d="M13 12h2"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d53a0076c5f3b85"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,19 11,11 10,14 12,18 14,6 4,19"/></svg>',
     };
   }
 

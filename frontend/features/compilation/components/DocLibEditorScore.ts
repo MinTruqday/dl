@@ -1,37 +1,90 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibEditorScore implements BlockTool {
+  static readonly feature = {
+    id: "DocLibEditorScore",
+    title: "DocLib EditorScore",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a591674e7f145100"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,13 5,14 12,7 17,4 12,10 4,6"/></svg>',
+    origin: "word-compatible",
+  } as const;
+
   static get toolbox() {
     return {
       title: "DocLib Editor Score",
-      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a591674e7f145100"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,13 5,14 12,7 17,4 12,10 4,6"/></svg>',
     };
   }
 
-  private api: API;
-  private data: BlockToolData;
-  private wrapper: HTMLElement;
+  static get isReadOnlySupported() {
+    return true;
+  }
 
-  constructor({ api, data }: { api: API; data: BlockToolData }) {
+  readonly id = "DocLibEditorScore";
+  readonly title = "DocLib Editor Score";
+  readonly category = "ai" as const;
+  readonly mode = "EditorScore";
+  readonly requiresSelection = false;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
+
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
-    this.data = data || { content: "" };
-    this.wrapper = document.createElement("div");
+    this.data = data || {};
   }
 
   render() {
-    this.wrapper.classList.add("ce-block");
-    const input = document.createElement("input");
-    input.classList.add("ce-paragraph", "cdx-block");
-    input.value = this.data?.content || "";
-    input.placeholder = "DocLib Editor Score";
-    this.wrapper.appendChild(input);
+    this.wrapper = document.createElement("div");
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
+    });
+    this.wrapper.appendChild(button);
     return this.wrapper;
   }
 
   save(blockContent: HTMLElement) {
-    const input = blockContent.querySelector("input") as HTMLInputElement;
     return {
-      content: input ? input.value : "",
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
     };
+  }
+
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    const selectedText = window.getSelection()?.toString() || "";
+    window.dispatchEvent(
+      new CustomEvent("doclib-ai-command", {
+        detail: { command: this.id, selectedText },
+      }),
+    );
   }
 }

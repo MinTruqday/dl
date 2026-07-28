@@ -16,6 +16,7 @@ from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.outbox_worker import process_outbox
+from src.services.transfer import TransferService
 
 
 @asynccontextmanager
@@ -23,13 +24,19 @@ async def lifespan(app: FastAPI):
     await init_db()
     await redis.get_client().ping()
     outbox_task = asyncio.create_task(process_outbox())
+    transfer_task = asyncio.create_task(TransferService.recover_pending_transfers())
     logger.info("Finance service initialized")
     try:
         yield
     finally:
         outbox_task.cancel()
+        transfer_task.cancel()
         try:
             await outbox_task
+        except asyncio.CancelledError:
+            pass
+        try:
+            await transfer_task
         except asyncio.CancelledError:
             pass
         await redis.aclose()

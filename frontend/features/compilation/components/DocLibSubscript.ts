@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibSubscript implements InlineTool {
+  static readonly feature = {
+    id: "DocLibSubscript",
+    title: "DocLib Subscript",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="613d363e5dae2712"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,14 7,15 12,8 9,5 13,20 13,5"/></svg>',
+    origin: "microsoft-word",
+  } as const;
+
   private api: API;
   private button: HTMLButtonElement | null = null;
   private _state: boolean = false;
@@ -26,7 +33,7 @@ export default class DocLibSubscript implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
-      '<svg width="20" height="20" viewBox="0 0 24 24"><text x="2" y="16" font-size="16" font-family="sans-serif" font-weight="bold" fill="currentColor">X</text><text x="14" y="22" font-size="11" font-family="sans-serif" font-weight="bold" fill="currentColor">2</text></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="613d363e5dae2712"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,14 7,15 12,8 9,5 13,20 13,5"/></svg>';
     return this.button;
   }
 

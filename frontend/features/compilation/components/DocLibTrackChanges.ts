@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibTrackChanges implements BlockTool {
+  static readonly feature = {
+    id: "DocLibTrackChanges",
+    title: "DocLib TrackChanges",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="945705fa865bffe0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,6 9,16 19,10 4,7 7,18 18,14"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibTrackChanges implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Track Changes",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="945705fa865bffe0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,6 9,16 19,10 4,7 7,18 18,14"/></svg>',
     };
   }
 

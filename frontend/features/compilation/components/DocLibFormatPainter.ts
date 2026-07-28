@@ -1,32 +1,95 @@
-import { API, InlineTool } from "@editorjs/editorjs";
+import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
-export default class DocLibFormatPainter implements InlineTool {
-  static get isInline() {
+export default class DocLibFormatPainter implements BlockTool {
+  static readonly feature = {
+    id: "DocLibFormatPainter",
+    title: "DocLib FormatPainter",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab16c9da68a124db"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,9 18,18 6,12 6,19 20,5 20,12"/></svg>',
+    origin: "microsoft-word",
+  } as const;
+
+  static get toolbox() {
+    return {
+      title: "DocLib Format Painter",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab16c9da68a124db"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,9 18,18 6,12 6,19 20,5 20,12"/></svg>',
+    };
+  }
+
+  static get isReadOnlySupported() {
     return true;
   }
 
-  private api: API;
-  private button: HTMLButtonElement | null = null;
+  readonly id = "DocLibFormatPainter";
+  readonly title = "DocLib Format Painter";
+  readonly category = "format" as const;
+  readonly mode = "FormatPainter";
+  readonly requiresSelection = true;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
 
-  constructor({ api }: { api: API }) {
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
+    this.data = data || {};
   }
 
   render() {
-    this.button = document.createElement("button");
-    this.button.type = "button";
-    this.button.classList.add(this.api.styles.inlineToolButton);
-    this.button.innerHTML = "FP";
-    return this.button;
+    this.wrapper = document.createElement("div");
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
+    });
+    this.wrapper.appendChild(button);
+    return this.wrapper;
   }
 
-  surround(range: Range) {
-    const wrapper = document.createElement("span");
-    wrapper.classList.add("doclib-format-painter-target");
-    range.surroundContents(wrapper);
+  save(blockContent: HTMLElement) {
+    return {
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
+    };
   }
 
-  checkState() {
-    return false;
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    const selection = window.getSelection();
+    const anchor = selection?.anchorNode;
+    const element =
+      anchor instanceof HTMLElement ? anchor : anchor?.parentElement || null;
+    const block = element?.closest<HTMLElement>(".ce-block") || document.querySelector<HTMLElement>(".ce-block--focused");
+    if (block) block.dataset.wordFormat = this.mode;
+    window.dispatchEvent(
+      new CustomEvent("doclib-format-command", {
+        detail: { command: this.id, mode: this.mode },
+      }),
+    );
   }
 }

@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibLinkPreview implements BlockTool {
+  static readonly feature = {
+    id: "DocLibLinkPreview",
+    title: "DocLib LinkPreview",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="79a2f43c0a4ba89d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,13 10,13 14,11 19,8 20,16 18,5"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
@@ -16,7 +23,7 @@ export default class DocLibLinkPreview implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Bookmark",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="79a2f43c0a4ba89d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,13 10,13 14,11 19,8 20,16 18,5"/></svg>',
     };
   }
 

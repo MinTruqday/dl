@@ -21,9 +21,13 @@ async def evaluate_drm_request(
             document_id=request.document_id,
             client_ip=request.client_ip,
             user_tier=request.user_tier,
-            document_type=request.document_type
+            document_type=request.document_type,
+            device_fingerprint=request.device_fingerprint,
         )
         return {"status": "success", "data": policy}
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to evaluate DRM policy")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "drm_policy_unavailable"},
+        )

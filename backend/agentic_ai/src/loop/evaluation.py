@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 from loguru import logger
-from src.utils.structured_output import extract_json_value
 
 @dataclass
 class EvaluationReport:
@@ -64,7 +63,10 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
 
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     from huggingface_hub import AsyncInferenceClient
+    from langchain_core.messages import HumanMessage
     from src.core.registry import PromptType, registry
+    from src.schemas.evaluation import JudgeScores
+    from src.utils.huggingface import HFInferenceChat
 
     from src.core.infrastructure.configuration import settings
 
@@ -77,21 +79,16 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
         client = AsyncInferenceClient(
             model=settings.LLM_MODEL, token=settings.HF_TOKEN
         )
-        resp = await client.chat_completion(
-            messages=[{"role": "user", "content": prompt}],
+        evaluator = HFInferenceChat(
+            client=client,
+            model=settings.LLM_MODEL,
+        ).with_structured_output(JudgeScores)
+        scores = await evaluator.ainvoke(
+            [HumanMessage(content=prompt)],
             max_tokens=256,
             temperature=0.1,
         )
-        raw = resp.choices[0].message.content.strip()
-        scores = extract_json_value(raw)
-        if not isinstance(scores, dict):
-            raise ValueError("Evaluation output must be a JSON object")
-        return {
-            "accuracy": min(max(int(scores.get("accuracy", 0)), 0), 10),
-            "completeness": min(max(int(scores.get("completeness", 0)), 0), 10),
-            "relevance": min(max(int(scores.get("relevance", 0)), 0), 10),
-            "explanation": scores.get("explanation", ""),
-        }
+        return scores.model_dump()
     except Exception:
         logger.exception("Language model output evaluation error")
         return {

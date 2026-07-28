@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibSimpleImage implements BlockTool {
+  static readonly feature = {
+    id: "DocLibSimpleImage",
+    title: "DocLib SimpleImage",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e169af2c87e56774"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,7 9,14 20,12 5,18 16,6 5,4"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { url: string; caption: string };
@@ -8,7 +15,7 @@ export default class DocLibSimpleImage implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Image (URL)",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e169af2c87e56774"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,7 9,14 20,12 5,18 16,6 5,4"/></svg>',
     };
   }
 

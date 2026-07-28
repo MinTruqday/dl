@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibCodeMirror implements BlockTool {
+  static readonly feature = {
+    id: "DocLibCodeMirror",
+    title: "DocLib CodeMirror",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a9968b687612ac5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,4 6,16 20,16 12,14 7,8 13,17"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { code: string; language: string };
@@ -9,7 +16,7 @@ export default class DocLibCodeMirror implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib CodeMirror",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a9968b687612ac5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,4 6,16 20,16 12,14 7,8 13,17"/></svg>',
     };
   }
 

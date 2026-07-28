@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibUnderline implements InlineTool {
+  static readonly feature = {
+    id: "DocLibUnderline",
+    title: "DocLib Underline",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15e98a919845814a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,16 6,13 20,5 14,10 8,8 7,20"/></svg>',
+    origin: "microsoft-word",
+  } as const;
+
   private api: API;
   private button: HTMLButtonElement | null = null;
   private _state: boolean = false;
@@ -26,7 +33,7 @@ export default class DocLibUnderline implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path><line x1="4" y1="21" x2="20" y2="21"></line></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15e98a919845814a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,16 6,13 20,5 14,10 8,8 7,20"/></svg>';
     return this.button;
   }
 

@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibFootnote implements InlineTool {
+  static readonly feature = {
+    id: "DocLibFootnote",
+    title: "DocLib Footnote",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5388c77fc314199"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,9 8,4 18,19 18,4 13,8 7,9"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLElement | null = null;
   private state: boolean = false;
@@ -20,7 +27,7 @@ export default class DocLibFootnote implements InlineTool {
     this.button = document.createElement("button");
     (this.button as HTMLButtonElement).type = "button";
     this.button.innerHTML =
-      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5388c77fc314199"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,9 8,4 18,19 18,4 13,8 7,9"/></svg>';
     this.button.classList.add(this.api.styles.inlineToolButton);
 
     if (!document.getElementById("doclib-footnote-styles")) {

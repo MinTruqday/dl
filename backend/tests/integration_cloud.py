@@ -102,6 +102,49 @@ async def main():
         status, quota, _ = call("GET", "/luu-tru/han-muc", owner_token)
         assert status == 200 and quota["data"]["used"] == len(content), quota
         assert call("GET", f"/tai-len/luu-tru/{path}", shared_token, follow=False)[0] == 403
+        version_content = b"cloud-version-data" * 400
+        version_data, version_headers = multipart(
+            "integration-version.txt",
+            version_content,
+        )
+        status, uploaded_version, _ = call(
+            "POST",
+            "/tai-len/tap-tin",
+            owner_token,
+            raw=version_data,
+            headers=version_headers,
+        )
+        assert status in {200, 201}, uploaded_version
+        staged_version_id = uploaded_version["data"]["item_id"]
+        version_path = uploaded_version["data"]["url"]
+        object_paths.append(version_path)
+        status, versioned_item, _ = call(
+            "POST",
+            f"/luu-tru/tap-tin/{item_id}/phien-ban",
+            owner_token,
+            {"url": version_path, "size": len(version_content)},
+        )
+        assert status == 200, versioned_item
+        assert await cloud.storage_items.find_one({"_id": staged_version_id}) is None
+        status, versions, _ = call(
+            "GET",
+            f"/luu-tru/phien-ban/{item_id}",
+            owner_token,
+        )
+        assert status == 200 and len(versions["data"]) == 1, versions
+        old_version_id = versions["data"][0]["version_id"]
+        assert versions["data"][0]["url"] == path
+        status, restored, _ = call(
+            "POST",
+            f"/luu-tru/phien-ban/{item_id}/khoi-phuc/{old_version_id}",
+            owner_token,
+        )
+        assert status == 200, restored
+        current_item = await cloud.storage_items.find_one({"_id": item_id})
+        assert current_item["url"] == path
+        status, quota, _ = call("GET", "/luu-tru/han-muc", owner_token)
+        assert status == 200
+        assert quota["data"]["used"] == len(content) + len(version_content), quota
 
         status, share_payload, _ = call(
             "POST",
@@ -116,6 +159,41 @@ async def main():
         share_token = public_payload["data"]["share_token"]
         status, public_item, _ = call("GET", f"/luu-tru/chia-se/{share_token}")
         assert status == 200 and public_item["data"]["download_url"], public_item
+        protected_status, protected_link, _ = call(
+            "POST",
+            "/luu-tru/link-chia-se/tao",
+            owner_token,
+            {
+                "item_id": item_id,
+                "password": "ProtectedShare123",
+                "expires_in_hours": 24,
+            },
+        )
+        assert protected_status == 201, protected_link
+        protected_token = protected_link["data"]["share_token"]
+        assert call(
+            "GET",
+            f"/luu-tru/link-chia-se/xac-thuc/{protected_token}?password=invalid",
+        )[0] == 403
+        assert call(
+            "GET",
+            f"/luu-tru/link-chia-se/xac-thuc/{protected_token}?password=ProtectedShare123",
+        )[0] == 200
+        expired_token = f"expired-{uuid.uuid4()}"
+        await cloud.storage_share_links.insert_one(
+            {
+                "_id": expired_token,
+                "item_id": item_id,
+                "owner_id": OWNER_ID,
+                "has_password": False,
+                "created_at": datetime.now(timezone.utc) - timedelta(hours=2),
+                "expires_at": datetime.now(timezone.utc) - timedelta(hours=1),
+            }
+        )
+        assert call(
+            "GET",
+            f"/luu-tru/link-chia-se/xac-thuc/{expired_token}",
+        )[0] == 410
 
         reserved_content = b"presigned-cloud-data" * 300
         request_body = {"filename": "presigned.txt", "size": len(reserved_content), "content_type": "text/plain"}
@@ -162,6 +240,7 @@ async def main():
         object_paths.extend(record.get("url") for record in records if record.get("url"))
         await cloud.storage_items.delete_many({"owner_id": {"$in": [OWNER_ID, SHARED_ID]}})
         await cloud.temp_chat_files.delete_many({"owner_id": {"$in": [OWNER_ID, SHARED_ID]}})
+        await cloud.storage_share_links.delete_many({"owner_id": {"$in": [OWNER_ID, SHARED_ID]}})
         await humanity.users.delete_many({"_id": {"$in": [OWNER_ID, SHARED_ID]}})
         await cache.delete(f"user_sessions:{OWNER_ID}", f"user_sessions:{SHARED_ID}")
         async for key in cache.scan_iter(match="cloud:upload:*"):

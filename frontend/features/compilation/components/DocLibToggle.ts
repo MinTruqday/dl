@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibToggle implements BlockTool {
+  static readonly feature = {
+    id: "DocLibToggle",
+    title: "DocLib Toggle",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f170dbeac285bc4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,10 17,7 6,10 10,13 8,5 8,16"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { title: string; content: string; status: "open" | "closed" };
@@ -8,7 +15,7 @@ export default class DocLibToggle implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Toggle",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f170dbeac285bc4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,10 17,7 6,10 10,13 8,5 8,16"/></svg>',
     };
   }
 
@@ -73,7 +80,7 @@ export default class DocLibToggle implements BlockTool {
     const icon = document.createElement("span");
     icon.classList.add("doclib-toggle-icon");
     icon.innerHTML =
-      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f170dbeac285bc4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,10 17,7 6,10 10,13 8,5 8,16"/></svg>';
 
     const title = document.createElement("span");
     title.classList.add("doclib-toggle-title");

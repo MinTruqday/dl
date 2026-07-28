@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibSectionBreak implements BlockTool {
+  static readonly feature = {
+    id: "DocLibSectionBreak",
+    title: "DocLib SectionBreak",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6cd21d4d30acdebb"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,10 16,13 18,6 5,4 4,12 12,14"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibSectionBreak implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Section Break",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12" stroke-dasharray="4 4"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6cd21d4d30acdebb"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,10 16,13 18,6 5,4 4,12 12,14"/></svg>',
     };
   }
 

@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibWordArt implements BlockTool {
+  static readonly feature = {
+    id: "DocLibWordArt",
+    title: "DocLib WordArt",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="867d58f8a15836b5"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,10 7,14 12,7 7,15 7,13 11,4"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibWordArt implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib WordArt",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-4 6-4 9 0s6 4 9 0"/><path d="M7 16h10"/><path d="M12 8l-4 8"/><path d="M12 8l4 8"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="867d58f8a15836b5"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,10 7,14 12,7 7,15 7,13 11,4"/></svg>',
     };
   }
 

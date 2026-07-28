@@ -39,7 +39,12 @@ class HistoryService:
 
     @staticmethod
     @log_logic_execution
-    async def get_user_sessions(user_id: str, document_id: Optional[str] = None) -> List[dict]:
+    async def get_user_sessions(
+        user_id: str,
+        document_id: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> List[dict]:
         query = {"user_id": user_id}
         if document_id:
             query["document_id"] = document_id
@@ -47,8 +52,10 @@ class HistoryService:
             ChatRepository
             .find_ai_sessions(query, {"messages": 0})
             .sort("updated_at", -1)
+            .skip(skip)
+            .limit(limit)
         )
-        return await cursor.to_list(length=None)
+        return await cursor.to_list(length=limit)
 
     @staticmethod
     @log_logic_execution
@@ -62,7 +69,8 @@ class HistoryService:
             ChatRepository
             .find_ai_messages({"session_id": session_id})
             .sort("created_at", 1)
-            .to_list(length=None)
+            .limit(500)
+            .to_list(length=500)
         )
         session["messages"] = messages
         return session
@@ -91,6 +99,7 @@ class HistoryService:
         )
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
+        await ChatRepository.delete_many({"session_id": session_id})
         return {"status": "success"}
 
     @staticmethod
@@ -108,6 +117,7 @@ class HistoryService:
             "user_id": user_id,
             "role": role,
             "content": content,
+            "attachments": data.get("attachments", []),
             "created_at": datetime.now(timezone.utc),
         }
         await ChatRepository.insert_ai_message(message)

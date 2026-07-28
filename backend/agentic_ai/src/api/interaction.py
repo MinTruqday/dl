@@ -14,9 +14,8 @@ from src.harness.agentops import agentops
 from src.harness.context import context
 from src.harness.orchestration import orchestration
 from src.harness.security import security
-from src.schemas.interaction import ChatRequest
+from src.schemas.interaction import ChatRequest, UserInstructionsRequest
 from src.core.dependency import CurrentUser, get_current_user
-from src.schemas.auth import Role, Tier
 from src.workflow.orchestration import supervisor
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tro-chuyen")
@@ -27,7 +26,9 @@ async def chat_endpoint(
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Execute one authenticated bounded chat or agent workflow"""
     req.user_id = str(current_user.id)
+    req.role = current_user.role.value
     logger.info("Chat request started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     if token:
@@ -45,6 +46,13 @@ async def chat_endpoint(
     req.query = scan.sanitized_text
 
     try:
+        is_quota_ok, quota_code = await _reserve_upload_quota(req)
+        if not is_quota_ok:
+            return {
+                "answer": "",
+                "route": "error",
+                "error_code": quota_code,
+            }
         if req.document_ids:
             from src.tools.http_client import INTERNAL_API_URL, make_api_request as _make_api_request
 
@@ -135,7 +143,7 @@ async def chat_endpoint(
             "error_code": "agent_workflow_failed",
         }
 
-async def _check_upload_quota(req: ChatRequest):
+async def _reserve_upload_quota(req: ChatRequest):
     item_type = None
     if req.folder_data:
         item_type = "folder"
@@ -148,56 +156,20 @@ async def _check_upload_quota(req: ChatRequest):
         return True, None
         
     try:
-        from src.core.infrastructure.database import database
-        user = await database.mongodb[settings.AGENTIC_AI_DB_NAME].users.find_one({"_id": req.user_id})
-        ai_tier = user.get("ai_tier", Tier.BASIC.value) if user else Tier.BASIC.value
-        is_admin = user.get("role") == Role.ADMIN.value if user else False
-        
-        if is_admin or ai_tier != Tier.BASIC.value:
-            return True, None
-
         async with httpx.AsyncClient(timeout=10.0) as c:
-            resp = await c.get(
-                f"{settings.USAGE_URL}/han-muc/tai-len/xac-minh",
-                params={"item_type": item_type},
-                headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
+            resp = await c.post(
+                f"{settings.USAGE_URL}/han-muc/tai-len/dat-cho",
+                json={"item_type": item_type, "req_reset_hours": 24},
+                headers={"Authorization": f"Bearer {req.token}"} if req.token else {},
             )
-            if resp.status_code != 200:
+            if resp.status_code == 429:
                 return False, "upload_quota_exceeded"
+            if resp.status_code != 200:
+                return False, "upload_quota_verification_failed"
             return True, None
     except Exception:
-        logger.exception("Upload quota verification error")
+        logger.exception("Upload quota reservation error")
         return False, "upload_quota_verification_failed"
-
-async def _consume_upload_quota(req: ChatRequest):
-    item_type = None
-    if req.folder_data:
-        item_type = "folder"
-    elif req.file_data:
-        item_type = "document"
-    elif req.image_data:
-        item_type = "image"
-        
-    if not item_type:
-        return
-        
-    try:
-        from src.core.infrastructure.database import database
-        user = await database.mongodb[settings.AGENTIC_AI_DB_NAME].users.find_one({"_id": req.user_id})
-        ai_tier = user.get("ai_tier", Tier.BASIC.value) if user else Tier.BASIC.value
-        is_admin = user.get("role") == Role.ADMIN.value if user else False
-        
-        if is_admin or ai_tier != Tier.BASIC.value:
-            return
-
-        async with httpx.AsyncClient(timeout=10.0) as c:
-            await c.post(
-                f"{settings.USAGE_URL}/han-muc/tai-len/tieu-thu",
-                json={"user_id": req.user_id, "item_type": item_type, "req_reset_hours": 24},
-                headers={"Authorization": f"Bearer {req.token}"} if req.token else {}
-            )
-    except Exception:
-        logger.exception("Upload quota consumption error")
 
 @router.post("/phat-truc-tiep")
 async def stream_endpoint(
@@ -205,7 +177,9 @@ async def stream_endpoint(
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Stream authenticated chat planning execution and verification events"""
     req.user_id = str(current_user.id)
+    req.role = current_user.role.value
     logger.info("Chat stream started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
@@ -236,7 +210,7 @@ async def stream_endpoint(
         agentops.record_session_start(session_id, user_id, req.query)
 
         try:
-            is_quota_ok, quota_code = await _check_upload_quota(req)
+            is_quota_ok, quota_code = await _reserve_upload_quota(req)
             if not is_quota_ok:
                 yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
                 yield "event: done\ndata: [DONE]\n\n"
@@ -359,6 +333,9 @@ async def stream_endpoint(
                             if chunk["type"] == "plan":
                                 req_dict["plan"] = chunk["nodes"]
                                 await heartbeat_queue.put({"type": "plan", "steps": chunk["nodes"]})
+                            elif chunk["type"] == "error":
+                                await heartbeat_queue.put(chunk)
+                                return
 
                         async for event in orchestration.run(
                             supervisor.execute_plan, req_dict, session_id
@@ -458,7 +435,6 @@ async def stream_endpoint(
                 except Exception:
                     logger.exception("Chat history persistence to database error")
 
-            await _consume_upload_quota(req)
             agentops.record_session_end(session_id, "done")
 
         except Exception:
@@ -474,6 +450,7 @@ async def stream_endpoint(
 async def get_user_instructions(
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Return the authenticated user instruction text"""
     user_id = str(current_user.id)
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     doc = await db.user_instructions.find_one({"_id": user_id})
@@ -482,11 +459,12 @@ async def get_user_instructions(
 
 @router.post("/tuy-chon-ca-nhan")
 async def save_user_instructions(
-    req: dict,
+    req: UserInstructionsRequest,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Persist bounded instruction text for the authenticated user"""
     user_id = str(current_user.id)
-    instructions = req.get("instructions", "").strip()
+    instructions = req.instructions.strip()
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     await db.user_instructions.update_one(
         {"_id": user_id},
@@ -508,6 +486,7 @@ async def save_user_instructions(
 async def clear_user_instructions(
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Delete instruction text owned by the authenticated user"""
     user_id = str(current_user.id)
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     await db.user_instructions.delete_one({"_id": user_id})

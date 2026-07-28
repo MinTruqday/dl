@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibAudio implements BlockTool {
+  static readonly feature = {
+    id: "DocLibAudio",
+    title: "DocLib Audio",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af7d00642b0c4241"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,10 4,19 13,16 19,18 20,12 19,14"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private config: any;
@@ -9,7 +16,7 @@ export default class DocLibAudio implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Audio",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af7d00642b0c4241"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,10 4,19 13,16 19,18 20,12 19,14"/></svg>',
     };
   }
 
@@ -83,7 +90,7 @@ export default class DocLibAudio implements BlockTool {
       uploader.style.cursor = "pointer";
       uploader.style.color = "#475569";
       uploader.innerHTML = `
-              <div style="color: #94a3b8; margin-bottom: 12px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>
+              <div style="color: #94a3b8; margin-bottom: 12px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af7d00642b0c4241"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,10 4,19 13,16 19,18 20,12 19,14"/></svg></div>
               <div style="font-weight: 500; font-size: 1.1em; margin-bottom: 4px;">Upload Audio</div>
               <div style="font-size: 0.9em; opacity: 0.8;">Click to select file or Right click to paste URL</div>
           `;

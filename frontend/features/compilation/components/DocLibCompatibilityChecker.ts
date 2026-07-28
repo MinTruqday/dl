@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibCompatibilityChecker implements BlockTool {
+  static readonly feature = {
+    id: "DocLibCompatibilityChecker",
+    title: "DocLib CompatibilityChecker",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9131d5cea557438b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,19 13,6 16,6 20,7 14,14 18,17"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibCompatibilityChecker implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Compatibility Checker",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9131d5cea557438b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,19 13,6 16,6 20,7 14,14 18,17"/></svg>',
     };
   }
 
@@ -62,7 +69,7 @@ export default class DocLibCompatibilityChecker implements BlockTool {
 
     const head = document.createElement("div");
     head.classList.add("doclib-compat-head");
-    head.innerHTML = `<svg class="doclib-compat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> <span>Compatibility Checker</span>`;
+    head.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9131d5cea557438b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,19 13,6 16,6 20,7 14,14 18,17"/></svg> <span>Compatibility Checker</span>`;
     container.appendChild(head);
 
     const list = document.createElement("div");

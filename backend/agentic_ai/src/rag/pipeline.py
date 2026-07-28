@@ -27,7 +27,7 @@ class PipelineRag:
                 mongo_uri, maxPoolSize=100
             )
         self._mongo = PipelineRag._mongo_client
-        self._db = self._mongo.doclib
+        self._db = self._mongo[settings.CONTENT_DB_NAME]
         minio_endpoint = settings.MINIO_ENDPOINT
         self._minio_base = minio_endpoint.rstrip("/")
         self._minio_private_bucket = settings.MINIO_PRIVATE_BUCKET

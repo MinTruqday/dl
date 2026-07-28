@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibProtectDocument implements BlockTool {
+  static readonly feature = {
+    id: "DocLibProtectDocument",
+    title: "DocLib ProtectDocument",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab31c7a38169a346"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,19 16,14 14,7 14,6 7,20 18,19"/></svg>',
+    origin: "microsoft-word",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibProtectDocument implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Protect Document",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab31c7a38169a346"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,19 16,14 14,7 14,6 7,20 18,19"/></svg>',
     };
   }
 
@@ -56,7 +63,7 @@ export default class DocLibProtectDocument implements BlockTool {
 
     const head = document.createElement("div");
     head.classList.add("doclib-protect-head");
-    head.innerHTML = `<svg class="doclib-protect-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> <span>Protect Document</span>`;
+    head.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab31c7a38169a346"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,19 16,14 14,7 14,6 7,20 18,19"/></svg> <span>Protect Document</span>`;
     container.appendChild(head);
 
     const row1 = document.createElement("div");

@@ -16,6 +16,8 @@ async def run():
     buyer_id = f"finance-buyer-{suffix}"
     seller_id = f"finance-seller-{suffix}"
     admin_id = f"finance-admin-{suffix}"
+    transfer_sender_id = f"finance-transfer-sender-{suffix}"
+    transfer_recipient_id = f"finance-transfer-recipient-{suffix}"
     document_id = f"finance-document-{suffix}"
     order_code = secrets.randbelow(1_000_000_000) + 1_000_000_000
     secret = os.environ["SECRET_KEY"]
@@ -46,6 +48,8 @@ async def run():
         buyer_id: f"session-{buyer_id}",
         seller_id: f"session-{seller_id}",
         admin_id: f"session-{admin_id}",
+        transfer_sender_id: f"session-{transfer_sender_id}",
+        transfer_recipient_id: f"session-{transfer_recipient_id}",
     }
     for user_id, session_id in sessions.items():
         await redis_client.sadd(f"user_sessions:{user_id}", session_id)
@@ -54,6 +58,8 @@ async def run():
             {"_id": buyer_id, "email": f"{buyer_id}@example.com", "full_name": "Finance Buyer", "slug": buyer_id, "role": "reader", "is_active": True},
             {"_id": seller_id, "email": f"{seller_id}@example.com", "full_name": "Finance Seller", "slug": seller_id, "role": "author", "is_active": True},
             {"_id": admin_id, "email": f"{admin_id}@example.com", "full_name": "Finance Admin", "slug": admin_id, "role": "admin", "is_active": True},
+            {"_id": transfer_sender_id, "email": f"{transfer_sender_id}@example.com", "full_name": "Transfer Sender", "slug": transfer_sender_id, "role": "reader", "is_active": True},
+            {"_id": transfer_recipient_id, "email": f"{transfer_recipient_id}@example.com", "full_name": "Transfer Recipient", "slug": transfer_recipient_id, "role": "reader", "is_active": True},
         ]
     )
     await content_db.documents.insert_one(
@@ -72,11 +78,14 @@ async def run():
         [
             {"_id": buyer_id, "balance": 1000, "withdrawable_balance": 0},
             {"_id": seller_id, "balance": 0, "withdrawable_balance": 0},
+            {"_id": transfer_sender_id, "balance": 100, "withdrawable_balance": 0},
+            {"_id": transfer_recipient_id, "balance": 0, "withdrawable_balance": 0},
         ]
     )
     buyer_headers = {"Authorization": f"Bearer {token(buyer_id, f'{buyer_id}@example.com', 'reader', sessions[buyer_id])}"}
     seller_headers = {"Authorization": f"Bearer {token(seller_id, f'{seller_id}@example.com', 'author', sessions[seller_id])}"}
     admin_headers = {"Authorization": f"Bearer {token(admin_id, f'{admin_id}@example.com', 'admin', sessions[admin_id])}"}
+    transfer_sender_headers = {"Authorization": f"Bearer {token(transfer_sender_id, f'{transfer_sender_id}@example.com', 'reader', sessions[transfer_sender_id])}"}
 
     try:
         async with httpx.AsyncClient(timeout=20.0) as client:
@@ -161,6 +170,69 @@ async def run():
             assert repeated.status_code == 200, repeated.text
             buyer_wallet = await finance_db.wallets.find_one({"_id": buyer_id})
             assert buyer_wallet["balance"] == 155, buyer_wallet
+
+            verified_recipient = await client.post(
+                "http://finance:8000/vi-tien/xac-minh-nguoi-nhan",
+                json={"recipient_identifier": transfer_recipient_id},
+                headers=transfer_sender_headers,
+            )
+            assert verified_recipient.status_code == 200, verified_recipient.text
+            transfer_body = {
+                "recipient_identifier": transfer_recipient_id,
+                "amount": 25,
+                "note": "Integration transfer",
+                "idempotency_key": f"transfer-{suffix}",
+            }
+            concurrent_transfers = await asyncio.gather(
+                client.post(
+                    "http://finance:8000/vi-tien/chuyen-tien",
+                    json=transfer_body,
+                    headers=transfer_sender_headers,
+                ),
+                client.post(
+                    "http://finance:8000/vi-tien/chuyen-tien",
+                    json=transfer_body,
+                    headers=transfer_sender_headers,
+                ),
+            )
+            assert sorted(
+                response.status_code for response in concurrent_transfers
+            ) == [200, 409], [response.text for response in concurrent_transfers]
+            transfer_replay = await client.post(
+                "http://finance:8000/vi-tien/chuyen-tien",
+                json=transfer_body,
+                headers=transfer_sender_headers,
+            )
+            assert transfer_replay.status_code == 200, transfer_replay.text
+            sender_transfer_wallet = await finance_db.wallets.find_one(
+                {"_id": transfer_sender_id}
+            )
+            recipient_transfer_wallet = await finance_db.wallets.find_one(
+                {"_id": transfer_recipient_id}
+            )
+            assert sender_transfer_wallet["balance"] == 75, sender_transfer_wallet
+            assert recipient_transfer_wallet["balance"] == 25, recipient_transfer_wallet
+            assert recipient_transfer_wallet["withdrawable_balance"] == 0
+            transfer_id = transfer_replay.json()["data"]["transaction_id"]
+            assert await finance_db.transactions.count_documents(
+                {"_id": {"$in": [f"{transfer_id}:out", f"{transfer_id}:in"]}}
+            ) == 2
+            reused_key = await client.post(
+                "http://finance:8000/vi-tien/chuyen-tien",
+                json={**transfer_body, "amount": 26},
+                headers=transfer_sender_headers,
+            )
+            assert reused_key.status_code == 409, reused_key.text
+            insufficient = await client.post(
+                "http://finance:8000/vi-tien/chuyen-tien",
+                json={
+                    **transfer_body,
+                    "amount": 1000,
+                    "idempotency_key": f"transfer-insufficient-{suffix}",
+                },
+                headers=transfer_sender_headers,
+            )
+            assert insufficient.status_code == 409, insufficient.text
 
             withdrawal = await client.post(
                 "http://finance:8000/rut-tien",
@@ -276,23 +348,54 @@ async def run():
 
             await asyncio.sleep(3)
             notifications = await notification_db.notifications.count_documents(
-                {"target_user_id": {"$in": [buyer_id, seller_id]}}
+                {
+                    "target_user_id": {
+                        "$in": [buyer_id, seller_id, transfer_recipient_id]
+                    }
+                }
             )
-            assert notifications == 3, notifications
+            assert notifications == 4, notifications
             assert await finance_db.outbox_events.count_documents({"status": "done"}) >= 3
             print("finance integration passed")
     finally:
-        await finance_db.wallets.delete_many({"_id": {"$in": [buyer_id, seller_id, admin_id]}})
-        await finance_db.transactions.delete_many({"user_id": {"$in": [buyer_id, seller_id, admin_id]}})
+        finance_user_ids = [
+            buyer_id,
+            seller_id,
+            admin_id,
+            transfer_sender_id,
+            transfer_recipient_id,
+        ]
+        await finance_db.wallets.delete_many({"_id": {"$in": finance_user_ids}})
+        await finance_db.transactions.delete_many({"user_id": {"$in": finance_user_ids}})
+        await finance_db.transfers.delete_many(
+            {
+                "$or": [
+                    {"sender_id": transfer_sender_id},
+                    {"recipient_id": transfer_recipient_id},
+                ]
+            }
+        )
         await finance_db.purchases.delete_many({"user_id": buyer_id})
         await finance_db.orders.delete_many({"user_id": buyer_id})
         await finance_db.withdrawal_requests.delete_many({"user_id": seller_id})
-        outbox = await finance_db.outbox_events.find({"payload.target_user_id": {"$in": [buyer_id, seller_id]}}).to_list(length=None)
+        outbox = await finance_db.outbox_events.find(
+            {
+                "payload.target_user_id": {
+                    "$in": [buyer_id, seller_id, transfer_recipient_id]
+                }
+            }
+        ).to_list(length=None)
         await finance_db.outbox_events.delete_many({"_id": {"$in": [row["_id"] for row in outbox]}})
         await content_db.documents.delete_one({"_id": document_id})
-        await humanity_db.users.delete_many({"_id": {"$in": [buyer_id, seller_id, admin_id]}})
+        await humanity_db.users.delete_many({"_id": {"$in": finance_user_ids}})
         await usage_db.subscriptions.delete_one({"user_id": buyer_id})
-        await notification_db.notifications.delete_many({"target_user_id": {"$in": [buyer_id, seller_id]}})
+        await notification_db.notifications.delete_many(
+            {
+                "target_user_id": {
+                    "$in": [buyer_id, seller_id, transfer_recipient_id]
+                }
+            }
+        )
         for user_id in sessions:
             await redis_client.delete(f"user_sessions:{user_id}")
         await redis_client.aclose()

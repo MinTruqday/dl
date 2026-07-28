@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibTimeline implements BlockTool {
+  static readonly feature = {
+    id: "DocLibTimeline",
+    title: "DocLib Timeline",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4187bedb46182280"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,20 7,19 6,11 4,13 11,4 15,10"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { items: { title: string; date: string; desc: string }[] };
@@ -9,7 +16,7 @@ export default class DocLibTimeline implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Timeline",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4187bedb46182280"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,20 7,19 6,11 4,13 11,4 15,10"/></svg>',
     };
   }
 
@@ -34,7 +41,7 @@ export default class DocLibTimeline implements BlockTool {
           ? data.items
           : [
               {
-                title: "Start Project",
+                title: "DocLib Start Project",
                 date: "Jan 2024",
                 desc: "Kickoff and detailed planning.",
               },

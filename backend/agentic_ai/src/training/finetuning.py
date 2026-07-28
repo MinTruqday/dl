@@ -110,7 +110,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
 
         def __call__(self, loss, iters):
             self.step += 1
-            epoch = (self.step * batch_size) // max(1, len(dataset))
+            epoch = ((self.step - 1) * batch_size) // max(1, len(dataset))
             progress = 25 + (self.step / max(1, self.total)) * 65
             current_epoch = epoch + 1
 
@@ -230,7 +230,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
         loss = info.get("loss", 0)
         epoch = info.get("epoch", 0)
         progress = 25 + (step / total_steps) * 65
-        current_epoch = int(epoch) + 1
+        current_epoch = min(epochs, max(1, int(float(epoch) + 0.999999)))
         update_data = {
             "progress": round(min(progress, 90), 1),
             "current_loss": round(loss, 6),
@@ -431,7 +431,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
         loss = info.get("loss", 0)
         epoch = info.get("epoch", 0)
         progress = 25 + (step / total_steps) * 65
-        current_epoch = int(epoch) + 1
+        current_epoch = min(epochs, max(1, int(float(epoch) + 0.999999)))
         update_data = {
             "progress": round(min(progress, 90), 1),
             "current_loss": round(loss, 6),

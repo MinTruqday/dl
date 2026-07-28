@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibBordersAndShading implements BlockTool {
+  static readonly feature = {
+    id: "DocLibBordersAndShading",
+    title: "DocLib BordersAndShading",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="76a2043d59b30828"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,13 8,14 8,13 12,10 17,6 4,11"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibBordersAndShading implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Borders & Shading",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 8h16"/><path d="M4 16h16"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="76a2043d59b30828"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,13 8,14 8,13 12,10 17,6 4,11"/></svg>',
     };
   }
 

@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibEmbed implements BlockTool {
+  static readonly feature = {
+    id: "DocLibEmbed",
+    title: "DocLib Embed",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b175931880991ec"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,10 8,19 4,13 13,19 9,10 20,20"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
@@ -15,7 +22,7 @@ export default class DocLibEmbed implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Embed",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b175931880991ec"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,10 8,19 4,13 13,19 9,10 20,20"/></svg>',
     };
   }
 

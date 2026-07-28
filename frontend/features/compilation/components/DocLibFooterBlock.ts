@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibFooterBlock implements BlockTool {
+  static readonly feature = {
+    id: "DocLibFooterBlock",
+    title: "DocLib FooterBlock",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f8841b5505193a8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,4 18,15 16,17 15,19 4,17 6,19"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibFooterBlock implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Footer Block",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16"/><path d="M4 22v-4h16v4H4z"/><path d="M12 18V2"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f8841b5505193a8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,4 18,15 16,17 15,19 4,17 6,19"/></svg>',
     };
   }
 

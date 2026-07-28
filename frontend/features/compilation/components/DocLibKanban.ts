@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibKanban implements BlockTool {
+  static readonly feature = {
+    id: "DocLibKanban",
+    title: "DocLib Kanban",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bba3a666a78199af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,14 17,4 18,14 4,9 6,20 20,20"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
@@ -16,7 +23,7 @@ export default class DocLibKanban implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Kanban",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bba3a666a78199af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,14 17,4 18,14 4,9 6,20 20,20"/></svg>',
     };
   }
 
@@ -172,7 +179,7 @@ export default class DocLibKanban implements BlockTool {
           const rmBtn = document.createElement("button");
           rmBtn.classList.add("doclib-kb-btn-rm");
           rmBtn.innerHTML =
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+            '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bba3a666a78199af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,14 17,4 18,14 4,9 6,20 20,20"/></svg>';
           rmBtn.addEventListener("click", () => {
             col.tasks.splice(taskIndex, 1);
             this.buildUI();
@@ -208,11 +215,11 @@ export default class DocLibKanban implements BlockTool {
       addColBtn.style.cursor = "pointer";
       addColBtn.style.color = "#94a3b8";
       addColBtn.innerHTML =
-        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bba3a666a78199af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,14 17,4 18,14 4,9 6,20 20,20"/></svg>';
       addColBtn.addEventListener("click", () => {
         this.data.columns.push({
           id: Date.now().toString(),
-          title: "New Column",
+          title: "DocLib New Column",
           color: "#94a3b8",
           tasks: [],
         });

@@ -1,144 +1,118 @@
-from typing import Optional
 import httpx
 from langchain_core.tools import tool
 from loguru import logger
+
 from src.core.infrastructure.configuration import settings
 
-@tool
-async def generate_dynamic_watermark(user_id: str, client_ip: str, email: str = "") -> dict:
-    """
-    <module_purpose>Generate contextual dynamic micro-watermark payload via DRM microservice (Zero Token Cost).</module_purpose>
-    <contract>Requires user_id and client_ip. Returns SVG/Canvas watermark token dictionary.</contract>
-    """
+
+async def _drm_request(path: str, params: dict, method: str = "GET") -> dict:
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{settings.DRM_URL}/bao-ve/thuy-an-dong",
-                params={"user_id": user_id, "client_ip": client_ip, "email": email},
+            response = await client.request(
+                method,
+                f"{settings.DRM_URL}{path}",
+                params=params,
                 headers={"X-Internal-Token": settings.SECRET_KEY},
-                timeout=5.0
+                timeout=5.0,
             )
             response.raise_for_status()
-            return response.json()
-    except Exception:
-        logger.warning("DRM dynamic watermark HTTP fallback")
-        import datetime, hashlib
-        timestamp_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-        return {
-            "enabled": True,
-            "text": f"CONFIDENTIAL | {email or user_id} | {client_ip} | {timestamp_str}",
-            "watermark_token": hashlib.sha256(f"{user_id}:{client_ip}:{timestamp_str}".encode()).hexdigest()[:16],
-            "opacity": 0.15,
-            "font_size": 16,
-            "color": "#888888"
-        }
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("DRM response must be an object")
+            return payload
+    except Exception as exc:
+        logger.exception("DRM request failed")
+        raise RuntimeError("DRM service unavailable") from exc
+
 
 @tool
-async def issue_temporary_aes_key(document_id: str, user_id: str, ttl_seconds: int = 300) -> dict:
+async def generate_dynamic_watermark(
+    user_id: str,
+    client_ip: str,
+    email: str = "",
+) -> dict:
     """
-    <module_purpose>Generate temporary 256-bit AES-GCM decryption key via DRM microservice (Zero Token Cost).</module_purpose>
-    <contract>Requires document_id and user_id. Returns key_id, key_hex, and expiration TTL.</contract>
+    <module_purpose>Generate a persisted DRM service watermark payload</module_purpose>
+    <contract>Requires a user identifier and valid client IP address</contract>
     """
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{settings.DRM_URL}/bao-ve/cap-khoa-aes",
-                params={"document_id": document_id, "user_id": user_id, "ttl_seconds": ttl_seconds},
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                timeout=5.0
-            )
-            response.raise_for_status()
-            return response.json()
-    except Exception:
-        logger.warning("DRM AES key HTTP fallback")
-        import secrets
-        return {
-            "key_id": f"fallback_key:{document_id}:{user_id}",
-            "key_hex": secrets.token_hex(32),
+    return await _drm_request(
+        "/bao-ve/thuy-an-dong",
+        {"user_id": user_id, "client_ip": client_ip, "email": email},
+    )
+
+
+@tool
+async def issue_temporary_aes_key(
+    document_id: str,
+    user_id: str,
+    ttl_seconds: int = 300,
+) -> dict:
+    """
+    <module_purpose>Issue a temporary AES key persisted by the DRM service</module_purpose>
+    <contract>Requires an existing document and active user</contract>
+    """
+    return await _drm_request(
+        "/bao-ve/cap-khoa-aes",
+        {
+            "document_id": document_id,
+            "user_id": user_id,
             "ttl_seconds": ttl_seconds,
-            "status": "issued_fallback"
-        }
+        },
+        method="POST",
+    )
+
 
 @tool
-async def verify_device_fingerprint(user_id: str, client_ip: str, device_fingerprint: Optional[str] = None) -> dict:
+async def verify_device_fingerprint(
+    user_id: str,
+    client_ip: str,
+    device_fingerprint: str,
+) -> dict:
     """
-    <module_purpose>Verify device hardware fingerprint and IP geofence via DRM microservice (Zero Token Cost).</module_purpose>
-    <contract>Requires user_id and client_ip. Returns fingerprint verification result.</contract>
+    <module_purpose>Verify an enrolled DRM device fingerprint and network address</module_purpose>
+    <contract>Requires a nonempty enrolled device fingerprint</contract>
     """
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{settings.DRM_URL}/bao-ve/xac-minh-van-tay",
-                params={"user_id": user_id, "client_ip": client_ip, "device_fingerprint": device_fingerprint},
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                timeout=5.0
-            )
-            response.raise_for_status()
-            return response.json()
-    except Exception:
-        logger.warning("DRM fingerprint HTTP fallback")
-        return {"matched": True, "risk_multiplier": 1.0, "reason": "Fingerprint verified fallback"}
+    return await _drm_request(
+        "/bao-ve/xac-minh-van-tay",
+        {
+            "user_id": user_id,
+            "client_ip": client_ip,
+            "device_fingerprint": device_fingerprint,
+        },
+    )
+
 
 @tool
 async def check_network_anomaly(user_id: str, client_ip: str) -> dict:
     """
-    <module_purpose>Check network behavior for anomalies via DRM microservice.</module_purpose>
-    <contract>Requires user_id and client_ip. Returns dict with anomaly flags.</contract>
+    <module_purpose>Measure current network access behavior through the DRM service</module_purpose>
+    <contract>Returns measured request and IP counts or raises when unavailable</contract>
     """
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{settings.DRM_URL}/bao-ve/kiem-tra-bat-thuong-mang",
-                params={"user_id": user_id, "client_ip": client_ip},
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                timeout=5.0
-            )
-            response.raise_for_status()
-            return response.json()
-    except Exception as e:
-        logger.warning("DRM network anomaly HTTP fallback")
-        return {"system_flag_anomaly": False, "error": str(e)}
+    return await _drm_request(
+        "/bao-ve/kiem-tra-bat-thuong-mang",
+        {"user_id": user_id, "client_ip": client_ip},
+    )
+
 
 @tool
-async def get_user_trust_profile(user_id: str, user_tier: str = "BASIC") -> dict:
+async def get_user_trust_profile(user_id: str) -> dict:
     """
-    <module_purpose>Retrieve user trust score via DRM microservice.</module_purpose>
-    <contract>Requires user_id. Returns trust score dict.</contract>
+    <module_purpose>Calculate trust from persisted user license and access records</module_purpose>
+    <contract>Requires an existing user</contract>
     """
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{settings.DRM_URL}/bao-ve/ho-so-tin-cay",
-                params={"user_id": user_id, "user_tier": user_tier},
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                timeout=5.0
-            )
-            response.raise_for_status()
-            return response.json()
-    except Exception as e:
-        logger.warning("DRM trust profile HTTP fallback")
-        from src.schemas.auth import Tier
-        tier_upper = str(user_tier).upper()
-        base_score = 90 if tier_upper == Tier.PREMIUM.value else 75 if tier_upper == Tier.PRO.value else 50
-        return {"user_id": user_id, "trust_score": base_score, "error": str(e)}
+    return await _drm_request(
+        "/bao-ve/ho-so-tin-cay",
+        {"user_id": user_id},
+    )
+
 
 @tool
-async def analyze_document_risk(document_id: str, document_type: str = "standard") -> dict:
+async def analyze_document_risk(document_id: str) -> dict:
     """
-    <module_purpose>Analyze risk level of the target document via DRM microservice.</module_purpose>
-    <contract>Requires document_id. Returns risk_level.</contract>
+    <module_purpose>Calculate document risk from persisted protection and dispute records</module_purpose>
+    <contract>Requires an existing document</contract>
     """
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{settings.DRM_URL}/bao-ve/rui-ro-tai-lieu",
-                params={"document_id": document_id, "document_type": document_type},
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                timeout=5.0
-            )
-            response.raise_for_status()
-            return response.json()
-    except Exception as e:
-        logger.warning("DRM document risk HTTP fallback")
-        risk = "HIGH" if document_type in ["sensitive", "exam"] else "LOW"
-        return {"document_id": document_id, "risk_level": risk, "error": str(e)}
+    return await _drm_request(
+        "/bao-ve/rui-ro-tai-lieu",
+        {"document_id": document_id},
+    )

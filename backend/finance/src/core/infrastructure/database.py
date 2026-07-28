@@ -61,6 +61,11 @@ async def setup_indexes():
     await db["orders"].create_index([("user_id", 1), ("created_at", -1)])
     await db["transactions"].create_index([("user_id", 1), ("created_at", -1)])
     await db["transactions"].create_index("reference_id")
+    await db["transfers"].create_index(
+        [("sender_id", 1), ("idempotency_key", 1)],
+        unique=True,
+    )
+    await db["transfers"].create_index([("status", 1), ("created_at", 1)])
     await db["purchases"].create_index(
         [("user_id", 1), ("document_id", 1), ("item_type", 1)],
         name="active_purchase_unique",

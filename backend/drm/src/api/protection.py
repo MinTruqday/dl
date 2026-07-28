@@ -1,19 +1,16 @@
 import datetime
-from enum import Enum
 import hashlib
+import ipaddress
 import secrets
 import time
 from typing import Any, Dict, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
 
 from src.core.dependency import verify_internal_token
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
-
-class Tier(str, Enum):
-    BASIC = "BASIC"
-    PRO = "PRO"
-    PREMIUM = "PREMIUM"
 
 router = APIRouter(
     prefix="/bao-ve",
@@ -22,6 +19,10 @@ router = APIRouter(
 
 @router.get("/kiem-tra-bat-thuong-mang")
 async def check_network_anomaly(user_id: str, client_ip: str) -> Dict[str, Any]:
+    try:
+        ipaddress.ip_address(client_ip)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Địa chỉ IP không hợp lệ")
     current_minute = int(time.time() / 60)
     req_key = f"drm:reqs:{user_id}:{current_minute}"
     ip_key = f"drm:ips:{user_id}:{current_minute}"
@@ -55,26 +56,103 @@ async def check_network_anomaly(user_id: str, client_ip: str) -> Dict[str, Any]:
         )
 
 @router.get("/ho-so-tin-cay")
-async def get_user_trust_profile(user_id: str, user_tier: str = Tier.BASIC.value) -> Dict[str, Any]:
-    tier_upper = str(user_tier).upper()
-    score = 90 if tier_upper == Tier.PREMIUM.value else 75 if tier_upper == Tier.PRO.value else 50
+async def get_user_trust_profile(
+    user_id: str = Query(min_length=1, max_length=128),
+) -> Dict[str, Any]:
+    user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
+        {"_id": user_id},
+        {"is_active": 1, "ai_tier": 1, "role": 1},
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+    drm_db = database.mongodb[settings.DRM_DB_NAME]
+    active_licenses = await drm_db.drm_licenses.count_documents(
+        {"user_id": user_id, "status": "ACTIVE"}
+    )
+    revoked_licenses = await drm_db.drm_licenses.count_documents(
+        {"user_id": user_id, "status": "REVOKED"}
+    )
+    denied_accesses = await drm_db.audit_logs.count_documents(
+        {
+            "user_id": user_id,
+            "event": {"$in": ["license_access_denied", "license_access_anomaly"]},
+        }
+    )
+    score = 100 if user.get("is_active", True) else 0
+    score = max(0, score - min(60, revoked_licenses * 15) - min(40, denied_accesses * 10))
     return {
         "user_id": user_id,
-        "user_tier": tier_upper,
+        "user_tier": str(user.get("ai_tier") or user.get("role") or "unknown"),
         "trust_score": score,
+        "active_licenses": active_licenses,
+        "revoked_licenses": revoked_licenses,
+        "denied_accesses": denied_accesses,
     }
 
 @router.get("/rui-ro-tai-lieu")
-async def analyze_document_risk(document_id: str, document_type: str = "standard") -> Dict[str, Any]:
-    is_sensitive = document_type in ["sensitive", "exam", "premium"]
+async def analyze_document_risk(
+    document_id: str = Query(min_length=1, max_length=128),
+) -> Dict[str, Any]:
+    document = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
+        {"_id": document_id},
+        {
+            "is_premium": 1,
+            "visibility": 1,
+            "status": 1,
+            "is_deleted": 1,
+        },
+    )
+    if not document or document.get("is_deleted"):
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+    drm_db = database.mongodb[settings.DRM_DB_NAME]
+    drm_settings = await drm_db.document_drm_settings.find_one(
+        {"document_id": document_id}
+    )
+    open_disputes = await drm_db.copyright_disputes.count_documents(
+        {
+            "document_id": document_id,
+            "status": {"$in": ["PENDING", "OPEN", "UNDER_REVIEW"]},
+        }
+    )
+    revoked_licenses = await drm_db.drm_licenses.count_documents(
+        {"document_id": document_id, "status": "REVOKED"}
+    )
+    factors = []
+    score = 0
+    if document.get("is_premium"):
+        score += 25
+        factors.append("premium_content")
+    if document.get("visibility") == "private":
+        score += 15
+        factors.append("private_visibility")
+    if drm_settings and any(
+        drm_settings.get(field)
+        for field in ["disable_copy", "disable_print", "watermark_enabled"]
+    ):
+        score += 20
+        factors.append("active_protection")
+    if open_disputes:
+        score += 40
+        factors.append("copyright_dispute")
+    if revoked_licenses:
+        score += min(30, revoked_licenses * 5)
+        factors.append("revoked_licenses")
+    risk_level = "HIGH" if score >= 60 else "MEDIUM" if score >= 25 else "LOW"
     return {
         "document_id": document_id,
-        "document_type": document_type,
-        "risk_level": "HIGH" if is_sensitive else "LOW",
+        "risk_level": risk_level,
+        "risk_score": min(score, 100),
+        "factors": factors,
+        "open_disputes": open_disputes,
+        "revoked_licenses": revoked_licenses,
     }
 
 @router.get("/thuy-an-dong")
 async def generate_dynamic_watermark(user_id: str, client_ip: str, email: str = "") -> Dict[str, Any]:
+    try:
+        ipaddress.ip_address(client_ip)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Địa chỉ IP không hợp lệ")
     timestamp_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     display_text = f"CONFIDENTIAL | {email or user_id} | {client_ip} | {timestamp_str}"
     watermark_token = hashlib.sha256(f"{user_id}:{client_ip}:{timestamp_str}".encode()).hexdigest()[:16]
@@ -89,34 +167,77 @@ async def generate_dynamic_watermark(user_id: str, client_ip: str, email: str = 
     }
 
 @router.post("/cap-khoa-aes")
-async def issue_temporary_aes_key(document_id: str, user_id: str, ttl_seconds: int = 300) -> Dict[str, Any]:
+async def issue_temporary_aes_key(
+    document_id: str = Query(min_length=1, max_length=128),
+    user_id: str = Query(min_length=1, max_length=128),
+    ttl_seconds: int = Query(default=300, ge=60, le=3600),
+) -> Dict[str, Any]:
+    document = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
+        {"_id": document_id, "is_deleted": {"$ne": True}},
+        {"_id": 1},
+    )
+    user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
+        {"_id": user_id, "is_active": {"$ne": False}},
+        {"_id": 1},
+    )
+    if not document:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+    if not user:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
     key_id = f"aes_key:{document_id}:{user_id}:{secrets.token_hex(4)}"
     raw_key = secrets.token_hex(32)
 
     try:
         await redis.get_client().setex(key_id, ttl_seconds, raw_key)
-        status = "issued"
-    except Exception as e:
-        logger.warning("DRM Redis key issuance fallback")
-        status = "issued_fallback"
+    except Exception:
+        logger.exception("DRM key persistence failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Dịch vụ cấp khóa tạm thời không khả dụng",
+        )
 
     return {
         "key_id": key_id,
         "key_hex": raw_key,
         "ttl_seconds": ttl_seconds,
-        "status": status
+        "status": "issued"
     }
 
 @router.get("/xac-minh-van-tay")
-async def verify_device_fingerprint(user_id: str, client_ip: str, device_fingerprint: Optional[str] = None) -> Dict[str, Any]:
-    if not device_fingerprint:
-        return {"matched": True, "risk_multiplier": 1.0, "reason": "No fingerprint enforced"}
-
-    expected_hash = hashlib.sha256(f"{user_id}:{client_ip}".encode()).hexdigest()[:16]
-    is_match = device_fingerprint == expected_hash
+async def verify_device_fingerprint(
+    user_id: str = Query(min_length=1, max_length=128),
+    client_ip: str = Query(min_length=3, max_length=45),
+    device_fingerprint: str = Query(min_length=8, max_length=256),
+) -> Dict[str, Any]:
+    try:
+        ipaddress.ip_address(client_ip)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Địa chỉ IP không hợp lệ")
+    licenses = await database.mongodb[settings.DRM_DB_NAME].drm_licenses.find(
+        {
+            "user_id": user_id,
+            "status": "ACTIVE",
+            "hardware_signature": {"$type": "string"},
+        },
+        {"hardware_signature": 1, "recent_accesses": 1},
+    ).to_list(length=100)
+    enrolled = {
+        row["hardware_signature"]
+        for row in licenses
+        if row.get("hardware_signature")
+    }
+    known_ips = {
+        access.get("ip")
+        for row in licenses
+        for access in row.get("recent_accesses", [])
+        if access.get("ip")
+    }
+    is_match = device_fingerprint in enrolled
+    known_ip = not known_ips or client_ip in known_ips
 
     return {
         "matched": is_match,
-        "risk_multiplier": 1.0 if is_match else 2.5,
-        "reason": "Fingerprint verified" if is_match else "Mismatch hardware signature detected"
+        "known_ip": known_ip,
+        "risk_multiplier": 1.0 if is_match and known_ip else 2.5,
+        "reason": "verified" if is_match else "fingerprint_mismatch"
     }

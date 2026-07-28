@@ -39,6 +39,10 @@ async def setup_indexes():
         await db["storage_items"].create_index([("target_id", 1)], background=True)
         await db["storage_items"].create_index([("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True)
         await db["temp_chat_files"].create_index("expires_at", expireAfterSeconds=0)
+        await db["storage_share_links"].create_index(
+            "expires_at",
+            expireAfterSeconds=0,
+        )
 
         logger.info("MongoDB indexes created and applied")
     except Exception:

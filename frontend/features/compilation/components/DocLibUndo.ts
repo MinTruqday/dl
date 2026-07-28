@@ -2,6 +2,13 @@ import { API } from "@editorjs/editorjs";
 import { sanitizeEditorData } from "./editorjs-sanitizer";
 
 export default class DocLibUndo {
+  static readonly feature = {
+    id: "DocLibUndo",
+    title: "DocLib Undo",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9677c876d1c9039"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,5 9,20 11,15 12,10 12,17 10,12"/></svg>',
+    origin: "microsoft-word",
+  } as const;
+
   private editor: any;
   private history: any[] = [];
   private position: number = -1;
@@ -47,14 +54,14 @@ export default class DocLibUndo {
     this.undoBtn = document.createElement("button");
     this.undoBtn.classList.add("doclib-undo-btn");
     this.undoBtn.innerHTML =
-      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9677c876d1c9039"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,5 9,20 11,15 12,10 12,17 10,12"/></svg>';
     this.undoBtn.title = "Undo (Cmd+Z)";
     this.undoBtn.disabled = true;
 
     this.redoBtn = document.createElement("button");
     this.redoBtn.classList.add("doclib-undo-btn");
     this.redoBtn.innerHTML =
-      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9677c876d1c9039"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,5 9,20 11,15 12,10 12,17 10,12"/></svg>';
     this.redoBtn.title = "Redo (Cmd+Shift+Z)";
     this.redoBtn.disabled = true;
 

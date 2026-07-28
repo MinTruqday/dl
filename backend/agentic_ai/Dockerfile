@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash appuser
-RUN mkdir -p /home/appuser/.cache/huggingface /home/appuser/.cache/torchinductor /home/appuser/.cache/torch /home/appuser/.cache/tmp && chown -R appuser:appuser /home/appuser/.cache
+RUN mkdir -p /home/appuser/.cache/huggingface /home/appuser/.cache/torchinductor /home/appuser/.cache/torch /home/appuser/.cache/tmp /var/lib/doclib/finetune/models /var/lib/doclib/finetune/adapters /var/lib/doclib/finetune/gguf && chown -R appuser:appuser /home/appuser/.cache /var/lib/doclib
 RUN git init /app/llama.cpp && \
     git -C /app/llama.cpp remote add origin https://github.com/ggerganov/llama.cpp.git && \
     git -C /app/llama.cpp fetch --depth 1 origin ${LLAMA_CPP_REV} && \

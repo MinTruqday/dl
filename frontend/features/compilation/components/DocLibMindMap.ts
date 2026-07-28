@@ -7,6 +7,13 @@ interface MindNode {
 }
 
 export default class DocLibMindMap implements BlockTool {
+  static readonly feature = {
+    id: "DocLibMindMap",
+    title: "DocLib MindMap",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b00415978b0509aa"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,8 8,19 7,9 13,4 15,5 12,7"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { root: MindNode };
@@ -15,7 +22,7 @@ export default class DocLibMindMap implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Mind Map",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="3" cy="6" r="2"></circle><circle cx="21" cy="6" r="2"></circle><circle cx="3" cy="18" r="2"></circle><circle cx="21" cy="18" r="2"></circle><line x1="5" y1="6" x2="9" y2="11"></line><line x1="19" y1="6" x2="15" y2="11"></line><line x1="5" y1="18" x2="9" y2="13"></line><line x1="19" y1="18" x2="15" y2="13"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b00415978b0509aa"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,8 8,19 7,9 13,4 15,5 12,7"/></svg>',
     };
   }
 

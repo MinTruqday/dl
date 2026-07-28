@@ -1,39 +1,95 @@
-import { API, BlockTool } from "@editorjs/editorjs";
+import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibKerningForFonts implements BlockTool {
-  private api: API;
-  private wrapper: HTMLElement | null = null;
-  private data: { content: string };
+  static readonly feature = {
+    id: "DocLibKerningForFonts",
+    title: "DocLib KerningForFonts",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b02fe67c7bf4c2ca"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,17 13,9 8,10 11,19 12,12 11,12"/></svg>',
+    origin: "word-compatible",
+  } as const;
 
   static get toolbox() {
     return {
       title: "DocLib Kerning For Fonts",
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>'
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b02fe67c7bf4c2ca"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,17 13,9 8,10 11,19 12,12 11,12"/></svg>',
     };
   }
 
-  constructor({ api, data }: { api: API; data: any }) {
+  static get isReadOnlySupported() {
+    return true;
+  }
+
+  readonly id = "DocLibKerningForFonts";
+  readonly title = "DocLib Kerning For Fonts";
+  readonly category = "format" as const;
+  readonly mode = "KerningForFonts";
+  readonly requiresSelection = false;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
+
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
-    this.data = { content: data?.content || "" };
+    this.data = data || {};
   }
 
   render() {
     this.wrapper = document.createElement("div");
-    this.wrapper.classList.add(this.api.styles.block, "doclib-doc-lib-kerning-for-fonts");
-    this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data?.content;
-    this.wrapper.dataset.placeholder = "Doc Lib Kerning For Fonts";
-
-    this.wrapper.addEventListener("input", (e: any) => {
-      this.data.content = e.target.innerHTML;
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
     });
-
+    this.wrapper.appendChild(button);
     return this.wrapper;
   }
 
   save(blockContent: HTMLElement) {
     return {
-      content: blockContent.innerHTML
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
     };
+  }
+
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    const selection = window.getSelection();
+    const anchor = selection?.anchorNode;
+    const element =
+      anchor instanceof HTMLElement ? anchor : anchor?.parentElement || null;
+    const block = element?.closest<HTMLElement>(".ce-block") || document.querySelector<HTMLElement>(".ce-block--focused");
+    if (block) block.dataset.wordFormat = this.mode;
+    window.dispatchEvent(
+      new CustomEvent("doclib-format-command", {
+        detail: { command: this.id, mode: this.mode },
+      }),
+    );
   }
 }

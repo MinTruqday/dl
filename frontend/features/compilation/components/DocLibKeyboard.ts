@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibKeyboard implements InlineTool {
+  static readonly feature = {
+    id: "DocLibKeyboard",
+    title: "DocLib Keyboard",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="154032f3878f4532"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,17 20,9 20,11 5,20 10,18 19,16"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLElement | null = null;
   private state: boolean = false;
@@ -20,7 +27,7 @@ export default class DocLibKeyboard implements InlineTool {
     this.button = document.createElement("button");
     (this.button as HTMLButtonElement).type = "button";
     this.button.innerHTML =
-      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6.01" y2="8"></line><line x1="10" y1="8" x2="10.01" y2="8"></line><line x1="14" y1="8" x2="14.01" y2="8"></line><line x1="18" y1="8" x2="18.01" y2="8"></line><line x1="6" y1="12" x2="6.01" y2="12"></line><line x1="10" y1="12" x2="10.01" y2="12"></line><line x1="14" y1="12" x2="14.01" y2="12"></line><line x1="18" y1="12" x2="18.01" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="154032f3878f4532"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,17 20,9 20,11 5,20 10,18 19,16"/></svg>';
     this.button.classList.add(this.api.styles.inlineToolButton);
 
     if (!document.getElementById("doclib-kbd-styles")) {

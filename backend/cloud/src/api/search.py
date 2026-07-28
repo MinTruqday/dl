@@ -22,11 +22,11 @@ async def duplicate_item(
 
 @router.get("/tim-kiem-nang-cao", response_model=APIResponse[Any])
 async def advanced_search(
-    q: Optional[str] = Query(None),
-    mime_type: Optional[str] = Query(None),
-    extension: Optional[str] = Query(None),
-    min_size_mb: Optional[float] = Query(None),
-    max_size_mb: Optional[float] = Query(None),
+    q: Optional[str] = Query(default=None, max_length=200),
+    mime_type: Optional[str] = Query(default=None, max_length=100),
+    extension: Optional[str] = Query(default=None, max_length=10),
+    min_size_mb: Optional[float] = Query(default=None, ge=0),
+    max_size_mb: Optional[float] = Query(default=None, ge=0),
     current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
 ):
     result = await SearchService.advanced_search(current_user.id, q, mime_type, extension, min_size_mb, max_size_mb)

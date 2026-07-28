@@ -1,9 +1,8 @@
-import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from uuid6 import uuid7
 
 class TransactionType(str, Enum):
@@ -13,7 +12,8 @@ class TransactionType(str, Enum):
     WITHDRAW = "withdraw"
     TIP = "tip"
     REFUND = "refund"
-    TRANSFER = "transfer"
+    TRANSFER_OUT = "transfer_out"
+    TRANSFER_IN = "transfer_in"
 
 class Transaction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
@@ -40,11 +40,17 @@ class TopupRequest(BaseModel):
     amount: int = Field(gt=0)
     method: str = "payos"
 
+
 class TransferRequest(BaseModel):
-    recipient_identifier: str = Field(min_length=1, description="Recipient Email, User ID, Slug, or Account Number")
-    amount: int = Field(gt=0, description="Amount of dl credits to transfer")
-    note: Optional[str] = Field(default="", description="Transfer message / note")
-    idempotency_key: Optional[str] = Field(default=None, description="Unique key to prevent duplicate transfer execution")
+    model_config = ConfigDict(extra="forbid")
+
+    recipient_identifier: str = Field(min_length=1, max_length=320)
+    amount: int = Field(gt=0, le=1000000000)
+    note: str = Field(default="", max_length=500)
+    idempotency_key: str = Field(min_length=8, max_length=200)
+
 
 class RecipientVerifyRequest(BaseModel):
-    recipient_identifier: str = Field(min_length=1, description="Recipient Email, User ID, Slug, or Account Number")
+    model_config = ConfigDict(extra="forbid")
+
+    recipient_identifier: str = Field(min_length=1, max_length=320)

@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibList implements BlockTool {
+  static readonly feature = {
+    id: "DocLibList",
+    title: "DocLib List",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15848ce23aef5fe0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 8,9 11,5 14,7 9,14 7,11"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private data: { style: "ordered" | "unordered"; items: string[] };
   private wrapper: HTMLElement | null = null;
@@ -9,7 +16,7 @@ export default class DocLibList implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib List",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15848ce23aef5fe0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 8,9 11,5 14,7 9,14 7,11"/></svg>',
     };
   }
 
@@ -34,12 +41,12 @@ export default class DocLibList implements BlockTool {
     const unorderedBtn = document.createElement("div");
     unorderedBtn.classList.add(this.api.styles.settingsButton);
     unorderedBtn.innerHTML =
-      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15848ce23aef5fe0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 8,9 11,5 14,7 9,14 7,11"/></svg>';
 
     const orderedBtn = document.createElement("div");
     orderedBtn.classList.add(this.api.styles.settingsButton);
     orderedBtn.innerHTML =
-      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15848ce23aef5fe0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 8,9 11,5 14,7 9,14 7,11"/></svg>';
 
     if (this.data.style === "unordered")
       unorderedBtn.classList.add(this.api.styles.settingsButtonActive);

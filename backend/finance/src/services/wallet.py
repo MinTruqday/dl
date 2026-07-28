@@ -49,6 +49,8 @@ class WalletService:
             "withdraw": "Withdrawal",
             "tip": "Author Tip",
             "refund": "Refund",
+            "transfer_out": "Transfer Sent",
+            "transfer_in": "Transfer Received",
         }
         for tx in txs:
             tx["_id"] = str(tx["_id"])

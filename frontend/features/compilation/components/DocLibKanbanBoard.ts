@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibKanbanBoard implements BlockTool {
+  static readonly feature = {
+    id: "DocLibKanbanBoard",
+    title: "DocLib KanbanBoard",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="08e2f3296b39cf12"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,9 9,11 9,10 7,5 6,5 5,15"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
@@ -15,7 +22,7 @@ export default class DocLibKanbanBoard implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Kanban",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="08e2f3296b39cf12"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,9 9,11 9,10 7,5 6,5 5,15"/></svg>',
     };
   }
 
@@ -202,7 +209,7 @@ export default class DocLibKanbanBoard implements BlockTool {
       addCol.addEventListener("click", () => {
         this.data.columns.push({
           id: this.mkId(),
-          title: "New Column",
+          title: "DocLib New Column",
           tasks: [],
         });
         this.buildUI();

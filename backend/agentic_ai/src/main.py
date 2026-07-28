@@ -121,6 +121,18 @@ async def readiness_check():
         checks["qdrant"] = "ready"
     except Exception:
         checks["qdrant"] = "unavailable"
+    try:
+        import httpx
+
+        async with httpx.AsyncClient(timeout=3) as client:
+            response = await client.get(
+                f"{settings.MINIO_ENDPOINT.rstrip('/')}/minio/health/ready"
+            )
+            checks["object_storage"] = (
+                "ready" if response.status_code == 200 else "unavailable"
+            )
+    except Exception:
+        checks["object_storage"] = "unavailable"
     ready = all(value == "ready" for value in checks.values())
     return JSONResponse(
         status_code=200 if ready else 503,

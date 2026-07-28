@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibMailMerge implements BlockTool {
+  static readonly feature = {
+    id: "DocLibMailMerge",
+    title: "DocLib MailMerge",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69e59677cd0c78d9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,12 18,4 5,16 5,17 17,14 4,18"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibMailMerge implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Mail Merge Field",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69e59677cd0c78d9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,12 18,4 5,16 5,17 17,14 4,18"/></svg>',
     };
   }
 

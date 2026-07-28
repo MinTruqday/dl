@@ -1,49 +1,95 @@
-import { API, BlockTune } from "@editorjs/editorjs";
+import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
-export default class DocLibShrinkToFit implements BlockTune {
-  static get isTune() {
+export default class DocLibShrinkToFit implements BlockTool {
+  static readonly feature = {
+    id: "DocLibShrinkToFit",
+    title: "DocLib ShrinkToFit",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9fed716ada0bec59"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,20 15,8 18,15 19,8 6,18 14,4"/></svg>',
+    origin: "word-compatible",
+  } as const;
+
+  static get toolbox() {
+    return {
+      title: "DocLib Shrink To Fit",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9fed716ada0bec59"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,20 15,8 18,15 19,8 6,18 14,4"/></svg>',
+    };
+  }
+
+  static get isReadOnlySupported() {
     return true;
   }
 
-  private api: API;
-  private data: any;
-  private wrapper: HTMLElement;
+  readonly id = "DocLibShrinkToFit";
+  readonly title = "DocLib Shrink To Fit";
+  readonly category = "format" as const;
+  readonly mode = "ShrinkToFit";
+  readonly requiresSelection = false;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
 
-  constructor({ api, data }: { api: API; data: any }) {
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
-    this.data = data || { enabled: false };
-    this.wrapper = document.createElement("div");
+    this.data = data || {};
   }
 
   render() {
-    const btn = document.createElement("button");
-    btn.classList.add(this.api.styles.settingsButton);
-    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 14L10 14M10 14V20M10 14L3 21M20 10L14 10M14 10V4M14 10L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    btn.dataset.title = "DocLib Shrink To Fit";
-
-    if (this.data.enabled) {
-      btn.classList.add(this.api.styles.settingsButtonActive);
-    }
-
-    btn.addEventListener("click", () => {
-      this.data.enabled = !this.data.enabled;
-      btn.classList.toggle(this.api.styles.settingsButtonActive);
+    this.wrapper = document.createElement("div");
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
     });
-
-    this.wrapper.appendChild(btn);
+    this.wrapper.appendChild(button);
     return this.wrapper;
   }
 
-  save() {
-    return this.data;
+  save(blockContent: HTMLElement) {
+    return {
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
+    };
   }
 
-  wrap(blockContent: HTMLElement) {
-    const w = document.createElement("div");
-    if (this.data.enabled) {
-      w.classList.add("doclib-doclibshrinktofit-active");
-    }
-    w.appendChild(blockContent);
-    return w;
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    const selection = window.getSelection();
+    const anchor = selection?.anchorNode;
+    const element =
+      anchor instanceof HTMLElement ? anchor : anchor?.parentElement || null;
+    const block = element?.closest<HTMLElement>(".ce-block") || document.querySelector<HTMLElement>(".ce-block--focused");
+    if (block) block.dataset.wordFormat = this.mode;
+    window.dispatchEvent(
+      new CustomEvent("doclib-format-command", {
+        detail: { command: this.id, mode: this.mode },
+      }),
+    );
   }
 }

@@ -23,7 +23,7 @@ export async function processTextAPI(
 
 export async function smartSearchAIAPI(query: string) {
   const res = await fetch(
-    `${API_URL}/kham-pha/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`,
+    `${API_URL}/kham-pha/tim-kiem-thong-minh?query=${encodeURIComponent(query)}`,
     {
       headers: getAuthHeaders(),
     },
@@ -213,4 +213,3 @@ export async function clearUserInstructionsAPI() {
   if (!res.ok) throw new Error(data.message || "Không thể xóa chỉ dẫn cá nhân");
   return data;
 }
-

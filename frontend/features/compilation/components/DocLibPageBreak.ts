@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibPageBreak implements BlockTool {
+  static readonly feature = {
+    id: "DocLibPageBreak",
+    title: "DocLib PageBreak",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca59aa56b42b1f64"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,8 4,5 14,13 18,19 19,16 10,13"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibPageBreak implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Page Break",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 14h6"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca59aa56b42b1f64"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,8 4,5 14,13 18,19 19,16 10,13"/></svg>',
     };
   }
 

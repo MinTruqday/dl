@@ -12,7 +12,6 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 from src.repositories.finetuning import FinetuneRepository
 from src.repositories.chat import ChatRepository
-from src.utils.structured_output import extract_json_value
 
 active_jobs = {}
 
@@ -65,7 +64,8 @@ def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
     def sync_update(data):
         if cancel_event.is_set():
             raise TrainingCancelled
-        asyncio.run_coroutine_threadsafe(_update(data), loop)
+        future = asyncio.run_coroutine_threadsafe(_update(data), loop)
+        future.result(timeout=30)
 
     try:
         sync_update({"status": "running", "progress": 5})
@@ -88,6 +88,7 @@ def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
             {
                 "status": "completed",
                 "progress": 100,
+                "current_epoch": config.get("epochs", 3),
                 "current_loss": round(final_loss, 6),
                 "best_loss": round(final_loss, 6),
                 "merged_model_name": model_name,
@@ -98,8 +99,11 @@ def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
         )
 
     except TrainingCancelled:
-        sync_update = lambda data: asyncio.run_coroutine_threadsafe(_update(data), loop)
-        sync_update({"status": "cancelled"})
+        future = asyncio.run_coroutine_threadsafe(
+            _update({"status": "cancelled"}),
+            loop,
+        )
+        future.result(timeout=30)
     except Exception:
         logger.exception("Model fine-tuning process error")
         sync_update({"status": "failed", "error_code": "model_finetuning_failed"})
@@ -272,81 +276,88 @@ async def import_feedback(req: dict):
 
 @log_logic_execution
 async def import_documents(req: dict):
-    
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
-    ds_id = str(uuid7())
+    from huggingface_hub import AsyncInferenceClient
+    from langchain_core.messages import HumanMessage
+    from src.schemas.finetuning import GeneratedSamples
+    from src.utils.huggingface import HFInferenceChat
+
+    client = AsyncInferenceClient(
+        model=settings.LLM_MODEL,
+        token=settings.HF_TOKEN,
+    )
+    structured_model = HFInferenceChat(
+        client=client,
+        model=settings.LLM_MODEL,
+    ).with_structured_output(GeneratedSamples)
+    generated_samples = []
+    for document_id in doc_ids:
+        document = await FinetuneRepository.find_document_context(
+            {"_id": document_id}
+        )
+        if not document:
+            continue
+        content = ""
+        if isinstance(document.get("content"), list):
+            content = "\n".join(
+                str(block.get("data", {}).get("text", ""))
+                for block in document["content"]
+                if isinstance(block, dict)
+            )
+        elif isinstance(document.get("content"), str):
+            content = document["content"]
+        words = content.split()
+        chunks = [
+            " ".join(words[index : index + 500])
+            for index in range(0, len(words), 500)
+            if len(words[index : index + 500]) > 50
+        ][:10]
+        for chunk in chunks:
+            try:
+                from src.core.registry import PromptType, registry
+
+                prompt = registry.get(PromptType.FINETUNE_QA_GENERATION).format(
+                    chunk=chunk
+                )
+                generated = await structured_model.ainvoke(
+                    [HumanMessage(content=prompt)],
+                    max_tokens=1024,
+                    temperature=0.3,
+                )
+                generated_samples.extend(
+                    sample.model_dump() for sample in generated.samples
+                )
+            except Exception:
+                logger.exception("Training data extraction error")
+    if not generated_samples:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "finetuning_sample_generation_failed"},
+        )
+    dataset_id = str(uuid7())
     await FinetuneRepository.insert_dataset(
         {
-            "_id": ds_id,
+            "_id": dataset_id,
             "user_id": user_id,
             "name": f"Data Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H%M')}",
             "description": "",
             "source": "documents",
-            "sample_count": 0,
-            "status": "draft",
+            "sample_count": len(generated_samples),
+            "status": "ready",
             "created_at": datetime.now(timezone.utc),
         }
     )
-    samples = []
-    for did in doc_ids:
-        doc = await FinetuneRepository.find_document_context({"_id": did})
-        if not doc:
-            continue
-        content = ""
-        if isinstance(doc.get("content"), list):
-            content = "\n".join(
-                [
-                    b.get("data", {}).get("text", "")
-                    for b in doc["content"]
-                    if isinstance(b, dict)
-                ]
-            )
-        elif isinstance(doc.get("content"), str):
-            content = doc["content"]
-        words = content.split()
-        chunks = [
-            " ".join(words[i : i + 500])
-            for i in range(0, len(words), 500)
-            if len(words[i : i + 500]) > 50
-        ][:10]
-        hf_token = settings.HF_TOKEN
-        from huggingface_hub import AsyncInferenceClient
-
-        for chunk in chunks:
-            try:
-                client = AsyncInferenceClient(
-                    model=settings.LLM_MODEL, token=hf_token
-                )
-                from src.core.registry import registry, PromptType
-                prompt = registry.get(PromptType.FINETUNE_QA_GENERATION).format(chunk=chunk)
-                messages = [{"role": "user", "content": prompt}]
-                resp = await client.chat_completion(
-                    messages=messages, max_tokens=1024, temperature=0.3
-                )
-                raw = resp.choices[0].message.content.strip()
-                generated_samples = extract_json_value(raw)
-                if not isinstance(generated_samples, list):
-                    raise ValueError("Fine-tuning sample output must be a JSON array")
-                for p in generated_samples:
-                    if p.get("instruction") and p.get("output"):
-                        samples.append(
-                            {
-                                "_id": str(uuid7()),
-                                "dataset_id": ds_id,
-                                "instruction": p["instruction"],
-                                "input": p.get("input", ""),
-                                "output": p["output"],
-                                "created_at": datetime.now(timezone.utc),
-                            }
-                        )
-            except Exception:
-                logger.exception("Training data extraction error")
-    if samples:
-        await FinetuneRepository.insert_samples(samples)
-        await FinetuneRepository.update_dataset(
-            {"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}}
-        )
-    return {"dataset_id": ds_id, "imported": len(samples)}
+    sample_documents = [
+        {
+            "_id": str(uuid7()),
+            "dataset_id": dataset_id,
+            **sample,
+            "created_at": datetime.now(timezone.utc),
+        }
+        for sample in generated_samples
+    ]
+    await FinetuneRepository.insert_samples(sample_documents)
+    return {"dataset_id": dataset_id, "imported": len(sample_documents)}
 
 @log_logic_execution
 async def create_job(req: dict):

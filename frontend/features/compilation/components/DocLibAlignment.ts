@@ -7,6 +7,13 @@ import {
 } from "@codexteam/icons";
 
 export default class DocLibAlignmentTune implements BlockTune {
+  static readonly feature = {
+    id: "DocLibAlignment",
+    title: "DocLib Alignment",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c15452765a08ff21"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,20 18,20 9,12 4,20 7,9 4,6"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private data: any;
   private block: any;

@@ -14,14 +14,15 @@ export const getTagsCategoriesAPI = async () => {
 export const smartSearchAPI = async (query: string, limit: number = 10) => {
   const res = await fetch(
     `${API_URL}/kham-pha/tim-kiem-thong-minh?query=${encodeURIComponent(query)}&limit=${limit}`,
+    { headers: getAuthHeaders() },
   );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi thực thi truy vấn tìm kiếm ngữ nghĩa");
   return data;
 };
 
-export const getAIRecommendationsAPI = async (limit: number = 10) => {
-  const res = await fetch(`${API_URL}/kham-pha/goi-y-ai?limit=${limit}`, {
+export const getPersonalizedRecommendationsAPI = async (limit: number = 10) => {
+  const res = await fetch(`${API_URL}/kham-pha/goi-y-ca-nhan?limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -29,4 +30,3 @@ export const getAIRecommendationsAPI = async (limit: number = 10) => {
     throw new Error(data.message || "Lỗi truy xuất bộ dữ liệu khuyến nghị cá nhân hóa");
   return data;
 };
-

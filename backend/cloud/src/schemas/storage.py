@@ -9,6 +9,11 @@ class ShareAccess(BaseModel):
     user_id: str = Field(min_length=1, max_length=100)
     role: str = Field(default="viewer", pattern=r"^(viewer|editor)$")
 
+class ProtectedShareCreate(BaseModel):
+    item_id: str = Field(min_length=1, max_length=128)
+    password: Optional[str] = Field(default=None, min_length=8, max_length=128)
+    expires_in_hours: int = Field(default=24, ge=1, le=720)
+
 class StorageItemBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

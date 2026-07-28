@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibDigitalSignature implements BlockTool {
+  static readonly feature = {
+    id: "DocLibDigitalSignature",
+    title: "DocLib DigitalSignature",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba1b2e375a980f64"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,14 16,8 9,20 19,19 8,15 4,16"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibDigitalSignature implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Digital Signature",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba1b2e375a980f64"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,14 16,8 9,20 19,19 8,15 4,16"/></svg>',
     };
   }
 
@@ -65,8 +72,8 @@ export default class DocLibDigitalSignature implements BlockTool {
       container.innerHTML = "";
 
       const iconStr = this.data.valid
-        ? '<svg class="doclib-cert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>'
-        : '<svg class="doclib-cert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba1b2e375a980f64"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,14 16,8 9,20 19,19 8,15 4,16"/></svg>'
+        : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba1b2e375a980f64"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,14 16,8 9,20 19,19 8,15 4,16"/></svg>';
 
       container.innerHTML = iconStr;
 

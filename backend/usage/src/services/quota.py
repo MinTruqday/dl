@@ -198,32 +198,31 @@ class QuotaService:
 
     @staticmethod
     @log_logic_execution
-    async def check_upload_quota(user_id: str, role: str, ai_tier: str, item_type: str):
+    async def reserve_upload_quota(
+        user_id: str,
+        role: str,
+        ai_tier: str,
+        item_type: str,
+        req_reset_hours: int = 24,
+    ):
         if role == Role.ADMIN.value:
             return True
-        
+
         if item_type == "folder" and ai_tier != Tier.PREMIUM.value:
             raise HTTPException(status_code=403, detail="Yêu cầu đặc quyền Toàn năng để tải lên cấu trúc thư mục")
-            
+
         limits = {Tier.BASIC.value: 1, Tier.PRO.value: 5, Tier.PREMIUM.value: math.inf}
         daily_limit = limits.get(ai_tier, 1)
-        
+
         if daily_limit == math.inf:
             return True
-            
-        key = f"quota:{user_id}:upload_{item_type}"
-        current = await redis.get(key)
-        current = int(current) if current else 0
-        
-        if current >= daily_limit:
-            raise HTTPException(status_code=429, detail=f"Đã vượt quá giới hạn tải lên tài nguyên {item_type} trong ngày")
-            
-        return True
 
-    @staticmethod
-    @log_logic_execution
-    async def consume_upload_quota(user_id: str, item_type: str, req_reset_hours: int = 24):
         key = f"quota:{user_id}:upload_{item_type}"
-        current = await redis.incr(key)
-        if current == 1:
-            await redis.expire(key, req_reset_hours * 3600)
+        reservation = await redis.reserve_below_limit(
+            key,
+            int(daily_limit),
+            req_reset_hours * 3600,
+        )
+        if reservation < 0:
+            raise HTTPException(status_code=429, detail=f"Đã vượt quá giới hạn tải lên tài nguyên {item_type} trong ngày")
+        return reservation

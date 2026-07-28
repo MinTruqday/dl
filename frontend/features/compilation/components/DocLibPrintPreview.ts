@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibPrintPreview implements BlockTool {
+  static readonly feature = {
+    id: "DocLibPrintPreview",
+    title: "DocLib PrintPreview",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af50107b948d0df5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,16 20,8 16,9 17,11 8,16 15,4"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibPrintPreview implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Print Preview",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af50107b948d0df5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,16 20,8 16,9 17,11 8,16 15,4"/></svg>',
     };
   }
 

@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibSmartArtPyramid implements BlockTool {
+  static readonly feature = {
+    id: "DocLibSmartArtPyramid",
+    title: "DocLib SmartArtPyramid",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="713cafb171db5eb5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,13 9,11 15,19 13,15 13,14 4,14"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibSmartArtPyramid implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib SmartArt Pyramid",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"></path><path d="M12 10L6 22"></path><path d="M12 10l6 12"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="713cafb171db5eb5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,13 9,11 15,19 13,15 13,14 4,14"/></svg>',
     };
   }
 

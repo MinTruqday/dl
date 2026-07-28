@@ -1,8 +1,10 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from src.core.infrastructure.mongo import mongo
-import asyncio
 import gzip
+import os
+import tempfile
+import time
 from datetime import datetime, timezone
 
 import httpx
@@ -16,6 +18,8 @@ from src.core.infrastructure.database import database
 from src.repositories.system import SystemRepository
 from src.repositories.policy import PolicyProposalRepository
 from src.repositories.moderation import ModerationRepository
+
+PROCESS_STARTED_AT = time.monotonic()
 
 class HealthService:
 
@@ -104,26 +108,109 @@ class HealthService:
 
     @staticmethod
     @log_logic_execution
-    async def trigger_backup(action: str = "FULL") -> dict:
-        from src.core.storage import upload_file
+    async def trigger_backup() -> dict:
+        from src.core.storage import upload_file_path
 
-        snapshot = {"created_at": datetime.now(timezone.utc), "databases": {}}
-        names = await database.mongodb.list_database_names()
-        for database_name in names:
-            if database_name in {"admin", "config", "local"}:
-                continue
-            target = database.mongodb[database_name]
-            snapshot["databases"][database_name] = {}
-            for collection_name in await target.list_collection_names():
-                snapshot["databases"][database_name][collection_name] = await target[collection_name].find({}).to_list(length=None)
-        raw = json_util.dumps(snapshot).encode("utf-8")
-        compressed = await asyncio.to_thread(gzip.compress, raw, 6)
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        object_name = f"system/backups/doclib-{timestamp}.json.gz"
-        await upload_file(compressed, object_name, content_type="application/gzip")
-        await mongo.insert_one("backup_jobs", {"_id": str(uuid7()), "object_name": object_name, "size_bytes": len(compressed), "status": "completed", "created_at": datetime.now(timezone.utc)})
-        logger.info("System data backup completed")
-        return {"object_name": object_name, "size_bytes": len(compressed), "status": "completed"}
+        backup_id = str(uuid7())
+        object_name = f"system/backups/doclib-{timestamp}-{backup_id}.json.gz"
+        created_at = datetime.now(timezone.utc)
+        await mongo.insert_one(
+            "backup_jobs",
+            {
+                "_id": backup_id,
+                "object_name": object_name,
+                "size_bytes": 0,
+                "document_count": 0,
+                "status": "running",
+                "created_at": created_at,
+            },
+        )
+        file_path = ""
+        try:
+            with tempfile.NamedTemporaryFile(
+                prefix="doclib-backup-",
+                suffix=".json.gz",
+                delete=False,
+            ) as temporary:
+                file_path = temporary.name
+            document_count = 0
+            with gzip.open(file_path, "wt", encoding="utf-8", compresslevel=6) as output:
+                output.write('{"created_at":')
+                output.write(json_util.dumps(created_at))
+                output.write(',"databases":{')
+                database_index = 0
+                names = await database.mongodb.list_database_names()
+                for database_name in names:
+                    if database_name in {"admin", "config", "local"}:
+                        continue
+                    if database_index:
+                        output.write(",")
+                    database_index += 1
+                    output.write(json_util.dumps(database_name))
+                    output.write(":{")
+                    target = database.mongodb[database_name]
+                    collection_index = 0
+                    for collection_name in await target.list_collection_names():
+                        if collection_index:
+                            output.write(",")
+                        collection_index += 1
+                        output.write(json_util.dumps(collection_name))
+                        output.write(":[")
+                        document_index = 0
+                        async for document in target[collection_name].find({}).batch_size(250):
+                            if document_index:
+                                output.write(",")
+                            document_index += 1
+                            document_count += 1
+                            output.write(json_util.dumps(document))
+                        output.write("]")
+                    output.write("}")
+                output.write("}}")
+            size_bytes = os.path.getsize(file_path)
+            await upload_file_path(
+                file_path,
+                object_name,
+                content_type="application/gzip",
+            )
+            await mongo.update_one(
+                "backup_jobs",
+                {"_id": backup_id},
+                {
+                    "$set": {
+                        "size_bytes": size_bytes,
+                        "document_count": document_count,
+                        "status": "completed",
+                        "completed_at": datetime.now(timezone.utc),
+                    }
+                },
+            )
+            logger.info("System data backup completed")
+            return {
+                "object_name": object_name,
+                "size_bytes": size_bytes,
+                "document_count": document_count,
+                "status": "completed",
+            }
+        except Exception:
+            await mongo.update_one(
+                "backup_jobs",
+                {"_id": backup_id},
+                {
+                    "$set": {
+                        "status": "failed",
+                        "completed_at": datetime.now(timezone.utc),
+                    }
+                },
+            )
+            logger.exception("System data backup failed")
+            raise HTTPException(
+                status_code=503,
+                detail="Không thể hoàn thành bản sao lưu dữ liệu hệ thống",
+            )
+        finally:
+            if file_path and os.path.exists(file_path):
+                os.unlink(file_path)
 
     @staticmethod
     @log_logic_execution
@@ -139,7 +226,7 @@ class HealthService:
             db_status = "disconnected"
         redis_status = "disconnected"
         try:
-            await redis.get("ping_test")
+            await redis.ping()
             redis_status = "connected"
         except Exception:
             redis_status = "error"
@@ -148,16 +235,13 @@ class HealthService:
         if rag_url:
             try:
                 async with httpx.AsyncClient(timeout=2.0) as client:
-                    resp = await client.get(f"{rag_url}/health")
+                    resp = await client.get(f"{rag_url}/ready")
                     rag_status = "healthy" if resp.status_code == 200 else "degraded"
             except Exception:
                 rag_status = "unreachable"
         load_avg = os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0]
-        cpu_usage = (
-            "{min(load_avg[0] / os.cpu_count() * 100, 100):.1f}%"
-            if hasattr(os, "cpu_count")
-            else "{min(load_avg[0] * 10, 100):.1f}%"
-        )
+        cpu_count = os.cpu_count() or 1
+        cpu_usage = f"{min(load_avg[0] / cpu_count * 100, 100):.1f}%"
         return {
             "status": (
                 "healthy"
@@ -171,7 +255,10 @@ class HealthService:
                 "cache": redis_status,
                 "ai_agent": rag_status,
             },
-            "resources": {"cpu_load": cpu_usage, "uptime": "99.9%"},
+            "resources": {
+                "cpu_load": cpu_usage,
+                "uptime_seconds": int(time.monotonic() - PROCESS_STARTED_AT),
+            },
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 

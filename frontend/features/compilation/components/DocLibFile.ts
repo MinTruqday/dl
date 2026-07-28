@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibFile implements BlockTool {
+  static readonly feature = {
+    id: "DocLibFile",
+    title: "DocLib File",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private config: any;
@@ -12,7 +19,7 @@ export default class DocLibFile implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib File Attachment",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg>',
     };
   }
 
@@ -97,7 +104,7 @@ export default class DocLibFile implements BlockTool {
       download.href = this.data?.file?.url;
       download.target = "_blank";
       download.innerHTML =
-        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>';
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg>';
 
       card.appendChild(icon);
       card.appendChild(info);
@@ -116,7 +123,7 @@ export default class DocLibFile implements BlockTool {
       uploader.style.cursor = "pointer";
       uploader.style.color = "#475569";
       uploader.innerHTML = `
-              <div style="color: #94a3b8; margin-bottom: 12px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
+              <div style="color: #94a3b8; margin-bottom: 12px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg></div>
               <div style="font-weight: 500; font-size: 1.1em; margin-bottom: 4px;">Upload Attachment</div>
               <div style="font-size: 0.9em; opacity: 0.8;">Click to select file or Right click to paste URL</div>
           `;

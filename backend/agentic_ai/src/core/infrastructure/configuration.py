@@ -59,6 +59,8 @@ class Settings(BaseModel):
     DRM_URL: str = get_service_url("DRM")
     WEBSOCKET_URL: str = get_service_url("WEBSOCKET")
     AGENTIC_AI_DB_NAME: str = os.getenv("AGENTIC_AI_DB_NAME", "doclib_agentic_ai")
+    CONTENT_DB_NAME: str = os.getenv("CONTENT_DB_NAME", "doclib_content")
+    DRM_DB_NAME: str = os.getenv("DRM_DB_NAME", "doclib_drm")
     AGENT_FAILURE_RATE_THRESHOLD: float = float(os.getenv("AGENT_FAILURE_RATE_THRESHOLD", "0.15"))
     AGENT_TOOL_FAILURE_THRESHOLD: int = int(os.getenv("AGENT_TOOL_FAILURE_THRESHOLD", "3"))
     AGENT_SECURITY_VIOLATION_THRESHOLD: int = int(os.getenv("AGENT_SECURITY_VIOLATION_THRESHOLD", "5"))

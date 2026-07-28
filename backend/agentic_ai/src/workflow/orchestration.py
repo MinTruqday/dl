@@ -607,8 +607,9 @@ class OrchestrationWorkflow:
         }
 
         final_results = []
+        execution_id = str(uuid7())
         config = {
-            "configurable": {"thread_id": session_id},
+            "configurable": {"thread_id": f"{session_id}:{execution_id}"},
             "recursion_limit": settings.AGENT_RECURSION_LIMIT,
         }
 
@@ -645,6 +646,10 @@ class OrchestrationWorkflow:
                     elif node_name == "aggregator":
                         yield {"type": "status", "code": "synthesizing_response"}
 
+            checkpoint = await self.app.aget_state(config)
+            final_state = checkpoint.values
+            final_results = final_state.get("consolidated_results", [])
+            workflow_error = final_state.get("error", workflow_error)
             if workflow_error:
                 yield {"type": "error", "code": workflow_error}
                 return

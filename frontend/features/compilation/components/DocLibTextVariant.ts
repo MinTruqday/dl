@@ -1,6 +1,13 @@
 import { API } from "@editorjs/editorjs";
 
 export default class DocLibTextVariant {
+  static readonly feature = {
+    id: "DocLibTextVariant",
+    title: "DocLib TextVariant",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca8d3865d094b68e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 9,20 8,16 16,10 18,9 8,12"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private data: string;
   private wrapper: HTMLElement | null = null;
@@ -19,18 +26,18 @@ export default class DocLibTextVariant {
     this.variants = [
       {
         name: "call-out",
-        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 21h4v-2h-4v2zm2-17c-3.31 0-6 2.69-6 6 0 2.22 1.21 4.15 3 5.19V17c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1.81c1.79-1.04 3-2.97 3-5.19 0-3.31-2.69-6-6-6zm-1 12h2v-2h-2v2zm1-9c1.1 0 2 .9 2 2 0 1.11-.89 2-2 2s-2-.89-2-2c0-1.1.9-2 2-2z"/></svg>',
-        title: "Call-out",
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca8d3865d094b68e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 9,20 8,16 16,10 18,9 8,12"/></svg>',
+        title: "DocLib Call-out",
       },
       {
         name: "citation",
-        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-3L9 11v9h9v-9h-3.5zm-11 0h-3L1 11v9h9v-9H6.5z"/></svg>',
-        title: "Citation",
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca8d3865d094b68e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 9,20 8,16 16,10 18,9 8,12"/></svg>',
+        title: "DocLib Citation",
       },
       {
         name: "details",
-        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/></svg>',
-        title: "Details",
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca8d3865d094b68e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 9,20 8,16 16,10 18,9 8,12"/></svg>',
+        title: "DocLib Details",
       },
     ];
   }

@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibVerticalTimeline implements BlockTool {
+  static readonly feature = {
+    id: "DocLibVerticalTimeline",
+    title: "DocLib VerticalTimeline",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="140290341e5e5d54"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,6 12,5 17,13 12,20 15,7 6,9"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
@@ -17,7 +24,7 @@ export default class DocLibVerticalTimeline implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Vertical Timeline",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="140290341e5e5d54"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,6 12,5 17,13 12,20 15,7 6,9"/></svg>',
     };
   }
 
@@ -179,7 +186,7 @@ export default class DocLibVerticalTimeline implements BlockTool {
         this.data.events.push({
           id: this.mkId(),
           date: "New Date",
-          title: "New Event",
+          title: "DocLib New Event",
           description: "Event description",
           color: "#64748b",
         });

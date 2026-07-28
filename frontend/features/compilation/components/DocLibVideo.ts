@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibVideo implements BlockTool {
+  static readonly feature = {
+    id: "DocLibVideo",
+    title: "DocLib Video",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dd08117e66526aaf"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,12 4,11 4,18 8,9 18,5 8,12"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private config: any;
@@ -9,7 +16,7 @@ export default class DocLibVideo implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Video",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dd08117e66526aaf"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,12 4,11 4,18 8,9 18,5 8,12"/></svg>',
     };
   }
 
@@ -83,7 +90,7 @@ export default class DocLibVideo implements BlockTool {
       uploader.style.cursor = "pointer";
       uploader.style.color = "#475569";
       uploader.innerHTML = `
-              <div style="color: #94a3b8; margin-bottom: 12px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg></div>
+              <div style="color: #94a3b8; margin-bottom: 12px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dd08117e66526aaf"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,12 4,11 4,18 8,9 18,5 8,12"/></svg></div>
               <div style="font-weight: 500; font-size: 1.1em; margin-bottom: 4px;">Upload Video</div>
               <div style="font-size: 0.9em; opacity: 0.8;">Click to select file or Right click to paste URL</div>
           `;

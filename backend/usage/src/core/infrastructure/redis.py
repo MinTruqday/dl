@@ -104,6 +104,25 @@ class RedisAPIClient:
             logger.exception(f"Failed to execute atomic INCR/EXPIRE pipeline on Redis Cache for key {key}")
             raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
 
+    async def reserve_below_limit(self, key: str, limit: int, expire: int):
+        script = """
+local current = tonumber(redis.call('GET', KEYS[1]) or '0')
+local limit = tonumber(ARGV[1])
+if current >= limit then
+    return -1
+end
+local updated = redis.call('INCR', KEYS[1])
+if updated == 1 or redis.call('TTL', KEYS[1]) < 0 then
+    redis.call('EXPIRE', KEYS[1], ARGV[2])
+end
+return updated
+"""
+        try:
+            return await self.get_client().eval(script, 1, key, limit, expire)
+        except Exception:
+            logger.exception(f"Failed to reserve quota atomically for key {key}")
+            raise Exception("Dịch vụ bộ đệm tạm thời không khả dụng")
+
     async def aclose(self):
         if self._client:
             await self._client.aclose()

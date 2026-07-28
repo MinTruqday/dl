@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibSmartArtList implements BlockTool {
+  static readonly feature = {
+    id: "DocLibSmartArtList",
+    title: "DocLib SmartArtList",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b0eda2b9ccb224c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,18 18,13 7,20 4,12 10,15 4,10"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibSmartArtList implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib SmartArt List",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="6"></rect><rect x="3" y="11" width="18" height="6"></rect><rect x="3" y="19" width="18" height="6"></rect></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b0eda2b9ccb224c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,18 18,13 7,20 4,12 10,15 4,10"/></svg>',
     };
   }
 

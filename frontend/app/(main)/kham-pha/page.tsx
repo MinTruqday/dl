@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { getDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getTagsCategoriesAPI,
-  getAIRecommendationsAPI,
+  getPersonalizedRecommendationsAPI,
   smartSearchAPI,
 } from "@/features/content/services/discovery.service";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
@@ -28,7 +28,7 @@ export default function ExplorePage() {
     try {
       const [catData, recData] = await Promise.all([
         getTagsCategoriesAPI(),
-        getAIRecommendationsAPI(4),
+        getPersonalizedRecommendationsAPI(4),
       ]);
       setCategories(catData.data?.categories || catData.categories || []);
       setRecommendations(recData.data || recData || []);

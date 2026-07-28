@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibSubdocument implements BlockTool {
+  static readonly feature = {
+    id: "DocLibSubdocument",
+    title: "DocLib Subdocument",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16d29829b7363666"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,10 20,11 17,7 7,4 6,8 12,5"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibSubdocument implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Subdocument",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16d29829b7363666"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,10 20,11 17,7 7,4 6,8 12,5"/></svg>',
     };
   }
 
@@ -57,7 +64,7 @@ export default class DocLibSubdocument implements BlockTool {
     const info = document.createElement("div");
     info.classList.add("doclib-subdoc-info");
 
-    info.innerHTML += `<svg class="doclib-subdoc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`;
+    info.innerHTML += `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16d29829b7363666"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,10 20,11 17,7 7,4 6,8 12,5"/></svg>`;
 
     const name = document.createElement("div");
     name.classList.add("doclib-subdoc-name");

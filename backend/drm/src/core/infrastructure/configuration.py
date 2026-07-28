@@ -22,5 +22,7 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID", "")
     DRM_DB_NAME: str = os.getenv("DRM_DB_NAME", "doclib_drm")
     FINANCE_DB_NAME: str = os.getenv("FINANCE_DB_NAME", "doclib_finance")
+    CONTENT_DB_NAME: str = os.getenv("CONTENT_DB_NAME", "doclib_content")
+    HUMANITY_DB_NAME: str = os.getenv("HUMANITY_DB_NAME", "doclib_humanity")
 
 settings = Settings()

@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibTable implements BlockTool {
+  static readonly feature = {
+    id: "DocLibTable",
+    title: "DocLib Table",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eab225f6131a7830"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,12 7,12 6,13 5,18 19,8 6,6"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private data: { content: string[][] };
   private wrapper: HTMLElement | null = null;
@@ -9,7 +16,7 @@ export default class DocLibTable implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Table",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="9" x2="9" y2="21"></line><line x1="15" y1="9" x2="15" y2="21"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eab225f6131a7830"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,12 7,12 6,13 5,18 19,8 6,6"/></svg>',
     };
   }
 

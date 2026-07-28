@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibSignature implements BlockTool {
+  static readonly feature = {
+    id: "DocLibSignature",
+    title: "DocLib Signature",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b187d15a64b6154"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,11 10,8 17,11 16,20 18,17 8,12"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { dataUrl: string; label: string };
@@ -12,7 +19,7 @@ export default class DocLibSignature implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Signature",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l9.5-9.5 4 4L20 6.5"></path><path d="m6.5 17.5 3-3"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b187d15a64b6154"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,11 10,8 17,11 16,20 18,17 8,12"/></svg>',
     };
   }
 

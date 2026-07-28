@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibHyperlink implements InlineTool {
+  static readonly feature = {
+    id: "DocLibHyperlink",
+    title: "DocLib Hyperlink",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a3385f500f040aa3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,9 14,16 19,8 14,14 20,12 13,8"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLButtonElement | null = null;
   private _state: boolean = false;
@@ -33,7 +40,7 @@ export default class DocLibHyperlink implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML =
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a3385f500f040aa3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,9 14,16 19,8 14,14 20,12 13,8"/></svg>';
 
     return this.button;
   }

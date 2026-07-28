@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibSmartArtHierarchy implements BlockTool {
+  static readonly feature = {
+    id: "DocLibSmartArtHierarchy",
+    title: "DocLib SmartArtHierarchy",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3428308ba490c0c6"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,10 18,7 15,12 9,15 12,12 19,4"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib SmartArt Hierarchy",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="6" rx="1"/><rect x="2" y="15" width="6" height="6" rx="1"/><rect x="16" y="15" width="6" height="6" rx="1"/><path d="M12 9v3"/><path d="M5 15v-3h14v3"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3428308ba490c0c6"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,10 18,7 15,12 9,15 12,12 19,4"/></svg>',
     };
   }
 

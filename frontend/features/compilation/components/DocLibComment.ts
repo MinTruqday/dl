@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibComment implements InlineTool {
+  static readonly feature = {
+    id: "DocLibComment",
+    title: "DocLib Comment",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="94cb7ff0e1529dc6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,20 12,6 8,18 8,15 14,17 9,15"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLElement | null = null;
   private state: boolean = false;
@@ -21,7 +28,7 @@ export default class DocLibComment implements InlineTool {
     this.button = document.createElement("button");
     (this.button as HTMLButtonElement).type = "button";
     this.button.innerHTML =
-      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="94cb7ff0e1529dc6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,20 12,6 8,18 8,15 14,17 9,15"/></svg>';
     this.button.classList.add(this.api.styles.inlineToolButton);
 
     if (!document.getElementById("doclib-comment-styles")) {

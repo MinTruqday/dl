@@ -54,7 +54,10 @@ class FinetuneRepository:
 
     @classmethod
     async def find_document_context(cls, *args, **kwargs):
-        return await mongo.find_one("documents", *args, **kwargs)
+        return await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
+            *args,
+            **kwargs,
+        )
 
     @classmethod
     async def insert_one(cls, *args, **kwargs):

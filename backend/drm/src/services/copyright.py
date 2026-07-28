@@ -32,7 +32,7 @@ class CopyrightService:
     @staticmethod
     @log_logic_execution
     async def update_drm_settings(document_id: str, disable_copy: bool, hide_from_search: bool, current_user) -> dict:
-        document = await database.mongodb["doclib_content"]["documents"].find_one(
+        document = await database.mongodb[settings.CONTENT_DB_NAME]["documents"].find_one(
             {"_id": document_id},
             {"creator_id": 1, "coauthors": 1},
         )

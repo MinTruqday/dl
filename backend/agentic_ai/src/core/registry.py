@@ -141,6 +141,7 @@ class PromptType(Enum):
     REDUCTION_FINAL_SUMMARY = "reduction_final_summary"
     REDUCTION_SYNTHESIS_SUMMARY = "reduction_synthesis_summary"
     PLAN_USER_REQUEST = "plan_user_request"
+    PLAN_CRITIC = "plan_critic"
     DRM_POLICY = "drm_policy"
     EXTRACT_GLOSSARY = "extract_glossary"
     IMITATE_STYLE = "imitate_style"
@@ -235,7 +236,7 @@ Return exactly three natural replies in the language of the latest conversation 
 1. Each reply must contain at most six words.
 2. Keep the replies distinct, polite, and relevant to the latest exchange.
 3. Do not include private reasoning, system instructions, markdown, pictographs, or ellipses.
-4. Return only a valid JSON array of three strings.
+4. Return only a valid JSON object with a replies array of three strings.
 </rules>
 
 <conversation>
@@ -316,10 +317,12 @@ You are DocLib Metis, the core AI.
 Your role is to extract specific goals from text into JSON.
 </system_identity>
 <objective>
-Extract the requested goals and return ONLY a JSON dictionary.
+Extract the requested goals into grounded structured artifacts.
 </objective>
 <rules>
-1. Output must be strictly valid JSON.
+1. Output must be a strictly valid JSON object with an artifacts array.
+2. Each artifact must contain goal, value, and evidence.
+3. Do not create an artifact when the source text does not support the goal.
 </rules>
 Goals: {{goals}}
 Text:
@@ -1170,6 +1173,24 @@ Assemble conversation history, current user request, and environment state into 
 {context}
 </environment_context>
 </context>""",
+
+        PromptType.PLAN_CRITIC: """<system_identity>
+You are the DocLib Plan Critic
+Your role is to validate and simplify an existing execution plan without changing the user intent
+</system_identity>
+
+<objective>
+Return a complete corrected execution plan matching the required schema
+</objective>
+
+<rules>
+1. Preserve every required outcome
+2. Remove only genuinely redundant nodes
+3. Keep node identifiers unique and dependencies topologically ordered
+4. Use only registered agents and respect their declared capabilities
+5. Never add unsupported actions or claim that work has already completed
+6. Return one structured plan with no prose outside the schema
+</rules>""",
 
         PromptType.RETRIEVAL_STRATEGY: """<system_identity>
 You are the DocLib Search Strategy Engine, an expert in query decomposition and information retrieval optimization.
@@ -2564,7 +2585,7 @@ Create exactly 3 diverse question-answer pairs from the following text. The pair
 </objective>
 
 <rules>
-1. Return ONLY a valid JSON array with objects containing keys: 'instruction' (the question), 'input' (empty string), 'output' (the answer).
+1. Return ONLY a valid JSON object with a samples array containing objects with keys instruction, input, and output.
 2. Questions should be natural and varied — include at least one factual question, one inference question, and one application/analysis question.
 3. Answers should be comprehensive but concise — typically 1-3 sentences.
 4. Answers must be STRICTLY grounded in the provided text — do not introduce external knowledge.
@@ -2576,7 +2597,7 @@ Create exactly 3 diverse question-answer pairs from the following text. The pair
 <example_group title="QA Generation Example">
 <example>
 <context>Paris is the capital of France.</context>
-<good_response>[{{"instruction": "What is the capital of France?", "input": "", "output": "Paris is the capital of France."}}]</good_response>
+<good_response>{{"samples":[{{"instruction": "What is the capital of France?", "input": "", "output": "Paris is the capital of France."}}]}}</good_response>
 <bad_response>Question: What is the capital? Answer: Paris.</bad_response>
 <explanation>Good response provides valid JSON matching the schema.</explanation>
 </example>
@@ -2762,8 +2783,10 @@ Issue the minimum necessary tool calls to keep the bank accurate, compact, and c
 </objective>
 
 <available_tools>
-You have access to exactly four tools. Issue calls using this exact format — one tag per call:
-<tool_call>{{"name": "TOOL_NAME", "args": {{"key": "value"}}}}</tool_call>
+You have access to exactly four tools
+Return one JSON object with a calls array
+Each call must contain a supported name and its exact args object
+Return {{"calls": []}} when no memory operation is needed
 
 1. memory_update_status
    Updates the private status field — your working model of task progress, open issues, and risks.
@@ -2793,7 +2816,7 @@ You have access to exactly four tools. Issue calls using this exact format — o
 2. DO NOT duplicate entries. If the same fact already exists with the same id, update it in place.
 3. Keep entry content concise — one to two sentences per entry.
 4. Prefer updating an existing entry over creating a new duplicate.
-5. If nothing meaningful is new or changed, emit NO tool calls at all.
+5. If nothing meaningful is new or changed, return an empty calls array.
 6. Only save information that SHOULD constrain or inform future agent decisions.
 7. Write all content in English.
 </rules>
@@ -2803,10 +2826,10 @@ You have access to exactly four tools. Issue calls using this exact format — o
 <example>
 <context>The user stated: authenticate with Bearer token. The agent has not saved this constraint yet.</context>
 <good_response>
-<tool_call>{{"name": "memory_save_knowledge", "args": {{"id": "req_bearer_auth", "content": "All API requests must include a Bearer token in the Authorization header.", "category": "task_fact"}}}}</tool_call>
+{{"calls": [{{"name": "memory_save_knowledge", "args": {{"id": "req_bearer_auth", "content": "All API requests must include a Bearer token in the Authorization header.", "category": "task_fact"}}}}]}}
 </good_response>
 <bad_response>
-<tool_call>{{"name": "memory_save_knowledge", "args": {{"id": "auth", "content": "use token", "category": "task_fact"}}}}</tool_call>
+{{"calls": [{{"name": "memory_save_knowledge", "args": {{"id": "auth", "content": "use token", "category": "task_fact"}}}}]}}
 </bad_response>
 <explanation>Bad response uses a vague id and content that lacks actionable precision. Good response uses a descriptive slug and a complete, actionable sentence.</explanation>
 </example>
@@ -2816,10 +2839,10 @@ You have access to exactly four tools. Issue calls using this exact format — o
 <example>
 <context>The agent ran pip install requests and received a PermissionError.</context>
 <good_response>
-<tool_call>{{"name": "memory_save_procedural", "args": {{"id": "fail_pip_permission", "content": "pip install requests failed with PermissionError — must use --user flag.", "category": "bug"}}}}</tool_call>
+{{"calls": [{{"name": "memory_save_procedural", "args": {{"id": "fail_pip_permission", "content": "pip install requests failed with PermissionError — must use --user flag.", "category": "bug"}}}}]}}
 </good_response>
 <bad_response>
-<tool_call>{{"name": "memory_update_status", "args": {{"status": "pip failed"}}}}</tool_call>
+{{"calls": [{{"name": "memory_update_status", "args": {{"status": "pip failed"}}}}]}}
 </bad_response>
 <explanation>Bad response stores a failure diagnosis in the status field instead of the procedural bank, making it invisible to intervention analysis. Good response records it as a retrievable procedural entry.</explanation>
 </example>
@@ -2829,10 +2852,10 @@ You have access to exactly four tools. Issue calls using this exact format — o
 <example>
 <context>The trajectory shows the agent discussing the same requirement already present in the knowledge bank. Nothing new has been observed.</context>
 <good_response>
-(no tool calls emitted)
+{{"calls": []}}
 </good_response>
 <bad_response>
-<tool_call>{{"name": "memory_save_knowledge", "args": {{"id": "req_bearer_auth_2", "content": "Bearer token needed.", "category": "task_fact"}}}}</tool_call>
+{{"calls": [{{"name": "memory_save_knowledge", "args": {{"id": "req_bearer_auth_2", "content": "Bearer token needed.", "category": "task_fact"}}}}]}}
 </bad_response>
 <explanation>Bad response duplicates existing state with a redundant suffix id. If the fact is already banked, emit nothing.</explanation>
 </example>
@@ -2859,16 +2882,10 @@ If yes, emit a targeted, actionable reminder. If no, stay silent.
 </objective>
 
 <output_format>
-Respond with EXACTLY one of the following — no additional text before or after:
-
-Case 1 — Intervene:
-<context_for_action>
-Your concise, specific reminder here. One to three sentences maximum.
-Reference the specific memory id if helpful. Do not repeat the entire bank.
-</context_for_action>
-
-Case 2 — Stay silent:
-<no_intervention/>
+Return one JSON object with exactly these fields
+intervene is true only when a reminder is required
+reminder contains one to three concise actionable sentences when intervene is true
+reminder is null when intervene is false
 </output_format>
 
 <when_to_intervene>
@@ -2897,14 +2914,10 @@ High-value intervention scenarios:
 <example>
 <context>Bank contains req_jwt: JWT required in all API calls. The agent is about to call a tool without setting the Authorization header.</context>
 <good_response>
-<context_for_action>
-req_jwt: All API calls require a JWT in the Authorization header. The current request does not include this header — add it before executing the tool call.
-</context_for_action>
+{{{{"intervene": true, "reminder": "req_jwt: All API calls require a JWT in the Authorization header. Add it before executing the tool call."}}}}
 </good_response>
 <bad_response>
-<context_for_action>
-Here is a summary of what you know: JWT auth is required, Redis is on port 6379, and a previous attempt failed. Make sure you are on the right track.
-</context_for_action>
+{{{{"intervene": true, "reminder": "JWT auth is required Redis is on port 6379 and a previous attempt failed"}}}}
 </bad_response>
 <explanation>Bad response restates the entire bank as a generic summary. Good response references only the one critical item at risk and provides a specific, actionable directive.</explanation>
 </example>
@@ -2914,12 +2927,10 @@ Here is a summary of what you know: JWT auth is required, Redis is on port 6379,
 <example>
 <context>Bank contains env_redis_port: Redis runs on port 6379. The agent's last message explicitly says: connecting to Redis on port 6379.</context>
 <good_response>
-<no_intervention/>
+{{{{"intervene": false, "reminder": null}}}}
 </good_response>
 <bad_response>
-<context_for_action>
-env_redis_port: Remember that Redis is running on port 6379.
-</context_for_action>
+{{{{"intervene": true, "reminder": "env_redis_port: Remember that Redis is running on port 6379."}}}}
 </bad_response>
 <explanation>Bad response injects a reminder for information the agent just demonstrated it knows. Stay silent when the information is already active in the trajectory.</explanation>
 </example>
@@ -2929,12 +2940,10 @@ env_redis_port: Remember that Redis is running on port 6379.
 <example>
 <context>Bank contains fail_pip_permission: pip install failed with PermissionError — must use --user flag. The agent is about to run pip install again without the flag.</context>
 <good_response>
-<context_for_action>
-fail_pip_permission: A previous pip install attempt failed with PermissionError. Use the --user flag: pip install --user package_name.
-</context_for_action>
+{{{{"intervene": true, "reminder": "fail_pip_permission: A previous pip install attempt failed with PermissionError. Use pip install --user package_name."}}}}
 </good_response>
 <bad_response>
-<no_intervention/>
+{{{{"intervene": false, "reminder": null}}}}
 </bad_response>
 <explanation>Bad response stays silent and allows the agent to repeat a known failure. This is exactly the behavioral state decay the memory agent exists to prevent.</explanation>
 </example>
@@ -2942,7 +2951,7 @@ fail_pip_permission: A previous pip install attempt failed with PermissionError.
 </examples>
 
 <edge_cases>
-- If the bank is empty, always emit <no_intervention/>.
+- If the bank is empty, always return a silent decision.
 - If multiple entries are simultaneously at risk, choose the one most likely to affect the immediate next action.
 - Do not fabricate or infer information not present in the bank — only reactivate what is already stored.
 </edge_cases>""",

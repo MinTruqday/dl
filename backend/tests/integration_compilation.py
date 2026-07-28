@@ -125,6 +125,51 @@ async def main():
         )
 
         assert call("GET", "/ready")[0] == 200
+        assert call("GET", "/soan-thao/latex/ban-nhap")[0] == 401
+        status, payload, media = call(
+            "GET",
+            "/soan-thao/latex/ban-nhap",
+            owner_token,
+        )
+        assert status == 200 and payload["data"]["content"] is None, payload
+        status, payload, media = call(
+            "POST",
+            "/soan-thao/latex/tu-dong-luu",
+            owner_token,
+            {"content": latex},
+        )
+        assert status == 200, payload
+        status, payload, media = call(
+            "GET",
+            "/soan-thao/latex/ban-nhap",
+            owner_token,
+        )
+        assert status == 200 and payload["data"]["content"] == latex, payload
+        updated_latex = latex.replace("integration", "updated integration")
+        status, payload, media = call(
+            "POST",
+            "/soan-thao/latex/tu-dong-luu",
+            owner_token,
+            {"content": updated_latex},
+        )
+        assert status == 200, payload
+        status, payload, media = call(
+            "GET",
+            "/soan-thao/latex/ban-nhap",
+            owner_token,
+        )
+        assert status == 200 and payload["data"]["content"] == updated_latex, payload
+        assert call(
+            "DELETE",
+            "/soan-thao/latex/don-dep",
+            owner_token,
+        )[0] == 200
+        status, payload, media = call(
+            "GET",
+            "/soan-thao/latex/ban-nhap",
+            owner_token,
+        )
+        assert status == 200 and payload["data"]["content"] is None, payload
         from src.engines.editorjs import EditorjsEngine
         assert EditorjsEngine._safe_image_url("http://mongodb:27017/private") == ""
         assert EditorjsEngine._safe_link_url('javascript:alert("unsafe")') == ""
@@ -138,6 +183,21 @@ async def main():
             }
         )
         assert 'alt="unsafe" onerror=' not in rendered
+        field_rendered = EditorjsEngine._render_block(
+            {"type": "field", "data": {"code": "PAGE_COUNT"}}
+        )
+        assert "PAGE_COUNT" in field_rendered
+        ole_rendered = EditorjsEngine._render_block(
+            {"type": "oleObject", "data": {"objectId": "object-42"}}
+        )
+        assert "object-42" in ole_rendered
+        sparkline_rendered = EditorjsEngine._render_block(
+            {"type": "sparklines", "data": {"values": "1, 4, 2, 8"}}
+        )
+        assert "<polyline" in sparkline_rendered and "points=" in sparkline_rendered
+        assert EditorjsEngine._render_block(
+            {"type": "sparklines", "data": {"values": "invalid"}}
+        ) == ""
         assert call("POST", "/soan-thao/latex/bien-dich", body={"content": latex})[0] == 401
         status, payload, media = call(
             "POST",
@@ -190,6 +250,31 @@ async def main():
         assert status == 200 and payload["status"] == 200, payload
         stored = await content.documents.find_one({"_id": DOCUMENT_ID})
         assert stored["draft_content"]["blocks"][0]["id"] == "heading"
+        editor_with_word_settings = json.loads(editor)
+        editor_with_word_settings["wordSettings"] = {
+            "commands": {
+                "DocLibCopilotExplain": {
+                    "mode": "CopilotExplain",
+                    "category": "ai",
+                    "appliedAt": 1,
+                    "enabled": True,
+                }
+            }
+        }
+        status, payload, media = call(
+            "POST",
+            f"/soan-thao/{DOCUMENT_ID}/tu-dong-luu",
+            owner_token,
+            {"content": editor_with_word_settings},
+        )
+        assert status == 200 and payload["status"] == 200, payload
+        stored = await content.documents.find_one({"_id": DOCUMENT_ID})
+        assert (
+            stored["draft_content"]["wordSettings"]["commands"][
+                "DocLibCopilotExplain"
+            ]["enabled"]
+            is True
+        )
 
         status, suggestion, media = call(
             "POST",

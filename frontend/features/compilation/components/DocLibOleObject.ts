@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibOleObject implements BlockTool {
+  static readonly feature = {
+    id: "DocLibOleObject",
+    title: "DocLib OleObject",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="06b45609fcf8bd9c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,14 5,13 18,14 6,7 6,15 8,8"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { objectId: string };
@@ -8,7 +15,7 @@ export default class DocLibOleObject implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib OLE Object",
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>'
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="06b45609fcf8bd9c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,14 5,13 18,14 6,7 6,15 8,8"/></svg>'
     };
   }
 
@@ -21,17 +28,17 @@ export default class DocLibOleObject implements BlockTool {
     this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block, "doclib-ole-object");
     this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data.objectId;
+    this.wrapper.textContent = this.data.objectId;
     this.wrapper.dataset.placeholder = "OLE Object ID";
 
     this.wrapper.addEventListener("input", () => {
-      this.data.objectId = this.wrapper!.innerHTML;
+      this.data.objectId = this.wrapper!.textContent || "";
     });
 
     return this.wrapper;
   }
 
   save(blockContent: HTMLElement) {
-    return { objectId: blockContent.innerHTML };
+    return { objectId: blockContent.textContent || "" };
   }
 }

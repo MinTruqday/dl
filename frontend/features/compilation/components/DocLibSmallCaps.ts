@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibSmallCaps implements InlineTool {
+  static readonly feature = {
+    id: "DocLibSmallCaps",
+    title: "DocLib SmallCaps",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bc9bffe0e1c5f856"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,6 4,7 8,14 14,5 15,7 13,12"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   static get isInline() {
     return true;
   }
@@ -21,7 +28,7 @@ export default class DocLibSmallCaps implements InlineTool {
     this.button = document.createElement("button");
     this.button.type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
-    this.button.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 18V6H13V8H7V11H12V13H7V18H5ZM16 18V10H22V12H18V14H21V16H18V18H16Z" fill="currentColor"/></svg>`;
+    this.button.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bc9bffe0e1c5f856"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,6 4,7 8,14 14,5 15,7 13,12"/></svg>`;
     return this.button;
   }
 
@@ -38,6 +45,7 @@ export default class DocLibSmallCaps implements InlineTool {
   wrap(range: Range) {
     const el = document.createElement(this.tag);
     el.classList.add("DocLibSmallCaps");
+    el.style.fontVariantCaps = "small-caps";
     el.appendChild(range.extractContents());
     range.insertNode(el);
     this.api.selection.expandToTag(el);

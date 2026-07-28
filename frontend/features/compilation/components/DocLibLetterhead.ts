@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibLetterhead implements BlockTool {
+  static readonly feature = {
+    id: "DocLibLetterhead",
+    title: "DocLib Letterhead",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11908698bcde9d29"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,12 19,20 5,5 8,11 6,9 17,9"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibLetterhead implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Letterhead",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11908698bcde9d29"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,12 19,20 5,5 8,11 6,9 17,9"/></svg>',
     };
   }
 

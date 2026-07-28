@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibBreakLine implements BlockTool {
+  static readonly feature = {
+    id: "DocLibBreakLine",
+    title: "DocLib BreakLine",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c3660dc53f17d7d7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,4 17,14 16,10 15,15 14,11 5,14"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: any;
@@ -8,7 +15,7 @@ export default class DocLibBreakLine implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Break Line",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c3660dc53f17d7d7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,4 17,14 16,10 15,15 14,11 5,14"/></svg>',
     };
   }
 

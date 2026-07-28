@@ -1,6 +1,7 @@
 import hashlib
+import hmac
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import HTTPException
 from src.core.infrastructure.configuration import settings
@@ -15,18 +16,36 @@ class ShareService:
         if not item:
             raise HTTPException(status_code=404, detail="Không tìm thấy tệp cần chia sẻ")
         token = f"share_{secrets.token_urlsafe(16)}"
-        pass_hash = hashlib.sha256(password.encode()).hexdigest() if password else None
+        password_salt = secrets.token_bytes(16) if password else None
+        password_hash = (
+            hashlib.scrypt(
+                password.encode(),
+                salt=password_salt,
+                n=16384,
+                r=8,
+                p=1,
+            ).hex()
+            if password and password_salt
+            else None
+        )
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
         share_doc = {
             "_id": token,
             "item_id": item_id,
             "owner_id": owner_id,
-            "password_hash": pass_hash,
+            "password_hash": password_hash,
+            "password_salt": password_salt.hex() if password_salt else None,
             "has_password": bool(password),
             "expires_in_hours": expires_in_hours,
             "created_at": datetime.now(timezone.utc),
+            "expires_at": expires_at,
         }
         await database.mongodb[settings.CLOUD_DB_NAME].storage_share_links.insert_one(share_doc)
-        return {"share_token": token, "has_password": bool(password), "expires_in_hours": expires_in_hours}
+        return {
+            "share_token": token,
+            "has_password": bool(password),
+            "expires_at": expires_at,
+        }
 
     @staticmethod
     @log_logic_execution
@@ -34,10 +53,28 @@ class ShareService:
         link = await database.mongodb[settings.CLOUD_DB_NAME].storage_share_links.find_one({"_id": token})
         if not link:
             raise HTTPException(status_code=404, detail="Đường dẫn chia sẻ không tồn tại hoặc đã bị hủy")
+        expires_at = link.get("expires_at")
+        if isinstance(expires_at, datetime) and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if not isinstance(expires_at, datetime) or expires_at <= datetime.now(timezone.utc):
+            await database.mongodb[settings.CLOUD_DB_NAME].storage_share_links.delete_one(
+                {"_id": token}
+            )
+            raise HTTPException(status_code=410, detail="Đường dẫn chia sẻ đã hết hạn")
         if link.get("has_password"):
             if not password:
                 raise HTTPException(status_code=401, detail="Yêu cầu nhập mật khẩu bảo vệ để truy cập")
-            if hashlib.sha256(password.encode()).hexdigest() != link.get("password_hash"):
+            try:
+                candidate = hashlib.scrypt(
+                    password.encode(),
+                    salt=bytes.fromhex(link["password_salt"]),
+                    n=16384,
+                    r=8,
+                    p=1,
+                ).hex()
+            except (KeyError, TypeError, ValueError):
+                raise HTTPException(status_code=410, detail="Đường dẫn chia sẻ không còn hợp lệ")
+            if not hmac.compare_digest(candidate, link.get("password_hash", "")):
                 raise HTTPException(status_code=403, detail="Mật khẩu truy cập không chính xác")
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({"_id": link["item_id"]})
         if not item:

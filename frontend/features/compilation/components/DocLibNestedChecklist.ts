@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibNestedChecklist implements BlockTool {
+  static readonly feature = {
+    id: "DocLibNestedChecklist",
+    title: "DocLib NestedChecklist",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7fd01601be5a94d0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,8 9,5 7,9 16,8 7,15 7,14"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { items: { text: string; checked: boolean; depth: number }[] };
@@ -8,7 +15,7 @@ export default class DocLibNestedChecklist implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Checklist",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7fd01601be5a94d0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,8 9,5 7,9 16,8 7,15 7,14"/></svg>',
     };
   }
 

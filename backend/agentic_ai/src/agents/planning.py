@@ -6,8 +6,6 @@ from langchain_core.output_parsers import JsonOutputParser
 from loguru import logger
 from src.schemas.planning import ExecutionPlan
 from src.utils.huggingface import HFInferenceChat
-from src.utils.structured_output import extract_json_value
-
 from src.core.infrastructure.configuration import settings
 from src.memory.memo import memo_manager
 
@@ -57,7 +55,14 @@ class PlanAgent:
         )
         
         user_id = req_data.get("user_id", "guest")
-        long_term_memory = await memo_manager.get_memories(user_id=user_id, query=req_data.get("query", ""))
+        try:
+            long_term_memory = await memo_manager.get_memories(
+                user_id=user_id,
+                query=req_data.get("query", ""),
+            )
+        except Exception:
+            logger.exception("Planner memory retrieval failed")
+            long_term_memory = ""
         
         query = req_data.get("query", "")
         context_parts = [
@@ -83,55 +88,24 @@ class PlanAgent:
                 f"{memory_context[:12000]}"
             )
 
-        try:
-            format_instructions = self.parser.get_format_instructions()
-            messages = [
-                SystemMessage(
-                    content=system_prompt.format(
-                        format_instructions=format_instructions
-                    )
-                ),
-                HumanMessage(content=prompt),
-            ]
-
-            try:
-                parsed_model = await self.structured_llm.ainvoke(messages)
-                parsed_result = (
-                    parsed_model.model_dump()
-                    if hasattr(parsed_model, "model_dump")
-                    else parsed_model.dict()
+        format_instructions = self.parser.get_format_instructions()
+        messages = [
+            SystemMessage(
+                content=system_prompt.format(
+                    format_instructions=format_instructions
                 )
-            except Exception:
-                logger.exception("Plan model invocation failed")
-                parsed_result = {"steps": []}
+            ),
+            HumanMessage(content=prompt),
+        ]
 
-            nodes = parsed_result.get("nodes", [])
-            valid_nodes = []
-            for n in nodes:
-                if isinstance(n, dict):
-                    valid_nodes.append({
-                        "id": n.get("id", f"node_{len(valid_nodes)}"),
-                        "agent": n.get("agent", "Knowledge"),
-                        "task": n.get("task", "Analyze"),
-                        "dependencies": n.get("dependencies", []),
-                        "specialization": n.get("specialization"),
-                    })
-
-            if not valid_nodes:
-                valid_nodes = [
-                    {
-                        "id": "fallback_1",
-                        "agent": "Reasoning",
-                        "task": "Provide a safe response in the user's language without unsupported claims",
-                        "dependencies": []
-                    }
-                ]
-
-            yield {"type": "plan", "nodes": valid_nodes}
-
+        try:
+            parsed_model = await self.structured_llm.ainvoke(messages)
         except Exception:
-            logger.exception("Plan generation error")
-            yield {"type": "plan", "nodes": [{"id": "fallback", "agent": "Knowledge", "task": "Provide a safe failure response in the user's language", "dependencies": []}]}
+            logger.exception("Plan model invocation failed")
+            yield {"type": "error", "code": "planning_model_failed"}
+            return
+        parsed_result = parsed_model.model_dump()
+        yield {"type": "plan", "nodes": parsed_result["nodes"]}
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         import hashlib
@@ -142,6 +116,8 @@ class PlanAgent:
             async for chunk in self.stream_plan(req_data):
                 if chunk["type"] == "plan":
                     nodes = chunk["nodes"]
+                elif chunk["type"] == "error":
+                    raise RuntimeError(chunk["code"])
             return nodes
 
         query = req_data.get("query", "")
@@ -162,8 +138,13 @@ class PlanAgent:
             try:
                 cached = await self._redis.get(cache_key)
                 if cached:
+                    cached_nodes = _json.loads(cached)
+                    validated = ExecutionPlan(
+                        reasoning="Validated cached execution plan",
+                        nodes=cached_nodes,
+                    )
                     logger.info("Planner cache hit for query")
-                    return _json.loads(cached)
+                    return [node.model_dump() for node in validated.nodes]
             except Exception:
                 logger.exception("Planner cache read failed")
 
@@ -171,6 +152,8 @@ class PlanAgent:
         async for chunk in self.stream_plan(req_data):
             if chunk["type"] == "plan":
                 nodes = chunk["nodes"]
+            elif chunk["type"] == "error":
+                raise RuntimeError(chunk["code"])
                 
         nodes = await critic.review_plan(nodes)
 
@@ -210,7 +193,7 @@ class PlanAgent:
             )
         except Exception:
             logger.exception("Replanning failed")
-            return current_plan
+            raise RuntimeError("replanning_model_failed")
 
 class CriticAgent:
     """
@@ -232,18 +215,16 @@ class CriticAgent:
         logger.info("Critic Agent is reviewing the generated plan")
         try:
             import json
+            from src.core.registry import PromptType, registry
+
             messages = [
-                SystemMessage(content="You are a Critic Agent. Review the provided execution plan JSON. Optimize it by combining redundant steps or fixing logical flaws. Output ONLY valid JSON containing the revised list of nodes. Do not wrap in markdown unless it's a standard json block."),
+                SystemMessage(content=registry.get(PromptType.PLAN_CRITIC)),
                 HumanMessage(content=json.dumps(nodes, ensure_ascii=False))
             ]
-            response = await self.llm.ainvoke(messages)
-            reviewed_nodes = extract_json_value(response.content)
-            if isinstance(reviewed_nodes, list) and all(isinstance(n, dict) for n in reviewed_nodes):
-                logger.info("Critic Agent approved and optimized the plan")
-                return reviewed_nodes
-            else:
-                logger.warning("Critic Agent returned invalid structure, falling back to original plan")
-                return nodes
+            structured_llm = self.llm.with_structured_output(ExecutionPlan)
+            response = await structured_llm.ainvoke(messages)
+            logger.info("Critic Agent approved and optimized the plan")
+            return [node.model_dump() for node in response.nodes]
         except Exception:
             logger.exception("Critic Agent review failed, using original plan")
             return nodes

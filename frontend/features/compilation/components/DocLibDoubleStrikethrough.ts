@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibDoubleStrikethrough implements InlineTool {
+  static readonly feature = {
+    id: "DocLibDoubleStrikethrough",
+    title: "DocLib DoubleStrikethrough",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73d112c156899a38"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,9 5,10 5,5 5,9 4,18 17,19"/></svg>',
+    origin: "microsoft-word",
+  } as const;
+
   static get isInline() {
     return true;
   }
@@ -21,7 +28,7 @@ export default class DocLibDoubleStrikethrough implements InlineTool {
     this.button = document.createElement("button");
     this.button.type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
-    this.button.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 10H19M5 14H19M8 4L16 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    this.button.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73d112c156899a38"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,9 5,10 5,5 5,9 4,18 17,19"/></svg>`;
     return this.button;
   }
 
@@ -38,6 +45,8 @@ export default class DocLibDoubleStrikethrough implements InlineTool {
   wrap(range: Range) {
     const el = document.createElement(this.tag);
     el.classList.add("DocLibDoubleStrikethrough");
+    el.style.textDecorationLine = "line-through";
+    el.style.textDecorationStyle = "double";
     el.appendChild(range.extractContents());
     range.insertNode(el);
     this.api.selection.expandToTag(el);

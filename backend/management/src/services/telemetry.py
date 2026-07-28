@@ -1,5 +1,6 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
+from src.core.infrastructure.redis import redis
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
@@ -79,9 +80,20 @@ class TelemetryService:
             mongo_status = "healthy"
         except Exception:
             mongo_status = "unhealthy"
+        try:
+            await redis.ping()
+            redis_status = "healthy"
+        except Exception:
+            redis_status = "unhealthy"
+        status = (
+            "healthy"
+            if mongo_status == "healthy" and redis_status == "healthy"
+            else "degraded"
+        )
         return {
-            "status": "online",
+            "status": status,
             "mongodb": mongo_status,
+            "redis": redis_status,
             "timestamp": datetime.now(timezone.utc),
         }
 

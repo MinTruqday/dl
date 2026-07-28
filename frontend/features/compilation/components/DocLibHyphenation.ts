@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibHyphenation implements BlockTool {
+  static readonly feature = {
+    id: "DocLibHyphenation",
+    title: "DocLib Hyphenation",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89d2cc9be884da75"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,10 4,6 15,17 18,19 8,16 14,6"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibHyphenation implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Hyphenation",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89d2cc9be884da75"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,10 4,6 15,17 18,19 8,16 14,6"/></svg>',
     };
   }
 

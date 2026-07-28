@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibLineNumbers implements BlockTool {
+  static readonly feature = {
+    id: "DocLibLineNumbers",
+    title: "DocLib LineNumbers",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b32985390069eb6c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,11 18,10 4,7 18,10 6,19 19,6"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibLineNumbers implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Line Numbers",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="6" x2="20" y2="6"/><line x1="12" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/><path d="M4 6h4"/><path d="M4 12h4"/><path d="M4 18h4"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b32985390069eb6c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,11 18,10 4,7 18,10 6,19 19,6"/></svg>',
     };
   }
 

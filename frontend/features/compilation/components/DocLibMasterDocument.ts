@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibMasterDocument implements BlockTool {
+  static readonly feature = {
+    id: "DocLibMasterDocument",
+    title: "DocLib MasterDocument",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e2ab138a8092d41"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,12 11,9 19,13 15,18 18,6 19,10"/></svg>',
+    origin: "microsoft-word",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibMasterDocument implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Master Document",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><rect x="2" y="11" width="10" height="7" rx="1"></rect></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e2ab138a8092d41"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,12 11,9 19,13 15,18 18,6 19,10"/></svg>',
     };
   }
 

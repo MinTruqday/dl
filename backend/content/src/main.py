@@ -63,6 +63,10 @@ async def readiness_check():
     try:
         await database.mongodb.admin.command("ping")
         await redis.ping()
+        from src.core.infrastructure.mq import mq
+
+        if not await mq.health_check():
+            raise RuntimeError("RabbitMQ is unavailable")
     except Exception:
         logger.exception("Content readiness check failed")
         return JSONResponse(status_code=503, content={"status": "not_ready"})

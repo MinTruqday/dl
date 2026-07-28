@@ -1,37 +1,91 @@
-import { API, BlockTool } from "@editorjs/editorjs";
+import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibAccessibilityChecker implements BlockTool {
-  private api: API;
-  private wrapper: HTMLElement | null = null;
-  private data: { result: string };
+  static readonly feature = {
+    id: "DocLibAccessibilityChecker",
+    title: "DocLib AccessibilityChecker",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c95124b952dbca7"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,17 5,11 17,15 5,18 12,12 11,17"/></svg>',
+    origin: "microsoft-word",
+  } as const;
 
   static get toolbox() {
     return {
       title: "DocLib Accessibility Checker",
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="16" cy="4" r="1"/><path d="m18 19 1-7-6 1"/><path d="m5 8 3-3 5.5 3-2.36 3.5"/><path d="M4.24 14.5a5 5 0 0 0 6.88 6"/><path d="M13.76 17.5a5 5 0 0 0-6.88-6"/></svg>'
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c95124b952dbca7"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,17 5,11 17,15 5,18 12,12 11,17"/></svg>',
     };
   }
 
-  constructor({ api, data }: { api: API; data: any }) {
+  static get isReadOnlySupported() {
+    return true;
+  }
+
+  readonly id = "DocLibAccessibilityChecker";
+  readonly title = "DocLib Accessibility Checker";
+  readonly category = "review" as const;
+  readonly mode = "AccessibilityChecker";
+  readonly requiresSelection = false;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
+
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
-    this.data = { result: data.result || "" };
+    this.data = data || {};
   }
 
   render() {
     this.wrapper = document.createElement("div");
-    this.wrapper.classList.add(this.api.styles.block, "doclib-accessibility");
-    this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data.result;
-    this.wrapper.dataset.placeholder = "Accessibility status";
-
-    this.wrapper.addEventListener("input", () => {
-      this.data.result = this.wrapper!.innerHTML;
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
     });
-
+    this.wrapper.appendChild(button);
     return this.wrapper;
   }
 
   save(blockContent: HTMLElement) {
-    return { result: blockContent.innerHTML };
+    return {
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
+    };
+  }
+
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    const root = document.querySelector<HTMLElement>(".codex-editor");
+    if (root) root.dataset.wordReview = this.mode;
+    window.dispatchEvent(
+      new CustomEvent("doclib-review-command", {
+        detail: { command: this.id, mode: this.mode },
+      }),
+    );
   }
 }

@@ -1,6 +1,6 @@
 from typing import Annotated, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class GenerationRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=100000, description="<input_context>The exact user request to be processed by Metis.</input_context>")
@@ -85,3 +85,68 @@ class MemoryUserEditsRequest(BaseModel):
 
 class QuickRepliesRequest(BaseModel):
     history_messages: List[Annotated[str, Field(min_length=1, max_length=10000)]] = Field(min_length=1, max_length=50, description="<input_context>Recent bounded conversation messages used to generate replies.</input_context>")
+
+class SemanticSearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=1000, description="<input_context>Search query embedded against the authorized document index</input_context>")
+    limit: int = Field(default=20, ge=1, le=30, description="<constraints>Maximum distinct document results</constraints>")
+
+class StructuredInferenceResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+class QuickRepliesOutput(StructuredInferenceResult):
+    replies: list[str] = Field(min_length=3, max_length=3, description="<output_format>Exactly three concise reply suggestions.</output_format>")
+
+    @field_validator("replies")
+    @classmethod
+    def validate_replies(cls, replies):
+        for reply in replies:
+            if not isinstance(reply, str) or not 1 <= len(reply.split()) <= 6:
+                raise ValueError("Each reply must contain one to six words")
+            if "." * 3 in reply or chr(8230) in reply:
+                raise ValueError("Ellipses are not allowed")
+            if any(ord(char) >= 0x1F000 for char in reply):
+                raise ValueError("Pictographs are not allowed")
+        return replies
+
+class PlagiarismResult(StructuredInferenceResult):
+    plagiarism_score: float = Field(ge=0, le=1, description="<output_format>Normalized plagiarism risk score.</output_format>")
+    status: str = Field(pattern=r"^(clean|warning|danger)$", description="<output_format>Severity derived from the normalized score.</output_format>")
+    message: str = Field(min_length=1, max_length=2000, description="<output_format>Concise evidence based assessment.</output_format>")
+    matched_sources: list[str] = Field(default_factory=list, max_length=20, description="<output_format>Identifiers of sources supporting the assessment.</output_format>")
+
+class DocumentAnalysisRequest(BaseModel):
+    context: str = Field(min_length=1, max_length=200000, description="<input_context>Extracted document text to analyze.</input_context>")
+    ext: str = Field(default="txt", pattern=r"^[a-zA-Z0-9]{1,16}$", description="<constraints>Filename extension without a leading dot.</constraints>")
+    folder_str: str = Field(default="NONE", max_length=10000, description="<input_context>Bounded folder options available for classification.</input_context>")
+
+class ExtractTextRequest(BaseModel):
+    document_id: str = Field(min_length=1, max_length=128, description="<critical_instructions>Authorized document whose stored file content will be extracted.</critical_instructions>")
+
+class DocumentEntities(StructuredInferenceResult):
+    people: list[str] = Field(default_factory=list, max_length=100, description="<output_format>People explicitly identified in the supplied document.</output_format>")
+    organizations: list[str] = Field(default_factory=list, max_length=100, description="<output_format>Organizations explicitly identified in the supplied document.</output_format>")
+    dates: list[str] = Field(default_factory=list, max_length=100, description="<output_format>Dates explicitly identified in the supplied document.</output_format>")
+    amounts: list[str] = Field(default_factory=list, max_length=100, description="<output_format>Monetary amounts explicitly identified in the supplied document.</output_format>")
+
+class DocumentAnalysisResult(StructuredInferenceResult):
+    summary: str = Field(min_length=1, max_length=5000, description="<output_format>Grounded document summary.</output_format>")
+    suggested_name: str = Field(min_length=1, max_length=300, description="<output_format>Safe descriptive filename.</output_format>")
+    tags: list[str] = Field(min_length=1, max_length=20, description="<output_format>Relevant search tags.</output_format>")
+    entities: DocumentEntities = Field(description="<output_format>Grounded named entities grouped by category.</output_format>")
+    is_safe: bool = Field(description="<output_format>Whether the supplied content is safe to process.</output_format>")
+    target_folder_id: str = Field(min_length=1, max_length=128, description="<output_format>Identifier of the best matching supplied folder or NONE.</output_format>")
+
+class GlossaryEntry(StructuredInferenceResult):
+    term: str = Field(min_length=1, max_length=300, description="<output_format>Technical term found in the source text.</output_format>")
+    definition: str = Field(min_length=1, max_length=2000, description="<output_format>Grounded definition derived from the source text.</output_format>")
+
+class GlossaryResult(StructuredInferenceResult):
+    glossary: list[GlossaryEntry] = Field(default_factory=list, max_length=15, description="<output_format>Deduplicated glossary entries grounded in the source text.</output_format>")
+
+class ExtractedArtifact(StructuredInferenceResult):
+    goal: str = Field(min_length=1, max_length=500, description="<output_format>Extraction goal satisfied by this artifact.</output_format>")
+    value: str = Field(min_length=1, max_length=10000, description="<output_format>Artifact value grounded in the supplied source.</output_format>")
+    evidence: str = Field(default="", max_length=2000, description="<output_format>Concise source evidence supporting the artifact.</output_format>")
+
+class ArtifactExtractionResult(StructuredInferenceResult):
+    artifacts: list[ExtractedArtifact] = Field(default_factory=list, max_length=20, description="<output_format>Artifacts matched to the requested extraction goals.</output_format>")

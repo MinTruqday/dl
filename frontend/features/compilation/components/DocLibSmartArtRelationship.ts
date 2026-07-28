@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibSmartArtRelationship implements BlockTool {
+  static readonly feature = {
+    id: "DocLibSmartArtRelationship",
+    title: "DocLib SmartArtRelationship",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd2cde170a7aca70"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,14 5,10 14,7 19,14 14,18 11,19"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibSmartArtRelationship implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib SmartArt Relationship",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><circle cx="6" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="6" cy="18" r="2"></circle><line x1="7.5" y1="7.5" x2="10.5" y2="10.5"></line><line x1="16.5" y1="16.5" x2="13.5" y2="13.5"></line><line x1="16.5" y1="7.5" x2="13.5" y2="10.5"></line><line x1="7.5" y1="16.5" x2="10.5" y2="13.5"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd2cde170a7aca70"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,14 5,10 14,7 19,14 14,18 11,19"/></svg>',
     };
   }
 

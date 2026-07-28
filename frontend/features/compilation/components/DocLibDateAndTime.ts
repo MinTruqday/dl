@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibDateAndTime implements BlockTool {
+  static readonly feature = {
+    id: "DocLibDateAndTime",
+    title: "DocLib DateAndTime",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6daf2a2048b1afb0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,9 12,19 8,11 9,10 18,8 5,12"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibDateAndTime implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Date & Time",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6daf2a2048b1afb0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,9 12,19 8,11 9,10 18,8 5,12"/></svg>',
     };
   }
 
@@ -52,7 +59,7 @@ export default class DocLibDateAndTime implements BlockTool {
     const icon = document.createElement("span");
     icon.classList.add("doclib-datetime-icon");
     icon.innerHTML =
-      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6daf2a2048b1afb0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,9 12,19 8,11 9,10 18,8 5,12"/></svg>';
     container.appendChild(icon);
 
     const d = new Date(this.data.timestamp);

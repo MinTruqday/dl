@@ -1,7 +1,8 @@
+import asyncio
 from uuid6 import uuid7
-from typing import Any, Dict
+from typing import Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from loguru import logger
 
 from src.loop.event import (
@@ -12,13 +13,13 @@ from src.loop.event import (
     event_driven_loop,
 )
 
-from src.schemas.events import WebhookPayload, CreateScheduleRequest
+from src.schemas.events import CreateScheduleRequest, ManualTriggerRequest, WebhookPayload
 from src.core.dependency import Role, require_role, verify_internal_token
 
 router = APIRouter(prefix="/su-kien")
 
 @router.post("/webhook", dependencies=[Depends(verify_internal_token)])
-async def receive_webhook(request: Request, body: WebhookPayload = Body()):
+async def receive_webhook(body: WebhookPayload):
     """Validate and enqueue an internal agent event webhook"""
     try:
         event_type_str = body.event_type.lower()
@@ -30,7 +31,7 @@ async def receive_webhook(request: Request, body: WebhookPayload = Body()):
             "document_deleted": EventType.DOCUMENT_DELETED,
             "user_registered": EventType.USER_REGISTERED,
         }
-        event_type = event_type_map.get(event_type_str, EventType.WEBHOOK)
+        event_type = event_type_map[event_type_str]
 
         event = AgentEvent(
             event_id=str(uuid7()),
@@ -39,7 +40,13 @@ async def receive_webhook(request: Request, body: WebhookPayload = Body()):
             source=body.source,
         )
 
-        await event_driven_loop.emit_event(event)
+        try:
+            await event_driven_loop.emit_event(event)
+        except asyncio.QueueFull:
+            raise HTTPException(
+                status_code=503,
+                detail={"code": "event_queue_full"},
+            )
         logger.info(f"Webhook received event_id={event.event_id}, type={event_type.value}")
 
         return {
@@ -47,9 +54,14 @@ async def receive_webhook(request: Request, body: WebhookPayload = Body()):
             "event_id": event.event_id,
             "event_type": event_type.value,
         }
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception:
         logger.exception("Webhook processing error")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "webhook_processing_failed"},
+        )
 
 @router.post(
     "/webhook/tai-lieu-dang-tai",
@@ -58,7 +70,6 @@ async def receive_webhook(request: Request, body: WebhookPayload = Body()):
 async def document_uploaded_webhook(
     document_id: str,
     user_id: str = "",
-    request: Request = None,
 ):
     """Enqueue a document upload event for indexing and verification"""
     event = AgentEvent(
@@ -67,7 +78,13 @@ async def document_uploaded_webhook(
         payload={"document_id": document_id, "user_id": user_id},
         source="content_service",
     )
-    await event_driven_loop.emit_event(event)
+    try:
+        await event_driven_loop.emit_event(event)
+    except asyncio.QueueFull:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "event_queue_full"},
+        )
     return {"status": "accepted", "event_id": event.event_id}
 
 @router.get(
@@ -107,7 +124,6 @@ async def create_schedule(req: CreateScheduleRequest):
     cron_scheduler.register(schedule)
 
     if cron_scheduler._running and schedule.enabled:
-        import asyncio
         schedule._task = asyncio.create_task(
             cron_scheduler._run_schedule(schedule),
             name=f"cron:{schedule.name}",
@@ -142,7 +158,7 @@ async def toggle_schedule(schedule_id: str):
     schedule = cron_scheduler._schedules.get(schedule_id)
     if not schedule:
         raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
-    schedule.enabled = not schedule.enabled
+    cron_scheduler.set_enabled(schedule_id, not schedule.enabled)
     return {
         "schedule_id": schedule_id,
         "name": schedule.name,
@@ -161,7 +177,7 @@ async def event_loop_status():
     "/lich-su",
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
-async def event_history(limit: int = 20):
+async def event_history(limit: int = Query(default=20, ge=1, le=200)):
     """Return recently processed agent events"""
     return {
         "events": event_driven_loop.get_recent_events(limit=limit),
@@ -171,7 +187,7 @@ async def event_history(limit: int = 20):
     "/cap-nhat",
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
-async def system_updates(limit: int = 20):
+async def system_updates(limit: int = Query(default=20, ge=1, le=200)):
     """Return recent state updates emitted by agent events"""
     updates = event_driven_loop.update_registry.get_recent(limit=limit)
     return {
@@ -193,18 +209,21 @@ async def system_updates(limit: int = 20):
     "/kich-hoat/{event_type}",
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
-async def manual_trigger(event_type: str, payload: Dict[str, Any] = Body(default={})):
+async def manual_trigger(
+    event_type: Literal["heartbeat", "document_uploaded", "user_query"],
+    req: ManualTriggerRequest = Body(default_factory=ManualTriggerRequest),
+):
     """Trigger a supported agent event immediately"""
     event_type_map = {
         "heartbeat": EventType.SYSTEM_HEARTBEAT,
         "document_uploaded": EventType.DOCUMENT_UPLOADED,
         "user_query": EventType.USER_QUERY,
     }
-    et = event_type_map.get(event_type, EventType.WEBHOOK)
+    et = event_type_map[event_type]
     event = AgentEvent(
         event_id=str(uuid7()),
         event_type=et,
-        payload=payload,
+        payload=req.payload,
         source="manual_trigger",
     )
     result = await event_driven_loop.handle_event(event)

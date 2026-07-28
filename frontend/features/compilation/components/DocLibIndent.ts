@@ -1,4 +1,11 @@
 export default class DocLibIndentTune {
+  static readonly feature = {
+    id: "DocLibIndent",
+    title: "DocLib Indent",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2f7b086539fff469"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,8 12,20 10,4 10,7 13,17 19,5"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   api: any;
   data: any;
   block: any;
@@ -17,7 +24,7 @@ export default class DocLibIndentTune {
   render() {
     const wrapper = document.createElement("div");
     wrapper.classList.add("ce-popover-item");
-    const icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="12" x2="11" y2="12"></line><line x1="21" y1="6" x2="11" y2="6"></line><line x1="21" y1="18" x2="11" y2="18"></line><polyline points="8 8 12 12 8 16"></polyline></svg>`;
+    const icon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2f7b086539fff469"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,8 12,20 10,4 10,7 13,17 19,5"/></svg>`;
     wrapper.innerHTML = `<div class="ce-popover-item__icon">${icon}</div><div class="ce-popover-item__title">DocLib Indent</div>`;
 
     wrapper.addEventListener("click", (e) => {

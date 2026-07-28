@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibTableOfFigures implements BlockTool {
+  static readonly feature = {
+    id: "DocLibTableOfFigures",
+    title: "DocLib TableOfFigures",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="041b16d81b176ef5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,14 9,16 14,10 12,11 5,12 15,8"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private wrapper!: HTMLElement;
@@ -8,7 +15,7 @@ export default class DocLibTableOfFigures implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Table of Figures",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="041b16d81b176ef5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,14 9,16 14,10 12,11 5,12 15,8"/></svg>',
     };
   }
 

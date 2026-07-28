@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibDropCap implements BlockTool {
+  static readonly feature = {
+    id: "DocLibDropCap",
+    title: "DocLib DropCap",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba8d39bd3278083d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,9 10,6 20,5 12,14 4,4 20,16"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibDropCap implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Drop Cap",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba8d39bd3278083d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,9 10,6 20,5 12,14 4,4 20,16"/></svg>',
     };
   }
 

@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibVersionHistory implements BlockTool {
+  static readonly feature = {
+    id: "DocLibVersionHistory",
+    title: "DocLib VersionHistory",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="485808a509c0d047"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,7 12,16 13,9 8,7 18,17 12,10"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibVersionHistory implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Version History",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="485808a509c0d047"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,7 12,16 13,9 8,7 18,17 12,10"/></svg>',
     };
   }
 

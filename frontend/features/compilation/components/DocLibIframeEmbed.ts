@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibIframeEmbed implements BlockTool {
+  static readonly feature = {
+    id: "DocLibIframeEmbed",
+    title: "DocLib IframeEmbed",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d38698e32ba92c8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,9 7,10 20,20 14,17 19,4 14,9"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { url: string; height: number };
@@ -9,7 +16,7 @@ export default class DocLibIframeEmbed implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Embed",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d38698e32ba92c8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,9 7,10 20,20 14,17 19,4 14,9"/></svg>',
     };
   }
 
@@ -118,7 +125,7 @@ export default class DocLibIframeEmbed implements BlockTool {
 
       const icon = document.createElement("div");
       icon.innerHTML =
-        '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>';
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d38698e32ba92c8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,9 7,10 20,20 14,17 19,4 14,9"/></svg>';
 
       const input = document.createElement("input");
       input.classList.add("doclib-if-input");

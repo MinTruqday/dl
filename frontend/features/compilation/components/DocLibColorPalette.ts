@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibColorPalette implements BlockTool {
+  static readonly feature = {
+    id: "DocLibColorPalette",
+    title: "DocLib ColorPalette",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6b56ae6a91821a18"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,5 8,8 13,15 13,11 5,9 10,17"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { title: string; colors: { hex: string; name: string }[] };
@@ -9,7 +16,7 @@ export default class DocLibColorPalette implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Color Palette",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6b56ae6a91821a18"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,5 8,8 13,15 13,11 5,9 10,17"/></svg>',
     };
   }
 

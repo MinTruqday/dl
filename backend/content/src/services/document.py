@@ -26,6 +26,7 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
+from src.repositories.reading import ReadingRepository
 
 def serialize_document(document):
     if not document:
@@ -145,6 +146,82 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
+    async def get_personalized_recommendations(
+        user_id: str,
+        limit: int,
+    ) -> List[dict]:
+        history = await (
+            ReadingRepository.find({"user_id": user_id})
+            .sort("last_read_at", -1)
+            .limit(100)
+            .to_list(length=100)
+        )
+        read_ids = {
+            str(item.get("document_id"))
+            for item in history
+            if item.get("document_id")
+        }
+        if not read_ids:
+            return []
+        read_documents = await DocumentRepository.find(
+            {"_id": {"$in": list(read_ids)}},
+            {"tags": 1, "category": 1},
+        ).to_list(length=100)
+        tag_weights: dict[str, float] = {}
+        category_weights: dict[str, float] = {}
+        for position, document in enumerate(read_documents):
+            weight = 1 / (position + 1)
+            category = document.get("category")
+            if isinstance(category, str) and category:
+                category_weights[category] = category_weights.get(category, 0) + weight
+            for tag in document.get("tags") or []:
+                if isinstance(tag, str) and tag:
+                    tag_weights[tag] = tag_weights.get(tag, 0) + weight
+        if not tag_weights and not category_weights:
+            return []
+        candidates = await (
+            DocumentRepository.find(
+                {
+                    "_id": {"$nin": list(read_ids)},
+                    "status": DocumentStatus.PUBLISHED,
+                    "is_deleted": {"$ne": True},
+                    "visibility": "public",
+                }
+            )
+            .sort("views", -1)
+            .limit(500)
+            .to_list(length=500)
+        )
+        ranked = []
+        for document in candidates:
+            tag_score = sum(
+                tag_weights.get(tag, 0)
+                for tag in document.get("tags") or []
+                if isinstance(tag, str)
+            )
+            category_score = category_weights.get(document.get("category"), 0)
+            preference_score = tag_score * 2 + category_score
+            if preference_score <= 0:
+                continue
+            ranked.append(
+                (
+                    preference_score,
+                    int(document.get("views", 0) or 0),
+                    str(document.get("_id")),
+                    document,
+                )
+            )
+        ranked.sort(key=lambda item: (-item[0], -item[1], item[2]))
+        return [
+            {
+                **serialize_document(document),
+                "personalization_score": round(score, 6),
+            }
+            for score, _, _, document in ranked[:limit]
+        ]
+
+    @staticmethod
+    @log_logic_execution
     async def get_text_search(
         query: str,
         limit: int = Query(
@@ -164,6 +241,41 @@ class DocumentService:
         documents = await cursor.to_list(length=limit)
         return [serialize_document(d) for d in documents]
 
+    @staticmethod
+    @log_logic_execution
+    async def get_ranked_public_documents(
+        ranked_results: List[dict],
+        limit: int,
+    ) -> List[dict]:
+        document_ids = [
+            str(result["document_id"])
+            for result in ranked_results
+            if isinstance(result, dict) and result.get("document_id")
+        ][:limit]
+        if not document_ids:
+            return []
+        documents = await DocumentRepository.find(
+            {
+                "_id": {"$in": document_ids},
+                "status": DocumentStatus.PUBLISHED,
+                "is_deleted": {"$ne": True},
+                "visibility": "public",
+            }
+        ).to_list(length=limit)
+        by_id = {str(document["_id"]): document for document in documents}
+        scores = {
+            str(result["document_id"]): float(result.get("score") or 0)
+            for result in ranked_results
+            if isinstance(result, dict) and result.get("document_id")
+        }
+        return [
+            {
+                **serialize_document(by_id[document_id]),
+                "semantic_score": scores.get(document_id, 0),
+            }
+            for document_id in document_ids
+            if document_id in by_id
+        ]
 
     @staticmethod
     @log_logic_execution

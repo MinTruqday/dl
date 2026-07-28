@@ -90,6 +90,60 @@ async def main():
                 break
             await asyncio.sleep(0.1)
         assert published and published.get("status") == "published", published
+        recommended_id = f"content-recommended-{uuid.uuid4()}"
+        document_ids.append(recommended_id)
+        await content.documents.update_one(
+            {"_id": document_id},
+            {"$set": {"tags": ["agentic"], "category": "technology"}},
+        )
+        await content.documents.insert_one(
+            {
+                "_id": recommended_id,
+                "title": "Personalized Integration Document",
+                "slug": recommended_id,
+                "creator_id": AUTHOR_ID,
+                "content": "personalized",
+                "content_format": "markdown",
+                "status": "published",
+                "visibility": "public",
+                "is_deleted": False,
+                "tags": ["agentic"],
+                "category": "technology",
+                "views": 1,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+            }
+        )
+        await content.reading_history.insert_one(
+            {
+                "_id": str(uuid.uuid4()),
+                "user_id": BUYER_ID,
+                "document_id": document_id,
+                "progress_percentage": 80,
+                "last_read_at": datetime.now(timezone.utc),
+            }
+        )
+        status, recommendation_payload = call(
+            "GET",
+            "/kham-pha/goi-y-ca-nhan?limit=10",
+            buyer_token,
+        )
+        assert status == 200, recommendation_payload
+        recommendation_ids = [
+            item["_id"] for item in recommendation_payload["data"]
+        ]
+        assert recommended_id in recommendation_ids, recommendation_payload
+        assert document_id not in recommendation_ids, recommendation_payload
+        assert call("GET", "/kham-pha/goi-y-ai?limit=10")[0] == 404
+        search_query = urllib.parse.quote("Paid Integration")
+        status, search_payload = call(
+            "GET",
+            f"/kham-pha/tim-kiem-thong-minh?query={search_query}&limit=10",
+        )
+        assert status == 200, search_payload
+        assert any(
+            item["_id"] == document_id for item in search_payload["data"]
+        ), search_payload
 
         status, payload = call("GET", f"/tai-lieu/{document_id}")
         assert status == 200
@@ -117,6 +171,30 @@ async def main():
         status, payload = call("GET", f"/phien-ban/tai-lieu/{document_id}", author_token)
         assert status == 200
         assert len(payload["data"]) == 1
+        status, payload = call(
+            "PUT",
+            f"/tai-lieu/{document_id}",
+            author_token,
+            {"title": "Updated Integration Document"},
+        )
+        assert status == 200 and payload["data"]["title"] == "Updated Integration Document", payload
+        assert call("DELETE", f"/tai-lieu/{document_id}", buyer_token)[0] == 403
+        status, payload = call(
+            "DELETE",
+            f"/tai-lieu/{document_id}",
+            author_token,
+        )
+        assert status == 200, payload
+        deleted = await content.documents.find_one({"_id": document_id})
+        assert deleted and deleted["is_deleted"] is True, deleted
+        status, payload = call(
+            "POST",
+            f"/tai-lieu/{document_id}/khoi-phuc",
+            author_token,
+        )
+        assert status == 200, payload
+        restored = await content.documents.find_one({"_id": document_id})
+        assert restored and restored["is_deleted"] is False, restored
 
         status, payload = call("POST", "/thu-vien/danh-sach", buyer_token, {"name": "Integration List", "description": "test", "is_public": False})
         assert status == 201
@@ -136,6 +214,7 @@ async def main():
         await content.document_versions.delete_many({"creator_id": AUTHOR_ID})
         await content.document_revisions.delete_many({"creator_id": AUTHOR_ID})
         await content.reading_lists.delete_many({"user_id": BUYER_ID})
+        await content.reading_history.delete_many({"user_id": BUYER_ID})
         await content.highlights.delete_many({"user_id": BUYER_ID})
         await finance.purchases.delete_many({"user_id": BUYER_ID, "item_id": {"$in": document_ids}})
         await humanity.users.delete_many({"_id": {"$in": [AUTHOR_ID, BUYER_ID]}})

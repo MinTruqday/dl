@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibHeader implements BlockTool {
+  static readonly feature = {
+    id: "DocLibHeader",
+    title: "DocLib Header",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e32a0b93159f3252"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,12 15,15 8,10 20,18 15,17 15,14"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { text: string; level: number };
@@ -8,7 +15,7 @@ export default class DocLibHeader implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Header",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"></path><path d="M4 18V6"></path><path d="M12 18V6"></path><path d="M21 16h-4v-8h4"></path><path d="M17 12h4"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e32a0b93159f3252"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,12 15,15 8,10 20,18 15,17 15,14"/></svg>',
     };
   }
   static get isReadOnlySupported() {

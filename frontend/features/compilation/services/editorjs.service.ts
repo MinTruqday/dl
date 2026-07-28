@@ -191,20 +191,6 @@ export async function getVersionDiffAPI(
   return data.data;
 }
 
-export async function analyzeInternalPlagiarismAPI(
-  documentId: string,
-  content: any,
-) {
-  const res = await fetch(`${API_URL}/kiem-tra-dao-van`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify(content),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi chạy tiến trình phân tích tính nguyên bản");
-  return data;
-}
-
 export async function getAiSuggestionsAPI(documentId: string, context: string) {
   const res = await fetch(`${API_URL}/goi-y-ai`, {
     method: "POST",

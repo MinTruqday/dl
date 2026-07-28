@@ -45,7 +45,10 @@ class EditorjsEngine:
                 "u",
                 "ul",
             ],
-            attributes={"a": ["href", "title"]},
+            attributes={
+                "a": ["href", "title"],
+                "span": ["class"],
+            },
             protocols=["http", "https", "mailto"],
             strip=True,
         )
@@ -500,13 +503,34 @@ class EditorjsEngine:
             return f'<p style="font-family:monospace;text-align:center">{_html.escape(s(d.get("formula", d.get("math", d.get("text", "")))))}</p>'
 
         if t == "field":
-            return f'<span style="background: #f0f0f0; padding: 2px 4px; border: 1px dashed #ccc; font-family: monospace;">{{{san(s(d.get("content", d.get("name", ""))))}}}</span>'
+            return f'<span style="background: #f0f0f0; padding: 2px 4px; border: 1px dashed #ccc; font-family: monospace;">{{{san(s(d.get("code", d.get("content", d.get("name", "")))) )}}}</span>'
 
         if t == "sparklines":
-            return '<table style="width: 100px; display: inline-table; margin: 0 5px; border-collapse: collapse;"><tr><td style="height: 20px; background: linear-gradient(to right, #4CAF50 0%, #4CAF50 40%, #ddd 40%, #ddd 100%); border: 1px solid #aaa;"></td></tr></table>'
+            values = []
+            for raw in re.split(r"[\s,;]+", s(d.get("values", "")).strip())[:100]:
+                if not raw:
+                    continue
+                try:
+                    value = float(raw)
+                except ValueError:
+                    continue
+                if value == value and abs(value) != float("inf"):
+                    values.append(value)
+            if len(values) < 2:
+                return ""
+            low = min(values)
+            high = max(values)
+            span = high - low or 1
+            width = 240
+            height = 60
+            points = " ".join(
+                f"{index * width / (len(values) - 1):.2f},{height - ((value - low) / span * height):.2f}"
+                for index, value in enumerate(values)
+            )
+            return f'<svg viewBox="0 0 {width} {height}" role="img" aria-label="Sparkline"><polyline fill="none" stroke="#2563eb" stroke-width="3" points="{points}"/></svg>'
 
         if t == "oleObject":
-            name = san(s(d.get("name", d.get("title", "Embedded Object"))))
+            name = san(s(d.get("objectId", d.get("name", d.get("title", "Embedded Object")))))
             return f'<div style="border: 2px solid #555; padding: 15px; background: #f9f9f9; width: 250px; text-align: center; margin: 20px auto; border-radius: 8px;"><strong>{name}</strong><br/><small style="color:#666;">Double-click to open</small></div>'
 
         if t in ("convertTextToTable", "convertTableToText", "tableAutoFormat"):
@@ -547,6 +571,10 @@ class EditorjsEngine:
             "a { color: #2c5282; }"
             "details { border: 1px solid #ddd; padding: 8px; margin: 8px 0; }"
             "kbd { background: #f4f4f4; border: 1px solid #ccc; border-radius: 3px; padding: 1px 5px; font-family: monospace; }"
+            ".DocLibDoubleStrikethrough { text-decoration-line: line-through; text-decoration-style: double; }"
+            ".DocLibHiddenText { opacity: 0.35; text-decoration: underline dashed; }"
+            ".DocLibSmallCaps { font-variant: small-caps; }"
+            ".doclib-text-effects { text-shadow: 1px 1px 2px rgba(15, 23, 42, 0.35); }"
         )
         parts = [
             f'<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"/><style>{CSS}</style></head><body>'

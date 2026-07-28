@@ -51,6 +51,10 @@ async def readiness_check():
     try:
         await database.mongodb.admin.command("ping")
         await redis.ping()
+        from src.core.storage import get_storage_client
+
+        storage = await get_storage_client()
+        await storage.head_bucket(Bucket=settings.MINIO_PRIVATE_BUCKET)
     except Exception:
         logger.exception("Management readiness check failed")
         return JSONResponse(status_code=503, content={"status": "not_ready"})

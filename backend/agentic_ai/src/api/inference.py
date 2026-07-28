@@ -11,7 +11,6 @@ from src.core.infrastructure.configuration import settings
 from src.core.logging_route import LoggingRoute
 from src.core.model_runtime import run_chat_completion
 from src.core.registry import PromptType, registry
-from src.utils.structured_output import extract_json_value
 from src.schemas.inference import (
     ActionRequest,
     CitationRequest,
@@ -31,6 +30,15 @@ from src.schemas.inference import (
     ComplianceScreenRequest,
     SemanticDiffRequest,
     QuickRepliesRequest,
+    SemanticSearchRequest,
+    DocumentAnalysisRequest,
+    DocumentAnalysisResult,
+    GlossaryResult,
+    PlagiarismResult,
+    PlagiarismCheckRequest,
+    QuickRepliesOutput,
+    ArtifactExtractionResult,
+    ExtractTextRequest,
 )
 from src.schemas.auth import Tier
 
@@ -126,6 +134,51 @@ async def _run_ai_with_quota(
 
     return result
 
+async def _run_structured_ai_with_quota(
+    current_user: CurrentUser,
+    messages: List[dict],
+    schema,
+    max_tokens: int = 500,
+    temperature: float = 0.3,
+):
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+    from src.utils.huggingface import HFInferenceChat
+
+    limits = await _check_quota(current_user)
+    model = limits.get("model", settings.QWEN_MODEL)
+    inference_client = AsyncInferenceClient(
+        model=model,
+        token=settings.HF_TOKEN,
+    )
+    structured_model = HFInferenceChat(
+        client=inference_client,
+        model=model,
+    ).with_structured_output(schema)
+    message_types = {
+        "assistant": AIMessage,
+        "system": SystemMessage,
+        "user": HumanMessage,
+    }
+    structured_messages = [
+        message_types.get(message.get("role"), HumanMessage)(
+            content=message.get("content", "")
+        )
+        for message in messages
+    ]
+    result = await structured_model.ainvoke(
+        structured_messages,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+    prompt_len = sum(len(message.get("content", "")) for message in messages)
+    tokens_used = (prompt_len + len(result.model_dump_json())) // 4
+    await _consume_quota(
+        current_user,
+        tokens_used,
+        limits.get("req_reset_hours", 24),
+    )
+    return result
+
 @router.post("/tao-noi-dung")
 async def generate_text(
     req: GenerationRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -176,39 +229,59 @@ async def generate_quick_replies(
         prompt = registry.get(PromptType.QUICK_REPLIES).format(
             history=history_text
         )
-        result = await _run_ai_with_quota(
+        result = await _run_structured_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
+            schema=QuickRepliesOutput,
             max_tokens=100,
             temperature=0.3,
         )
-        try:
-            replies = extract_json_value(result)
-            valid = (
-                isinstance(replies, list)
-                and len(replies) == 3
-                and all(
-                    isinstance(reply, str)
-                    and 1 <= len(reply.split()) <= 6
-                    and "." * 3 not in reply
-                    and chr(8230) not in reply
-                    and not any(ord(char) >= 0x1F000 for char in reply)
-                    for reply in replies
-                )
-            )
-            if not valid:
-                replies = []
-        except (TypeError, ValueError):
-            replies = []
-            
         logger.info("Quick reply generation completed")
         return {
-            "replies": replies[:3],
-            "error_code": None if replies else "quick_replies_invalid_output",
+            "replies": result.replies,
+            "error_code": None,
         }
-    except Exception:
-        logger.exception("Quick reply generation failed")
-        return {"replies": [], "error_code": "quick_replies_unavailable"}
+    except Exception as exc:
+        raise _public_ai_error("quick_replies", exc)
+
+
+@router.post("/tim-kiem-tai-lieu")
+async def semantic_document_search(
+    req: SemanticSearchRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Return ranked document identifiers from the persisted vector index"""
+    try:
+        limits = await _check_quota(current_user)
+        from src.rag.retrieval import retriever
+
+        chunks = await retriever.retrieve(req.query, k=req.limit)
+        scores = {}
+        for chunk in chunks:
+            metadata = chunk.get("metadata") or {}
+            document_id = metadata.get("document_id")
+            if not document_id:
+                continue
+            score = float(chunk.get("score") or chunk.get("rrf_score") or 0)
+            key = str(document_id)
+            scores[key] = max(scores.get(key, 0), score)
+        ranked = [
+            {"document_id": document_id, "score": score}
+            for document_id, score in sorted(
+                scores.items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )[: req.limit]
+        ]
+        await _consume_quota(
+            current_user,
+            max(1, len(req.query) // 4),
+            limits.get("req_reset_hours", 24),
+        )
+        return {"results": ranked}
+    except Exception as exc:
+        raise _public_ai_error("semantic_document_search", exc)
+
 
 @router.post("/tao-ma")
 async def generate_code(
@@ -287,7 +360,7 @@ async def summarize_text(
 
 @router.post("/kiem-tra-dao-van")
 async def check_plagiarism(
-    req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
+    req: PlagiarismCheckRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Estimate plagiarism risk and return structured matching evidence"""
     logger.info("Plagiarism detection started")
@@ -305,7 +378,7 @@ async def check_plagiarism(
         from src.rag.embedding import embedder
         from src.store.vector import vector_store
 
-        query_vector = await embedder.embed_query(req.text[:2000])
+        query_vector = await embedder.embed_query(req.content[:2000])
         matches = await vector_store.query(query_vector=query_vector, limit=5)
 
         significant_matches = [m for m in matches if m["score"] > 0.75]
@@ -314,40 +387,27 @@ async def check_plagiarism(
             return {
                 "plagiarism_score": 0.0,
                 "status": "clean",
-                "message_code": "plagiarism_not_detected",
-                "matches": [],
+                "message": "No significant matching source was found",
+                "matched_sources": [],
             }
 
         context = "\n".join(
             [
-                "- Match (Score: {m['score']:.2f}): {m['text'][:200]}"
+                f"- Match (Score: {m['score']:.2f}): {m['text'][:200]}"
                 for m in significant_matches
             ]
         )
         prompt = registry.get(PromptType.PLAGIARISM_DETECTION).format(
-            text=req.text[:1000], context=context
+            text=req.content[:1000], context=context
         )
-        result = await _run_ai_with_quota(
+        result = await _run_structured_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
+            schema=PlagiarismResult,
             max_tokens=300,
             temperature=0.1,
         )
-
-        try:
-            parsed_result = extract_json_value(result)
-            if isinstance(parsed_result, dict):
-                return parsed_result
-        except (TypeError, ValueError):
-            logger.warning("Plagiarism model output was not valid JSON")
-
-        max_score = max([m["score"] for m in significant_matches]) * 100
-        return {
-            "plagiarism_score": round(max_score, 1),
-            "status": "danger" if max_score > 85 else "warning",
-            "message_code": "plagiarism_detected",
-            "matches": significant_matches[:3],
-        }
+        return result.model_dump()
     except Exception as exc:
         raise _public_ai_error("plagiarism_detection", exc)
 
@@ -568,26 +628,44 @@ async def multi_doc_synthesis(
         raise _public_ai_error("multi_document_synthesis", exc)
 
 @router.post("/trich-xuat-van-ban")
-async def extract_text(req: dict, current_user: CurrentUser = Depends(get_current_user)):
+async def extract_text(
+    req: ExtractTextRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+):
     """Extract normalized text from an authorized cloud file"""
     logger.info("Document text extraction started")
     try:
-        file_url = req.get("file_url")
-        if not file_url:
-            logger.warning("Missing file location URL in request")
-            raise HTTPException(
-                status_code=400, detail={"code": "file_path_required"}
-            )
-
         from src.rag.pipeline import ingestion_pipeline
 
+        document = await ingestion_pipeline.authorize_document(
+            req.document_id,
+            str(current_user.id),
+            current_user.role == Role.ADMIN,
+        )
+        file_url = document.get("file_url")
+        if not file_url:
+            raise HTTPException(
+                status_code=404,
+                detail={"code": "document_file_not_found"},
+            )
+
         extracted_text = await ingestion_pipeline._extract_text(file_url)
+        if not extracted_text:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "document_text_unavailable"},
+            )
 
         logger.info("Document text extraction completed")
         return {"extracted_text": extracted_text}
     except Exception as exc:
         if isinstance(exc, HTTPException):
             raise
+        if isinstance(exc, (ValueError, PermissionError)):
+            raise HTTPException(
+                status_code=404,
+                detail={"code": "document_not_found"},
+            )
         logger.exception("Document text extraction failed")
         raise HTTPException(
             status_code=500,
@@ -596,33 +674,27 @@ async def extract_text(req: dict, current_user: CurrentUser = Depends(get_curren
 
 @router.post("/phan-tich-tai-lieu")
 async def analyze_document(
-    req: dict, current_user: CurrentUser = Depends(get_current_user)
+    req: DocumentAnalysisRequest,
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     """Analyze bounded document content and return structured findings"""
-    logger.info(f"Started document analysis API request (folder {req.get('folder_str')}) for user_id={current_user.id}")
+    logger.info("Document analysis started")
     try:
-        context = req.get("context", "")
-        ext = req.get("ext", "txt")
-        folder_str = req.get("folder_str", "None")
-
         prompt = registry.get(PromptType.STORAGE_FILE_ANALYSIS).format(
-            ext=ext, folder_str=folder_str, context=context[:3000]
+            ext=req.ext,
+            folder_str=req.folder_str,
+            context=req.context[:3000],
         )
 
-        result = await _run_ai_with_quota(
+        result = await _run_structured_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
+            schema=DocumentAnalysisResult,
             max_tokens=1000,
             temperature=0.2,
         )
-
-        parsed_result = extract_json_value(result)
-        if isinstance(parsed_result, dict):
-            logger.info("Document analysis completed")
-            return parsed_result
-        else:
-            logger.warning("LLM returned malformed JSON response during document analysis")
-            raise ValueError("Language model returned invalid format")
+        logger.info("Document analysis completed")
+        return result.model_dump()
     except Exception as exc:
         raise _public_ai_error("document_analysis", exc)
 
@@ -643,13 +715,6 @@ async def delete_vector_document(document_id: str):
         logger.exception("Vector index deletion error")
         raise HTTPException(status_code=500, detail={"code": "document_vector_deletion_failed"})
 
-def _extract_json(text: str) -> dict:
-    try:
-        parsed = extract_json_value(text)
-        return parsed if isinstance(parsed, dict) else {}
-    except (TypeError, ValueError):
-        return {}
-
 @router.post("/giai-thich-thuat-ngu")
 async def extract_glossary(
     req: GlossaryRequest, current_user: CurrentUser = Depends(get_current_user)
@@ -658,15 +723,15 @@ async def extract_glossary(
     logger.info("Glossary extraction started")
     try:
         prompt = registry.get(PromptType.EXTRACT_GLOSSARY).format(text=req.text)
-        result = await _run_ai_with_quota(
+        result = await _run_structured_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
+            schema=GlossaryResult,
             max_tokens=2000,
             temperature=0.3,
         )
-        data = _extract_json(result)
         logger.info("Glossary extraction completed")
-        return data if data else {"glossary": []}
+        return result.model_dump()
     except Exception as exc:
         raise _public_ai_error("glossary_extraction", exc)
 
@@ -718,15 +783,15 @@ async def extract_to_storage(
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.EXTRACT_TO_ARTIFACTS).format(goals=', '.join(req.extraction_goals), text=req.text[:3000])
-        result = await _run_ai_with_quota(
+        result = await _run_structured_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
+            schema=ArtifactExtractionResult,
             max_tokens=1500,
             temperature=0.1,
         )
-        data = _extract_json(result)
         logger.info("Artifact extraction completed")
-        return {"summary": json.dumps(data, ensure_ascii=False) if data else "{}"}
+        return result.model_dump()
     except Exception as exc:
         raise _public_ai_error("extract_to_storage", exc)
 

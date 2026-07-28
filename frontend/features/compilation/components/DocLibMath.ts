@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibMath implements BlockTool {
+  static readonly feature = {
+    id: "DocLibMath",
+    title: "DocLib Math",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f821e57a41c9e5dd"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,20 12,7 18,18 12,4 5,20 15,10"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { formula: string };
@@ -9,7 +16,7 @@ export default class DocLibMath implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Math (KaTeX)",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path><path d="M12 8h.01"></path><path d="M12 12h.01"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f821e57a41c9e5dd"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,20 12,7 18,18 12,4 5,20 15,10"/></svg>',
     };
   }
 

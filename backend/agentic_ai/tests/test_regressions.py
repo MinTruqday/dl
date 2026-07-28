@@ -964,24 +964,6 @@ def test_episodic_memory_queries_are_user_scoped():
     assert manager._episodes.query["user_id"] == "user-1"
 
 
-def test_resume_runner_executes_checkpointed_graph():
-    from unittest.mock import patch
-
-    from src.api import interrupt
-
-    calls = []
-
-    class FakeApp:
-        async def astream(self, state, config):
-            calls.append((state, config))
-            yield {"supervisor": {"next_nodes": ["action"]}}
-
-    config = {"configurable": {"thread_id": "thread-1"}}
-    with patch("src.workflow.orchestration.supervisor_app", FakeApp()):
-        asyncio.run(interrupt._resume_from_checkpoint("thread-1", config))
-    assert calls == [(None, config)]
-
-
 def test_inference_request_models_enforce_public_bounds():
     from pydantic import ValidationError
 
@@ -1175,6 +1157,194 @@ def test_swarm_prompt_json_examples_are_format_safe():
             ):
                 malformed.append((prompt_type.value, field_name))
     assert malformed == []
+
+
+def test_drm_tool_requests_fail_closed():
+    from unittest.mock import patch
+
+    from src.tools.drm import _drm_request
+
+    class BrokenClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return False
+
+        async def request(self, *args, **kwargs):
+            raise OSError("unavailable")
+
+    rejected = False
+    with patch("src.tools.drm.httpx.AsyncClient", return_value=BrokenClient()):
+        try:
+            asyncio.run(_drm_request("/bao-ve/test", {}))
+        except RuntimeError:
+            rejected = True
+    assert rejected is True
+
+
+def test_semantic_document_search_returns_distinct_ranked_ids():
+    from unittest.mock import AsyncMock, patch
+
+    from src.api.inference import semantic_document_search
+    from src.schemas.auth import CurrentUser
+    from src.schemas.inference import SemanticSearchRequest
+
+    chunks = [
+        {
+            "score": 0.7,
+            "metadata": {"document_id": "doc-a"},
+        },
+        {
+            "score": 0.9,
+            "metadata": {"document_id": "doc-b"},
+        },
+        {
+            "score": 0.8,
+            "metadata": {"document_id": "doc-a"},
+        },
+    ]
+    user = CurrentUser(
+        _id="semantic-user",
+        email="semantic@example.com",
+        role="reader",
+        ai_tier="BASIC",
+    )
+    with (
+        patch(
+            "src.api.inference._check_quota",
+            new=AsyncMock(return_value={"req_reset_hours": 24}),
+        ),
+        patch(
+            "src.api.inference._consume_quota",
+            new=AsyncMock(),
+        ),
+        patch(
+            "src.rag.retrieval.retriever.retrieve",
+            new=AsyncMock(return_value=chunks),
+        ),
+    ):
+        result = asyncio.run(
+            semantic_document_search(
+                SemanticSearchRequest(query="ranked documents", limit=5),
+                user,
+            )
+        )
+    assert result == {
+        "results": [
+            {"document_id": "doc-b", "score": 0.9},
+            {"document_id": "doc-a", "score": 0.8},
+        ]
+    }
+
+def test_document_finetuning_import_uses_structured_samples():
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from src.schemas.finetuning import FinetuneSample, GeneratedSamples
+    from src.services.finetuning import import_documents
+
+    structured_model = MagicMock()
+    structured_model.ainvoke = AsyncMock(
+        return_value=GeneratedSamples(
+            samples=[
+                FinetuneSample(
+                    instruction="What is verified",
+                    output="The supplied document is verified",
+                )
+            ]
+        )
+    )
+    chat_model = MagicMock()
+    chat_model.with_structured_output.return_value = structured_model
+    inserted_datasets = AsyncMock()
+    inserted_samples = AsyncMock()
+    with (
+        patch(
+            "src.services.finetuning.FinetuneRepository.find_document_context",
+            new=AsyncMock(
+                return_value={
+                    "_id": "content-document",
+                    "content": " ".join(["grounded"] * 80),
+                }
+            ),
+        ),
+        patch(
+            "src.services.finetuning.FinetuneRepository.insert_dataset",
+            new=inserted_datasets,
+        ),
+        patch(
+            "src.services.finetuning.FinetuneRepository.insert_samples",
+            new=inserted_samples,
+        ),
+        patch("huggingface_hub.AsyncInferenceClient", return_value=MagicMock()),
+        patch("src.utils.huggingface.HFInferenceChat", return_value=chat_model),
+    ):
+        result = asyncio.run(
+            import_documents(
+                {
+                    "user_id": "admin",
+                    "document_ids": ["content-document"],
+                }
+            )
+        )
+    assert result["imported"] == 1
+    inserted_datasets.assert_awaited_once()
+    inserted_samples.assert_awaited_once()
+    stored = inserted_samples.await_args.args[0][0]
+    assert stored["instruction"] == "What is verified"
+    assert stored["output"] == "The supplied document is verified"
+
+
+def test_proactive_memory_outputs_are_strictly_validated():
+    from pydantic import ValidationError
+
+    from src.schemas.proactive import MemoryBankActions, MemoryIntervention
+
+    actions = MemoryBankActions.model_validate(
+        {
+            "calls": [
+                {
+                    "name": "memory_delete",
+                    "args": {"id": "obsolete_fact"},
+                }
+            ]
+        },
+        strict=True,
+    )
+    assert actions.calls[0].name == "memory_delete"
+    try:
+        MemoryBankActions.model_validate(
+            {
+                "calls": [
+                    {
+                        "name": "execute_shell",
+                        "args": {"id": "unsafe"},
+                    }
+                ]
+            },
+            strict=True,
+        )
+        assert False
+    except ValidationError:
+        pass
+    try:
+        MemoryIntervention(intervene=False, reminder="Unrequested reminder")
+        assert False
+    except ValidationError:
+        pass
+
+
+def test_chunk_security_filter_fails_closed_without_classifier():
+    from unittest.mock import patch
+
+    from src.rag.chunk import _sanitize_text
+
+    class BrokenClassifier:
+        def with_structured_output(self, schema):
+            raise RuntimeError("classifier unavailable")
+
+    with patch("src.workflow.graph.llm", BrokenClassifier()):
+        assert asyncio.run(_sanitize_text("Ordinary document content")) is False
 
 
 if __name__ == "__main__":

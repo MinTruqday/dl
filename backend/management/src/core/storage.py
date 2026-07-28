@@ -78,6 +78,20 @@ async def upload_file(
     await storage_client.put_object(**kwargs)
     return object_name
 
+async def upload_file_path(
+    file_path: str,
+    object_name: str,
+    content_type: str,
+) -> str:
+    storage_client = await get_storage_client()
+    await storage_client.upload_file(
+        file_path,
+        get_bucket(object_name),
+        object_name,
+        ExtraArgs={"ContentType": content_type},
+    )
+    return object_name
+
 async def download_file(object_name: str) -> tuple[bytes, str]:
     storage_client = await get_storage_client()
     response = await storage_client.get_object(

@@ -26,18 +26,37 @@ class DRMEnforcementEngine:
         Fast 100% Deterministic DRM Enforcement (< 2ms, ZERO Token Cost).
         """
         network_task = check_network_anomaly.ainvoke({"user_id": user_id, "client_ip": client_ip})
-        trust_task = get_user_trust_profile.ainvoke({"user_id": user_id, "user_tier": user_tier})
-        risk_task = analyze_document_risk.ainvoke({"document_id": document_id, "document_type": document_type})
-        fp_task = verify_device_fingerprint.ainvoke({"user_id": user_id, "device_fingerprint": device_fingerprint, "client_ip": client_ip})
-
-        network_res, trust_res, risk_res, fp_res = await asyncio.gather(
-            network_task, trust_task, risk_task, fp_task
-        )
+        trust_task = get_user_trust_profile.ainvoke({"user_id": user_id})
+        risk_task = analyze_document_risk.ainvoke({"document_id": document_id})
+        if device_fingerprint:
+            fp_task = verify_device_fingerprint.ainvoke(
+                {
+                    "user_id": user_id,
+                    "device_fingerprint": device_fingerprint,
+                    "client_ip": client_ip,
+                }
+            )
+            network_res, trust_res, risk_res, fp_res = await asyncio.gather(
+                network_task,
+                trust_task,
+                risk_task,
+                fp_task,
+            )
+        else:
+            network_res, trust_res, risk_res = await asyncio.gather(
+                network_task,
+                trust_task,
+                risk_task,
+            )
+            fp_res = {
+                "matched": False,
+                "reason_code": "device_fingerprint_missing",
+            }
 
         trust_score = trust_res.get("trust_score", 50)
         risk_level = risk_res.get("risk_level", "LOW")
         anomaly = network_res.get("system_flag_anomaly", False)
-        fp_matched = fp_res.get("matched", True)
+        fp_matched = fp_res.get("matched") is True
 
         if anomaly:
             return {
@@ -47,7 +66,21 @@ class DRMEnforcementEngine:
                 "anti_exfiltration": AntiExfiltrationFlags().model_dump(),
                 "enable_aes_encryption": False,
                 "hardware_binding_strict": False,
-                "requires_ai_escalation": True
+                "requires_ai_escalation": False
+            }
+        if not fp_matched:
+            return {
+                "decision": "BLOCKED",
+                "reasoning": "Device fingerprint verification failed",
+                "watermark": WatermarkConfig().model_dump(),
+                "anti_exfiltration": AntiExfiltrationFlags(
+                    block_print=True,
+                    block_copy=True,
+                    block_screenshot=True,
+                ).model_dump(),
+                "enable_aes_encryption": False,
+                "hardware_binding_strict": True,
+                "requires_ai_escalation": False,
             }
 
         decision = "LEVEL_0"
@@ -58,7 +91,7 @@ class DRMEnforcementEngine:
         block_screenshot = False
         enable_watermark = False
 
-        if risk_level == "HIGH" or trust_score < 60 or not fp_matched:
+        if risk_level == "HIGH" or trust_score < 60:
             decision = "LEVEL_3"
             enable_aes = True
             strict_hw = True

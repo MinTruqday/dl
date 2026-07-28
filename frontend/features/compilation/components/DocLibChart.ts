@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibChart implements BlockTool {
+  static readonly feature = {
+    id: "DocLibChart",
+    title: "DocLib Chart",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ce5dd1cb9985287"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,12 4,15 19,20 18,20 12,14 4,13"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
@@ -30,7 +37,7 @@ export default class DocLibChart implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Chart",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ce5dd1cb9985287"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,12 4,15 19,20 18,20 12,14 4,13"/></svg>',
     };
   }
 

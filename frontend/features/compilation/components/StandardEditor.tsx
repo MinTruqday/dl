@@ -4,6 +4,12 @@ import React, { useEffect, useRef, useState } from "react";
 import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
 import { sanitizeEditorData } from "./editorjs-sanitizer";
+import {
+  attachWordSettings,
+  registerWordSettings,
+  type WordCommandSettings,
+  type WordOutputData,
+} from "./word-command-engine";
 
 interface StandardEditorProps {
   initialContent?: string;
@@ -123,6 +129,7 @@ export default function StandardEditor({
 
     const init = async () => {
       const EditorJSModule = (await import("@editorjs/editorjs")).default;
+      const { WORD_COMMAND_TOOLS } = await import("./word-command-catalog");
       const DocLibHeader = (await import("./DocLibHeader")).default;
       const DocLibParagraph = (await import("./DocLibParagraph")).default;
       const DocLibList = (await import("./DocLibList")).default;
@@ -272,6 +279,15 @@ export default function StandardEditor({
       const DocLibTranslation = (await import("./DocLibTranslation")).default;
       const DocLibThesaurus = (await import("./DocLibThesaurus")).default;
       const DocLibEquationArray = (await import("./DocLibEquationArray")).default;
+      const DocLibDigitalSignatureLine = (await import("./DocLibDigitalSignatureLine")).default;
+      const DocLibDoubleStrikethrough = (await import("./DocLibDoubleStrikethrough")).default;
+      const DocLibField = (await import("./DocLibField")).default;
+      const DocLibHiddenText = (await import("./DocLibHiddenText")).default;
+      const DocLibOleObject = (await import("./DocLibOleObject")).default;
+      const DocLibSmallCaps = (await import("./DocLibSmallCaps")).default;
+      const DocLibSparklines = (await import("./DocLibSparklines")).default;
+      const DocLibSpecialCharacter = (await import("./DocLibSpecialCharacter")).default;
+      const DocLibTextEffects = (await import("./DocLibTextEffects")).default;
 
       if (cancelled) {
         holderDiv.remove();
@@ -281,9 +297,11 @@ export default function StandardEditor({
       let data: OutputData = {
         blocks: [{ type: "paragraph", data: { text: "" } }],
       };
+      let wordSettings: WordCommandSettings | undefined;
       if (initialContent) {
         try {
-          const parsed = JSON.parse(initialContent);
+          const parsed = JSON.parse(initialContent) as WordOutputData;
+          wordSettings = parsed.wordSettings;
           if (parsed.blocks && parsed.blocks.length > 0)
             data = sanitizeEditorData(parsed);
         } catch (err: any) {
@@ -302,6 +320,7 @@ export default function StandardEditor({
 
       const tools: Record<string, any> = {};
 
+      Object.assign(tools, WORD_COMMAND_TOOLS);
       tools.premium = { class: PremiumTune };
       const commonTunes = ["textVariant", "styleTune"];
       if (DocLibAlignmentTune) {
@@ -537,6 +556,18 @@ export default function StandardEditor({
       if (DocLibTranslation) tools.translation = DocLibTranslation;
       if (DocLibThesaurus) tools.thesaurus = DocLibThesaurus;
       if (DocLibEquationArray) tools.equationArray = DocLibEquationArray;
+      if (DocLibDigitalSignatureLine)
+        tools.digitalSignatureLine = DocLibDigitalSignatureLine;
+      if (DocLibDoubleStrikethrough)
+        tools.doubleStrikethrough = DocLibDoubleStrikethrough;
+      if (DocLibField) tools.field = DocLibField;
+      if (DocLibHiddenText) tools.hiddenText = DocLibHiddenText;
+      if (DocLibOleObject) tools.oleObject = DocLibOleObject;
+      if (DocLibSmallCaps) tools.smallCaps = DocLibSmallCaps;
+      if (DocLibSparklines) tools.sparklines = DocLibSparklines;
+      if (DocLibSpecialCharacter)
+        tools.specialCharacter = DocLibSpecialCharacter;
+      if (DocLibTextEffects) tools.textEffects = DocLibTextEffects;
 
       const editor = new EditorJSModule({
         holder: holderDiv,
@@ -555,7 +586,9 @@ export default function StandardEditor({
         onChange: async () => {
           try {
             if (setSaveStatus) setSaveStatus("Saving");
-            const saved = sanitizeEditorData(await editor.save());
+            const saved = sanitizeEditorData(
+              attachWordSettings(editor, await editor.save()),
+            ) as WordOutputData;
             const text = saved.blocks.map((b) => b.data?.text || "").join(" ");
             const words = text.trim().split(/\s+/).length;
 
@@ -618,6 +651,7 @@ export default function StandardEditor({
       });
 
       if (!cancelled) {
+        registerWordSettings(editor, wordSettings);
         actualEditorRef.current = editor;
       } else {
         editor.isReady

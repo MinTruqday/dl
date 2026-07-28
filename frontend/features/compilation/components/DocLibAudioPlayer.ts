@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibAudioPlayer implements BlockTool {
+  static readonly feature = {
+    id: "DocLibAudioPlayer",
+    title: "DocLib AudioPlayer",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d4edf687225bed1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,20 12,20 4,10 20,17 9,19 6,19"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: {
@@ -14,7 +21,7 @@ export default class DocLibAudioPlayer implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Audio Player",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d4edf687225bed1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,20 12,20 4,10 20,17 9,19 6,19"/></svg>',
     };
   }
 
@@ -134,7 +141,7 @@ export default class DocLibAudioPlayer implements BlockTool {
         const editBtn = document.createElement("button");
         editBtn.classList.add("doclib-ap-edit-btn");
         editBtn.innerHTML =
-          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>';
+          '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d4edf687225bed1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,20 12,20 4,10 20,17 9,19 6,19"/></svg>';
         editBtn.addEventListener("click", () => {
           this.data.audioUrl = "";
           this.buildUI();

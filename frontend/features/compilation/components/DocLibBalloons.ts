@@ -1,49 +1,91 @@
-import { API, BlockTune } from "@editorjs/editorjs";
+import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
-export default class DocLibBalloons implements BlockTune {
-  static get isTune() {
+export default class DocLibBalloons implements BlockTool {
+  static readonly feature = {
+    id: "DocLibBalloons",
+    title: "DocLib Balloons",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f30d2dd8c2de2c38"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,17 15,16 11,5 14,9 6,20 9,12"/></svg>',
+    origin: "word-compatible",
+  } as const;
+
+  static get toolbox() {
+    return {
+      title: "DocLib Balloons",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f30d2dd8c2de2c38"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,17 15,16 11,5 14,9 6,20 9,12"/></svg>',
+    };
+  }
+
+  static get isReadOnlySupported() {
     return true;
   }
 
-  private api: API;
-  private data: any;
-  private wrapper: HTMLElement;
+  readonly id = "DocLibBalloons";
+  readonly title = "DocLib Balloons";
+  readonly category = "review" as const;
+  readonly mode = "Balloons";
+  readonly requiresSelection = false;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
 
-  constructor({ api, data }: { api: API; data: any }) {
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
-    this.data = data || { enabled: false };
-    this.wrapper = document.createElement("div");
+    this.data = data || {};
   }
 
   render() {
-    const btn = document.createElement("button");
-    btn.classList.add(this.api.styles.settingsButton);
-    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 11.5C21 16.1944 16.9706 20 12 20C10.7493 20 9.55831 19.7423 8.47779 19.2789L4.5 20.5L5.75338 16.6575C4.65486 15.2536 4 13.4542 4 11.5C4 6.80558 7.58172 3 12 3C16.4183 3 21 6.80558 21 11.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
-    btn.dataset.title = "DocLib Balloons";
-
-    if (this.data.enabled) {
-      btn.classList.add(this.api.styles.settingsButtonActive);
-    }
-
-    btn.addEventListener("click", () => {
-      this.data.enabled = !this.data.enabled;
-      btn.classList.toggle(this.api.styles.settingsButtonActive);
+    this.wrapper = document.createElement("div");
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
     });
-
-    this.wrapper.appendChild(btn);
+    this.wrapper.appendChild(button);
     return this.wrapper;
   }
 
-  save() {
-    return this.data;
+  save(blockContent: HTMLElement) {
+    return {
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
+    };
   }
 
-  wrap(blockContent: HTMLElement) {
-    const w = document.createElement("div");
-    if (this.data.enabled) {
-      w.classList.add("doclib-doclibballoons-active");
-    }
-    w.appendChild(blockContent);
-    return w;
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    const root = document.querySelector<HTMLElement>(".codex-editor");
+    if (root) root.dataset.wordReview = this.mode;
+    window.dispatchEvent(
+      new CustomEvent("doclib-review-command", {
+        detail: { command: this.id, mode: this.mode },
+      }),
+    );
   }
 }

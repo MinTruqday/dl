@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibShape implements BlockTool {
+  static readonly feature = {
+    id: "DocLibShape",
+    title: "DocLib Shape",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2822af373898e2e9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,4 9,8 9,20 9,16 11,6 15,8"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibShape implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Shape",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><path d="M14 3h7v7h-7z"/><path d=\"M14 14h7v7h-7z\"/><circle cx="6.5" cy="17.5" r="3.5"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2822af373898e2e9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,4 9,8 9,20 9,16 11,6 15,8"/></svg>',
     };
   }
 
@@ -86,7 +93,7 @@ export default class DocLibShape implements BlockTool {
       else if (this.data.shape === "arrow")
         path = '<polygon points="10,40 50,40 50,20 90,50 50,80 50,60 10,60" />';
 
-      svgWrap.innerHTML = `<svg viewBox="0 0 100 100" fill="${this.data.fill}" stroke="${this.data.stroke}" stroke-width="2">${path}</svg>`;
+      svgWrap.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2822af373898e2e9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,4 9,8 9,20 9,16 11,6 15,8"/></svg>`;
       svgWrap.appendChild(textEl);
     };
 

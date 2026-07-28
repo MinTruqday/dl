@@ -63,7 +63,39 @@ class StorageService:
         
         pipeline = [
             {"$match": {"owner_id": owner_id, "is_folder": False, "is_shortcut": False}},
-            {"$group": {"_id": None, "total_used": {"$sum": "$size"}}}
+            {
+                "$project": {
+                    "assets": {
+                        "$concatArrays": [
+                            {
+                                "$cond": [
+                                    {"$eq": [{"$type": "$url"}, "string"]},
+                                    [{"url": "$url", "size": "$size"}],
+                                    [],
+                                ]
+                            },
+                            {
+                                "$map": {
+                                    "input": {"$ifNull": ["$versions", []]},
+                                    "as": "version",
+                                    "in": {
+                                        "url": "$$version.url",
+                                        "size": "$$version.size",
+                                    },
+                                }
+                            },
+                        ]
+                    }
+                }
+            },
+            {"$unwind": "$assets"},
+            {
+                "$group": {
+                    "_id": "$assets.url",
+                    "size": {"$max": "$assets.size"},
+                }
+            },
+            {"$group": {"_id": None, "total_used": {"$sum": "$size"}}},
         ]
         result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.aggregate(pipeline).to_list(1)
         used = (result[0].get("total_used") or 0) if result else 0
@@ -309,20 +341,46 @@ class StorageService:
     ) -> Optional[StorageItemInDB]:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
-            return None
+            raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
+        if item.is_folder:
+            raise HTTPException(
+                status_code=400,
+                detail="Thư mục không hỗ trợ lịch sử phiên bản",
+            )
         if not url.startswith((f"users/{owner_id}/", f"client/{owner_id}/")):
-            return None
+            raise HTTPException(
+                status_code=400,
+                detail="Đường dẫn phiên bản không thuộc người dùng hiện tại",
+            )
         from src.core.storage import get_bucket, get_storage_client
         try:
             client = await get_storage_client()
             metadata = await client.head_object(Bucket=get_bucket(url), Key=url)
         except Exception:
-            return None
+            raise HTTPException(
+                status_code=503,
+                detail="Dịch vụ lưu trữ tạm thời không khả dụng",
+            )
         if metadata.get("ContentLength") != size:
-            return None
+            raise HTTPException(
+                status_code=409,
+                detail="Kích thước phiên bản không khớp với dữ liệu đã tải lên",
+            )
         quota = await StorageService.get_storage_quota(owner_id)
-        if quota["used"] - item.size + size > quota["limit"]:
-            return None
+        cloud_db = database.mongodb[settings.CLOUD_DB_NAME]
+        registered = await cloud_db.storage_items.find_one(
+            {
+                "owner_id": owner_id,
+                "$or": [{"url": url}, {"versions.url": url}],
+            },
+            {"_id": 1},
+        )
+        projected_usage = quota["used"] if registered else quota["used"] + size
+        if projected_usage > quota["limit"]:
+            raise HTTPException(
+                status_code=413,
+                detail="Dung lượng lưu trữ còn lại không đủ",
+            )
         from src.schemas.storage import FileVersion
 
         update_dict = {
@@ -340,9 +398,18 @@ class StorageService:
             }
 
         size_diff = size - (item.size or 0)
-        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
-            {"_id": item_id, "owner_id": owner_id}, update_op
-        )
+        async with await database.mongodb.start_session() as session:
+            async with session.start_transaction():
+                await cloud_db.storage_items.update_one(
+                    {"_id": item_id, "owner_id": owner_id},
+                    update_op,
+                    session=session,
+                )
+                if registered and str(registered["_id"]) != item_id:
+                    await cloud_db.storage_items.delete_one(
+                        {"_id": registered["_id"], "owner_id": owner_id},
+                        session=session,
+                    )
 
         return await StorageService.get_item(item_id, owner_id)
 
@@ -424,5 +491,3 @@ class StorageService:
         )
         items = await cursor.to_list(length=limit)
         return [StorageItemInDB(**item) for item in items]
-
-

@@ -1,37 +1,92 @@
-import { API, BlockTool } from "@editorjs/editorjs";
+import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibFocusMode implements BlockTool {
-  private api: API;
-  private wrapper: HTMLElement | null = null;
-  private data: { focus: string };
+  static readonly feature = {
+    id: "DocLibFocusMode",
+    title: "DocLib FocusMode",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0904c82c64b35683"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,8 17,14 19,13 5,16 12,8 17,11"/></svg>',
+    origin: "word-compatible",
+  } as const;
 
   static get toolbox() {
     return {
       title: "DocLib Focus Mode",
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0904c82c64b35683"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,8 17,14 19,13 5,16 12,8 17,11"/></svg>',
     };
   }
 
-  constructor({ api, data }: { api: API; data: any }) {
+  static get isReadOnlySupported() {
+    return true;
+  }
+
+  readonly id = "DocLibFocusMode";
+  readonly title = "DocLib Focus Mode";
+  readonly category = "view" as const;
+  readonly mode = "FocusMode";
+  readonly requiresSelection = false;
+  private api?: API;
+  private data: BlockToolData;
+  private wrapper: HTMLElement | null = null;
+
+  constructor(
+    { api, data }: { api?: API; data?: BlockToolData } = {},
+  ) {
     this.api = api;
-    this.data = { focus: data.focus || "" };
+    this.data = data || {};
   }
 
   render() {
     this.wrapper = document.createElement("div");
-    this.wrapper.classList.add(this.api.styles.block, "doclib-focus-mode");
-    this.wrapper.contentEditable = "true";
-    this.wrapper.innerHTML = this.data.focus;
-    this.wrapper.dataset.placeholder = "Focus content";
-
-    this.wrapper.addEventListener("input", () => {
-      this.data.focus = this.wrapper!.innerHTML;
+    this.wrapper.classList.add("cdx-block", "doclib-word-command");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = this.title;
+    button.classList.add("doclib-word-command__button");
+    button.dataset.applied = this.data.applied === true ? "true" : "false";
+    button.addEventListener("click", () => {
+      if (!this.api || !this.wrapper) return;
+      void this.execute(this.api)
+        .then(() => {
+          if (!this.wrapper) return;
+          this.wrapper.dataset.applied = "true";
+          button.dataset.applied = "true";
+          this.data = {
+            feature: this.id,
+            mode: this.mode,
+            applied: true,
+          };
+        })
+        .catch((error) => {
+          if (this.wrapper) {
+            this.wrapper.dataset.error =
+              error instanceof Error ? error.message : "Command failed";
+          }
+        });
     });
-
+    this.wrapper.appendChild(button);
     return this.wrapper;
   }
 
   save(blockContent: HTMLElement) {
-    return { focus: blockContent.innerHTML };
+    return {
+      feature: this.id,
+      mode: this.mode,
+      applied: blockContent.dataset.applied === "true",
+    };
+  }
+
+  validate(savedData: BlockToolData) {
+    return savedData.feature === this.id && savedData.mode === this.mode;
+  }
+
+  async execute(editor: any) {
+    const root = document.querySelector<HTMLElement>(".codex-editor");
+    if (!root) throw new Error("Editor is not ready");
+    root.classList.toggle("doclib-reading-mode");
+    window.dispatchEvent(
+      new CustomEvent("doclib-view-command", {
+        detail: { command: this.id, mode: this.mode },
+      }),
+    );
   }
 }

@@ -8,7 +8,7 @@ from src.core.infrastructure.configuration import settings
 class LicenseRepository:
     @staticmethod
     def _get_db():
-        return database.mongodb.get_database(settings.DRM_DB_NAME if hasattr(settings, 'DRM_DB_NAME') else "doclib")
+        return database.mongodb.get_database(settings.DRM_DB_NAME)
 
     @classmethod
     async def find_license_by_file_id(cls, file_id: str) -> Optional[Dict[str, Any]]:
@@ -24,7 +24,7 @@ class LicenseRepository:
 
     @classmethod
     async def get_document(cls, document_id: str) -> Optional[Dict[str, Any]]:
-        content_db = database.mongodb["doclib_content"]
+        content_db = database.mongodb[settings.CONTENT_DB_NAME]
         return await content_db["documents"].find_one({"_id": document_id})
 
     @classmethod

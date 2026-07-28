@@ -1,6 +1,13 @@
 import { API, BlockTool } from "@editorjs/editorjs";
 
 export default class DocLibButton implements BlockTool {
+  static readonly feature = {
+    id: "DocLibButton",
+    title: "DocLib Button",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="085088b8d1ea9900"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,16 4,18 9,17 4,4 10,11 18,18"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private data: { link: string; text: string };
   private wrapper: HTMLElement | null = null;
@@ -35,7 +42,7 @@ export default class DocLibButton implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Button",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="085088b8d1ea9900"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,16 4,18 9,17 4,4 10,11 18,18"/></svg>',
     };
   }
 
@@ -192,7 +199,7 @@ export default class DocLibButton implements BlockTool {
   renderSettings() {
     return [
       {
-        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>',
+        icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="085088b8d1ea9900"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,16 4,18 9,17 4,4 10,11 18,18"/></svg>',
         label: "Edit Button",
         name: "edit_mode",
         onActivate: () => {

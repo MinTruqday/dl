@@ -1,53 +1,76 @@
-from datetime import datetime, timezone
-from typing import List, Optional
-from uuid6 import uuid7
 from fastapi import HTTPException
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+
 from src.core.logic_logger import log_logic_execution
+from src.services.storage import StorageService
+
 
 class VersionService:
     @staticmethod
     @log_logic_execution
-    async def create_file_version(file_id: str, owner_id: str, new_url: str, new_size: int) -> dict:
-        item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({"_id": file_id, "owner_id": owner_id})
-        if not item or item.get("is_folder"):
-            raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin cần tạo phiên bản")
-        version_count = await database.mongodb[settings.CLOUD_DB_NAME].storage_versions.count_documents({"file_id": file_id})
-        version_num = version_count + 1
-        version_doc = {
-            "_id": f"ver_{uuid7()}",
-            "file_id": file_id,
-            "owner_id": owner_id,
-            "version_number": version_num,
-            "url": new_url,
-            "size": new_size,
-            "created_at": datetime.now(timezone.utc),
-        }
-        await database.mongodb[settings.CLOUD_DB_NAME].storage_versions.insert_one(version_doc)
-        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
-            {"_id": file_id},
-            {"$set": {"url": new_url, "size": new_size, "current_version": version_num, "updated_at": datetime.now(timezone.utc)}}
+    async def create_file_version(
+        file_id: str,
+        owner_id: str,
+        new_url: str,
+        new_size: int,
+    ) -> dict:
+        item = await StorageService.add_version(
+            file_id,
+            owner_id,
+            new_url,
+            new_size,
         )
-        return {"status": "success", "version": version_num, "file_id": file_id}
+        return {
+            "status": "success",
+            "file_id": file_id,
+            "version_count": len(item.versions),
+        }
 
     @staticmethod
     @log_logic_execution
     async def get_file_versions(file_id: str, owner_id: str) -> list:
-        item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({"_id": file_id, "owner_id": owner_id})
-        if not item:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
-        cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_versions.find({"file_id": file_id}).sort("version_number", -1)
-        return await cursor.to_list(length=100)
+        item = await StorageService.get_item(file_id, owner_id)
+        if not item or item.is_folder:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm thấy tệp tin",
+            )
+        return [version.model_dump() for version in reversed(item.versions)]
 
     @staticmethod
     @log_logic_execution
-    async def restore_file_version(file_id: str, version_id: str, owner_id: str) -> dict:
-        ver = await database.mongodb[settings.CLOUD_DB_NAME].storage_versions.find_one({"_id": version_id, "file_id": file_id, "owner_id": owner_id})
-        if not ver:
-            raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản tệp tin")
-        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
-            {"_id": file_id},
-            {"$set": {"url": ver["url"], "size": ver["size"], "current_version": ver["version_number"], "updated_at": datetime.now(timezone.utc)}}
+    async def restore_file_version(
+        file_id: str,
+        version_id: str,
+        owner_id: str,
+    ) -> dict:
+        item = await StorageService.get_item(file_id, owner_id)
+        if not item or item.is_folder:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm thấy tệp tin",
+            )
+        version = next(
+            (
+                candidate
+                for candidate in item.versions
+                if candidate.version_id == version_id
+            ),
+            None,
         )
-        return {"status": "success", "message": f"Đã khôi phục về phiên bản {ver['version_number']}"}
+        if not version:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm thấy phiên bản tệp tin",
+            )
+        restored = await StorageService.add_version(
+            file_id,
+            owner_id,
+            version.url,
+            version.size,
+        )
+        return {
+            "status": "success",
+            "file_id": file_id,
+            "restored_version_id": version_id,
+            "version_count": len(restored.versions),
+        }

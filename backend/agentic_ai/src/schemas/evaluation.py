@@ -34,3 +34,9 @@ class RelevanceJudgment(BaseModel):
 class HallucinationGrade(BaseModel):
     is_refusal_or_hallucination: bool = Field(description="<critical_instructions>Set to True if the response refuses the prompt, states ignorance, or uses artificial identity markers. Set to False if it is a normal, helpful response.</critical_instructions>")
     reason: str = Field(description="<critical_instructions>A concise 1-sentence reason explaining why the response was graded as a refusal/hallucination or a valid response.</critical_instructions>")
+
+class JudgeScores(BaseModel):
+    accuracy: int = Field(ge=0, le=10, description="<output_format>Factual accuracy score from zero to ten.</output_format>")
+    completeness: int = Field(ge=0, le=10, description="<output_format>Coverage score from zero to ten.</output_format>")
+    relevance: int = Field(ge=0, le=10, description="<output_format>Task relevance score from zero to ten.</output_format>")
+    explanation: str = Field(min_length=1, max_length=2000, description="<output_format>Concise evidence for the scores.</output_format>")

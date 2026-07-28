@@ -1,6 +1,7 @@
 import asyncio
 from uuid6 import uuid7
 import re
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from enum import Enum
@@ -89,6 +90,19 @@ class CronScheduler:
             schedule._task.cancel()
         logger.info(f"CronScheduler unregistered schedule {schedule_id}")
 
+    def set_enabled(self, schedule_id: str, enabled: bool):
+        schedule = self._schedules[schedule_id]
+        schedule.enabled = enabled
+        if not enabled:
+            if schedule._task and not schedule._task.done():
+                schedule._task.cancel()
+            schedule._task = None
+        elif self._running and (not schedule._task or schedule._task.done()):
+            schedule._task = asyncio.create_task(
+                self._run_schedule(schedule),
+                name=f"cron:{schedule.name}",
+            )
+
     def set_event_loop(self, event_driven_loop: "EventDrivenLoop"):
         self._event_loop_ref = event_driven_loop
 
@@ -161,14 +175,14 @@ class CronScheduler:
 
 class SystemUpdateRegistry:
     def __init__(self):
-        self._updates: List[SystemUpdate] = []
+        self._updates = deque(maxlen=1000)
 
     def record(self, update: SystemUpdate):
         self._updates.append(update)
         logger.info(f"SystemUpdateRegistry recorded update '{update.update_type}' for event {update.event_id}")
 
     def get_recent(self, limit: int = 50) -> List[SystemUpdate]:
-        return list(reversed(self._updates[-limit:]))
+        return list(reversed(list(self._updates)[-limit:]))
 
     def get_by_event(self, event_id: str) -> List[SystemUpdate]:
         return [u for u in self._updates if u.event_id == event_id]
@@ -189,7 +203,7 @@ class EventDrivenLoop:
     def __init__(self):
         self._handlers: Dict[EventType, List[EventHandler]] = {}
         self._event_queue: asyncio.Queue[AgentEvent] = asyncio.Queue(maxsize=1000)
-        self._processed_events: List[AgentEvent] = []
+        self._processed_events = deque(maxlen=1000)
         self._update_registry = SystemUpdateRegistry()
         self._running = False
         self._worker_task: Optional[asyncio.Task] = None
@@ -201,11 +215,8 @@ class EventDrivenLoop:
         logger.info(f"EventDrivenLoop registered handler for {handler.event_type.value} {handler.description}")
 
     async def emit_event(self, event: AgentEvent):
-        try:
-            self._event_queue.put_nowait(event)
-            logger.info(f"EventDrivenLoop queued event {event.event_id} ({event.event_type.value})")
-        except asyncio.QueueFull:
-            logger.warning(f"EventDrivenLoop event queue full, dropping event {event.event_id}")
+        self._event_queue.put_nowait(event)
+        logger.info(f"EventDrivenLoop queued event {event.event_id} ({event.event_type.value})")
 
     async def handle_event(self, event: AgentEvent) -> Optional[str]:
         handlers = self._handlers.get(event.event_type, [])
@@ -279,7 +290,7 @@ class EventDrivenLoop:
         }
 
     def get_recent_events(self, limit: int = 20) -> List[Dict]:
-        events = list(reversed(self._processed_events[-limit:]))
+        events = list(reversed(list(self._processed_events)[-limit:]))
         return [
             {
                 "event_id": e.event_id,

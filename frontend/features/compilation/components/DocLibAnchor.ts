@@ -1,6 +1,13 @@
 import { API, BlockTune } from "@editorjs/editorjs";
 
 export default class DocLibAnchor implements BlockTune {
+  static readonly feature = {
+    id: "DocLibAnchor",
+    title: "DocLib Anchor",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9ddd899a066a4693"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,4 5,5 10,8 6,15 12,20 10,20"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private _data: string;
   private block: any;
@@ -31,7 +38,7 @@ export default class DocLibAnchor implements BlockTune {
     const toggler = document.createElement("div");
     toggler.classList.add(this.api.styles.settingsButton);
     toggler.innerHTML =
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9ddd899a066a4693"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,4 5,5 10,8 6,15 12,20 10,20"/></svg>';
 
     if (this.currentAnchor) {
       toggler.classList.add(this.api.styles.settingsButtonActive);

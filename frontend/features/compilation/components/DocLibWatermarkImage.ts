@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibWatermarkImage implements BlockTool {
+  static readonly feature = {
+    id: "DocLibWatermarkImage",
+    title: "DocLib WatermarkImage",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="feaeca668500d3b9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,8 19,4 18,4 11,19 11,19 4,10"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibWatermarkImage implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Watermark Image",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><path d="M4 4l16 16"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="feaeca668500d3b9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,8 19,4 18,4 11,19 11,19 4,10"/></svg>',
     };
   }
 

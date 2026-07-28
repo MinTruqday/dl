@@ -79,8 +79,14 @@ class ReasoningAgent:
         except Exception:
             logger.exception("Document quality evaluation error")
             return {
-                "should_retry": False,
+                "should_retry": True,
                 "feedback": "The system encountered an error during the quality evaluation phase",
+                "scores": {
+                    "relevance": 0.0,
+                    "grounding": 0.0,
+                    "completeness": 0.0,
+                    "overall": 0.0,
+                },
             }
 
     def _build_context(self, documents: List[Dict]) -> str:

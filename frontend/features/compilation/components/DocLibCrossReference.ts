@@ -1,6 +1,13 @@
 import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibCrossReference implements BlockTool {
+  static readonly feature = {
+    id: "DocLibCrossReference",
+    title: "DocLib CrossReference",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab29ca4f78ca710a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,11 19,15 5,19 15,14 16,17 7,14"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibCrossReference implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Cross Reference",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab29ca4f78ca710a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,11 19,15 5,19 15,14 16,17 7,14"/></svg>',
     };
   }
 

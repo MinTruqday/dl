@@ -1,6 +1,13 @@
 import { API, InlineTool } from "@editorjs/editorjs";
 
 export default class DocLibTextStyle implements InlineTool {
+  static readonly feature = {
+    id: "DocLibTextStyle",
+    title: "DocLib TextStyle",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b58e2862361f1642"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,10 10,17 7,18 9,19 20,19 4,7"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private button: HTMLElement | null = null;
   private state: boolean = false;
@@ -21,7 +28,7 @@ export default class DocLibTextStyle implements InlineTool {
     (this.button as HTMLButtonElement).type = "button";
 
     this.button.innerHTML =
-      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>';
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b58e2862361f1642"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,10 10,17 7,18 9,19 20,19 4,7"/></svg>';
     this.button.classList.add(this.api.styles.inlineToolButton);
     return this.button;
   }

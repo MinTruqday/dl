@@ -1,17 +1,11 @@
 from __future__ import annotations
 
-import re
 from typing import Dict, List, Optional
 
 from loguru import logger
 
 from src.proactive.bank import MemoryBank, ProactiveMemoryBank, proactive_memory_bank
-from src.utils.structured_output import extract_json_value
-
-
 _WINDOW_SIZE = 8
-_INTERVENTION_TAG = "context_for_action"
-_NO_INTERVENTION_TAG = "no_intervention"
 
 
 def _format_trajectory_window(trajectory: List[Dict], window: int = _WINDOW_SIZE) -> str:
@@ -25,76 +19,6 @@ def _format_trajectory_window(trajectory: List[Dict], window: int = _WINDOW_SIZE
             content = content[:300] + "\n[TRUNCATED]\n" + content[-300:]
         lines.append(f"[TURN {i + 1}] {role}: {content}")
     return "\n".join(lines) if lines else "(no trajectory)"
-
-
-def _parse_phase1_tool_calls(raw_output: str) -> List[Dict]:
-    pattern = re.compile(r"<tool_call>(.*?)</tool_call>", re.DOTALL)
-    calls = []
-    for match in pattern.finditer(raw_output):
-        try:
-            call = extract_json_value(match.group(1).strip())
-            if (
-                isinstance(call, dict)
-                and call.get("name")
-                in {
-                    "memory_update_status",
-                    "memory_save_knowledge",
-                    "memory_save_procedural",
-                    "memory_delete",
-                }
-                and isinstance(call.get("args"), dict)
-            ):
-                calls.append(call)
-        except Exception:
-            logger.warning("ProactiveMemoryAgent Phase 1 failed to parse tool call block")
-    if calls:
-        return calls
-    try:
-        payload = extract_json_value(raw_output)
-        candidates = payload.get("calls", []) if isinstance(payload, dict) else []
-        return [
-            call
-            for call in candidates
-            if isinstance(call, dict)
-            and call.get("name")
-            in {
-                "memory_update_status",
-                "memory_save_knowledge",
-                "memory_save_procedural",
-                "memory_delete",
-            }
-            and isinstance(call.get("args"), dict)
-        ]
-    except Exception:
-        return []
-
-
-def _parse_phase2_output(raw_output: str) -> Optional[str]:
-    if f"<{_NO_INTERVENTION_TAG}" in raw_output:
-        return None
-
-    match = re.search(
-        rf"<{_INTERVENTION_TAG}>(.*?)</{_INTERVENTION_TAG}>",
-        raw_output,
-        re.DOTALL,
-    )
-    if match:
-        text = match.group(1).strip()
-        return text if text else None
-
-    try:
-        payload = extract_json_value(raw_output)
-        if (
-            isinstance(payload, dict)
-            and payload.get("intervene") is True
-            and isinstance(payload.get("reminder"), str)
-        ):
-            reminder = payload["reminder"].strip()
-            return reminder or None
-    except Exception:
-        return None
-
-    return None
 
 
 class ProactiveMemoryAgent:
@@ -141,6 +65,7 @@ class ProactiveMemoryAgent:
     ) -> MemoryBank:
         from langchain_core.messages import HumanMessage, SystemMessage
         from src.core.registry import PromptType, registry
+        from src.schemas.proactive import MemoryBankActions
 
         bank_snapshot = self._bank.format_bank_snapshot(bank)
         phase1_system = registry.get(PromptType.MEMORY_BANK_PHASE1)
@@ -148,12 +73,13 @@ class ProactiveMemoryAgent:
             f"<task>\n{task_description}\n</task>\n\n"
             f"<recent_trajectory>\n{trajectory_window}\n</recent_trajectory>\n\n"
             f"<current_bank>\n{bank_snapshot}\n</current_bank>\n\n"
-            "Issue the appropriate memory tool calls based on the above."
+            "Return the minimum validated memory actions required by this state"
         )
 
         try:
             llm = self._build_llm()
-            response = await llm.ainvoke(
+            structured_llm = llm.with_structured_output(MemoryBankActions)
+            response = await structured_llm.ainvoke(
                 [
                     SystemMessage(content=phase1_system),
                     HumanMessage(content=phase1_user),
@@ -161,15 +87,14 @@ class ProactiveMemoryAgent:
                 max_tokens=1024,
                 temperature=0.1,
             )
-            raw = response.content
-            tool_calls = _parse_phase1_tool_calls(raw)
+            tool_calls = response.calls
             logger.info(
                 f"ProactiveMemoryAgent Phase 1 produced {len(tool_calls)} tool call(s) for session={session_id}"
             )
 
             for call in tool_calls:
-                name = call.get("name", "")
-                args = call.get("args", {})
+                name = call.name
+                args = call.args.model_dump()
                 await self._dispatch_tool(session_id, user_id, name, args)
 
         except Exception:
@@ -229,6 +154,7 @@ class ProactiveMemoryAgent:
     ) -> Optional[str]:
         from langchain_core.messages import HumanMessage, SystemMessage
         from src.core.registry import PromptType, registry
+        from src.schemas.proactive import MemoryIntervention
 
         bank_snapshot = self._bank.format_bank_snapshot(bank)
 
@@ -238,17 +164,18 @@ class ProactiveMemoryAgent:
             )
             return None
 
-        phase2_system = registry.get(PromptType.MEMORY_BANK_PHASE2)
+        phase2_system = registry.get(PromptType.MEMORY_BANK_PHASE2).format()
         phase2_user = (
             f"<task>\n{task_description}\n</task>\n\n"
             f"<recent_trajectory>\n{trajectory_window}\n</recent_trajectory>\n\n"
             f"<memory_bank>\n{bank_snapshot}\n</memory_bank>\n\n"
-            "Decide whether to intervene. Emit ONLY one of the two tags."
+            "Return the validated intervention decision"
         )
 
         try:
             llm = self._build_llm()
-            response = await llm.ainvoke(
+            structured_llm = llm.with_structured_output(MemoryIntervention)
+            response = await structured_llm.ainvoke(
                 [
                     SystemMessage(content=phase2_system),
                     HumanMessage(content=phase2_user),
@@ -256,8 +183,11 @@ class ProactiveMemoryAgent:
                 max_tokens=512,
                 temperature=0.1,
             )
-            raw = response.content
-            intervention = _parse_phase2_output(raw)
+            intervention = (
+                response.reminder.strip()
+                if response.intervene and response.reminder
+                else None
+            )
 
             if intervention:
                 logger.info(

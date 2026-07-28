@@ -112,6 +112,41 @@ async def verify_planner_privacy():
     assert [event["type"] for event in events] == ["plan"]
     assert "private chain" not in json.dumps(events)
 
+    class FailingPlanModel:
+        async def ainvoke(self, messages):
+            raise ValueError("invalid structured output")
+
+    planner.structured_llm = FailingPlanModel()
+    with patch("src.agents.planning.memo_manager.get_memories", return_value=""):
+        failed_events = [
+            event
+            async for event in planner.stream_plan(
+                {"query": "test", "user_id": "user", "conversation_history": []}
+            )
+        ]
+    assert failed_events == [
+        {"type": "error", "code": "planning_model_failed"}
+    ]
+
+    from pydantic import ValidationError
+    from src.schemas.planning import ExecutionPlan, PlanNode
+
+    try:
+        ExecutionPlan(
+            reasoning="Invalid dependency order",
+            nodes=[
+                PlanNode(
+                    id="one",
+                    agent="Knowledge",
+                    task="Retrieve documents",
+                    dependencies=["two"],
+                )
+            ],
+        )
+        raise AssertionError("Invalid plan dependency was accepted")
+    except ValidationError:
+        pass
+
 
 async def verify_routing():
     class FakeEmbedder:

@@ -1,6 +1,13 @@
 import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 
 export default class DocLibEquationArray implements BlockTool {
+  static readonly feature = {
+    id: "DocLibEquationArray",
+    title: "DocLib EquationArray",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11e7c3b765e78075"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 12,17 20,14 13,19 7,10 9,8"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   private api: API;
   private readOnly: boolean;
   private data: any;
@@ -9,7 +16,7 @@ export default class DocLibEquationArray implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Equation Array",
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14l6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="M22 22l-5-10-5 10"></path><path d="M14 18h6"></path><path d="M4 20h16"></path></svg>',
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11e7c3b765e78075"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 12,17 20,14 13,19 7,10 9,8"/></svg>',
     };
   }
 

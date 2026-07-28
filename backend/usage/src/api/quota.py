@@ -75,11 +75,11 @@ async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
         data=None, message="Ghi nhận mức tiêu thụ tài nguyên hệ thống hoàn tất", status=200
     )
 
-from src.schemas.quota import ConsumeUploadQuotaRequest, UploadType
+from src.schemas.quota import UploadQuotaReservationRequest
 
-@router.get("/tai-len/xac-minh", response_model=APIResponse[Any], include_in_schema=False)
-async def check_upload_quota_internal(
-    item_type: UploadType,
+@router.post("/tai-len/dat-cho", response_model=APIResponse[Any], include_in_schema=False)
+async def reserve_upload_quota_internal(
+    req: UploadQuotaReservationRequest,
     current_user: CurrentUser = Depends(get_current_user),
     db=Depends(get_db),
 ):
@@ -87,23 +87,16 @@ async def check_upload_quota_internal(
     ai_tier = getattr(current_user, "ai_tier", "BASIC")
     if hasattr(ai_tier, "value"):
         ai_tier = ai_tier.value
-        
-    await QuotaService.check_upload_quota(str(current_user.id), role, ai_tier, item_type.value)
-    return APIResponse(
-        data=None,
-        message="Xác minh dung lượng tải lên khả dụng hoàn tất",
-        status=200,
-    )
 
-@router.post("/tai-len/tieu-thu", response_model=APIResponse[Any], include_in_schema=False)
-async def consume_upload_quota_internal(
-    req: ConsumeUploadQuotaRequest,
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db)
-):
-    await QuotaService.consume_upload_quota(
-        str(current_user.id), req.item_type.value, req.req_reset_hours
+    reservation = await QuotaService.reserve_upload_quota(
+        str(current_user.id),
+        role,
+        ai_tier,
+        req.item_type.value,
+        req.req_reset_hours,
     )
     return APIResponse(
-        data=None, message="Ghi nhận mức tiêu thụ dung lượng tải lên hoàn tất", status=200
+        data={"reservation": reservation},
+        message="Đặt chỗ dung lượng tải lên hoàn tất",
+        status=200,
     )

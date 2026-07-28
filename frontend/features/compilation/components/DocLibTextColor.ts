@@ -8,6 +8,13 @@ interface DocLibColorConfig {
 }
 
 export default class DocLibColorPicker implements InlineTool {
+  static readonly feature = {
+    id: "DocLibTextColor",
+    title: "DocLib TextColor",
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1cb639a4ace6b4f5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,16 10,15 6,13 14,11 18,11 10,8"/></svg>',
+    origin: "doclib-native",
+  } as const;
+
   static get isInline() {
     return true;
   }
@@ -75,9 +82,9 @@ export default class DocLibColorPicker implements InlineTool {
 
   private getIcon() {
     if (this.pluginType === "marker") {
-      return '<svg fill="#000000" height="20px" width="20px" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 491.644 491.644"><path d="M456.623,2.282c-42.758-20.283-141.107,96.84-223.473,264.224c-2.35,4.776-2.686,10.294-0.936,15.32c1.75,5.026,5.442,9.145,10.251,11.426L366.758,352.2c4.809,2.281,10.332,2.538,15.333,0.714c5.001-1.825,9.059-5.579,11.272-10.42C470.883,172.829,499.385,22.562,456.623,2.282z"/><path d="M34.71,461.799l-17.257,16.708c-2.225,2.17-2.934,5.475-1.773,8.363c1.179,2.886,3.985,4.773,7.099,4.773h160.887c-1.364-5.043-0.921-10.445,1.391-15.306l7.919-16.692H40.036C38.036,459.646,36.129,460.419,34.71,461.799z"/><path d="M264.766,448.864l-32.615-15.458c-1.046-0.502-2.161-0.744-3.257-0.744c-2.87,0-5.611,1.614-6.901,4.372l-22.001,46.384c-0.871,1.789-0.723,3.895,0.341,5.564c1.046,1.661,2.888,2.661,4.855,2.661h0.046l44.275-0.378c2.206-0.016,4.206-1.299,5.159-3.292l13.724-28.925c0.856-1.838,0.967-3.936,0.29-5.846C268.004,451.292,266.585,449.728,264.766,448.864z"/><path d="M348.445,366.038l-112.572-51.392c-8.909-4.067-19.434-0.227-23.63,8.622c-2.551,5.378-3.58,11.353-2.975,17.275l5.2,50.909c0.703,6.882,4.983,12.884,11.261,15.792l60.031,27.797c6.688,3.097,14.548,2.179,20.343-2.375l45.983-36.137c4.931-3.875,7.487-10.041,6.743-16.269C358.086,374.032,354.151,368.642,348.445,366.038z"/></svg>';
+      return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1cb639a4ace6b4f5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,16 10,15 6,13 14,11 18,11 10,8"/></svg>';
     } else {
-      return '<svg fill="#000000" height="20px" width="20px" viewBox="-6 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M365 432L328 352 172 352 135 432 64 432 227 80 272 80 436 432 365 432ZM201 288L299 288 250 183 201 288Z"></path></svg>';
+      return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1cb639a4ace6b4f5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,16 10,15 6,13 14,11 18,11 10,8"/></svg>';
     }
   }
 
