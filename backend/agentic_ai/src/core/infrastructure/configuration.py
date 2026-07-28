@@ -1,4 +1,5 @@
 import os
+import tempfile
 from typing import Optional
 
 from pydantic import BaseModel
@@ -12,6 +13,11 @@ def get_service_url(service_name_underscore: str) -> str:
     if k8s_host:
         return f"http://{k8s_host}:8000"
     return f"http://{service_name_underscore.lower()}:8000"
+
+
+def get_runtime_path(*parts: str) -> str:
+    return os.path.join(tempfile.gettempdir(), *parts)
+
 
 class Settings(BaseModel):
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "DocLib")
@@ -58,9 +64,20 @@ class Settings(BaseModel):
     AGENT_SECURITY_VIOLATION_THRESHOLD: int = int(os.getenv("AGENT_SECURITY_VIOLATION_THRESHOLD", "5"))
     AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(os.getenv("AGENT_SLOW_DURATION_MS_THRESHOLD", "30000"))
     AGENT_ROUTE_CONFIDENCE_THRESHOLD: float = float(os.getenv("AGENT_ROUTE_CONFIDENCE_THRESHOLD", "0.55"))
-    AGENT_FILE_ROOT: str = os.getenv("AGENT_FILE_ROOT", "/tmp/doclib_agent_files")
-    FINETUNE_MODELS_DIR: str = os.getenv("FINETUNE_MODELS_DIR", "/tmp/doclib_finetune/models")
-    FINETUNE_ADAPTERS_DIR: str = os.getenv("FINETUNE_ADAPTERS_DIR", "/tmp/doclib_finetune/adapters")
-    FINETUNE_GGUF_DIR: str = os.getenv("FINETUNE_GGUF_DIR", "/tmp/doclib_finetune/gguf")
+    AGENT_EXECUTION_TIMEOUT_SECONDS: int = int(os.getenv("AGENT_EXECUTION_TIMEOUT_SECONDS", "900"))
+    AGENT_RECURSION_LIMIT: int = int(os.getenv("AGENT_RECURSION_LIMIT", "200"))
+    AGENT_MAX_CONTEXT_TOKENS: int = int(os.getenv("AGENT_MAX_CONTEXT_TOKENS", "32768"))
+    AGENT_HISTORY_MAX_TURNS: int = int(os.getenv("AGENT_HISTORY_MAX_TURNS", "50"))
+    AGENT_DEFAULT_MAX_OUTPUT_TOKENS: int = int(os.getenv("AGENT_DEFAULT_MAX_OUTPUT_TOKENS", "4096"))
+    AGENT_PROACTIVE_MEMORY_ENABLED: bool = os.getenv("AGENT_PROACTIVE_MEMORY_ENABLED", "true").lower() == "true"
+    AGENT_FILE_ROOT: str = os.getenv("AGENT_FILE_ROOT", get_runtime_path("doclib_agent_files"))
+    AGENT_ARCHIVE_MAX_FILES: int = int(os.getenv("AGENT_ARCHIVE_MAX_FILES", "1000"))
+    AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES: int = int(os.getenv("AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES", "536870912"))
+    AGENT_ARCHIVE_MAX_COMPRESSION_RATIO: float = float(os.getenv("AGENT_ARCHIVE_MAX_COMPRESSION_RATIO", "100"))
+    MCP_ALLOWED_STDIO_COMMANDS: str = os.getenv("MCP_ALLOWED_STDIO_COMMANDS", "")
+    MCP_ALLOWED_SSE_HOSTS: str = os.getenv("MCP_ALLOWED_SSE_HOSTS", "")
+    FINETUNE_MODELS_DIR: str = os.getenv("FINETUNE_MODELS_DIR", get_runtime_path("doclib_finetune", "models"))
+    FINETUNE_ADAPTERS_DIR: str = os.getenv("FINETUNE_ADAPTERS_DIR", get_runtime_path("doclib_finetune", "adapters"))
+    FINETUNE_GGUF_DIR: str = os.getenv("FINETUNE_GGUF_DIR", get_runtime_path("doclib_finetune", "gguf"))
 
 settings = Settings()

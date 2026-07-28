@@ -54,10 +54,19 @@ class MCPService:
 
         server_type = connector.get("server_type", "stdio")
         if server_type == "stdio":
+            from src.core.infrastructure.configuration import settings
+
             command = connector.get("command")
             args = connector.get("args", [])
             if not command:
                 raise ValueError("mcp_stdio_command_missing")
+            allowed_commands = {
+                item.strip()
+                for item in settings.MCP_ALLOWED_STDIO_COMMANDS.split(",")
+                if item.strip()
+            }
+            if command not in allowed_commands:
+                raise PermissionError("mcp_stdio_command_not_allowed")
 
             server_params = StdioServerParameters(command=command, args=args)
             try:
@@ -69,10 +78,28 @@ class MCPService:
             except Exception as exc:
                 raise RuntimeError("mcp_stdio_execution_failed") from exc
         elif server_type == "sse":
+            from urllib.parse import urlparse
+
             from mcp.client.sse import sse_client
+            from src.core.infrastructure.configuration import settings
+
             url = connector.get("url")
             if not url:
                 raise ValueError("mcp_sse_url_missing")
+            parsed = urlparse(url)
+            allowed_hosts = {
+                item.strip().lower()
+                for item in settings.MCP_ALLOWED_SSE_HOSTS.split(",")
+                if item.strip()
+            }
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.hostname
+                or parsed.username
+                or parsed.password
+                or parsed.hostname.lower() not in allowed_hosts
+            ):
+                raise PermissionError("mcp_sse_endpoint_not_allowed")
             try:
                 async with sse_client(url) as streams:
                     async with ClientSession(streams[0], streams[1]) as session:

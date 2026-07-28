@@ -16,6 +16,7 @@ async def submit_feedback(
     req: FeedbackRequest,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Persist authenticated feedback for evaluation and future training"""
     try:
         feedback_doc = {
             "session_id": req.session_id,

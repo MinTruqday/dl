@@ -1,13 +1,10 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import asyncio
-import json
 import threading
 from datetime import datetime, timezone
 
-import httpx
-from datasets import Dataset
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import HTTPException, Query
 from loguru import logger
 
 from uuid6 import uuid7
@@ -15,6 +12,7 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 from src.repositories.finetuning import FinetuneRepository
 from src.repositories.chat import ChatRepository
+from src.utils.structured_output import extract_json_value
 
 active_jobs = {}
 
@@ -326,11 +324,10 @@ async def import_documents(req: dict):
                     messages=messages, max_tokens=1024, temperature=0.3
                 )
                 raw = resp.choices[0].message.content.strip()
-                if "```json" in raw:
-                    raw = raw.split("```json")[1].split("```")[0]
-                elif "```" in raw:
-                    raw = raw.split("```")[1].split("```")[0]
-                for p in json.loads(raw):
+                generated_samples = extract_json_value(raw)
+                if not isinstance(generated_samples, list):
+                    raise ValueError("Fine-tuning sample output must be a JSON array")
+                for p in generated_samples:
                     if p.get("instruction") and p.get("output"):
                         samples.append(
                             {
@@ -342,7 +339,7 @@ async def import_documents(req: dict):
                                 "created_at": datetime.now(timezone.utc),
                             }
                         )
-            except Exception as e:
+            except Exception:
                 logger.exception("Training data extraction error")
     if samples:
         await FinetuneRepository.insert_samples(samples)
@@ -502,25 +499,36 @@ async def deploy_model(job_id: str, req: dict):
         logger.info("Remote model repository created")
         api.create_repo(repo_id=repo_id, exist_ok=True)
 
+        import os
+        artifact_uploaded = False
         if merged_path:
-            import os
-
-            if os.path.exists(merged_path):
+            if await asyncio.to_thread(os.path.exists, merged_path):
                 logger.info("Uploading model to remote repository")
-                import asyncio
 
-                loop = asyncio.get_event_loop()
-                await loop.run_in_executor(
-                    None,
-                    lambda: api.upload_folder(
-                        folder_path=merged_path,
-                        repo_id=repo_id,
-                        commit_message="Deploy fine tuned model via automated system",
-                    ),
+                await asyncio.to_thread(
+                    api.upload_folder,
+                    folder_path=merged_path,
+                    repo_id=repo_id,
+                    commit_message="Deploy fine tuned model via automated system",
                 )
+                artifact_uploaded = True
             else:
                 logger.warning("Model output directory not found")
-                raise Exception("Model directory not found")
+        if gguf_path:
+            if await asyncio.to_thread(os.path.isfile, gguf_path):
+                logger.info("Uploading GGUF model to remote repository")
+                await asyncio.to_thread(
+                    api.upload_file,
+                    path_or_fileobj=gguf_path,
+                    path_in_repo=os.path.basename(gguf_path),
+                    repo_id=repo_id,
+                    commit_message="Deploy GGUF model via automated system",
+                )
+                artifact_uploaded = True
+            else:
+                logger.warning("GGUF model artifact not found")
+        if not artifact_uploaded:
+            raise FileNotFoundError("model_artifact_not_found")
 
         model_name = repo_id
         await FinetuneRepository.update_job(

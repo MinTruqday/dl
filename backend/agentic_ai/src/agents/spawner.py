@@ -1,6 +1,5 @@
-from typing import Any, Dict
-
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+import re
+from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 
 
@@ -64,16 +63,28 @@ class AgentSpawner:
 
     async def _generate_system_prompt(self, role: str) -> str:
         logger.info(f"Generating system prompt for spawned role: {role}")
-        from src.core.registry import PromptType, registry
+        from src.core.registry import METIS_SYSTEM_BASE, PromptType, registry
+
         meta_prompt = registry.get(PromptType.SPAWNER_SYSTEM).format(role=role)
         try:
             response = await self.llm.ainvoke([HumanMessage(content=meta_prompt)])
-            return response.content.strip()
+            return f"{METIS_SYSTEM_BASE}\n{response.content.strip()}"
         except Exception:
             logger.exception("System prompt generation for spawned agent failed")
-            return f"<system_identity>\nYou are a highly specialized expert in {role}.\n</system_identity>\n<objective>\nComplete the given task with precision and depth.\n</objective>"
+            return f"{METIS_SYSTEM_BASE}\n<system_identity>\nYou are a highly specialized expert in {role}.\n</system_identity>\n<objective>\nComplete the given task with precision and depth.\n</objective>"
 
     async def spawn(self, role: str, task: str) -> str:
-        system_prompt = await self._generate_system_prompt(role)
-        async with SpawnedAgent(llm=self.llm, role=role, system_prompt=system_prompt) as agent:
+        normalized_role = role.strip()
+        if (
+            not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._/-]{2,79}", normalized_role)
+            or re.search(
+                r"\b(ignore|instruction|override|prompt|system)\b",
+                normalized_role,
+                re.IGNORECASE,
+            )
+            or len(task) > 20000
+        ):
+            raise ValueError("spawn_request_invalid")
+        system_prompt = await self._generate_system_prompt(normalized_role)
+        async with SpawnedAgent(llm=self.llm, role=normalized_role, system_prompt=system_prompt) as agent:
             return await agent.run(task)

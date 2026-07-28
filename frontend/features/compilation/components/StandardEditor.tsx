@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
+import { sanitizeEditorData } from "./editorjs-sanitizer";
 
 interface StandardEditorProps {
   initialContent?: string;
@@ -245,8 +246,6 @@ export default function StandardEditor({
       const DocLibGreetingLine = (await import("./DocLibGreetingLine")).default;
       const DocLibEnvelope = (await import("./DocLibEnvelope")).default;
       const DocLibLabelConfig = (await import("./DocLibLabelConfig")).default;
-      const DocLibColumnBreak = (await import("./DocLibColumnBreak")).default;
-      const DocLibTextWrappingBreak = (await import("./DocLibTextWrappingBreak")).default;
       const DocLibEvenPageBreak = (await import("./DocLibEvenPageBreak")).default;
       const DocLibOddPageBreak = (await import("./DocLibOddPageBreak")).default;
       const DocLibPrintPreview = (await import("./DocLibPrintPreview")).default;
@@ -285,7 +284,8 @@ export default function StandardEditor({
       if (initialContent) {
         try {
           const parsed = JSON.parse(initialContent);
-          if (parsed.blocks && parsed.blocks.length > 0) data = parsed;
+          if (parsed.blocks && parsed.blocks.length > 0)
+            data = sanitizeEditorData(parsed);
         } catch (err: any) {
           const blocks = initialContent.split("\n").map((line: string) => ({
             type: "paragraph",
@@ -505,9 +505,6 @@ export default function StandardEditor({
       if (DocLibGreetingLine) tools.greetingLine = DocLibGreetingLine;
       if (DocLibEnvelope) tools.envelope = DocLibEnvelope;
       if (DocLibLabelConfig) tools.labelConfig = DocLibLabelConfig;
-      if (DocLibColumnBreak) tools.columnBreak = DocLibColumnBreak;
-      if (DocLibTextWrappingBreak)
-        tools.textWrappingBreak = DocLibTextWrappingBreak;
       if (DocLibEvenPageBreak) tools.evenPageBreak = DocLibEvenPageBreak;
       if (DocLibOddPageBreak) tools.oddPageBreak = DocLibOddPageBreak;
       if (DocLibPrintPreview) tools.printPreview = DocLibPrintPreview;
@@ -541,33 +538,6 @@ export default function StandardEditor({
       if (DocLibThesaurus) tools.thesaurus = DocLibThesaurus;
       if (DocLibEquationArray) tools.equationArray = DocLibEquationArray;
 
-      const componentContext = (require as any).context(
-        "./",
-        false,
-        /^\.\/DocLib[^/]+\.ts$/,
-      );
-      const registeredClasses = new Set(
-        Object.values(tools).map((entry) => entry?.class || entry),
-      );
-      const pluginNames = new Set([
-        "DocLibDragDrop",
-        "DocLibMultiBlockSelection",
-        "DocLibUndo",
-      ]);
-      componentContext.keys().forEach((path: string) => {
-        const name = path.slice(2, -3);
-        const toolClass = componentContext(path).default;
-        if (
-          !toolClass ||
-          pluginNames.has(name) ||
-          registeredClasses.has(toolClass)
-        )
-          return;
-        const key = name.charAt(6).toLowerCase() + name.slice(7);
-        tools[key] = toolClass;
-        registeredClasses.add(toolClass);
-      });
-
       const editor = new EditorJSModule({
         holder: holderDiv,
         tools,
@@ -585,7 +555,7 @@ export default function StandardEditor({
         onChange: async () => {
           try {
             if (setSaveStatus) setSaveStatus("Saving");
-            const saved = await editor.save();
+            const saved = sanitizeEditorData(await editor.save());
             const text = saved.blocks.map((b) => b.data?.text || "").join(" ");
             const words = text.trim().split(/\s+/).length;
 

@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 from loguru import logger
 
 from src.proactive.bank import MemoryBank, ProactiveMemoryBank, proactive_memory_bank
+from src.utils.structured_output import extract_json_value
 
 
 _WINDOW_SIZE = 8
@@ -31,13 +32,41 @@ def _parse_phase1_tool_calls(raw_output: str) -> List[Dict]:
     calls = []
     for match in pattern.finditer(raw_output):
         try:
-            import json
-            call = json.loads(match.group(1).strip())
-            if isinstance(call, dict) and "name" in call:
+            call = extract_json_value(match.group(1).strip())
+            if (
+                isinstance(call, dict)
+                and call.get("name")
+                in {
+                    "memory_update_status",
+                    "memory_save_knowledge",
+                    "memory_save_procedural",
+                    "memory_delete",
+                }
+                and isinstance(call.get("args"), dict)
+            ):
                 calls.append(call)
         except Exception:
             logger.warning("ProactiveMemoryAgent Phase 1 failed to parse tool call block")
-    return calls
+    if calls:
+        return calls
+    try:
+        payload = extract_json_value(raw_output)
+        candidates = payload.get("calls", []) if isinstance(payload, dict) else []
+        return [
+            call
+            for call in candidates
+            if isinstance(call, dict)
+            and call.get("name")
+            in {
+                "memory_update_status",
+                "memory_save_knowledge",
+                "memory_save_procedural",
+                "memory_delete",
+            }
+            and isinstance(call.get("args"), dict)
+        ]
+    except Exception:
+        return []
 
 
 def _parse_phase2_output(raw_output: str) -> Optional[str]:
@@ -52,6 +81,18 @@ def _parse_phase2_output(raw_output: str) -> Optional[str]:
     if match:
         text = match.group(1).strip()
         return text if text else None
+
+    try:
+        payload = extract_json_value(raw_output)
+        if (
+            isinstance(payload, dict)
+            and payload.get("intervene") is True
+            and isinstance(payload.get("reminder"), str)
+        ):
+            reminder = payload["reminder"].strip()
+            return reminder or None
+    except Exception:
+        return None
 
     return None
 
@@ -96,6 +137,7 @@ class ProactiveMemoryAgent:
         task_description: str,
         trajectory_window: str,
         bank: MemoryBank,
+        user_id: str,
     ) -> MemoryBank:
         from langchain_core.messages import HumanMessage, SystemMessage
         from src.core.registry import PromptType, registry
@@ -128,7 +170,7 @@ class ProactiveMemoryAgent:
             for call in tool_calls:
                 name = call.get("name", "")
                 args = call.get("args", {})
-                await self._dispatch_tool(session_id, name, args)
+                await self._dispatch_tool(session_id, user_id, name, args)
 
         except Exception:
             logger.exception(
@@ -138,7 +180,7 @@ class ProactiveMemoryAgent:
         return await self._bank.get_bank(session_id)
 
     async def _dispatch_tool(
-        self, session_id: str, name: str, args: Dict
+        self, session_id: str, user_id: str, name: str, args: Dict
     ) -> None:
         try:
             if name == "memory_update_status":
@@ -152,7 +194,11 @@ class ProactiveMemoryAgent:
                     content=args.get("content", ""),
                     category=args.get("category", "task_fact"),
                 )
-                await memo_manager.add([{"role": "user", "content": args.get("content", "")}], user_id=session_id, category=args.get("category", "task_fact"))
+                await memo_manager.add(
+                    [{"role": "user", "content": args.get("content", "")}],
+                    user_id=user_id or session_id,
+                    category=args.get("category", "task_fact"),
+                )
 
             elif name == "memory_save_procedural":
                 await self._bank.save_procedural(
@@ -235,13 +281,18 @@ class ProactiveMemoryAgent:
         session_id: str,
         task_description: str,
         trajectory: List[Dict],
+        user_id: str = "",
     ) -> Optional[str]:
         trajectory_window = _format_trajectory_window(trajectory)
 
         current_bank = await self._bank.get_bank(session_id)
 
         updated_bank = await self._run_phase1(
-            session_id, task_description, trajectory_window, current_bank
+            session_id,
+            task_description,
+            trajectory_window,
+            current_bank,
+            user_id,
         )
 
         intervention = await self._run_phase2(

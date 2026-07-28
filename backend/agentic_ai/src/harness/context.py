@@ -7,8 +7,8 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 
 CHARS_PER_TOKEN_APPROX = 4
-DEFAULT_MAX_CONTEXT_TOKENS = 6000
-HISTORY_MAX_TURNS = 10
+DEFAULT_MAX_CONTEXT_TOKENS = settings.AGENT_MAX_CONTEXT_TOKENS
+HISTORY_MAX_TURNS = settings.AGENT_HISTORY_MAX_TURNS
 
 @dataclass
 class AgentContext:
@@ -56,7 +56,7 @@ class ContextHarness:
                 self._redis_client = aioredis.from_url(
                     settings.REDIS_URI, decode_responses=True
                 )
-            except Exception as e:
+            except Exception:
                 logger.exception("Redis connection error")
         return self._redis_client
 
@@ -67,17 +67,31 @@ class ContextHarness:
         try:
             import json
 
-            raw_items = await redis.lrange(
-                f"session:{session_id}:history", 0, HISTORY_MAX_TURNS * 2 - 1
+            history_key = f"session:{session_id}:history"
+            summary_key = f"session:{session_id}:summary"
+            raw_items, summary = await asyncio.gather(
+                redis.lrange(history_key, 0, HISTORY_MAX_TURNS * 2 - 1),
+                redis.get(summary_key),
             )
             history = []
+            if summary:
+                history.append(
+                    {
+                        "role": "context",
+                        "content": (
+                            "<compacted_conversation>\n"
+                            f"{summary}\n"
+                            "</compacted_conversation>"
+                        ),
+                    }
+                )
             for item in raw_items:
                 try:
                     history.append(json.loads(item))
-                except Exception:
-                    pass
+                except (TypeError, json.JSONDecodeError):
+                    logger.warning("Discarded malformed short term history item")
             return history
-        except Exception as e:
+        except Exception:
             logger.exception("Error loading chat history from temporary storage")
             return []
 
@@ -85,10 +99,35 @@ class ContextHarness:
         if not user_id:
             return ""
         try:
+            from src.core.infrastructure.database import database
             from src.memory.memo import memo_manager
-            prefs = await memo_manager.get_memories(user_id)
-            return prefs or ""
-        except Exception as e:
+
+            db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
+            instruction_doc, memories = await asyncio.gather(
+                db.user_instructions.find_one({"_id": user_id}),
+                memo_manager.get_memories(user_id),
+            )
+            instructions = (
+                str(instruction_doc.get("instructions", ""))
+                if instruction_doc
+                else ""
+            )
+            memory_text = memories or ""
+            sections = []
+            if instructions.strip():
+                sections.append(
+                    "<persistent_user_instructions>\n"
+                    f"{instructions.strip()}\n"
+                    "</persistent_user_instructions>"
+                )
+            if memory_text.strip():
+                sections.append(
+                    "<relevant_user_memory>\n"
+                    f"{memory_text.strip()}\n"
+                    "</relevant_user_memory>"
+                )
+            return "\n\n".join(sections)
+        except Exception:
             logger.exception("Error loading personal configuration")
             return ""
 
@@ -108,6 +147,9 @@ class ContextHarness:
             self._load_user_preferences(user_id),
         )
 
+        preferences = preferences[
+            : remaining_budget * CHARS_PER_TOKEN_APPROX
+        ]
         pref_tokens = _estimate_tokens(preferences)
         history_budget = max(0, remaining_budget - pref_tokens)
         truncated_history = _truncate_history(history, history_budget)
@@ -141,13 +183,38 @@ class ContextHarness:
             import json
 
             key = f"session:{session_id}:history"
+            summary_key = f"session:{session_id}:summary"
             payload = json.dumps({"role": role, "content": content})
             async with redis.pipeline() as pipe:
                 pipe.rpush(key, payload)
-                pipe.ltrim(key, -(HISTORY_MAX_TURNS * 2), -1)
                 pipe.expire(key, ttl_seconds)
                 await pipe.execute()
-        except Exception as e:
+            maximum_items = HISTORY_MAX_TURNS * 2
+            item_count = await redis.llen(key)
+            overflow_count = max(0, item_count - maximum_items)
+            if overflow_count:
+                overflow, previous_summary = await asyncio.gather(
+                    redis.lrange(key, 0, overflow_count - 1),
+                    redis.get(summary_key),
+                )
+                compacted_lines = []
+                if previous_summary:
+                    compacted_lines.append(previous_summary)
+                for item in overflow:
+                    try:
+                        turn = json.loads(item)
+                    except (TypeError, json.JSONDecodeError):
+                        continue
+                    compacted_lines.append(
+                        f"{turn.get('role', 'unknown')}: "
+                        f"{str(turn.get('content', ''))[:2000]}"
+                    )
+                compacted = "\n".join(compacted_lines)[-12000:]
+                async with redis.pipeline() as pipe:
+                    pipe.ltrim(key, overflow_count, -1)
+                    pipe.setex(summary_key, ttl_seconds, compacted)
+                    await pipe.execute()
+        except Exception:
             logger.exception("Error saving interaction session")
 
     async def clear_session(self, session_id: str):
@@ -156,8 +223,9 @@ class ContextHarness:
             return
         try:
             await redis.delete(f"session:{session_id}:history")
+            await redis.delete(f"session:{session_id}:summary")
             logger.info("Session history deleted")
-        except Exception as e:
+        except Exception:
             logger.exception("Error deleting session from memory")
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:

@@ -1,4 +1,3 @@
-import asyncio
 import json
 from typing import Any, Dict, Optional
 from loguru import logger
@@ -18,12 +17,7 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 def _build_chain():
-    if hasattr(llm, "with_structured_output"):
-        try:
-            return prompt | llm.with_structured_output(DRMPolicyOutput)
-        except Exception:
-            pass
-    return prompt | llm
+    return prompt | llm.with_structured_output(DRMPolicyOutput)
 
 async def evaluate_drm_policy(
     user_id: str,

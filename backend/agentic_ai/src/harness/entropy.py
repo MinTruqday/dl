@@ -1,4 +1,3 @@
-import asyncio
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -6,7 +5,6 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
-from src.core.infrastructure.configuration import settings
 
 ENTROPY_MESSAGE_WEIGHT = 0.3
 ENTROPY_TOKEN_WEIGHT = 0.3

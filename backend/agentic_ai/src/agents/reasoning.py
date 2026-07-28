@@ -1,7 +1,6 @@
 from typing import Dict, List
 
 from loguru import logger
-from pydantic import BaseModel, Field
 from src.core.registry import PromptType, registry
 
 from src.core.infrastructure.configuration import settings
@@ -77,7 +76,7 @@ class ReasoningAgent:
                     "overall": eval_res.overall,
                 },
             }
-        except Exception as e:
+        except Exception:
             logger.exception("Document quality evaluation error")
             return {
                 "should_retry": False,

@@ -92,7 +92,7 @@ class TraceAnalysisAgent:
             traces = await AgentRepository.get_traces_since(cutoff)
             logger.info(f"TraceAnalysisAgent fetched {len(traces)} traces from last {self.lookback_hours}h")
             return traces
-        except Exception as e:
+        except Exception:
             logger.exception("TraceAnalysisAgent failed to fetch traces")
             return []
 
@@ -140,7 +140,7 @@ class TraceAnalysisAgent:
             )
             result = await llm.ainvoke(prompt)
             return result.content.strip()
-        except Exception as e:
+        except Exception:
             logger.exception("TraceAnalysisAgent LLM analysis failed")
             return ""
 
@@ -328,7 +328,6 @@ class PromptOptimizer:
 
     async def apply_improvement(self, suggestion: ImprovementSuggestion) -> bool:
         config = suggestion.proposed_config
-        action = config.get("action")
 
         try:
             if suggestion.improvement_type == "prompt_tweak":
@@ -342,7 +341,7 @@ class PromptOptimizer:
             else:
                 logger.warning(f"PromptOptimizer unknown improvement type '{suggestion.improvement_type}'")
                 return False
-        except Exception as e:
+        except Exception:
             logger.exception(f"PromptOptimizer failed to apply improvement {suggestion.improvement_id}")
             return False
 
@@ -380,7 +379,7 @@ class PromptOptimizer:
                 f"PromptOptimizer updated {prompt_type_str} version={version_id}"
             )
             return True
-        except Exception as e:
+        except Exception:
             logger.exception("PromptOptimizer prompt tweak failed")
         return False
 
@@ -408,7 +407,7 @@ class PromptOptimizer:
                     ROLE_POLICIES[role][field_name] = value
                     logger.info(f"PromptOptimizer updated governance {role}.{field_name} = {value}")
                     return True
-        except Exception as e:
+        except Exception:
             logger.exception("PromptOptimizer grader config failed")
         return False
 
@@ -434,7 +433,7 @@ class PromptOptimizer:
                     registry.update(prompt_type, prev_content)
                     logger.info(f"PromptOptimizer rolled back {prompt_type_str}")
                     return True
-        except Exception as e:
+        except Exception:
             logger.exception("PromptOptimizer rollback failed")
         return False
 

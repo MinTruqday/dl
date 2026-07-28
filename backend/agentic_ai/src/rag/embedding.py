@@ -1,11 +1,9 @@
 import asyncio
 import hashlib
 import json
-import os
 from typing import List
 
 import redis
-from loguru import logger
 from sentence_transformers import SentenceTransformer
 
 from src.core.infrastructure.configuration import settings

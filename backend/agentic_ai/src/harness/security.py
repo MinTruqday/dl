@@ -137,12 +137,20 @@ class SecurityHarness:
         return min(special_ratio * 0.5 + length_penalty, 1.0)
 
     async def ascan_input(
-        self, text: str, session_id: str = "", user_id: str = ""
+        self,
+        text: str,
+        session_id: str = "",
+        user_id: str = "",
+        allow_ai_review: bool = True,
     ) -> ScanResult:
+        """Inspect and sanitize inbound text with deterministic and optional model checks"""
         if not text or not text.strip():
             return ScanResult(passed=True, risk_score=0.0, sanitized_text=text or "")
 
-        sanitized, violations = await self._adetect_security_issues(text)
+        sanitized, violations = await self._adetect_security_issues(
+            text,
+            allow_ai_review=allow_ai_review,
+        )
         
         injection_violations = [v for v in violations if "prompt_injection" in v]
         credential_violations = [v for v in violations if "credential_leak" in v]

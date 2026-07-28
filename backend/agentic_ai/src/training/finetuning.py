@@ -1,4 +1,3 @@
-import asyncio
 import json
 import sys
 from pathlib import Path
@@ -47,7 +46,7 @@ def format_samples_to_chat(samples: list, tokenizer=None, for_mlx=False) -> list
 
 def run_mlx_training(job_id: str, config: dict, update_callback):
     import mlx.core as mx
-    from mlx_lm import generate, load
+    from mlx_lm import load
     from mlx_lm.tuner import TrainingArgs, make_lora_layers, train
     from mlx_lm.tuner.datasets import Dataset as MlxDataset
 
@@ -351,7 +350,7 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
             result["gguf_path"] = gguf_path
         else:
             logger.warning("Format conversion not supported")
-    except Exception as e:
+    except Exception:
         logger.exception("Model format conversion error")
 
     return result
@@ -516,7 +515,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     base_model_name = config.get("base_model")
     hf_token = config.get("hf_token")
     epochs = config.get("epochs", 3)
-    batch_size = config.get("batch_size", 1)
+    batch_size = max(1, int(config.get("batch_size", 1)))
     learning_rate = config.get("learning_rate", 1e-4)
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
@@ -555,7 +554,9 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     final_loss = 0.0
 
     for epoch in range(epochs):
-        for s in samples:
+        optimizer.zero_grad()
+        accumulated_samples = 0
+        for sample_index, s in enumerate(samples):
             prompt = s.get("instruction", "")
             image_b64 = s.get("output", "")
             if image_b64.startswith("data:image"):
@@ -565,11 +566,9 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 img = (
                     Image.open(io.BytesIO(image_data)).convert("RGB").resize((512, 512))
                 )
-            except Exception as e:
+            except Exception:
                 logger.exception("Image data processing error")
                 continue
-
-            optimizer.zero_grad()
 
             try:
                 img_tensor = (
@@ -608,12 +607,20 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 model_pred = transformer(noisy_latents, timesteps, prompt_embeds).sample
                 loss = F.mse_loss(model_pred, noise)
 
-                loss.backward()
-                optimizer.step()
+                (loss / batch_size).backward()
+                accumulated_samples += 1
                 final_loss = float(loss)
-            except Exception as e:
+            except Exception:
                 logger.exception("Diffusion model training error")
                 final_loss = 0.0
+
+            if accumulated_samples and (
+                accumulated_samples >= batch_size
+                or sample_index == len(samples) - 1
+            ):
+                optimizer.step()
+                optimizer.zero_grad()
+                accumulated_samples = 0
 
             current_step += 1
             progress = 25 + (current_step / total_steps) * 65

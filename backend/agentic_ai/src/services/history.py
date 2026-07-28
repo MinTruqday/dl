@@ -1,5 +1,4 @@
 from src.core.logic_logger import log_logic_execution
-from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid6 import uuid7

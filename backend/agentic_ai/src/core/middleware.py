@@ -17,8 +17,5 @@ async def add_trace_id_header(request: Request, call_next):
     return response
 
 
-import time
 from fastapi import Request
-from loguru import logger
-from starlette.middleware.base import BaseHTTPMiddleware
 

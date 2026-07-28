@@ -1,5 +1,4 @@
 import re
-import uuid
 from uuid6 import uuid7
 
 async def _sanitize_text(text: str) -> bool:
@@ -50,7 +49,7 @@ class ChunkRag:
                 )
                 self.type = "chonkie_semantic"
                 logger.info("Semantic chunking tool initialized")
-            except Exception as e:
+            except Exception:
                 logger.exception("Semantic chunking tool initialization failed, falling back to standard mode")
                 try:
                     self.chunker = TokenChunker(
@@ -59,7 +58,7 @@ class ChunkRag:
                     )
                     self.type = "chonkie_token"
                     logger.info("Token chunker loaded")
-                except Exception as e:
+                except Exception:
                     logger.exception("Error occurred while initializing text chunker processor")
 
     async def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
@@ -95,7 +94,7 @@ class ChunkRag:
             logger.info("Text chunking processing successful")
             return chunks
 
-        except Exception as e:
+        except Exception:
             logger.exception("Text chunking error, switching to fallback method")
             return await self._fallback_chunking(text, metadata)
 

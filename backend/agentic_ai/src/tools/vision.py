@@ -28,7 +28,9 @@ class VisionTool:
     async def analyze_image(self, image_base64: str, question: str) -> str:
         logger.info("Vision analysis started")
         try:
-            image_bytes = base64.b64decode(image_base64)
+            if len(image_base64) > 20_000_000 or len(question) > 4000:
+                raise ValueError("vision_input_limit_exceeded")
+            base64.b64decode(image_base64, validate=True)
             response = await self.client.chat_completion(
                 messages=[
                     {

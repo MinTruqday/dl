@@ -1,14 +1,11 @@
 import json
 import time
-from typing import Any, Dict, List, Literal
 
 from langgraph.checkpoint.mongodb import MongoDBSaver
-from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 from langgraph.graph import END, StateGraph
 from loguru import logger
 from src.core.infrastructure.configuration import settings
-from pydantic import BaseModel, Field
 from src.agents.acting import actor
 from src.agents.interpreter import interpreter
 from src.agents.planning import planner
@@ -26,7 +23,7 @@ async def supervisor_node(state: ActingState):
     if not start_time:
         start_time = time.time()
 
-    if time.time() - start_time > 45:
+    if time.time() - start_time > settings.AGENT_EXECUTION_TIMEOUT_SECONDS:
         logger.warning("AI task execution exceeded hard timeout")
         return {
             "next_nodes": ["trimmer"],
@@ -54,6 +51,23 @@ async def supervisor_node(state: ActingState):
         task_status = {n["id"]: "pending" for n in steps}
         completed_tasks = []
 
+    req_data = state.get("req_data", {})
+    session_id = req_data.get("session_id", "")
+    if session_id:
+        from src.harness.governance import governance
+
+        session_summary = governance.get_session_summary(session_id)
+        if session_summary:
+            plan_decision = governance.check_plan_steps(session_id, len(steps))
+            if not plan_decision.allowed:
+                return {
+                    "steps": steps,
+                    "task_status": task_status,
+                    "completed_tasks": completed_tasks,
+                    "next_nodes": ["trimmer"],
+                    "error": "plan_policy_denied",
+                }
+
     if dynamic_injections:
         for new_node in dynamic_injections:
             if new_node["id"] not in task_status:
@@ -74,12 +88,31 @@ async def supervisor_node(state: ActingState):
         if task_status.get(n["id"]) == "pending":
             deps = n.get("dependencies", [])
             if all(dep in completed_tasks for dep in deps):
+                if session_id:
+                    from src.harness.governance import governance
+
+                    session_summary = governance.get_session_summary(session_id)
+                    decision = governance.check_tool_allowed(
+                        session_id,
+                        n.get("agent", "Action"),
+                    )
+                    if session_summary and not decision.allowed:
+                        task_status[n["id"]] = "failed"
+                        continue
                 ready_tasks.append(n)
                 task_status[n["id"]] = "running"
     
     if not ready_tasks:
         if all(status == "completed" for status in task_status.values()):
             return {"steps": steps, "task_status": task_status, "completed_tasks": completed_tasks, "next_nodes": ["trimmer"]}
+        if any(status == "failed" for status in task_status.values()):
+            return {
+                "steps": steps,
+                "task_status": task_status,
+                "completed_tasks": completed_tasks,
+                "next_nodes": ["trimmer"],
+                "error": "task_execution_failed",
+            }
         else:
             is_running = any(status == "running" for status in task_status.values())
             if not is_running:
@@ -106,6 +139,7 @@ async def supervisor_node(state: ActingState):
         "Reasoning": "reasoning",
         "SwarmAgent": "swarm",
         "MCTSAgent": "mcts",
+        "SpawnerAgent": "spawner",
     }
 
     next_nodes = list(set([route_map.get(s.get("agent", "Action"), "action") for s in ready_tasks]))
@@ -114,9 +148,11 @@ async def supervisor_node(state: ActingState):
         "steps": steps, 
         "task_status": task_status,
         "completed_tasks": completed_tasks,
+        "current_step_index": len(completed_tasks),
         "next_nodes": next_nodes,
         "dynamic_injections": dynamic_injections,
         "execution_history": execution_history,
+        "start_time": start_time,
     }
 
 async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
@@ -131,10 +167,39 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         return {}
 
     req_data = state.get("req_data", {})
+    session_id = req_data.get("session_id", "")
+    memory_context = None
+    if (
+        settings.AGENT_PROACTIVE_MEMORY_ENABLED
+        and session_id
+        and agent_name not in {"Knowledge"}
+    ):
+        from src.proactive.middleware import memory_middleware
+
+        trajectory = [
+            {"role": "assistant", "content": str(item)}
+            for item in state.get("consolidated_results", [])
+        ]
+        memory_context = await memory_middleware.process(
+            session_id=session_id,
+            trajectory=trajectory,
+            step_count=len(completed_tasks) + 1,
+            task_description="\n".join(
+                str(task.get("task", "")) for task in my_tasks
+            ),
+            user_id=str(req_data.get("user_id", "")),
+        )
 
     async def _exec_task(task_obj):
         current_task = task_obj.get("task", "")
+        if memory_context:
+            current_task = f"{current_task}\n\n{memory_context}"
         try:
+            if session_id:
+                from src.harness.governance import governance
+
+                if governance.get_session_summary(session_id):
+                    governance.record_tool_call(session_id, current_task)
             from src.workflow.graph import llm
             evaluator_llm = llm.with_structured_output(TaskEvaluation)
 
@@ -151,6 +216,8 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                         user_id,
                         token,
                         auto_approve=bool(req_data.get("approve_tools", False)),
+                        session_id=session_id,
+                        approval_id=req_data.get("approval_id"),
                     )
                 elif agent_name == "Knowledge":
                     res = await tool_callable.execute(req_data)
@@ -170,13 +237,16 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                         logger.warning("Self-reflection failed, initiating replan sequence")
                         try:
                             from src.memory.memo import memo_manager
-                            import asyncio
+                            from src.utils.background import create_background_task
                             user_id = req_data.get("user_id", "guest")
                             mem_data = [
                                 {"role": "system", "content": "I attempted a task but failed. I must learn from this mistake for future reasoning."},
                                 {"role": "user", "content": f"Task: {current_task}\nFailed Output: {res}\nFeedback: {eval_res.feedback}\nRevised Task for next time: {eval_res.revised_task}"}
                             ]
-                            asyncio.create_task(memo_manager.add_memory(mem_data, user_id))
+                            create_background_task(
+                                memo_manager.add_memory(mem_data, user_id),
+                                f"procedural-memory-{user_id}",
+                            )
                         except Exception:
                             logger.exception("Failed to inject procedural memory")
                         current_task = eval_res.revised_task or current_task
@@ -186,7 +256,9 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                         break
                 except Exception:
                     logger.exception("Evaluation result parsing error")
-                    final_res = res
+                    final_res = json.dumps(
+                        {"status": "task_evaluation_failed"}
+                    )
                     break
 
             if replan_count >= 3:
@@ -199,10 +271,11 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
 
     task_results = await asyncio.gather(*[_exec_task(t) for t in my_tasks])
 
-    for t in my_tasks:
-        task_status[t["id"]] = "completed"
-        if t["id"] not in completed_tasks:
-            completed_tasks.append(t["id"])
+    for task, result in zip(my_tasks, task_results):
+        succeeded = _result_succeeded(result)
+        task_status[task["id"]] = "completed" if succeeded else "failed"
+        if succeeded and task["id"] not in completed_tasks:
+            completed_tasks.append(task["id"])
 
     return {
         "task_status": task_status,
@@ -225,6 +298,16 @@ async def researcher_agent_node(state: ActingState):
 
 async def reasoner_agent_node(state: ActingState):
     return await execute_tool_node(state, reasoner, "Reasoning")
+
+
+def _result_succeeded(result):
+    try:
+        payload = json.loads(result)
+    except (TypeError, json.JSONDecodeError):
+        return True
+    if not isinstance(payload, dict) or "status" not in payload:
+        return True
+    return payload["status"] in {"success", "completed"}
 
 async def swarm_node(state: ActingState):
     steps = state.get("steps", [])
@@ -281,7 +364,12 @@ async def swarm_node(state: ActingState):
         ]
         return json.dumps(
             {
-                "status": "success" if final_artifacts or messages else "empty",
+                "status": (
+                    "success"
+                    if final_artifacts.get("review_approved") is True
+                    and final_artifacts.get("security_approved") is True
+                    else "swarm_verification_failed"
+                ),
                 "artifacts": final_artifacts,
                 "messages": messages,
             },
@@ -290,10 +378,11 @@ async def swarm_node(state: ActingState):
 
     task_results = await asyncio.gather(*[_run_swarm(t) for t in my_tasks])
     
-    for t in my_tasks:
-        task_status[t["id"]] = "completed"
-        if t["id"] not in completed_tasks:
-            completed_tasks.append(t["id"])
+    for task, result in zip(my_tasks, task_results):
+        succeeded = _result_succeeded(result)
+        task_status[task["id"]] = "completed" if succeeded else "failed"
+        if succeeded and task["id"] not in completed_tasks:
+            completed_tasks.append(task["id"])
 
     return {
         "task_status": task_status,
@@ -321,21 +410,23 @@ async def mcts_node(state: ActingState):
         current_task = task_obj.get("task", "")
         init_state = {"task": current_task, "code": "", "approach": ""}
         best_state = await mcts_agent.search(init_state)
+        code = best_state.get("code", "")
         return json.dumps(
             {
-                "status": "success",
+                "status": "success" if code.strip() else "mcts_generation_failed",
                 "approach": best_state.get("approach", ""),
-                "code": best_state.get("code", ""),
+                "code": code,
             },
             ensure_ascii=False,
         )
 
     task_results = await asyncio.gather(*[_run_mcts(t) for t in my_tasks])
     
-    for t in my_tasks:
-        task_status[t["id"]] = "completed"
-        if t["id"] not in completed_tasks:
-            completed_tasks.append(t["id"])
+    for task, result in zip(my_tasks, task_results):
+        succeeded = _result_succeeded(result)
+        task_status[task["id"]] = "completed" if succeeded else "failed"
+        if succeeded and task["id"] not in completed_tasks:
+            completed_tasks.append(task["id"])
 
     return {
         "task_status": task_status,
@@ -343,6 +434,26 @@ async def mcts_node(state: ActingState):
         "consolidated_results": [f"[MCTSAgent - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)],
         "last_agent_result": task_results[-1] if task_results else json.dumps({"status": "completed"}),
     }
+
+
+async def spawner_node(state: ActingState):
+    from src.agents.spawner import AgentSpawner
+    from src.workflow.graph import llm
+
+    class SpawnerExecutor:
+        async def execute(self, task: str) -> str:
+            matching_task = next(
+                (
+                    item
+                    for item in state.get("steps", [])
+                    if item.get("task") and item.get("task") in task
+                ),
+                {},
+            )
+            role = matching_task.get("specialization") or "Domain specialist"
+            return await AgentSpawner(llm).spawn(role, task)
+
+    return await execute_tool_node(state, SpawnerExecutor(), "SpawnerAgent")
 
 async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])
@@ -412,6 +523,7 @@ workflow.add_node("knowledge", researcher_agent_node)
 workflow.add_node("reasoning", reasoner_agent_node)
 workflow.add_node("swarm", swarm_node)
 workflow.add_node("mcts", mcts_node)
+workflow.add_node("spawner", spawner_node)
 workflow.add_node("trimmer", trimmer_node)
 workflow.add_node("sanitizer", sanitizer_node)
 workflow.add_node("aggregator", aggregator_node)
@@ -456,16 +568,28 @@ class OrchestrationWorkflow:
 
     async def execute_plan(self, req_data):
         from src.memory.global_state import global_state
+        from src.harness.governance import governance
+        from src.loop.rubric import standard_rubric_middleware
+        from src.loop.verification import verification
+
         logger.info(f"Initializing orchestration execution stream for query length {len(req_data.get('query', ''))}")
         yield {"type": "status", "code": "analyzing_request"}
 
-        session_id = req_data.get("session_id", str(uuid7()))
+        session_id = req_data.get("session_id") or str(uuid7())
+        req_data["session_id"] = session_id
+        user_id = str(req_data.get("user_id", ""))
+        role = str(req_data.get("role", "reader"))
+        governance.open_session(session_id, user_id, role)
 
         project_context = await global_state.get_project_context_async(session_id)
         if project_context:
             req_data["global_context"] = project_context
 
-        recent_episodes = await global_state.get_recent_episodes(k=3)
+        recent_episodes = await global_state.get_recent_episodes(
+            k=3,
+            session_id=session_id,
+            user_id=user_id,
+        )
         if recent_episodes:
             req_data["episodic_context"] = "\n---\n".join(recent_episodes)
 
@@ -479,61 +603,93 @@ class OrchestrationWorkflow:
             "error": "",
             "replan_count": 0,
             "results_trimmed": False,
+            "start_time": time.time(),
         }
 
         final_results = []
         config = {
             "configurable": {"thread_id": session_id},
-            "recursion_limit": 25,
+            "recursion_limit": settings.AGENT_RECURSION_LIMIT,
         }
 
-        async for output in self.app.astream(initial_state, config=config):
+        workflow_error = ""
+        final_state = {}
+        try:
+            async for output in self.app.astream(initial_state, config=config):
                 for node_name, state_update in output.items():
+                    final_state.update(state_update)
+                    if state_update.get("error"):
+                        workflow_error = state_update["error"]
                     if "consolidated_results" in state_update:
                         final_results = state_update["consolidated_results"]
+                    if node_name == "supervisor":
+                        steps = state_update.get("steps")
+                        if steps and state_update.get("current_step_index") == 0:
+                            yield {"type": "plan", "steps": steps}
+                    elif node_name in [
+                        "interpreter",
+                        "search_engine",
+                        "action",
+                        "knowledge",
+                        "reasoning",
+                        "swarm",
+                        "mcts",
+                        "spawner",
+                    ]:
+                        if not state_update.get("error"):
+                            yield {
+                                "type": "tool_result",
+                                "agent": node_name,
+                                "status": "completed",
+                            }
+                    elif node_name == "aggregator":
+                        yield {"type": "status", "code": "synthesizing_response"}
 
-                if node_name == "supervisor":
-                    steps = state_update.get("steps")
-                    if steps and state_update.get("current_step_index") == 0:
-                        yield {"type": "plan", "steps": steps}
-                elif node_name in [
-                    "interpreter",
-                    "search_engine",
-                    "action",
-                    "knowledge",
-                    "reasoning",
-                    "swarm",
-                    "mcts",
-                ]:
-                    if not state_update.get("error"):
-                        yield {
-                            "type": "tool_result",
-                            "agent": node_name,
-                            "status": "completed",
-                        }
+            if workflow_error:
+                yield {"type": "error", "code": workflow_error}
+                return
 
-                elif node_name == "aggregator":
-                    yield {"type": "status", "code": "synthesizing_response"}
+            if not final_results:
+                yield {"type": "error", "code": "no_supporting_data"}
+                return
 
-        if not final_results:
-            final_results = ["No supporting data was produced"]
+            query = req_data.get("query", "")
+            full_response_chunks = []
+            async for chunk in response_generator.aggregate_stream(query, final_results):
+                full_response_chunks.append(
+                    chunk.get("chunk", "") if isinstance(chunk, dict) else str(chunk)
+                )
 
-        query = req_data.get("query", "")
-        full_response_chunks = []
-        async for chunk in response_generator.aggregate_stream(query, final_results):
-            full_response_chunks.append(chunk.get("chunk", "") if isinstance(chunk, dict) else str(chunk))
-            content = chunk.get("chunk", "") if isinstance(chunk, dict) else str(chunk)
-            yield {"type": "message", "chunk": content}
+            combined = "".join(full_response_chunks)
+            rubric_result = await standard_rubric_middleware.rubric.evaluate(
+                combined,
+                {"query": query},
+            )
+            verification_result = await verification.verify_task_completion(
+                session_id=session_id,
+                task_id="final_response",
+                response=combined,
+                steps=final_state.get("steps"),
+                current_step_index=len(final_state.get("completed_tasks", [])),
+                allow_ai_review=False,
+            )
+            if not rubric_result.passed or not verification_result.passed:
+                yield {"type": "error", "code": "response_verification_failed"}
+                return
 
-        try:
-            combined = " ".join(full_response_chunks)
-            if combined.strip():
+            for content in full_response_chunks:
+                yield {"type": "message", "chunk": content}
+
+            try:
                 await global_state.add_episodic_memory(
                     session_id=session_id,
                     summary=f"Query: {query[:200]}\nResponse summary: {combined[:500]}",
+                    user_id=user_id,
                 )
-        except Exception:
-            logger.exception("Episodic memory storage failed")
+            except Exception:
+                logger.exception("Episodic memory storage failed")
+        finally:
+            governance.close_session(session_id)
 
 supervisor = OrchestrationWorkflow()
 supervisor_app = supervisor.app

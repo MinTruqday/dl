@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal, Optional
 
 from loguru import logger
@@ -24,6 +24,9 @@ ROLE_POLICIES: dict[str, dict] = {
             "Reasoning",
             "InterpreterAgent",
             "Action",
+            "SwarmAgent",
+            "MCTSAgent",
+            "SpawnerAgent",
         },
         "blocked_tools": set(),
         "max_plan_steps": 6,
@@ -37,6 +40,9 @@ ROLE_POLICIES: dict[str, dict] = {
             "Reasoning",
             "InterpreterAgent",
             "Action",
+            "SwarmAgent",
+            "MCTSAgent",
+            "SpawnerAgent",
         },
         "blocked_tools": set(),
         "max_plan_steps": 10,

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import (
@@ -14,7 +14,12 @@ from langchain_core.utils.function_calling import convert_to_openai_tool
 from pydantic import Field
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from loguru import logger
-from src.utils.structured_output import extract_json_value, validate_structured_output
+from src.core.infrastructure.configuration import settings
+from src.utils.structured_output import (
+    extract_json_value,
+    extract_json_values,
+    validate_structured_output,
+)
 
 def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
     from huggingface_hub import HfApi
@@ -74,7 +79,10 @@ class HFInferenceChat(BaseChatModel):
 
         chat_kwargs = {
             "messages": hf_messages,
-            "max_tokens": kwargs.get("max_tokens", 512),
+            "max_tokens": kwargs.get(
+                "max_tokens",
+                settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS,
+            ),
             "temperature": kwargs.get("temperature", 0.1),
         }
         response = await self.client.chat_completion(**chat_kwargs)
@@ -109,7 +117,10 @@ class HFInferenceChat(BaseChatModel):
 
         stream = await self.client.chat_completion(
             messages=hf_messages,
-            max_tokens=kwargs.get("max_tokens", 512),
+            max_tokens=kwargs.get(
+                "max_tokens",
+                settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS,
+            ),
             temperature=kwargs.get("temperature", 0.1),
             stream=True,
         )
@@ -132,23 +143,47 @@ class HFInferenceChat(BaseChatModel):
         return "hf_inference_chat"
 
     def with_structured_output(self, schema, **kwargs):
-        @retry(
-            stop=stop_after_attempt(3),
-            wait=wait_exponential(multiplier=1, min=2, max=10),
-            retry=retry_if_exception_type(Exception),
-            reraise=True,
-            before_sleep=lambda retry_state: logger.warning(f"Retrying _ainvoke structured output due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})")
-        )
         async def _ainvoke(messages, **kwargs_inner):
             schema_json = (
                 schema.model_json_schema()
                 if hasattr(schema, "model_json_schema")
                 else schema.schema()
             )
-            sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")
-            msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
-            res = await self.ainvoke(msgs, **kwargs_inner)
-            return validate_structured_output(res.content, schema)
+            sys_msg = SystemMessage(
+                content=(
+                    "Return exactly one valid JSON value matching the schema\n"
+                    "Do not include analysis prose markdown or code fences\n"
+                    f"Schema: {schema_json}"
+                )
+            )
+            msgs = [sys_msg] + (
+                messages if isinstance(messages, list) else [messages]
+            )
+            for attempt in range(3):
+                res = await self.ainvoke(msgs, **kwargs_inner)
+                try:
+                    return validate_structured_output(res.content, schema)
+                except Exception as error:
+                    logger.warning(
+                        "Structured output validation failed attempt={} error_type={}",
+                        attempt + 1,
+                        type(error).__name__,
+                    )
+                    if attempt == 2:
+                        raise
+                    msgs.extend(
+                        [
+                            AIMessage(content=str(res.content)[:4000]),
+                            HumanMessage(
+                                content=(
+                                    "The previous value failed schema validation\n"
+                                    f"Validation error: {str(error)[:1000]}\n"
+                                    "Return one corrected JSON value only"
+                                )
+                            ),
+                        ]
+                    )
+            raise RuntimeError("structured_output_retry_exhausted")
 
         def _invoke(messages, **kwargs_inner):
             schema_json = (
@@ -156,10 +191,41 @@ class HFInferenceChat(BaseChatModel):
                 if hasattr(schema, "model_json_schema")
                 else schema.schema()
             )
-            sys_msg = SystemMessage(content=f"Output ONLY valid JSON matching this schema: {schema_json}")
-            msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
-            res = self.invoke(msgs, **kwargs_inner)
-            return validate_structured_output(res.content, schema)
+            sys_msg = SystemMessage(
+                content=(
+                    "Return exactly one valid JSON value matching the schema\n"
+                    "Do not include analysis prose markdown or code fences\n"
+                    f"Schema: {schema_json}"
+                )
+            )
+            msgs = [sys_msg] + (
+                messages if isinstance(messages, list) else [messages]
+            )
+            for attempt in range(3):
+                res = self.invoke(msgs, **kwargs_inner)
+                try:
+                    return validate_structured_output(res.content, schema)
+                except Exception as error:
+                    logger.warning(
+                        "Structured output validation failed attempt={} error_type={}",
+                        attempt + 1,
+                        type(error).__name__,
+                    )
+                    if attempt == 2:
+                        raise
+                    msgs.extend(
+                        [
+                            AIMessage(content=str(res.content)[:4000]),
+                            HumanMessage(
+                                content=(
+                                    "The previous value failed schema validation\n"
+                                    f"Validation error: {str(error)[:1000]}\n"
+                                    "Return one corrected JSON value only"
+                                )
+                            ),
+                        ]
+                    )
+            raise RuntimeError("structured_output_retry_exhausted")
 
         return RunnableLambda(_invoke, afunc=_ainvoke)
 
@@ -185,73 +251,120 @@ class HFInferenceChat(BaseChatModel):
         )
 
         def parse_tool_call(content):
-            payload = extract_json_value(content)
-            if isinstance(payload, dict) and isinstance(payload.get("tool_calls"), list):
-                calls = payload["tool_calls"]
-                payload = calls[0] if calls else {}
-            if isinstance(payload, dict) and isinstance(payload.get("function"), dict):
-                payload = payload["function"]
-            name = payload.get("name") or payload.get("tool")
-            arguments = payload.get(
-                "arguments",
-                payload.get("args", payload.get("parameters", {})),
-            )
-            if isinstance(arguments, str):
-                arguments = extract_json_value(arguments)
-            if name not in allowed_names:
-                raise ValueError("Model selected an unavailable tool")
-            if not isinstance(arguments, dict):
-                raise ValueError("Tool arguments must be a JSON object")
-            selected_tool = tool_map[name]
-            schema = getattr(selected_tool, "args_schema", None)
-            if schema:
-                validated = (
-                    schema.model_validate(arguments)
-                    if hasattr(schema, "model_validate")
-                    else schema.parse_obj(arguments)
-                )
-                arguments = (
-                    validated.model_dump()
-                    if hasattr(validated, "model_dump")
-                    else validated.dict()
-                )
-            return AIMessage(
-                content="",
-                tool_calls=[
-                    {
-                        "name": name,
-                        "args": arguments,
-                        "id": f"call_{name}",
-                        "type": "tool_call",
-                    }
-                ],
-            )
+            errors = []
+            for original_payload in extract_json_values(content):
+                try:
+                    payload = original_payload
+                    if isinstance(payload, dict) and isinstance(payload.get("tool_calls"), list):
+                        calls = payload["tool_calls"]
+                        payload = calls[0] if calls else {}
+                    if isinstance(payload, dict) and isinstance(payload.get("function"), dict):
+                        payload = payload["function"]
+                    if not isinstance(payload, dict):
+                        raise ValueError("Tool selection must be a JSON object")
+                    name = payload.get("name") or payload.get("tool")
+                    arguments = payload.get(
+                        "arguments",
+                        payload.get("args", payload.get("parameters", {})),
+                    )
+                    if isinstance(arguments, str):
+                        arguments = extract_json_value(arguments)
+                    if name not in allowed_names:
+                        raise ValueError("Model selected an unavailable tool")
+                    if not isinstance(arguments, dict):
+                        raise ValueError("Tool arguments must be a JSON object")
+                    selected_tool = tool_map[name]
+                    schema = getattr(selected_tool, "args_schema", None)
+                    if schema:
+                        validated = (
+                            schema.model_validate(arguments, strict=True)
+                            if hasattr(schema, "model_validate")
+                            else schema.parse_obj(arguments)
+                        )
+                        arguments = (
+                            validated.model_dump()
+                            if hasattr(validated, "model_dump")
+                            else validated.dict()
+                        )
+                    return AIMessage(
+                        content="",
+                        tool_calls=[
+                            {
+                                "name": name,
+                                "args": arguments,
+                                "id": f"call_{name}",
+                                "type": "tool_call",
+                            }
+                        ],
+                    )
+                except Exception as error:
+                    errors.append(error)
+            if errors:
+                raise ValueError(str(errors[-1])) from errors[-1]
+            raise ValueError("Model did not return a tool selection")
 
-        @retry(
-            stop=stop_after_attempt(3),
-            wait=wait_exponential(multiplier=1, min=2, max=10),
-            retry=retry_if_exception_type(Exception),
-            reraise=True,
-            before_sleep=lambda retry_state: logger.warning(
-                "Retrying tool selection attempt={} error_type={}",
-                retry_state.attempt_number,
-                type(retry_state.outcome.exception()).__name__,
-            ),
-        )
         async def _ainvoke(messages, **kwargs_inner):
             source_messages = messages if isinstance(messages, list) else [messages]
-            result = await self.ainvoke(
-                [selection_prompt, *source_messages],
-                **kwargs_inner,
-            )
-            return parse_tool_call(result.content)
+            corrective_messages = [selection_prompt, *source_messages]
+            for attempt in range(3):
+                result = await self.ainvoke(
+                    corrective_messages,
+                    **kwargs_inner,
+                )
+                try:
+                    return parse_tool_call(result.content)
+                except Exception as error:
+                    logger.warning(
+                        "Tool selection validation failed attempt={} error_type={}",
+                        attempt + 1,
+                        type(error).__name__,
+                    )
+                    if attempt == 2:
+                        raise
+                    corrective_messages.extend(
+                        [
+                            AIMessage(content=str(result.content)[:4000]),
+                            HumanMessage(
+                                content=(
+                                    "The previous tool selection was invalid\n"
+                                    f"Validation error: {str(error)[:1000]}\n"
+                                    "Return one corrected JSON tool call only"
+                                )
+                            ),
+                        ]
+                    )
+            raise RuntimeError("tool_selection_retry_exhausted")
 
         def _invoke(messages, **kwargs_inner):
             source_messages = messages if isinstance(messages, list) else [messages]
-            result = self.invoke(
-                [selection_prompt, *source_messages],
-                **kwargs_inner,
-            )
-            return parse_tool_call(result.content)
+            corrective_messages = [selection_prompt, *source_messages]
+            for attempt in range(3):
+                result = self.invoke(
+                    corrective_messages,
+                    **kwargs_inner,
+                )
+                try:
+                    return parse_tool_call(result.content)
+                except Exception as error:
+                    logger.warning(
+                        "Tool selection validation failed attempt={} error_type={}",
+                        attempt + 1,
+                        type(error).__name__,
+                    )
+                    if attempt == 2:
+                        raise
+                    corrective_messages.extend(
+                        [
+                            AIMessage(content=str(result.content)[:4000]),
+                            HumanMessage(
+                                content=(
+                                    "The previous tool selection was invalid\n"
+                                    f"Validation error: {str(error)[:1000]}\n"
+                                    "Return one corrected JSON tool call only"
+                                )
+                            ),
+                        ]
+                    )
+            raise RuntimeError("tool_selection_retry_exhausted")
 
         return RunnableLambda(_invoke, afunc=_ainvoke)

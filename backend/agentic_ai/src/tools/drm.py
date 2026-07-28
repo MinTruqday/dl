@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Optional
 import httpx
 from langchain_core.tools import tool
 from loguru import logger
@@ -20,7 +20,7 @@ async def generate_dynamic_watermark(user_id: str, client_ip: str, email: str = 
             )
             response.raise_for_status()
             return response.json()
-    except Exception as e:
+    except Exception:
         logger.warning("DRM dynamic watermark HTTP fallback")
         import datetime, hashlib
         timestamp_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -49,7 +49,7 @@ async def issue_temporary_aes_key(document_id: str, user_id: str, ttl_seconds: i
             )
             response.raise_for_status()
             return response.json()
-    except Exception as e:
+    except Exception:
         logger.warning("DRM AES key HTTP fallback")
         import secrets
         return {
@@ -75,7 +75,7 @@ async def verify_device_fingerprint(user_id: str, client_ip: str, device_fingerp
             )
             response.raise_for_status()
             return response.json()
-    except Exception as e:
+    except Exception:
         logger.warning("DRM fingerprint HTTP fallback")
         return {"matched": True, "risk_multiplier": 1.0, "reason": "Fingerprint verified fallback"}
 

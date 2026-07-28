@@ -2,10 +2,8 @@ import os
 import glob
 import subprocess
 import json
-from pathlib import Path
 from langchain_core.tools import tool
 from loguru import logger
-import shlex
 
 @tool
 def glob_search(pattern: str, path: str = ".") -> str:

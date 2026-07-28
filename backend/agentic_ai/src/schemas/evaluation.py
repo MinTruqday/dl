@@ -23,12 +23,12 @@ class ErrorMessageJudgment(BaseModel):
 
 class HallucinationJudgment(BaseModel):
     is_hallucination_or_refusal: bool = Field(description="Set to True if the response refuses the prompt, states 'I do not know', uses AI-identity disclaimers, or contains hallucinated unverified facts.")
-    confidence: float = Field(description="<critical_instructions>Confidence score between 0.0 and 1.0 representing how certain you are of this judgment.</critical_instructions>")
+    confidence: float = Field(ge=0.0, le=1.0, description="<critical_instructions>Confidence score between 0.0 and 1.0 representing how certain you are of this judgment.</critical_instructions>")
     explanation: str = Field(description="<critical_instructions>Detailed explanation of the exact claims that are hallucinated or why the refusal was detected.</critical_instructions>")
 
 class RelevanceJudgment(BaseModel):
     is_relevant: bool = Field(description="<critical_instructions>Set to True if the response directly addresses the core intent of the user's query without unnecessary pivoting.</critical_instructions>")
-    relevance_score: float = Field(description="<critical_instructions>A continuous score from 0.0 to 1.0. Use 1.0 for perfect answers, 0.5 for partial answers, and 0.0 for completely unrelated garbage.</critical_instructions>")
+    relevance_score: float = Field(ge=0.0, le=1.0, description="<critical_instructions>A continuous score from 0.0 to 1.0. Use 1.0 for perfect answers, 0.5 for partial answers, and 0.0 for completely unrelated garbage.</critical_instructions>")
     feedback: str = Field(description="<critical_instructions>Actionable critique on what information is missing, hallucinatory, or well-executed regarding relevance.</critical_instructions>")
 
 class HallucinationGrade(BaseModel):

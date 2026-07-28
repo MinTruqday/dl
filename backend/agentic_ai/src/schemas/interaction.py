@@ -13,6 +13,7 @@ class ChatRequest(BaseModel):
     useWeb: bool = Field(default=False, description="<conditional_output>Whether to use web search.</conditional_output>")
     thinking: bool = Field(default=False, description="<conditional_output>Whether to enable deeper orchestration with public progress status.</conditional_output>")
     approve_tools: bool = Field(default=False, description="<conditional_output>Whether the user explicitly approved sensitive tool execution for this request.</conditional_output>")
+    approval_id: Optional[str] = Field(default=None, max_length=128, description="<critical_instructions>One-time approval identifier for a previously proposed sensitive tool action.</critical_instructions>")
     image_data: Optional[str] = Field(default=None, max_length=28000000, description="<input_context>Base64 encoded image data if attached.</input_context>")
     file_data: Optional[str] = Field(default=None, max_length=28000000, description="<input_context>Base64 encoded file data if attached.</input_context>")
     folder_data: Optional[str] = Field(default=None, max_length=28000000, description="<input_context>Base64 encoded folder context.</input_context>")
@@ -20,3 +21,11 @@ class ChatRequest(BaseModel):
     conversation_history: list[dict] = Field(default_factory=list, max_length=100, description="<input_context>Previous messages in the thread.</input_context>")
     token: Optional[str] = Field(default=None, max_length=8192, description="<critical_instructions>Authentication token of the user.</critical_instructions>")
     attachments: list[dict] = Field(default_factory=list, max_length=100, description="<input_context>List of attached files.</input_context>")
+
+
+class UserInstructionsRequest(BaseModel):
+    instructions: str = Field(
+        min_length=1,
+        max_length=20000,
+        description="<input_context>Persistent response and workflow preferences owned by the authenticated user.</input_context>",
+    )

@@ -41,8 +41,19 @@ class FlakyClient:
 
 class FakePlanModel:
     async def ainvoke(self, messages):
-        content = '<think>private chain</think>{"nodes":[{"id":"one","agent":"Knowledge","task":"Retrieve relevant documents","dependencies":[]}]}'
-        return SimpleNamespace(content=content)
+        from src.schemas.planning import ExecutionPlan, PlanNode
+
+        return ExecutionPlan(
+            reasoning="Knowledge retrieval is required",
+            nodes=[
+                PlanNode(
+                    id="one",
+                    agent="Knowledge",
+                    task="Retrieve relevant documents",
+                    dependencies=[],
+                )
+            ]
+        )
 
 
 class FakeEvaluationModel:
@@ -54,7 +65,16 @@ class FakeEvaluationModel:
 
 
 class FakeActionTool:
-    async def execute(self, action, params, user_id, token, auto_approve=False):
+    async def execute(
+        self,
+        action,
+        params,
+        user_id,
+        token,
+        auto_approve=False,
+        session_id="",
+        approval_id=None,
+    ):
         assert auto_approve is True
         return "Action completed"
 
@@ -80,11 +100,9 @@ async def verify_planner_privacy():
     from langchain_core.output_parsers import JsonOutputParser
     from src.schemas.planning import ExecutionPlan
     planner.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
+    planner.structured_llm = FakePlanModel()
     planner._redis = None
-    with (
-        patch("src.agents.planning.memo_manager.get_memories", return_value=""),
-        patch.object(planner, "_invoke_llm", side_effect=planner.llm.ainvoke),
-    ):
+    with patch("src.agents.planning.memo_manager.get_memories", return_value=""):
         events = [
             event
             async for event in planner.stream_plan(
@@ -110,7 +128,7 @@ async def verify_routing():
     validator = SemanticRouterValidator()
     nodes = [{"id": "one", "agent": "InterpreterAgent", "task": "calculate"}]
     result = await validator.validate_plan(nodes)
-    assert result[0]["agent"] == "Reasoning"
+    assert result[0]["agent"] == "InterpreterAgent"
 
 
 async def verify_action_workflow():

@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Depends
-from typing import Any, Dict, List
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from src.repositories.mcp import MCPRepository
 from src.core.logging_route import LoggingRoute
@@ -8,8 +7,8 @@ from src.schemas.mcp import RegisterServerRequest
 from src.core.dependency import Role, require_role, verify_internal_token
 
 class CallbackRequest(BaseModel):
-    task_id: str
-    result: str
+    task_id: str = Field(min_length=1, max_length=128, description="<input_context>Waiting internal task identifier.</input_context>")
+    result: str = Field(max_length=1000000, description="<input_context>Serialized MCP tool result.</input_context>")
 
 router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
 
@@ -18,6 +17,40 @@ router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def register_mcp_server(req: RegisterServerRequest):
+    """Register an administrator managed MCP server connection"""
+    from urllib.parse import urlparse
+
+    from src.core.infrastructure.configuration import settings
+
+    if req.server_type == "stdio":
+        allowed_commands = {
+            item.strip()
+            for item in settings.MCP_ALLOWED_STDIO_COMMANDS.split(",")
+            if item.strip()
+        }
+        if req.command not in allowed_commands:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "mcp_stdio_command_not_allowed"},
+            )
+    else:
+        parsed = urlparse(req.url or "")
+        allowed_hosts = {
+            item.strip().lower()
+            for item in settings.MCP_ALLOWED_SSE_HOSTS.split(",")
+            if item.strip()
+        }
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.hostname.lower() not in allowed_hosts
+        ):
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "mcp_sse_endpoint_not_allowed"},
+            )
     doc = req.model_dump()
     doc["is_connected"] = True
     result = await MCPRepository.insert_connector(doc)
@@ -28,6 +61,7 @@ async def register_mcp_server(req: RegisterServerRequest):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def list_mcp_servers():
+    """List registered MCP server connections and their status"""
     cursor = MCPRepository.search_connectors({}, limit=100)
     docs = await cursor.to_list(length=None)
     for d in docs:
@@ -39,6 +73,7 @@ async def list_mcp_servers():
     dependencies=[Depends(verify_internal_token)],
 )
 async def mcp_callback(req: CallbackRequest):
+    """Publish an authenticated MCP tool result to its waiting task"""
     from src.core.infrastructure.redis import redis
     await redis.publish(f"tool_result:{req.task_id}", req.result)
     return {"status": "success"}

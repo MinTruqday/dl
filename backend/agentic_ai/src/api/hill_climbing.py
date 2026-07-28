@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from loguru import logger
@@ -13,16 +13,19 @@ router = APIRouter(
 
 @router.get("/tong-quan")
 async def get_dashboard():
+    """Return the current autonomous improvement dashboard"""
     return hill_climbing_loop.get_dashboard()
 
 @router.get("/van-de")
 async def get_issues(limit: int = 50):
+    """List detected operational issues within the requested limit"""
     return {
         "issues": hill_climbing_loop.get_issues(limit=limit),
     }
 
 @router.get("/de-xuat")
 async def get_improvements(status: Optional[str] = None, limit: int = 50):
+    """List improvement proposals filtered by review status"""
     return {
         "improvements": hill_climbing_loop.get_suggestions(
             status_filter=status, limit=limit
@@ -33,6 +36,7 @@ from src.schemas.auth import Role
 
 @router.post("/de-xuat/{improvement_id}/phe-duyet")
 async def approve_improvement(improvement_id: str, approver: str = Role.ADMIN.value):
+    """Approve and apply a validated improvement proposal"""
     success = await hill_climbing_loop.approve_improvement(improvement_id, approver=approver)
     if not success:
         raise HTTPException(
@@ -47,6 +51,7 @@ async def approve_improvement(improvement_id: str, approver: str = Role.ADMIN.va
 
 @router.post("/de-xuat/{improvement_id}/tu-choi")
 async def reject_improvement(improvement_id: str):
+    """Reject a pending improvement proposal"""
     success = await hill_climbing_loop.reject_improvement(improvement_id)
     if not success:
         raise HTTPException(
@@ -60,6 +65,7 @@ async def reject_improvement(improvement_id: str):
 
 @router.post("/de-xuat/{improvement_id}/hoan-tac")
 async def rollback_improvement(improvement_id: str):
+    """Roll back an applied improvement using its stored snapshot"""
     success = await hill_climbing_loop.rollback_improvement(improvement_id)
     if not success:
         raise HTTPException(
@@ -73,18 +79,21 @@ async def rollback_improvement(improvement_id: str):
 
 @router.post("/phan-tich")
 async def run_analysis():
+    """Run issue analysis and improvement generation immediately"""
     logger.info("Hill climbing analysis triggered manually via API")
     result = await hill_climbing_loop.analyze_and_improve()
     return result
 
 @router.get("/lich-su")
 async def get_analysis_history(limit: int = 10):
+    """Return recent autonomous improvement analysis runs"""
     return {
         "history": hill_climbing_loop.get_analysis_history(limit=limit),
     }
 
 @router.get("/cau-hinh")
 async def get_config():
+    """Return the current autonomous improvement thresholds and policy"""
     return {
         "auto_apply": hill_climbing_loop.auto_apply,
         "min_traces_before_analysis": hill_climbing_loop.trace_analyzer.min_traces,
@@ -103,6 +112,7 @@ async def update_config(
     min_traces: Optional[int] = Body(default=None),
     lookback_hours: Optional[int] = Body(default=None),
 ):
+    """Update bounded autonomous improvement runtime settings"""
     if auto_apply is not None:
         hill_climbing_loop.auto_apply = auto_apply
     if min_traces is not None:

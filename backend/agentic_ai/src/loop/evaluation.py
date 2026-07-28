@@ -1,10 +1,11 @@
 import json
 import math
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 from loguru import logger
+from src.utils.structured_output import extract_json_value
 
 @dataclass
 class EvaluationReport:
@@ -82,18 +83,16 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             temperature=0.1,
         )
         raw = resp.choices[0].message.content.strip()
-        if "```json" in raw:
-            raw = raw.split("```json")[1].split("```")[0]
-        elif "```" in raw:
-            raw = raw.split("```")[1].split("```")[0]
-        scores = json.loads(raw.strip())
+        scores = extract_json_value(raw)
+        if not isinstance(scores, dict):
+            raise ValueError("Evaluation output must be a JSON object")
         return {
             "accuracy": min(max(int(scores.get("accuracy", 0)), 0), 10),
             "completeness": min(max(int(scores.get("completeness", 0)), 0), 10),
             "relevance": min(max(int(scores.get("relevance", 0)), 0), 10),
             "explanation": scores.get("explanation", ""),
         }
-    except Exception as e:
+    except Exception:
         logger.exception("Language model output evaluation error")
         return {
             "accuracy": 0,
@@ -118,7 +117,7 @@ class EvaluationHarness:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
             logger.info("Test dataset loaded")
-        except Exception as e:
+        except Exception:
             logger.exception("Test dataset loading error")
             self._dataset = []
 

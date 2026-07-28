@@ -1,13 +1,13 @@
 import asyncio
-import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.repositories.agent import AgentRepository
+from src.utils.background import create_background_task
 
 @dataclass
 class TraceEvent:
@@ -57,7 +57,7 @@ class AgentopsHarness:
 
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
-            except Exception as e:
+            except Exception:
                 logger.exception("MongoDB connection error")
         return self._db_client
 
@@ -86,7 +86,10 @@ class AgentopsHarness:
             (metrics.ended_at - metrics.started_at).total_seconds() * 1000
         )
         logger.info("Finished recording session")
-        asyncio.create_task(self._flush_session(session_id))
+        create_background_task(
+            self._flush_session(session_id),
+            f"agentops-flush-{session_id}",
+        )
 
     def record_tool_call(
         self,
@@ -168,7 +171,7 @@ class AgentopsHarness:
             }
             await AgentRepository.insert_trace(doc)
             logger.info("Saved session history")
-        except Exception as e:
+        except Exception:
             logger.exception("Error saving session history")
 
     def get_prometheus_metrics(self) -> str:

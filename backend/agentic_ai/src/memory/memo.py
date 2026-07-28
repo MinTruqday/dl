@@ -1,22 +1,23 @@
 import asyncio
-import uuid
 import hashlib
 import math
 import json
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from uuid6 import uuid7
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, Range, VectorParams, MatchAny, MatchExcept
 from rank_bm25 import BM25Okapi
 
 from src.core.infrastructure.configuration import settings
+from src.utils.background import create_background_task
+from src.utils.huggingface import HFInferenceChat
 from src.core.registry import PromptType, registry
-from src.schemas.memory import MemoryItem, MemoryOperation
+from src.schemas.memory import MemoryOperation
 from src.memory.management import memory_manager
 
 class EntityStore:
@@ -133,13 +134,11 @@ class MemoryManager:
             url=settings.QDRANT_URL,
             timeout=10.0,
         )
-        self._hf = HuggingFaceEndpoint(
-            repo_id=settings.LLM_MODEL,
-            huggingfacehub_api_token=settings.HF_TOKEN,
-            temperature=0.1,
-            task="conversational",
+        self._hf = AsyncInferenceClient(
+            model=settings.LLM_MODEL,
+            token=settings.HF_TOKEN,
         )
-        self.llm = ChatHuggingFace(llm=self._hf)
+        self.llm = HFInferenceChat(client=self._hf, model=settings.LLM_MODEL)
         from src.rag.embedding import embedder
         self.embedder = embedder
         self._initialized = False
@@ -364,9 +363,24 @@ class MemoryManager:
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
                 points.append(PointStruct(id=item_id, vector=vector, payload=payload))
-                asyncio.create_task(memory_manager.save_memory_history(item_id, "ADD", None, item.content))
+                create_background_task(
+                    memory_manager.save_memory_history(
+                        item_id,
+                        "ADD",
+                        None,
+                        item.content,
+                    ),
+                    f"memory-history-add-{item_id}",
+                )
                 if user_id:
-                    asyncio.create_task(self._entity_store._link_entities_for_memory(item_id, item.content, user_id))
+                    create_background_task(
+                        self._entity_store._link_entities_for_memory(
+                            item_id,
+                            item.content,
+                            user_id,
+                        ),
+                        f"memory-entity-link-{item_id}",
+                    )
             except Exception:
                 logger.exception("Memory embedding generation failed")
 
@@ -557,7 +571,15 @@ class MemoryManager:
                     collection_name=self.collection_name,
                     points=[PointStruct(id=memory_id, vector=vector, payload=payload)]
                 )
-                asyncio.create_task(memory_manager.save_memory_history(memory_id, "UPDATE", old_content, new_content))
+                create_background_task(
+                    memory_manager.save_memory_history(
+                        memory_id,
+                        "UPDATE",
+                        old_content,
+                        new_content,
+                    ),
+                    f"memory-history-update-{memory_id}",
+                )
                 logger.info("Memory updated")
         except Exception:
             logger.exception("Memory update failed")
@@ -573,7 +595,15 @@ class MemoryManager:
                     collection_name=self.collection_name,
                     points_selector=[memory_id]
                 )
-                asyncio.create_task(memory_manager.save_memory_history(memory_id, "DELETE", old_content, None))
+                create_background_task(
+                    memory_manager.save_memory_history(
+                        memory_id,
+                        "DELETE",
+                        old_content,
+                        None,
+                    ),
+                    f"memory-history-delete-{memory_id}",
+                )
                 logger.info("Memory deleted")
         except Exception:
             logger.exception("Memory delete failed")

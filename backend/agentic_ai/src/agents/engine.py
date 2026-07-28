@@ -4,7 +4,6 @@ import json
 import re
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
 
 import redis
 from loguru import logger
@@ -19,7 +18,10 @@ def _is_ssrf_attempt(query: str) -> bool:
     urls = re.findall(r"https?://[^\s]+", query)
     for url in urls:
         try:
-            hostname = urlparse(url).hostname
+            parsed = urlparse(url)
+            hostname = parsed.hostname
+            if parsed.username or parsed.password or not hostname:
+                return True
             if hostname:
                 ip_info = socket.getaddrinfo(hostname, None)
                 for res in ip_info:
@@ -27,7 +29,7 @@ def _is_ssrf_attempt(query: str) -> bool:
                     if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_unspecified:
                         return True
         except Exception:
-            pass
+            return True
     words = re.findall(r"[0-9a-fA-F.:]+", query)
     for word in words:
         try:
@@ -44,7 +46,7 @@ def _is_ssrf_attempt(query: str) -> bool:
                 if ip.is_private or ip.is_loopback:
                     return True
         except Exception:
-            pass
+            return True
     return False
 
 class EngineAgent:
@@ -151,6 +153,9 @@ class EngineAgent:
         return normalized
 
     async def _playwright_scrape(self, url: str) -> str:
+        if _is_ssrf_attempt(url):
+            logger.warning("Playwright navigation blocked by SSRF policy")
+            return ""
         try:
             from playwright.async_api import async_playwright
             async with async_playwright() as p:

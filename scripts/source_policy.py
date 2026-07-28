@@ -1,6 +1,7 @@
 import ast
 import io
 import pathlib
+import re
 import subprocess
 import sys
 import tokenize
@@ -185,6 +186,46 @@ def scan_config(path, source, issues):
         add_text_issues(path, line_number, text, issues)
 
 
+def scan_compilation_registry(issues):
+    component_root = (
+        ROOT / "frontend" / "features" / "compilation" / "components"
+    )
+    editor_path = component_root / "StandardEditor.tsx"
+    if not editor_path.is_file():
+        issues.append((editor_path.relative_to(ROOT), 1, "editor_registry_missing"))
+        return
+    source = editor_path.read_text(encoding="utf-8")
+    relative_editor = editor_path.relative_to(ROOT)
+    if "require as any" in source or ".context(" in source:
+        issues.append((relative_editor, 1, "unbounded_component_registry"))
+    component_names = set(
+        re.findall(r'await import\("\./(DocLib[^"/]+)"\)', source)
+    )
+    for component_name in sorted(component_names):
+        component_path = component_root / f"{component_name}.ts"
+        if not component_path.is_file():
+            issues.append(
+                (
+                    relative_editor,
+                    1,
+                    f"registered_component_missing:{component_name}",
+                )
+            )
+            continue
+        component_source = component_path.read_text(encoding="utf-8")
+        if (
+            "private data: { content: string }" in component_source
+            and len(component_source.splitlines()) < 60
+        ):
+            issues.append(
+                (
+                    component_path.relative_to(ROOT),
+                    1,
+                    "generic_component_registered",
+                )
+            )
+
+
 def main():
     issues = []
     for path in tracked_files():
@@ -202,6 +243,7 @@ def main():
             scan_web(relative_path, source, issues)
         else:
             scan_config(relative_path, source, issues)
+    scan_compilation_registry(issues)
     for path, line, issue in sorted(set(issues), key=lambda item: (str(item[0]), item[1], item[2])):
         print(f"{path}:{line}:{issue}")
     if issues:

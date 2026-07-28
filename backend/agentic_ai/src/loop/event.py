@@ -1,5 +1,4 @@
 import asyncio
-import json
 from uuid6 import uuid7
 import re
 from dataclasses import dataclass, field
@@ -8,6 +7,7 @@ from enum import Enum
 from typing import Any, Callable, Coroutine, Dict, List, Optional
 
 from loguru import logger
+from src.utils.background import create_background_task
 
 from src.memory.memo import memo_manager
 from src.repositories.chat import ChatRepository
@@ -144,13 +144,16 @@ class CronScheduler:
                 logger.info(f"CronScheduler firing event for schedule '{schedule.name}' (run #{schedule.run_count})")
 
                 if self._event_loop_ref:
-                    asyncio.create_task(self._event_loop_ref.handle_event(event))
+                    create_background_task(
+                        self._event_loop_ref.handle_event(event),
+                        f"cron-event-{event.event_id}",
+                    )
                 else:
                     logger.warning(f"CronScheduler no EventDrivenLoop attached for schedule '{schedule.name}'")
 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except Exception:
                 logger.exception(f"CronScheduler error in schedule '{schedule.name}'")
                 await asyncio.sleep(5)
 
@@ -263,7 +266,7 @@ class EventDrivenLoop:
                 continue
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except Exception:
                 logger.exception("EventDrivenLoop worker error")
 
     def get_stats(self) -> Dict[str, Any]:
@@ -302,8 +305,11 @@ async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
     if payload.get("check_hill_climbing", False):
         try:
             from src.loop.hill_climbing import hill_climbing_loop
-            asyncio.create_task(hill_climbing_loop.analyze_and_improve())
-        except Exception as e:
+            create_background_task(
+                hill_climbing_loop.analyze_and_improve(),
+                f"hill-climbing-{event.event_id}",
+            )
+        except Exception:
             logger.warning("Heartbeat hill climbing trigger failed")
     return "Heartbeat processed"
 
@@ -319,7 +325,9 @@ async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
 async def _handle_user_query_event(event: AgentEvent) -> Optional[str]:
     query = event.payload.get("query", "")
     user_id = event.payload.get("user_id", "")
-    logger.debug(f"EventDrivenLoop user query event from user={user_id}")
+    logger.debug(
+        f"EventDrivenLoop user query event from user={user_id} query_chars={len(query)}"
+    )
     return f"User query event recorded for user {user_id}"
 
 

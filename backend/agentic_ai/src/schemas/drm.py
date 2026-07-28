@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional
 from src.schemas.auth import Tier
 
 class WatermarkConfig(BaseModel):
@@ -28,9 +28,9 @@ class DRMPolicyOutput(BaseModel):
     hardware_binding_strict: bool = Field(default=False, description="<critical_instructions>Lock decryption key to device fingerprint.</critical_instructions>")
 
 class DRMContextRequest(BaseModel):
-    user_id: str
-    document_id: str
-    client_ip: str
-    user_tier: Optional[Tier] = Tier.BASIC
-    document_type: Optional[str] = "standard"
-    device_fingerprint: Optional[str] = None
+    user_id: str = Field(min_length=1, max_length=128, description="<input_context>User identifier used for policy and license lookup.</input_context>")
+    document_id: str = Field(min_length=1, max_length=128, description="<input_context>Document identifier whose access policy is evaluated.</input_context>")
+    client_ip: str = Field(min_length=1, max_length=64, description="<security_context>Client network address included in risk evaluation.</security_context>")
+    user_tier: Optional[Tier] = Field(default=Tier.BASIC, description="<decision_context>Subscription tier used by the rights policy.</decision_context>")
+    document_type: Optional[str] = Field(default="standard", min_length=1, max_length=64, description="<decision_context>Document protection category used by the rights policy.</decision_context>")
+    device_fingerprint: Optional[str] = Field(default=None, max_length=512, description="<security_context>Optional device binding fingerprint for strict access decisions.</security_context>")

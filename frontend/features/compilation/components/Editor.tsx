@@ -52,6 +52,7 @@ import {
   List,
 } from "lucide-react";
 import MonacoEditor from "@monaco-editor/react";
+import { sanitizeEditorData } from "./editorjs-sanitizer";
 
 interface EditorProps {
   documentId?: string;
@@ -129,7 +130,7 @@ export default function Editor({
               setLocalText(data.content);
             } else if (editorRef.current) {
               const parsedContent = typeof data.content === "string" ? JSON.parse(data.content) : data.content;
-              editorRef.current.render(parsedContent);
+              editorRef.current.render(sanitizeEditorData(parsedContent));
             }
           }
         } catch (err) {
@@ -400,8 +401,9 @@ ${latexCode}
         }
 
         data.blocks = newBlocks;
-        await editorRef.current.render(data);
-        if (onSave) onSave(JSON.stringify(data));
+        const sanitizedData = sanitizeEditorData(data);
+        await editorRef.current.render(sanitizedData);
+        if (onSave) onSave(JSON.stringify(sanitizedData));
         showToast("Block translation completed", "success");
       }
     } catch (err: any) {
@@ -419,9 +421,9 @@ ${latexCode}
       if (onSave) onSave(originalContentForUndo);
     } else {
       if (!editorRef.current) return;
-      const data = JSON.parse(originalContentForUndo);
+      const data = sanitizeEditorData(JSON.parse(originalContentForUndo));
       await editorRef.current.render(data);
-      if (onSave) onSave(originalContentForUndo);
+      if (onSave) onSave(JSON.stringify(data));
     }
     setOriginalContentForUndo(null);
     showToast("Original content restored", "success");

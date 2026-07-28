@@ -170,7 +170,7 @@ class ConversionRag:
             logger.exception("Document content analysis error")
             return {"error": "document_parsing_failed"}
         finally:
-            tmp_path.unlink(missing_ok=True)
+            await asyncio.to_thread(tmp_path.unlink, missing_ok=True)
 
     async def extract_tables(self, file_url: str) -> List[Dict]:
         file_bytes, file_ext = await self._download_from_minio(file_url)
@@ -209,11 +209,11 @@ class ConversionRag:
             tables = await loop.run_in_executor(None, _extract)
             logger.info("Extracted data tables")
             return tables
-        except Exception as e:
+        except Exception:
             logger.exception("Data table extraction error")
             return []
         finally:
-            tmp_path.unlink(missing_ok=True)
+            await asyncio.to_thread(tmp_path.unlink, missing_ok=True)
 
     def _split_markdown_to_chunks(self, markdown: str) -> List[Dict]:
         if not markdown:
@@ -386,7 +386,7 @@ class ConversionRag:
             logger.info("Retrieved file content from storage")
             return data, ext
 
-        except Exception as e:
+        except Exception:
             logger.exception("File download connection error")
             return None, ""
 

@@ -1,5 +1,4 @@
 from enum import Enum
-from pydantic import BaseModel
 
 METIS_BEHAVIOR_RULES = """
 <metis_behavior>
@@ -419,8 +418,8 @@ Evaluate the task description and artifact verification state then return the ne
 <example_group title="Routing Logic">
 <example>
 <context>Code is written but hasn't been reviewed.</context>
-<good_response>{{"next_agent":"reviewer","reasoning":"Code exists but peer review is missing"}}</good_response>
-<bad_response>{{"next_agent":"finish","reasoning":"Code exists"}}</bad_response>
+<good_response>{{{{"next_agent":"reviewer","reasoning":"Code exists but peer review is missing"}}}}</good_response>
+<bad_response>{{{{"next_agent":"finish","reasoning":"Code exists"}}}}</bad_response>
 <explanation>Cannot finish until peer review is complete.</explanation>
 </example>
 </example_group>
@@ -446,8 +445,8 @@ Generate a complete implementation and return it as structured data.
 <example_group title="Code Generation">
 <example>
 <task>Write a hello world function</task>
-<good_response>{{"language":"python","code":"def print_hello_world():\\n    print(\\\"Hello World\\\")","logic_explanation":"Defines and invokes one explicit output operation"}}</good_response>
-<bad_response>{{"language":"python","code":"def do_thing():\\n    pass","logic_explanation":"Placeholder"}}</bad_response>
+<good_response>{{{{"language":"python","code":"def print_hello_world():\\n    print(\\\"Hello World\\\")","logic_explanation":"Defines and invokes one explicit output operation"}}}}</good_response>
+<bad_response>{{{{"language":"python","code":"def do_thing():\\n    pass","logic_explanation":"Placeholder"}}}}</bad_response>
 <explanation>Bad response generates incomplete stub code with comments.</explanation>
 </example>
 </example_group>
@@ -473,8 +472,8 @@ Evaluate code and deterministic scanner evidence then return a structured securi
 <example_group title="Vulnerability Detection">
 <example>
 <code>eval(user_input)</code>
-<good_response>{{"is_secure":false,"vulnerability_summary":"User input reaches eval and permits arbitrary code execution"}}</good_response>
-<bad_response>{{"is_secure":true,"vulnerability_summary":"The code is concise"}}</bad_response>
+<good_response>{{{{"is_secure":false,"vulnerability_summary":"User input reaches eval and permits arbitrary code execution"}}}}</good_response>
+<bad_response>{{{{"is_secure":true,"vulnerability_summary":"The code is concise"}}}}</bad_response>
 <explanation>Bad response ignores a critical RCE vulnerability.</explanation>
 </example>
 </example_group>
@@ -500,8 +499,8 @@ Evaluate the implementation and return a structured approval verdict.
 <example_group title="Code Critique">
 <example>
 <code>def calc(a,b): return a+b</code>
-<good_response>{{"is_approved":false,"feedback":"The function name is ambiguous and its public parameters lack type hints"}}</good_response>
-<bad_response>{{"is_approved":true,"feedback":"It works"}}</bad_response>
+<good_response>{{{{"is_approved":false,"feedback":"The function name is ambiguous and its public parameters lack type hints"}}}}</good_response>
+<bad_response>{{{{"is_approved":true,"feedback":"It works"}}}}</bad_response>
 <explanation>The code does not meet enterprise typing and naming standards.</explanation>
 </example>
 </example_group>
@@ -554,8 +553,8 @@ Generate exactly 3 distinct implementation approaches for the given task. Each a
 <example_group title="Distinct Approaches">
 <example>
 <task>Sort a list</task>
-<good_response>{{"branches":[{{"approach_name":"Timsort","implementation":"values.sort()"}},{{"approach_name":"QuickSort","implementation":"def sort_values(values): return values if len(values) < 2 else sort_values([x for x in values[1:] if x <= values[0]]) + [values[0]] + sort_values([x for x in values[1:] if x > values[0]])"}},{{"approach_name":"MergeSort","implementation":"def sort_values(values): return sorted(values)"}}]}}</good_response>
-<bad_response>{{"branches":[{{"approach_name":"Sort","implementation":"values.sort()"}},{{"approach_name":"Sorted","implementation":"sorted(values)"}},{{"approach_name":"Sort default","implementation":"values.sort(reverse=False)"}}]}}</bad_response>
+<good_response>{{{{"branches":[{{{{"approach_name":"Timsort","implementation":"values.sort()"}}}},{{{{"approach_name":"QuickSort","implementation":"def sort_values(values): return values if len(values) < 2 else sort_values([x for x in values[1:] if x <= values[0]]) + [values[0]] + sort_values([x for x in values[1:] if x > values[0]])"}}}},{{{{"approach_name":"MergeSort","implementation":"def sort_values(values): return sorted(values)"}}}}]}}}}</good_response>
+<bad_response>{{{{"branches":[{{{{"approach_name":"Sort","implementation":"values.sort()"}}}},{{{{"approach_name":"Sorted","implementation":"sorted(values)"}}}},{{{{"approach_name":"Sort default","implementation":"values.sort(reverse=False)"}}}}]}}}}</bad_response>
 <explanation>The bad response provides identical underlying algorithms with trivial wrapper differences.</explanation>
 </example>
 </example_group>
@@ -580,8 +579,8 @@ Evaluate the provided code implementation and assign a heuristic score strictly 
 <example_group title="Algorithmic Evaluation">
 <example>
 <code>def has_dup(arr): return len(arr) != len(set(arr))</code>
-<good_response>{{"score":0.9}}</good_response>
-<bad_response>{{"score":0.3}}</bad_response>
+<good_response>{{{{"score":0.9}}}}</good_response>
+<bad_response>{{{{"score":0.3}}}}</bad_response>
 <explanation>Bad response penalizes pythonic efficiency.</explanation>
 </example>
 </example_group>
@@ -911,12 +910,13 @@ After your reasoning, produce a strictly valid JSON execution plan that assigns 
 
 
 <available_agents>
-- Action: Uses registered DocLib tools for authenticated document operations, wallet queries and transfers, document editing, mind maps, and personal instruction management.
+- Action: Uses registered DocLib tools for authenticated document operations, read-only wallet queries, document editing, mind maps, and personal instruction management.
 - Knowledge: Searches, reads, and analyzes internal documents from the user's library. Use for any question that requires retrieving specific stored content.
 - EngineAgent: Performs web searches to retrieve external information from the internet. Use when the user's question requires real-time or external data not in the library.
 - Reasoning: Performs deep logical analysis, evaluates quality, and handles complex multi-step reasoning problems.
 - SwarmAgent: A specialized multi-agent swarm (Coder, Reviewer, SecOps) used specifically for writing, reviewing, and securing complex code or software features. Use for major coding tasks.
 - MCTSAgent: Monte Carlo Tree Search agent. Use when a complex logic problem requires generating and evaluating multiple solution branches (e.g., when a previous approach failed and needs re-evaluation).
+- SpawnerAgent: Creates one bounded temporary specialist for a domain not covered by the registered core agents. Set specialization to a concise role name.
 </available_agents>
 
 <rules>
@@ -930,6 +930,7 @@ After your reasoning, produce a strictly valid JSON execution plan that assigns 
 8. UNRECOGNIZED ENTITY RULE — NON-NEGOTIABLE: If the user asks about any specific person, product, company, event, document, or entity that you do not immediately recognize or that could be private/internal data, you MUST plan an EngineAgent step to search for it. An unfamiliar capitalized noun is almost certainly a name that requires lookup — not a common word. Confabulating costs the user's trust. This rule takes precedence over all others.
 9. Do not claim that an agent can execute arbitrary code or create an unsupported file or folder operation.
 10. LANGUAGE: Produce the JSON plan and all internal fields in English. The "answer" field for a direct chat route must use the language of the latest user request.
+11. Use SpawnerAgent only when none of the core agents covers the required expertise. Include a specialization field containing a concise role name.
 </rules>
 
 <examples>
@@ -1878,16 +1879,16 @@ TEXT
 
         PromptType.CODE_GENERATION: """<system_identity>
 You are the DocLib Code Generation Engine, a skilled software engineer specializing in clean, efficient, and secure code.
-Your role: write production-quality code that follows best practices, is well-documented, and handles edge cases.
+Your role: write production-quality code that follows best practices, uses precise docstrings where supported, and handles edge cases.
 </system_identity>
 
 <objective>
-Write clean, efficient, and well-documented {language} code for the following request. Output ONLY the code block — no conversational text.
+Write clean and efficient {language} code for the following request. Output only source code without markdown fences or conversational text.
 </objective>
 
 <rules>
 1. Follow the language's idiomatic conventions and style guidelines (PEP 8 for Python, ESLint standards for JavaScript, etc.).
-2. Include meaningful comments for non-obvious logic, but avoid over-commenting obvious code.
+2. Do not generate source comments. Use concise docstrings only for public interfaces when the language supports them.
 3. Handle common edge cases: null/empty inputs, boundary conditions, type mismatches.
 4. SECURITY: Never generate code that contains hardcoded credentials, SQL injection vulnerabilities, or other security anti-patterns.
 5. Prefer readability over cleverness — write code that a junior developer can understand.
@@ -2441,7 +2442,7 @@ Analyze the user intent and select the appropriate system tool for execution. Ma
 2. If the request is ambiguous, select the most likely tool and note any assumptions.
 3. If no available tool matches the request, clearly state this rather than forcing a poor match.
 4. Extract and validate parameters from the user's request before dispatching.
-5. For destructive operations (delete, modify, transfer), ensure all required confirmation parameters are present.
+5. For destructive operations such as deletion or replacement, ensure all required confirmation parameters are present.
 6. CRITICAL: When invoking a tool, your arguments MUST be formatted as a SINGLE valid JSON object (a dictionary), NOT a JSON array/list.
 </rules>
 

@@ -1,24 +1,21 @@
 import asyncio
-import json
-import re
 from typing import Dict, List, Optional
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.store.vector import vector_store
+from src.utils.huggingface import HFInferenceChat
 
 
-_hf = HuggingFaceEndpoint(
-    repo_id=settings.LLM_MODEL,
-    huggingfacehub_api_token=settings.HF_TOKEN,
-    temperature=0.1,
-    task="conversational",
+_hf = AsyncInferenceClient(
+    model=settings.LLM_MODEL,
+    token=settings.HF_TOKEN,
 )
-_llm = ChatHuggingFace(llm=_hf)
+_llm = HFInferenceChat(client=_hf, model=settings.LLM_MODEL)
 
 
 class RetrievalRag:
@@ -45,13 +42,13 @@ class RetrievalRag:
         return self._reranker
 
     def _extract_json_array(self, text: str) -> list:
-        text = text.strip()
-        text = re.sub(r"^```(?:json)?\n", "", text, flags=re.IGNORECASE | re.MULTILINE)
-        text = re.sub(r"\n```$", "", text, flags=re.MULTILINE)
-        match = re.search(r"\[[\s\S]*\]", text)
-        if match:
-            return json.loads(match.group(0))
-        return []
+        from src.utils.structured_output import extract_json_value
+
+        try:
+            parsed = extract_json_value(text)
+            return parsed if isinstance(parsed, list) else []
+        except (TypeError, ValueError):
+            return []
 
     async def _generate_hypothetical_document(self, question: str) -> str:
         system_prompt = (
@@ -161,7 +158,7 @@ class RetrievalRag:
             documents = sorted(documents, key=lambda x: x["rrf_score"], reverse=True)
         except ImportError:
             logger.warning("rank_bm25 not installed, skipping BM25 Hybrid Fusion")
-        except Exception as e:
+        except Exception:
             logger.error("Hybrid search fusion error")
 
         if not current_reranker:

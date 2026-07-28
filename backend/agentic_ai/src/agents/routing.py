@@ -1,14 +1,9 @@
 from typing import Dict, List, Optional
 
 import numpy as np
-from huggingface_hub import AsyncInferenceClient
-from langchain_core.prompts import PromptTemplate
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.registry import PromptType, registry
-from src.schemas.routing import RouteDecision
-from src.utils.huggingface import HFInferenceChat
 
 
 VALID_AGENTS = {
@@ -18,7 +13,8 @@ VALID_AGENTS = {
     "Knowledge": "Retrieves information from the local document library using semantic vector search",
     "Reasoning": "Performs deep logical analysis, reasoning, evaluation, and multi-step problem solving",
     "SwarmAgent": "Writes, reviews, and secures complex software code using a multi-agent team",
-    "MCTSAgent": "Solves complex logic problems by exploring multiple solution branches via Monte Carlo Tree Search"
+    "MCTSAgent": "Solves complex logic problems by exploring multiple solution branches via Monte Carlo Tree Search",
+    "SpawnerAgent": "Creates one bounded temporary specialist for a domain not covered by the registered core agents"
 }
 
 

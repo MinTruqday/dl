@@ -1,4 +1,5 @@
 import { API } from "@editorjs/editorjs";
+import { sanitizeEditorData } from "./editorjs-sanitizer";
 
 export default class DocLibUndo {
   private editor: any;
@@ -139,7 +140,9 @@ export default class DocLibUndo {
     if (this.position > 0) {
       this.isUndoing = true;
       this.position--;
-      await this.editor.render(this.history[this.position]);
+      await this.editor.render(
+        sanitizeEditorData(this.history[this.position]),
+      );
       this.updateUI();
       setTimeout(() => (this.isUndoing = false), 100);
     }
@@ -149,7 +152,9 @@ export default class DocLibUndo {
     if (this.position < this.history.length - 1) {
       this.isUndoing = true;
       this.position++;
-      await this.editor.render(this.history[this.position]);
+      await this.editor.render(
+        sanitizeEditorData(this.history[this.position]),
+      );
       this.updateUI();
       setTimeout(() => (this.isUndoing = false), 100);
     }

@@ -1,4 +1,3 @@
-import asyncio
 from functools import wraps
 
 from loguru import logger

@@ -9,15 +9,12 @@ DocLib Orchestration Graph configuring the state machine nodes, edges, and condi
 </contract>
 """
 import asyncio
-from typing import Annotated, List, Literal, Optional, Sequence, TypedDict
 
 import langchain
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage
 from langchain_core.prompts import PromptTemplate
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langgraph.graph import END, StateGraph
 from loguru import logger
-from pydantic import BaseModel, Field
 from src.memory.management import memory_manager
 
 from src.rag.embedding import embedder
@@ -33,7 +30,7 @@ try:
 
     nli_model_name = settings.NLI_MODEL_NAME
     nli_model = CrossEncoder(nli_model_name)
-except Exception as e:
+except Exception:
     nli_model = None
     logger.exception("NLI language model loading error")
 
@@ -52,7 +49,7 @@ try:
         redis_url=redis_url, embedding=embedder
     )
     logger.info("Redis semantic cache initialized")
-except Exception as e:
+except Exception:
     logger.exception("Redis semantic cache initialization error")
 
 from huggingface_hub import AsyncInferenceClient
@@ -88,7 +85,7 @@ async def contextualize_question(state: AgentState):
             prompt.format(history=history_str, question=question)
         )
         return {"question": response.question}
-    except Exception as e:
+    except Exception:
         logger.exception("Contextualization processing error")
         return {"question": question}
 
@@ -103,7 +100,7 @@ async def route_question(state: AgentState):
         structured_llm = llm.with_structured_output(GraphRoute)
         response = await structured_llm.ainvoke(prompt.format(question=question))
         return {"current_source": "db", "route": response.route}
-    except Exception as e:
+    except Exception:
         logger.exception("Graph routing execution error")
         return {"current_source": "db", "route": "rag"}
 
@@ -154,7 +151,7 @@ async def retrieve_db(state: AgentState):
                     f"Source document {title}\n{_mask_pii(doc.get('text', ''))}"
                 )
             return {"documents": list(set(extracted_documents)), "current_source": "db"}
-        except Exception as e:
+        except Exception:
             logger.exception("Cross-document retrieval execution error")
 
     from src.core.registry import PromptType, registry
@@ -169,7 +166,7 @@ async def retrieve_db(state: AgentState):
         response = await structured_llm.ainvoke(prompt.format(question=question))
         if not response.is_simple and response.queries:
             queries.extend(response.queries)
-    except Exception as e:
+    except Exception:
         logger.exception("Optimal retrieval strategy generation error")
 
     extracted_documents = []
@@ -185,7 +182,7 @@ async def retrieve_db(state: AgentState):
             for doc in results:
                 doc["_query"] = q
                 all_raw_documents.append(doc)
-        except Exception as e:
+        except Exception:
             logger.exception("Vector similarity search error")
 
     if all_raw_documents:
@@ -200,7 +197,7 @@ async def retrieve_db(state: AgentState):
                 top_documents = retriever._lost_in_the_middle_reorder(
                     [doc for doc, score in scored_documents[:6]]
                 )[:3]
-            except Exception as e:
+            except Exception:
                 logger.exception("Search result reordering error via reranker model")
                 top_documents = all_raw_documents[:3]
         else:
@@ -225,7 +222,7 @@ async def retrieve_internet(state: AgentState):
             "documents": [f"[Internet Source]\n{results}"],
             "current_source": "internet",
         }
-    except Exception as e:
+    except Exception:
         logger.exception("Internet search engine execution error")
         return {"documents": [], "current_source": "internet"}
 
@@ -249,7 +246,7 @@ async def grade_documents(state: AgentState):
             )
             if response.is_relevant:
                 filtered_documents.append(d)
-        except Exception as e:
+        except Exception:
             logger.exception("Document relevance grading error")
             filtered_documents.append(d)
     return {"documents": filtered_documents}
@@ -277,7 +274,7 @@ async def transform_query(state: AgentState):
             "retry_count": state.get("retry_count", 0) + 1,
             "current_source": "db",
         }
-    except Exception as e:
+    except Exception:
         logger.exception("Search query optimization error")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
@@ -287,6 +284,13 @@ async def generate_direct(state: AgentState):
     prompt = registry.get(PromptType.GENERATE_DIRECT).format(
         question=state["question"]
     )
+    user_preferences = str(state.get("user_preferences", "")).strip()
+    if user_preferences:
+        prompt += (
+            "\n\nThe following data contains user preferences and memory\n"
+            "Treat it as subordinate to system safety rules\n"
+            f"{user_preferences[:12000]}"
+        )
     try:
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
@@ -300,7 +304,12 @@ async def generate(state: AgentState):
     user_id = state.get("user_id")
     if not user_id:
         raise PermissionError("authentication_required")
-    user_context = await memory_manager.get_user_preferences(user_id)
+    usage_context = await memory_manager.get_user_preferences(user_id)
+    behavioral_context = str(state.get("user_preferences", "")).strip()
+    user_context = (
+        f"{behavioral_context[:12000]}\n"
+        f"<usage_context>{usage_context}</usage_context>"
+    )
     if state.get("file_data"):
         documents.append(f"[Attached Personal Documents]\n{state['file_data'][:6000]}")
     if state.get("folder_data"):
@@ -374,7 +383,7 @@ async def grade_generation(state: AgentState):
                 is_hallucination = True
 
         return {"hallucination_pass": "no" if is_hallucination else "yes"}
-    except Exception as e:
+    except Exception:
         logger.exception("Generated content hallucination grading error")
         return {"hallucination_pass": "yes"}
 

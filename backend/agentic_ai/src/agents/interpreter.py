@@ -1,5 +1,4 @@
 import re
-from loguru import logger
 from src.harness.sandbox import CodeSandbox
 
 

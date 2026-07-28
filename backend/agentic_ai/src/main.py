@@ -93,10 +93,12 @@ app.include_router(mcp_router)
 app.include_router(interrupt_router)
 @app.get("/health")
 async def health_check():
+    """Report process liveness for container health monitoring"""
     return {"status": "healthy"}
 
 @app.get("/ready")
 async def readiness_check():
+    """Report readiness of every infrastructure dependency required for requests"""
     checks = {}
     try:
         await database.mongodb.admin.command("ping")
@@ -126,6 +128,7 @@ async def readiness_check():
     )
 @app.get("/evaluate/metrics")
 async def harness_metrics():
+    """Expose agent harness telemetry in Prometheus text format"""
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
         content=agentops.get_prometheus_metrics(),
@@ -136,6 +139,7 @@ async def harness_metrics():
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def harness_status():
+    """Return orchestration circuit and evaluation status for administrators"""
     return {
         "orchestration": {
             "active_sessions": orchestration.get_active_sessions(),
@@ -150,7 +154,7 @@ async def startup_event():
     try:
         await vector_store.ensure_collection()
         logger.info("Qdrant vector store connection established")
-    except Exception as e:
+    except Exception:
         logger.exception("Qdrant vector store initialization error")
     try:
         from src.core.infrastructure.database import init_db
@@ -171,16 +175,22 @@ async def startup_event():
                 [("dataset_id", 1), ("status", 1)], background=True
             )
             logger.info("MongoDB indexing initialized")
-    except Exception as e:
+    except Exception:
         logger.exception("MongoDB indexing error")
     try:
         from src.loop.event import cron_scheduler, event_driven_loop
         await event_driven_loop.start_worker()
         await cron_scheduler.start()
         logger.info("Event-driven loop started")
-    except Exception as e:
+    except Exception:
         logger.exception("Event-driven loop startup error")
 async def shutdown_event():
+    try:
+        from src.utils.background import drain_background_tasks
+
+        await drain_background_tasks()
+    except Exception:
+        logger.exception("Background task shutdown failed")
     try:
         from src.loop.event import cron_scheduler, event_driven_loop
         await cron_scheduler.stop()

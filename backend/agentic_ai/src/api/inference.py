@@ -1,7 +1,5 @@
-import asyncio
-import base64
 import json
-from typing import Any, List, Optional
+from typing import List
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,6 +11,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.logging_route import LoggingRoute
 from src.core.model_runtime import run_chat_completion
 from src.core.registry import PromptType, registry
+from src.utils.structured_output import extract_json_value
 from src.schemas.inference import (
     ActionRequest,
     CitationRequest,
@@ -131,6 +130,7 @@ async def _run_ai_with_quota(
 async def generate_text(
     req: GenerationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Generate bounded text under the authenticated user quota"""
     logger.info("Text generation started")
     try:
         result = await _run_ai_with_quota(
@@ -148,6 +148,7 @@ async def generate_text(
 async def translate_text(
     req: TranslationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Translate bounded text into the requested target language"""
     logger.info("Translation started target_language={}", req.target_lang)
     try:
         prompt = registry.get(PromptType.TRANSLATE).format(
@@ -156,7 +157,7 @@ async def translate_text(
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=len(req.text) * 3,
+            max_tokens=min(len(req.text) * 3, 4000),
             temperature=0.1,
         )
         logger.info("Translation completed")
@@ -168,6 +169,7 @@ async def translate_text(
 async def generate_quick_replies(
     req: QuickRepliesRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Generate structured quick replies from bounded conversation history"""
     logger.info("Quick reply generation started")
     try:
         history_text = "\n".join(req.history_messages)
@@ -180,10 +182,8 @@ async def generate_quick_replies(
             max_tokens=100,
             temperature=0.3,
         )
-        import json
         try:
-            clean_result = result.strip().strip('`').removeprefix('json').strip()
-            replies = json.loads(clean_result)
+            replies = extract_json_value(result)
             valid = (
                 isinstance(replies, list)
                 and len(replies) == 3
@@ -198,7 +198,7 @@ async def generate_quick_replies(
             )
             if not valid:
                 replies = []
-        except json.JSONDecodeError:
+        except (TypeError, ValueError):
             replies = []
             
         logger.info("Quick reply generation completed")
@@ -214,6 +214,7 @@ async def generate_quick_replies(
 async def generate_code(
     req: CodeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Generate complete source code for the requested language and task"""
     try:
         prompt = registry.get(PromptType.CODE_GENERATION).format(
             language=req.language, prompt=req.prompt
@@ -232,6 +233,7 @@ async def generate_code(
 async def grammar_check(
     req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Check and correct grammar for an eligible authenticated user"""
     try:
         if (
             current_user.role != Role.ADMIN
@@ -246,7 +248,7 @@ async def grammar_check(
         result = await _run_ai_with_quota(
             current_user,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=len(req.text) + 200,
+            max_tokens=min(len(req.text) + 200, 4000),
             temperature=0.1,
         )
         import difflib
@@ -266,6 +268,7 @@ async def grammar_check(
 async def summarize_text(
     req: SummarizeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Summarize bounded text in the requested language"""
     logger.info("Text summarization started")
     try:
         prompt = registry.get(PromptType.SUMMARIZE).format(
@@ -286,6 +289,7 @@ async def summarize_text(
 async def check_plagiarism(
     req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Estimate plagiarism risk and return structured matching evidence"""
     logger.info("Plagiarism detection started")
     try:
         if (
@@ -331,13 +335,10 @@ async def check_plagiarism(
         )
 
         try:
-            import json as json_mod
-            import re
-
-            json_match = re.search(r"\{.*\}", result, re.DOTALL)
-            if json_match:
-                return json_mod.loads(json_match.group())
-        except (json.JSONDecodeError, TypeError, ValueError):
+            parsed_result = extract_json_value(result)
+            if isinstance(parsed_result, dict):
+                return parsed_result
+        except (TypeError, ValueError):
             logger.warning("Plagiarism model output was not valid JSON")
 
         max_score = max([m["score"] for m in significant_matches]) * 100
@@ -354,6 +355,7 @@ async def check_plagiarism(
 async def unified_action(
     req: ActionRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Run one supported editor action against bounded text context"""
     logger.info("Unified action started action={}", req.action)
     try:
         prompts = {
@@ -394,6 +396,7 @@ async def unified_action(
 async def get_synonyms(
     req: GrammarRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Generate context aware synonyms for eligible users"""
     logger.info("Synonym retrieval started")
     try:
         if (
@@ -422,6 +425,7 @@ async def get_synonyms(
 async def suggest_citations(
     req: CitationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Suggest citations for bounded content and source context"""
     logger.info("Citation suggestion started")
     try:
         if (
@@ -465,6 +469,7 @@ async def suggest_citations(
 async def transform_tone(
     req: ToneRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Rewrite bounded content using the requested tone"""
     logger.info("Tone transformation started")
     try:
         if (
@@ -496,6 +501,7 @@ async def transform_tone(
 async def peer_review(
     req: ReviewRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Review bounded content against the requested criteria"""
     logger.info("Content review started")
     try:
         if (
@@ -531,6 +537,7 @@ async def peer_review(
 async def multi_doc_synthesis(
     req: SynthesisRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Synthesize evidence from an authorized set of indexed documents"""
     logger.info("Multi-document synthesis started document_count={}", len(req.document_ids))
     try:
         from src.rag.embedding import embedder
@@ -562,6 +569,7 @@ async def multi_doc_synthesis(
 
 @router.post("/trich-xuat-van-ban")
 async def extract_text(req: dict, current_user: CurrentUser = Depends(get_current_user)):
+    """Extract normalized text from an authorized cloud file"""
     logger.info("Document text extraction started")
     try:
         file_url = req.get("file_url")
@@ -590,6 +598,7 @@ async def extract_text(req: dict, current_user: CurrentUser = Depends(get_curren
 async def analyze_document(
     req: dict, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Analyze bounded document content and return structured findings"""
     logger.info(f"Started document analysis API request (folder {req.get('folder_str')}) for user_id={current_user.id}")
     try:
         context = req.get("context", "")
@@ -607,13 +616,10 @@ async def analyze_document(
             temperature=0.2,
         )
 
-        import json as json_mod
-        import re
-
-        json_match = re.search(r"\{.*\}", result, re.DOTALL)
-        if json_match:
+        parsed_result = extract_json_value(result)
+        if isinstance(parsed_result, dict):
             logger.info("Document analysis completed")
-            return json_mod.loads(json_match.group())
+            return parsed_result
         else:
             logger.warning("LLM returned malformed JSON response during document analysis")
             raise ValueError("Language model returned invalid format")
@@ -625,6 +631,7 @@ async def analyze_document(
     dependencies=[Depends(verify_internal_token)],
 )
 async def delete_vector_document(document_id: str):
+    """Delete all indexed vectors for an internal document identifier"""
     logger.info(f"Started vector index deletion for document {document_id}")
     try:
         from src.store.vector import vector_store
@@ -637,20 +644,17 @@ async def delete_vector_document(document_id: str):
         raise HTTPException(status_code=500, detail={"code": "document_vector_deletion_failed"})
 
 def _extract_json(text: str) -> dict:
-    import re
-    import json
-    match = re.search(r'\{.*\}', text, re.DOTALL)
-    if match:
-        try:
-            return json.loads(match.group(0))
-        except (json.JSONDecodeError, TypeError, ValueError):
-            return {}
-    return {}
+    try:
+        parsed = extract_json_value(text)
+        return parsed if isinstance(parsed, dict) else {}
+    except (TypeError, ValueError):
+        return {}
 
 @router.post("/giai-thich-thuat-ngu")
 async def extract_glossary(
     req: GlossaryRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Extract a structured glossary from bounded source text"""
     logger.info("Glossary extraction started")
     try:
         prompt = registry.get(PromptType.EXTRACT_GLOSSARY).format(text=req.text)
@@ -670,6 +674,7 @@ async def extract_glossary(
 async def imitate_style(
     req: StyleImitationRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Rewrite bounded text using characteristics of a style sample"""
     logger.info("Style imitation started")
     try:
         prompt = registry.get(PromptType.IMITATE_STYLE).format(reference_text=req.style_sample, text=req.text)
@@ -688,6 +693,7 @@ async def imitate_style(
 async def draft_with_memory(
     req: DraftWithMemoryRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Draft content using the authenticated user memory context"""
     logger.info("Memory-aware drafting started")
     try:
         from src.core.registry import registry, PromptType
@@ -707,6 +713,7 @@ async def draft_with_memory(
 async def extract_to_storage(
     req: ExtractToStorageRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Extract structured artifacts according to bounded extraction goals"""
     logger.info("Artifact extraction started")
     try:
         from src.core.registry import registry, PromptType
@@ -727,6 +734,7 @@ async def extract_to_storage(
 async def web_fact_check(
     req: WebFactCheckRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Check bounded claims using the configured web evidence workflow"""
     logger.info("Web fact check started")
     try:
         from src.core.registry import registry, PromptType
@@ -746,6 +754,7 @@ async def web_fact_check(
 async def compliance_screen(
     req: ComplianceScreenRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Screen bounded text against configured compliance requirements"""
     logger.info("Compliance screening started")
     try:
         from src.core.registry import registry, PromptType
@@ -765,6 +774,7 @@ async def compliance_screen(
 async def semantic_diff(
     req: SemanticDiffRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Compare two bounded texts by meaning and material change"""
     logger.info("Semantic comparison started")
     try:
         from src.core.registry import registry, PromptType

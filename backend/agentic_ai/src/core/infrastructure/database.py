@@ -1,6 +1,4 @@
-from src.core.infrastructure.redis import redis
 import asyncio
-import os
 
 from loguru import logger
 
@@ -45,11 +43,59 @@ async def init_db():
 async def setup_indexes():
     try:
         db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
+        from pymongo import ASCENDING, DESCENDING, IndexModel
+
+        index_sets = {
+            "agent_traces": [
+                IndexModel([("session_id", ASCENDING), ("started_at", DESCENDING)]),
+                IndexModel([("status", ASCENDING), ("started_at", DESCENDING)]),
+            ],
+            "ai_sessions": [
+                IndexModel([("user_id", ASCENDING), ("updated_at", DESCENDING)]),
+                IndexModel([("user_id", ASCENDING), ("document_id", ASCENDING)]),
+            ],
+            "ai_messages": [
+                IndexModel([("session_id", ASCENDING), ("created_at", ASCENDING)]),
+                IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)]),
+            ],
+            "rag_feedback": [
+                IndexModel([("user_id", ASCENDING), ("vote_type", ASCENDING)]),
+                IndexModel([("session_id", ASCENDING), ("message_id", ASCENDING)]),
+            ],
+            "finetune_datasets": [
+                IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)]),
+            ],
+            "finetune_samples": [
+                IndexModel([("dataset_id", ASCENDING), ("created_at", ASCENDING)]),
+            ],
+            "finetune_jobs": [
+                IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)]),
+                IndexModel([("user_id", ASCENDING), ("status", ASCENDING)]),
+            ],
+            "mcp_registry": [
+                IndexModel([("name", ASCENDING)], unique=True),
+            ],
+            "global_preferences": [
+                IndexModel([("key", ASCENDING)], unique=True),
+            ],
+            "global_project_context": [
+                IndexModel([("project_id", ASCENDING)], unique=True),
+            ],
+            "episodic_memory": [
+                IndexModel([("user_id", ASCENDING), ("session_id", ASCENDING), ("created_at", DESCENDING)]),
+                IndexModel([("expires_at", ASCENDING)], expireAfterSeconds=0),
+            ],
+            "history_events": [
+                IndexModel([("created_at", DESCENDING)]),
+            ],
+        }
+        for collection_name, indexes in index_sets.items():
+            await db[collection_name].create_indexes(indexes)
         logger.info("MongoDB index creation completed")
-    except Exception as e:
+    except Exception:
         logger.exception("MongoDB index creation failed")
+        raise
 
 async def close_db():
     if database.mongodb:
         database.mongodb.close()
-

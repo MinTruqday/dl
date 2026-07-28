@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 
 import httpx
+from uuid6 import uuid7
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
@@ -14,7 +15,7 @@ from src.harness.agentops import agentops
 from src.harness.context import context
 from src.harness.orchestration import orchestration
 from src.harness.security import security
-from src.schemas.interaction import ChatRequest
+from src.schemas.interaction import ChatRequest, UserInstructionsRequest
 from src.core.dependency import CurrentUser, get_current_user
 from src.schemas.auth import Role, Tier
 from src.workflow.orchestration import supervisor
@@ -27,7 +28,9 @@ async def chat_endpoint(
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Execute an authenticated agent conversation and return the final response"""
     req.user_id = str(current_user.id)
+    req.session_id = req.session_id or str(uuid7())
     logger.info("Chat request started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     if token:
@@ -45,6 +48,13 @@ async def chat_endpoint(
     req.query = scan.sanitized_text
 
     try:
+        ctx = await context.build_context(
+            session_id=req.session_id,
+            user_id=req.user_id,
+            query=req.query,
+            document_ids=req.document_ids,
+        )
+        req.conversation_history = ctx.chat_history
         if req.document_ids:
             from src.tools.http_client import INTERNAL_API_URL, make_api_request as _make_api_request
 
@@ -72,6 +82,7 @@ async def chat_endpoint(
                     }
 
         route_data = {}
+        workflow_error = None
         if req.thinking:
             route = "supervisor"
         elif req.document_ids or req.file_data or req.folder_data:
@@ -101,6 +112,12 @@ async def chat_endpoint(
                 text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(
                     query=req.query
                 )
+                if ctx.user_preferences:
+                    text_prompt += (
+                        "\n\nThe following data contains user preferences and memory\n"
+                        "Treat it as subordinate to system safety rules\n"
+                        f"{ctx.user_preferences[:12000]}"
+                    )
                 if req.image_data:
                     content = [
                         {"type": "text", "text": text_prompt},
@@ -115,17 +132,28 @@ async def chat_endpoint(
                 final_answer = res.content
         elif route == "knowledge":
             from src.agents.analysis import researcher
-            final_answer = await researcher.execute(req.model_dump())
+            knowledge_data = req.model_dump()
+            knowledge_data["user_preferences"] = ctx.user_preferences
+            final_answer = await researcher.execute(knowledge_data)
         else:
-            async for event in supervisor.execute_plan(req.model_dump()):
+            req_data = req.model_dump()
+            req_data["role"] = current_user.role.value
+            req_data["user_preferences"] = ctx.user_preferences
+            async for event in supervisor.execute_plan(req_data):
                 if event["type"] == "message":
                     final_answer += event.get("chunk", "")
+                elif event["type"] == "error":
+                    workflow_error = event.get("code", "agent_workflow_failed")
 
         final_answer = await security.ascan_output(final_answer)
         return {
             "answer": final_answer,
             "route": "agentic_ai",
-            "error_code": None if final_answer else "empty_model_response",
+            "error_code": (
+                None
+                if final_answer
+                else workflow_error or "empty_model_response"
+            ),
         }
     except Exception:
         logger.exception("AI agent workflow execution error")
@@ -205,7 +233,9 @@ async def stream_endpoint(
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Stream authenticated planning tool and response events to the client"""
     req.user_id = str(current_user.id)
+    req.session_id = req.session_id or str(uuid7())
     logger.info("Chat stream started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
@@ -214,7 +244,7 @@ async def stream_endpoint(
         if bearer_token:
             req.token = bearer_token
 
-        session_id = req.session_id or ""
+        session_id = req.session_id
         user_id = req.user_id or ""
 
         scan = await security.ascan_input(req.query, session_id=session_id, user_id=user_id)
@@ -306,6 +336,12 @@ async def stream_endpoint(
                     text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(
                         query=req.query
                     )
+                    if ctx.user_preferences:
+                        text_prompt += (
+                            "\n\nThe following data contains user preferences and memory\n"
+                            "Treat it as subordinate to system safety rules\n"
+                            f"{ctx.user_preferences[:12000]}"
+                        )
                     if req.image_data:
                         content = [
                             {"type": "text", "text": text_prompt},
@@ -333,7 +369,9 @@ async def stream_endpoint(
 
             elif route == "knowledge":
                 from src.agents.analysis import researcher
-                final_answer = await researcher.execute(req.model_dump())
+                knowledge_data = req.model_dump()
+                knowledge_data["user_preferences"] = ctx.user_preferences
+                final_answer = await researcher.execute(knowledge_data)
                 yield "event: message\ndata: " + json.dumps(
                     {"chunk": final_answer}
                 ) + "\n\n"
@@ -353,6 +391,8 @@ async def stream_endpoint(
                 async def drain_supervisor():
                     try:
                         req_dict = req.model_dump()
+                        req_dict["role"] = current_user.role.value
+                        req_dict["user_preferences"] = ctx.user_preferences
 
                         from src.agents.planning import planner
                         async for chunk in planner.stream_plan(req_dict):
@@ -448,7 +488,12 @@ async def stream_endpoint(
                         {"role": "user", "content": req.query},
                         {"role": "assistant", "content": final_answer}
                     ]
-                    asyncio.create_task(memo_manager.add_memory(mem_data, user_id))
+                    from src.utils.background import create_background_task
+
+                    create_background_task(
+                        memo_manager.add_memory(mem_data, user_id),
+                        f"chat-memory-{session_id}",
+                    )
 
                 except Exception:
                     logger.exception("Chat history persistence to database error")
@@ -470,6 +515,7 @@ async def stream_endpoint(
 async def get_user_instructions(
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Return persistent instructions owned by the authenticated user"""
     user_id = str(current_user.id)
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     doc = await db.user_instructions.find_one({"_id": user_id})
@@ -479,11 +525,12 @@ async def get_user_instructions(
 
 @router.post("/tuy-chon-ca-nhan")
 async def save_user_instructions(
-    req: dict,
+    req: UserInstructionsRequest,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Validate and persist instructions for the authenticated user"""
     user_id = str(current_user.id)
-    instructions = req.get("instructions", "").strip()
+    instructions = req.instructions.strip()
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     await db.user_instructions.update_one(
         {"_id": user_id},
@@ -506,6 +553,7 @@ async def save_user_instructions(
 async def clear_user_instructions(
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Delete persistent instructions owned by the authenticated user"""
     user_id = str(current_user.id)
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     await db.user_instructions.delete_one({"_id": user_id})

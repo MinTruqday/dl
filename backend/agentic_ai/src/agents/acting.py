@@ -17,10 +17,8 @@ _REQUIRES_APPROVAL_TOOLS = frozenset({
     "edit_document_text",
     "manage_user_instructions",
     "propose_document_edits",
-    "redeem_voucher",
     "replace_document_content",
     "restore_document",
-    "transfer_user_funds",
     "update_document_metadata",
 })
 
@@ -62,10 +60,17 @@ class ActingAgent:
         self.tools_prompt = "\n".join(tool_descriptions)
 
     async def execute(
-        self, action: str, params: dict, user_id: str, token: str = None, auto_approve: bool = False
+        self,
+        action: str,
+        params: dict,
+        user_id: str,
+        token: str = None,
+        auto_approve: bool = False,
+        session_id: str = "",
+        approval_id: str = None,
     ) -> str:
         if not token and action != "public_query":
-            return "Bạn cần phải xác thực danh tính để tiếp tục thực hiện thao tác này"
+            return json.dumps({"status": "authentication_required"})
 
         system_prompt = registry.get(PromptType.TOOL_DISPATCHER)
 
@@ -104,7 +109,9 @@ class ActingAgent:
                             )
                         ))
                         if is_last(attempt):
-                            return "Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát"
+                            return json.dumps(
+                                {"status": "tool_selection_validation_failed"}
+                            )
                         continue
                     raise
 
@@ -123,7 +130,9 @@ class ActingAgent:
                         )
                     ))
                     if is_last(attempt):
-                        return "Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát"
+                        return json.dumps(
+                            {"status": "tool_selection_validation_failed"}
+                        )
                     continue
 
                 if not res.tool_calls:
@@ -136,7 +145,7 @@ class ActingAgent:
                         content="You did not call any tools. You MUST respond by invoking exactly ONE tool from the provided list. Do not respond with plain text."
                     ))
                     if is_last(attempt):
-                        return "Hệ thống không tìm thấy công cụ phù hợp để xử lý yêu cầu của bạn"
+                        return json.dumps({"status": "tool_selection_failed"})
                     continue
 
                 tool_call = res.tool_calls[0]
@@ -144,13 +153,57 @@ class ActingAgent:
                 tool_params = tool_call["args"]
 
                 if tool_name not in self.tool_map:
-                    return "Công cụ bạn yêu cầu hiện không khả dụng hoặc không tồn tại trên hệ thống"
+                    return json.dumps({"status": "tool_unavailable"})
 
+                selected_tool = self.tool_map[tool_name]
                 if tool_name in _REQUIRES_APPROVAL_TOOLS and not auto_approve:
-                    return "Thao tác này yêu cầu xác nhận ủy quyền trực tiếp từ bạn"
+                    from src.loop.intervention import intervention
+
+                    if approval_id:
+                        approved = await intervention.consume_approval(
+                            intervention_id=approval_id,
+                            session_id=session_id,
+                            user_id=str(user_id),
+                            action_type=tool_name,
+                        )
+                        if not approved:
+                            return json.dumps(
+                                {
+                                    "status": "approval_invalid",
+                                    "tool_name": tool_name,
+                                }
+                            )
+                    else:
+                        approval = await intervention.request_approval(
+                            session_id=session_id,
+                            user_id=str(user_id),
+                            action_type=tool_name,
+                            description=selected_tool.description,
+                            proposed_action=json.dumps(
+                                tool_params,
+                                ensure_ascii=False,
+                                default=str,
+                            ),
+                            risk_level=(
+                                "high"
+                                if tool_name
+                                in {
+                                    "delete_document",
+                                    "replace_document_content",
+                                    "restore_document",
+                                }
+                                else "medium"
+                            ),
+                        )
+                        return json.dumps(
+                            {
+                                "status": "approval_required",
+                                "tool_name": tool_name,
+                                "approval_id": approval.intervention_id,
+                            }
+                        )
 
                 logger.info("Tool execution started tool={}", tool_name)
-                selected_tool = self.tool_map[tool_name]
                 try:
                     tool_result = await selected_tool.ainvoke(
                         tool_params, config={"configurable": {"token": token, "user_id": user_id}}
@@ -169,10 +222,10 @@ class ActingAgent:
                     ))
                     logger.exception("Data processing issue encountered, system is automatically retrying")
                     if is_last(attempt):
-                        return "Thao tác thực hiện không hoàn tất sau nhiều lần thử lại, vui lòng kiểm tra lại yêu cầu"
+                        return json.dumps({"status": "tool_execution_failed"})
 
         except Exception:
             logger.exception("Execution process interrupted")
-            return "Đã xảy ra lỗi trong quá trình xử lý, vui lòng thử lại sau giây lát"
+            return json.dumps({"status": "action_execution_failed"})
 
 actor = ActingAgent()

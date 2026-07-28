@@ -7,9 +7,7 @@ from src.tools.editing import (
 from src.tools.billing import (
     get_user_balance,
     get_transaction_history,
-    redeem_voucher,
     get_revenue_report,
-    transfer_user_funds,
 )
 from src.tools.document import (
     create_document,
@@ -25,6 +23,7 @@ from src.tools.document import (
 )
 from src.tools.mindmap import generate_mindmap
 from src.tools.instructions import manage_user_instructions
+from src.tools.mcp import search_mcp_connectors, suggest_mcp_connectors
 from src.workflow.reduction import agent_summarize_long_document
 
 tools = [
@@ -34,8 +33,6 @@ tools = [
     replace_document_content,
     get_user_balance,
     get_transaction_history,
-    transfer_user_funds,
-    redeem_voucher,
     get_revenue_report,
     get_my_documents,
     read_document,
@@ -50,5 +47,6 @@ tools = [
     edit_document_text,
     edit_document_block,
     propose_document_edits,
+    search_mcp_connectors,
+    suggest_mcp_connectors,
 ]
-

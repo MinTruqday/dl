@@ -1,11 +1,10 @@
 import asyncio
 import time
-from dataclasses import dataclass, field
-from typing import Any, Callable, Coroutine, Optional
+from dataclasses import dataclass
+from typing import Any, Callable
 
 from loguru import logger
 
-from src.core.infrastructure.configuration import settings
 
 DEFAULT_TOOL_TIMEOUT_SECONDS = 30.0
 DEFAULT_MAX_RETRIES = 2
@@ -93,11 +92,11 @@ class ToolHarness:
                     attempt=attempt,
                 )
 
-            except asyncio.TimeoutError as e:
+            except asyncio.TimeoutError:
                 last_error = "The execution of the utility exceeded the maximum allowed processing time and was forcefully terminated"
                 logger.exception(f"AI tool execution timeout {definition.name}")
 
-            except Exception as e:
+            except Exception:
                 last_error = "The utility encountered an unexpected internal exception during its execution phase"
                 logger.exception(f"AI tool execution unexpected error {definition.name}")
 

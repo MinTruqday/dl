@@ -8,6 +8,7 @@ from typing import Any, Dict, Literal, Optional
 
 from langchain_core.exceptions import OutputParserException
 from loguru import logger
+from src.utils.background import create_background_task
 from pydantic import ValidationError
 
 from src.repositories.agent import AgentRepository
@@ -124,9 +125,13 @@ class FailureAttributionHarness:
             f"Session failure recorded: type={failure_type}, node={node or 'unknown'}"
         )
         try:
-            asyncio.get_running_loop().create_task(self._persist_record(record))
+            asyncio.get_running_loop()
+            create_background_task(
+                self._persist_record(record),
+                f"failure-record-{session_id}-{len(self._records[session_id])}",
+            )
         except RuntimeError:
-            pass
+            logger.warning("Failure record persistence skipped without an event loop")
         return record
 
     async def _persist_record(self, record: FailureRecord):

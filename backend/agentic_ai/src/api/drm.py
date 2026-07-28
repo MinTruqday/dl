@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel
 from typing import Dict, Any, Optional
 from loguru import logger
 from src.agents.drm import evaluate_drm_policy
@@ -13,6 +12,7 @@ async def evaluate_drm_request(
     request: DRMContextRequest,
     x_internal_token: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
+    """Evaluate an internal document rights policy request"""
     if x_internal_token != settings.SECRET_KEY:
         raise HTTPException(status_code=403, detail={"code": "invalid_internal_token"})
     try:

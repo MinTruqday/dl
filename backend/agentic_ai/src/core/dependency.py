@@ -1,5 +1,4 @@
 from src.core.infrastructure.redis import redis
-import time
 from typing import List, Optional
 
 import jwt
@@ -8,7 +7,6 @@ from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
 
 from src.schemas.auth import Role, CurrentUser
 
@@ -30,7 +28,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         if email is None or session_id is None:
             logger.warning("Token verification failed due to missing identity claims")
             raise credentials_exception
-    except jwt.PyJWTError as e:
+    except jwt.PyJWTError:
         logger.exception("Authentication decoding failed due to invalid token payload")
         raise credentials_exception
 

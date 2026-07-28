@@ -39,7 +39,7 @@ class ASTIndexer:
                 lines = source_code.splitlines(keepends=True)
                 
             tree = ast.parse(source_code, filename=file_path)
-        except Exception as e:
+        except Exception:
             logger.exception("Parsing execution failed")
             return []
             

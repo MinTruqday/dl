@@ -1,5 +1,4 @@
 import os
-import uuid
 from typing import Dict, List, Optional
 
 from loguru import logger
@@ -82,18 +81,20 @@ class PipelineRag:
         async def get_summary_chunk(first_pages, extract_method):
             try:
                 from langchain_core.prompts import PromptTemplate
-                from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+                from huggingface_hub import AsyncInferenceClient
+                from src.utils.huggingface import HFInferenceChat
 
                 llama_model = settings.LLM_MODEL
                 hf_token = settings.HF_TOKEN
 
-                _hf = HuggingFaceEndpoint(
-                    task="conversational",
-                    repo_id=llama_model,
-                    huggingfacehub_api_token=hf_token,
-                    temperature=0.1,
+                _hf = AsyncInferenceClient(
+                    model=llama_model,
+                    token=hf_token,
                 )
-                llm_summary = ChatHuggingFace(llm=_hf)
+                llm_summary = HFInferenceChat(
+                    client=_hf,
+                    model=llama_model,
+                )
                 prompt = PromptTemplate(
                     template="Based on the following extracted text, summarize the core information of this document in the format:\nDocument Name: (Name)\nAuthor: (Author)\nPublication Year/Context: (Year/Context)\nMain Content Summary: (Content)\n\nText:\n{text}\n\nGenerate Identity Summary (Global Summary):",
                     input_variables=["text"],
@@ -112,7 +113,7 @@ class PipelineRag:
                         "extraction_method": extract_method,
                     },
                 }
-            except Exception as e:
+            except Exception:
                 logger.exception("Document summary generation error")
                 return None
 
@@ -200,11 +201,13 @@ class PipelineRag:
         return self._extract_with_docling(file_bytes, file_url)
 
     async def _extract_from_zip(self, zip_data: bytes) -> str:
+        import asyncio
         import shutil
+        import stat
         import tempfile
         import zipfile
+        from pathlib import Path
 
-        all_text = []
         supported_exts = {
             ".pdf",
             ".txt",
@@ -220,43 +223,83 @@ class PipelineRag:
             ".tex",
         }
 
-        with tempfile.TemporaryDirectory(prefix="ingestion_zip_") as tmp_dir:
-            zip_path = os.path.join(tmp_dir, "archive.zip")
-            with open(zip_path, "wb") as f:
-                f.write(zip_data)
+        def extract_archive() -> str:
+            all_text = []
+            with tempfile.TemporaryDirectory(prefix="ingestion_zip_") as tmp_dir:
+                zip_path = os.path.join(tmp_dir, "archive.zip")
+                with open(zip_path, "wb") as archive_handle:
+                    archive_handle.write(zip_data)
 
-            extract_path = os.path.join(tmp_dir, "extracted")
-            os.makedirs(extract_path)
+                extract_path = os.path.join(tmp_dir, "extracted")
+                os.makedirs(extract_path)
 
-            with zipfile.ZipFile(zip_path, "r") as zip_ref:
-                zip_ref.extractall(extract_path)
+                with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                    members = zip_ref.infolist()
+                    files = [member for member in members if not member.is_dir()]
+                    if len(files) > settings.AGENT_ARCHIVE_MAX_FILES:
+                        raise ValueError("archive_file_limit_exceeded")
+                    total_size = sum(member.file_size for member in files)
+                    if total_size > settings.AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES:
+                        raise ValueError("archive_size_limit_exceeded")
+                    compressed_size = sum(member.compress_size for member in files)
+                    if (
+                        total_size
+                        and total_size / max(compressed_size, 1)
+                        > settings.AGENT_ARCHIVE_MAX_COMPRESSION_RATIO
+                    ):
+                        raise ValueError("archive_compression_ratio_exceeded")
 
-            search_root = extract_path
-            top_contents = os.listdir(extract_path)
-            if len(top_contents) == 1 and os.path.isdir(
-                os.path.join(extract_path, top_contents[0])
-            ):
-                search_root = os.path.join(extract_path, top_contents[0])
-                logger.info("Opening subdirectory inside compressed file")
+                    extraction_root = Path(extract_path).resolve()
+                    for member in members:
+                        mode = member.external_attr >> 16
+                        if stat.S_IFMT(mode) == stat.S_IFLNK:
+                            raise ValueError("archive_symbolic_link_blocked")
+                        if member.flag_bits & 1:
+                            raise ValueError("archive_encryption_unsupported")
+                        target = (extraction_root / member.filename).resolve()
+                        if not target.is_relative_to(extraction_root):
+                            raise ValueError("archive_path_traversal_blocked")
+                        if member.is_dir():
+                            target.mkdir(parents=True, exist_ok=True)
+                            continue
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        with zip_ref.open(member, "r") as source_handle:
+                            with open(target, "wb") as target_handle:
+                                shutil.copyfileobj(source_handle, target_handle)
 
-            for root, _, files in os.walk(search_root):
-                for f in files:
-                    f_ext = os.path.splitext(f)[1].lower()
-                    if f_ext in supported_exts:
-                        f_path = os.path.join(root, f)
+                search_root = extract_path
+                top_contents = os.listdir(extract_path)
+                if len(top_contents) == 1 and os.path.isdir(
+                    os.path.join(extract_path, top_contents[0])
+                ):
+                    search_root = os.path.join(extract_path, top_contents[0])
+                    logger.info("Opening subdirectory inside compressed file")
+
+                for root, _, files in os.walk(search_root):
+                    for file_name in files:
+                        file_extension = os.path.splitext(file_name)[1].lower()
+                        if file_extension not in supported_exts:
+                            continue
+                        file_path = os.path.join(root, file_name)
                         logger.info("Extracting file content")
                         try:
-                            with open(f_path, "rb") as f_handle:
-                                content_bytes = f_handle.read()
-                                file_text = self._extract_with_docling(
-                                    content_bytes, f
+                            with open(file_path, "rb") as file_handle:
+                                content_bytes = file_handle.read()
+                            file_text = self._extract_with_docling(
+                                content_bytes,
+                                file_name,
+                            )
+                            if file_text:
+                                all_text.append(
+                                    f"--- FILE: {file_name} ---\n{file_text}"
                                 )
-                                if file_text:
-                                    all_text.append(f"--- FILE: {f} ---\n{file_text}")
-                        except Exception as e:
-                            logger.exception("Error loading data from compressed file")
+                        except Exception:
+                            logger.exception(
+                                "Error loading data from compressed file"
+                            )
+            return "\n\n".join(all_text)
 
-        return "\n\n".join(all_text)
+        return await asyncio.to_thread(extract_archive)
 
     async def _download_file(self, url: str) -> Optional[bytes]:
         try:
@@ -289,7 +332,7 @@ class PipelineRag:
             data = obj["Body"].read()
             logger.info("File data downloaded")
             return data
-        except Exception as e:
+        except Exception:
             logger.exception("File download error")
             return None
 
@@ -314,7 +357,7 @@ class PipelineRag:
                 return full_text
             finally:
                 tmp_path.unlink(missing_ok=True)
-        except Exception as e:
+        except Exception:
             logger.exception("Data analysis error")
             return ""
 
@@ -356,7 +399,7 @@ class PipelineRag:
                         f"graphrag:edges:{document_id}", edge_data
                     )
                 logger.info("Pushed entities to GraphRAG store")
-        except Exception as e:
+        except Exception:
             logger.exception("GraphRAG entity extraction failed")
 
 ingestion_pipeline = PipelineRag()

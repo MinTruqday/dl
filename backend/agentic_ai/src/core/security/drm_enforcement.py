@@ -1,8 +1,5 @@
 import asyncio
-import json
-import secrets
 from typing import Any, Dict, Optional
-from loguru import logger
 
 from src.tools.drm import (
     generate_dynamic_watermark,
@@ -12,7 +9,7 @@ from src.tools.drm import (
     get_user_trust_profile,
     analyze_document_risk,
 )
-from src.schemas.drm import DRMPolicyOutput, WatermarkConfig, AntiExfiltrationFlags
+from src.schemas.drm import WatermarkConfig, AntiExfiltrationFlags
 
 class DRMEnforcementEngine:
     async def fast_deterministic_enforce(

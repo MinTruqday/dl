@@ -17,7 +17,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         )
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
-    except Exception as e:
+    except Exception:
         logger.exception("Failed to load document content")
     return ""
 
@@ -317,7 +317,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
                 from src.store.vector import vector_store
                 await vector_store.delete_by_document(document_id)
                 logger.info("Document index cleanup completed")
-            except Exception as e:
+            except Exception:
                 logger.exception("Failed to clean up document index")
             return json.dumps({"status": "success", "document_id": document_id})
         return json.dumps({"status": "document_deletion_failed"})

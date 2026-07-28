@@ -25,7 +25,7 @@ class EventBus:
                 "agentic_events", aio_pika.ExchangeType.TOPIC
             )
             logger.info("Connected to RabbitMQ Event Bus")
-        except Exception as e:
+        except Exception:
             logger.error("Failed to connect to RabbitMQ")
 
     async def publish(self, routing_key: str, message: Dict[str, Any]):
@@ -39,7 +39,7 @@ class EventBus:
                 routing_key=routing_key,
             )
             logger.debug(f"Published event [{routing_key}]: {message}")
-        except Exception as e:
+        except Exception:
             logger.error(f"Error publishing event {routing_key}")
 
     async def subscribe(self, routing_key: str, callback: Callable[[Dict[str, Any]], Any]):
@@ -61,7 +61,7 @@ class EventBus:
 
             await queue.consume(process_message)
             logger.info(f"Subscribed to events: {routing_key}")
-        except Exception as e:
+        except Exception:
             logger.error(f"Error subscribing to {routing_key}")
 
     async def close(self):

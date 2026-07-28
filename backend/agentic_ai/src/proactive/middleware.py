@@ -51,6 +51,7 @@ class MemoryMiddleware:
         step_count: int,
         task_description: str,
         force_on_failure: bool = False,
+        user_id: str = "",
     ) -> Optional[str]:
         if not _should_trigger(step_count, force_on_failure):
             return None
@@ -64,6 +65,7 @@ class MemoryMiddleware:
                 session_id=session_id,
                 task_description=task_description,
                 trajectory=trajectory,
+                user_id=user_id,
             )
 
             if reminder:

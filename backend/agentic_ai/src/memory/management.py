@@ -12,7 +12,7 @@ class ManagementMemory:
         redis_url = settings.REDIS_URI
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
-        except Exception as e:
+        except Exception:
             logger.exception("Redis connection error")
             self._redis = None
 
@@ -28,7 +28,7 @@ class ManagementMemory:
             data = await self._redis.get(key)
             if data:
                 return json.loads(data)
-        except Exception as e:
+        except Exception:
             logger.exception("Error reading memory data")
         return []
 
@@ -48,7 +48,7 @@ class ManagementMemory:
             await self._redis.setex(
                 key, self._short_term_ttl, json.dumps(history, ensure_ascii=False)
             )
-        except Exception as e:
+        except Exception:
             logger.exception("Error saving memory data")
 
     async def save_long_term(self, user_id: str, entry: Dict):
@@ -67,7 +67,7 @@ class ManagementMemory:
             await self._redis.setex(
                 key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
             )
-        except Exception as e:
+        except Exception:
             logger.exception("Error storing data")
 
     async def get_long_term(self, user_id: str) -> List[Dict]:
@@ -79,7 +79,7 @@ class ManagementMemory:
             data = await self._redis.get(key)
             if data:
                 return json.loads(data)
-        except Exception as e:
+        except Exception:
             logger.exception("Error retrieving long-term storage data")
         return []
 

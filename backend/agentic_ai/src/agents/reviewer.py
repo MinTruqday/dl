@@ -47,7 +47,7 @@ class ReviewerAgent:
             else:
                 state.current_agent = "coder"
             logger.info("Reviewer LLM evaluation completed")
-        except Exception as e:
+        except Exception:
             logger.exception("Reviewer LLM evaluation failed")
             state.messages.append(AIMessage(content="LLM evaluation failed"))
             state.artifacts["review_approved"] = False

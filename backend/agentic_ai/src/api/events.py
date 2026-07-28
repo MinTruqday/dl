@@ -1,9 +1,8 @@
 from uuid6 import uuid7
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from loguru import logger
-from pydantic import BaseModel
 
 from src.loop.event import (
     AgentEvent,
@@ -13,13 +12,14 @@ from src.loop.event import (
     event_driven_loop,
 )
 
-from src.schemas.events import WebhookPayload, CreateScheduleRequest, ScheduleResponse
+from src.schemas.events import WebhookPayload, CreateScheduleRequest
 from src.core.dependency import Role, require_role, verify_internal_token
 
 router = APIRouter(prefix="/su-kien")
 
 @router.post("/webhook", dependencies=[Depends(verify_internal_token)])
 async def receive_webhook(request: Request, body: WebhookPayload = Body()):
+    """Validate and enqueue an internal agent event webhook"""
     try:
         event_type_str = body.event_type.lower()
         event_type_map = {
@@ -60,6 +60,7 @@ async def document_uploaded_webhook(
     user_id: str = "",
     request: Request = None,
 ):
+    """Enqueue a document upload event for indexing and verification"""
     event = AgentEvent(
         event_id=str(uuid7()),
         event_type=EventType.DOCUMENT_UPLOADED,
@@ -74,6 +75,7 @@ async def document_uploaded_webhook(
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def list_schedules():
+    """List every registered recurring agent schedule"""
     return {
         "schedules": cron_scheduler.list_schedules(),
         "total": len(cron_scheduler._schedules),
@@ -84,6 +86,7 @@ async def list_schedules():
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def create_schedule(req: CreateScheduleRequest):
+    """Create and activate an administrator managed recurring event"""
     event_type_map = {
         "system_heartbeat": EventType.SYSTEM_HEARTBEAT,
         "document_uploaded": EventType.DOCUMENT_UPLOADED,
@@ -123,6 +126,7 @@ async def create_schedule(req: CreateScheduleRequest):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def delete_schedule(schedule_id: str):
+    """Delete one recurring agent schedule"""
     if schedule_id not in cron_scheduler._schedules:
         raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
     cron_scheduler.unregister(schedule_id)
@@ -134,6 +138,7 @@ async def delete_schedule(schedule_id: str):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def toggle_schedule(schedule_id: str):
+    """Enable or disable one recurring agent schedule"""
     schedule = cron_scheduler._schedules.get(schedule_id)
     if not schedule:
         raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
@@ -149,6 +154,7 @@ async def toggle_schedule(schedule_id: str):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def event_loop_status():
+    """Return event queue and worker runtime statistics"""
     return event_driven_loop.get_stats()
 
 @router.get(
@@ -156,6 +162,7 @@ async def event_loop_status():
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def event_history(limit: int = 20):
+    """Return recently processed agent events"""
     return {
         "events": event_driven_loop.get_recent_events(limit=limit),
     }
@@ -165,6 +172,7 @@ async def event_history(limit: int = 20):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def system_updates(limit: int = 20):
+    """Return recent state updates emitted by agent events"""
     updates = event_driven_loop.update_registry.get_recent(limit=limit)
     return {
         "updates": [
@@ -186,6 +194,7 @@ async def system_updates(limit: int = 20):
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )
 async def manual_trigger(event_type: str, payload: Dict[str, Any] = Body(default={})):
+    """Trigger a supported agent event immediately"""
     event_type_map = {
         "heartbeat": EventType.SYSTEM_HEARTBEAT,
         "document_uploaded": EventType.DOCUMENT_UPLOADED,

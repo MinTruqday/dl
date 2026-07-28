@@ -2,8 +2,8 @@ import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Coroutine, Dict, List, Optional
-from src.schemas.evaluation import ErrorMessageJudgment, HallucinationJudgment, RelevanceJudgment
+from typing import Any, Callable, Coroutine, List, Optional
+from src.schemas.evaluation import HallucinationJudgment, RelevanceJudgment
 
 from loguru import logger
 
@@ -71,19 +71,38 @@ class ErrorPrefixGrader(BaseGrader):
         return "error_prefix"
 
     async def grade(self, response: str, context: dict) -> GraderResult:
-        from src.workflow.graph import llm
-        from pydantic import BaseModel, Field
+        import json
 
+        text = response.strip()
+        lowered = text.lower()
+        failed_statuses = {
+            "action_execution_failed",
+            "approval_required",
+            "execution_step_failed",
+            "mcts_generation_failed",
+            "response_generation_failed",
+            "swarm_verification_failed",
+            "task_evaluation_failed",
+            "task_execution_failed",
+            "tool_execution_failed",
+            "tool_selection_failed",
+            "tool_selection_validation_failed",
+            "tool_unavailable",
+        }
         try:
-            evaluator = llm.with_structured_output(ErrorMessageJudgment)
-            from src.core.registry import registry, PromptType
-            prompt = registry.get(PromptType.RUBRIC_ERROR_JUDGE).format(response=response[:500])
-            result = await evaluator.ainvoke(prompt)
-            if result.is_error_message:
-                return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                    feedback=f"Detected error warning in the response: {result.reason}")
-        except Exception:
-            pass
+            payload = json.loads(text)
+        except (TypeError, json.JSONDecodeError):
+            payload = None
+        if (
+            isinstance(payload, dict)
+            and payload.get("status") in failed_statuses
+        ) or lowered.startswith(("error:", "execution error:", "failed:")):
+            return GraderResult(
+                grader_name=self.name,
+                passed=False,
+                score=0.0,
+                feedback="Response contains a machine readable execution failure",
+            )
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 class ToolResultGrader(BaseGrader):
@@ -127,7 +146,6 @@ class HallucinationGrader(BaseGrader):
 
     async def grade(self, response: str, context: dict) -> GraderResult:
         try:
-            from pydantic import BaseModel, Field as PydanticField
             from src.workflow.graph import llm
 
             evaluator = llm.with_structured_output(HallucinationJudgment)
@@ -140,9 +158,15 @@ class HallucinationGrader(BaseGrader):
             if result.is_hallucination_or_refusal and result.confidence > 0.7:
                 return GraderResult(grader_name=self.name, passed=False,
                     score=1.0 - result.confidence,
-                    feedback="System detected signs of data hallucination (confidence: {result.confidence:.2f}): {result.explanation}. Please provide responses based on verified information.")
-        except Exception as e:
-            logger.warning("HallucinationGrader error, skipping")
+                    feedback=f"System detected signs of data hallucination with confidence {result.confidence:.2f}: {result.explanation}")
+        except Exception:
+            logger.exception("Hallucination grader unavailable")
+            return GraderResult(
+                grader_name=self.name,
+                passed=False,
+                score=0.0,
+                feedback="Hallucination grader unavailable",
+            )
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
 
@@ -156,7 +180,6 @@ class RelevanceGrader(BaseGrader):
         if not query:
             return GraderResult(grader_name=self.name, passed=True, score=1.0)
         try:
-            from pydantic import BaseModel, Field as PydanticField
             from src.workflow.graph import llm
 
             evaluator = llm.with_structured_output(RelevanceJudgment)
@@ -168,11 +191,16 @@ class RelevanceGrader(BaseGrader):
             if not result.is_relevant or result.relevance_score < 0.5:
                 return GraderResult(grader_name=self.name, passed=False,
                     score=result.relevance_score,
-                    feedback="Response relevance is insufficient (score: {result.relevance_score:.2f}): {result.feedback}")
+                    feedback=f"Response relevance is insufficient with score {result.relevance_score:.2f}: {result.feedback}")
             return GraderResult(grader_name=self.name, passed=True, score=result.relevance_score)
-        except Exception as e:
-            logger.warning("RelevanceGrader error, skipping")
-            return GraderResult(grader_name=self.name, passed=True, score=1.0)
+        except Exception:
+            logger.exception("Relevance grader unavailable")
+            return GraderResult(
+                grader_name=self.name,
+                passed=False,
+                score=0.0,
+                feedback="Relevance grader unavailable",
+            )
 
 
 class Rubric:
@@ -187,7 +215,14 @@ class Rubric:
         for i, res in enumerate(results):
             if isinstance(res, Exception):
                 logger.warning(f"Grader {self.graders[i].name} raised {res}")
-                resolved.append(GraderResult(grader_name=self.graders[i].name, passed=True, score=1.0))
+                resolved.append(
+                    GraderResult(
+                        grader_name=self.graders[i].name,
+                        passed=False,
+                        score=0.0,
+                        feedback="Grader execution failed",
+                    )
+                )
             else:
                 resolved.append(res)
         failed = [r for r in resolved if not r.passed]

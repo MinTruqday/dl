@@ -1,12 +1,10 @@
-import operator
 import json
-from typing import Annotated, List, TypedDict
+from typing import TypedDict
 
 from langchain_core.tools import tool
 from langgraph.graph import END, StateGraph
 from langgraph.types import Send
 
-from src.core.infrastructure.configuration import settings
 
 BATCH_SIZE = 5
 MAX_CHUNKS = 40

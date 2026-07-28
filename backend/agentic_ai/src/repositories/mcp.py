@@ -1,5 +1,5 @@
 from src.core.infrastructure.mongo import mongo
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 class MCPRepository:
     @classmethod

@@ -26,6 +26,7 @@ class AnalysisAgent:
                 )
                 file_data = req.get("file_data")
                 image_data = req.get("image_data")
+                user_preferences = req.get("user_preferences", "")
             else:
                 query = getattr(req, "query", "")
                 user_id = getattr(req, "user_id", "")
@@ -41,6 +42,7 @@ class AnalysisAgent:
                 )
                 file_data = getattr(req, "file_data", None)
                 image_data = getattr(req, "image_data", None)
+                user_preferences = getattr(req, "user_preferences", "")
 
             result = await knowledge_app.ainvoke(
                 {
@@ -52,6 +54,7 @@ class AnalysisAgent:
                     "chat_history": chat_history,
                     "file_data": file_data,
                     "image_data": image_data,
+                    "user_preferences": user_preferences,
                 }
             )
             generation = result.get("generation")

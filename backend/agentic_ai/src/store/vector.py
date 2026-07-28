@@ -1,5 +1,4 @@
 import asyncio
-import os
 from typing import Dict, List, Optional
 
 import httpx
@@ -47,7 +46,7 @@ class VectorStore:
                 self._upsert_queue.task_done()
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except Exception:
                 logger.exception("Search index payload upsert queue error")
 
     async def ensure_collection(self):
@@ -65,7 +64,7 @@ class VectorStore:
                         size=embedder._dimensions, distance=Distance.COSINE
                     ),
                 )
-        except Exception as e:
+        except Exception:
             logger.exception("System search index structure initialization error")
             raise
 
@@ -141,7 +140,7 @@ class VectorStore:
                     ]
                 ),
             )
-        except Exception as e:
+        except Exception:
             logger.exception("Search index deletion error")
             raise
 

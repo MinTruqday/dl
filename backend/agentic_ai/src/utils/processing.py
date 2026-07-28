@@ -27,6 +27,6 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
             return full_text
         finally:
             tmp_path.unlink(missing_ok=True)
-    except Exception as e:
+    except Exception:
         logger.exception("File text extraction error")
         return ""

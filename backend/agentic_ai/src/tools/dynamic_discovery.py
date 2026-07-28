@@ -13,7 +13,12 @@ class DynamicToolRegistry:
         parameters_schema: Dict[str, Any],
         handler: Callable[..., Any]
     ) -> bool:
-        if not name or not handler:
+        if (
+            not name
+            or not callable(handler)
+            or name in self._registered_tools
+            or not description.strip()
+        ):
             return False
 
         tool_info = {
@@ -33,24 +38,65 @@ class DynamicToolRegistry:
             count = 0
             for path_key, path_item in paths.items():
                 for method, operation in path_item.items():
-                    if method.lower() in ["get", "post", "put", "delete"]:
+                    if method.lower() in ["get", "post", "put", "patch", "delete"]:
                         operation_id = operation.get("operationId") or f"{method}_{path_key.replace('/', '_')}"
                         summary = operation.get("summary") or operation.get("description") or f"API endpoint {method.upper()} {path_key}"
                         params_schema = operation.get("parameters", [])
                         handler = handler_factory(method, path_key)
-                        self.register_tool(operation_id, summary, {"parameters": params_schema}, handler)
-                        count += 1
+                        schema = {
+                            "parameters": params_schema,
+                            "request_body": operation.get("requestBody"),
+                        }
+                        if self.register_tool(
+                            operation_id,
+                            summary,
+                            schema,
+                            handler,
+                        ):
+                            count += 1
             return count
-        except Exception as err:
+        except Exception:
             logger.exception("Failed to parse OpenAPI spec for dynamic tool discovery")
             return 0
 
-    def register_openapi_spec(self, name: str, spec: Dict[str, Any]) -> List[str]:
-        json_str = json.dumps(spec) if isinstance(spec, dict) else str(spec)
-        def dummy_factory(m, p):
-            return lambda **k: "ok"
-        count = self.register_from_openapi_spec(json_str, dummy_factory)
-        return list(self._registered_tools.keys())
+    def register_openapi_spec(
+        self,
+        name: str,
+        spec: Dict[str, Any],
+        handler_factory: Callable[[str, str], Callable],
+    ) -> List[str]:
+        if not name.strip():
+            raise ValueError("registry_name_required")
+        if not isinstance(spec, dict):
+            raise TypeError("openapi_spec_invalid")
+        namespace = "".join(
+            character if character.isalnum() or character == "_" else "_"
+            for character in name.strip()
+        )
+        normalized_spec = json.loads(json.dumps(spec))
+        for path, path_item in normalized_spec.get("paths", {}).items():
+            if not isinstance(path_item, dict):
+                continue
+            for method, operation in path_item.items():
+                if (
+                    method.lower() not in {"get", "post", "put", "patch", "delete"}
+                    or not isinstance(operation, dict)
+                ):
+                    continue
+                local_name = operation.get("operationId") or (
+                    f"{method}_{path.replace('/', '_')}"
+                )
+                operation["operationId"] = f"{namespace}_{local_name}"
+        before = set(self._registered_tools)
+        json_str = json.dumps(normalized_spec)
+        self.register_from_openapi_spec(
+            json_str,
+            lambda method, path: handler_factory(method, path),
+        )
+        registered = sorted(set(self._registered_tools) - before)
+        if not registered:
+            raise ValueError("openapi_operations_not_registered")
+        return registered
 
     def get_tool(self, name: str) -> Optional[Dict[str, Any]]:
         return self._registered_tools.get(name)
@@ -76,7 +122,7 @@ class DynamicToolRegistry:
             if asyncio.iscoroutinefunction(handler):
                 res = await handler(**kwargs)
             else:
-                res = handler(**kwargs)
+                res = await asyncio.to_thread(handler, **kwargs)
             return {"success": True, "result": res}
         except Exception as err:
             logger.exception(f"Error executing dynamic tool '{name}'")

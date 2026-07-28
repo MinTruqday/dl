@@ -5,6 +5,7 @@ import aio_pika
 from loguru import logger
 from typing import Any, Dict, Optional
 from src.core.infrastructure.configuration import settings
+from src.utils.background import create_background_task
 
 class RabbitMQClient:
     def __init__(self):
@@ -53,7 +54,7 @@ class RabbitMQClient:
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             return True
-        except Exception as e:
+        except Exception:
             logger.exception("Error distributing message to RabbitMQ")
             return False
 
@@ -69,7 +70,10 @@ class RabbitMQClient:
                 
                 self.pending_acks[ack_id] = message
                 
-                asyncio.create_task(self._auto_nack_if_timeout(ack_id, delay=300))
+                create_background_task(
+                    self._auto_nack_if_timeout(ack_id, delay=300),
+                    f"rabbitmq-auto-nack-{ack_id}",
+                )
                 
                 return {
                     "payload": payload,
@@ -78,7 +82,7 @@ class RabbitMQClient:
             return None
         except aio_pika.exceptions.QueueEmpty:
             return None
-        except Exception as e:
+        except Exception:
             logger.exception("Error fetching message from RabbitMQ")
             return None
 
@@ -89,8 +93,8 @@ class RabbitMQClient:
             logger.warning(f"Timeout waiting for ACK/NACK for message {ack_id} from RabbitMQ, retrying")
             try:
                 await message.nack(requeue=True)
-            except Exception as e:
-                pass
+            except Exception:
+                logger.exception("RabbitMQ automatic NACK failed")
 
     async def ack(self, delivery_tag: str) -> bool:
         message = self.pending_acks.pop(delivery_tag, None)
@@ -98,7 +102,7 @@ class RabbitMQClient:
             try:
                 await message.ack()
                 return True
-            except Exception as e:
+            except Exception:
                 logger.exception("Error sending ACK response to RabbitMQ")
                 return False
         return False

@@ -1,8 +1,6 @@
-import json
 import math
 from typing import Dict, List, Optional
 from loguru import logger
-from src.core.infrastructure.configuration import settings
 
 class SemanticCache:
     def __init__(self, similarity_threshold: float = 0.90, ttl_seconds: int = 86400):

@@ -1,5 +1,4 @@
 from src.core.infrastructure.mongo import mongo
-from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 
@@ -66,7 +65,6 @@ class AgentRepository:
     @classmethod
     async def get_traces_since(cls, since_datetime, limit: int = 500) -> list:
         try:
-            from datetime import timezone
             cutoff = since_datetime
             results = []
             cursor = mongo.find("agent_traces", {"started_at": {"$gte": cutoff}})

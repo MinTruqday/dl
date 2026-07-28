@@ -13,6 +13,7 @@ async def ingest_endpoint(
     req: IngestRequest,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Authorize and index one document into the retrieval pipeline"""
     logger.info(f"Started document ingestion process document_id={req.document_id}")
     try:
         result = await ingestion_pipeline.ingest_document(
@@ -22,7 +23,7 @@ async def ingest_endpoint(
         )
         logger.info(f"Document ingestion completed document_id={req.document_id}")
         return result
-    except Exception as e:
+    except Exception:
         logger.exception("Document ingestion pipeline error")
         raise
 
@@ -31,6 +32,7 @@ async def delete_document_endpoint(
     document_id: str,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Authorize and remove one document from the retrieval index"""
     await ingestion_pipeline.authorize_document(
         document_id,
         user_id=str(current_user.id),
@@ -44,6 +46,6 @@ async def delete_document_endpoint(
             "status": "success",
             "message_code": "document_vectors_deleted",
         }
-    except Exception as e:
+    except Exception:
         logger.exception("Document deletion error")
         raise

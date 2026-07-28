@@ -1,7 +1,6 @@
-import operator
 from typing import Annotated, Any, Dict, List, TypedDict
 
-from langchain_core.messages import BaseMessage, RemoveMessage, SystemMessage
+from langchain_core.messages import RemoveMessage, SystemMessage
 
 def reduce_chat_history(left: list, right: list) -> list:
     if left is None:
@@ -75,6 +74,7 @@ class AgentState(TypedDict):
     use_web: bool
     use_smart: bool
     user_id: str
+    user_preferences: str
     document_ids: list
     image_data: str
     file_data: str

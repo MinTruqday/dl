@@ -39,9 +39,9 @@ def _balanced_candidates(text: str):
                     break
 
 
-def extract_json_value(text: Any) -> Any:
+def extract_json_values(text: Any) -> list[Any]:
     if isinstance(text, (dict, list)):
-        return text
+        return [text]
     if not isinstance(text, str) or not text.strip():
         raise StructuredOutputError("Model output is empty")
     cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
@@ -56,6 +56,8 @@ def extract_json_value(text: Any) -> Any:
     )
     candidates.extend(_balanced_candidates(cleaned))
     failures = []
+    values = []
+    fingerprints = set()
     for candidate in candidates:
         variants = [
             candidate,
@@ -63,15 +65,40 @@ def extract_json_value(text: Any) -> Any:
         ]
         for variant in variants:
             try:
-                return json.loads(variant)
+                value = json.loads(variant)
+                fingerprint = json.dumps(
+                    value,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    default=str,
+                )
+                if fingerprint not in fingerprints:
+                    fingerprints.add(fingerprint)
+                    values.append(value)
+                break
             except (TypeError, json.JSONDecodeError) as error:
                 failures.append(str(error))
+    if values:
+        return values
     detail = failures[-1] if failures else "No JSON object or array found"
     raise StructuredOutputError(f"Invalid structured model output: {detail}")
 
 
+def extract_json_value(text: Any) -> Any:
+    return extract_json_values(text)[0]
+
+
 def validate_structured_output(text: Any, schema: Type[Any]) -> Any:
-    value = extract_json_value(text)
-    if hasattr(schema, "model_validate"):
-        return schema.model_validate(value)
-    return schema.parse_obj(value)
+    errors = []
+    for value in extract_json_values(text):
+        try:
+            if hasattr(schema, "model_validate"):
+                return schema.model_validate(value, strict=True)
+            return schema.parse_obj(value)
+        except Exception as error:
+            errors.append(error)
+    if errors:
+        raise StructuredOutputError(
+            f"Structured output did not match schema: {errors[-1]}"
+        ) from errors[-1]
+    raise StructuredOutputError("Structured output did not contain a candidate")

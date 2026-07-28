@@ -65,9 +65,16 @@ class GlobalStateManager:
         self._project_cache[project_id] = dict(context)
         return context
 
-    async def add_episodic_memory(self, session_id: str, summary: str, embedding: Optional[List[float]] = None):
+    async def add_episodic_memory(
+        self,
+        session_id: str,
+        summary: str,
+        embedding: Optional[List[float]] = None,
+        user_id: str = "",
+    ):
         doc = {
             "session_id": session_id,
+            "user_id": user_id,
             "summary": summary,
             "created_at": datetime.datetime.utcnow(),
             "expires_at": datetime.datetime.utcnow() + datetime.timedelta(days=90),
@@ -77,9 +84,21 @@ class GlobalStateManager:
         await self._episodes.insert_one(doc)
         logger.info("Episodic memory stored")
 
-    async def get_recent_episodes(self, k: int = 3) -> List[str]:
+    async def get_recent_episodes(
+        self,
+        k: int = 3,
+        session_id: str = "",
+        user_id: str = "",
+    ) -> List[str]:
+        query: Dict[str, Any] = {
+            "expires_at": {"$gt": datetime.datetime.utcnow()}
+        }
+        if session_id:
+            query["session_id"] = session_id
+        if user_id:
+            query["user_id"] = user_id
         cursor = self._episodes.find(
-            {"expires_at": {"$gt": datetime.datetime.utcnow()}},
+            query,
             {"summary": 1},
             sort=[("created_at", -1)],
             limit=k,
@@ -87,7 +106,12 @@ class GlobalStateManager:
         docs = await cursor.to_list(length=k)
         return [d["summary"] for d in docs]
 
-    async def get_relevant_episodes(self, query_embedding: List[float], k: int = 3) -> List[str]:
+    async def get_relevant_episodes(
+        self,
+        query_embedding: List[float],
+        k: int = 3,
+        user_id: str = "",
+    ) -> List[str]:
         try:
             pipeline = [
                 {
@@ -99,7 +123,12 @@ class GlobalStateManager:
                         "limit": k,
                     }
                 },
-                {"$match": {"expires_at": {"$gt": datetime.datetime.utcnow()}}},
+                {
+                    "$match": {
+                        "expires_at": {"$gt": datetime.datetime.utcnow()},
+                        **({"user_id": user_id} if user_id else {}),
+                    }
+                },
                 {"$project": {"summary": 1}},
             ]
             cursor = self._episodes.aggregate(pipeline)
@@ -107,7 +136,7 @@ class GlobalStateManager:
             return [d["summary"] for d in docs]
         except Exception:
             logger.exception("Episodic vector search failed, falling back to recent episodes")
-            return await self.get_recent_episodes(k)
+            return await self.get_recent_episodes(k, user_id=user_id)
 
     async def add_history_event(self, event: str):
         normalized_event = event.strip()

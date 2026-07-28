@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
@@ -47,7 +46,6 @@ def _check_response_not_empty(response: str) -> CheckResult:
 
 async def _check_no_hallucination_markers(response: str) -> CheckResult:
     from src.workflow.graph import llm
-    from pydantic import BaseModel, Field
 
     try:
         evaluator = llm.with_structured_output(HallucinationGrade)
@@ -60,9 +58,13 @@ async def _check_no_hallucination_markers(response: str) -> CheckResult:
                 status="failed",
                 reason=f"Detected signs of refusal to respond or data hallucination: {result.reason}",
             )
-    except Exception as e:
-        if len(response) < 15 and "?" not in response:
-            pass
+    except Exception:
+        logger.exception("Hallucination verification unavailable")
+        return CheckResult(
+            name="no_hallucination_markers",
+            status="failed",
+            reason="Hallucination verification unavailable",
+        )
             
     return CheckResult(name="no_hallucination_markers", status="passed")
 
@@ -99,7 +101,6 @@ def _check_tool_result_valid(tool_result: Any) -> CheckResult:
 
 async def _check_no_error_prefix(response: str) -> CheckResult:
     from src.workflow.graph import llm
-    from pydantic import BaseModel, Field
 
     try:
         evaluator = llm.with_structured_output(ErrorMessageJudgment)
@@ -113,7 +114,12 @@ async def _check_no_error_prefix(response: str) -> CheckResult:
                 reason=f"Detected error warning in the response content: {result.reason}",
             )
     except Exception:
-        pass
+        logger.exception("Error response verification unavailable")
+        return CheckResult(
+            name="no_error_prefix",
+            status="failed",
+            reason="Error response verification unavailable",
+        )
     return CheckResult(name="no_error_prefix", status="passed")
 
 class VerificationHarness:
@@ -127,13 +133,18 @@ class VerificationHarness:
         response: str,
         steps: Optional[List[Dict]] = None,
         current_step_index: Optional[int] = None,
+        allow_ai_review: bool = True,
     ) -> VerificationResult:
         logger.info("Starting task result verification")
-        checks = [
-            _check_response_not_empty(response),
-            await _check_no_hallucination_markers(response),
-            await _check_no_error_prefix(response),
-        ]
+        checks = [_check_response_not_empty(response)]
+
+        if allow_ai_review:
+            checks.extend(
+                [
+                    await _check_no_hallucination_markers(response),
+                    await _check_no_error_prefix(response),
+                ]
+            )
 
         if steps is not None and current_step_index is not None:
             checks.append(_check_plan_fully_executed(steps, current_step_index))
