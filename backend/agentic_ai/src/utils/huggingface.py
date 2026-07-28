@@ -9,10 +9,12 @@ from langchain_core.messages import (
     SystemMessage,
 )
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
+from langchain_core.runnables import RunnableLambda
+from langchain_core.utils.function_calling import convert_to_openai_tool
 from pydantic import Field
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from loguru import logger
-from src.utils.structured_output import validate_structured_output
+from src.utils.structured_output import extract_json_value, validate_structured_output
 
 def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
     from huggingface_hub import HfApi
@@ -130,8 +132,6 @@ class HFInferenceChat(BaseChatModel):
         return "hf_inference_chat"
 
     def with_structured_output(self, schema, **kwargs):
-        from langchain_core.runnables import RunnableLambda
-
         @retry(
             stop=stop_after_attempt(3),
             wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -160,5 +160,98 @@ class HFInferenceChat(BaseChatModel):
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
             res = self.invoke(msgs, **kwargs_inner)
             return validate_structured_output(res.content, schema)
+
+        return RunnableLambda(_invoke, afunc=_ainvoke)
+
+    def bind_tools(self, tools, *, tool_choice=None, **kwargs):
+        tool_definitions = [convert_to_openai_tool(tool) for tool in tools]
+        tool_map = {tool.name: tool for tool in tools}
+        allowed_names = set(tool_map)
+        if isinstance(tool_choice, str) and tool_choice not in {
+            "auto",
+            "any",
+            "required",
+            "none",
+        }:
+            allowed_names &= {tool_choice}
+        selection_prompt = SystemMessage(
+            content=(
+                "Select exactly one tool for the request\n"
+                "Return one JSON object with keys name and arguments\n"
+                "name must match a registered tool\n"
+                "arguments must be one JSON object matching that tool schema\n"
+                f"Registered tools: {tool_definitions}"
+            )
+        )
+
+        def parse_tool_call(content):
+            payload = extract_json_value(content)
+            if isinstance(payload, dict) and isinstance(payload.get("tool_calls"), list):
+                calls = payload["tool_calls"]
+                payload = calls[0] if calls else {}
+            if isinstance(payload, dict) and isinstance(payload.get("function"), dict):
+                payload = payload["function"]
+            name = payload.get("name") or payload.get("tool")
+            arguments = payload.get(
+                "arguments",
+                payload.get("args", payload.get("parameters", {})),
+            )
+            if isinstance(arguments, str):
+                arguments = extract_json_value(arguments)
+            if name not in allowed_names:
+                raise ValueError("Model selected an unavailable tool")
+            if not isinstance(arguments, dict):
+                raise ValueError("Tool arguments must be a JSON object")
+            selected_tool = tool_map[name]
+            schema = getattr(selected_tool, "args_schema", None)
+            if schema:
+                validated = (
+                    schema.model_validate(arguments)
+                    if hasattr(schema, "model_validate")
+                    else schema.parse_obj(arguments)
+                )
+                arguments = (
+                    validated.model_dump()
+                    if hasattr(validated, "model_dump")
+                    else validated.dict()
+                )
+            return AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "name": name,
+                        "args": arguments,
+                        "id": f"call_{name}",
+                        "type": "tool_call",
+                    }
+                ],
+            )
+
+        @retry(
+            stop=stop_after_attempt(3),
+            wait=wait_exponential(multiplier=1, min=2, max=10),
+            retry=retry_if_exception_type(Exception),
+            reraise=True,
+            before_sleep=lambda retry_state: logger.warning(
+                "Retrying tool selection attempt={} error_type={}",
+                retry_state.attempt_number,
+                type(retry_state.outcome.exception()).__name__,
+            ),
+        )
+        async def _ainvoke(messages, **kwargs_inner):
+            source_messages = messages if isinstance(messages, list) else [messages]
+            result = await self.ainvoke(
+                [selection_prompt, *source_messages],
+                **kwargs_inner,
+            )
+            return parse_tool_call(result.content)
+
+        def _invoke(messages, **kwargs_inner):
+            source_messages = messages if isinstance(messages, list) else [messages]
+            result = self.invoke(
+                [selection_prompt, *source_messages],
+                **kwargs_inner,
+            )
+            return parse_tool_call(result.content)
 
         return RunnableLambda(_invoke, afunc=_ainvoke)

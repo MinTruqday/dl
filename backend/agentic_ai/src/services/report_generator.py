@@ -3,9 +3,6 @@ from loguru import logger
 from src.rag.conversion import document_parser
 
 class ExecutiveReportGenerator:
-    def __init__(self):
-        pass
-
     async def generate_report_from_url(self, file_url: str) -> Dict[str, str]:
         logger.info("Generating executive report from document URL")
         parsed = await document_parser.parse_document(file_url)

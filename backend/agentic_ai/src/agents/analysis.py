@@ -12,9 +12,6 @@ class AnalysisAgent:
     - Error Handling: Employs safe attribute and key lookups.
     </contract>
     """
-    def __init__(self):
-        pass
-
     async def execute(self, req) -> str:
         logger.info("Querying MongoDB")
         try:

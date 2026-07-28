@@ -1,7 +1,5 @@
-from typing import Any
 from src.agents.swarm import SwarmState
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
-from pydantic import BaseModel, Field
 from src.schemas.reviewer import ReviewerEvaluation
 from loguru import logger
 from src.core.registry import PromptType, registry
@@ -27,7 +25,8 @@ class ReviewerAgent:
         
         if not code_to_review:
             state.messages.append(AIMessage(content="Missing code artifact for evaluation"))
-            state.is_complete = True
+            state.artifacts["review_approved"] = False
+            state.current_agent = "coder"
             return state
             
         system_prompt = registry.get(PromptType.SWARM_REVIEWER)
@@ -41,9 +40,9 @@ class ReviewerAgent:
             review_msg = f"Code evaluation completed. Approved: {eval_result.is_approved}. Feedback: {eval_result.feedback}"
             state.messages.append(AIMessage(content=review_msg))
             state.artifacts["review"] = eval_result.feedback
+            state.artifacts["review_approved"] = eval_result.is_approved
 
             if eval_result.is_approved:
-                state.is_complete = True
                 state.current_agent = "supervisor"
             else:
                 state.current_agent = "coder"
@@ -51,7 +50,7 @@ class ReviewerAgent:
         except Exception as e:
             logger.exception("Reviewer LLM evaluation failed")
             state.messages.append(AIMessage(content="LLM evaluation failed"))
-            state.is_complete = True
-            state.current_agent = "supervisor"
+            state.artifacts["review_approved"] = False
+            state.current_agent = "coder"
             
         return state

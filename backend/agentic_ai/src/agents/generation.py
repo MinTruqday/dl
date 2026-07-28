@@ -18,9 +18,6 @@ class GenerationAgent:
     - Error Handling: Aborts immediately with a safety message if security scans fail.
     </contract>
     """
-    def __init__(self):
-        pass
-
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
         logger.info("Aggregating search results")
 

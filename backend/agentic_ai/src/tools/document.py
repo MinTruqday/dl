@@ -1,9 +1,11 @@
 import json
+from typing import Optional
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
 from src.tools.http_client import INTERNAL_API_URL, check_system_access, make_api_request
+
 
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
@@ -18,6 +20,202 @@ async def _get_doc_text(document_id: str, token: str) -> str:
     except Exception as e:
         logger.exception("Failed to load document content")
     return ""
+
+
+@tool
+async def create_document(
+    title: str,
+    content_format: str = "doclib",
+    content: str = "",
+    description: str = "",
+    config: RunnableConfig = None,
+) -> str:
+    """
+    <module_purpose>
+    Create a new EditorJS or LaTeX document owned by the authenticated user
+    </module_purpose>
+    <contract>
+    Use doclib for EditorJS JSON and doclibx for LaTeX source
+    EditorJS content must contain a blocks array
+    Empty content creates a valid starter document for the selected format
+    </contract>
+    """
+    token = (config or {}).get("configurable", {}).get("token")
+    if not token:
+        return json.dumps({"status": "authentication_required"})
+    normalized_format = content_format.strip().lower()
+    if normalized_format not in {"doclib", "doclibx"}:
+        return json.dumps({"status": "unsupported_document_format"})
+    normalized_content = content
+    if normalized_format == "doclib":
+        if not normalized_content.strip():
+            normalized_content = json.dumps(
+                {"time": 0, "blocks": [], "version": "2.30.8"}
+            )
+        try:
+            parsed = json.loads(normalized_content)
+        except (TypeError, json.JSONDecodeError):
+            return json.dumps({"status": "document_content_invalid"})
+        if not isinstance(parsed, dict) or not isinstance(parsed.get("blocks"), list):
+            return json.dumps({"status": "document_content_invalid"})
+        normalized_content = json.dumps(parsed, ensure_ascii=False)
+    elif not normalized_content.strip():
+        normalized_content = (
+            "\\documentclass{article}\n"
+            "\\begin{document}\n"
+            "\\end{document}\n"
+        )
+    payload = {
+        "title": title,
+        "description": description,
+        "content": normalized_content,
+        "content_format": normalized_format,
+        "visibility": "private",
+    }
+    try:
+        response = await make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/tai-lieu",
+            headers={"Authorization": token},
+            json=payload,
+            timeout=30.0,
+        )
+        if response.status_code != 201:
+            return json.dumps(
+                {
+                    "status": "document_creation_failed",
+                    "upstream_status": response.status_code,
+                }
+            )
+        data = response.json().get("data", {})
+        return json.dumps(
+            {
+                "status": "success",
+                "document_id": data.get("_id") or data.get("id"),
+                "content_format": normalized_format,
+            }
+        )
+    except Exception:
+        logger.exception("Document creation failed")
+        return json.dumps({"status": "document_service_unavailable"})
+
+
+@tool
+async def update_document_metadata(
+    document_id: str,
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    category: Optional[str] = None,
+    tags: Optional[list[str]] = None,
+    config: RunnableConfig = None,
+) -> str:
+    """
+    <module_purpose>
+    Update editable metadata for one document without changing its content
+    </module_purpose>
+    <contract>
+    Provide the exact document ID and at least one metadata field
+    Existing content and format remain unchanged
+    </contract>
+    """
+    token = (config or {}).get("configurable", {}).get("token")
+    if not token:
+        return json.dumps({"status": "authentication_required"})
+    values = {
+        "title": title,
+        "description": description,
+        "category": category,
+        "tags": tags,
+    }
+    payload = {key: value for key, value in values.items() if value is not None}
+    if not payload:
+        return json.dumps({"status": "document_update_empty"})
+    try:
+        response = await make_api_request(
+            "PUT",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
+            headers={"Authorization": token},
+            json=payload,
+            timeout=30.0,
+        )
+        if response.status_code != 200:
+            return json.dumps(
+                {
+                    "status": "document_update_failed",
+                    "upstream_status": response.status_code,
+                }
+            )
+        return json.dumps({"status": "success", "document_id": document_id})
+    except Exception:
+        logger.exception("Document metadata update failed")
+        return json.dumps({"status": "document_service_unavailable"})
+
+
+@tool
+async def replace_document_content(
+    document_id: str,
+    content: str,
+    content_format: str,
+    config: RunnableConfig = None,
+) -> str:
+    """
+    <module_purpose>
+    Replace the complete EditorJS or LaTeX source of an existing document
+    </module_purpose>
+    <contract>
+    Use doclib for EditorJS JSON and doclibx for LaTeX source
+    Prefer surgical edit tools when only a small region needs modification
+    </contract>
+    """
+    token = (config or {}).get("configurable", {}).get("token")
+    if not token:
+        return json.dumps({"status": "authentication_required"})
+    normalized_format = content_format.strip().lower()
+    if normalized_format not in {"doclib", "doclibx"}:
+        return json.dumps({"status": "unsupported_document_format"})
+    normalized_content = content
+    if normalized_format == "doclib":
+        try:
+            parsed = json.loads(content)
+        except (TypeError, json.JSONDecodeError):
+            return json.dumps({"status": "document_content_invalid"})
+        if not isinstance(parsed, dict) or not isinstance(parsed.get("blocks"), list):
+            return json.dumps({"status": "document_content_invalid"})
+        normalized_content = json.dumps(parsed, ensure_ascii=False)
+    elif not content.strip():
+        return json.dumps({"status": "document_content_invalid"})
+    try:
+        response = await make_api_request(
+            "PUT",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}/noi-dung",
+            headers={"Authorization": token},
+            json={
+                "content": normalized_content,
+                "content_format": normalized_format,
+            },
+            timeout=30.0,
+        )
+        if response.status_code != 200:
+            return json.dumps(
+                {
+                    "status": "document_update_failed",
+                    "upstream_status": response.status_code,
+                }
+            )
+        from src.tools.editing import _broadcast_update
+
+        await _broadcast_update(document_id, normalized_content)
+        return json.dumps(
+            {
+                "status": "success",
+                "document_id": document_id,
+                "content_format": normalized_format,
+            }
+        )
+    except Exception:
+        logger.exception("Document content replacement failed")
+        return json.dumps({"status": "document_service_unavailable"})
+
 
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:

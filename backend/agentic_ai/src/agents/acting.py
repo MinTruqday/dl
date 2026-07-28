@@ -1,3 +1,5 @@
+import json
+
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from loguru import logger
 from src.core.registry import PromptType, registry
@@ -9,11 +11,17 @@ from src.core.infrastructure.configuration import settings
 _MAX_ATTEMPTS = 3
 
 _REQUIRES_APPROVAL_TOOLS = frozenset({
-    "delete_document",
-    "restore_document",
     "create_document",
-    "send_virtual_tip",
-    "redeem_coupon",
+    "delete_document",
+    "edit_document_block",
+    "edit_document_text",
+    "manage_user_instructions",
+    "propose_document_edits",
+    "redeem_voucher",
+    "replace_document_content",
+    "restore_document",
+    "transfer_user_funds",
+    "update_document_metadata",
 })
 
 def _is_validation_error(exc: Exception) -> bool:
@@ -64,7 +72,16 @@ class ActingAgent:
         try:
             messages = [
                 SystemMessage(content=system_prompt),
-                HumanMessage(content=action),
+                HumanMessage(
+                    content=json.dumps(
+                        {
+                            "action": action,
+                            "supplied_parameters": params,
+                        },
+                        ensure_ascii=False,
+                        default=str,
+                    )
+                ),
             ]
 
             llm_with_tools = llm.bind_tools(tools)

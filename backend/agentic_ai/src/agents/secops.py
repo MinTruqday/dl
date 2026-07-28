@@ -123,6 +123,7 @@ class SecOpsAgent:
             )
             state.messages.append(AIMessage(content=scan_results))
             state.artifacts["security_report"] = scan_results
+            state.artifacts["security_approved"] = eval_result.is_secure
             logger.info("SecOps LLM evaluation completed")
         except Exception:
             logger.exception("SecOps LLM evaluation failed")
@@ -136,6 +137,7 @@ class SecOpsAgent:
             )
             state.messages.append(AIMessage(content=scan_results))
             state.artifacts["security_report"] = scan_results
+            state.artifacts["security_approved"] = False
 
         state.current_agent = "supervisor"
         return state

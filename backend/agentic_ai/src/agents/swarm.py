@@ -1,7 +1,7 @@
-from typing import Dict, Any, List, Literal
-from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage
+import json
+from typing import Dict, Any
+from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, END
-from pydantic import BaseModel, Field
 from loguru import logger
 from src.core.registry import PromptType, registry
 from src.schemas.swarm import SwarmState, SwarmRouteDecision
@@ -20,21 +20,37 @@ class SupervisorAgent:
     def __init__(self, llm):
         self.llm = llm
 
+    @staticmethod
+    def _fallback_route(state: SwarmState) -> str:
+        if not state.artifacts.get("code"):
+            return "coder"
+        if state.artifacts.get("review_approved") is not True:
+            return "coder" if "review_approved" in state.artifacts else "reviewer"
+        if state.artifacts.get("security_approved") is not True:
+            return "coder" if "security_approved" in state.artifacts else "secops"
+        return "finish"
+
     async def route(self, state: SwarmState) -> SwarmState:
         logger.info("Supervisor evaluating task routing via LLM")
         
         system_prompt = registry.get(PromptType.SWARM_SUPERVISOR)
-        human_msg_content = (
-            f"Current Task: {state.task}\n"
-            f"Artifacts gathered: {list(state.artifacts.keys())}\n"
-            f"Message history length: {len(state.messages)}\n"
-            "Determine the next route."
+        human_msg_content = json.dumps(
+            {
+                "task": state.task,
+                "current_agent": state.current_agent,
+                "artifacts": state.artifacts,
+                "message_count": len(state.messages),
+            },
+            ensure_ascii=False,
+            default=str,
         )
 
-        
         try:
             structured_llm = self.llm.with_structured_output(SwarmRouteDecision)
-            messages = [SystemMessage(content=system_prompt), HumanMessage(content="Determine the next route.")]
+            messages = [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=human_msg_content),
+            ]
             decision = await structured_llm.ainvoke(messages)
             
             logger.info(f"Supervisor routed to: {decision.next_agent}. Reason: {decision.reasoning}")
@@ -43,9 +59,13 @@ class SupervisorAgent:
                 state.is_complete = True
             else:
                 state.current_agent = decision.next_agent
-        except Exception as e:
+        except Exception:
             logger.exception("Supervisor LLM routing failed")
-            state.is_complete = True
+            fallback = self._fallback_route(state)
+            if fallback == "finish":
+                state.is_complete = True
+            else:
+                state.current_agent = fallback
             
         return state
 

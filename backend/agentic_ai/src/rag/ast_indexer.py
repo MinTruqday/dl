@@ -25,7 +25,7 @@ class ASTIndexer:
     </module_purpose>
     """
     def __init__(self, vector_store=None):
-        pass
+        self.vector_store = vector_store
         
     def _extract_source(self, lines: List[str], node: ast.AST) -> str:
         if not hasattr(node, "lineno") or not hasattr(node, "end_lineno"):

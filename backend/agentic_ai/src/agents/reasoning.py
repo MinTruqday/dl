@@ -68,8 +68,14 @@ class ReasoningAgent:
             )
 
             return {
-                "should_retry": eval_res.is_hallucination,
+                "should_retry": eval_res.should_retry,
                 "feedback": eval_res.feedback,
+                "scores": {
+                    "relevance": eval_res.relevance,
+                    "grounding": eval_res.grounding,
+                    "completeness": eval_res.completeness,
+                    "overall": eval_res.overall,
+                },
             }
         except Exception as e:
             logger.exception("Document quality evaluation error")

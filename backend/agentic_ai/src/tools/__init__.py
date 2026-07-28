@@ -12,6 +12,9 @@ from src.tools.billing import (
     transfer_user_funds,
 )
 from src.tools.document import (
+    create_document,
+    update_document_metadata,
+    replace_document_content,
     get_my_documents,
     get_trash_documents,
     delete_document,
@@ -26,6 +29,9 @@ from src.workflow.reduction import agent_summarize_long_document
 
 tools = [
     agent_summarize_long_document,
+    create_document,
+    update_document_metadata,
+    replace_document_content,
     get_user_balance,
     get_transaction_history,
     transfer_user_funds,
@@ -45,5 +51,4 @@ tools = [
     edit_document_block,
     propose_document_edits,
 ]
-
 

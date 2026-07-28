@@ -25,7 +25,11 @@ class CoderAgent:
     def __init__(self, llm):
         self.llm = llm
 
-    def _verify_code(self, code: str) -> str:
+    def _verify_code(self, code: str, language: str) -> str:
+        if not code.strip():
+            return "Generated code is empty"
+        if language.lower() not in {"python", "py"}:
+            return ""
         try:
             ast.parse(code)
             compile(code, "<generated-code>", "exec")
@@ -52,6 +56,10 @@ class CoderAgent:
 
         system_prompt = registry.get(PromptType.SWARM_CODER)
         human_msg_content = f"Task: {task}\nContext: {state.context}"
+        state.artifacts.pop("review", None)
+        state.artifacts.pop("review_approved", None)
+        state.artifacts.pop("security_report", None)
+        state.artifacts.pop("security_approved", None)
 
         try:
             structured_llm = self.llm.with_structured_output(CoderOutput)
@@ -67,7 +75,10 @@ class CoderAgent:
                 final_code = response.code
                 final_logic = response.logic_explanation
                 
-                verification_error = self._verify_code(final_code)
+                verification_error = self._verify_code(
+                    final_code,
+                    response.language,
+                )
                 if not verification_error:
                     logger.info("Coder verification passed")
                     break

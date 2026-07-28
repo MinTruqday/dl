@@ -10,7 +10,11 @@ class DocumentGrade(BaseModel):
     is_relevant: bool = Field(description="<critical_instructions>Set to True ONLY if the document explicitly and directly contains factual information that resolves the user's query. Set to False if it is only tangentially related or lacks concrete answers.</critical_instructions>")
 
 class QualityEvaluation(BaseModel):
-    is_hallucination: bool = Field(description="<critical_instructions>Set to True if the response contains ANY unverified claims, fabricated facts, hallucinated APIs, or information directly contradicting the retrieved context.</critical_instructions>")
+    relevance: float = Field(ge=0.0, le=1.0, description="<constraints>Score from 0.0 to 1.0 for how directly the response addresses the query.</constraints>")
+    grounding: float = Field(ge=0.0, le=1.0, description="<constraints>Score from 0.0 to 1.0 for how fully the response is supported by the supplied context.</constraints>")
+    completeness: float = Field(ge=0.0, le=1.0, description="<constraints>Score from 0.0 to 1.0 for coverage of every material part of the query.</constraints>")
+    overall: float = Field(ge=0.0, le=1.0, description="<constraints>Calibrated overall quality score from 0.0 to 1.0.</constraints>")
+    should_retry: bool = Field(description="<critical_instructions>Set to True when the response is unsafe, ungrounded, incomplete, or has an overall score below 0.6.</critical_instructions>")
     feedback: str = Field(description="<output_format>Specific, actionable feedback pointing out exactly which part of the response is flawed and outlining the explicit logical steps required to fix it.</output_format>")
 
 class ErrorMessageJudgment(BaseModel):

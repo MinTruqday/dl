@@ -26,6 +26,8 @@ class GlobalStateManager:
         self._prefs = db["global_preferences"]
         self._context = db["global_project_context"]
         self._episodes = db["episodic_memory"]
+        self._history = db["history_events"]
+        self._project_cache: Dict[str, Dict[str, Any]] = {}
 
     async def update_preference(self, key: str, value: Any):
         await self._prefs.update_one(
@@ -40,6 +42,7 @@ class GlobalStateManager:
         return doc["value"] if doc else default
 
     async def update_project_context(self, project_id: str, context: Dict[str, Any]):
+        self._project_cache[project_id] = dict(context)
         await self._context.update_one(
             {"project_id": project_id},
             {
@@ -54,11 +57,13 @@ class GlobalStateManager:
         logger.info("Project context synchronization completed")
 
     def get_project_context(self, project_id: str) -> Dict[str, Any]:
-        return {}
+        return dict(self._project_cache.get(project_id, {}))
 
     async def get_project_context_async(self, project_id: str) -> Dict[str, Any]:
         doc = await self._context.find_one({"project_id": project_id})
-        return doc["context"] if doc else {}
+        context = doc["context"] if doc else {}
+        self._project_cache[project_id] = dict(context)
+        return context
 
     async def add_episodic_memory(self, session_id: str, summary: str, embedding: Optional[List[float]] = None):
         doc = {
@@ -104,8 +109,16 @@ class GlobalStateManager:
             logger.exception("Episodic vector search failed, falling back to recent episodes")
             return await self.get_recent_episodes(k)
 
-    def add_history_event(self, event: str):
-        pass
+    async def add_history_event(self, event: str):
+        normalized_event = event.strip()
+        if not normalized_event:
+            raise ValueError("History event must not be empty")
+        await self._history.insert_one(
+            {
+                "event": normalized_event,
+                "created_at": datetime.datetime.now(datetime.timezone.utc),
+            }
+        )
 
 
 global_state = GlobalStateManager()
